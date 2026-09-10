@@ -144,7 +144,7 @@ fla 的模型定义，只把我们的 layer 替换进去 —— 规格自动跟�
 |---|---|---|
 | **0** ✅ | 形状清单反推 + 缺口表 + 矩阵 schema | 已完成：`docs/matrix/` 三份 json，19 项缺口显式列出 |
 | **1** ✅ | ① aclnn 编译 ✅ ② runtime 桥 ✅ ③ `kda_fwd` 接线 ✅ ④ KDA 本地基线 ✅ ⑤ torch_npu 基线 ✅ | 见下「第一期实测结果」。自编译算子在 bd=4 下比 torch_npu 组合快 2.4~4.4x |
-| **2** 进行中 | `kda_bwd`（九 kernel）+ 九个前向检查点 + autograd + KDA layer（含 2 modules） | layer 级梯度端到端对齐；首版性能数 vs torch_npu 组合版 |
+| **2** ✅ | `kda_bwd`（九 kernel）+ 九个前向检查点 + autograd + KDA layer（含 2 modules） | 见下「第二期实测结果」。层级梯度对齐，训练步比 torch_npu 组合版快 4.8~5.7x |
 | **3** | model 注入（Kimi-Linear）+ KDA `fused_recurrent`(decode) + 矩阵 CI 生成 | 端到端跑通一个模型；chunk↔recurrent 互验通过 |
 | **4** | GDN 扩族（含 GQA、token-major 布局、非零初始 state）+ DeltaNet + 性能迭代 | Qwen3-Next 可用；兑现"高效率算子" |
 
@@ -174,6 +174,33 @@ fla 的模型定义，只把我们的 layer 替换进去 —— 规格自动跟�
    结论。分进程后 bd=4 比 bd=1 快 3.9x。
 
 这两条都是"先有推断、后看数据"的产物，已写成 `AGENTS.md` §6 的性能测量铁律。
+
+### 第二期实测结果（A5 / Ascend950PR，CANN 9.2.0，2026-09-11）
+
+| 项 | 结果 |
+|---|---|
+| 前置：fwd/bwd dtype 不一致的代价 | ✅ 已量化。保存值降精度 1.4e-03~1.6e-03，输出舍到 bf16 ~1.65e-03，叠加 2.2e-03~2.4e-03 且 ≈ √(A²+B²)。与契约已声明的输出精度同量级，可推进 |
+| 九个前向检查点 | ✅ 逐个对单元的 `build_saved_forward`，四形状误差 6e-05~2.9e-03 |
+| `kda_bwd` 九 kernel 接线 | ✅ contract 五个 case 全通过（含 bd=2/3），预算取 contract 的 comparison |
+| autograd + KDA layer | ✅ 层级输出相对 L2 4.9e-03，17 个参数梯度 3.6e-03~2.2e-02 |
+| 训练步性能 | ✅ bd=4 下比 torch_npu 组合版快 4.83x（kimi）/ 5.06x（qwen）/ 5.67x（T=4096） |
+
+三个第二期新发现的缺口（细节见 `docs/matrix/gaps.json`）：
+
+1. **前向 kernel 不产出反向要的检查点**（`fwd-caches-not-emitted`）。九个里只有六个是
+   kernel 直接给的；`g_cumsum` / `h` / `v_new` 当前在 host 侧补，实测占训练步 21%（bd=4）。
+   它是 torch 算子，**不随核数缩短**，所以 block_dim 上限抬高后占比会继续涨。
+2. **按 fla 的默认初始化，算子会 fp32 上溢**（`gate-range-beyond-declared`）。实测前向在
+   chunk 内门控跨度 ≤67 时完全正常、≥89 时吐 NaN，分界是 `ln(FLT_MAX)≈88.7`；而 fla 的
+   KDA 初始化给出约 94。契约声明的域（≤1.92）比失效阈值还窄 46 倍 —— 此前所有精度数都
+   测在真实模型不会出现的窄域里。已加 `MAX_GATE_SPAN=80` 的显式门控，但那只是把静默失败
+   变成明确失败，**没有扩大可用域**。第三期注入前必须就此做决策。
+3. **kernel 不做 q/k 的 l2norm、门控变换、beta sigmoid**（`qk-l2norm-not-in-kernel`）。
+   fla 把这三步放在 kernel 里（`use_*_in_kernel=True`），我们要调用方做。数值上合法的输入
+   无法区分做过没做过，所以**门控挡不住** —— 目前唯一"错了不报错"的语义缺口。
+
+另外修了一个桥层 bug（`opp-path-read-once`）：CANN 只在首次算子解析时读
+`ASCEND_CUSTOM_OPP_PATH`，之后注册的 vendor 树失效，而它报的是"算子包未安装"。
 
 ## 6. 性能基线
 

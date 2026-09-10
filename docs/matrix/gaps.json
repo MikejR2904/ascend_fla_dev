@@ -361,17 +361,17 @@
       "id": "fwd-caches-not-emitted",
       "title": "kda_bwd 要九个前向检查点，前向 kernel 只直接给出六个",
       "category": "abi",
-      "severity": "P1",
+      "severity": "P2",
       "applies_to": [
         "kda"
       ],
-      "evidence": "kda_bwd 的 unit.py validate_inputs 要求 saved 恰好含九项：g_cumsum/w/u/qg/kg/v_new 为 (B,T,HV,128)、Aqk/Akk 为 (B,T,HV,64)、h 为 (B,C,HV,128,128)，全 bf16、token-major。前向 kernel 直接产出的只有 w/u/qg/kg（kda_sub3_wy_kernel）、Aqk（kda_sub2_score_kernel）、Akk（tril_inverse64_v2_strict_bf16_kernel）六项。gate kernel 只写 eg = 2**g_cumsum，不写 cumsum 本身；kda_sub45_fused_kernel 内部算了逐 chunk 状态 h 与 v_new = u - w @ h，但只写出 o 与 final_state。单元自己是用 CPU 参考 build_saved_forward() 造 saved 的，不是用 kernel。",
-      "impact": "autograd 的前向必须补齐这三项。g_cumsum 可由 log2(eg) 得到（一次 elementwise）；h 与 v_new 只能重跑 chunk 递推 —— 当前在 host 侧用 torch 做（C 次迭代 × 2 次 bmm），**正确但慢**，是反向链的性能瓶颈：它把一个融合 kernel 拆成了 O(C) 次小算子调用。",
+      "evidence": "kda_bwd 的 unit.py validate_inputs 要求 saved 恰好含九项：g_cumsum/w/u/qg/kg/v_new 为 (B,T,HV,128)、Aqk/Akk 为 (B,T,HV,64)、h 为 (B,C,HV,128,128)，全 bf16、token-major。前向 kernel 直接产出的只有 w/u/qg/kg（kda_sub3_wy_kernel）、Aqk（kda_sub2_score_kernel）、Akk（tril_inverse64_v2_strict_bf16_kernel）六项。gate kernel 只写 eg = 2**g_cumsum，不写 cumsum 本身；kda_sub45_fused_kernel 内部算了逐 chunk 状态 h 与 v_new = u - w @ h，但只写出 o 与 final_state。单元自己是用 CPU 参考 build_saved_forward() 造 saved 的，不是用 kernel。 | **代价已实测**（benchmarks/bench_kda_train_step.py，Ascend950PR / CANN 9.2.0，bf16，warmup 2 / iters 5，同步）：kimi_linear_layer 形状下补检查点 1.053ms（bd=1）/ 1.065ms（bd=4），long_context 4.242 / 4.351ms —— **随 block_dim 基本不变**，因为它是 torch 算子而不是我们的 kernel。于是它的占比随 block_dim 上升：fwd+bwd 的 7%（bd=1）→ 21%（bd=4）。",
+      "impact": "autograd 的前向必须补齐这三项。g_cumsum 可由 log2(eg) 得到（一次 elementwise）；h 与 v_new 只能重跑 chunk 递推，当前在 host 侧用 torch 做（C 次迭代 × 2 次 bmm）。\n**修正先前的判断**：我曾写它是\"反向链的性能瓶颈\"，实测不是 —— kimi_linear_layer / bd=4 下它占 21%，而九个反向 kernel 占 53%（2.690ms / 5.069ms）。它是一笔确定的、值得收的账，但不是主因。**真正要紧的是它不随核数缩短**：block_dim 上限若被抬高（block-dim-ceiling），kernel 侧会继续变快而这一段不会，占比会继续涨。",
       "blocks": [
         "phase 2 性能",
         "phase 3"
       ],
-      "proposed_action": "按 AGENTS.md §3 在本仓 kernels/ 下建自己的单元：做一个 kda_sub45_fused_kernel 的变体，额外写出 h 与 v_new（两个 GM 输出 + store，内部量已有），再做一个 gate 变体直接写 g_cumsum。改 ascriptor 仓是不允许的。先立正确性（host 侧补齐）再换 kernel —— 不要在九 kernel 反向链没验证通过之前去写新 kernel。"
+      "proposed_action": "按 AGENTS.md §3 在本仓 kernels/ 下建自己的单元：做一个 kda_sub45_fused_kernel 的变体，额外写出 h 与 v_new（两个 GM 输出 + store，内部量已有），再做一个 gate 变体直接写 g_cumsum。改 ascriptor 仓是不允许的。优先级排在 block-dim-ceiling 之后 —— 先抬核数上限，那一项的收益更大，而且抬完之后这一项的占比才真正凸显。"
     },
     {
       "id": "modules-are-torch-not-kernels",
@@ -430,24 +430,24 @@
     },
     {
       "id": "gate-range-beyond-declared",
-      "title": "真实 KDA 层初始化产生的门控跨度约 94，算子声明域只到 1.92",
-      "category": "verification",
+      "title": "按 fla 的默认初始化，KDA 层的门控跨度(~94) 越过算子的 fp32 上溢线(~88.7)",
+      "category": "numerics",
       "severity": "P1",
       "applies_to": [
         "kda"
       ],
-      "evidence": "kda_fwd contract 的 input_generation 声明 g_raw ∈ [-0.03, 0]，即 64 token 的 chunk 内累计跨度 ≤ 1.92；contract 的 cases 里最宽的是 gate_multiplier=1。而 KDA 层按 fla 自己的初始化（A_log = log(U(1,16)) → exp(A_log) ≈ 15.35；dt_bias 为 Mamba inv-softplus → dt ∈ [0.001, 0.096]）给出的 per-token g 最大约 -15.35 × 0.096 ≈ -1.47，64 token 累计约 **-94**，比声明域宽约 50 倍。实测跨度**几乎与输入尺度无关**（输入 scale 0.5→94.04、0.01→92.97），它由那两个参数的初始化决定。钉在 tests/test_kda_layer_npu.py::test_layer_gate_span_exceeds_declared_domain。 | **反向精度对门控深度的依赖已实测**：contract 的 gentle_decay case（gate_multiplier=0.03）下 dk=5.40e-03、dg=6.20e-03，而同形状的 multi_chunk（gate_multiplier=1）下是 dk=9.17e-02、dg=1.65e-01 —— 差一个数量级。这证实了契约给出的成因（bf16 对 log2 累积门控的舍入在深衰减下改变乘性导数），也说明在层的真实门控（比 gate_multiplier=1 再宽约 50 倍）下这项误差只会更大。",
-      "impact": "① **算子在真实工作域上没有被验证过。** 契约的 cases 全落在窄域内，我们的前向/反向精度数也都是在窄域测的，不能外推到层级/模型级。② 向量化 CPU 参考 (kda_chunk_vectorized) 在跨度 > 80 时 exp(g_max - g) 会 fp32 上溢，所以**宽域下它不能当 oracle**；层测试因此改用逐 token 递推版。③ fla 用 safe_gate / lower_bound 给门控设界，而我们把这两个开关判为不支持 —— 等于把这个风险留给了调用方。",
+      "evidence": "**上溢阈值实测**（benchmarks 侧扫门控倍数，B1/T64/H1/HV1）：chunk 内跨度 1.11→66.84 时前向全部有限且相对 L2 稳定在 2.86e-03~2.98e-03（**完全没有退化**）；跨度 89.12 与 111.40 时o 与 final_state 均出现 NaN/Inf。分界正是 ``ln(FLT_MAX) ≈ 88.72`` —— kernel 把成对衰减分解成 ``exp(g−m)·exp(m−g)``，后一项在跨度超过它时 fp32 上溢。\n**层侧跨度实测**：KDA 层按 fla 自己的初始化（A_log = log(U(1,16)) → exp(A_log) ≈ 15.35；dt_bias 为 Mamba inv-softplus → dt ∈ [0.001, 0.096]）给出的 per-token g 最大约 -15.35 × 0.096 ≈ -1.47，64 token 累计约 **-94**，已越线。跨度**几乎与输入尺度无关**（scale 0.5→94.04、0.01→92.97），由那两个参数的初始化决定。\n**对比声明域**：contract 的 input_generation 是 g_raw ∈ [-0.03, 0]，即跨度 ≤1.92 —— 比失效阈值还窄 46 倍。\n**反向精度对门控深度的依赖也已实测**：gentle_decay case（gate_multiplier=0.03）下 dk=5.40e-03、dg=6.20e-03，同形状的 multi_chunk（×1）下是 dk=9.17e-02、dg=1.65e-01，差一个数量级 —— 与契约给出的成因一致（bf16 对 log2 累积门控的舍入在深衰减下改变乘性导数）。\n钉在 tests/test_kda_layer_npu.py 的 test_layer_default_init_overflows_the_operator 与 test_layer_gate_span_exceeds_declared_domain。",
+      "impact": "① **按 fla 的默认初始化，这个算子直接不可用** —— 不是精度变差，是吐 NaN。② 此前所有前向/反向精度数都测在跨度 ≤1.92 的窄域里，而那是真实模型不会出现的区间，不能外推到层级/模型级。③ 向量化 CPU 参考在跨度 >80 时自己也上溢，宽域下不能当 oracle，只能用逐 token 递推版。④ fla 用 safe_gate / lower_bound 给门控设界，而我们把这两个开关判为不支持 —— 等于把这个风险留给调用方。",
       "blocks": [
         "phase 3"
       ],
-      "proposed_action": "第三期模型注入前必须做：① 在宽域（跨度 ~94）下用递推 oracle 重测前向与反向精度，看契约预算在那里是否还成立；② 若不成立，要么推动 ascriptor 侧扩 cases 覆盖宽域，要么实现 lower_bound 式的门控下界（那会改变数学，需显式决策，不能当成数值修补）。不要因为窄域测试全绿就认为算子在真实模型上可用。"
+      "proposed_action": "已加门控：ops/kda/chunk.py 的 MAX_GATE_SPAN=80 + check_gate_range（默认开），超限报错而不是让 kernel 吐 NaN。**但这只是把静默失败变成了明确失败，没有扩大可用域。**\n第三期模型注入前必须做决策，三条路：① 在 ascriptor 侧把成对衰减改成稳定形式（减去行最大值再做减法，不要分解成两个 exp 相乘）—— 这是根治，且不改数学；② 实现 fla 的 lower_bound 式门控下界 —— **会改变数学**，需显式决策，不能当数值修补；③ 在宽域下用递推 oracle 重测，若契约预算在那里仍成立且只是窄域没覆盖，则推动 ascriptor 扩 cases。不要因为窄域测试全绿就认为算子在真实模型上可用。"
     }
   ],
   "summary": {
     "P0": 0,
-    "P1": 14,
-    "P2": 8,
+    "P1": 13,
+    "P2": 9,
     "total": 29,
     "first_milestone": "第一期五项已全部有结论，并补齐了同机性能对比：aclnn 编译、runtime 桥、kda_fwd 接线、KDA 本地基线均实测通过；自编译算子在 block_dim=4 下比 torch_npu 组合快 4.43x（kimi_linear_layer）/ 2.38x（long_context T=4096）/ 19.7x（smoke）。过程中修掉两个自己的 bug（bridge-per-call-overhead、op-name-collision-in-process），它们先后让 block_dim 的效果被完全掩盖。当前最大的性能项是 block-dim-ceiling（已升 P1）：扩展性一路线性到契约上限 4，而硬件有 28 cube。第二期的前置障碍仍是 kda-fwd-bwd-dtype-mismatch。",
     "recommended_first_target": "KDA（Kimi-Linear / fla-kda-default 形状）。其 ABI 已是 token-major BTHK、GQA 原生支持、initial_state 与 final_state 均为 FP32、backward 产出 dh0 —— 上述多数 ABI 缺口对它都不适用。唯一需要前置补齐的是本地验证证据（kda-no-local-evidence）。",

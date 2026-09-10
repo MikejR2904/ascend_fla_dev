@@ -163,6 +163,22 @@ def ops_section(ops: dict) -> list[str]:
                 out.append(f"| `{seg}` | {kb['bd1'][seg]:.3f} | {kb['bd4'][seg]:.3f} |")
             out += ["", f"**怎么读**：{kb['reading']}", ""]
 
+        if ts := bl.get("train_step"):
+            out += ["", "#### 训练步（fwd+bwd）", "", f"> {ts['note']}", "",
+                    f"记录于 {ts['recorded_at']}", "",
+                    "| 形状 | B/H/HV/T | bd | fwd | +检查点 | fwd+bwd | torch_npu | 加速 |",
+                    "|---|---|---|---|---|---|---|---|"]
+            for r in ts["rows"]:
+                for bd in ("bd1", "bd4"):
+                    x = r[bd]
+                    out.append(f"| {r['shape']} | {r['dims']} | {bd[2:]} | {x['fwd']:.3f} | "
+                               f"{x['fwd_with_caches']:.3f} | {x['fwd_bwd']:.3f} | "
+                               f"{x['torch_npu_fwd_bwd']:.3f} | {x['speedup']:.2f}x |")
+            bk = ts["breakdown_kimi_linear_layer_bd4"]
+            out += ["", "kimi_linear_layer / bd=4 的拆分（ms）：" + " · ".join(
+                f"{k} {v:.3f}" for k, v in bk.items()), "",
+                f"**怎么读**：{ts['reading']}", ""]
+
         out += ["", f"**观察**：{bl['observation']}", ""]
         if cc := bl.get("cross_cann_consistency"):
             out += [f"**跨 CANN 版本一致性**：{cc}", ""]

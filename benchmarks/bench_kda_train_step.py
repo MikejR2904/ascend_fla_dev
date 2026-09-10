@@ -34,7 +34,12 @@ import time
 import torch
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
-from ascend_fla.ops.kda import chunk_kda, chunk_kda_fwd, chunk_kda_fwd_with_caches  # noqa: E402
+from ascend_fla.ops.kda import (  # noqa: E402
+    chunk_kda,
+    chunk_kda_fwd,
+    chunk_kda_fwd_with_caches,
+    prepare,
+)
 from ascend_fla.ops.kda.chunk import SUPPORTED_BLOCK_DIM  # noqa: E402
 from ascend_fla.reference.kda import kda_chunk_vectorized  # noqa: E402
 from benchmarks.bench_kda_torch_npu import SHAPES, make_inputs  # noqa: E402
@@ -58,6 +63,10 @@ def _grad_inputs(x: dict) -> dict:
 
 
 def run_shape(name: str, block_dim: int, warmup: int, iters: int) -> dict:
+    # 必须先 prepare：本脚本第一档是纯前向（它不会预编译反向链），等跑到带缓存那一档
+    # 再注册反向的 vendor 树就晚了 —— CANN 只在首次算子解析时读 ASCEND_CUSTOM_OPP_PATH。
+    # 不调 prepare 会被 runtime/binding.py 的门控拦住并报错，而不是静默失效。
+    prepare("a5", block_dim, backward=True)
     shp = SHAPES[name]
     x = make_inputs(**shp, dtype=torch.bfloat16, device="npu")
     common = dict(block_dim=block_dim, layout_device="npu")

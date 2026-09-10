@@ -816,6 +816,92 @@
       }
     },
     "caveats": "torch_npu 基线的跑间波动约 20%（kimi_linear_layer 在四个子进程里测到 7.920 / 5.445 / 5.439 / 5.811ms），所以加速比带同等量级的不确定度。每行的比值用的是该子进程自己测的基线，不是跨进程平均。",
-    "next": "① 抬高 block_dim 上限（gaps.json 的 block-dim-ceiling，已升 P1）—— 扩展性到 4 仍线性，物理上有 28 cube。② kernel 侧的 nd2nz 返工（kernel-nd2nz-suboptimal）。③ 反向的同类测量，第二期随 kda_bwd 一起做。"
+    "next": "① 抬高 block_dim 上限（gaps.json 的 block-dim-ceiling，已升 P1）—— 扩展性到 4 仍线性，物理上有 28 cube。② kernel 侧的 nd2nz 返工（kernel-nd2nz-suboptimal）。③ 反向的同类测量，第二期随 kda_bwd 一起做。",
+    "train_step": {
+      "note": "完整一步训练（fwd + bwd）对照 torch_npu 组合版 + autograd。benchmarks/bench_kda_train_step.py，warmup 2 / iters 5，同步，layout_device=npu，每个 block_dim 一个子进程。fwd 一列**不含**门控跨度检查（与第一期的数可比），检查的代价单列。",
+      "recorded_at": "2026-09-11",
+      "rows": [
+        {
+          "shape": "smoke",
+          "dims": "B1/H1/HV1/T64",
+          "bd1": {
+            "fwd": 0.194,
+            "fwd_with_caches": 0.409,
+            "fwd_bwd": 1.504,
+            "torch_npu_fwd_bwd": 15.085,
+            "speedup": 10.03
+          },
+          "bd4": {
+            "fwd": 0.24,
+            "fwd_with_caches": 0.558,
+            "fwd_bwd": 1.732,
+            "torch_npu_fwd_bwd": 17.251,
+            "speedup": 9.96
+          }
+        },
+        {
+          "shape": "kimi_linear_layer",
+          "dims": "B1/H32/HV32/T1024",
+          "bd1": {
+            "fwd": 4.898,
+            "fwd_with_caches": 5.952,
+            "fwd_bwd": 15.864,
+            "torch_npu_fwd_bwd": 21.731,
+            "speedup": 1.37
+          },
+          "bd4": {
+            "fwd": 1.314,
+            "fwd_with_caches": 2.379,
+            "fwd_bwd": 5.069,
+            "torch_npu_fwd_bwd": 24.463,
+            "speedup": 4.83
+          }
+        },
+        {
+          "shape": "qwen3_next_layer",
+          "dims": "B1/H16/HV32/T1024",
+          "bd1": {
+            "fwd": 4.914,
+            "fwd_with_caches": 5.955,
+            "fwd_bwd": 15.893,
+            "torch_npu_fwd_bwd": 25.549,
+            "speedup": 1.61
+          },
+          "bd4": {
+            "fwd": 1.335,
+            "fwd_with_caches": 2.446,
+            "fwd_bwd": 5.154,
+            "torch_npu_fwd_bwd": 26.089,
+            "speedup": 5.06
+          }
+        },
+        {
+          "shape": "long_context",
+          "dims": "B1/H16/HV32/T4096",
+          "bd1": {
+            "fwd": 19.567,
+            "fwd_with_caches": 23.809,
+            "fwd_bwd": 63.792,
+            "torch_npu_fwd_bwd": 106.711,
+            "speedup": 1.67
+          },
+          "bd4": {
+            "fwd": 5.134,
+            "fwd_with_caches": 9.485,
+            "fwd_bwd": 20.275,
+            "torch_npu_fwd_bwd": 114.935,
+            "speedup": 5.67
+          }
+        }
+      ],
+      "breakdown_kimi_linear_layer_bd4": {
+        "fwd_kernels": 1.314,
+        "caches_host_side": 1.065,
+        "bwd_kernels": 2.69,
+        "gate_range_check": 0.212,
+        "total": 5.069
+      },
+      "reading": "① 训练步的加速比（bd=4 下 4.83x~5.67x）**高于**仅前向的（4.4x）——torch_npu 侧的反向要穿过它那张 python 循环图，被 launch 开销支配得更厉害。② host 侧补检查点 1.065ms，占训练步 21%（bd=1 时只占 7%）。它是 torch 算子，**不随核数缩短**，所以 block_dim 越高占比越大 —— 抬高 block-dim-ceiling 之后这一项才真正凸显（见 fwd-caches-not-emitted）。③ 九个反向 kernel 2.690ms 占 53%，是训练步里最大的一块。④ 门控跨度检查 0.212ms —— 占训练步 4%、占仅前向 16%，可用 check_gate_range=False 关掉，但关掉后越界就是 NaN 而不是报错。"
+    }
   }
 }
