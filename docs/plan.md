@@ -33,12 +33,19 @@ attnres；另有 `ascend-a2-ci.yml` 真机 CI（CANN 9.1.0 / torch 2.9 / triton-
 ### 为什么最终不接 fla 接口
 
 曾考虑做成 fla 的 out-of-tree 后端插件（注册进 `BackendRegistry`，priority 高于
-`triton_ascend`）。最终选择纯算子库，换来的是 **ABI 自由度**：
+`triton_ascend`）。最终选择纯算子库。
 
-fla 用 `[B, T, H, K]`、state 为 FP32、带 `cu_seqlens` 变长；ascriptor 现成算子用
-定尺 `[B, H, C, 64, 128]`、state 为 BF16、定长。接 fla 接口就必须在每次调用时做
-layout 转换，而那恰好是访存开销 —— 与"高效率算子"的目标直接冲突。不接接口，
-定尺布局就能原样用，转换降级为 `compat/` 里的可选便利层。
+> **本节的原始论据已被第 0 期调研部分推翻，如实记录。** 当初的理由是"省掉 layout
+> 转换开销"：fla 用 `[B,T,H,K]`，而 ascriptor 用定尺 `[B,H,C,64,128]`，接 fla 接口
+> 就得每次调用都 permute。这对 GDN 成立，**但对 KDA 不成立** —— `kda_fwd`/`kda_bwd`
+> 的公开张量本来就是 token-major `BTHK`/`BTHV`，内部自行 permute，且 state 为 FP32。
+> 既然 KDA 已定为首个目标，这条论据在第一期用不上。
+
+真正站得住的理由是**契约的诚实性**：现成算子的定尺约束（`L=64`、`K=V=128`、无 varlen、
+无 tail、fp16 被拒）远窄于 fla 公共 API 承诺的范围。做 fla 后端意味着要在 verifier
+里拒绝掉大部分调用，使用者感受到的是"时而加速、时而不加速"的不可预测行为；做独立库
+则可以把约束直接写进 API 契约，调用方一开始就知道自己在用什么。次要理由是不承担跟随
+上游 19 万行演进的维护成本。
 
 代价是失去 fla 的测试集与模型生态。用两件事补偿：`naive.py` 仍作 oracle；
 `models/` 用注入方式对齐上游模型规格（见第 4 节）。
@@ -67,6 +74,31 @@ layout 转换，而那恰好是访存开销 —— 与"高效率算子"的目标
 `chunk_row_scan`（按 chunk 边界复位的行扫描 = chunk cumsum）、`matrix_normalization`
 的 `row_l2`（l2norm）、`gated_approximations`（SwiGLU / GELU）。
 
+### 首个目标为什么是 KDA 而不是 GDN
+
+第 0 期把两者的 ABI 逐项对出来后，结论很清楚：**KDA 的契约离 fla 的语义近得多**。
+
+| 能力 | `kda_fwd/bwd` | `gdn_fwd/bwd` |
+|---|---|---|
+| GQA 分组 | ✅ `HV % H == 0` | ❌ domain 只有 `B,H,C` |
+| 公开布局 | ✅ token-major `BTHK`/`BTHV` | ❌ `[B,H,C,L,D]` |
+| 非零 `initial_state` | ✅ FP32 正式输入 | ❌ zero only |
+| 初始 state 梯度 | ✅ 输出 `dh0`、接受 `dht` | ❌ ABI 中不存在 |
+| `final_state` dtype | ✅ FP32（同 fla 惯例） | ❌ BF16 |
+| `block_dim` 上限 | 4 | 2 |
+| 本地验证证据 | ❌ 无 `validation.json` | ✅ 齐全 |
+
+只有最后一行对 GDN 有利，而那是可以补的（在本机跑 `run.py reference` 与 `sim` 即可，
+不需要 CANN）。其余六项都是 ABI 层面的硬差距，要在 GDN 上补齐就是改 kernel。
+
+一个附带好处：KDA layer 只依赖两个 module（`FusedRMSNormGated(sigmoid)` 与
+`ShortConvolution`），GDN 还多一个 `RMSNorm`。KDA 的 `A_log`/`dt_bias` 是 per
+value-head，原生支持 GVA。
+
+首要目标模型相应从 Qwen3-Next 换成 **Kimi-Linear-48B-A3B**（H=HV=32，K=V=128，BF16），
+它的形状完全落在 `kda_fwd` 的定尺域内，零阻塞缺口。Qwen3-Next 受 `gdn-no-gqa` 阻塞，
+随 GDN 扩族移到第四期。
+
 ## 3. 第一期的真实风险：runtime 桥
 
 ascriptor 的执行模型全是"落盘 + 独立进程"（详见 `AGENTS.md` §4）。它是 kernel
@@ -86,13 +118,13 @@ ascriptor 的执行模型全是"落盘 + 独立进程"（详见 `AGENTS.md` §4�
 施工顺序。算子先行，但算子要支持什么形状由模型 config 反推决定 —— 否则算子会在
 玩具形状上全绿，到真机模型上挂掉。这就是第 0 期存在的理由。
 
-**② 窄切片，不照搬。** GDN 这条链路实测只需要：
+**② 窄切片，不照搬。** KDA 这条链路实测只需要：
 
 ```
-model:   Qwen3-Next 规格（gated_deltanet）
-layer:   GatedDeltaNet                                              1 个
-modules: ShortConvolution/causal_conv1d, RMSNorm, FusedRMSNormGated  3 个
-ops:     chunk(训练/prefill) + fused_recurrent(decode)               2 个入口
+model:   Kimi-Linear 规格（kimi_linear）
+layer:   KDA                                                  1 个
+modules: FusedRMSNormGated(sigmoid), ShortConvolution/causal_conv1d   2 个
+ops:     chunk(训练/prefill) + fused_recurrent(decode，待写)    2 个入口
 ```
 
 43 个 layers / 41 个 models 一个都不要照搬。
@@ -107,17 +139,20 @@ fla 的模型定义，只把我们的 layer 替换进去 —— 规格自动跟�
 
 | 期 | 内容 | 验收 |
 |---|---|---|
-| **0** | 形状清单反推 + 缺口表 + 矩阵 schema | `docs/matrix/` 三份 json：目标模型真实形状 × 所需算子，缺口显式列出 |
-| **1** | runtime 桥 + `gdn_fwd` | 真实形状下进程内零拷贝调用，精度对齐双 oracle |
-| **2** | `gdn_bwd` + autograd + GatedDeltaNet layer（含 3 modules） | layer 级梯度端到端对齐；首版性能数 vs torch_npu 组合版 |
-| **3** | model 注入 + `fused_recurrent`(decode) + 矩阵自动生成 | 端到端跑通一个模型；矩阵由 CI 产出 |
-| **4** | KDA / DeltaNet 扩族 + 性能迭代 | 兑现"高效率算子" |
+| **0** ✅ | 形状清单反推 + 缺口表 + 矩阵 schema | 已完成：`docs/matrix/` 三份 json，19 项缺口显式列出 |
+| **1** | ① 本地 aclnn 编译打通（先拿 `chunk_row_scan` 验证）② runtime 桥 ③ `kda_fwd` 接线 ④ KDA 本地精度基线 ⑤ torch_npu 组合基线 | Kimi-Linear 单层真实形状下进程内零拷贝调用，精度对齐双 oracle |
+| **2** | `kda_bwd` + autograd + KDA layer（含 2 modules） | layer 级梯度端到端对齐；首版性能数 vs torch_npu 组合版 |
+| **3** | model 注入（Kimi-Linear）+ KDA `fused_recurrent`(decode) + 矩阵 CI 生成 | 端到端跑通一个模型；chunk↔recurrent 互验通过 |
+| **4** | GDN 扩族（含 GQA、token-major 布局、非零初始 state）+ DeltaNet + 性能迭代 | Qwen3-Next 可用；兑现"高效率算子" |
+
+第一期的五项里，①④⑤ 可在本机完成（①②需要远程真机）。**① 是硬前置**：在它通过之前
+不要开始 `kda_fwd` 接线，否则可能在错误的技术路线上投入。
 
 ## 6. 性能基线
 
 两条基线，同形状、同 dtype、同步计时：
 
-1. **torch_npu 组合实现** —— 用原生算子拼出同语义的 GDN。它同时是第二个 oracle。
+1. **torch_npu 组合实现** —— 用原生算子拼出同语义的 KDA。它同时是第二个 oracle。
 2. **ascriptor 生成的 aclnn 算子** —— 本仓的产物。
 
 报性能必须声明：形状、dtype、是否含 bwd、warmup 与重复次数、是否 `synchronize()`。
@@ -125,11 +160,15 @@ fla 的模型定义，只把我们的 layer 替换进去 —— 规格自动跟�
 
 ## 7. 开放问题
 
-- **`scale` 参数无处安放**：fla 的 `scale`（默认 `head_dim**-0.5`）在 ascriptor GDN
-  ABI 里没有对应入口（contract 里的 `scale: 0.05` 是输入生成幅度，不是算子参数）。
-  要么进 kernel，要么 host 侧预乘 q —— 后者多一次 elementwise 遍历，与性能目标冲突。
+- **`scale` 参数无处安放**：fla 的 `scale`（默认 `head_dim**-0.5`）在 ascriptor 各单元
+  的 ABI 里都没有对应入口（contract 里的 `scale: 0.05` / `stddev 0.04` 是输入生成幅度，
+  不是算子参数）。要么进 kernel，要么 host 侧预乘 q —— 后者多一次 elementwise 全量
+  遍历，与性能目标冲突。
+- **KDA 的 fwd/bwd dtype 不一致**：`kda_fwd` 的 `beta`/`initial_state`/`g_raw` 是 FP32，
+  `kda_bwd` 的同名张量是 BF16。autograd 组装时这一步降精度不在任何一侧的契约预算内，
+  影响幅度待测（第二期前置）。
 - **A2 何时启动**：取决于 ascriptor 侧 A2/A3 deferred 状态何时解除。
-- **varlen 是否要做**：训练场景常用 packing；ascriptor 侧完全没有 `cu_seqlens` 概念。
+- **varlen 是否要做**：训练场景常用 packing；ascriptor 侧明确声明不支持 `cu_seqlens`。
   代价与收益待评估。
 
 完整缺口清单见 `docs/matrix/gaps.json`。

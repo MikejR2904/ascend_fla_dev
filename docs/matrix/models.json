@@ -2,7 +2,7 @@
   "schema": "ascend_fla.model-shapes/1",
   "recorded_at": "2026-09-10",
   "produced_by": "phase 0, manual reverse-derivation from upstream configs",
-  "note": "目标模型的真实形状清单。算子测试矩阵的 case 形状必须从这里取，不得自拟。ascriptor_fit 记录与 ascriptor a5 定尺 ABI (L=64, K=V=128, BF16) 的匹配情况。",
+  "note": "目标模型的真实形状清单。算子测试矩阵的 case 形状必须从这里取，不得自拟。ascriptor_fit 记录与 ascriptor a5 定尺 ABI (L=64, K=V=128, BF16) 的匹配情况。 priority/target_phase 反映第 0 期结论：首个目标是 KDA 链路（Kimi-Linear），GDN 链路（Qwen3-Next）移至第四期。",
   "ascriptor_a5_abi": {
     "layout": "[B, H, C, L, D]",
     "L": 64,
@@ -16,7 +16,7 @@
       "id": "qwen3-next-80b-a3b",
       "label": "Qwen3-Next-80B-A3B-Instruct",
       "op_family": "gated_delta_rule",
-      "priority": "primary",
+      "priority": "secondary",
       "source": {
         "url": "https://huggingface.co/Qwen/Qwen3-Next-80B-A3B-Instruct/raw/main/config.json",
         "retrieved": "2026-09-10"
@@ -44,15 +44,18 @@
         "head_v_dim": "match",
         "dtype": "match",
         "head_grouping": "gap",
-        "blocking_gaps": ["gdn-no-gqa"],
-        "note": "K=V=128 与 BF16 完全匹配定尺 ABI。唯一阻塞项是 16 key heads / 32 value heads 的分组 —— gdn_fwd 的 domain 只有 B,H,C，没有独立的 value-head 维度。"
-      }
+        "blocking_gaps": [
+          "gdn-no-gqa"
+        ],
+        "note": "K=V=128 与 BF16 完全匹配定尺 ABI。唯一阻塞项是 16 key heads / 32 value heads 的分组 —— gdn_fwd 的 domain 只有 B,H,C，没有独立的 value-head 维度。 原定为首要目标，因 GQA 缺口随 GDN 扩族移至第四期。"
+      },
+      "target_phase": 4
     },
     {
       "id": "kimi-linear-48b-a3b",
       "label": "Kimi-Linear-48B-A3B-Instruct",
       "op_family": "kda",
-      "priority": "secondary",
+      "priority": "primary",
       "source": {
         "url": "https://huggingface.co/moonshotai/Kimi-Linear-48B-A3B-Instruct/raw/main/config.json",
         "retrieved": "2026-09-10"
@@ -79,8 +82,9 @@
         "dtype": "match",
         "head_grouping": "match",
         "blocking_gaps": [],
-        "note": "形状完全落在 kda_fwd/kda_bwd 的定尺域内（HV % H == 0 且此处 HV == H）。是最干净的首个端到端目标。"
-      }
+        "note": "形状完全落在 kda_fwd/kda_bwd 的定尺域内（HV % H == 0 且此处 HV == H）。是最干净的首个端到端目标。 第 0 期定为首个端到端目标。"
+      },
+      "target_phase": 1
     },
     {
       "id": "fla-gated-deltanet-default",
@@ -111,9 +115,13 @@
         "head_k_dim": "gap",
         "head_v_dim": "gap",
         "head_grouping": "match",
-        "blocking_gaps": ["fixed-kv-128", "asymmetric-kv-dim"],
+        "blocking_gaps": [
+          "fixed-kv-128",
+          "asymmetric-kv-dim"
+        ],
         "note": "head_k=256 / head_v=512 都超出定尺 D=128，且 K≠V。这是 fla 的参考默认值，不是任何落地模型的规格 —— 处置方式是门控明确拒绝，不是去支持它。"
-      }
+      },
+      "target_phase": null
     },
     {
       "id": "fla-kda-default",
@@ -145,7 +153,8 @@
         "head_grouping": "match",
         "blocking_gaps": [],
         "note": "fla 的 KDA 默认值恰好落在定尺域内，可直接当回归 case 用。"
-      }
+      },
+      "target_phase": null
     },
     {
       "id": "fla-delta-net-default",
@@ -179,7 +188,8 @@
         "head_grouping": "match",
         "blocking_gaps": [],
         "note": "同样落在定尺域内。"
-      }
+      },
+      "target_phase": null
     }
   ],
   "internal_shapes_pending": [
@@ -193,9 +203,35 @@
   ],
   "test_case_shapes": {
     "note": "算子测试矩阵应覆盖的形状。T 必须是 64 的倍数（L=64 无 tail 路径），C = T / 64。",
-    "smoke": {"B": 1, "H": 1, "C": 1, "comment": "ascriptor 现有 case 的规模，仅用于接线冒烟"},
-    "qwen3_next_layer": {"B": 1, "H": 16, "HV": 32, "C": 16, "T": 1024, "comment": "单层真实形状，第一期精度验收目标"},
-    "kimi_linear_layer": {"B": 1, "H": 32, "HV": 32, "C": 16, "T": 1024, "comment": "KDA 单层真实形状"},
-    "long_context": {"B": 1, "H": 16, "HV": 32, "C": 64, "T": 4096, "comment": "覆盖 chunk 边界与 state 传递，不是为了测误差累积"}
+    "smoke": {
+      "B": 1,
+      "H": 1,
+      "C": 1,
+      "comment": "ascriptor 现有 case 的规模，仅用于接线冒烟"
+    },
+    "qwen3_next_layer": {
+      "B": 1,
+      "H": 16,
+      "HV": 32,
+      "C": 16,
+      "T": 1024,
+      "comment": "单层真实形状，第一期精度验收目标"
+    },
+    "kimi_linear_layer": {
+      "B": 1,
+      "H": 32,
+      "HV": 32,
+      "C": 16,
+      "T": 1024,
+      "comment": "KDA 单层真实形状"
+    },
+    "long_context": {
+      "B": 1,
+      "H": 16,
+      "HV": 32,
+      "C": 64,
+      "T": 4096,
+      "comment": "覆盖 chunk 边界与 state 传递，不是为了测误差累积"
+    }
   }
 }

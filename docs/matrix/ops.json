@@ -127,11 +127,37 @@
       "contract_sha256": "1dae2470b2803454bd22fafe216296a6ee54dd2761a597d65f2026402e19a973",
       "leaf_kernels": 5,
       "declared_cases": 4,
+      "is_first_target": true,
+      "abi": {
+        "layout": "token-major —— 公开张量为 BTHK/BTHV，kernel 内部自行 permute 到 BHCLK/BHVCLK",
+        "inputs": {
+          "q": ["bfloat16", "B,C*64,H,128"],
+          "k": ["bfloat16", "B,C*64,H,128"],
+          "v": ["bfloat16", "B,C*64,HV,128"],
+          "g_raw": ["float32", "B,C*64,HV,128", "自然对数 gate 增量，per-channel"],
+          "beta": ["float32", "B,C*64,HV"],
+          "initial_state": ["float32", "B,HV,128,128"]
+        },
+        "outputs": {
+          "o": ["bfloat16", "B,C*64,HV,128"],
+          "final_state": ["float32", "B,HV,128,128"]
+        },
+        "note": "公开布局已与 fla 的 [B,T,H,K] 一致，接线无需调用方 permute。g_raw 是 per-channel 细粒度门控（KDA 的特点），不是 GDN 的 per-token 标量。"
+      },
       "constraints": {
         "L": 64, "K": 128, "V": 128,
-        "head_grouping": "支持 HV % H == 0 —— 这是 GDN 所缺的能力，实现可借鉴",
-        "initial_state": "支持 random / zero（case 中均有）",
-        "note": "定长 forward，五个 A5 kernel，含独立 recurrence 与显式精度检查点。"
+        "head_grouping": "支持 HV % H == 0 —— 这是 GDN 所缺的能力",
+        "initial_state": "支持 random / zero，以 float32 正式输入",
+        "block_dim": [1, 2, 3, 4],
+        "tails": "T=C*64；partial chunk、K/V tail、fp16、L=32 均被拒绝",
+        "scope": "定长；不支持 cu_seqlens / cp_context / safe_gate / gate fusion / state_v_first",
+        "input_generation": "q/k/v stddev 0.04，initial state stddev 0.01，g_raw ∈ [-0.03,0]，beta ∈ [0.05,0.5]",
+        "note": "定长 forward，五个 A5 kernel，含独立 recurrence 与显式精度检查点。gate fusion 不支持意味着 g 要在 kernel 外算好传入 —— 对 KDA layer 是自然的，f_proj 本就是 Linear。"
+      },
+      "comparison_budget": {
+        "mode": "allclose", "rtol": 0.02, "atol": 0.02, "max_relative_l2": 0.05,
+        "stage_gate_g": {"rtol": 1e-06, "atol": 1e-06, "max_relative_l2": 1e-06},
+        "note": "默认预算比 gdn 的 0.002 宽一个数量级（BF16 cube/store 边界）。本仓对 fla naive 的 fp32 比对应另立更严的标准，不要直接沿用。"
       },
       "validation": {
         "reference": "untested", "sim": "untested", "pipesim": "untested", "emit": "untested",
@@ -151,7 +177,36 @@
       "ascriptor_path": "kernels/projects/a5/kda_bwd",
       "contract_sha256": "a89b77dd7294270e",
       "declared_cases": 5,
-      "constraints": {"L": 64, "K": 128, "V": 128},
+      "is_first_target": true,
+      "abi": {
+        "layout": "token-major —— 公开张量为 BTHK/BTHV；内部交接为 BHVCLD 或 BHVT64",
+        "inputs": {
+          "q": ["bfloat16", "B,C*64,H,128"],
+          "k": ["bfloat16", "B,C*64,H,128"],
+          "v": ["bfloat16", "B,C*64,HV,128"],
+          "g": ["bfloat16", "B,C*64,HV,128"],
+          "beta": ["bfloat16", "B,C*64,HV"],
+          "initial_state": ["bfloat16", "B,HV,128,128"],
+          "do": ["bfloat16", "B,C*64,HV,128"],
+          "dht": ["bfloat16", "B,HV,128,128"]
+        },
+        "outputs": {
+          "dq": ["bfloat16", "B,C*64,H,128"],
+          "dk": ["bfloat16", "B,C*64,H,128"],
+          "dv": ["bfloat16", "B,C*64,HV,128"],
+          "dbeta": ["bfloat16", "B,C*64,HV"],
+          "dg": ["bfloat16", "B,C*64,HV,128"],
+          "dh0": ["bfloat16", "B,HV,128,128"]
+        },
+        "note": "产出 dh0 且接受 dht —— 支持可训练初始 state 与 state 梯度反传，这是 gdn_bwd/delta_rule_bwd 所缺的。⚠️ 但 beta / initial_state / g 在此处是 bfloat16，而 kda_fwd 中是 float32（见 gaps.json 的 kda-fwd-bwd-dtype-mismatch）。"
+      },
+      "constraints": {
+        "L": 64, "K": 128, "V": 128,
+        "head_grouping": "HV % H == 0",
+        "d_initial_state": "present — 输出 dh0",
+        "block_dim": [1, 2, 3, 4],
+        "tails": "T=C*64；CPU 参考侧更宽的 tail 支持不等于 kernel 支持"
+      },
       "validation": {
         "reference": "untested", "sim": "untested", "pipesim": "untested", "emit": "untested",
         "compile": "untested", "cannsim": "untested",
@@ -204,20 +259,21 @@
 
   "missing_ops": [
     {
-      "id": "gdn_fused_recurrent",
-      "op_family": "gated_delta_rule",
+      "id": "kda_fused_recurrent",
+      "op_family": "kda",
       "purpose": "decode 路径（逐 token 递推 + state 传递）",
       "ascriptor_asset": "none",
-      "fla_counterpart": "fla.ops.gated_delta_rule.fused_recurrent_gated_delta_rule",
-      "note": "完全缺失，需要新写，不是接线。没有它就只有 prefill/训练，没有推理解码。",
+      "fla_counterpart": "fla.ops.kda.fused_recurrent_kda",
+      "note": "完全缺失，需要新写，不是接线。没有它就只有 prefill/训练，没有推理解码，也失去 chunk↔recurrent 互验这个最好的 oracle。第三期目标。",
       "blocks": ["phase 3 端到端模型跑通"]
     },
     {
-      "id": "kda_fused_recurrent",
-      "op_family": "kda",
+      "id": "gdn_fused_recurrent",
+      "op_family": "gated_delta_rule",
       "purpose": "decode 路径",
       "ascriptor_asset": "none",
-      "note": "同上。"
+      "fla_counterpart": "fla.ops.gated_delta_rule.fused_recurrent_gated_delta_rule",
+      "note": "同上。随 GDN 扩族（第四期）再补。"
     }
   ],
 
@@ -249,20 +305,80 @@
   ],
 
   "stack_layers": {
-    "note": "全链路的上三层。窄切片原则：按算子倒推，用到哪个做哪个。",
+    "note": "全链路的上三层。窄切片原则：按算子倒推，用到哪个做哪个。首个目标是 KDA 链路，其依赖面比 GDN 少一个 module。",
     "modules": [
-      {"id": "causal_conv1d", "fla_source": "fla.modules.convolution (ShortConvolution)", "needed_by": ["GatedDeltaNet", "KDA"], "ascriptor_asset": "none", "our_status": "not-started"},
-      {"id": "rms_norm", "fla_source": "fla.modules.layernorm (RMSNorm)", "needed_by": ["GatedDeltaNet"], "ascriptor_asset": "partial — matrix_normalization 可借", "our_status": "not-started"},
-      {"id": "fused_rms_norm_gated", "fla_source": "fla.modules.fused_norm_gate (FusedRMSNormGated)", "needed_by": ["GatedDeltaNet"], "ascriptor_asset": "partial", "our_status": "not-started"},
-      {"id": "l2norm", "fla_source": "fla.modules.l2norm", "needed_by": ["GatedDeltaNet(use_qk_l2norm_in_kernel)"], "ascriptor_asset": "matrix_normalization.row_l2", "our_status": "not-started"}
+      {
+        "id": "causal_conv1d",
+        "fla_source": "fla.modules.convolution (ShortConvolution)",
+        "needed_by": ["KDA", "GatedDeltaNet"],
+        "ascriptor_asset": "none — 需新写",
+        "our_status": "not-started"
+      },
+      {
+        "id": "fused_rms_norm_gated",
+        "fla_source": "fla.modules.fused_norm_gate (FusedRMSNormGated)",
+        "needed_by": ["KDA", "GatedDeltaNet"],
+        "ascriptor_asset": "partial — matrix_normalization 可借",
+        "variant_note": "KDA 用 activation=\"sigmoid\"，GatedDeltaNet 用默认值 —— 两者不是同一配置。",
+        "our_status": "not-started"
+      },
+      {
+        "id": "rms_norm",
+        "fla_source": "fla.modules.layernorm (RMSNorm)",
+        "needed_by": ["GatedDeltaNet"],
+        "ascriptor_asset": "partial — matrix_normalization 可借",
+        "note": "KDA 不需要 —— 它只用 FusedRMSNormGated 作 o_norm。",
+        "our_status": "not-started"
+      },
+      {
+        "id": "l2norm",
+        "fla_source": "fla.modules.l2norm",
+        "needed_by": ["GatedDeltaNet(use_qk_l2norm_in_kernel)"],
+        "ascriptor_asset": "matrix_normalization.row_l2",
+        "our_status": "not-started"
+      }
     ],
     "layers": [
-      {"id": "gated_deltanet", "fla_source": "fla.layers.gated_deltanet.GatedDeltaNet", "deps": {"modules": ["causal_conv1d", "rms_norm", "fused_rms_norm_gated"], "ops": ["a5.gdn_fwd", "a5.gdn_bwd", "gdn_fused_recurrent"], "other": "7 个 nn.Linear + A_log / dt_bias 参数"}, "our_status": "not-started"},
-      {"id": "kda", "fla_source": "fla.layers.kda.KDA", "our_status": "not-started"}
+      {
+        "id": "kda",
+        "fla_source": "fla.layers.kda.KDA",
+        "is_first_target": true,
+        "deps": {
+          "modules": ["fused_rms_norm_gated(sigmoid)", "causal_conv1d"],
+          "ops": ["a5.kda_fwd", "a5.kda_bwd", "fused_recurrent(缺)"],
+          "oracle": "fla.ops.kda.naive",
+          "other": "q/k/v_proj + f_proj(低秩两层 Linear) + b_proj + g_proj(两层 Linear) + o_proj；A_log[HV] 与 dt_bias 为 per value-head（原生支持 GVA）"
+        },
+        "gate_formula": "g = -exp(A_log) * softplus(f_proj(x) + dt_bias)",
+        "our_status": "not-started"
+      },
+      {
+        "id": "gated_deltanet",
+        "fla_source": "fla.layers.gated_deltanet.GatedDeltaNet",
+        "deps": {
+          "modules": ["causal_conv1d", "rms_norm", "fused_rms_norm_gated"],
+          "ops": ["a5.gdn_fwd", "a5.gdn_bwd", "fused_recurrent(缺)"],
+          "oracle": "fla.ops.gated_delta_rule.naive",
+          "other": "7 个 nn.Linear + A_log / dt_bias 参数"
+        },
+        "our_status": "not-started"
+      }
     ],
     "models": [
-      {"id": "qwen3-next", "strategy": "注入 — 用 HF transformers 的模型定义，替换 linear attention layer", "our_status": "not-started"},
-      {"id": "kimi-linear", "strategy": "注入", "our_status": "not-started"}
+      {
+        "id": "kimi-linear",
+        "strategy": "注入 — 用上游模型定义，替换 linear attention layer",
+        "is_first_target": true,
+        "layer": "kda",
+        "our_status": "not-started"
+      },
+      {
+        "id": "qwen3-next",
+        "strategy": "注入 — 用 HF transformers 的模型定义，替换 linear attention layer",
+        "layer": "gated_deltanet",
+        "blocked_by": ["gdn-no-gqa"],
+        "our_status": "not-started"
+      }
     ]
   }
 }

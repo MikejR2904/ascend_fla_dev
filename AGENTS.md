@@ -16,13 +16,23 @@
 > 架构纪律：有人提议"顺便注册进 fla 的 dispatch"时，这是在改变仓库定位，
 > 需要显式决策，不要顺手做。往 fla 方向回摆的代价是跟随上游的长期维护成本。
 
-## 2. 三条已定的决策
+## 2. 四条已定的决策
 
 | 决策 | 选择 | 理由 |
 |---|---|---|
 | 目标 SoC | **A5 / 950 优先** | ascriptor 0.1.0 只正式声明 A5 支持，`projects/a5/` 下 GDN/KDA/DeltaNet 的 fwd+bwd 均已真机 passed |
-| 与 fla 关系 | **纯算子库** | 不接 fla 接口，换来 ABI 自由度：可直接用定尺布局，省掉 layout 转换开销 |
+| 与 fla 关系 | **纯算子库** | 定尺约束远窄于 fla 公共 API 的承诺范围；做独立库才能把约束写进契约，而不是塞进 verifier 的拒绝理由 |
 | 首期范围 | **fwd + bwd** | 面向训练；反向资产已有，不做等于浪费 |
+| 首个算子族 | **KDA**（非 GDN） | 第 0 期 ABI 对比的结论，见下 |
+
+**首个目标是 KDA 链路，不是 GDN。** 第 0 期把两者 ABI 逐项对出来后发现，KDA 在六项
+能力上都更接近 fla 语义：GQA 分组、token-major 公开布局、非零 `initial_state`、
+backward 产出 `dh0`、`final_state` 为 FP32、`block_dim` 上限 4。GDN 只在"本地验证证据
+齐全"一项上占优，而那是可补的。对照表见 `docs/matrix/README.md` 的"为什么首个目标是
+KDA"，依据见 `gaps.json` 的 `summary.kda_vs_gdn`。
+
+首要目标模型相应是 **Kimi-Linear-48B-A3B**；Qwen3-Next 受 `gdn-no-gqa` 阻塞，随 GDN
+扩族移到第四期。**不要因为 GDN 更知名就调回去** —— 换回来要先解决六项 ABI 缺口。
 
 A2/A3 在 ascriptor 侧于 2026-09-06 被 deferred，且有未解决的 split-K FP32 cube
 数值缺陷。`platform.py` 按多 SoC 设计，但 A2 是后续目标，**不要在 A5 还没打通时

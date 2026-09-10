@@ -40,8 +40,8 @@ def model_section(models: dict) -> list[str]:
         f"ascriptor A5 定尺 ABI：`{abi['layout']}`，L={abi['L']}，D={abi['D']}，"
         f"q/k/v `{abi['dtype_qkv']}`，beta/g `{abi['dtype_beta_g']}`。",
         "",
-        "| 模型 | 算子族 | 优先级 | H | HV | head_k | head_v | dtype | 定尺匹配 | 阻塞缺口 |",
-        "|---|---|---|---|---|---|---|---|---|---|",
+        "| 模型 | 算子族 | 优先级 | 目标期 | H | HV | head_k | head_v | dtype | 定尺匹配 | 阻塞缺口 |",
+        "|---|---|---|---|---|---|---|---|---|---|---|",
     ]
     for m in models["models"]:
         s, fit = m["shape"], m["ascriptor_fit"]
@@ -49,8 +49,10 @@ def model_section(models: dict) -> list[str]:
         fit_marks = " ".join(
             MARK.get(fit.get(k, ""), "") for k in ("head_k_dim", "head_v_dim", "head_grouping")
         )
+        phase = m.get("target_phase")
         out.append(
             f"| {m['label']} | {m['op_family']} | {m['priority']} | "
+            f"{('第 %d 期' % phase) if phase else '—'} | "
             f"{s.get('num_key_heads', '—')} | {s.get('num_value_heads', '—')} | "
             f"{s.get('head_k_dim', '—')} | {s.get('head_v_dim', '—')} | "
             f"{s.get('dtype', '—')} | {fit_marks} | {blocking} |"
@@ -88,8 +90,9 @@ def ops_section(ops: dict) -> list[str]:
     ]
     for op in ops["linear_attention_ops"]:
         v, st = op["validation"], op["our_status"]
+        name = f"**`{op['id']}`** ★" if op.get("is_first_target") else f"`{op['id']}`"
         out.append(
-            f"| `{op['id']}` | {op['op_family']} | {op['direction']} | "
+            f"| {name} | {op['op_family']} | {op['direction']} | "
             + " | ".join(
                 MARK.get(v.get(k, "untested"), "?")
                 for k in ("reference", "sim", "pipesim", "emit", "compile", "board_cce")
@@ -97,6 +100,8 @@ def ops_section(ops: dict) -> list[str]:
             + f" | {STATUS.get(st['wiring'], st['wiring'])} |"
         )
     out += [
+        "",
+        "★ 标记第一期的首个目标。",
         "",
         "> **compile** 一列是本仓 runtime 桥依赖的本地 CANN 编译路径 —— 全部 `untested`，"
         "这是第一期的首个里程碑（见 `gaps.json` 的 `aclnn-compile-untested`）。"
@@ -126,6 +131,9 @@ def ops_section(ops: dict) -> list[str]:
     return out
 
 
+FAMILY_LABEL = {"all": "全部", "kda": "KDA", "gated_delta_rule": "GDN", "delta_rule": "DeltaNet"}
+
+
 def gaps_section(gaps: dict) -> list[str]:
     s = gaps["summary"]
     out = [
@@ -138,18 +146,49 @@ def gaps_section(gaps: dict) -> list[str]:
         f"**建议的首个目标**：{s['recommended_first_target']}",
         "",
     ]
-    order = {"P0": 0, "P1": 1, "P2": 2}
+
+    if cmp_ := s.get("kda_vs_gdn"):
+        out += [
+            "### 为什么首个目标是 KDA",
+            "",
+            f"> {cmp_['note']}",
+            "",
+            "| 仅 KDA 具备 | 仅 GDN 具备 |",
+            "|---|---|",
+        ]
+        kda_only, gdn_only = cmp_["kda_only"], cmp_["gdn_only"]
+        for i in range(max(len(kda_only), len(gdn_only))):
+            left = kda_only[i] if i < len(kda_only) else ""
+            right = gdn_only[i] if i < len(gdn_only) else ""
+            out.append(f"| {left} | {right} |")
+        out.append("")
+
+    # 按算子族速查：每族受哪些缺口影响
+    out += ["### 按算子族速查", "", "| 算子族 | P0 | P1 | P2 |", "|---|---|---|---|"]
+    for fam in ("kda", "gated_delta_rule", "delta_rule"):
+        row = [FAMILY_LABEL[fam]]
+        for sev in ("P0", "P1", "P2"):
+            hit = [
+                f"`{g['id']}`"
+                for g in gaps["gaps"]
+                if g["severity"] == sev and (fam in g["applies_to"] or "all" in g["applies_to"])
+            ]
+            row.append("<br>".join(hit) or "—")
+        out.append("| " + " | ".join(row) + " |")
+    out.append("")
+
     for sev in ("P0", "P1", "P2"):
         items = [g for g in gaps["gaps"] if g["severity"] == sev]
         if not items:
             continue
         out += [f"### {sev}", ""]
-        for g in sorted(items, key=lambda g: order[g["severity"]]):
+        for g in items:
             blocks = ", ".join(f"`{b}`" for b in g["blocks"]) or "—"
+            applies = " / ".join(FAMILY_LABEL.get(f, f) for f in g["applies_to"])
             out += [
                 f"#### `{g['id']}` — {g['title']}",
                 "",
-                f"- **类别** {g['category']} · **阻塞** {blocks}",
+                f"- **类别** {g['category']} · **适用于** {applies} · **阻塞** {blocks}",
                 f"- **依据** {g['evidence']}",
                 f"- **影响** {g['impact']}",
                 f"- **建议** {g['proposed_action']}",
@@ -181,7 +220,7 @@ def validate(models: dict, ops: dict, gaps: dict) -> list[str]:
     dupes = {gid for gid in gap_ids if sum(g["id"] == gid for g in gaps["gaps"]) > 1}
     problems += [f"gaps.json: 缺口 id 重复 {gid!r}" for gid in sorted(dupes)]
 
-    # 算子的 validation 与 our_status 必须用已知词汇
+    # 算子的 validation 必须用已知词汇
     known_stages = set(ops["stage_vocabulary"]["statuses"])
     for op in ops["linear_attention_ops"]:
         for stage, value in op["validation"].items():
@@ -189,6 +228,27 @@ def validate(models: dict, ops: dict, gaps: dict) -> list[str]:
                 continue
             if value not in known_stages:
                 problems.append(f"ops.json: {op['id']}.{stage} 的状态 {value!r} 不在 stage_vocabulary 中")
+
+    # 缺口的 applies_to 必须存在且用已知算子族
+    for g in gaps["gaps"]:
+        if not g.get("applies_to"):
+            problems.append(f"gaps.json: {g['id']} 缺少 applies_to")
+            continue
+        for fam in g["applies_to"]:
+            if fam not in FAMILY_LABEL:
+                problems.append(f"gaps.json: {g['id']} 的 applies_to 含未知算子族 {fam!r}")
+
+    # 首个目标必须在三份 json 里一致
+    primary_families = {m["op_family"] for m in models["models"] if m["priority"] == "primary"}
+    target_ops = {op["op_family"] for op in ops["linear_attention_ops"] if op.get("is_first_target")}
+    if primary_families != target_ops:
+        problems.append(
+            f"首个目标不一致：models.json 的 primary 模型属于 {sorted(primary_families)}，"
+            f"而 ops.json 标记 is_first_target 的算子属于 {sorted(target_ops)}"
+        )
+    target_layers = {L["id"] for L in ops["stack_layers"]["layers"] if L.get("is_first_target")}
+    if len(target_layers) != 1:
+        problems.append(f"ops.json: stack_layers.layers 应恰有一个 is_first_target，实际 {sorted(target_layers)}")
     return problems
 
 
