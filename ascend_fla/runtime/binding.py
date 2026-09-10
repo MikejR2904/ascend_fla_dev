@@ -96,17 +96,40 @@ def acl_libs() -> _AclLibs:
         return _libs
 
 
+# 本进程是否已经真正执行过一次 aclnn 算子。见 register_custom_opp_path。
+_aclnn_called = False
+
+
 def register_custom_opp_path(vendor_dir: str | os.PathLike) -> None:
     """把 vendor 树加进 ``ASCEND_CUSTOM_OPP_PATH``，让 CANN 找得到算子配置。
 
     已存在的路径保持在前。**算子名不同的**自定义算子包可以共存（冒号分隔）；
     同名算子的多份 build 不能 —— 见 :func:`_claim_op_name`。
+
+    ⚠️ **CANN 只在首次算子解析时读这个环境变量。** 之后追加的路径它看不见，表现为
+    ``aclnn…GetWorkspaceSize 失败 rc=161001``，而 plog 里的真实原因是
+    "SoC version ascend950 verification failed … 算子包未安装" —— 极易误判成编译产物
+    有问题（实测构建产物完好、``binary_info_config.json`` 也在）。所以这里在首次调用
+    之后拒绝注册新路径，而不是让它静默失效。
+
+    实践上的含义：**一个进程要用到的全部 kernel，都要在第一次执行之前编译完。**
+    前向带缓存的入口 :func:`~ascend_fla.ops.kda.chunk.chunk_kda_fwd_with_caches` 因此
+    会先把反向链编译好 —— 要缓存的唯一理由就是接着跑反向。
     """
     path = str(vendor_dir)
     current = os.environ.get("ASCEND_CUSTOM_OPP_PATH", "")
     entries = [e for e in current.split(":") if e]
-    if path not in entries:
-        os.environ["ASCEND_CUSTOM_OPP_PATH"] = ":".join([*entries, path])
+    if path in entries:
+        return
+    if _aclnn_called:
+        raise AclError(
+            f"已经执行过 aclnn 算子，不能再注册新的 vendor 树：\n  {path}\n"
+            "CANN 只在首次算子解析时读 ASCEND_CUSTOM_OPP_PATH，之后追加的它看不见，"
+            "调用时会以 rc=161001 失败（plog 里会说成\"算子包未安装\"，容易误判成编译问题）。"
+            "请把本进程要用到的 kernel 都在第一次执行之前编译好 —— "
+            "例如先调 ascend_fla.ops.kda.prepare()。"
+        )
+    os.environ["ASCEND_CUSTOM_OPP_PATH"] = ":".join([*entries, path])
 
 
 # op 名 → 本进程已认领它的 vendor 树。见 _claim_op_name 的说明。
@@ -267,6 +290,9 @@ class AclnnOp:
         missing += [n for n in self.scalar_names if n not in scalars]
         if missing:
             raise AclError(f"{self.op_name}: 缺少参数 {missing}")
+
+        global _aclnn_called
+        _aclnn_called = True
 
         ordered = [inputs[n] for n in self.input_names] + [outputs[n] for n in self.output_names]
         device = ordered[0].device

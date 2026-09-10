@@ -40,7 +40,7 @@ ascriptor pin：`0.1.0.dev1` · library `77619116f9b3` · 支持硬件 a5 · def
 | `a5.gdn_fwd` | gated_delta_rule | forward | ✅ | ✅ | ✅ | ✅ | ⬜ | ✅ | ⬜ 未开始 |
 | `a5.gdn_bwd` | gated_delta_rule | backward | ✅ | ✅ | ✅ | ✅ | ⬜ | ✅ | ⬜ 未开始 |
 | **`a5.kda_fwd`** ★ | kda | forward | ✅ | ✅ | ⬜ | ⬜ | ⬜ | ✅ | ✅ 完成 |
-| **`a5.kda_bwd`** ★ | kda | backward | ✅ | ✅ | ⬜ | ⬜ | ⬜ | ✅ | ⬜ 未开始 |
+| **`a5.kda_bwd`** ★ | kda | backward | ✅ | ✅ | ⬜ | ⬜ | ⬜ | ✅ | ✅ 完成 |
 | `a5.delta_rule_fwd` | delta_rule | forward | ✅ | ✅ | ✅ | ✅ | ⬜ | ✅ | ⬜ 未开始 |
 | `a5.delta_rule_bwd` | delta_rule | backward | ✅ | ✅ | ✅ | ✅ | ⬜ | ✅ | ⬜ 未开始 |
 
@@ -120,16 +120,22 @@ ascriptor pin：`0.1.0.dev1` · library `77619116f9b3` · 支持硬件 a5 · def
 
 > 全链路的上三层。窄切片原则：按算子倒推，用到哪个做哪个。首个目标是 KDA 链路，其依赖面比 GDN 少一个 module。
 
+> ``done-torch`` 表示功能完成但实现是 torch 原生算子拼的，不是本仓自编译的 kernel —— 见 gaps.json 的 modules-are-torch-not-kernels。``done`` 只给自编译算子。
+
 **modules**
 
-- `causal_conv1d` — ⬜ 未开始 · none — 需新写
-- `fused_rms_norm_gated` — ⬜ 未开始 · partial — matrix_normalization 可借
+- `causal_conv1d` — 🔶 完成（torch 实现） · none — 需新写
+  - 证据：2026-09-11 第二期：ascend_fla/modules/convolution.py ShortConvolution；tests/test_modules.py 纯 CPU 11 项通过（含因果性、归一化与门控的先后顺序、cache 分段与整段一致性等判别性检查）。
+- `fused_rms_norm_gated` — 🔶 完成（torch 实现） · partial — matrix_normalization 可借
+  - 证据：2026-09-11 第二期：ascend_fla/modules/fused_norm_gated.py FusedRMSNormGated；tests/test_modules.py 纯 CPU 11 项通过（含因果性、归一化与门控的先后顺序、cache 分段与整段一致性等判别性检查）。
 - `rms_norm` — ⬜ 未开始 · partial — matrix_normalization 可借
-- `l2norm` — ⬜ 未开始 · matrix_normalization.row_l2
+- `l2norm` — 🔶 完成（torch 实现） · matrix_normalization.row_l2
+  - 证据：2026-09-11：layers/kda.py 里用 F.normalize 在 fp32 下做，未单列模块。
 
 **layers**
 
-- `kda` — ⬜ 未开始
+- `kda` — 🔶 完成（torch 实现）
+  - 证据：2026-09-11 第二期：ascend_fla/layers/kda.py KimiDeltaAttention，参数名与 fla 逐项对齐（KDA 算子自编译，周边 modules 是 torch —— modules-are-torch-not-kernels）。层级梯度实测：三个形状下输出相对 L2 4.9e-03，全部 17 个参数的梯度在 3.6e-03~2.2e-02，预算 0.1（A_log/dt_bias/f_proj 用 0.25，因为它们的梯度直接由 dg 来）。参考是同一份权重的 CPU 层，只把 KDA 算子换成 fp32 逐 token 递推版。承担了 fla 放在 kernel 里的三件事（q/k 的 l2norm、门控变换、beta sigmoid）。⚠️ 梯度对齐是在 exp(A_log)=1 下测的 —— fla 默认初始化会让算子 fp32 上溢，见 gate-range-beyond-declared。decode 路径未接（fused-recurrent-missing）。
 - `gated_deltanet` — ⬜ 未开始
 
 **models**
@@ -139,7 +145,7 @@ ascriptor pin：`0.1.0.dev1` · library `77619116f9b3` · 支持硬件 a5 · def
 
 ## 缺口
 
-P0 0 项 · P1 11 项 · P2 7 项 · 共 23 项
+P0 0 项 · P1 14 项 · P2 8 项 · 共 29 项
 
 **首个里程碑**：第一期五项已全部有结论，并补齐了同机性能对比：aclnn 编译、runtime 桥、kda_fwd 接线、KDA 本地基线均实测通过；自编译算子在 block_dim=4 下比 torch_npu 组合快 4.43x（kimi_linear_layer）/ 2.38x（long_context T=4096）/ 19.7x（smoke）。过程中修掉两个自己的 bug（bridge-per-call-overhead、op-name-collision-in-process），它们先后让 block_dim 的效果被完全掩盖。当前最大的性能项是 block-dim-ceiling（已升 P1）：扩展性一路线性到契约上限 4，而硬件有 28 cube。第二期的前置障碍仍是 kda-fwd-bwd-dtype-mismatch。
 
@@ -162,18 +168,11 @@ P0 0 项 · P1 11 项 · P2 7 项 · 共 23 项
 
 | 算子族 | P0 | P1 | P2 |
 |---|---|---|---|
-| KDA | — | `kda-fwd-bwd-dtype-mismatch`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`no-tail-path`<br>`block-dim-ceiling` | `npu-builtin-ops-missing`<br>`toy-case-shapes`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`modules-layer-missing`<br>`torch-npu-baseline-missing`<br>`kernel-nd2nz-suboptimal` |
-| GDN | — | `gdn-no-gqa`<br>`layout-not-token-major`<br>`nonzero-initial-state`<br>`d-initial-state-absent`<br>`state-dtype-bf16`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`scale-param-no-slot`<br>`no-tail-path`<br>`block-dim-ceiling` | `npu-builtin-ops-missing`<br>`toy-case-shapes`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`modules-layer-missing`<br>`torch-npu-baseline-missing` |
+| KDA | — | `fused-recurrent-missing`<br>`no-varlen`<br>`no-tail-path`<br>`block-dim-ceiling`<br>`fwd-caches-not-emitted`<br>`qk-l2norm-not-in-kernel`<br>`state-layout-k-first`<br>`gate-range-beyond-declared` | `kda-fwd-bwd-dtype-mismatch`<br>`npu-builtin-ops-missing`<br>`toy-case-shapes`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`torch-npu-baseline-missing`<br>`kernel-nd2nz-suboptimal`<br>`modules-are-torch-not-kernels` |
+| GDN | — | `gdn-no-gqa`<br>`layout-not-token-major`<br>`nonzero-initial-state`<br>`d-initial-state-absent`<br>`state-dtype-bf16`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`scale-param-no-slot`<br>`no-tail-path`<br>`block-dim-ceiling` | `npu-builtin-ops-missing`<br>`toy-case-shapes`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`torch-npu-baseline-missing` |
 | DeltaNet | — | `layout-not-token-major`<br>`nonzero-initial-state`<br>`d-initial-state-absent`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`scale-param-no-slot`<br>`no-tail-path` | `npu-builtin-ops-missing`<br>`toy-case-shapes`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`torch-npu-baseline-missing` |
 
 ### P1
-
-#### `kda-fwd-bwd-dtype-mismatch` — kda 的 fwd 与 bwd 对同名张量声明了不同 dtype
-
-- **类别** abi · **适用于** KDA · **阻塞** `phase 2`
-- **依据** kda_fwd inputs：beta float32、initial_state float32、g_raw float32，final_state 输出 float32。kda_bwd inputs：beta bfloat16、initial_state bfloat16、g bfloat16、dht bfloat16。
-- **影响** autograd.Function 组装时，forward 保存的 FP32 张量必须降到 BF16 才能喂给 backward，这一步有精度损失且不在任何一侧的契约预算内。
-- **建议** 第二期组装 autograd 前先量化这次降精度的影响：同输入下 FP32 保存 vs BF16 保存的梯度差异。若不可接受，需要改 bwd 的 ABI 接受 FP32。不要默默插一个 .to(bfloat16) 了事。
 
 #### `gdn-no-gqa` — gdn_fwd/bwd 无独立 value-head 维度，不支持 GQA 分组
 
@@ -245,7 +244,42 @@ P0 0 项 · P1 11 项 · P2 7 项 · 共 23 项
 - **影响** **扩展性一路线性到声明上限，说明这是声明限制而不是实现限制。** Ascend950PR 物理上有 28 cube / 56 vec，我们只用到 4 —— 按线性外推还有 ~7 倍空间。这让它成为比 kernel-nd2nz-suboptimal 更靠前的优化项：后者是常数因子，前者是可用核数。
 - **建议** 已有答案：是声明限制。下一步是在 ascriptor 侧把 kda_fwd/kda_bwd 的 domain.block_dim 上限抬高并补 cases 覆盖（contract 的 core_ownership 说 gate 按 B*HV*C 切、scores/WY/inverse 按 cube 组切、融合尾部按 B*HV 头对切 —— kimi 形状下 B*HV=32、B*HV*C=512，工作量足够喂满 28 核）。kernel 源码归 ascriptor 仓所有（AGENTS.md §3：只读），改动要走那一侧。本仓的 SUPPORTED_BLOCK_DIM 与 contract 的声明由 tests/test_kda_gating.py 锁在一起，抬高后会同时提醒。
 
+#### `fwd-caches-not-emitted` — kda_bwd 要九个前向检查点，前向 kernel 只直接给出六个
+
+- **类别** abi · **适用于** KDA · **阻塞** `phase 2 性能`, `phase 3`
+- **依据** kda_bwd 的 unit.py validate_inputs 要求 saved 恰好含九项：g_cumsum/w/u/qg/kg/v_new 为 (B,T,HV,128)、Aqk/Akk 为 (B,T,HV,64)、h 为 (B,C,HV,128,128)，全 bf16、token-major。前向 kernel 直接产出的只有 w/u/qg/kg（kda_sub3_wy_kernel）、Aqk（kda_sub2_score_kernel）、Akk（tril_inverse64_v2_strict_bf16_kernel）六项。gate kernel 只写 eg = 2**g_cumsum，不写 cumsum 本身；kda_sub45_fused_kernel 内部算了逐 chunk 状态 h 与 v_new = u - w @ h，但只写出 o 与 final_state。单元自己是用 CPU 参考 build_saved_forward() 造 saved 的，不是用 kernel。
+- **影响** autograd 的前向必须补齐这三项。g_cumsum 可由 log2(eg) 得到（一次 elementwise）；h 与 v_new 只能重跑 chunk 递推 —— 当前在 host 侧用 torch 做（C 次迭代 × 2 次 bmm），**正确但慢**，是反向链的性能瓶颈：它把一个融合 kernel 拆成了 O(C) 次小算子调用。
+- **建议** 按 AGENTS.md §3 在本仓 kernels/ 下建自己的单元：做一个 kda_sub45_fused_kernel 的变体，额外写出 h 与 v_new（两个 GM 输出 + store，内部量已有），再做一个 gate 变体直接写 g_cumsum。改 ascriptor 仓是不允许的。先立正确性（host 侧补齐）再换 kernel —— 不要在九 kernel 反向链没验证通过之前去写新 kernel。
+
+#### `qk-l2norm-not-in-kernel` — fla 的 KDA 在 kernel 内做 q/k 的 L2 归一化、门控变换与 beta sigmoid，ascriptor 的不做
+
+- **类别** abi · **适用于** KDA · **阻塞** —
+- **依据** fla 的 KimiDeltaAttention 调 chunk_kda 时传 use_qk_l2norm_in_kernel=True、use_gate_in_kernel=True、use_beta_sigmoid_in_kernel=True，即三步都在它的 kernel 里：g 的变换是 -exp(A_log) * softplus(g + dt_bias.view(HV,K))，beta 过 sigmoid，q/k 沿头维 L2 归一化。ascriptor 的 kda_fwd/kda_bwd 的 inlet 只收已经变换好的 q/k/g/beta，contract 里没有 A_log / dt_bias 这两个入口。
+- **影响** **门控挡不住这一条** —— 没做归一化的 q/k 在数值上完全合法，算子会照算并给出一个静静地错的结果。这是本仓目前唯一"错了不报错"的语义缺口，因此列 P1。另外这三步的梯度也落在调用方这边，autograd 链要从层级算起。
+- **建议** 当前处置：ascend_fla/layers/kda.py 显式做这三步并在 fp32 下做，ops/kda 的 docstring 与 __init__ 写明"调用方需已做"。直接调算子的人要自己负责。若要彻底消除风险，得在 ascriptor 侧给 kernel 加 A_log/dt_bias 入口与 l2norm —— 那是第四期的事，收益还包括省掉几趟 elementwise 的访存。
+
+#### `state-layout-k-first` — 我们的 state 是 [B,HV,K,V]，fla 的 KDA layer 用 state_v_first=True
+
+- **类别** abi · **适用于** KDA · **阻塞** `phase 3`
+- **依据** ascriptor kda_fwd 的 initial_state / final_state 均为 (B,HV,128,128) 且 K 在前（kernel 内 next_state = state * exp2(g_last)[:,None] + kg^T @ v_new，按 K 维缩放行）。fla 的 KimiDeltaAttention 调 chunk_kda 与 fused_recurrent_kda 时都传 state_v_first=True。
+- **影响** 第三期把本仓的 layer 注入 Kimi-Linear 时，与上游 cache 交接要转置，否则 decode 第一步就会用错的状态起算。K=V=128 让形状相同，**转置错了不会报形状错** —— 又是一个静默失败面。
+- **建议** 第三期在注入层里做转置并加一个显式断言（比如用非对称测试值验证方向）。不要在算子里改布局 —— 算子的布局由 kernel 决定，改它等于改 kernel。
+
+#### `gate-range-beyond-declared` — 真实 KDA 层初始化产生的门控跨度约 94，算子声明域只到 1.92
+
+- **类别** verification · **适用于** KDA · **阻塞** `phase 3`
+- **依据** kda_fwd contract 的 input_generation 声明 g_raw ∈ [-0.03, 0]，即 64 token 的 chunk 内累计跨度 ≤ 1.92；contract 的 cases 里最宽的是 gate_multiplier=1。而 KDA 层按 fla 自己的初始化（A_log = log(U(1,16)) → exp(A_log) ≈ 15.35；dt_bias 为 Mamba inv-softplus → dt ∈ [0.001, 0.096]）给出的 per-token g 最大约 -15.35 × 0.096 ≈ -1.47，64 token 累计约 **-94**，比声明域宽约 50 倍。实测跨度**几乎与输入尺度无关**（输入 scale 0.5→94.04、0.01→92.97），它由那两个参数的初始化决定。钉在 tests/test_kda_layer_npu.py::test_layer_gate_span_exceeds_declared_domain。 | **反向精度对门控深度的依赖已实测**：contract 的 gentle_decay case（gate_multiplier=0.03）下 dk=5.40e-03、dg=6.20e-03，而同形状的 multi_chunk（gate_multiplier=1）下是 dk=9.17e-02、dg=1.65e-01 —— 差一个数量级。这证实了契约给出的成因（bf16 对 log2 累积门控的舍入在深衰减下改变乘性导数），也说明在层的真实门控（比 gate_multiplier=1 再宽约 50 倍）下这项误差只会更大。
+- **影响** ① **算子在真实工作域上没有被验证过。** 契约的 cases 全落在窄域内，我们的前向/反向精度数也都是在窄域测的，不能外推到层级/模型级。② 向量化 CPU 参考 (kda_chunk_vectorized) 在跨度 > 80 时 exp(g_max - g) 会 fp32 上溢，所以**宽域下它不能当 oracle**；层测试因此改用逐 token 递推版。③ fla 用 safe_gate / lower_bound 给门控设界，而我们把这两个开关判为不支持 —— 等于把这个风险留给了调用方。
+- **建议** 第三期模型注入前必须做：① 在宽域（跨度 ~94）下用递推 oracle 重测前向与反向精度，看契约预算在那里是否还成立；② 若不成立，要么推动 ascriptor 侧扩 cases 覆盖宽域，要么实现 lower_bound 式的门控下界（那会改变数学，需显式决策，不能当成数值修补）。不要因为窄域测试全绿就认为算子在真实模型上可用。
+
 ### P2
+
+#### `kda-fwd-bwd-dtype-mismatch` — kda 的 fwd 与 bwd 对同名张量声明了不同 dtype
+
+- **类别** abi · **适用于** KDA · **阻塞** —
+- **依据** kda_fwd inputs：beta float32、initial_state float32、g_raw float32，final_state 输出 float32。kda_bwd inputs：beta bfloat16、initial_state bfloat16、g bfloat16、dht bfloat16。 | 2026-09-11 量化（benchmarks/quantify_bwd_dtype_mismatch.py，CPU fp32 参考 + autograd，四个形状 smoke/multi_chunk/gva/kimi_shaped 结论一致）。把三个效应拆开，基准为全程 fp32：A 保存值走 bf16 往返（bwd kernel 实际看到的输入）：dq/dk/dv/dg 相对 L2 1.4e-03~1.6e-03，dbeta 1.6e-04，dinitial_state 3.3e-04。B 梯度输出舍到 bf16（bwd ABI 的输出精度）：一律 ~1.65e-03。C 两者叠加：2.17e-03~2.37e-03，且 C ≈ √(A²+B²)（1.633²+1.686² → 2.347 vs 实测 2.370）—— 两个效应相互独立，没有病态放大。
+- **影响** **降精度不免费，但与契约已声明的输出精度同量级。** B（输出舍到 bf16）是 bwd ABI 规定的，无论如何都要付；A（保存值降精度）把总误差从 1.65e-03 的地板抬到 2.3e-03，即 ×1.4。没有引入新性质的误差，因此第二期可以按 .to(bfloat16) 组装 autograd，把这个数记在案。注意这是**算子级**相对 L2，按 AGENTS.md §6 的纪律不能外推成任务级精度结论 —— 要声称对训练的影响，得跑任务级实验并拆出"替换实现"与"改精度"两个对照组。
+- **建议** 已量化，不再阻塞第二期。组装 autograd 时照 bwd ABI 降到 bf16，但**显式**做、在 docstring 里写明代价，不要当成无害的类型适配。若后续任务级实验显示不可接受，再回头推动 bwd ABI 接受 FP32（那是 ascriptor 侧的改动）。
 
 #### `npu-builtin-ops-missing` — 内置算子包的覆盖随机器而异：部分 Ascend950PR 机器上 torch_npu 的计算算子不可用
 
@@ -275,13 +309,6 @@ P0 0 项 · P1 11 项 · P2 7 项 · 共 23 项
 - **影响** expand_v != 1.0 的配置不被支持（fla GatedDeltaNetConfig 默认 expand_v=2.0 → head_v 是 head_k 的两倍）。
 - **建议** 与 fixed-kv-128 同样处置：两个真实目标模型都是 head_k == head_v == 128，不去支持非对称维度。门控拒绝并说明。
 
-#### `modules-layer-missing` — modules 层的必需组件缺失
-
-- **类别** coverage · **适用于** KDA / GDN · **阻塞** `phase 2`
-- **依据** fla.layers.kda 只依赖 FusedRMSNormGated 与 ShortConvolution 两个 module（o_norm 用 activation="sigmoid"）；fla.layers.gated_deltanet 多需要一个 RMSNorm。ascriptor 侧有 matrix_normalization 与 gated_approximations 可部分借用，没有 causal_conv1d。
-- **影响** 没有这些，layer 层无法组装，端到端梯度检验做不了。KDA 的依赖面比 GDN 少一个 module。
-- **建议** 第二期按 KDA 的需要做窄切片：先 FusedRMSNormGated(sigmoid) 与 causal_conv1d。causal_conv1d 需新写；norm 可从 matrix_normalization 扩展。第一期可先用 torch 实现占位，但要在矩阵里标明是 torch 而非自有 kernel。
-
 #### `torch-npu-baseline-missing` — 缺少 torch_npu 组合实现作基线与第二 oracle
 
 - **类别** validation · **适用于** 全部 · **阻塞** `phase 1 验收`, `phase 2 性能报告`
@@ -289,9 +316,16 @@ P0 0 项 · P1 11 项 · P2 7 项 · 共 23 项
 - **影响** 没有它就只有一个 oracle（fla naive），也没有性能对照 —— 无法判断"高效率"是否达成。
 - **建议** 第一期与 runtime 桥并行做：reference/ 下用 torch_npu 原生算子拼出同语义 KDA，同时充当基线与第二 oracle。
 
-#### `kernel-nd2nz-suboptimal` — kda_fwd 的 5 个 kernel 里有 15 处 ub_to_l1.nd2nz，ascriptor lint 实测它比 compact-NZ 慢 10 倍
+#### `kernel-nd2nz-suboptimal` — kda 的前后向 kernel 里有一批 ascriptor lint 标出的访存低效点（nd2nz 展开、偶数 block stride）
 
 - **类别** performance · **适用于** KDA · **阻塞** —
-- **依据** 编译 kda_fwd 时 ascriptor lint 在 intra.py(2)、triangular_inverse.py(8)、wy.py(2)、recurrent.py(3) 共 15 处报同一条 warning：ub_to_l1.nd2nz 会展开成多次 MTE3 burst（每个 NZ fractal 列一次），不是单条指令，板上实测比 compact-NZ move 慢 10 倍（D-084）。lint 还给了第二条：staging tile 的自然 block stride 是 tile 行数（天然 16 对齐，正好是 bank 阶梯最差的一档，~8.7 cycle/store vs ~1.1），补一行 padding 让它变奇数；D-226 里两个返工的 kernel 上这步收益 -12.3us / -10.8us（总量 -17.7us / -28.2us），比换 move 本身更大。
-- **影响** 这 15 处在 kernel 源码里，不在本仓。按 D-226 的比例，单 kernel 量级的收益在数十微秒 —— 但要先确认设备侧耗时占比（见 bridge-per-call-overhead），占比低的话改了也看不出来。
+- **依据** 编译 kda_fwd 时 ascriptor lint 在 intra.py(2)、triangular_inverse.py(8)、wy.py(2)、recurrent.py(3) 共 15 处报同一条 warning：ub_to_l1.nd2nz 会展开成多次 MTE3 burst（每个 NZ fractal 列一次），不是单条指令，板上实测比 compact-NZ move 慢 10 倍（D-084）。lint 还给了第二条：staging tile 的自然 block stride 是 tile 行数（天然 16 对齐，正好是 bank 阶梯最差的一档，~8.7 cycle/store vs ~1.1），补一行 padding 让它变奇数；D-226 里两个返工的 kernel 上这步收益 -12.3us / -10.8us（总量 -17.7us / -28.2us），比换 move 本身更大。 | 反向侧同族线索：scan_fused.py:53 的 snapshot_and_cast_state_vf 报"strided block store with an even block stride (64)" —— 连续 datablock 撞同一组 UB bank、store 口串行化，板上实测比奇数 stride 慢 ~2x、在 16 的倍数上慢 ~8x（同一条 D-084）；处置同样是把目标行补 1 让 stride 变奇数（65）。
+- **影响** 这 15 处在 kernel 源码里，不在本仓。按 D-226 的比例，单 kernel 量级的收益在数十微秒 —— 但要先确认设备侧耗时占比（见 bridge-per-call-overhead），占比低的话改了也看不出来。 反向侧的占比尚未测 —— 当前反向的瓶颈在 host 侧补检查点（fwd-caches-not-emitted），要先换掉那一段，kernel 级优化才看得出效果。
 - **建议** 第四期。kernel 源码归 ascriptor 仓所有（AGENTS.md §3：只读），所以这里只登记线索，改动要走 ascriptor 侧。动手前先用 benchmarks/profile_bridge_overhead.py 确认设备侧占比足够大，否则是在优化一个不在关键路径上的东西。
+
+#### `modules-are-torch-not-kernels` — modules 层是 torch 原生算子实现，不是本仓自编译的算子
+
+- **类别** performance · **适用于** KDA · **阻塞** —
+- **依据** ascend_fla/modules/convolution.py 用 F.conv1d + F.silu；fused_norm_gated.py 用 rsqrt/mean/sigmoid 两趟完成（名字里的 Fused 只为与 fla 对齐，并未融合）。layers/kda.py 里的投影、l2norm、softplus 门控、sigmoid 也都是 torch 算子。
+- **影响** ① 这些步骤在内置算子包不全的机器上不可用（需要 conv1d/silu/matmul），而自编译的 kda 算子本身不受影响 —— 所以层级验证比算子级验证对机器挑剔。② 层级耗时里有一部分不归本仓的"高效率算子"管，报层级性能数时必须拆开说，否则会把 torch 的开销算进算子账上。
+- **建议** 第四期按测得的占比决定做哪些。归一化与门控是 elementwise，融合收益直接；短卷积是 depthwise，值得单独做一个 kernel。动手前先 profile 层级耗时拆分，别重复 bridge-per-call-overhead 那次"先推断后测量"的错。

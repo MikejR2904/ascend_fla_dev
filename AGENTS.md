@@ -138,7 +138,15 @@ CANN 9.1.0 的机器**只有** 910 系列。这是算子包安装差异，不是
   极其隐蔽。判类型一律看生成的 `aclnn_*.h`，不要照搬 ascriptor 的 `SCALAR_C`
   （那是 kernel 侧的 C 类型）。
 - ACL dtype 枚举：f32=0、f16=1、i32=3、i64=9、bool=12、bf16=27；`ACL_FORMAT_ND=2`。
+- aclnn 的 **HostSpec 标量列表包含 GM 形状里出现的全部符号维**，不只是 kernel 签名里
+  显式声明的标量。`kda_bwd` 的九个 kernel 都因此多一个 `T`；`kda_fwd` 的五个恰好把符号
+  都显式声明了，所以没踩到。**标量名一律以 `CompiledKernel.scalar_names` 为准，不要从
+  kernel 签名推断** —— 漏传会报"缺少参数"（这个还算好查），多传或错序则不一定报错。
 - 必须让 `ASCEND_CUSTOM_OPP_PATH` 指向 vendor 树，CANN 才找得到算子的 JSON 配置。
+  **而且它只在首次算子解析时被读一次** —— 之后追加的路径 CANN 看不见，调用时报
+  `rc=161001`，plog 里说的却是"SoC version ascend950 verification failed / 算子包未安装"。
+  **这个报错是误导的**：构建产物完好也会这样。所以一个进程要用到的 kernel 必须在第一次
+  执行之前全部编译完（`ascend_fla.ops.kda.prepare()`）。
 - `ascriptor` 的 `a5` → `950` profile（32 cube / 64 vec），而 Ascend950PR 物理上
   只有 **28 cube / 56 vec**。`block_dim` 超过物理核数会在硬件 barrier 上死锁。
 

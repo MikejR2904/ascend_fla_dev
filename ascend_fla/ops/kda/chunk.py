@@ -206,50 +206,61 @@ def _from_bhcld(x: torch.Tensor, *, on_cpu: bool) -> torch.Tensor:
     return out.to(dev) if on_cpu else out
 
 
-def chunk_kda_fwd(
-    q: torch.Tensor,
-    k: torch.Tensor,
-    v: torch.Tensor,
-    g: torch.Tensor,
-    beta: torch.Tensor,
-    scale: float | None = None,
-    initial_state: torch.Tensor | None = None,
-    output_final_state: bool = False,
-    *,
-    device: str = "a5",
-    block_dim: int = 1,
-    layout_device: str = "auto",
-) -> tuple[torch.Tensor, torch.Tensor | None]:
-    """KDA 分块前向。
+#: chunk 内门控跨度的上限。实测：跨度 ≤67 时前向完全正常（相对 L2 稳定在 2.9e-03），
+#: ≥89 时输出 NaN/Inf。分界正是 ``ln(FLT_MAX) ≈ 88.72`` —— kernel 把成对衰减分解成
+#: ``exp(g−m)·exp(m−g)``，后一项在跨度超过它时 fp32 上溢。取 80 留约 10% 余量，也与
+#: ``reference.kda.kda_chunk_vectorized`` 的上限一致，好让两边对同一组输入都可用。
+MAX_GATE_SPAN = 80.0
 
-    Args:
-        q, k: ``[B, T, H, 128]`` bfloat16。
-        v: ``[B, T, HV, 128]`` bfloat16，``HV % H == 0``。
-        g: ``[B, T, HV, 128]`` float32，log 空间的 per-dimension 衰减**增量**
-            （kernel 内部做 chunk 内 cumsum）。
-        beta: ``[B, T, HV]`` float32。
-        scale: q 的缩放，默认 ``128 ** -0.5``。kernel 有 f32 标量入口，不需要 host 预乘。
-        initial_state: ``[B, HV, 128, 128]`` float32，可选。
-        output_final_state: 是否返回末态。
-        device: ascriptor 设备名。
-        block_dim: 启动核组数，只接受 ``SUPPORTED_BLOCK_DIM``。kernel 用
-            ``GetVecIdx()/GetVecNum()`` 自行切分，而 ``GetVecNum() == 2 * block_dim``，
-            所以这个值直接决定并行度 —— ``block_dim=1`` 只用到 2 个向量核。
-            契约只覆盖到 4；Ascend950PR 物理上有 28 cube / 56 vec，但超过物理核数
-            会在硬件 barrier 死锁。
-        layout_device: token-major ↔ BHCLD 的重排在哪做。``"npu"`` 最快但需要
-            内置 copy 算子；``"cpu"`` 绕主机往返（数值相同，计时不可用于性能结论）；
-            ``"auto"``（默认）探测一次后自行选择。
 
-    Returns:
-        ``(o, final_state)``，``o`` 为 ``[B, T, HV, 128]`` bfloat16；
-        ``final_state`` 为 ``[B, HV, 128, 128]`` float32 或 ``None``。
+def _gate_span(g: torch.Tensor, c: int, *, on_cpu: bool) -> float:
+    """g 在 chunk 内累计后的最大跨度（``max(cumsum) - min(cumsum)``）。
+
+    必须按 **chunk 内**算 —— kernel 的 cumsum 每 64 个 token 重置，跨 chunk 的累计不参与
+    那个 ``exp(m−g)``。``on_cpu=True`` 时绕主机算（缺内置算子的机器上 cumsum 不可用）。
     """
-    b, h, hv, c = _check(q, k, v, g, beta, initial_state, block_dim)
+    src = g.cpu() if on_cpu else g
+    b, t, hv, kd = src.shape
+    cum = src.float().view(b, c, L_PER_CHUNK, hv, kd).cumsum(dim=2)
+    return (cum.amax(dim=2) - cum.amin(dim=2)).max().item()
+
+
+def _check_gate_range(g: torch.Tensor, c: int, *, on_cpu: bool) -> None:
+    """门控跨度超限就报错，绝不让 kernel 静默吐 NaN（AGENTS.md §7）。
+
+    ⚠️ **这条限制比 contract 声明的输入域宽得多，但比真实 KDA 层窄。** contract 的
+    ``input_generation`` 是 ``g_raw ∈ [-0.03, 0]``（64 token 跨度 ≤1.92）；而 fla 自己的
+    KDA 初始化（``A_log = log(U(1,16))``、``dt`` 最大 0.1）给出的跨度约 **94**，越过
+    :data:`MAX_GATE_SPAN`。也就是说**按 fla 的默认初始化，这个算子直接不可用** ——
+    见 ``docs/matrix/gaps.json`` 的 ``gate-range-beyond-declared``。
+    """
+    span = _gate_span(g, c, on_cpu=on_cpu)
+    if span > MAX_GATE_SPAN:
+        raise ValueError(
+            f"chunk 内门控跨度 {span:.1f} 超过 {MAX_GATE_SPAN}，kernel 会在 fp32 上溢并"
+            f"输出 NaN（实测分界 ln(FLT_MAX)≈88.7）。g 是 log 空间的 per-token 衰减增量，"
+            f"要减小它的量级：KDA 层里即减小 exp(A_log) 或 dt。"
+            f"确知安全时可传 check_gate_range=False 跳过本检查。"
+            f"详见 docs/matrix/gaps.json 的 gate-range-beyond-declared"
+        )
+
+
+def _resolve_layout(layout_device: str) -> bool:
+    """``layout_device`` → 是否把重排绕到 CPU 上做。"""
     if layout_device not in ("auto", "npu", "cpu"):
         raise ValueError(f"layout_device 只能是 auto/npu/cpu，收到 {layout_device!r}")
-    on_cpu = (layout_device == "cpu") or (layout_device == "auto" and not _npu_supports_d2d_copy())
-    scale = HEAD_DIM ** -0.5 if scale is None else float(scale)
+    return (layout_device == "cpu") or (layout_device == "auto" and not _npu_supports_d2d_copy())
+
+
+def _run_chain(q, k, v, g, beta, scale, initial_state, *, device, block_dim,
+               on_cpu, b, h, hv, c) -> dict[str, torch.Tensor]:
+    """跑完五个前向 kernel，返回**全部** BHCLD 中间量。
+
+    ``chunk_kda_fwd`` 只要其中的 ``o`` 与 ``final_state``；``chunk_kda_fwd_with_caches``
+    还要 ``eg`` / ``Aqk`` / ``Akk`` / ``w`` / ``u`` / ``qg`` / ``kg`` 去拼 kda_bwd 需要的
+    九个前向检查点。抽成一处是为了两条路径**共用同一次 kernel 调用**，不会因为实现
+    漂移而给出不同的中间量。
+    """
     dev = q.device
     compiled = _compiled_chain(device, block_dim)
 
@@ -303,5 +314,174 @@ def chunk_kda_fwd(
         {"o": o_c, "final_state": final_state},
     )
 
-    o = _from_bhcld(o_c, on_cpu=on_cpu)
-    return o, (final_state if output_final_state else None)
+    return {"eg": eg, "Aqk": aqk, "strict": strict, "Akk": akk, "w": w, "u": u,
+            "qg": qg, "kg": kg, "o": o_c, "final_state": final_state,
+            "initial_state": state0}
+
+
+def chunk_kda_fwd(
+    q: torch.Tensor,
+    k: torch.Tensor,
+    v: torch.Tensor,
+    g: torch.Tensor,
+    beta: torch.Tensor,
+    scale: float | None = None,
+    initial_state: torch.Tensor | None = None,
+    output_final_state: bool = False,
+    *,
+    device: str = "a5",
+    block_dim: int = 1,
+    layout_device: str = "auto",
+    check_gate_range: bool = True,
+) -> tuple[torch.Tensor, torch.Tensor | None]:
+    """KDA 分块前向。
+
+    Args:
+        q, k: ``[B, T, H, 128]`` bfloat16。
+        v: ``[B, T, HV, 128]`` bfloat16，``HV % H == 0``。
+        g: ``[B, T, HV, 128]`` float32，log 空间的 per-dimension 衰减**增量**
+            （kernel 内部做 chunk 内 cumsum）。
+        beta: ``[B, T, HV]`` float32。
+        scale: q 的缩放，默认 ``128 ** -0.5``。kernel 有 f32 标量入口，不需要 host 预乘。
+        initial_state: ``[B, HV, 128, 128]`` float32，可选。
+        output_final_state: 是否返回末态。
+        device: ascriptor 设备名。
+        block_dim: 启动核组数，只接受 ``SUPPORTED_BLOCK_DIM``。kernel 用
+            ``GetVecIdx()/GetVecNum()`` 自行切分，而 ``GetVecNum() == 2 * block_dim``，
+            所以这个值直接决定并行度 —— ``block_dim=1`` 只用到 2 个向量核。
+            契约只覆盖到 4；Ascend950PR 物理上有 28 cube / 56 vec，但超过物理核数
+            会在硬件 barrier 死锁。
+        layout_device: token-major ↔ BHCLD 的重排在哪做。``"npu"`` 最快但需要
+            内置 copy 算子；``"cpu"`` 绕主机往返（数值相同，计时不可用于性能结论）；
+            ``"auto"``（默认）探测一次后自行选择。
+        check_gate_range: 是否校验 chunk 内门控跨度不超过 :data:`MAX_GATE_SPAN`。
+            默认开 —— 超限时 kernel 会静默吐 NaN，那比报错糟得多。代价是对 ``g``
+            做一次 cumsum + 两次规约。
+
+    Returns:
+        ``(o, final_state)``，``o`` 为 ``[B, T, HV, 128]`` bfloat16；
+        ``final_state`` 为 ``[B, HV, 128, 128]`` float32 或 ``None``。
+    """
+    b, h, hv, c = _check(q, k, v, g, beta, initial_state, block_dim)
+    on_cpu = _resolve_layout(layout_device)
+    if check_gate_range:
+        _check_gate_range(g, c, on_cpu=on_cpu)
+    scale = HEAD_DIM ** -0.5 if scale is None else float(scale)
+    chain = _run_chain(q, k, v, g, beta, scale, initial_state, device=device,
+                       block_dim=block_dim, on_cpu=on_cpu, b=b, h=h, hv=hv, c=c)
+    o = _from_bhcld(chain["o"], on_cpu=on_cpu)
+    return o, (chain["final_state"] if output_final_state else None)
+
+
+#: ``kda_bwd`` 声明的九个前向检查点。顺序无关，但**名字和形状必须完全一致** ——
+#: 它的 ``validate_inputs`` 会逐个核对，多一个少一个都报错。
+BWD_CACHE_NAMES = ("g_cumsum", "Aqk", "Akk", "w", "u", "qg", "kg", "v_new", "h")
+
+
+def _scan_states(w, u, kg, eg, state0, *, b, hv, c):
+    """逐 chunk 递推出 ``h``（chunk 起始状态）与 ``v_new``。
+
+    ``kda_sub45_fused_kernel`` 内部算的就是这两个量，但它只写出 ``o`` 与
+    ``final_state`` —— 见 `docs/matrix/gaps.json` 的 ``fwd-caches-not-emitted``。
+    这里在 host 侧用 torch 复算一遍，**正确但慢**（C 次迭代 × 2 次 bmm，全是
+    torch_npu 的小算子），只为先把反向链的正确性立住。
+
+    递推（与 kda_bwd 的 ref/forward.py 逐行对应，fp32 累加、存储时降到 bf16）::
+
+        h[c]      = state
+        v_new[c]  = u[c] - w[c] @ state
+        state     = state * exp2(g_last[c])[:, None] + kg[c]^T @ v_new[c]
+
+    其中 ``exp2(g_last[c])`` 就是 ``eg`` 在该 chunk 末行的值（``eg == 2**g_cumsum``）。
+
+    Returns:
+        ``(h, v_new)``：``h`` 为 ``[B,C,HV,128,128]``、``v_new`` 为 BHCLD 的
+        ``[B,HV,C,64,128]``，均 bfloat16。
+    """
+    state = state0.float()
+    h_chunks, v_new_chunks = [], []
+    for ci in range(c):
+        h_chunks.append(state)
+        wc = w[:, :, ci].float()                       # [B,HV,64,128]
+        vn = u[:, :, ci].float() - wc @ state          # [B,HV,64,128]
+        v_new_chunks.append(vn)
+        g_last = eg[:, :, ci, L_PER_CHUNK - 1, :]      # [B,HV,128] = exp2(g_cumsum 末行)
+        state = state * g_last[..., None] + kg[:, :, ci].float().transpose(-1, -2) @ vn
+    h = torch.stack(h_chunks, dim=1).bfloat16()        # [B,C,HV,128,128]
+    v_new = torch.stack(v_new_chunks, dim=2).bfloat16()  # [B,HV,C,64,128]
+    return h, v_new
+
+
+def chunk_kda_fwd_with_caches(
+    q: torch.Tensor,
+    k: torch.Tensor,
+    v: torch.Tensor,
+    g: torch.Tensor,
+    beta: torch.Tensor,
+    scale: float | None = None,
+    initial_state: torch.Tensor | None = None,
+    *,
+    device: str = "a5",
+    block_dim: int = 1,
+    layout_device: str = "auto",
+    check_gate_range: bool = True,
+) -> tuple[torch.Tensor, torch.Tensor, dict[str, torch.Tensor]]:
+    """前向，并额外产出 ``kda_bwd`` 需要的九个检查点。
+
+    与 :func:`chunk_kda_fwd` **共用同一次 kernel 调用**（都走 ``_run_chain``），所以
+    ``o`` 与 ``final_state`` 逐位相同。
+
+    九个检查点里六个直接来自前向 kernel（``Aqk`` / ``Akk`` / ``w`` / ``u`` / ``qg`` /
+    ``kg``），另外三个要补：
+
+    * ``g_cumsum = log2(eg)`` —— gate kernel 只写出 ``eg = 2**g_cumsum``，不写 cumsum 本身。
+    * ``h`` / ``v_new`` —— 融合 recurrent kernel 内部有，但不写出（见
+      :func:`_scan_states`）。
+
+    **这三项都是 host 侧补的，是当前反向链的性能瓶颈**，缺口记在
+    ``docs/matrix/gaps.json`` 的 ``fwd-caches-not-emitted``。
+
+    本函数**会顺便把反向链编译好**（首次调用时多花一次编译时间）。这不是顺手而为：
+    CANN 只在首次算子解析时读 ``ASCEND_CUSTOM_OPP_PATH``，反向的 vendor 树若在前向
+    执行之后才注册就解析不到（``rc=161001``）。见 ``runtime/binding.py`` 的
+    ``register_custom_opp_path``。
+
+    Returns:
+        ``(o, final_state, caches)``。``caches`` 的键正是 :data:`BWD_CACHE_NAMES`，
+        全部 bfloat16、token-major（``h`` 为 ``[B,C,HV,128,128]``），可直接喂 ``kda_bwd``。
+    """
+    b, h_q, hv, c = _check(q, k, v, g, beta, initial_state, block_dim)
+    # 反向链要在**首次 aclnn 调用之前**注册完 vendor 树，否则它的算子解析不到
+    # （见 runtime/binding.py 的 register_custom_opp_path）。要缓存的唯一理由就是
+    # 接着跑反向，所以在这里一并编译好。编译有两级缓存，重复调用不花钱。
+    from .chunk_bwd import _compiled_chain as _bwd_chain
+
+    _bwd_chain(device, block_dim)
+    on_cpu = _resolve_layout(layout_device)
+    if check_gate_range:
+        _check_gate_range(g, c, on_cpu=on_cpu)
+    scale = HEAD_DIM ** -0.5 if scale is None else float(scale)
+    chain = _run_chain(q, k, v, g, beta, scale, initial_state, device=device,
+                       block_dim=block_dim, on_cpu=on_cpu, b=b, h=h_q, hv=hv, c=c)
+
+    h_states, v_new = _scan_states(chain["w"], chain["u"], chain["kg"], chain["eg"],
+                                   chain["initial_state"], b=b, hv=hv, c=c)
+    tok = lambda x: _from_bhcld(x, on_cpu=on_cpu).bfloat16()  # noqa: E731
+    caches = {
+        # eg 是 f32 且在声明的 gate 区间内恒 > 0，log2 不会碰到非正数；
+        # bwd 的 g_cumsum 本身就是 bf16，所以这一步的精度损失由它的 ABI 吸收。
+        "g_cumsum": tok(chain["eg"].log2()),
+        "Aqk": tok(chain["Aqk"]),
+        "Akk": tok(chain["Akk"]),
+        "w": tok(chain["w"]),
+        "u": tok(chain["u"]),
+        "qg": tok(chain["qg"]),
+        "kg": tok(chain["kg"]),
+        "v_new": tok(v_new),
+        "h": h_states,
+    }
+    missing = set(BWD_CACHE_NAMES) ^ set(caches)
+    if missing:
+        raise RuntimeError(f"检查点名字与 kda_bwd 的声明不符，差异 {sorted(missing)}")
+    o = _from_bhcld(chain["o"], on_cpu=on_cpu)
+    return o, chain["final_state"], caches

@@ -20,7 +20,11 @@ OUT = MATRIX / "README.md"
 HEADER = "<!-- 由 tools/gen_matrix.py 生成，请勿手改。改 docs/matrix/*.json 后重新运行。 -->"
 
 MARK = {"match": "✅", "passed": "✅", "gap": "❌", "failed": "❌", "untested": "⬜", "partial": "🟡"}
-STATUS = {"not-started": "⬜ 未开始", "in-progress": "🟡 进行中", "done": "✅ 完成", "blocked": "❌ 受阻"}
+STATUS = {"not-started": "⬜ 未开始", "in-progress": "🟡 进行中", "done": "✅ 完成",
+          # done-torch：功能完成，但实现是 torch 原生算子而非自编译 kernel。
+          # 单列一档是为了不让"能跑"冒充"高效率算子"——见 gaps.json 的
+          # modules-are-torch-not-kernels。
+          "done-torch": "🔶 完成（torch 实现）", "blocked": "❌ 受阻"}
 
 
 def load(name: str) -> dict:
@@ -171,12 +175,16 @@ def ops_section(ops: dict) -> list[str]:
 
     stack = ops["stack_layers"]
     out += ["### 全链路三层", "", f"> {stack['note']}", ""]
+    if sn := stack.get("status_note"):
+        out += [f"> {sn}", ""]
     for layer in ("modules", "layers", "models"):
         out += [f"**{layer}**", ""]
         for item in stack[layer]:
             extra = item.get("ascriptor_asset") or item.get("strategy") or ""
             extra = f" · {extra}" if extra else ""
             out.append(f"- `{item['id']}` — {STATUS.get(item['our_status'], item['our_status'])}{extra}")
+            if ev := item.get("our_evidence"):
+                out.append(f"  - 证据：{ev}")
         out.append("")
     return out
 

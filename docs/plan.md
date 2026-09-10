@@ -143,8 +143,8 @@ fla 的模型定义，只把我们的 layer 替换进去 —— 规格自动跟�
 | 期 | 内容 | 验收 |
 |---|---|---|
 | **0** ✅ | 形状清单反推 + 缺口表 + 矩阵 schema | 已完成：`docs/matrix/` 三份 json，19 项缺口显式列出 |
-| **1** | ① aclnn 编译 ✅ ② runtime 桥 ✅ ③ `kda_fwd` 接线 ✅ ④ KDA 本地基线 ✅ ⑤ torch_npu 基线 ❌ 受阻 | 见下「第一期实测结果」 |
-| **2** | `kda_bwd` + autograd + KDA layer（含 2 modules） | layer 级梯度端到端对齐；首版性能数 vs torch_npu 组合版 |
+| **1** ✅ | ① aclnn 编译 ✅ ② runtime 桥 ✅ ③ `kda_fwd` 接线 ✅ ④ KDA 本地基线 ✅ ⑤ torch_npu 基线 ✅ | 见下「第一期实测结果」。自编译算子在 bd=4 下比 torch_npu 组合快 2.4~4.4x |
+| **2** 进行中 | `kda_bwd`（九 kernel）+ 九个前向检查点 + autograd + KDA layer（含 2 modules） | layer 级梯度端到端对齐；首版性能数 vs torch_npu 组合版 |
 | **3** | model 注入（Kimi-Linear）+ KDA `fused_recurrent`(decode) + 矩阵 CI 生成 | 端到端跑通一个模型；chunk↔recurrent 互验通过 |
 | **4** | GDN 扩族（含 GQA、token-major 布局、非零初始 state）+ DeltaNet + 性能迭代 | Qwen3-Next 可用；兑现"高效率算子" |
 
@@ -156,15 +156,24 @@ fla 的模型定义，只把我们的 layer 替换进去 —— 规格自动跟�
 | ② runtime 桥 | ✅ `runtime/{binding,compile}.py`。ctypes + `aclCreateTensor` 直吃 NPU `data_ptr`，零拷贝。单 kernel 与 ascriptor harness 路径**逐位相同**（`max_abs_diff=0`） |
 | ③ `kda_fwd` 接线 | ✅ 五 kernel 串联。单 chunk / 多 chunk / GVA(HV=2·H) 三形状的 `o` 相对 L2 3.29e-03~3.38e-03、`final_state` 1.94e-03~2.93e-03，均在 contract 预算 0.05 内 |
 | ④ KDA 本地基线 | ✅ `kda_fwd` reference+sim（各 4 case）、`kda_bwd` reference+sim（各 5 case）全 passed |
-| ⑤ torch_npu 基线 | ❌ 受阻于 `npu-builtin-ops-missing`：CANN 9.1.0 的内置算子包不覆盖 Ascend950PR，torch_npu 的计算算子全不可用 |
+| ⑤ torch_npu 基线 | ✅ 换到一台 opp 带 `ascend950` 的机器（CANN 9.2.0）后跑通。原先判定的"SoC 不支持"其实是**算子包安装差异** |
 
-两个值得记住的坑（细节见 `AGENTS.md` §5）：
+四个值得记住的坑（细节见 `AGENTS.md` §5 与 §6）：
 
 1. **`aclCreateTensor` 在 `libnnopbase.so`**，不在 `libascendcl.so`。
 2. **aclnn 的浮点 attr 是 `double` 而不是 `float`。** 按 `c_float` 传 4 字节，被调方从
    8 字节槽里读垃圾值，表现为 `scale` 近 0 —— 于是**只有用到 scale 的输出归零、不用的
    输出照常正确**。这个 bug 一开始被误判成 kernel 或 dtype 问题；定位靠的是拿同一个
    kernel 对比 harness 路径做单点二分。判 attr 类型一律看生成的 `aclnn_*.h`。
+3. **缓存键不能比缓存贵。** `compile_kernel` 的签名要 `inspect.getsource` + sha256，
+   每 kernel ~2ms；`kda_fwd` 一次前向查 5 个，于是"算缓存键"吃掉了端到端耗时的 **95%**
+   （设备侧只占 2.3%）。加备忘后 10.119→4.930ms。
+4. **一个算子名，一个进程，一份 build。** `ASCEND_CUSTOM_OPP_PATH` 按算子名查、第一个
+   命中的胜出、每进程只解析一次，第二份 build 被**静默**忽略。这让同进程的 `block_dim`
+   扫描全都执行了 bd=1 的二进制，四个耗时完全相同 —— 我据此写过"block_dim 无效"的错误
+   结论。分进程后 bd=4 比 bd=1 快 3.9x。
+
+这两条都是"先有推断、后看数据"的产物，已写成 `AGENTS.md` §6 的性能测量铁律。
 
 ## 6. 性能基线
 

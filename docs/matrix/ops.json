@@ -312,8 +312,9 @@
         "wiring": "done",
         "binding": "done",
         "accuracy_vs_oracle": "done",
-        "perf_vs_baseline": "blocked",
-        "note": "ascend_fla/ops/kda/chunk.py 串联五个 kernel，经 runtime 桥进程内调用。2026-09-11 实测：单 chunk / 多 chunk / GVA(HV=2·H) 三个形状的 o 相对 L2 3.29e-03 ~ 3.38e-03、final_state 1.94e-03 ~ 2.93e-03，均在 contract 预算 0.05 内；逐 kernel 与 ascriptor harness 路径比对为逐位相同（max_abs_diff=0）。性能对比受 npu-builtin-ops-missing 阻塞。"
+        "perf_vs_baseline": "done",
+        "caches_for_backward": "done",
+        "evidence": "前向 relL2 3.29e-03~3.38e-03（预算 0.05）；bd=4 下比 torch_npu 组合快 2.38x~19.7x。九个反向检查点由 chunk_kda_fwd_with_caches 产出，逐个对过 kda_bwd 单元的 build_saved_forward，误差 6e-05~2.9e-03（tests/test_kda_caches_npu.py）。"
       }
     },
     {
@@ -417,10 +418,12 @@
         "evidence_ours": "2026-09-11 本仓在 238 上补跑：reference(5 cases) 与 sim(5 cases) 均 passed。此前这两个 stage 在上游 contract 里是 untested。"
       },
       "our_status": {
-        "wiring": "not-started",
-        "binding": "not-started",
-        "accuracy_vs_oracle": "not-started",
-        "perf_vs_baseline": "not-started"
+        "wiring": "done",
+        "binding": "done",
+        "accuracy_vs_oracle": "done",
+        "perf_vs_baseline": "not-started",
+        "evidence": "九个 kernel 经 runtime 桥串起（ops/kda/chunk_bwd.py），对 kda_bwd 单元自己的 ref.oracle 比对，预算取 contract.json 的 comparison（默认 0.05，dk 0.15，dg 0.25）。contract 的五个 case 全通过（含 block_dim=2 与 3，每个 case 一个进程）：\n  single_chunk       dq=1.28e-02 dk=7.33e-02 dv=3.09e-03 dbeta=3.41e-03 dg=1.09e-01 dh0=2.98e-03\n  multi_chunk        dq=2.24e-02 dk=9.17e-02 dv=3.50e-03 dbeta=3.34e-03 dg=1.65e-01 dh0=2.59e-03\n  grouped_heads      dq=2.15e-02 dk=9.30e-02 dv=3.31e-03 dbeta=9.19e-04 dg=1.44e-01 dh0=2.79e-03\n  gentle_decay       dq=3.67e-03 dk=5.40e-03 dv=3.82e-03 dbeta=3.85e-03 dg=6.20e-03 dh0=5.16e-03\n  grouped_idle_cores dq=1.44e-02 dk=8.69e-02 dv=2.93e-03 dbeta=6.48e-03 dg=1.56e-01 dh0=2.54e-03\ngentle_decay（门控 ×0.03）的 dk/dg 比同形状的 multi_chunk 好一个数量级，证实了契约给出的成因：bf16 对 log2 累积门控的舍入在深衰减下改变乘性导数。",
+        "note": "性能未测：当前瓶颈不在反向 kernel，而在 host 侧补三个前向检查点（fwd-caches-not-emitted）。先换掉那一段再测才有意义。"
       }
     },
     {
@@ -555,7 +558,8 @@
           "GatedDeltaNet"
         ],
         "ascriptor_asset": "none — 需新写",
-        "our_status": "not-started"
+        "our_status": "done-torch",
+        "our_evidence": "2026-09-11 第二期：ascend_fla/modules/convolution.py ShortConvolution；tests/test_modules.py 纯 CPU 11 项通过（含因果性、归一化与门控的先后顺序、cache 分段与整段一致性等判别性检查）。"
       },
       {
         "id": "fused_rms_norm_gated",
@@ -566,7 +570,8 @@
         ],
         "ascriptor_asset": "partial — matrix_normalization 可借",
         "variant_note": "KDA 用 activation=\"sigmoid\"，GatedDeltaNet 用默认值 —— 两者不是同一配置。",
-        "our_status": "not-started"
+        "our_status": "done-torch",
+        "our_evidence": "2026-09-11 第二期：ascend_fla/modules/fused_norm_gated.py FusedRMSNormGated；tests/test_modules.py 纯 CPU 11 项通过（含因果性、归一化与门控的先后顺序、cache 分段与整段一致性等判别性检查）。"
       },
       {
         "id": "rms_norm",
@@ -582,10 +587,12 @@
         "id": "l2norm",
         "fla_source": "fla.modules.l2norm",
         "needed_by": [
-          "GatedDeltaNet(use_qk_l2norm_in_kernel)"
+          "GatedDeltaNet(use_qk_l2norm_in_kernel)",
+          "KDA（kernel 不做，layer 必须做 —— 见 qk-l2norm-not-in-kernel）"
         ],
         "ascriptor_asset": "matrix_normalization.row_l2",
-        "our_status": "not-started"
+        "our_status": "done-torch",
+        "our_evidence": "2026-09-11：layers/kda.py 里用 F.normalize 在 fp32 下做，未单列模块。"
       }
     ],
     "layers": [
@@ -607,7 +614,8 @@
           "other": "q/k/v_proj + f_proj(低秩两层 Linear) + b_proj + g_proj(两层 Linear) + o_proj；A_log[HV] 与 dt_bias 为 per value-head（原生支持 GVA）"
         },
         "gate_formula": "g = -exp(A_log) * softplus(f_proj(x) + dt_bias)",
-        "our_status": "not-started"
+        "our_status": "done-torch",
+        "our_evidence": "2026-09-11 第二期：ascend_fla/layers/kda.py KimiDeltaAttention，参数名与 fla 逐项对齐（KDA 算子自编译，周边 modules 是 torch —— modules-are-torch-not-kernels）。层级梯度实测：三个形状下输出相对 L2 4.9e-03，全部 17 个参数的梯度在 3.6e-03~2.2e-02，预算 0.1（A_log/dt_bias/f_proj 用 0.25，因为它们的梯度直接由 dg 来）。参考是同一份权重的 CPU 层，只把 KDA 算子换成 fp32 逐 token 递推版。承担了 fla 放在 kernel 里的三件事（q/k 的 l2norm、门控变换、beta sigmoid）。⚠️ 梯度对齐是在 exp(A_log)=1 下测的 —— fla 默认初始化会让算子 fp32 上溢，见 gate-range-beyond-declared。decode 路径未接（fused-recurrent-missing）。"
       },
       {
         "id": "gated_deltanet",
@@ -646,7 +654,8 @@
         ],
         "our_status": "not-started"
       }
-    ]
+    ],
+    "status_note": "``done-torch`` 表示功能完成但实现是 torch 原生算子拼的，不是本仓自编译的 kernel —— 见 gaps.json 的 modules-are-torch-not-kernels。``done`` 只给自编译算子。"
   },
   "our_runtime_bridge": {
     "status": "working",
