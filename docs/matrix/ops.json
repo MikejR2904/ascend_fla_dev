@@ -1,36 +1,49 @@
 {
   "schema": "ascend_fla.op-support/1",
-  "recorded_at": "2026-09-10",
+  "recorded_at": "2026-09-11",
   "produced_by": "phase 0, read from ascriptor kernels contracts + catalog",
   "note": "算子资产与支持状态。ascriptor 侧的事实（ABI、定尺域、验证状态）以 contract.json 为所有者，这里只存决策所需的摘要并指向来源。our_status 是本仓的接线进度，由我们自己维护。",
-
   "ascriptor_pin": {
     "workspace": "$ASCRIPTOR_WORKSPACE (默认 ../ascriptor)",
     "library_commit": "77619116f9b3b2a91e7fa01d6161c257a883ae68",
     "wheel_sha256": "475d3bc3eea2a2c69e1eb9de5cce73e7936a3fbd4edcc6a7f306f61943cc5205",
     "version": "0.1.0.dev1",
-    "qualified_host": {"python": "3.10.20", "torch": "2.9.1+cpu", "numpy": "2.2.6"},
+    "qualified_host": {
+      "python": "3.10.20",
+      "torch": "2.9.1+cpu",
+      "numpy": "2.2.6"
+    },
     "release_scope": {
-      "supported_hardware": ["a5"],
-      "deferred_hardware": ["a2", "a3"],
-      "unqualified_hardware": ["a5pr"],
+      "supported_hardware": [
+        "a5"
+      ],
+      "deferred_hardware": [
+        "a2",
+        "a3"
+      ],
+      "unqualified_hardware": [
+        "a5pr"
+      ],
       "decision": "D-250",
       "note": "A2/A3 于 2026-09-06 deferred，另有未解决的 split-K FP32 cube 数值缺陷。"
     },
     "action": "升级 pin 前先看 ascriptor agent/compatibility.json，并重跑本仓全部精度回归。"
   },
-
   "stage_vocabulary": {
     "reference": "CPU 独立参考自检（不导入 DSL / 模拟器 / CANN）",
     "sim": "功能模拟器",
     "pipesim": "lowered 事件与 hazard 模拟",
     "emit": "源码发射",
-    "compile": "本地 CANN 自定义算子编译 —— 本仓 runtime 桥依赖的就是这条路",
+    "compile": "`ascriptor compile` CLI 的纯源码发射+编译（不执行）—— 注意这**不是** aclnn launcher",
     "cannsim": "cannsim 录制执行",
-    "board": "真机执行（经 SSH 推送 + 远端编译运行）",
-    "statuses": ["passed", "untested", "gap", "failed"]
+    "board": "真机执行。unit runner 的 LAUNCHER_STAGES 把 board / aclnn / pypto 三个 launcher 都记为这个 stage，所以 board: passed 并不区分是 SSH 远端编译还是本地 aclnn 编译",
+    "statuses": [
+      "passed",
+      "untested",
+      "gap",
+      "failed"
+    ]
   },
-
   "linear_attention_ops": [
     {
       "id": "a5.gdn_fwd",
@@ -39,23 +52,63 @@
       "ascriptor_path": "kernels/projects/a5/gdn_fwd",
       "contract_sha256": "83a730a3394cbb9bb48ecc2ddd96f462f30386fd02f8a9847e5d7166f93f7248",
       "leaf_kernels": 6,
-      "kernel_names": ["preprocess", "inverse", "recompute", "scores", "recurrent", "recurrent_saved"],
+      "kernel_names": [
+        "preprocess",
+        "inverse",
+        "recompute",
+        "scores",
+        "recurrent",
+        "recurrent_saved"
+      ],
       "declared_cases": 4,
       "abi": {
         "inputs": {
-          "query": ["bfloat16", "B,H,C,64,128"],
-          "key": ["bfloat16", "B,H,C,64,128"],
-          "value": ["bfloat16", "B,H,C,64,128"],
-          "beta": ["float32", "B,H,C,64"],
-          "g": ["float32", "B,H,C,64"]
+          "query": [
+            "bfloat16",
+            "B,H,C,64,128"
+          ],
+          "key": [
+            "bfloat16",
+            "B,H,C,64,128"
+          ],
+          "value": [
+            "bfloat16",
+            "B,H,C,64,128"
+          ],
+          "beta": [
+            "float32",
+            "B,H,C,64"
+          ],
+          "g": [
+            "float32",
+            "B,H,C,64"
+          ]
         },
         "outputs": {
-          "output": ["bfloat16", "B,H,C,64,128"],
-          "final_state": ["bfloat16", "B,H,128,128"],
-          "state_after_history": ["bfloat16", "B,H,C,128,128"],
-          "v_new_history": ["bfloat16", "B,H,C,64,128"],
-          "k_weighted_history": ["bfloat16", "B,H,C,64,128"],
-          "exp_delta_history": ["float32", "B,H,C,64"]
+          "output": [
+            "bfloat16",
+            "B,H,C,64,128"
+          ],
+          "final_state": [
+            "bfloat16",
+            "B,H,128,128"
+          ],
+          "state_after_history": [
+            "bfloat16",
+            "B,H,C,128,128"
+          ],
+          "v_new_history": [
+            "bfloat16",
+            "B,H,C,64,128"
+          ],
+          "k_weighted_history": [
+            "bfloat16",
+            "B,H,C,64,128"
+          ],
+          "exp_delta_history": [
+            "float32",
+            "B,H,C,64"
+          ]
         },
         "stage_outputs": 15,
         "note": "后四个输出是 backward 所需的保存值。final_state 为 BF16，fla 惯例是 FP32。"
@@ -66,15 +119,32 @@
         "tails": "none — 无 L/D tail 路径，T 必须是 64 的整数倍",
         "head_grouping": "无独立 value-head 维度，仅 B,H,C",
         "initial_state": "zero only",
-        "block_dim": [1, 2],
+        "block_dim": [
+          1,
+          2
+        ],
         "values": "有限 BF16 q/k/v；FP32 beta ∈ [0,1]；非正的 raw log gate g",
-        "gate_modes": ["logsigmoid", "slow"]
+        "gate_modes": [
+          "logsigmoid",
+          "slow"
+        ]
       },
-      "comparison_budget": {"mode": "allclose", "atol": 0.002, "rtol": 0.002, "max_relative_l2": 0.02},
+      "comparison_budget": {
+        "mode": "allclose",
+        "atol": 0.002,
+        "rtol": 0.002,
+        "max_relative_l2": 0.02
+      },
       "validation": {
-        "reference": "passed", "sim": "passed", "pipesim": "passed", "emit": "passed",
-        "compile": "untested", "cannsim": "untested",
-        "board_cce": "passed", "board_pto_isa": "passed", "board_pypto_pro": "passed",
+        "reference": "passed",
+        "sim": "passed",
+        "pipesim": "passed",
+        "emit": "passed",
+        "compile": "untested",
+        "cannsim": "untested",
+        "board_cce": "passed",
+        "board_pto_isa": "passed",
+        "board_pypto_pro": "passed",
         "evidence": "kernels/projects/a5/gdn_fwd/validation.json",
         "evidence_recorded_at": "2026-09-05"
       },
@@ -89,7 +159,12 @@
           "recurrent": "ops/common/chunk_delta_h"
         }
       },
-      "our_status": {"wiring": "not-started", "binding": "not-started", "accuracy_vs_oracle": "not-started", "perf_vs_baseline": "not-started"}
+      "our_status": {
+        "wiring": "not-started",
+        "binding": "not-started",
+        "accuracy_vs_oracle": "not-started",
+        "perf_vs_baseline": "not-started"
+      }
     },
     {
       "id": "a5.gdn_bwd",
@@ -106,18 +181,34 @@
         "head_grouping": "无独立 value-head 维度",
         "initial_state": "zero only",
         "d_initial_state": "absent — 生产 backward ABI 不产出初始 state 的梯度",
-        "block_dim": [1, 2],
+        "block_dim": [
+          1,
+          2
+        ],
         "note": "BHC 数不被 4 整除会走 backward finalize 的边界路径，case 中有覆盖。"
       },
       "validation": {
-        "reference": "passed", "sim": "passed", "pipesim": "passed", "emit": "passed",
-        "compile": "untested", "cannsim": "untested",
-        "board_cce": "passed", "board_pto_isa": "passed", "board_pypto_pro": "passed",
+        "reference": "passed",
+        "sim": "passed",
+        "pipesim": "passed",
+        "emit": "passed",
+        "compile": "untested",
+        "cannsim": "untested",
+        "board_cce": "passed",
+        "board_pto_isa": "passed",
+        "board_pypto_pro": "passed",
         "evidence": "kernels/projects/a5/gdn_bwd/validation.json",
         "evidence_recorded_at": "2026-09-05"
       },
-      "fla_counterpart": {"entry": "fla.ops.gated_delta_rule.chunk.chunk_gated_delta_rule_bwd"},
-      "our_status": {"wiring": "not-started", "binding": "not-started", "accuracy_vs_oracle": "not-started", "perf_vs_baseline": "not-started"}
+      "fla_counterpart": {
+        "entry": "fla.ops.gated_delta_rule.chunk.chunk_gated_delta_rule_bwd"
+      },
+      "our_status": {
+        "wiring": "not-started",
+        "binding": "not-started",
+        "accuracy_vs_oracle": "not-started",
+        "perf_vs_baseline": "not-started"
+      }
     },
     {
       "id": "a5.kda_fwd",
@@ -131,44 +222,99 @@
       "abi": {
         "layout": "token-major —— 公开张量为 BTHK/BTHV，kernel 内部自行 permute 到 BHCLK/BHVCLK",
         "inputs": {
-          "q": ["bfloat16", "B,C*64,H,128"],
-          "k": ["bfloat16", "B,C*64,H,128"],
-          "v": ["bfloat16", "B,C*64,HV,128"],
-          "g_raw": ["float32", "B,C*64,HV,128", "自然对数 gate 增量，per-channel"],
-          "beta": ["float32", "B,C*64,HV"],
-          "initial_state": ["float32", "B,HV,128,128"]
+          "q": [
+            "bfloat16",
+            "B,C*64,H,128"
+          ],
+          "k": [
+            "bfloat16",
+            "B,C*64,H,128"
+          ],
+          "v": [
+            "bfloat16",
+            "B,C*64,HV,128"
+          ],
+          "g_raw": [
+            "float32",
+            "B,C*64,HV,128",
+            "自然对数 gate 增量，per-channel"
+          ],
+          "beta": [
+            "float32",
+            "B,C*64,HV"
+          ],
+          "initial_state": [
+            "float32",
+            "B,HV,128,128"
+          ]
         },
         "outputs": {
-          "o": ["bfloat16", "B,C*64,HV,128"],
-          "final_state": ["float32", "B,HV,128,128"]
+          "o": [
+            "bfloat16",
+            "B,C*64,HV,128"
+          ],
+          "final_state": [
+            "float32",
+            "B,HV,128,128"
+          ]
         },
         "note": "公开布局已与 fla 的 [B,T,H,K] 一致，接线无需调用方 permute。g_raw 是 per-channel 细粒度门控（KDA 的特点），不是 GDN 的 per-token 标量。"
       },
       "constraints": {
-        "L": 64, "K": 128, "V": 128,
+        "L": 64,
+        "K": 128,
+        "V": 128,
         "head_grouping": "支持 HV % H == 0 —— 这是 GDN 所缺的能力",
         "initial_state": "支持 random / zero，以 float32 正式输入",
-        "block_dim": [1, 2, 3, 4],
+        "block_dim": [
+          1,
+          2,
+          3,
+          4
+        ],
         "tails": "T=C*64；partial chunk、K/V tail、fp16、L=32 均被拒绝",
         "scope": "定长；不支持 cu_seqlens / cp_context / safe_gate / gate fusion / state_v_first",
         "input_generation": "q/k/v stddev 0.04，initial state stddev 0.01，g_raw ∈ [-0.03,0]，beta ∈ [0.05,0.5]",
         "note": "定长 forward，五个 A5 kernel，含独立 recurrence 与显式精度检查点。gate fusion 不支持意味着 g 要在 kernel 外算好传入 —— 对 KDA layer 是自然的，f_proj 本就是 Linear。"
       },
       "comparison_budget": {
-        "mode": "allclose", "rtol": 0.02, "atol": 0.02, "max_relative_l2": 0.05,
-        "stage_gate_g": {"rtol": 1e-06, "atol": 1e-06, "max_relative_l2": 1e-06},
+        "mode": "allclose",
+        "rtol": 0.02,
+        "atol": 0.02,
+        "max_relative_l2": 0.05,
+        "stage_gate_g": {
+          "rtol": 1e-06,
+          "atol": 1e-06,
+          "max_relative_l2": 1e-06
+        },
         "note": "默认预算比 gdn 的 0.002 宽一个数量级（BF16 cube/store 边界）。本仓对 fla naive 的 fp32 比对应另立更严的标准，不要直接沿用。"
       },
       "validation": {
-        "reference": "untested", "sim": "untested", "pipesim": "untested", "emit": "untested",
-        "compile": "untested", "cannsim": "untested",
-        "board_cce": "passed", "board_pto_isa": "passed", "board_pypto_pro": "passed",
+        "reference": "passed",
+        "sim": "passed",
+        "pipesim": "untested",
+        "emit": "untested",
+        "compile": "untested",
+        "cannsim": "untested",
+        "board_cce": "passed",
+        "board_pto_isa": "passed",
+        "board_pypto_pro": "passed",
         "evidence": "kernels/docs/migration/fragments/a5-three-backends-20260907.json",
         "evidence_recorded_at": "2026-09-07",
-        "note": "无本地 validation.json —— 只有真机证据，本地各 stage 全未跑。复用前建议先补本地 sim。"
+        "note": "无本地 validation.json —— 只有真机证据，本地各 stage 全未跑。复用前建议先补本地 sim。",
+        "evidence_ours": "2026-09-11 本仓在 238 上补跑：reference(4 cases) 与 sim(4 cases) 均 passed。此前这两个 stage 在上游 contract 里是 untested。"
       },
-      "fla_counterpart": {"entry": "fla.ops.kda", "oracle": "fla.ops.kda.naive"},
-      "our_status": {"wiring": "not-started", "binding": "not-started", "accuracy_vs_oracle": "not-started", "perf_vs_baseline": "not-started"}
+      "fla_counterpart": {
+        "entry": "fla.ops.kda",
+        "oracle": "fla.ops.kda.naive"
+      },
+      "our_status": {
+        "wiring": "done",
+        "binding": "done",
+        "accuracy_vs_oracle": "done",
+        "perf_vs_baseline": "blocked",
+        "note": "ascend_fla/ops/kda/chunk.py 串联五个 kernel，经 runtime 桥进程内调用。2026-09-11 实测：单 chunk / 多 chunk / GVA(HV=2·H) 三个形状的 o 相对 L2 3.29e-03 ~ 3.38e-03、final_state 1.94e-03 ~ 2.93e-03，均在 contract 预算 0.05 内；逐 kernel 与 ascriptor harness 路径比对为逐位相同（max_abs_diff=0）。性能对比受 npu-builtin-ops-missing 阻塞。"
+      }
     },
     {
       "id": "a5.kda_bwd",
@@ -181,40 +327,101 @@
       "abi": {
         "layout": "token-major —— 公开张量为 BTHK/BTHV；内部交接为 BHVCLD 或 BHVT64",
         "inputs": {
-          "q": ["bfloat16", "B,C*64,H,128"],
-          "k": ["bfloat16", "B,C*64,H,128"],
-          "v": ["bfloat16", "B,C*64,HV,128"],
-          "g": ["bfloat16", "B,C*64,HV,128"],
-          "beta": ["bfloat16", "B,C*64,HV"],
-          "initial_state": ["bfloat16", "B,HV,128,128"],
-          "do": ["bfloat16", "B,C*64,HV,128"],
-          "dht": ["bfloat16", "B,HV,128,128"]
+          "q": [
+            "bfloat16",
+            "B,C*64,H,128"
+          ],
+          "k": [
+            "bfloat16",
+            "B,C*64,H,128"
+          ],
+          "v": [
+            "bfloat16",
+            "B,C*64,HV,128"
+          ],
+          "g": [
+            "bfloat16",
+            "B,C*64,HV,128"
+          ],
+          "beta": [
+            "bfloat16",
+            "B,C*64,HV"
+          ],
+          "initial_state": [
+            "bfloat16",
+            "B,HV,128,128"
+          ],
+          "do": [
+            "bfloat16",
+            "B,C*64,HV,128"
+          ],
+          "dht": [
+            "bfloat16",
+            "B,HV,128,128"
+          ]
         },
         "outputs": {
-          "dq": ["bfloat16", "B,C*64,H,128"],
-          "dk": ["bfloat16", "B,C*64,H,128"],
-          "dv": ["bfloat16", "B,C*64,HV,128"],
-          "dbeta": ["bfloat16", "B,C*64,HV"],
-          "dg": ["bfloat16", "B,C*64,HV,128"],
-          "dh0": ["bfloat16", "B,HV,128,128"]
+          "dq": [
+            "bfloat16",
+            "B,C*64,H,128"
+          ],
+          "dk": [
+            "bfloat16",
+            "B,C*64,H,128"
+          ],
+          "dv": [
+            "bfloat16",
+            "B,C*64,HV,128"
+          ],
+          "dbeta": [
+            "bfloat16",
+            "B,C*64,HV"
+          ],
+          "dg": [
+            "bfloat16",
+            "B,C*64,HV,128"
+          ],
+          "dh0": [
+            "bfloat16",
+            "B,HV,128,128"
+          ]
         },
         "note": "产出 dh0 且接受 dht —— 支持可训练初始 state 与 state 梯度反传，这是 gdn_bwd/delta_rule_bwd 所缺的。⚠️ 但 beta / initial_state / g 在此处是 bfloat16，而 kda_fwd 中是 float32（见 gaps.json 的 kda-fwd-bwd-dtype-mismatch）。"
       },
       "constraints": {
-        "L": 64, "K": 128, "V": 128,
+        "L": 64,
+        "K": 128,
+        "V": 128,
         "head_grouping": "HV % H == 0",
         "d_initial_state": "present — 输出 dh0",
-        "block_dim": [1, 2, 3, 4],
+        "block_dim": [
+          1,
+          2,
+          3,
+          4
+        ],
         "tails": "T=C*64；CPU 参考侧更宽的 tail 支持不等于 kernel 支持"
       },
       "validation": {
-        "reference": "untested", "sim": "untested", "pipesim": "untested", "emit": "untested",
-        "compile": "untested", "cannsim": "untested",
-        "board_cce": "passed", "board_pto_isa": "passed", "board_pypto_pro": "gap",
+        "reference": "passed",
+        "sim": "passed",
+        "pipesim": "untested",
+        "emit": "untested",
+        "compile": "untested",
+        "cannsim": "untested",
+        "board_cce": "passed",
+        "board_pto_isa": "passed",
+        "board_pypto_pro": "gap",
         "evidence": "kernels/docs/migration/fragments/a5-three-backends-20260907.json",
-        "note": "pypto_pro 后端是 gap，cce 与 pto_isa 真机 passed。"
+        "note": "pypto_pro 后端是 gap，cce 与 pto_isa 真机 passed。",
+        "evidence_ours": "2026-09-11 本仓在 238 上补跑：reference(5 cases) 与 sim(5 cases) 均 passed。此前这两个 stage 在上游 contract 里是 untested。"
       },
-      "our_status": {"wiring": "not-started", "binding": "not-started", "accuracy_vs_oracle": "not-started", "perf_vs_baseline": "not-started"}
+      "our_status": {
+        "wiring": "not-started",
+        "binding": "not-started",
+        "accuracy_vs_oracle": "not-started",
+        "perf_vs_baseline": "not-started"
+      }
     },
     {
       "id": "a5.delta_rule_fwd",
@@ -224,20 +431,38 @@
       "contract_sha256": "0d48d9262f560e1a",
       "declared_cases": 7,
       "constraints": {
-        "L": 64, "D": 128,
+        "L": 64,
+        "D": 128,
         "tails": "none — 不完整的 B*H 或 B*H*C 核分配走有界循环；空输入被拒绝",
         "initial_state": "zero only；生产 backward 无可训练初始 state 梯度",
-        "block_dim": {"min": 1, "max": 32},
+        "block_dim": {
+          "min": 1,
+          "max": 32
+        },
         "note": "block_dim 上限 32，比 gdn 的 [1,2] 宽得多 —— 多核扩展性更好。"
       },
       "validation": {
-        "reference": "passed", "sim": "passed", "pipesim": "passed", "emit": "passed",
-        "compile": "untested", "cannsim": "untested",
-        "board_cce": "passed", "board_pto_isa": "passed", "board_pypto_pro": "passed",
+        "reference": "passed",
+        "sim": "passed",
+        "pipesim": "passed",
+        "emit": "passed",
+        "compile": "untested",
+        "cannsim": "untested",
+        "board_cce": "passed",
+        "board_pto_isa": "passed",
+        "board_pypto_pro": "passed",
         "evidence": "kernels/projects/a5/delta_rule_fwd/validation.json"
       },
-      "fla_counterpart": {"entry": "fla.ops.delta_rule.chunk_delta_rule", "oracle": "fla.ops.delta_rule.naive"},
-      "our_status": {"wiring": "not-started", "binding": "not-started", "accuracy_vs_oracle": "not-started", "perf_vs_baseline": "not-started"}
+      "fla_counterpart": {
+        "entry": "fla.ops.delta_rule.chunk_delta_rule",
+        "oracle": "fla.ops.delta_rule.naive"
+      },
+      "our_status": {
+        "wiring": "not-started",
+        "binding": "not-started",
+        "accuracy_vs_oracle": "not-started",
+        "perf_vs_baseline": "not-started"
+      }
     },
     {
       "id": "a5.delta_rule_bwd",
@@ -246,17 +471,32 @@
       "ascriptor_path": "kernels/projects/a5/delta_rule_bwd",
       "contract_sha256": "1999c8cb0db5d954",
       "declared_cases": 5,
-      "constraints": {"L": 64, "D": 128, "initial_state": "zero only", "d_initial_state": "absent"},
+      "constraints": {
+        "L": 64,
+        "D": 128,
+        "initial_state": "zero only",
+        "d_initial_state": "absent"
+      },
       "validation": {
-        "reference": "passed", "sim": "passed", "pipesim": "passed", "emit": "passed",
-        "compile": "untested", "cannsim": "untested",
-        "board_cce": "passed", "board_pto_isa": "passed", "board_pypto_pro": "passed",
+        "reference": "passed",
+        "sim": "passed",
+        "pipesim": "passed",
+        "emit": "passed",
+        "compile": "untested",
+        "cannsim": "untested",
+        "board_cce": "passed",
+        "board_pto_isa": "passed",
+        "board_pypto_pro": "passed",
         "evidence": "kernels/projects/a5/delta_rule_bwd/validation.json"
       },
-      "our_status": {"wiring": "not-started", "binding": "not-started", "accuracy_vs_oracle": "not-started", "perf_vs_baseline": "not-started"}
+      "our_status": {
+        "wiring": "not-started",
+        "binding": "not-started",
+        "accuracy_vs_oracle": "not-started",
+        "perf_vs_baseline": "not-started"
+      }
     }
   ],
-
   "missing_ops": [
     {
       "id": "kda_fused_recurrent",
@@ -265,7 +505,9 @@
       "ascriptor_asset": "none",
       "fla_counterpart": "fla.ops.kda.fused_recurrent_kda",
       "note": "完全缺失，需要新写，不是接线。没有它就只有 prefill/训练，没有推理解码，也失去 chunk↔recurrent 互验这个最好的 oracle。第三期目标。",
-      "blocks": ["phase 3 端到端模型跑通"]
+      "blocks": [
+        "phase 3 端到端模型跑通"
+      ]
     },
     {
       "id": "gdn_fused_recurrent",
@@ -276,7 +518,6 @@
       "note": "同上。随 GDN 扩族（第四期）再补。"
     }
   ],
-
   "reusable_primitives": [
     {
       "id": "chunk_row_scan",
@@ -303,21 +544,26 @@
       "our_status": "not-started"
     }
   ],
-
   "stack_layers": {
     "note": "全链路的上三层。窄切片原则：按算子倒推，用到哪个做哪个。首个目标是 KDA 链路，其依赖面比 GDN 少一个 module。",
     "modules": [
       {
         "id": "causal_conv1d",
         "fla_source": "fla.modules.convolution (ShortConvolution)",
-        "needed_by": ["KDA", "GatedDeltaNet"],
+        "needed_by": [
+          "KDA",
+          "GatedDeltaNet"
+        ],
         "ascriptor_asset": "none — 需新写",
         "our_status": "not-started"
       },
       {
         "id": "fused_rms_norm_gated",
         "fla_source": "fla.modules.fused_norm_gate (FusedRMSNormGated)",
-        "needed_by": ["KDA", "GatedDeltaNet"],
+        "needed_by": [
+          "KDA",
+          "GatedDeltaNet"
+        ],
         "ascriptor_asset": "partial — matrix_normalization 可借",
         "variant_note": "KDA 用 activation=\"sigmoid\"，GatedDeltaNet 用默认值 —— 两者不是同一配置。",
         "our_status": "not-started"
@@ -325,7 +571,9 @@
       {
         "id": "rms_norm",
         "fla_source": "fla.modules.layernorm (RMSNorm)",
-        "needed_by": ["GatedDeltaNet"],
+        "needed_by": [
+          "GatedDeltaNet"
+        ],
         "ascriptor_asset": "partial — matrix_normalization 可借",
         "note": "KDA 不需要 —— 它只用 FusedRMSNormGated 作 o_norm。",
         "our_status": "not-started"
@@ -333,7 +581,9 @@
       {
         "id": "l2norm",
         "fla_source": "fla.modules.l2norm",
-        "needed_by": ["GatedDeltaNet(use_qk_l2norm_in_kernel)"],
+        "needed_by": [
+          "GatedDeltaNet(use_qk_l2norm_in_kernel)"
+        ],
         "ascriptor_asset": "matrix_normalization.row_l2",
         "our_status": "not-started"
       }
@@ -344,8 +594,15 @@
         "fla_source": "fla.layers.kda.KDA",
         "is_first_target": true,
         "deps": {
-          "modules": ["fused_rms_norm_gated(sigmoid)", "causal_conv1d"],
-          "ops": ["a5.kda_fwd", "a5.kda_bwd", "fused_recurrent(缺)"],
+          "modules": [
+            "fused_rms_norm_gated(sigmoid)",
+            "causal_conv1d"
+          ],
+          "ops": [
+            "a5.kda_fwd",
+            "a5.kda_bwd",
+            "fused_recurrent(缺)"
+          ],
           "oracle": "fla.ops.kda.naive",
           "other": "q/k/v_proj + f_proj(低秩两层 Linear) + b_proj + g_proj(两层 Linear) + o_proj；A_log[HV] 与 dt_bias 为 per value-head（原生支持 GVA）"
         },
@@ -356,8 +613,16 @@
         "id": "gated_deltanet",
         "fla_source": "fla.layers.gated_deltanet.GatedDeltaNet",
         "deps": {
-          "modules": ["causal_conv1d", "rms_norm", "fused_rms_norm_gated"],
-          "ops": ["a5.gdn_fwd", "a5.gdn_bwd", "fused_recurrent(缺)"],
+          "modules": [
+            "causal_conv1d",
+            "rms_norm",
+            "fused_rms_norm_gated"
+          ],
+          "ops": [
+            "a5.gdn_fwd",
+            "a5.gdn_bwd",
+            "fused_recurrent(缺)"
+          ],
           "oracle": "fla.ops.gated_delta_rule.naive",
           "other": "7 个 nn.Linear + A_log / dt_bias 参数"
         },
@@ -376,9 +641,26 @@
         "id": "qwen3-next",
         "strategy": "注入 — 用 HF transformers 的模型定义，替换 linear attention layer",
         "layer": "gated_deltanet",
-        "blocked_by": ["gdn-no-gqa"],
+        "blocked_by": [
+          "gdn-no-gqa"
+        ],
         "our_status": "not-started"
       }
+    ]
+  },
+  "our_runtime_bridge": {
+    "status": "working",
+    "implemented": "ascend_fla/runtime/binding.py + compile.py",
+    "verified_at": "2026-09-11",
+    "machine": "Ascend950PR_957b / CANN 9.1.0 / torch 2.10.0+cpu / torch_npu 2.10.0 / python 3.11.15",
+    "how": "ctypes 加载 libnnopbase.so（aclCreateTensor/aclDestroyTensor 在此，不在 libascendcl.so）与 vendor 的 libcust_opapi.so；torch NPU tensor 的 data_ptr 直接交给 aclCreateTensor，零拷贝；stream 取自 torch.npu.current_stream().npu_stream；workspace 用 torch.empty 按 device 复用。",
+    "evidence": "chunk_row_scan 经本桥调用 max_abs_diff=9.537e-07 / rel_l2=4.838e-08（对 CPU 参考）",
+    "facts_learned": [
+      "aclnn 两段式签名的参数顺序 = spec.inputs + spec.scalars + spec.outputs + &wsSize + &executor",
+      "aclnn 接口层放宽 attr 类型：整型一律 int64_t，浮点是 **double**（不是 float）。按 c_float 传会让 scale 读成近 0 —— 表现为只有用到 scale 的输出归零、别的输出正确，极隐蔽。判类型看生成的 aclnn_*.h，不要照搬 ascriptor 的 SCALAR_C（那是 kernel 侧类型）。",
+      "ACL dtype 枚举：f32=0 f16=1 i32=3 i64=9 bool=12 bf16=27；ACL_FORMAT_ND=2",
+      "CANN 需要 ASCEND_CUSTOM_OPP_PATH 指向 vendor 树才能找到算子 JSON 配置",
+      "与 ascriptor harness 路径的逐位一致性是验证桥正确性的最强手段（单 kernel 二分）"
     ]
   }
 }

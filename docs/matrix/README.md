@@ -39,8 +39,8 @@ ascriptor pin：`0.1.0.dev1` · library `77619116f9b3` · 支持硬件 a5 · def
 |---|---|---|---|---|---|---|---|---|---|
 | `a5.gdn_fwd` | gated_delta_rule | forward | ✅ | ✅ | ✅ | ✅ | ⬜ | ✅ | ⬜ 未开始 |
 | `a5.gdn_bwd` | gated_delta_rule | backward | ✅ | ✅ | ✅ | ✅ | ⬜ | ✅ | ⬜ 未开始 |
-| **`a5.kda_fwd`** ★ | kda | forward | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ✅ | ⬜ 未开始 |
-| **`a5.kda_bwd`** ★ | kda | backward | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ✅ | ⬜ 未开始 |
+| **`a5.kda_fwd`** ★ | kda | forward | ✅ | ✅ | ⬜ | ⬜ | ⬜ | ✅ | ✅ 完成 |
+| **`a5.kda_bwd`** ★ | kda | backward | ✅ | ✅ | ⬜ | ⬜ | ⬜ | ✅ | ⬜ 未开始 |
 | `a5.delta_rule_fwd` | delta_rule | forward | ✅ | ✅ | ✅ | ✅ | ⬜ | ✅ | ⬜ 未开始 |
 | `a5.delta_rule_bwd` | delta_rule | backward | ✅ | ✅ | ✅ | ✅ | ⬜ | ✅ | ⬜ 未开始 |
 
@@ -84,9 +84,9 @@ ascriptor pin：`0.1.0.dev1` · library `77619116f9b3` · 支持硬件 a5 · def
 
 ## 缺口
 
-P0 3 项 · P1 10 项 · P2 6 项 · 共 19 项
+P0 1 项 · P1 10 项 · P2 6 项 · 共 20 项
 
-**首个里程碑**：aclnn-compile-untested —— 在接任何线性注意力算子之前，先证明本地 aclnn 编译路径可用。
+**首个里程碑**：已达成：aclnn 本地编译 + runtime 桥均在 Ascend950PR 上实测通过（2026-09-11）。当前首要障碍是 npu-builtin-ops-missing —— 它阻塞性能基线与第二期 layer 验证。
 
 **建议的首个目标**：KDA（Kimi-Linear / fla-kda-default 形状）。其 ABI 已是 token-major BTHK、GQA 原生支持、initial_state 与 final_state 均为 FP32、backward 产出 dh0 —— 上述多数 ABI 缺口对它都不适用。唯一需要前置补齐的是本地验证证据（kda-no-local-evidence）。
 
@@ -107,32 +107,18 @@ P0 3 项 · P1 10 项 · P2 6 项 · 共 19 项
 
 | 算子族 | P0 | P1 | P2 |
 |---|---|---|---|
-| KDA | `aclnn-compile-untested`<br>`runtime-bridge-missing`<br>`kda-no-local-evidence` | `kda-fwd-bwd-dtype-mismatch`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`scale-param-no-slot`<br>`no-tail-path` | `toy-case-shapes`<br>`block-dim-ceiling`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`modules-layer-missing`<br>`torch-npu-baseline-missing` |
-| GDN | `aclnn-compile-untested`<br>`runtime-bridge-missing` | `gdn-no-gqa`<br>`layout-not-token-major`<br>`nonzero-initial-state`<br>`d-initial-state-absent`<br>`state-dtype-bf16`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`scale-param-no-slot`<br>`no-tail-path` | `toy-case-shapes`<br>`block-dim-ceiling`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`modules-layer-missing`<br>`torch-npu-baseline-missing` |
-| DeltaNet | `aclnn-compile-untested`<br>`runtime-bridge-missing` | `layout-not-token-major`<br>`nonzero-initial-state`<br>`d-initial-state-absent`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`scale-param-no-slot`<br>`no-tail-path` | `toy-case-shapes`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`torch-npu-baseline-missing` |
+| KDA | `npu-builtin-ops-missing` | `kda-fwd-bwd-dtype-mismatch`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`no-tail-path` | `toy-case-shapes`<br>`block-dim-ceiling`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`modules-layer-missing`<br>`torch-npu-baseline-missing` |
+| GDN | `npu-builtin-ops-missing` | `gdn-no-gqa`<br>`layout-not-token-major`<br>`nonzero-initial-state`<br>`d-initial-state-absent`<br>`state-dtype-bf16`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`scale-param-no-slot`<br>`no-tail-path` | `toy-case-shapes`<br>`block-dim-ceiling`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`modules-layer-missing`<br>`torch-npu-baseline-missing` |
+| DeltaNet | `npu-builtin-ops-missing` | `layout-not-token-major`<br>`nonzero-initial-state`<br>`d-initial-state-absent`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`scale-param-no-slot`<br>`no-tail-path` | `toy-case-shapes`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`torch-npu-baseline-missing` |
 
 ### P0
 
-#### `aclnn-compile-untested` — runtime 桥依赖的本地 aclnn 编译路径从未验证
+#### `npu-builtin-ops-missing` — CANN 的内置算子包不覆盖 Ascend950PR，torch_npu 的计算算子全不可用
 
-- **类别** runtime · **适用于** 全部 · **阻塞** `phase 1`
-- **依据** 六个 a5 单元的 contract.json support 列表中 compile 与 cannsim stage 全部 untested；真机 passed 的是 board stage，走 SSH 推送 + 远端编译。
-- **影响** 本仓 runtime/compile.py 的整个技术路线建立在一条未验证的路径上。若 aclnn 本地编译不通，第一期方案需要重新设计。
-- **建议** 第一期的第一个里程碑：取最简单的单元（如 chunk_row_scan）走通 ascriptor 的 aclnn launcher 本地编译，产出 custom_opp_*.run 并安装为 vendor。在接任何线性注意力算子之前完成。
-
-#### `runtime-bridge-missing` — ascriptor 无进程内 device tensor 调用能力
-
-- **类别** runtime · **适用于** 全部 · **阻塞** `phase 1`, `phase 2`, `phase 3`
-- **依据** ascriptor/runtime/opexec.py 的 __call__：aclnn 路径经 write_args 写二进制参数文件并跑独立 test_aclnnop；board/pypto 经 SSH 推送；返回值用 torch.frombuffer 重建 CPU tensor。
-- **影响** 每次调用都有落盘与进程启动开销，且输出在 CPU 上 —— 无法作为训练/推理中的算子使用。
-- **建议** 自建 runtime/{compile,cache,binding,autograd}.py：把生成的 CANN 自定义算子编译成常驻 .so，经 torch.library 注册，直吃 NPU device tensor。地基是 ascriptor 的 runtime/aclnn/template 与 build_custom_op()。
-
-#### `kda-no-local-evidence` — kda_fwd / kda_bwd 没有本地验证证据
-
-- **类别** validation · **适用于** KDA · **阻塞** `phase 1`
-- **依据** 两个单元目录下无 validation.json；contract support 中 reference/sim/pipesim/emit 全 untested，仅 board passed（证据为 kernels/docs/migration/fragments/a5-three-backends-20260907.json）。kda_bwd 的 pypto_pro 为 gap。
-- **影响** KDA 已是第一期首选目标，而它没有可在本机复现的精度基线 —— 出问题只能上真机查，迭代会很慢。
-- **建议** 第一期前置工作（可在 macOS 本机完成，无需 CANN）：用 ascriptor 的 run.py 在本地补跑 reference 与 sim，建立基线并记录到本仓。严重度因首个目标改为 KDA 而由 P2 提升至 P0。
+- **类别** environment · **适用于** 全部 · **阻塞** `phase 1 ⑤`, `phase 2 layer 级验证`
+- **依据** 238（Ascend950PR_957b / CANN 9.1.0）上 $ASCEND_OPP_PATH/built-in/op_impl/ai_core/tbe/kernel/ 只有 ascend910_93 与 ascend910b 两个 SoC 目录。torch.randn(device='npu') 报 aclnnInplaceNormal_1_StatelessNormalAiCore 找不到 JSON 配置；torch.zeros、bf16->fp32 Cast 同样失败。torch 本身是 2.10.0+cpu。
+- **影响** ⑤ torch_npu 组合基线无法在这台机器上跑（需要 matmul/einsum 等内置算子）。第二期的 layer 级验证同样受阻 —— nn.Linear / norm / conv 都依赖内置算子。实测可用的只有：torch.empty、H2D/D2H 拷贝、data_ptr、current_stream —— 这恰好够 runtime 桥用，自编译的 kernel 不受影响。
+- **建议** 三条路：① 性能基线改用 ascriptor 自己的 profile 子命令 + 自编译 kernel 之间的对比；② 在有完整算子包的机器上做 torch_npu 基线（a2/910B3 有 ascend910b）；③ 确认是否存在 950PR 的算子包可安装。选哪条取决于基线要回答的问题 —— 要对比 ascriptor vs torch_npu 就必须有内置算子，换机器是最直接的。
 
 ### P1
 
@@ -194,8 +180,8 @@ P0 3 项 · P1 10 项 · P2 6 项 · 共 19 项
 
 #### `scale-param-no-slot` — fla 的 scale 参数在 ascriptor ABI 中无入口
 
-- **类别** abi · **适用于** GDN / DeltaNet / KDA · **阻塞** `phase 1 精度对齐`
-- **依据** 各单元 inputs 中均无 scale 标量。gdn/delta_rule 的 case parameters 里的 "scale": 0.05 是输入生成幅度（delta_rule_fwd domain.input_values: "generated q/k/v scale 0.05"；kda_fwd domain.input_generation: "q/k/v stddev 0.04"），不是算子参数。
+- **类别** abi · **适用于** GDN / DeltaNet · **阻塞** `phase 4`
+- **依据** 各单元 inputs 中均无 scale 标量。gdn/delta_rule 的 case parameters 里的 "scale": 0.05 是输入生成幅度（delta_rule_fwd domain.input_values: "generated q/k/v scale 0.05"；kda_fwd domain.input_generation: "q/k/v stddev 0.04"），不是算子参数。 【2026-09-11 修正】KDA 不受影响：kda_sub2_score_kernel 与 kda_sub45_fused_kernel 都有 `scale: f32` 标量参数（单元固定传 128**-0.5），kernel 层面有入口，不需要 host 预乘。本仓 chunk_kda_fwd 已把 scale 作为可选参数直通 kernel。
 - **影响** fla 语义下 q 要乘 scale（默认 head_dim**-0.5 ≈ 0.0884）。无入口则只能 host 侧预乘，多一次 elementwise 全量遍历，与性能目标冲突。
 - **建议** 优先在 kernel 内吸收 scale（已有 q 的读取点可顺带乘）。第一期若先用 host 预乘打通，必须在性能报告中标注这部分开销。
 

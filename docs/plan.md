@@ -105,9 +105,12 @@ ascriptor 的执行模型全是"落盘 + 独立进程"（详见 `AGENTS.md` §4�
 开发/验证框架，不是可嵌入的运行时算子库。本仓必须自建"常驻化 + torch 绑定 +
 产物缓存"这一层。
 
-**前置风险已量化**：六个 a5 单元的 `compile` 与 `cannsim` stage 全部 `untested`
-——真机 `board` passed 走的是 SSH 远程路径，而我们要用的本地 aclnn 编译路径
-从未验证过。第一期的第一个里程碑就是证明这条路通。
+**风险已消除（2026-09-11）。** 原先的判断是"六个 a5 单元的 `compile` stage 全是
+`untested`，所以本地 aclnn 编译路径从未验证"。这个推断**有误**：unit runner 的
+`LAUNCHER_STAGES` 把 `board` / `aclnn` / `pypto` 三个 launcher 都记为 `board` stage，
+而 contract 里的 `compile` 指的是 `ascriptor compile` CLI（纯发射+编译、不执行）。
+不过结论仍需自证 —— 实测 `chunk_row_scan --launcher aclnn` 真机通过（19.6s），
+随后 `runtime/binding.py` 的 ctypes 零拷贝调用与 harness 路径逐位一致。
 
 ## 4. 全链路支持矩阵
 
@@ -140,30 +143,50 @@ fla 的模型定义，只把我们的 layer 替换进去 —— 规格自动跟�
 | 期 | 内容 | 验收 |
 |---|---|---|
 | **0** ✅ | 形状清单反推 + 缺口表 + 矩阵 schema | 已完成：`docs/matrix/` 三份 json，19 项缺口显式列出 |
-| **1** | ① 本地 aclnn 编译打通（先拿 `chunk_row_scan` 验证）② runtime 桥 ③ `kda_fwd` 接线 ④ KDA 本地精度基线 ⑤ torch_npu 组合基线 | Kimi-Linear 单层真实形状下进程内零拷贝调用，精度对齐双 oracle |
+| **1** | ① aclnn 编译 ✅ ② runtime 桥 ✅ ③ `kda_fwd` 接线 ✅ ④ KDA 本地基线 ✅ ⑤ torch_npu 基线 ❌ 受阻 | 见下「第一期实测结果」 |
 | **2** | `kda_bwd` + autograd + KDA layer（含 2 modules） | layer 级梯度端到端对齐；首版性能数 vs torch_npu 组合版 |
 | **3** | model 注入（Kimi-Linear）+ KDA `fused_recurrent`(decode) + 矩阵 CI 生成 | 端到端跑通一个模型；chunk↔recurrent 互验通过 |
 | **4** | GDN 扩族（含 GQA、token-major 布局、非零初始 state）+ DeltaNet + 性能迭代 | Qwen3-Next 可用；兑现"高效率算子" |
 
-第一期的五项里，①④⑤ 可在本机完成（①②需要远程真机）。**① 是硬前置**：在它通过之前
-不要开始 `kda_fwd` 接线，否则可能在错误的技术路线上投入。
+### 第一期实测结果（A5 / Ascend950PR，CANN 9.1.0，2026-09-11）
+
+| 项 | 结果 |
+|---|---|
+| ① aclnn 本地编译 | ✅ `chunk_row_scan` 经 `--launcher aclnn` 真机通过，19.6s |
+| ② runtime 桥 | ✅ `runtime/{binding,compile}.py`。ctypes + `aclCreateTensor` 直吃 NPU `data_ptr`，零拷贝。单 kernel 与 ascriptor harness 路径**逐位相同**（`max_abs_diff=0`） |
+| ③ `kda_fwd` 接线 | ✅ 五 kernel 串联。单 chunk / 多 chunk / GVA(HV=2·H) 三形状的 `o` 相对 L2 3.29e-03~3.38e-03、`final_state` 1.94e-03~2.93e-03，均在 contract 预算 0.05 内 |
+| ④ KDA 本地基线 | ✅ `kda_fwd` reference+sim（各 4 case）、`kda_bwd` reference+sim（各 5 case）全 passed |
+| ⑤ torch_npu 基线 | ❌ 受阻于 `npu-builtin-ops-missing`：CANN 9.1.0 的内置算子包不覆盖 Ascend950PR，torch_npu 的计算算子全不可用 |
+
+两个值得记住的坑（细节见 `AGENTS.md` §5）：
+
+1. **`aclCreateTensor` 在 `libnnopbase.so`**，不在 `libascendcl.so`。
+2. **aclnn 的浮点 attr 是 `double` 而不是 `float`。** 按 `c_float` 传 4 字节，被调方从
+   8 字节槽里读垃圾值，表现为 `scale` 近 0 —— 于是**只有用到 scale 的输出归零、不用的
+   输出照常正确**。这个 bug 一开始被误判成 kernel 或 dtype 问题；定位靠的是拿同一个
+   kernel 对比 harness 路径做单点二分。判 attr 类型一律看生成的 `aclnn_*.h`。
 
 ## 6. 性能基线
 
 两条基线，同形状、同 dtype、同步计时：
 
 1. **torch_npu 组合实现** —— 用原生算子拼出同语义的 KDA。它同时是第二个 oracle。
+   ⚠️ 当前在 A5/Ascend950PR 上**不可用**（`npu-builtin-ops-missing`）；需要换一台有
+   完整算子包的机器，或改用下面第 3 条。
 2. **ascriptor 生成的 aclnn 算子** —— 本仓的产物。
+3. **备选**：内置算子缺失时，退化为「自编译 kernel 之间」的对比（不同 `block_dim`、
+   不同 kernel 版本），并用 CPU fp32 参考守精度。它回答不了"比 torch_npu 快多少"，
+   要如实标注。
 
 报性能必须声明：形状、dtype、是否含 bwd、warmup 与重复次数、是否 `synchronize()`。
 不得用 ascriptor 模拟器时间充当设备延迟。
 
 ## 7. 开放问题
 
-- **`scale` 参数无处安放**：fla 的 `scale`（默认 `head_dim**-0.5`）在 ascriptor 各单元
-  的 ABI 里都没有对应入口（contract 里的 `scale: 0.05` / `stddev 0.04` 是输入生成幅度，
-  不是算子参数）。要么进 kernel，要么 host 侧预乘 q —— 后者多一次 elementwise 全量
-  遍历，与性能目标冲突。
+- ~~**`scale` 参数无处安放**~~ **（KDA 已证不成立）**：`kda_sub2_score_kernel` 与
+  `kda_sub45_fused_kernel` 都有 `scale: f32` 标量入口，本仓 `chunk_kda_fwd` 直通它，
+  不需要 host 预乘。contract `inputs` 里没有 scale 是因为它是 attr 而非张量。
+  GDN / DeltaNet 是否同样有入口待接线时核实。
 - **KDA 的 fwd/bwd dtype 不一致**：`kda_fwd` 的 `beta`/`initial_state`/`g_raw` 是 FP32，
   `kda_bwd` 的同名张量是 BF16。autograd 组装时这一步降精度不在任何一侧的契约预算内，
   影响幅度待测（第二期前置）。

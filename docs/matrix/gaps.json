@@ -1,55 +1,42 @@
 {
-  "schema": "ascend_fla.gaps/2",
-  "recorded_at": "2026-09-10",
+  "schema": "ascend_fla.gaps/3",
+  "recorded_at": "2026-09-11",
   "produced_by": "phase 0, derived by cross-checking models.json against ops.json",
   "note": "缺口表。severity: P0 阻塞第一期 / P1 阻塞端到端可用 / P2 覆盖面与性能。applies_to 列出受影响的算子族 —— 多数限制是算子族特有的，不要当成全局限制。每条的 evidence 必须指向可核查的来源，proposed_action 是建议而非承诺。",
   "schema_changelog": [
-    "v2 (2026-09-10): 首个目标由 GDN 改为 KDA 后重排 severity；新增 applies_to 字段；新增 kda-fwd-bwd-dtype-mismatch。"
+    "v2 (2026-09-10): 首个目标由 GDN 改为 KDA 后重排 severity；新增 applies_to 字段；新增 kda-fwd-bwd-dtype-mismatch。",
+    "v3 (2026-09-11): 第一期实测后更新。aclnn-compile-untested 的依据被证伪并改写（aclnn 映射到 board stage，contract 的 compile 指 `ascriptor compile` CLI）；runtime-bridge-missing 与 kda-no-local-evidence 已解决；scale-param-no-slot 对 kda 不成立（kernel 有 f32 scale 入口）；新增 npu-builtin-ops-missing。"
   ],
-
   "gaps": [
     {
-      "id": "aclnn-compile-untested",
-      "title": "runtime 桥依赖的本地 aclnn 编译路径从未验证",
-      "category": "runtime",
+      "id": "npu-builtin-ops-missing",
+      "title": "CANN 的内置算子包不覆盖 Ascend950PR，torch_npu 的计算算子全不可用",
+      "category": "environment",
       "severity": "P0",
-      "applies_to": ["all"],
-      "evidence": "六个 a5 单元的 contract.json support 列表中 compile 与 cannsim stage 全部 untested；真机 passed 的是 board stage，走 SSH 推送 + 远端编译。",
-      "impact": "本仓 runtime/compile.py 的整个技术路线建立在一条未验证的路径上。若 aclnn 本地编译不通，第一期方案需要重新设计。",
-      "blocks": ["phase 1"],
-      "proposed_action": "第一期的第一个里程碑：取最简单的单元（如 chunk_row_scan）走通 ascriptor 的 aclnn launcher 本地编译，产出 custom_opp_*.run 并安装为 vendor。在接任何线性注意力算子之前完成。"
-    },
-    {
-      "id": "runtime-bridge-missing",
-      "title": "ascriptor 无进程内 device tensor 调用能力",
-      "category": "runtime",
-      "severity": "P0",
-      "applies_to": ["all"],
-      "evidence": "ascriptor/runtime/opexec.py 的 __call__：aclnn 路径经 write_args 写二进制参数文件并跑独立 test_aclnnop；board/pypto 经 SSH 推送；返回值用 torch.frombuffer 重建 CPU tensor。",
-      "impact": "每次调用都有落盘与进程启动开销，且输出在 CPU 上 —— 无法作为训练/推理中的算子使用。",
-      "blocks": ["phase 1", "phase 2", "phase 3"],
-      "proposed_action": "自建 runtime/{compile,cache,binding,autograd}.py：把生成的 CANN 自定义算子编译成常驻 .so，经 torch.library 注册，直吃 NPU device tensor。地基是 ascriptor 的 runtime/aclnn/template 与 build_custom_op()。"
-    },
-    {
-      "id": "kda-no-local-evidence",
-      "title": "kda_fwd / kda_bwd 没有本地验证证据",
-      "category": "validation",
-      "severity": "P0",
-      "applies_to": ["kda"],
-      "evidence": "两个单元目录下无 validation.json；contract support 中 reference/sim/pipesim/emit 全 untested，仅 board passed（证据为 kernels/docs/migration/fragments/a5-three-backends-20260907.json）。kda_bwd 的 pypto_pro 为 gap。",
-      "impact": "KDA 已是第一期首选目标，而它没有可在本机复现的精度基线 —— 出问题只能上真机查，迭代会很慢。",
-      "blocks": ["phase 1"],
-      "proposed_action": "第一期前置工作（可在 macOS 本机完成，无需 CANN）：用 ascriptor 的 run.py 在本地补跑 reference 与 sim，建立基线并记录到本仓。严重度因首个目标改为 KDA 而由 P2 提升至 P0。"
+      "applies_to": [
+        "all"
+      ],
+      "evidence": "238（Ascend950PR_957b / CANN 9.1.0）上 $ASCEND_OPP_PATH/built-in/op_impl/ai_core/tbe/kernel/ 只有 ascend910_93 与 ascend910b 两个 SoC 目录。torch.randn(device='npu') 报 aclnnInplaceNormal_1_StatelessNormalAiCore 找不到 JSON 配置；torch.zeros、bf16->fp32 Cast 同样失败。torch 本身是 2.10.0+cpu。",
+      "impact": "⑤ torch_npu 组合基线无法在这台机器上跑（需要 matmul/einsum 等内置算子）。第二期的 layer 级验证同样受阻 —— nn.Linear / norm / conv 都依赖内置算子。实测可用的只有：torch.empty、H2D/D2H 拷贝、data_ptr、current_stream —— 这恰好够 runtime 桥用，自编译的 kernel 不受影响。",
+      "blocks": [
+        "phase 1 ⑤",
+        "phase 2 layer 级验证"
+      ],
+      "proposed_action": "三条路：① 性能基线改用 ascriptor 自己的 profile 子命令 + 自编译 kernel 之间的对比；② 在有完整算子包的机器上做 torch_npu 基线（a2/910B3 有 ascend910b）；③ 确认是否存在 950PR 的算子包可安装。选哪条取决于基线要回答的问题 —— 要对比 ascriptor vs torch_npu 就必须有内置算子，换机器是最直接的。"
     },
     {
       "id": "kda-fwd-bwd-dtype-mismatch",
       "title": "kda 的 fwd 与 bwd 对同名张量声明了不同 dtype",
       "category": "abi",
       "severity": "P1",
-      "applies_to": ["kda"],
+      "applies_to": [
+        "kda"
+      ],
       "evidence": "kda_fwd inputs：beta float32、initial_state float32、g_raw float32，final_state 输出 float32。kda_bwd inputs：beta bfloat16、initial_state bfloat16、g bfloat16、dht bfloat16。",
       "impact": "autograd.Function 组装时，forward 保存的 FP32 张量必须降到 BF16 才能喂给 backward，这一步有精度损失且不在任何一侧的契约预算内。",
-      "blocks": ["phase 2"],
+      "blocks": [
+        "phase 2"
+      ],
       "proposed_action": "第二期组装 autograd 前先量化这次降精度的影响：同输入下 FP32 保存 vs BF16 保存的梯度差异。若不可接受，需要改 bwd 的 ABI 接受 FP32。不要默默插一个 .to(bfloat16) 了事。"
     },
     {
@@ -57,10 +44,15 @@
       "title": "gdn_fwd/bwd 无独立 value-head 维度，不支持 GQA 分组",
       "category": "abi",
       "severity": "P1",
-      "applies_to": ["gated_delta_rule"],
+      "applies_to": [
+        "gated_delta_rule"
+      ],
       "evidence": "gdn_fwd contract.json domain.shape：\"B,H,C are positive runtime dimensions\" —— 没有 HV。对比 kda_fwd domain 有 \"H_HV\": \"positive; HV % H == 0\"，kda_bwd 亦然。",
       "impact": "阻塞 Qwen3-Next（16 key heads / 32 value heads）。",
-      "blocks": ["qwen3-next-80b-a3b", "phase 4"],
+      "blocks": [
+        "qwen3-next-80b-a3b",
+        "phase 4"
+      ],
       "proposed_action": "第四期做 GDN 扩族时一并解决，实现可借鉴 kda 已有的 HV%H==0 分区方式。严重度因第一期改走 KDA 而由 P0 降至 P1。"
     },
     {
@@ -68,10 +60,15 @@
       "title": "gdn 与 delta_rule 的公开布局是 [B,H,C,L,D]，与 fla 的 token-major 不一致",
       "category": "abi",
       "severity": "P1",
-      "applies_to": ["gated_delta_rule", "delta_rule"],
+      "applies_to": [
+        "gated_delta_rule",
+        "delta_rule"
+      ],
       "evidence": "gdn_fwd contract domain.layout：\"Contiguous CPU tensors in [B,H,C,L,D]\"。对比 kda_fwd：\"Contiguous token-major public tensors; explicit local permutation to BHCLK/BHVCLK kernel tensors\"，kda_bwd：\"Public tensors are contiguous BTHK/BTHV\"。",
       "impact": "接入 GDN 时调用方需要 permute，带来额外访存开销。KDA 不受影响 —— 它的公开接口已是 token-major，内部自行 permute。",
-      "blocks": ["phase 4"],
+      "blocks": [
+        "phase 4"
+      ],
       "proposed_action": "GDN 接线时让 kernel 内部做 permute（照 kda 的做法），而不是把转换推给调用方。"
     },
     {
@@ -79,10 +76,15 @@
       "title": "gdn 与 delta_rule 只支持零初始 state",
       "category": "abi",
       "severity": "P1",
-      "applies_to": ["gated_delta_rule", "delta_rule"],
+      "applies_to": [
+        "gated_delta_rule",
+        "delta_rule"
+      ],
       "evidence": "gdn_fwd / delta_rule_fwd contract.json domain.initial_state: \"zero only\"。kda_fwd 则以 float32 [B,HV,128,128] 作为正式输入，case 中有 random 与 zero 两种。",
       "impact": "GDN/DeltaNet 无法做 state 传递 —— 长序列分段训练、prefill→decode 交接、chunked prefill 都做不了。KDA 不受影响。",
-      "blocks": ["phase 4"],
+      "blocks": [
+        "phase 4"
+      ],
       "proposed_action": "GDN 扩族时照 kda_fwd 的方式加非零初始 state 入口。在此之前，门控必须对 GDN 传入非零 initial_state 的调用报错。"
     },
     {
@@ -90,10 +92,15 @@
       "title": "gdn 与 delta_rule 的 backward 不产出初始 state 的梯度",
       "category": "abi",
       "severity": "P1",
-      "applies_to": ["gated_delta_rule", "delta_rule"],
+      "applies_to": [
+        "gated_delta_rule",
+        "delta_rule"
+      ],
       "evidence": "gdn_bwd / delta_rule_bwd contract.json：\"no d_initial_state in the preserved backward production ABI\"。对比 kda_bwd 有 dh0 输出（[B,HV,128,128]）与 dht 输入。",
       "impact": "GDN/DeltaNet 无法支持可训练初始 state、序列并行（CP）与分段反向。KDA 不受影响。",
-      "blocks": ["phase 4"],
+      "blocks": [
+        "phase 4"
+      ],
       "proposed_action": "记录为 GDN/DeltaNet 的已知限制。门控应在 initial_state.requires_grad 时报错。"
     },
     {
@@ -101,7 +108,9 @@
       "title": "gdn 的 final_state 为 BF16，fla 惯例为 FP32",
       "category": "precision",
       "severity": "P1",
-      "applies_to": ["gated_delta_rule"],
+      "applies_to": [
+        "gated_delta_rule"
+      ],
       "evidence": "gdn_fwd contract outputs.final_state: bfloat16 [B,H,128,128]。对比 kda_fwd 的 final_state 为 float32。",
       "impact": "state 是跨 chunk 累积量，BF16 存储的误差会进入下一段递推。影响幅度未在 A5 上测过。KDA 不受影响。",
       "blocks": [],
@@ -112,10 +121,16 @@
       "title": "decode 路径算子完全缺失（全算子族）",
       "category": "coverage",
       "severity": "P1",
-      "applies_to": ["kda", "gated_delta_rule", "delta_rule"],
+      "applies_to": [
+        "kda",
+        "gated_delta_rule",
+        "delta_rule"
+      ],
       "evidence": "ascriptor kernels catalog 中无 fused_recurrent 类单元；现有六个单元均为 chunk 路径。",
       "impact": "只有训练与 prefill，没有推理解码。也失去了 chunk↔recurrent 互验这个最好的 oracle。",
-      "blocks": ["phase 3"],
+      "blocks": [
+        "phase 3"
+      ],
       "proposed_action": "第三期为 KDA 新写（非接线），以 fla.ops.kda.fused_recurrent_kda 为语义基准。GDN/DeltaNet 的 decode 路径随各自扩族再补。"
     },
     {
@@ -123,7 +138,9 @@
       "title": "无变长序列（cu_seqlens）支持",
       "category": "coverage",
       "severity": "P1",
-      "applies_to": ["all"],
+      "applies_to": [
+        "all"
+      ],
       "evidence": "kda_fwd contract domain.scope 明确写 \"Fixed length; no cu_seqlens, cp_context, safe_gate, gate fusion or state_v_first\"。其余单元 ABI 亦均为规整形状。",
       "impact": "训练常用的 sequence packing 无法使用，等长 padding 会浪费算力。顺带：gate fusion 不支持，意味着 g 必须在 kernel 外算好再传入。",
       "blocks": [],
@@ -134,10 +151,15 @@
       "title": "fla 的 scale 参数在 ascriptor ABI 中无入口",
       "category": "abi",
       "severity": "P1",
-      "applies_to": ["gated_delta_rule", "delta_rule", "kda"],
-      "evidence": "各单元 inputs 中均无 scale 标量。gdn/delta_rule 的 case parameters 里的 \"scale\": 0.05 是输入生成幅度（delta_rule_fwd domain.input_values: \"generated q/k/v scale 0.05\"；kda_fwd domain.input_generation: \"q/k/v stddev 0.04\"），不是算子参数。",
+      "applies_to": [
+        "gated_delta_rule",
+        "delta_rule"
+      ],
+      "evidence": "各单元 inputs 中均无 scale 标量。gdn/delta_rule 的 case parameters 里的 \"scale\": 0.05 是输入生成幅度（delta_rule_fwd domain.input_values: \"generated q/k/v scale 0.05\"；kda_fwd domain.input_generation: \"q/k/v stddev 0.04\"），不是算子参数。 【2026-09-11 修正】KDA 不受影响：kda_sub2_score_kernel 与 kda_sub45_fused_kernel 都有 `scale: f32` 标量参数（单元固定传 128**-0.5），kernel 层面有入口，不需要 host 预乘。本仓 chunk_kda_fwd 已把 scale 作为可选参数直通 kernel。",
       "impact": "fla 语义下 q 要乘 scale（默认 head_dim**-0.5 ≈ 0.0884）。无入口则只能 host 侧预乘，多一次 elementwise 全量遍历，与性能目标冲突。",
-      "blocks": ["phase 1 精度对齐"],
+      "blocks": [
+        "phase 4"
+      ],
       "proposed_action": "优先在 kernel 内吸收 scale（已有 q 的读取点可顺带乘）。第一期若先用 host 预乘打通，必须在性能报告中标注这部分开销。"
     },
     {
@@ -145,7 +167,9 @@
       "title": "L=64 固定且无 tail 路径，T 必须是 64 的整数倍",
       "category": "abi",
       "severity": "P1",
-      "applies_to": ["all"],
+      "applies_to": [
+        "all"
+      ],
       "evidence": "kda_fwd domain.tails：\"T=C*64; partial chunks, K/V tails, fp16, and L=32 are rejected by this authored kernel unit.\" 其余单元同为 \"No L/D tails\"。",
       "impact": "任意序列长度的推理与训练都需要 host 侧 padding，或拒绝。另：fp16 与 L=32 同样被拒绝。",
       "blocks": [],
@@ -156,10 +180,14 @@
       "title": "现有算子 case 全是玩具形状，未在真实模型形状上验证",
       "category": "validation",
       "severity": "P2",
-      "applies_to": ["all"],
+      "applies_to": [
+        "all"
+      ],
       "evidence": "kda_fwd 四个 case 为 B=1, H=1, HV=1~2, C=1~2；gdn_fwd 为 B=1, H=1~3, C=1~3。",
       "impact": "正确性证据的形状覆盖与真实负载相距很远（Kimi-Linear 单层为 H=HV=32，T=1024 时 C=16）。多核分区、UB 压力、核归属路径在玩具形状下可能根本没被触发。",
-      "blocks": ["phase 1 验收"],
+      "blocks": [
+        "phase 1 验收"
+      ],
       "proposed_action": "第一期的精度验收必须用 models.json 的 test_case_shapes.kimi_linear_layer，而不是沿用上游 case。"
     },
     {
@@ -167,7 +195,10 @@
       "title": "kda 的 block_dim 上限为 4，gdn 为 2，均远低于 delta_rule 的 32",
       "category": "performance",
       "severity": "P2",
-      "applies_to": ["kda", "gated_delta_rule"],
+      "applies_to": [
+        "kda",
+        "gated_delta_rule"
+      ],
       "evidence": "kda_fwd / kda_bwd domain.block_dim: [1,2,3,4]；gdn domain.block_dim: [1,2]；delta_rule_fwd domain.block_dim: {min:1, max:32}。",
       "impact": "多核扩展性可能成为性能天花板。A5 的核数远大于 4。",
       "blocks": [],
@@ -178,10 +209,14 @@
       "title": "K=V=128 固定，不支持其他 head_dim",
       "category": "coverage",
       "severity": "P2",
-      "applies_to": ["all"],
+      "applies_to": [
+        "all"
+      ],
       "evidence": "各单元 domain 固定 D=128 / K=128 V=128。",
       "impact": "fla GatedDeltaNetConfig 默认值（head_k=256 / head_v=512）不被支持。",
-      "blocks": ["fla-gated-deltanet-default"],
+      "blocks": [
+        "fla-gated-deltanet-default"
+      ],
       "proposed_action": "不去支持它 —— 那是 fla 的参考默认值，不是落地模型规格。两个真实目标模型都是 128。门控明确拒绝并在错误信息中说明。"
     },
     {
@@ -189,10 +224,14 @@
       "title": "K 与 V 共用同一个 D 维，不支持 head_k != head_v",
       "category": "abi",
       "severity": "P2",
-      "applies_to": ["all"],
+      "applies_to": [
+        "all"
+      ],
       "evidence": "各单元 inputs 中 q/k/v 的末维同为 128，domain 只声明单一 D=128（kda 分别声明 K=128 与 V=128，但两者都固定）。",
       "impact": "expand_v != 1.0 的配置不被支持（fla GatedDeltaNetConfig 默认 expand_v=2.0 → head_v 是 head_k 的两倍）。",
-      "blocks": ["fla-gated-deltanet-default"],
+      "blocks": [
+        "fla-gated-deltanet-default"
+      ],
       "proposed_action": "与 fixed-kv-128 同样处置：两个真实目标模型都是 head_k == head_v == 128，不去支持非对称维度。门控拒绝并说明。"
     },
     {
@@ -200,10 +239,15 @@
       "title": "modules 层的必需组件缺失",
       "category": "coverage",
       "severity": "P2",
-      "applies_to": ["kda", "gated_delta_rule"],
+      "applies_to": [
+        "kda",
+        "gated_delta_rule"
+      ],
       "evidence": "fla.layers.kda 只依赖 FusedRMSNormGated 与 ShortConvolution 两个 module（o_norm 用 activation=\"sigmoid\"）；fla.layers.gated_deltanet 多需要一个 RMSNorm。ascriptor 侧有 matrix_normalization 与 gated_approximations 可部分借用，没有 causal_conv1d。",
       "impact": "没有这些，layer 层无法组装，端到端梯度检验做不了。KDA 的依赖面比 GDN 少一个 module。",
-      "blocks": ["phase 2"],
+      "blocks": [
+        "phase 2"
+      ],
       "proposed_action": "第二期按 KDA 的需要做窄切片：先 FusedRMSNormGated(sigmoid) 与 causal_conv1d。causal_conv1d 需新写；norm 可从 matrix_normalization 扩展。第一期可先用 torch 实现占位，但要在矩阵里标明是 torch 而非自有 kernel。"
     },
     {
@@ -211,25 +255,89 @@
       "title": "缺少 torch_npu 组合实现作基线与第二 oracle",
       "category": "validation",
       "severity": "P2",
-      "applies_to": ["all"],
+      "applies_to": [
+        "all"
+      ],
       "evidence": "本仓尚无任何实现代码。",
       "impact": "没有它就只有一个 oracle（fla naive），也没有性能对照 —— 无法判断\"高效率\"是否达成。",
-      "blocks": ["phase 1 验收", "phase 2 性能报告"],
+      "blocks": [
+        "phase 1 验收",
+        "phase 2 性能报告"
+      ],
       "proposed_action": "第一期与 runtime 桥并行做：reference/ 下用 torch_npu 原生算子拼出同语义 KDA，同时充当基线与第二 oracle。"
+    },
+    {
+      "id": "aclnn-compile-untested",
+      "title": "本地 aclnn 编译路径（本仓首份独立证据）",
+      "category": "runtime",
+      "severity": "resolved",
+      "applies_to": [
+        "all"
+      ],
+      "evidence": "原依据有误：contract support 里的 compile stage 指 `ascriptor compile` CLI 的纯源码发射+编译，**不是** aclnn launcher —— unit runner 的 LAUNCHER_STAGES 把 aclnn 和 board 都映射到 board stage，而 board 本来就是 passed。原描述把两者混为一谈。",
+      "impact": "结论不变但理由不同：aclnn 本地编译此前没有本仓自己的证据，现在有了。",
+      "blocks": [
+        "phase 1"
+      ],
+      "proposed_action": "第一期的第一个里程碑：取最简单的单元（如 chunk_row_scan）走通 ascriptor 的 aclnn launcher 本地编译，产出 custom_opp_*.run 并安装为 vendor。在接任何线性注意力算子之前完成。",
+      "resolution": "2026-09-11 在 Ascend950PR / CANN 9.1.0 / NPU5 上实测：chunk_row_scan 的 `run.py check --launcher aclnn --device a5` 通过（case source_wide_aligned，19.6s，passed）。产物含 custom_opp_*.run 与 vendors/customize 树。"
+    },
+    {
+      "id": "runtime-bridge-missing",
+      "title": "ascriptor 无进程内 device tensor 调用能力",
+      "category": "runtime",
+      "severity": "resolved",
+      "applies_to": [
+        "all"
+      ],
+      "evidence": "ascriptor/runtime/opexec.py 的 __call__：aclnn 路径经 write_args 写二进制参数文件并跑独立 test_aclnnop；board/pypto 经 SSH 推送；返回值用 torch.frombuffer 重建 CPU tensor。",
+      "impact": "每次调用都有落盘与进程启动开销，且输出在 CPU 上 —— 无法作为训练/推理中的算子使用。",
+      "blocks": [
+        "phase 1",
+        "phase 2",
+        "phase 3"
+      ],
+      "proposed_action": "自建 runtime/{compile,cache,binding,autograd}.py：把生成的 CANN 自定义算子编译成常驻 .so，经 torch.library 注册，直吃 NPU device tensor。地基是 ascriptor 的 runtime/aclnn/template 与 build_custom_op()。",
+      "resolution": "2026-09-11 实现并实测通过。ascend_fla/runtime/{binding,compile}.py：用 ctypes 加载 libnnopbase.so（aclCreateTensor 在此，**不在** libascendcl.so）与 vendor 的 libcust_opapi.so，把 torch NPU tensor 的 data_ptr 直接交给 aclCreateTensor，零拷贝；stream 取自 torch.npu.current_stream().npu_stream；workspace 用 torch.empty 复用。chunk_row_scan 验证 max_abs_diff=9.537e-07 / rel_l2=4.838e-08。"
+    },
+    {
+      "id": "kda-no-local-evidence",
+      "title": "kda_fwd / kda_bwd 没有本地验证证据",
+      "category": "validation",
+      "severity": "resolved",
+      "applies_to": [
+        "kda"
+      ],
+      "evidence": "两个单元目录下无 validation.json；contract support 中 reference/sim/pipesim/emit 全 untested，仅 board passed（证据为 kernels/docs/migration/fragments/a5-three-backends-20260907.json）。kda_bwd 的 pypto_pro 为 gap。",
+      "impact": "KDA 已是第一期首选目标，而它没有可在本机复现的精度基线 —— 出问题只能上真机查，迭代会很慢。",
+      "blocks": [
+        "phase 1"
+      ],
+      "proposed_action": "第一期前置工作（可在 macOS 本机完成，无需 CANN）：用 ascriptor 的 run.py 在本地补跑 reference 与 sim，建立基线并记录到本仓。严重度因首个目标改为 KDA 而由 P2 提升至 P0。",
+      "resolution": "2026-09-11 在本地补齐：kda_fwd reference(4 cases)+sim(4 cases)、kda_bwd reference(5 cases)+sim(5 cases) 全部 passed，ascriptor 0.1.0 / python 3.11.15 / torch 2.10.0+cpu / numpy 2.4.6。"
     }
   ],
-
   "summary": {
-    "P0": 3,
+    "P0": 1,
     "P1": 10,
     "P2": 6,
-    "total": 19,
-    "first_milestone": "aclnn-compile-untested —— 在接任何线性注意力算子之前，先证明本地 aclnn 编译路径可用。",
+    "total": 20,
+    "first_milestone": "已达成：aclnn 本地编译 + runtime 桥均在 Ascend950PR 上实测通过（2026-09-11）。当前首要障碍是 npu-builtin-ops-missing —— 它阻塞性能基线与第二期 layer 验证。",
     "recommended_first_target": "KDA（Kimi-Linear / fla-kda-default 形状）。其 ABI 已是 token-major BTHK、GQA 原生支持、initial_state 与 final_state 均为 FP32、backward 产出 dh0 —— 上述多数 ABI 缺口对它都不适用。唯一需要前置补齐的是本地验证证据（kda-no-local-evidence）。",
     "kda_vs_gdn": {
       "note": "选择 KDA 作为首个目标的依据：下列能力 KDA 有、GDN 没有。",
-      "kda_only": ["GQA 分组 (HV % H == 0)", "token-major 公开布局", "非零 initial_state 输入", "backward 产出 dh0", "final_state 为 FP32", "block_dim 上限 4 而非 2"],
-      "gdn_only": ["本地 validation.json 证据齐全"]
-    }
+      "kda_only": [
+        "GQA 分组 (HV % H == 0)",
+        "token-major 公开布局",
+        "非零 initial_state 输入",
+        "backward 产出 dh0",
+        "final_state 为 FP32",
+        "block_dim 上限 4 而非 2"
+      ],
+      "gdn_only": [
+        "本地 validation.json 证据齐全"
+      ]
+    },
+    "resolved": 3
   }
 }

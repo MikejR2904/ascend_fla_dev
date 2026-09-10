@@ -85,6 +85,47 @@ ascriptor 现在的执行模型全是"**落盘 + 独立进程**"：`aclnn` launc
 - 共享机器上跑任务前先看 `npu-smi info`；有别人的活跃任务就等，**绝不 kill
   或修改他人进程**。
 - 远程工作副本通常是 `rsync` 的普通拷贝，不是 git checkout —— 不要在远端 `git pull`。
+- **装包用自己的 venv**。共享 conda 环境可能同时服务别的项目，往里 pip install
+  会污染别人。做法：`python -m venv --system-site-packages <工作区>/venv`，
+  复用宿主的 torch/torch_npu，自己的包只进 venv。
+- 传大文件要留意带宽：整包 `git archive` 往往有大量 examples/docs，
+  只打包 `ascriptor` 包 + `pyproject.toml` 能把 29MB 压到 2.7MB。
+  `scp` 中断会留下**不完整**的文件且不报错 —— 传完一定对 `md5sum`。
+
+### 已实测的环境限制（A5 / Ascend950PR，CANN 9.1.0，2026-09-11）
+
+**CANN 的内置算子包不覆盖 Ascend950PR。** `$ASCEND_OPP_PATH/built-in/op_impl/
+ai_core/tbe/kernel/` 下只有 `ascend910_93` 与 `ascend910b`。后果是
+**torch_npu 的计算算子全部不可用**：
+
+| 操作 | 可用 | 说明 |
+|---|---|---|
+| `torch.empty(device="npu")` | ✅ | 纯分配，不走算子 |
+| `.to("npu")` / `.cpu()` | ✅ | H2D / D2H memcpy |
+| `data_ptr()` / `current_stream()` | ✅ | runtime 桥需要的就是这些 |
+| `torch.zeros` / `randn` | ❌ | 需要 ZerosLike / StatelessNormal |
+| 任何 dtype 转换（`.float()`、bf16↔fp32） | ❌ | 需要 Cast |
+| `permute().contiguous()`（NPU 上） | ❌ | 需要 d2d copy |
+| 任何 matmul / einsum | ❌ | |
+
+**实践后果**：取值、比较、layout 重排一律**先 D2H 再做**（`t.cpu().float()`，
+不是 `t.float().cpu()`）。造零张量在 CPU 上造再 H2D。我们自己编译的 kernel
+**不受影响** —— 计算都在自编译算子里，这正是 runtime 桥的价值。
+
+**aclnn 相关的硬事实**（写 runtime 代码时会用到）：
+
+- `aclCreateTensor` / `aclDestroyTensor` 在 **`libnnopbase.so`**，
+  `libascendcl.so` 里没有这个符号。
+- aclnn 参数顺序 = `inputs… + scalars… + outputs… + &wsSize + &executor`。
+- aclnn 接口层**放宽** attr 类型：整型 attr 一律 `int64_t`，浮点 attr 是
+  **`double`**（不是 `float`）。按 `c_float` 传 4 字节会让被调方从 8 字节槽里读到
+  垃圾值 —— 实测表现为 `scale` 近 0，于是**只有用到它的输出归零、别的输出照常正确**，
+  极其隐蔽。判类型一律看生成的 `aclnn_*.h`，不要照搬 ascriptor 的 `SCALAR_C`
+  （那是 kernel 侧的 C 类型）。
+- ACL dtype 枚举：f32=0、f16=1、i32=3、i64=9、bool=12、bf16=27；`ACL_FORMAT_ND=2`。
+- 必须让 `ASCEND_CUSTOM_OPP_PATH` 指向 vendor 树，CANN 才找得到算子的 JSON 配置。
+- `ascriptor` 的 `a5` → `950` profile（32 cube / 64 vec），而 Ascend950PR 物理上
+  只有 **28 cube / 56 vec**。`block_dim` 超过物理核数会在硬件 barrier 上死锁。
 
 ## 6. 验证方法论
 
