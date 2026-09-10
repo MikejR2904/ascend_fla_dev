@@ -662,5 +662,49 @@
       "CANN 需要 ASCEND_CUSTOM_OPP_PATH 指向 vendor 树才能找到算子 JSON 配置",
       "与 ascriptor harness 路径的逐位一致性是验证桥正确性的最强手段（单 kernel 二分）"
     ]
+  },
+  "performance_baselines": {
+    "note": "基线一：torch_npu 原生算子拼出的同语义 KDA（ascend_fla/reference/kda.py 的 kda_chunk_vectorized）。它同时是第二 oracle。报数必须带形状/dtype/warmup/iters/是否同步 —— 见 AGENTS.md §6。",
+    "machine": "8-card Ascend950PR docker host, CANN 9.2.0 (V100R001C25B046), torch 2.10.0+cpu / torch_npu 2.10.0.post2, python 3.11.16, NPU 7",
+    "recorded_at": "2026-09-11",
+    "conditions": {
+      "dtype": "bfloat16",
+      "K": 128,
+      "V": 128,
+      "chunk": 64,
+      "warmup": 3,
+      "iters": 5,
+      "synchronized": true,
+      "forward_only": true
+    },
+    "torch_npu_vectorized": [
+      {
+        "shape": "smoke",
+        "dims": "B1/H1/HV1/T64",
+        "ms": 5.866,
+        "rel_l2_vs_cpu": 1.898e-05
+      },
+      {
+        "shape": "kimi_linear_layer",
+        "dims": "B1/H32/HV32/T1024",
+        "ms": 6.497,
+        "rel_l2_vs_cpu": 2.721e-05
+      },
+      {
+        "shape": "qwen3_next_layer",
+        "dims": "B1/H16/HV32/T1024",
+        "ms": 7.04,
+        "rel_l2_vs_cpu": 2.765e-05
+      },
+      {
+        "shape": "long_context",
+        "dims": "B1/H16/HV32/T4096",
+        "ms": 14.469,
+        "rel_l2_vs_cpu": 2.622e-05
+      }
+    ],
+    "observation": "数据量从 smoke 到 kimi_linear_layer 差 512 倍，耗时只差 11%（5.87→6.50ms）—— 这个 torch_npu 实现完全被 kernel launch 开销支配（向量化后仍有 63 次求逆迭代 + NT 次 chunk 迭代的 python 循环，每次若干小 op），不是算力受限。自编译的融合算子应当在这里大幅胜出；这也意味着**不要把这个基线当成硬件算力上限**。",
+    "not_yet_measured": "ascriptor 自编译算子（ops/kda/chunk.py）的同形状耗时。第二期补 —— 前置条件已满足：aclnn 编译在本机 CANN 9.2.0 上实测可用，且本机 npu permute+contiguous 可用（layout 重排走 NPU，不必绕 CPU）。",
+    "cross_cann_consistency": "kda_fwd 经 runtime 桥在 CANN 9.1.0 与 9.2.0 两台机器上的 relL2 逐位相同（smoke 3.288e-03 / multi_chunk 3.383e-03 / gva 3.359e-03），说明这个偏差来自算子自身的数值路径（见 gaps.json 的 kda-fwd-bwd-dtype-mismatch），与 CANN 版本无关。"
   }
 }

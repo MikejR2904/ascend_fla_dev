@@ -5,25 +5,10 @@
   "note": "缺口表。severity: P0 阻塞第一期 / P1 阻塞端到端可用 / P2 覆盖面与性能。applies_to 列出受影响的算子族 —— 多数限制是算子族特有的，不要当成全局限制。每条的 evidence 必须指向可核查的来源，proposed_action 是建议而非承诺。",
   "schema_changelog": [
     "v2 (2026-09-10): 首个目标由 GDN 改为 KDA 后重排 severity；新增 applies_to 字段；新增 kda-fwd-bwd-dtype-mismatch。",
-    "v3 (2026-09-11): 第一期实测后更新。aclnn-compile-untested 的依据被证伪并改写（aclnn 映射到 board stage，contract 的 compile 指 `ascriptor compile` CLI）；runtime-bridge-missing 与 kda-no-local-evidence 已解决；scale-param-no-slot 对 kda 不成立（kernel 有 f32 scale 入口）；新增 npu-builtin-ops-missing。"
+    "v3 (2026-09-11): 第一期实测后更新。aclnn-compile-untested 的依据被证伪并改写（aclnn 映射到 board stage，contract 的 compile 指 `ascriptor compile` CLI）；runtime-bridge-missing 与 kda-no-local-evidence 已解决；scale-param-no-slot 对 kda 不成立（kernel 有 f32 scale 入口）；新增 npu-builtin-ops-missing。",
+    "v3.1 (2026-09-11): npu-builtin-ops-missing 降级为 environment-specific —— 另一台 8 卡 Ascend950PR 机器（CANN 9.2.0，opp 带 ascend950 算子包）上 torch_npu 计算算子全部可用。"
   ],
   "gaps": [
-    {
-      "id": "npu-builtin-ops-missing",
-      "title": "CANN 的内置算子包不覆盖 Ascend950PR，torch_npu 的计算算子全不可用",
-      "category": "environment",
-      "severity": "P0",
-      "applies_to": [
-        "all"
-      ],
-      "evidence": "238（Ascend950PR_957b / CANN 9.1.0）上 $ASCEND_OPP_PATH/built-in/op_impl/ai_core/tbe/kernel/ 只有 ascend910_93 与 ascend910b 两个 SoC 目录。torch.randn(device='npu') 报 aclnnInplaceNormal_1_StatelessNormalAiCore 找不到 JSON 配置；torch.zeros、bf16->fp32 Cast 同样失败。torch 本身是 2.10.0+cpu。",
-      "impact": "⑤ torch_npu 组合基线无法在这台机器上跑（需要 matmul/einsum 等内置算子）。第二期的 layer 级验证同样受阻 —— nn.Linear / norm / conv 都依赖内置算子。实测可用的只有：torch.empty、H2D/D2H 拷贝、data_ptr、current_stream —— 这恰好够 runtime 桥用，自编译的 kernel 不受影响。",
-      "blocks": [
-        "phase 1 ⑤",
-        "phase 2 layer 级验证"
-      ],
-      "proposed_action": "三条路：① 性能基线改用 ascriptor 自己的 profile 子命令 + 自编译 kernel 之间的对比；② 在有完整算子包的机器上做 torch_npu 基线（a2/910B3 有 ascend910b）；③ 确认是否存在 950PR 的算子包可安装。选哪条取决于基线要回答的问题 —— 要对比 ascriptor vs torch_npu 就必须有内置算子，换机器是最直接的。"
-    },
     {
       "id": "kda-fwd-bwd-dtype-mismatch",
       "title": "kda 的 fwd 与 bwd 对同名张量声明了不同 dtype",
@@ -176,6 +161,20 @@
       "proposed_action": "门控显式报错并给出最近的合法 T。padding 方案要在性能报告中算进开销。"
     },
     {
+      "id": "npu-builtin-ops-missing",
+      "title": "内置算子包的覆盖随机器而异：部分 Ascend950PR 机器上 torch_npu 的计算算子不可用",
+      "category": "environment",
+      "severity": "P2",
+      "applies_to": [
+        "all"
+      ],
+      "evidence": "238（Ascend950PR_957b / CANN 9.1.0）上 $ASCEND_OPP_PATH/built-in/op_impl/ai_core/tbe/kernel/ 只有 ascend910_93 与 ascend910b 两个 SoC 目录。torch.randn(device='npu') 报 aclnnInplaceNormal_1_StatelessNormalAiCore 找不到 JSON 配置；torch.zeros、bf16->fp32 Cast 同样失败。torch 本身是 2.10.0+cpu。 【2026-09-11 补充】另一台 8 卡 Ascend950PR 机器（CANN 9.2.0，innerversion V100R001C25B046）的 opp 下有 **ascend950** 算子包，SoC 报 Ascend950PR_9579，实测 randn / zeros / fp32+bf16 matmul / bf16↔fp32 cast / permute+contiguous / einsum / cumsum 全部可用。所以这不是 SoC 级缺陷，而是**算子包安装差异**：CANN 9.1.0 的 opp 只装了 910 系列。",
+      "impact": "选机器决定能做什么：装了 ascend950 算子包的机器上 torch_npu 基线与 layer 级验证都可做；没装的机器上只能跑自编译 kernel（empty/H2D/D2H/data_ptr/stream 可用，计算算子全不可用）。runtime 桥在两种机器上都工作 —— 这正是它的价值。",
+      "blocks": [],
+      "proposed_action": "三条路：① 性能基线改用 ascriptor 自己的 profile 子命令 + 自编译 kernel 之间的对比；② 在有完整算子包的机器上做 torch_npu 基线（a2/910B3 有 ascend910b）；③ 确认是否存在 950PR 的算子包可安装。选哪条取决于基线要回答的问题 —— 要对比 ascriptor vs torch_npu 就必须有内置算子，换机器是最直接的。",
+      "resolution": "2026-09-11 改用带 ascend950 算子包的 CANN 9.2.0 机器后，⑤ torch_npu 基线与第二期 layer 验证的阻塞均解除。选机器时先查 $ASCEND_OPP_PATH/built-in/op_impl/ai_core/tbe/kernel/ 下是否有 ascend950 目录 —— 这一步应进入任何 A5 任务的开机检查。"
+    },
+    {
       "id": "toy-case-shapes",
       "title": "现有算子 case 全是玩具形状，未在真实模型形状上验证",
       "category": "validation",
@@ -318,11 +317,11 @@
     }
   ],
   "summary": {
-    "P0": 1,
+    "P0": 0,
     "P1": 10,
-    "P2": 6,
+    "P2": 7,
     "total": 20,
-    "first_milestone": "已达成：aclnn 本地编译 + runtime 桥均在 Ascend950PR 上实测通过（2026-09-11）。当前首要障碍是 npu-builtin-ops-missing —— 它阻塞性能基线与第二期 layer 验证。",
+    "first_milestone": "第一期五项已全部有结论：aclnn 编译、runtime 桥、kda_fwd 接线、KDA 本地基线均实测通过；torch_npu 基线在带 ascend950 算子包的机器上跑通。下一个障碍是 kda-fwd-bwd-dtype-mismatch（第二期前置）。",
     "recommended_first_target": "KDA（Kimi-Linear / fla-kda-default 形状）。其 ABI 已是 token-major BTHK、GQA 原生支持、initial_state 与 final_state 均为 FP32、backward 产出 dh0 —— 上述多数 ABI 缺口对它都不适用。唯一需要前置补齐的是本地验证证据（kda-no-local-evidence）。",
     "kda_vs_gdn": {
       "note": "选择 KDA 作为首个目标的依据：下列能力 KDA 有、GDN 没有。",

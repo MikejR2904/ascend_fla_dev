@@ -135,14 +135,24 @@ def main() -> int:
         if args.accuracy:
             o_dev, s_dev = kda_chunk_vectorized(**kw)
             x_cpu = {k: v.cpu() for k, v in x.items()}
-            o_cpu, s_cpu = kda_chunk_ref(**x_cpu, output_final_state=True)
-            o_rec, s_rec = kda_recurrent_ref(**x_cpu, output_final_state=True)
-            rec["rel_l2_vs_cpu_chunk"] = rel_l2(o_dev.cpu(), o_cpu)
-            rec["rel_l2_state_vs_cpu_chunk"] = rel_l2(s_dev.cpu(), s_cpu)
-            rec["rel_l2_cpu_chunk_vs_recurrent"] = rel_l2(o_cpu, o_rec)
-            print(f"{'':<20} 精度: dev_vec vs cpu_chunk relL2={rec['rel_l2_vs_cpu_chunk']:.3e} "
-                  f"state={rec['rel_l2_state_vs_cpu_chunk']:.3e} | "
-                  f"cpu chunk vs recurrent relL2={rec['rel_l2_cpu_chunk_vs_recurrent']:.3e}")
+            # CPU 参考按形状选实现：循环版（kda_chunk_ref / kda_recurrent_ref）在 T=1024、
+            # HV=32 下要跑上千次 python 循环，实测 wall 1.5min 就烧掉 59min CPU time。
+            # 大形状只用向量化 CPU 版当参考（它已与 fla 上游 naive 对齐到 1.1e-07）。
+            small = shp["T"] * shp["HV"] <= 64 * 32
+            if small:
+                o_cpu, s_cpu = kda_chunk_ref(**x_cpu, output_final_state=True)
+                o_rec, _ = kda_recurrent_ref(**x_cpu, output_final_state=True)
+                rec["rel_l2_cpu_chunk_vs_recurrent"] = rel_l2(o_cpu, o_rec)
+                rec["cpu_reference"] = "kda_chunk_ref (loop)"
+            else:
+                o_cpu, s_cpu = kda_chunk_vectorized(**x_cpu, output_final_state=True)
+                rec["cpu_reference"] = "kda_chunk_vectorized (大形状下循环版过慢)"
+            rec["rel_l2_vs_cpu"] = rel_l2(o_dev.cpu(), o_cpu)
+            rec["rel_l2_state_vs_cpu"] = rel_l2(s_dev.cpu(), s_cpu)
+            extra = (f" | cpu chunk vs recurrent relL2={rec['rel_l2_cpu_chunk_vs_recurrent']:.3e}"
+                     if "rel_l2_cpu_chunk_vs_recurrent" in rec else "")
+            print(f"{'':<20} 精度[{rec['cpu_reference'].split()[0]}]: o relL2={rec['rel_l2_vs_cpu']:.3e} "
+                  f"state={rec['rel_l2_state_vs_cpu']:.3e}{extra}")
         records.append(rec)
 
     if args.json_out:

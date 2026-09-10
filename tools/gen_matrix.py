@@ -103,9 +103,9 @@ def ops_section(ops: dict) -> list[str]:
         "",
         "★ 标记第一期的首个目标。",
         "",
-        "> **compile** 一列是本仓 runtime 桥依赖的本地 CANN 编译路径 —— 全部 `untested`，"
-        "这是第一期的首个里程碑（见 `gaps.json` 的 `aclnn-compile-untested`）。"
-        "真机 `board` 全部 passed，但走的是 SSH 远端编译，不是同一条路。",
+        "> **compile** 一列指 `ascriptor compile` CLI（纯源码发射+编译、不执行），"
+        "**不是** aclnn launcher —— unit runner 把 board / aclnn / pypto 都记为 `board` stage。"
+        "本仓的 aclnn 本地编译与零拷贝调用已独立实测通过，见下方 `our_runtime_bridge`。",
         "",
     ]
 
@@ -118,6 +118,28 @@ def ops_section(ops: dict) -> list[str]:
     for p in ops["reusable_primitives"]:
         out.append(f"| `{p['id']}` | {p['maps_to']} | {STATUS.get(p['our_status'], p['our_status'])} |")
     out.append("")
+
+    if bl := ops.get("performance_baselines"):
+        c = bl["conditions"]
+        out += [
+            "### 性能基线", "",
+            f"> {bl['note']}", "",
+            f"机器：{bl['machine']} · 记录于 {bl['recorded_at']}",
+            "",
+            f"条件：dtype={c['dtype']} K=V={c['K']} chunk={c['chunk']} "
+            f"warmup={c['warmup']} iters={c['iters']} "
+            f"synchronized={'yes' if c['synchronized'] else 'no'} "
+            f"forward_only={'yes' if c['forward_only'] else 'no'}",
+            "",
+            "| 形状 | B/H/HV/T | torch_npu 向量化 (ms) | o relL2 vs CPU |",
+            "|---|---|---|---|",
+        ]
+        for r in bl["torch_npu_vectorized"]:
+            out.append(f"| {r['shape']} | {r['dims']} | {r['ms']:.3f} | {r['rel_l2_vs_cpu']:.3e} |")
+        out += ["", f"**观察**：{bl['observation']}", ""]
+        if cc := bl.get("cross_cann_consistency"):
+            out += [f"**跨 CANN 版本一致性**：{cc}", ""]
+        out += [f"**尚未测得**：{bl['not_yet_measured']}", ""]
 
     stack = ops["stack_layers"]
     out += ["### 全链路三层", "", f"> {stack['note']}", ""]

@@ -46,7 +46,7 @@ ascriptor pin：`0.1.0.dev1` · library `77619116f9b3` · 支持硬件 a5 · def
 
 ★ 标记第一期的首个目标。
 
-> **compile** 一列是本仓 runtime 桥依赖的本地 CANN 编译路径 —— 全部 `untested`，这是第一期的首个里程碑（见 `gaps.json` 的 `aclnn-compile-untested`）。真机 `board` 全部 passed，但走的是 SSH 远端编译，不是同一条路。
+> **compile** 一列指 `ascriptor compile` CLI（纯源码发射+编译、不执行），**不是** aclnn launcher —— unit runner 把 board / aclnn / pypto 都记为 `board` stage。本仓的 aclnn 本地编译与零拷贝调用已独立实测通过，见下方 `our_runtime_bridge`。
 
 ### 缺失的算子
 
@@ -60,6 +60,27 @@ ascriptor pin：`0.1.0.dev1` · library `77619116f9b3` · 支持硬件 a5 · def
 | `chunk_row_scan` | fla 的 chunk cumsum（ops/utils/cumsum.py 的 chunk_local_cumsum） | ⬜ 未开始 |
 | `matrix_normalization.row_l2` | fla.modules.l2norm | ⬜ 未开始 |
 | `gated_approximations` | fla.modules.activations / fused swiglu | ⬜ 未开始 |
+
+### 性能基线
+
+> 基线一：torch_npu 原生算子拼出的同语义 KDA（ascend_fla/reference/kda.py 的 kda_chunk_vectorized）。它同时是第二 oracle。报数必须带形状/dtype/warmup/iters/是否同步 —— 见 AGENTS.md §6。
+
+机器：8-card Ascend950PR docker host, CANN 9.2.0 (V100R001C25B046), torch 2.10.0+cpu / torch_npu 2.10.0.post2, python 3.11.16, NPU 7 · 记录于 2026-09-11
+
+条件：dtype=bfloat16 K=V=128 chunk=64 warmup=3 iters=5 synchronized=yes forward_only=yes
+
+| 形状 | B/H/HV/T | torch_npu 向量化 (ms) | o relL2 vs CPU |
+|---|---|---|---|
+| smoke | B1/H1/HV1/T64 | 5.866 | 1.898e-05 |
+| kimi_linear_layer | B1/H32/HV32/T1024 | 6.497 | 2.721e-05 |
+| qwen3_next_layer | B1/H16/HV32/T1024 | 7.040 | 2.765e-05 |
+| long_context | B1/H16/HV32/T4096 | 14.469 | 2.622e-05 |
+
+**观察**：数据量从 smoke 到 kimi_linear_layer 差 512 倍，耗时只差 11%（5.87→6.50ms）—— 这个 torch_npu 实现完全被 kernel launch 开销支配（向量化后仍有 63 次求逆迭代 + NT 次 chunk 迭代的 python 循环，每次若干小 op），不是算力受限。自编译的融合算子应当在这里大幅胜出；这也意味着**不要把这个基线当成硬件算力上限**。
+
+**跨 CANN 版本一致性**：kda_fwd 经 runtime 桥在 CANN 9.1.0 与 9.2.0 两台机器上的 relL2 逐位相同（smoke 3.288e-03 / multi_chunk 3.383e-03 / gva 3.359e-03），说明这个偏差来自算子自身的数值路径（见 gaps.json 的 kda-fwd-bwd-dtype-mismatch），与 CANN 版本无关。
+
+**尚未测得**：ascriptor 自编译算子（ops/kda/chunk.py）的同形状耗时。第二期补 —— 前置条件已满足：aclnn 编译在本机 CANN 9.2.0 上实测可用，且本机 npu permute+contiguous 可用（layout 重排走 NPU，不必绕 CPU）。
 
 ### 全链路三层
 
@@ -84,9 +105,9 @@ ascriptor pin：`0.1.0.dev1` · library `77619116f9b3` · 支持硬件 a5 · def
 
 ## 缺口
 
-P0 1 项 · P1 10 项 · P2 6 项 · 共 20 项
+P0 0 项 · P1 10 项 · P2 7 项 · 共 20 项
 
-**首个里程碑**：已达成：aclnn 本地编译 + runtime 桥均在 Ascend950PR 上实测通过（2026-09-11）。当前首要障碍是 npu-builtin-ops-missing —— 它阻塞性能基线与第二期 layer 验证。
+**首个里程碑**：第一期五项已全部有结论：aclnn 编译、runtime 桥、kda_fwd 接线、KDA 本地基线均实测通过；torch_npu 基线在带 ascend950 算子包的机器上跑通。下一个障碍是 kda-fwd-bwd-dtype-mismatch（第二期前置）。
 
 **建议的首个目标**：KDA（Kimi-Linear / fla-kda-default 形状）。其 ABI 已是 token-major BTHK、GQA 原生支持、initial_state 与 final_state 均为 FP32、backward 产出 dh0 —— 上述多数 ABI 缺口对它都不适用。唯一需要前置补齐的是本地验证证据（kda-no-local-evidence）。
 
@@ -107,18 +128,9 @@ P0 1 项 · P1 10 项 · P2 6 项 · 共 20 项
 
 | 算子族 | P0 | P1 | P2 |
 |---|---|---|---|
-| KDA | `npu-builtin-ops-missing` | `kda-fwd-bwd-dtype-mismatch`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`no-tail-path` | `toy-case-shapes`<br>`block-dim-ceiling`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`modules-layer-missing`<br>`torch-npu-baseline-missing` |
-| GDN | `npu-builtin-ops-missing` | `gdn-no-gqa`<br>`layout-not-token-major`<br>`nonzero-initial-state`<br>`d-initial-state-absent`<br>`state-dtype-bf16`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`scale-param-no-slot`<br>`no-tail-path` | `toy-case-shapes`<br>`block-dim-ceiling`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`modules-layer-missing`<br>`torch-npu-baseline-missing` |
-| DeltaNet | `npu-builtin-ops-missing` | `layout-not-token-major`<br>`nonzero-initial-state`<br>`d-initial-state-absent`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`scale-param-no-slot`<br>`no-tail-path` | `toy-case-shapes`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`torch-npu-baseline-missing` |
-
-### P0
-
-#### `npu-builtin-ops-missing` — CANN 的内置算子包不覆盖 Ascend950PR，torch_npu 的计算算子全不可用
-
-- **类别** environment · **适用于** 全部 · **阻塞** `phase 1 ⑤`, `phase 2 layer 级验证`
-- **依据** 238（Ascend950PR_957b / CANN 9.1.0）上 $ASCEND_OPP_PATH/built-in/op_impl/ai_core/tbe/kernel/ 只有 ascend910_93 与 ascend910b 两个 SoC 目录。torch.randn(device='npu') 报 aclnnInplaceNormal_1_StatelessNormalAiCore 找不到 JSON 配置；torch.zeros、bf16->fp32 Cast 同样失败。torch 本身是 2.10.0+cpu。
-- **影响** ⑤ torch_npu 组合基线无法在这台机器上跑（需要 matmul/einsum 等内置算子）。第二期的 layer 级验证同样受阻 —— nn.Linear / norm / conv 都依赖内置算子。实测可用的只有：torch.empty、H2D/D2H 拷贝、data_ptr、current_stream —— 这恰好够 runtime 桥用，自编译的 kernel 不受影响。
-- **建议** 三条路：① 性能基线改用 ascriptor 自己的 profile 子命令 + 自编译 kernel 之间的对比；② 在有完整算子包的机器上做 torch_npu 基线（a2/910B3 有 ascend910b）；③ 确认是否存在 950PR 的算子包可安装。选哪条取决于基线要回答的问题 —— 要对比 ascriptor vs torch_npu 就必须有内置算子，换机器是最直接的。
+| KDA | — | `kda-fwd-bwd-dtype-mismatch`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`no-tail-path` | `npu-builtin-ops-missing`<br>`toy-case-shapes`<br>`block-dim-ceiling`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`modules-layer-missing`<br>`torch-npu-baseline-missing` |
+| GDN | — | `gdn-no-gqa`<br>`layout-not-token-major`<br>`nonzero-initial-state`<br>`d-initial-state-absent`<br>`state-dtype-bf16`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`scale-param-no-slot`<br>`no-tail-path` | `npu-builtin-ops-missing`<br>`toy-case-shapes`<br>`block-dim-ceiling`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`modules-layer-missing`<br>`torch-npu-baseline-missing` |
+| DeltaNet | — | `layout-not-token-major`<br>`nonzero-initial-state`<br>`d-initial-state-absent`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`scale-param-no-slot`<br>`no-tail-path` | `npu-builtin-ops-missing`<br>`toy-case-shapes`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`torch-npu-baseline-missing` |
 
 ### P1
 
@@ -193,6 +205,13 @@ P0 1 项 · P1 10 项 · P2 6 项 · 共 20 项
 - **建议** 门控显式报错并给出最近的合法 T。padding 方案要在性能报告中算进开销。
 
 ### P2
+
+#### `npu-builtin-ops-missing` — 内置算子包的覆盖随机器而异：部分 Ascend950PR 机器上 torch_npu 的计算算子不可用
+
+- **类别** environment · **适用于** 全部 · **阻塞** —
+- **依据** 238（Ascend950PR_957b / CANN 9.1.0）上 $ASCEND_OPP_PATH/built-in/op_impl/ai_core/tbe/kernel/ 只有 ascend910_93 与 ascend910b 两个 SoC 目录。torch.randn(device='npu') 报 aclnnInplaceNormal_1_StatelessNormalAiCore 找不到 JSON 配置；torch.zeros、bf16->fp32 Cast 同样失败。torch 本身是 2.10.0+cpu。 【2026-09-11 补充】另一台 8 卡 Ascend950PR 机器（CANN 9.2.0，innerversion V100R001C25B046）的 opp 下有 **ascend950** 算子包，SoC 报 Ascend950PR_9579，实测 randn / zeros / fp32+bf16 matmul / bf16↔fp32 cast / permute+contiguous / einsum / cumsum 全部可用。所以这不是 SoC 级缺陷，而是**算子包安装差异**：CANN 9.1.0 的 opp 只装了 910 系列。
+- **影响** 选机器决定能做什么：装了 ascend950 算子包的机器上 torch_npu 基线与 layer 级验证都可做；没装的机器上只能跑自编译 kernel（empty/H2D/D2H/data_ptr/stream 可用，计算算子全不可用）。runtime 桥在两种机器上都工作 —— 这正是它的价值。
+- **建议** 三条路：① 性能基线改用 ascriptor 自己的 profile 子命令 + 自编译 kernel 之间的对比；② 在有完整算子包的机器上做 torch_npu 基线（a2/910B3 有 ascend910b）；③ 确认是否存在 950PR 的算子包可安装。选哪条取决于基线要回答的问题 —— 要对比 ascriptor vs torch_npu 就必须有内置算子，换机器是最直接的。
 
 #### `toy-case-shapes` — 现有算子 case 全是玩具形状，未在真实模型形状上验证
 

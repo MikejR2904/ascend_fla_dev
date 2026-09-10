@@ -92,11 +92,23 @@ ascriptor 现在的执行模型全是"**落盘 + 独立进程**"：`aclnn` launc
   只打包 `ascriptor` 包 + `pyproject.toml` 能把 29MB 压到 2.7MB。
   `scp` 中断会留下**不完整**的文件且不报错 —— 传完一定对 `md5sum`。
 
-### 已实测的环境限制（A5 / Ascend950PR，CANN 9.1.0，2026-09-11）
+### 开机必查：opp 有没有 `ascend950` 算子包
 
-**CANN 的内置算子包不覆盖 Ascend950PR。** `$ASCEND_OPP_PATH/built-in/op_impl/
-ai_core/tbe/kernel/` 下只有 `ascend910_93` 与 `ascend910b`。后果是
-**torch_npu 的计算算子全部不可用**：
+**同为 Ascend950PR，不同机器的内置算子包覆盖不同 —— 这决定了你能做什么。**
+进任何 A5 机器先跑：
+
+```bash
+ls $ASCEND_OPP_PATH/built-in/op_impl/ai_core/tbe/kernel/
+```
+
+- 有 `ascend950` → torch_npu 的计算算子可用（实测 randn / zeros / fp32+bf16 matmul /
+  cast / contiguous / einsum / cumsum 全通）。性能基线与 layer 级验证都能做。
+- 只有 `ascend910*` → **torch_npu 的计算算子全不可用**，下表为实测可用面。
+
+实测：CANN 9.2.0（innerversion V100R001C25B046）的机器**有** `ascend950`；
+CANN 9.1.0 的机器**只有** 910 系列。这是算子包安装差异，不是 SoC 级缺陷。
+
+### 内置算子包缺失时的可用面（实测）
 
 | 操作 | 可用 | 说明 |
 |---|---|---|
@@ -108,9 +120,12 @@ ai_core/tbe/kernel/` 下只有 `ascend910_93` 与 `ascend910b`。后果是
 | `permute().contiguous()`（NPU 上） | ❌ | 需要 d2d copy |
 | 任何 matmul / einsum | ❌ | |
 
-**实践后果**：取值、比较、layout 重排一律**先 D2H 再做**（`t.cpu().float()`，
-不是 `t.float().cpu()`）。造零张量在 CPU 上造再 H2D。我们自己编译的 kernel
-**不受影响** —— 计算都在自编译算子里，这正是 runtime 桥的价值。
+**实践后果**（仅在缺 `ascend950` 的机器上）：取值、比较、layout 重排一律**先 D2H
+再做**（`t.cpu().float()`，不是 `t.float().cpu()`）。造零张量在 CPU 上造再 H2D。
+`ops/kda/chunk.py` 的 `layout_device="auto"` 会自动探测并绕路。
+
+**我们自己编译的 kernel 在两种机器上都不受影响** —— 计算都在自编译算子里。
+这正是 runtime 桥的价值：它让算子在内置算子包不全的机器上照样可用。
 
 **aclnn 相关的硬事实**（写 runtime 代码时会用到）：
 
