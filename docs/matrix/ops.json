@@ -1,0 +1,268 @@
+{
+  "schema": "ascend_fla.op-support/1",
+  "recorded_at": "2026-09-10",
+  "produced_by": "phase 0, read from ascriptor kernels contracts + catalog",
+  "note": "算子资产与支持状态。ascriptor 侧的事实（ABI、定尺域、验证状态）以 contract.json 为所有者，这里只存决策所需的摘要并指向来源。our_status 是本仓的接线进度，由我们自己维护。",
+
+  "ascriptor_pin": {
+    "workspace": "$ASCRIPTOR_WORKSPACE (默认 ../ascriptor)",
+    "library_commit": "77619116f9b3b2a91e7fa01d6161c257a883ae68",
+    "wheel_sha256": "475d3bc3eea2a2c69e1eb9de5cce73e7936a3fbd4edcc6a7f306f61943cc5205",
+    "version": "0.1.0.dev1",
+    "qualified_host": {"python": "3.10.20", "torch": "2.9.1+cpu", "numpy": "2.2.6"},
+    "release_scope": {
+      "supported_hardware": ["a5"],
+      "deferred_hardware": ["a2", "a3"],
+      "unqualified_hardware": ["a5pr"],
+      "decision": "D-250",
+      "note": "A2/A3 于 2026-09-06 deferred，另有未解决的 split-K FP32 cube 数值缺陷。"
+    },
+    "action": "升级 pin 前先看 ascriptor agent/compatibility.json，并重跑本仓全部精度回归。"
+  },
+
+  "stage_vocabulary": {
+    "reference": "CPU 独立参考自检（不导入 DSL / 模拟器 / CANN）",
+    "sim": "功能模拟器",
+    "pipesim": "lowered 事件与 hazard 模拟",
+    "emit": "源码发射",
+    "compile": "本地 CANN 自定义算子编译 —— 本仓 runtime 桥依赖的就是这条路",
+    "cannsim": "cannsim 录制执行",
+    "board": "真机执行（经 SSH 推送 + 远端编译运行）",
+    "statuses": ["passed", "untested", "gap", "failed"]
+  },
+
+  "linear_attention_ops": [
+    {
+      "id": "a5.gdn_fwd",
+      "op_family": "gated_delta_rule",
+      "direction": "forward",
+      "ascriptor_path": "kernels/projects/a5/gdn_fwd",
+      "contract_sha256": "83a730a3394cbb9bb48ecc2ddd96f462f30386fd02f8a9847e5d7166f93f7248",
+      "leaf_kernels": 6,
+      "kernel_names": ["preprocess", "inverse", "recompute", "scores", "recurrent", "recurrent_saved"],
+      "declared_cases": 4,
+      "abi": {
+        "inputs": {
+          "query": ["bfloat16", "B,H,C,64,128"],
+          "key": ["bfloat16", "B,H,C,64,128"],
+          "value": ["bfloat16", "B,H,C,64,128"],
+          "beta": ["float32", "B,H,C,64"],
+          "g": ["float32", "B,H,C,64"]
+        },
+        "outputs": {
+          "output": ["bfloat16", "B,H,C,64,128"],
+          "final_state": ["bfloat16", "B,H,128,128"],
+          "state_after_history": ["bfloat16", "B,H,C,128,128"],
+          "v_new_history": ["bfloat16", "B,H,C,64,128"],
+          "k_weighted_history": ["bfloat16", "B,H,C,64,128"],
+          "exp_delta_history": ["float32", "B,H,C,64"]
+        },
+        "stage_outputs": 15,
+        "note": "后四个输出是 backward 所需的保存值。final_state 为 BF16，fla 惯例是 FP32。"
+      },
+      "constraints": {
+        "L": 64,
+        "D": 128,
+        "tails": "none — 无 L/D tail 路径，T 必须是 64 的整数倍",
+        "head_grouping": "无独立 value-head 维度，仅 B,H,C",
+        "initial_state": "zero only",
+        "block_dim": [1, 2],
+        "values": "有限 BF16 q/k/v；FP32 beta ∈ [0,1]；非正的 raw log gate g",
+        "gate_modes": ["logsigmoid", "slow"]
+      },
+      "comparison_budget": {"mode": "allclose", "atol": 0.002, "rtol": 0.002, "max_relative_l2": 0.02},
+      "validation": {
+        "reference": "passed", "sim": "passed", "pipesim": "passed", "emit": "passed",
+        "compile": "untested", "cannsim": "untested",
+        "board_cce": "passed", "board_pto_isa": "passed", "board_pypto_pro": "passed",
+        "evidence": "kernels/projects/a5/gdn_fwd/validation.json",
+        "evidence_recorded_at": "2026-09-05"
+      },
+      "fla_counterpart": {
+        "entry": "fla.ops.gated_delta_rule.chunk_gated_delta_rule",
+        "oracle": "fla.ops.gated_delta_rule.naive.naive_chunk_gated_delta_rule",
+        "stage_mapping": {
+          "preprocess": "gated_delta_rule/gate.py + ops/utils/cumsum",
+          "inverse": "ops/utils/solve_tril + ops/common/chunk_scaled_dot_kkt",
+          "recompute": "gated_delta_rule/wy_fast.py",
+          "scores": "ops/common/chunk_o",
+          "recurrent": "ops/common/chunk_delta_h"
+        }
+      },
+      "our_status": {"wiring": "not-started", "binding": "not-started", "accuracy_vs_oracle": "not-started", "perf_vs_baseline": "not-started"}
+    },
+    {
+      "id": "a5.gdn_bwd",
+      "op_family": "gated_delta_rule",
+      "direction": "backward",
+      "ascriptor_path": "kernels/projects/a5/gdn_bwd",
+      "contract_sha256": "80d15bbdeaaffc8491ab4bd57cce59a3751a9d5f83f4d626e56a9290f3e3e9f1",
+      "leaf_kernels": 5,
+      "declared_cases": 5,
+      "constraints": {
+        "L": 64,
+        "D": 128,
+        "tails": "none",
+        "head_grouping": "无独立 value-head 维度",
+        "initial_state": "zero only",
+        "d_initial_state": "absent — 生产 backward ABI 不产出初始 state 的梯度",
+        "block_dim": [1, 2],
+        "note": "BHC 数不被 4 整除会走 backward finalize 的边界路径，case 中有覆盖。"
+      },
+      "validation": {
+        "reference": "passed", "sim": "passed", "pipesim": "passed", "emit": "passed",
+        "compile": "untested", "cannsim": "untested",
+        "board_cce": "passed", "board_pto_isa": "passed", "board_pypto_pro": "passed",
+        "evidence": "kernels/projects/a5/gdn_bwd/validation.json",
+        "evidence_recorded_at": "2026-09-05"
+      },
+      "fla_counterpart": {"entry": "fla.ops.gated_delta_rule.chunk.chunk_gated_delta_rule_bwd"},
+      "our_status": {"wiring": "not-started", "binding": "not-started", "accuracy_vs_oracle": "not-started", "perf_vs_baseline": "not-started"}
+    },
+    {
+      "id": "a5.kda_fwd",
+      "op_family": "kda",
+      "direction": "forward",
+      "ascriptor_path": "kernels/projects/a5/kda_fwd",
+      "contract_sha256": "1dae2470b2803454bd22fafe216296a6ee54dd2761a597d65f2026402e19a973",
+      "leaf_kernels": 5,
+      "declared_cases": 4,
+      "constraints": {
+        "L": 64, "K": 128, "V": 128,
+        "head_grouping": "支持 HV % H == 0 —— 这是 GDN 所缺的能力，实现可借鉴",
+        "initial_state": "支持 random / zero（case 中均有）",
+        "note": "定长 forward，五个 A5 kernel，含独立 recurrence 与显式精度检查点。"
+      },
+      "validation": {
+        "reference": "untested", "sim": "untested", "pipesim": "untested", "emit": "untested",
+        "compile": "untested", "cannsim": "untested",
+        "board_cce": "passed", "board_pto_isa": "passed", "board_pypto_pro": "passed",
+        "evidence": "kernels/docs/migration/fragments/a5-three-backends-20260907.json",
+        "evidence_recorded_at": "2026-09-07",
+        "note": "无本地 validation.json —— 只有真机证据，本地各 stage 全未跑。复用前建议先补本地 sim。"
+      },
+      "fla_counterpart": {"entry": "fla.ops.kda", "oracle": "fla.ops.kda.naive"},
+      "our_status": {"wiring": "not-started", "binding": "not-started", "accuracy_vs_oracle": "not-started", "perf_vs_baseline": "not-started"}
+    },
+    {
+      "id": "a5.kda_bwd",
+      "op_family": "kda",
+      "direction": "backward",
+      "ascriptor_path": "kernels/projects/a5/kda_bwd",
+      "contract_sha256": "a89b77dd7294270e",
+      "declared_cases": 5,
+      "constraints": {"L": 64, "K": 128, "V": 128},
+      "validation": {
+        "reference": "untested", "sim": "untested", "pipesim": "untested", "emit": "untested",
+        "compile": "untested", "cannsim": "untested",
+        "board_cce": "passed", "board_pto_isa": "passed", "board_pypto_pro": "gap",
+        "evidence": "kernels/docs/migration/fragments/a5-three-backends-20260907.json",
+        "note": "pypto_pro 后端是 gap，cce 与 pto_isa 真机 passed。"
+      },
+      "our_status": {"wiring": "not-started", "binding": "not-started", "accuracy_vs_oracle": "not-started", "perf_vs_baseline": "not-started"}
+    },
+    {
+      "id": "a5.delta_rule_fwd",
+      "op_family": "delta_rule",
+      "direction": "forward",
+      "ascriptor_path": "kernels/projects/a5/delta_rule_fwd",
+      "contract_sha256": "0d48d9262f560e1a",
+      "declared_cases": 7,
+      "constraints": {
+        "L": 64, "D": 128,
+        "tails": "none — 不完整的 B*H 或 B*H*C 核分配走有界循环；空输入被拒绝",
+        "initial_state": "zero only；生产 backward 无可训练初始 state 梯度",
+        "block_dim": {"min": 1, "max": 32},
+        "note": "block_dim 上限 32，比 gdn 的 [1,2] 宽得多 —— 多核扩展性更好。"
+      },
+      "validation": {
+        "reference": "passed", "sim": "passed", "pipesim": "passed", "emit": "passed",
+        "compile": "untested", "cannsim": "untested",
+        "board_cce": "passed", "board_pto_isa": "passed", "board_pypto_pro": "passed",
+        "evidence": "kernels/projects/a5/delta_rule_fwd/validation.json"
+      },
+      "fla_counterpart": {"entry": "fla.ops.delta_rule.chunk_delta_rule", "oracle": "fla.ops.delta_rule.naive"},
+      "our_status": {"wiring": "not-started", "binding": "not-started", "accuracy_vs_oracle": "not-started", "perf_vs_baseline": "not-started"}
+    },
+    {
+      "id": "a5.delta_rule_bwd",
+      "op_family": "delta_rule",
+      "direction": "backward",
+      "ascriptor_path": "kernels/projects/a5/delta_rule_bwd",
+      "contract_sha256": "1999c8cb0db5d954",
+      "declared_cases": 5,
+      "constraints": {"L": 64, "D": 128, "initial_state": "zero only", "d_initial_state": "absent"},
+      "validation": {
+        "reference": "passed", "sim": "passed", "pipesim": "passed", "emit": "passed",
+        "compile": "untested", "cannsim": "untested",
+        "board_cce": "passed", "board_pto_isa": "passed", "board_pypto_pro": "passed",
+        "evidence": "kernels/projects/a5/delta_rule_bwd/validation.json"
+      },
+      "our_status": {"wiring": "not-started", "binding": "not-started", "accuracy_vs_oracle": "not-started", "perf_vs_baseline": "not-started"}
+    }
+  ],
+
+  "missing_ops": [
+    {
+      "id": "gdn_fused_recurrent",
+      "op_family": "gated_delta_rule",
+      "purpose": "decode 路径（逐 token 递推 + state 传递）",
+      "ascriptor_asset": "none",
+      "fla_counterpart": "fla.ops.gated_delta_rule.fused_recurrent_gated_delta_rule",
+      "note": "完全缺失，需要新写，不是接线。没有它就只有 prefill/训练，没有推理解码。",
+      "blocks": ["phase 3 端到端模型跑通"]
+    },
+    {
+      "id": "kda_fused_recurrent",
+      "op_family": "kda",
+      "purpose": "decode 路径",
+      "ascriptor_asset": "none",
+      "note": "同上。"
+    }
+  ],
+
+  "reusable_primitives": [
+    {
+      "id": "chunk_row_scan",
+      "ascriptor_path": "kernels/algorithms/chunk_row_scan",
+      "what": "FP32 行扫描，每 chunk_size 边界复位累加",
+      "maps_to": "fla 的 chunk cumsum（ops/utils/cumsum.py 的 chunk_local_cumsum）",
+      "device": "a5",
+      "our_status": "not-started"
+    },
+    {
+      "id": "matrix_normalization.row_l2",
+      "ascriptor_path": "kernels/algorithms/matrix_normalization",
+      "what": "四种矩阵乘归一化，其中 row_l2 用平方和开方",
+      "maps_to": "fla.modules.l2norm",
+      "device": "a5",
+      "our_status": "not-started"
+    },
+    {
+      "id": "gated_approximations",
+      "ascriptor_path": "kernels/algorithms/gated_approximations",
+      "what": "GELU（tanh 与 A&S-erf，FP32/FP16/BF16）与 SwiGLU（含 beta 缩放 sigmoid）",
+      "maps_to": "fla.modules.activations / fused swiglu",
+      "device": "a5",
+      "our_status": "not-started"
+    }
+  ],
+
+  "stack_layers": {
+    "note": "全链路的上三层。窄切片原则：按算子倒推，用到哪个做哪个。",
+    "modules": [
+      {"id": "causal_conv1d", "fla_source": "fla.modules.convolution (ShortConvolution)", "needed_by": ["GatedDeltaNet", "KDA"], "ascriptor_asset": "none", "our_status": "not-started"},
+      {"id": "rms_norm", "fla_source": "fla.modules.layernorm (RMSNorm)", "needed_by": ["GatedDeltaNet"], "ascriptor_asset": "partial — matrix_normalization 可借", "our_status": "not-started"},
+      {"id": "fused_rms_norm_gated", "fla_source": "fla.modules.fused_norm_gate (FusedRMSNormGated)", "needed_by": ["GatedDeltaNet"], "ascriptor_asset": "partial", "our_status": "not-started"},
+      {"id": "l2norm", "fla_source": "fla.modules.l2norm", "needed_by": ["GatedDeltaNet(use_qk_l2norm_in_kernel)"], "ascriptor_asset": "matrix_normalization.row_l2", "our_status": "not-started"}
+    ],
+    "layers": [
+      {"id": "gated_deltanet", "fla_source": "fla.layers.gated_deltanet.GatedDeltaNet", "deps": {"modules": ["causal_conv1d", "rms_norm", "fused_rms_norm_gated"], "ops": ["a5.gdn_fwd", "a5.gdn_bwd", "gdn_fused_recurrent"], "other": "7 个 nn.Linear + A_log / dt_bias 参数"}, "our_status": "not-started"},
+      {"id": "kda", "fla_source": "fla.layers.kda.KDA", "our_status": "not-started"}
+    ],
+    "models": [
+      {"id": "qwen3-next", "strategy": "注入 — 用 HF transformers 的模型定义，替换 linear attention layer", "our_status": "not-started"},
+      {"id": "kimi-linear", "strategy": "注入", "our_status": "not-started"}
+    ]
+  }
+}

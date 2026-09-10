@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ascend_fla"
+version = "0.0.1.dev0"
+description = "High-efficiency Ascend NPU operators for fla-family linear attention, built on ascriptor"
+requires-python = ">=3.10"
+dependencies = [
+    "torch>=2.9.0",
+]
+
+[project.optional-dependencies]
+# ascriptor 是私有 release wheel，按 library/README.md 的 gh release download 流程安装；
+# 不在此处声明版本，由 docs/matrix/ops.json 的 ascriptor_pin 记录实际使用的修订。
+npu = ["torch_npu>=2.9.0"]
+sim = ["numpy>=2.2"]
+# fla 仅用于测试期取 naive.py 作 oracle 与对齐模型规格，运行时不依赖
+ref = ["flash-linear-attention"]
+test = ["pytest", "pytest-xdist"]
+
+[tool.setuptools.packages.find]
+include = ["ascend_fla*"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"

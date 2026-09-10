@@ -1,0 +1,201 @@
+{
+  "schema": "ascend_fla.model-shapes/1",
+  "recorded_at": "2026-09-10",
+  "produced_by": "phase 0, manual reverse-derivation from upstream configs",
+  "note": "目标模型的真实形状清单。算子测试矩阵的 case 形状必须从这里取，不得自拟。ascriptor_fit 记录与 ascriptor a5 定尺 ABI (L=64, K=V=128, BF16) 的匹配情况。",
+  "ascriptor_a5_abi": {
+    "layout": "[B, H, C, L, D]",
+    "L": 64,
+    "D": 128,
+    "dtype_qkv": "bfloat16",
+    "dtype_beta_g": "float32",
+    "note": "L 与 D 固定，无 tail 路径；gdn 无独立 value-head 维度"
+  },
+  "models": [
+    {
+      "id": "qwen3-next-80b-a3b",
+      "label": "Qwen3-Next-80B-A3B-Instruct",
+      "op_family": "gated_delta_rule",
+      "priority": "primary",
+      "source": {
+        "url": "https://huggingface.co/Qwen/Qwen3-Next-80B-A3B-Instruct/raw/main/config.json",
+        "retrieved": "2026-09-10"
+      },
+      "shape": {
+        "hidden_size": 2048,
+        "num_key_heads": 16,
+        "num_value_heads": 32,
+        "head_k_dim": 128,
+        "head_v_dim": 128,
+        "conv_size": 4,
+        "num_hidden_layers": 48,
+        "full_attention_interval": 4,
+        "dtype": "bfloat16"
+      },
+      "derived": {
+        "linear_attn_layers": 36,
+        "full_attn_layers": 12,
+        "head_group_ratio": 2,
+        "key_dim": 2048,
+        "value_dim": 4096
+      },
+      "ascriptor_fit": {
+        "head_k_dim": "match",
+        "head_v_dim": "match",
+        "dtype": "match",
+        "head_grouping": "gap",
+        "blocking_gaps": ["gdn-no-gqa"],
+        "note": "K=V=128 与 BF16 完全匹配定尺 ABI。唯一阻塞项是 16 key heads / 32 value heads 的分组 —— gdn_fwd 的 domain 只有 B,H,C，没有独立的 value-head 维度。"
+      }
+    },
+    {
+      "id": "kimi-linear-48b-a3b",
+      "label": "Kimi-Linear-48B-A3B-Instruct",
+      "op_family": "kda",
+      "priority": "secondary",
+      "source": {
+        "url": "https://huggingface.co/moonshotai/Kimi-Linear-48B-A3B-Instruct/raw/main/config.json",
+        "retrieved": "2026-09-10"
+      },
+      "shape": {
+        "hidden_size": 2304,
+        "num_key_heads": 32,
+        "num_value_heads": 32,
+        "head_k_dim": 128,
+        "head_v_dim": 128,
+        "conv_size": 4,
+        "num_hidden_layers": 27,
+        "dtype": "bfloat16"
+      },
+      "derived": {
+        "linear_attn_layers": 20,
+        "full_attn_layers": 7,
+        "head_group_ratio": 1,
+        "main_model_head_dim": 72
+      },
+      "ascriptor_fit": {
+        "head_k_dim": "match",
+        "head_v_dim": "match",
+        "dtype": "match",
+        "head_grouping": "match",
+        "blocking_gaps": [],
+        "note": "形状完全落在 kda_fwd/kda_bwd 的定尺域内（HV % H == 0 且此处 HV == H）。是最干净的首个端到端目标。"
+      }
+    },
+    {
+      "id": "fla-gated-deltanet-default",
+      "label": "fla GatedDeltaNetConfig 默认值",
+      "op_family": "gated_delta_rule",
+      "priority": "reference-only",
+      "source": {
+        "url": "fla/models/gated_deltanet/configuration_gated_deltanet.py",
+        "retrieved": "2026-09-10"
+      },
+      "shape": {
+        "hidden_size": 2048,
+        "num_key_heads": 6,
+        "num_value_heads": 6,
+        "head_k_dim": 256,
+        "head_v_dim": 512,
+        "expand_v": 2.0,
+        "conv_size": 4,
+        "num_hidden_layers": 21
+      },
+      "derived": {
+        "key_dim": 1536,
+        "value_dim": 3072,
+        "head_group_ratio": 1,
+        "formula": "head_k_dim = head_dim; head_v_dim = head_dim * expand_v"
+      },
+      "ascriptor_fit": {
+        "head_k_dim": "gap",
+        "head_v_dim": "gap",
+        "head_grouping": "match",
+        "blocking_gaps": ["fixed-kv-128", "asymmetric-kv-dim"],
+        "note": "head_k=256 / head_v=512 都超出定尺 D=128，且 K≠V。这是 fla 的参考默认值，不是任何落地模型的规格 —— 处置方式是门控明确拒绝，不是去支持它。"
+      }
+    },
+    {
+      "id": "fla-kda-default",
+      "label": "fla KDAConfig 默认值",
+      "op_family": "kda",
+      "priority": "reference-only",
+      "source": {
+        "url": "fla/models/kda/configuration_kda.py",
+        "retrieved": "2026-09-10"
+      },
+      "shape": {
+        "hidden_size": 2048,
+        "num_key_heads": 16,
+        "num_value_heads": 16,
+        "head_k_dim": 128,
+        "head_v_dim": 128,
+        "expand_v": 1.0,
+        "conv_size": 4,
+        "num_hidden_layers": 24
+      },
+      "derived": {
+        "key_dim": 2048,
+        "value_dim": 2048,
+        "head_group_ratio": 1
+      },
+      "ascriptor_fit": {
+        "head_k_dim": "match",
+        "head_v_dim": "match",
+        "head_grouping": "match",
+        "blocking_gaps": [],
+        "note": "fla 的 KDA 默认值恰好落在定尺域内，可直接当回归 case 用。"
+      }
+    },
+    {
+      "id": "fla-delta-net-default",
+      "label": "fla DeltaNetConfig 默认值",
+      "op_family": "delta_rule",
+      "priority": "reference-only",
+      "source": {
+        "url": "fla/models/delta_net/configuration_delta_net.py",
+        "retrieved": "2026-09-10"
+      },
+      "shape": {
+        "hidden_size": 2048,
+        "num_key_heads": 16,
+        "num_value_heads": 16,
+        "head_k_dim": 128,
+        "head_v_dim": 128,
+        "expand_k": 1.0,
+        "expand_v": 1.0,
+        "conv_size": 4,
+        "num_hidden_layers": 24
+      },
+      "derived": {
+        "key_dim": 2048,
+        "value_dim": 2048,
+        "head_group_ratio": 1,
+        "formula": "head_k_dim = hidden_size * expand_k / num_heads"
+      },
+      "ascriptor_fit": {
+        "head_k_dim": "match",
+        "head_v_dim": "match",
+        "head_grouping": "match",
+        "blocking_gaps": [],
+        "note": "同样落在定尺域内。"
+      }
+    }
+  ],
+  "internal_shapes_pending": [
+    {
+      "id": "qwen3.5-9b",
+      "op_family": "gated_delta_rule",
+      "known": "32 heads / head_dim 128 / chunk 64, bf16, 24 layers",
+      "source": "内部实测（同级 fla_infer 工作区，A2/910B3）",
+      "action": "规格需从权威 config 核实后再补入 models[]；当前仅作参考，不要当作已验证形状。"
+    }
+  ],
+  "test_case_shapes": {
+    "note": "算子测试矩阵应覆盖的形状。T 必须是 64 的倍数（L=64 无 tail 路径），C = T / 64。",
+    "smoke": {"B": 1, "H": 1, "C": 1, "comment": "ascriptor 现有 case 的规模，仅用于接线冒烟"},
+    "qwen3_next_layer": {"B": 1, "H": 16, "HV": 32, "C": 16, "T": 1024, "comment": "单层真实形状，第一期精度验收目标"},
+    "kimi_linear_layer": {"B": 1, "H": 32, "HV": 32, "C": 16, "T": 1024, "comment": "KDA 单层真实形状"},
+    "long_context": {"B": 1, "H": 16, "HV": 32, "C": 64, "T": 4096, "comment": "覆盖 chunk 边界与 state 传递，不是为了测误差累积"}
+  }
+}
