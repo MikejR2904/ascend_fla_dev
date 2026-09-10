@@ -131,15 +131,43 @@ def ops_section(ops: dict) -> list[str]:
             f"synchronized={'yes' if c['synchronized'] else 'no'} "
             f"forward_only={'yes' if c['forward_only'] else 'no'}",
             "",
-            "| 形状 | B/H/HV/T | torch_npu 向量化 (ms) | o relL2 vs CPU |",
-            "|---|---|---|---|",
         ]
-        for r in bl["torch_npu_vectorized"]:
-            out.append(f"| {r['shape']} | {r['dims']} | {r['ms']:.3f} | {r['rel_l2_vs_cpu']:.3e} |")
+        tn = bl["torch_npu_vectorized"]
+        out += [f"> {tn['note']}", "",
+                "| 形状 | B/H/HV/T | 四次测量 (ms) | 中位数 | o relL2 vs CPU |",
+                "|---|---|---|---|---|"]
+        for r in tn["ms_per_run"]:
+            runs = " / ".join(f"{x:.3f}" for x in r["runs"])
+            out.append(f"| {r['shape']} | {r['dims']} | {runs} | {r['median']:.3f} | "
+                       f"{r['rel_l2_vs_cpu']:.3e} |")
+        out += ["", f"**波动**：{tn['variance_note']}", ""]
+        if asc := bl.get("ascriptor_self_compiled"):
+            out += ["", f"> {asc['note']}", "",
+                    "| 形状 | B/H/HV/T | bd=1 | bd=2 | bd=3 | bd=4 | bd1→4 | o relL2 |",
+                    "|---|---|---|---|---|---|---|---|"]
+            for r in asc["ms_by_block_dim"]:
+                gain = f"{r['bd1'] / r['bd4']:.2f}x" if r["bd4"] else "—"
+                out.append(f"| {r['shape']} | {r['dims']} | {r['bd1']:.3f} | {r['bd2']:.3f} | "
+                           f"{r['bd3']:.3f} | {r['bd4']:.3f} | {gain} | {r['rel_l2_o_vs_cpu']:.3e} |")
+            sp = asc["speedup_vs_torch_npu_at_bd4"]
+            out += ["", "**block_dim=4 下 vs torch_npu 基线**："
+                    + " · ".join(f"{k} {v}" for k, v in sp.items()), ""]
+            kb = asc["kernel_breakdown_kimi_linear_layer"]
+            out += [f"> {kb['note']}", "",
+                    "| 段 | bd=1 (ms) | bd=4 (ms) |", "|---|---|---|"]
+            for seg in kb["bd1"]:
+                out.append(f"| `{seg}` | {kb['bd1'][seg]:.3f} | {kb['bd4'][seg]:.3f} |")
+            out += ["", f"**怎么读**：{kb['reading']}", ""]
+
         out += ["", f"**观察**：{bl['observation']}", ""]
         if cc := bl.get("cross_cann_consistency"):
             out += [f"**跨 CANN 版本一致性**：{cc}", ""]
-        out += [f"**尚未测得**：{bl['not_yet_measured']}", ""]
+        if cv := bl.get("caveats"):
+            out += [f"**测量注意**：{cv}", ""]
+        if nx := bl.get("next"):
+            out += [f"**下一步**：{nx}", ""]
+        if nm := bl.get("not_yet_measured"):
+            out += [f"**尚未测得**：{nm}", ""]
 
     stack = ops["stack_layers"]
     out += ["### 全链路三层", "", f"> {stack['note']}", ""]

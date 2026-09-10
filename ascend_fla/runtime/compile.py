@@ -9,6 +9,8 @@
 * **磁盘**：``out_dir`` 按 (kernel, device, block_dim, 标量绑定) 的签名分目录，
   ascriptor 自己的 ``.source_hash`` 让源码未变时跳过重编译。
 * **进程内**：同一签名只构造一个 ``AclnnOp``，避免重复 ``dlopen`` 同一个 .so。
+  签名本身也备忘（``_sig_memo``）—— 它要读源码算 hash，不备忘的话光算缓存键就
+  吃掉端到端耗时的 95%。
 
 标量绑定（``bindings``）会进签名：ascriptor 的 PTO 后端会把整型标量特化进生成的
 代码，不同形状可能对应不同产物。
@@ -28,6 +30,11 @@ from .binding import AclnnOp
 __all__ = ["CompiledKernel", "compile_kernel", "default_cache_root"]
 
 _process_cache: dict[str, "CompiledKernel"] = {}
+# 签名备忘。算签名要 inspect.getsource + json + sha256，实测每 kernel ~2ms；
+# kda_fwd 一次前向要查 5 个 kernel，于是"算缓存键"比缓存省下的还贵 —— 实测占
+# 端到端耗时的 95%（见 benchmarks/profile_bridge_overhead.py）。key 里用 id(kernel)
+# 是安全的：value 里一并持有 kernel 的强引用，对象不会被回收、id 不会被复用。
+_sig_memo: dict[tuple, tuple[Any, str]] = {}
 _lock = threading.Lock()
 
 
@@ -65,6 +72,22 @@ def _signature(kernel: Any, device: str, block_dim: int | None, bindings: dict[s
         sort_keys=True,
     )
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:16]
+
+
+def _signature_memoized(kernel: Any, device: str, block_dim: int | None,
+                        bindings: dict[str, int], backend: str) -> str:
+    """:func:`_signature` 的进程内备忘版。语义完全相同，只是不重复读源码。
+
+    进程内源码不会变，所以同一 kernel 对象的签名是常量。这个函数存在的唯一理由是
+    让"查缓存"这件事便宜到可以放进每次前向的热路径。
+    """
+    key = (id(kernel), device, block_dim, tuple(sorted(bindings.items())), backend)
+    hit = _sig_memo.get(key)
+    if hit is not None:
+        return hit[1]
+    sig = _signature(kernel, device, block_dim, bindings, backend)
+    _sig_memo[key] = (kernel, sig)   # 持有 kernel 强引用，保证 id 不被复用
+    return sig
 
 
 class CompiledKernel:
@@ -127,7 +150,7 @@ def compile_kernel(
         RuntimeError: 编译未产出 vendor 树，或 vendor 树里找不到 ``libcust_opapi.so``。
     """
     bindings = dict(bindings or {})
-    sig = _signature(kernel, device, block_dim, bindings, backend)
+    sig = _signature_memoized(kernel, device, block_dim, bindings, backend)
 
     with _lock:
         if not force and sig in _process_cache:

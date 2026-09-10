@@ -63,24 +63,58 @@ ascriptor pin：`0.1.0.dev1` · library `77619116f9b3` · 支持硬件 a5 · def
 
 ### 性能基线
 
-> 基线一：torch_npu 原生算子拼出的同语义 KDA（ascend_fla/reference/kda.py 的 kda_chunk_vectorized）。它同时是第二 oracle。报数必须带形状/dtype/warmup/iters/是否同步 —— 见 AGENTS.md §6。
+> 两条基线。基线一：torch_npu 原生算子拼出的同语义 KDA（ascend_fla/reference/kda.py 的 kda_chunk_vectorized），它同时是第二 oracle。基线二：本仓经 runtime 桥调用的 ascriptor 自编译算子（ascend_fla/ops/kda/chunk.py）。两者**同机同卡同输入**测量，否则加速比无意义。报数必须带形状/dtype/warmup/iters/是否同步 —— 见 AGENTS.md §6。
 
-机器：8-card Ascend950PR docker host, CANN 9.2.0 (V100R001C25B046), torch 2.10.0+cpu / torch_npu 2.10.0.post2, python 3.11.16, NPU 7 · 记录于 2026-09-11
+机器：8-card Ascend950PR docker host, CANN 9.2.0 (V100R001C25B046), torch 2.10.0+cpu / torch_npu 2.10.0.post2, python 3.11.16, NPU 0 · 记录于 2026-09-11
 
-条件：dtype=bfloat16 K=V=128 chunk=64 warmup=3 iters=5 synchronized=yes forward_only=yes
+条件：dtype=bfloat16 K=V=128 chunk=64 warmup=3 iters=10 synchronized=yes forward_only=yes
 
-| 形状 | B/H/HV/T | torch_npu 向量化 (ms) | o relL2 vs CPU |
-|---|---|---|---|
-| smoke | B1/H1/HV1/T64 | 5.866 | 1.898e-05 |
-| kimi_linear_layer | B1/H32/HV32/T1024 | 6.497 | 2.721e-05 |
-| qwen3_next_layer | B1/H16/HV32/T1024 | 7.040 | 2.765e-05 |
-| long_context | B1/H16/HV32/T4096 | 14.469 | 2.622e-05 |
+> 与 ascriptor_self_compiled 同一批运行测得（每个 block_dim 的子进程各自重测一次基线），所以两张表可以直接比。先前在 NPU 7 / iters=5 下测的 5.866 / 6.497 / 7.040 / 14.469ms 已被这组取代 —— 条件不同的数不能混用。
 
-**观察**：数据量从 smoke 到 kimi_linear_layer 差 512 倍，耗时只差 11%（5.87→6.50ms）—— 这个 torch_npu 实现完全被 kernel launch 开销支配（向量化后仍有 63 次求逆迭代 + NT 次 chunk 迭代的 python 循环，每次若干小 op），不是算力受限。自编译的融合算子应当在这里大幅胜出；这也意味着**不要把这个基线当成硬件算力上限**。
+| 形状 | B/H/HV/T | 四次测量 (ms) | 中位数 | o relL2 vs CPU |
+|---|---|---|---|---|
+| smoke | B1/H1/HV1/T64 | 6.633 / 6.473 / 4.581 / 4.684 | 5.579 | 1.898e-05 |
+| kimi_linear_layer | B1/H32/HV32/T1024 | 7.920 / 5.445 / 5.439 / 5.811 | 5.628 | 2.721e-05 |
+| qwen3_next_layer | B1/H16/HV32/T1024 | 8.051 / 5.524 / 5.115 / 5.697 | 5.611 | 2.765e-05 |
+| long_context | B1/H16/HV32/T4096 | 17.668 / 12.155 / 11.816 / 12.223 | 12.189 | 2.622e-05 |
+
+**波动**：四次测量里**第一个子进程始终最慢**（6.633 / 7.920 / 8.051 / 17.668），应是设备初始化与缓存冷启的成本漏进了它的计时。中位数比均值更能代表稳态。
+
+
+> 每个 block_dim 一个子进程 —— 同名算子多 build 在一进程内会互相覆盖，见 gaps.json 的 op-name-collision-in-process。四个 block_dim 的 relL2 完全相同。
+
+| 形状 | B/H/HV/T | bd=1 | bd=2 | bd=3 | bd=4 | bd1→4 | o relL2 |
+|---|---|---|---|---|---|---|---|
+| smoke | B1/H1/HV1/T64 | 0.334 | 0.238 | 0.222 | 0.238 | 1.40x | 3.288e-03 |
+| kimi_linear_layer | B1/H32/HV32/T1024 | 4.955 | 2.516 | 1.724 | 1.311 | 3.78x | 3.962e-03 |
+| qwen3_next_layer | B1/H16/HV32/T1024 | 4.923 | 2.491 | 1.713 | 1.302 | 3.78x | 3.964e-03 |
+| long_context | B1/H16/HV32/T4096 | 19.622 | 9.971 | 6.794 | 5.138 | 3.82x | 4.168e-03 |
+
+**block_dim=4 下 vs torch_npu 基线**：smoke 19.7x · kimi_linear_layer 4.43x · qwen3_next_layer 4.38x · long_context 2.38x
+
+> benchmarks/profile_bridge_overhead.py --sync-each 的设备耗时归因（ms/次）。同步会破坏流水，所以总和大于流水模式下的总耗时。
+
+| 段 | bd=1 (ms) | bd=4 (ms) |
+|---|---|---|
+| `KdaSub2ScoreKernel` | 1.583 | 0.407 |
+| `TrilInverse64V2StrictBf16Kernel` | 1.354 | 0.361 |
+| `KdaSub45FusedKernel` | 1.311 | 0.329 |
+| `KdaSub3WyKernel` | 0.486 | 0.129 |
+| `KdaSub1GateKernel` | 0.198 | 0.058 |
+| `layout_to_bhcld_x5` | 0.318 | 0.276 |
+| `layout_from_bhcld` | 0.095 | 0.064 |
+| `total` | 5.838 | 1.901 |
+
+**怎么读**：layout 重排只占 7%（bd1）—— 我先前猜它是瓶颈，错了。大头是三个 kernel，而它们正是 ascriptor lint 里 15 处 ub_to_l1.nd2nz 的所在（见 gaps.json 的 kernel-nd2nz-suboptimal）。bd=4 下 layout 占比升到 18%，因为 kernel 侧随核数缩短而重排不随。
+
+
+**观察**：torch_npu 基线：数据量从 smoke 到 kimi_linear_layer 差 512 倍，耗时只差 ~15% —— 它完全被 kernel launch 开销支配（向量化后仍有 63 次求逆迭代 + NT 次 chunk 迭代的 python 循环），**不是硬件算力上限**。自编译侧相反：耗时随工作量近线性（T 从 1024 到 4096，bd4 下 1.311→5.138ms，正好 3.9 倍），是真正的算力账。这也解释了 smoke 上 19.7x 的加速 —— 那里 torch_npu 在付固定开销而我们不付。
 
 **跨 CANN 版本一致性**：kda_fwd 经 runtime 桥在 CANN 9.1.0 与 9.2.0 两台机器上的 relL2 逐位相同（smoke 3.288e-03 / multi_chunk 3.383e-03 / gva 3.359e-03），说明这个偏差来自算子自身的数值路径（见 gaps.json 的 kda-fwd-bwd-dtype-mismatch），与 CANN 版本无关。
 
-**尚未测得**：ascriptor 自编译算子（ops/kda/chunk.py）的同形状耗时。第二期补 —— 前置条件已满足：aclnn 编译在本机 CANN 9.2.0 上实测可用，且本机 npu permute+contiguous 可用（layout 重排走 NPU，不必绕 CPU）。
+**测量注意**：torch_npu 基线的跑间波动约 20%（kimi_linear_layer 在四个子进程里测到 7.920 / 5.445 / 5.439 / 5.811ms），所以加速比带同等量级的不确定度。每行的比值用的是该子进程自己测的基线，不是跨进程平均。
+
+**下一步**：① 抬高 block_dim 上限（gaps.json 的 block-dim-ceiling，已升 P1）—— 扩展性到 4 仍线性，物理上有 28 cube。② kernel 侧的 nd2nz 返工（kernel-nd2nz-suboptimal）。③ 反向的同类测量，第二期随 kda_bwd 一起做。
 
 ### 全链路三层
 
@@ -105,9 +139,9 @@ ascriptor pin：`0.1.0.dev1` · library `77619116f9b3` · 支持硬件 a5 · def
 
 ## 缺口
 
-P0 0 项 · P1 10 项 · P2 7 项 · 共 20 项
+P0 0 项 · P1 11 项 · P2 7 项 · 共 23 项
 
-**首个里程碑**：第一期五项已全部有结论：aclnn 编译、runtime 桥、kda_fwd 接线、KDA 本地基线均实测通过；torch_npu 基线在带 ascend950 算子包的机器上跑通。下一个障碍是 kda-fwd-bwd-dtype-mismatch（第二期前置）。
+**首个里程碑**：第一期五项已全部有结论，并补齐了同机性能对比：aclnn 编译、runtime 桥、kda_fwd 接线、KDA 本地基线均实测通过；自编译算子在 block_dim=4 下比 torch_npu 组合快 4.43x（kimi_linear_layer）/ 2.38x（long_context T=4096）/ 19.7x（smoke）。过程中修掉两个自己的 bug（bridge-per-call-overhead、op-name-collision-in-process），它们先后让 block_dim 的效果被完全掩盖。当前最大的性能项是 block-dim-ceiling（已升 P1）：扩展性一路线性到契约上限 4，而硬件有 28 cube。第二期的前置障碍仍是 kda-fwd-bwd-dtype-mismatch。
 
 **建议的首个目标**：KDA（Kimi-Linear / fla-kda-default 形状）。其 ABI 已是 token-major BTHK、GQA 原生支持、initial_state 与 final_state 均为 FP32、backward 产出 dh0 —— 上述多数 ABI 缺口对它都不适用。唯一需要前置补齐的是本地验证证据（kda-no-local-evidence）。
 
@@ -128,8 +162,8 @@ P0 0 项 · P1 10 项 · P2 7 项 · 共 20 项
 
 | 算子族 | P0 | P1 | P2 |
 |---|---|---|---|
-| KDA | — | `kda-fwd-bwd-dtype-mismatch`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`no-tail-path` | `npu-builtin-ops-missing`<br>`toy-case-shapes`<br>`block-dim-ceiling`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`modules-layer-missing`<br>`torch-npu-baseline-missing` |
-| GDN | — | `gdn-no-gqa`<br>`layout-not-token-major`<br>`nonzero-initial-state`<br>`d-initial-state-absent`<br>`state-dtype-bf16`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`scale-param-no-slot`<br>`no-tail-path` | `npu-builtin-ops-missing`<br>`toy-case-shapes`<br>`block-dim-ceiling`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`modules-layer-missing`<br>`torch-npu-baseline-missing` |
+| KDA | — | `kda-fwd-bwd-dtype-mismatch`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`no-tail-path`<br>`block-dim-ceiling` | `npu-builtin-ops-missing`<br>`toy-case-shapes`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`modules-layer-missing`<br>`torch-npu-baseline-missing`<br>`kernel-nd2nz-suboptimal` |
+| GDN | — | `gdn-no-gqa`<br>`layout-not-token-major`<br>`nonzero-initial-state`<br>`d-initial-state-absent`<br>`state-dtype-bf16`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`scale-param-no-slot`<br>`no-tail-path`<br>`block-dim-ceiling` | `npu-builtin-ops-missing`<br>`toy-case-shapes`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`modules-layer-missing`<br>`torch-npu-baseline-missing` |
 | DeltaNet | — | `layout-not-token-major`<br>`nonzero-initial-state`<br>`d-initial-state-absent`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`scale-param-no-slot`<br>`no-tail-path` | `npu-builtin-ops-missing`<br>`toy-case-shapes`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`torch-npu-baseline-missing` |
 
 ### P1
@@ -204,6 +238,13 @@ P0 0 项 · P1 10 项 · P2 7 项 · 共 20 项
 - **影响** 任意序列长度的推理与训练都需要 host 侧 padding，或拒绝。另：fp16 与 L=32 同样被拒绝。
 - **建议** 门控显式报错并给出最近的合法 T。padding 方案要在性能报告中算进开销。
 
+#### `block-dim-ceiling` — kda 的 block_dim 上限 4 是当前最大的性能天花板：扩展性到 4 仍是线性的
+
+- **类别** performance · **适用于** KDA / GDN · **阻塞** `phase 4`
+- **依据** kda_fwd / kda_bwd domain.block_dim: [1,2,3,4]；gdn domain.block_dim: [1,2]；delta_rule_fwd domain.block_dim: {min:1, max:32}。 | 2026-09-11 实测（Ascend950PR / CANN 9.2.0，每个 block_dim 一个进程，bf16，warmup 3 / iters 10，同步，仅前向）：kimi_linear_layer 4.955 / 2.516 / 1.724 / 1.311ms（bd=1/2/3/4，bd1→4 提速 3.78x）；long_context 19.622 / 9.971 / 6.794 / 5.138ms（3.82x）。单 kernel 级（sync-each 归因）：三个重 kernel 从 1.583/1.354/1.311ms 降到 0.407/0.361/0.329ms。四个 block_dim 的 relL2 完全相同，分区不改变数值结果。
+- **影响** **扩展性一路线性到声明上限，说明这是声明限制而不是实现限制。** Ascend950PR 物理上有 28 cube / 56 vec，我们只用到 4 —— 按线性外推还有 ~7 倍空间。这让它成为比 kernel-nd2nz-suboptimal 更靠前的优化项：后者是常数因子，前者是可用核数。
+- **建议** 已有答案：是声明限制。下一步是在 ascriptor 侧把 kda_fwd/kda_bwd 的 domain.block_dim 上限抬高并补 cases 覆盖（contract 的 core_ownership 说 gate 按 B*HV*C 切、scores/WY/inverse 按 cube 组切、融合尾部按 B*HV 头对切 —— kimi 形状下 B*HV=32、B*HV*C=512，工作量足够喂满 28 核）。kernel 源码归 ascriptor 仓所有（AGENTS.md §3：只读），改动要走那一侧。本仓的 SUPPORTED_BLOCK_DIM 与 contract 的声明由 tests/test_kda_gating.py 锁在一起，抬高后会同时提醒。
+
 ### P2
 
 #### `npu-builtin-ops-missing` — 内置算子包的覆盖随机器而异：部分 Ascend950PR 机器上 torch_npu 的计算算子不可用
@@ -219,13 +260,6 @@ P0 0 项 · P1 10 项 · P2 7 项 · 共 20 项
 - **依据** kda_fwd 四个 case 为 B=1, H=1, HV=1~2, C=1~2；gdn_fwd 为 B=1, H=1~3, C=1~3。
 - **影响** 正确性证据的形状覆盖与真实负载相距很远（Kimi-Linear 单层为 H=HV=32，T=1024 时 C=16）。多核分区、UB 压力、核归属路径在玩具形状下可能根本没被触发。
 - **建议** 第一期的精度验收必须用 models.json 的 test_case_shapes.kimi_linear_layer，而不是沿用上游 case。
-
-#### `block-dim-ceiling` — kda 的 block_dim 上限为 4，gdn 为 2，均远低于 delta_rule 的 32
-
-- **类别** performance · **适用于** KDA / GDN · **阻塞** —
-- **依据** kda_fwd / kda_bwd domain.block_dim: [1,2,3,4]；gdn domain.block_dim: [1,2]；delta_rule_fwd domain.block_dim: {min:1, max:32}。
-- **影响** 多核扩展性可能成为性能天花板。A5 的核数远大于 4。
-- **建议** 第一期测到性能数后判断这是声明限制还是实现限制。若是后者，是第四期优化的首要目标。
 
 #### `fixed-kv-128` — K=V=128 固定，不支持其他 head_dim
 
@@ -254,3 +288,10 @@ P0 0 项 · P1 10 项 · P2 7 项 · 共 20 项
 - **依据** 本仓尚无任何实现代码。
 - **影响** 没有它就只有一个 oracle（fla naive），也没有性能对照 —— 无法判断"高效率"是否达成。
 - **建议** 第一期与 runtime 桥并行做：reference/ 下用 torch_npu 原生算子拼出同语义 KDA，同时充当基线与第二 oracle。
+
+#### `kernel-nd2nz-suboptimal` — kda_fwd 的 5 个 kernel 里有 15 处 ub_to_l1.nd2nz，ascriptor lint 实测它比 compact-NZ 慢 10 倍
+
+- **类别** performance · **适用于** KDA · **阻塞** —
+- **依据** 编译 kda_fwd 时 ascriptor lint 在 intra.py(2)、triangular_inverse.py(8)、wy.py(2)、recurrent.py(3) 共 15 处报同一条 warning：ub_to_l1.nd2nz 会展开成多次 MTE3 burst（每个 NZ fractal 列一次），不是单条指令，板上实测比 compact-NZ move 慢 10 倍（D-084）。lint 还给了第二条：staging tile 的自然 block stride 是 tile 行数（天然 16 对齐，正好是 bank 阶梯最差的一档，~8.7 cycle/store vs ~1.1），补一行 padding 让它变奇数；D-226 里两个返工的 kernel 上这步收益 -12.3us / -10.8us（总量 -17.7us / -28.2us），比换 move 本身更大。
+- **影响** 这 15 处在 kernel 源码里，不在本仓。按 D-226 的比例，单 kernel 量级的收益在数十微秒 —— 但要先确认设备侧耗时占比（见 bridge-per-call-overhead），占比低的话改了也看不出来。
+- **建议** 第四期。kernel 源码归 ascriptor 仓所有（AGENTS.md §3：只读），所以这里只登记线索，改动要走 ascriptor 侧。动手前先用 benchmarks/profile_bridge_overhead.py 确认设备侧占比足够大，否则是在优化一个不在关键路径上的东西。

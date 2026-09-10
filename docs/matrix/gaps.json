@@ -191,17 +191,19 @@
     },
     {
       "id": "block-dim-ceiling",
-      "title": "kda 的 block_dim 上限为 4，gdn 为 2，均远低于 delta_rule 的 32",
+      "title": "kda 的 block_dim 上限 4 是当前最大的性能天花板：扩展性到 4 仍是线性的",
       "category": "performance",
-      "severity": "P2",
+      "severity": "P1",
       "applies_to": [
         "kda",
         "gated_delta_rule"
       ],
-      "evidence": "kda_fwd / kda_bwd domain.block_dim: [1,2,3,4]；gdn domain.block_dim: [1,2]；delta_rule_fwd domain.block_dim: {min:1, max:32}。",
-      "impact": "多核扩展性可能成为性能天花板。A5 的核数远大于 4。",
-      "blocks": [],
-      "proposed_action": "第一期测到性能数后判断这是声明限制还是实现限制。若是后者，是第四期优化的首要目标。"
+      "evidence": "kda_fwd / kda_bwd domain.block_dim: [1,2,3,4]；gdn domain.block_dim: [1,2]；delta_rule_fwd domain.block_dim: {min:1, max:32}。 | 2026-09-11 实测（Ascend950PR / CANN 9.2.0，每个 block_dim 一个进程，bf16，warmup 3 / iters 10，同步，仅前向）：kimi_linear_layer 4.955 / 2.516 / 1.724 / 1.311ms（bd=1/2/3/4，bd1→4 提速 3.78x）；long_context 19.622 / 9.971 / 6.794 / 5.138ms（3.82x）。单 kernel 级（sync-each 归因）：三个重 kernel 从 1.583/1.354/1.311ms 降到 0.407/0.361/0.329ms。四个 block_dim 的 relL2 完全相同，分区不改变数值结果。",
+      "impact": "**扩展性一路线性到声明上限，说明这是声明限制而不是实现限制。** Ascend950PR 物理上有 28 cube / 56 vec，我们只用到 4 —— 按线性外推还有 ~7 倍空间。这让它成为比 kernel-nd2nz-suboptimal 更靠前的优化项：后者是常数因子，前者是可用核数。",
+      "blocks": [
+        "phase 4"
+      ],
+      "proposed_action": "已有答案：是声明限制。下一步是在 ascriptor 侧把 kda_fwd/kda_bwd 的 domain.block_dim 上限抬高并补 cases 覆盖（contract 的 core_ownership 说 gate 按 B*HV*C 切、scores/WY/inverse 按 cube 组切、融合尾部按 B*HV 头对切 —— kimi 形状下 B*HV=32、B*HV*C=512，工作量足够喂满 28 核）。kernel 源码归 ascriptor 仓所有（AGENTS.md §3：只读），改动要走那一侧。本仓的 SUPPORTED_BLOCK_DIM 与 contract 的声明由 tests/test_kda_gating.py 锁在一起，抬高后会同时提醒。"
     },
     {
       "id": "fixed-kv-128",
@@ -314,14 +316,55 @@
       ],
       "proposed_action": "第一期前置工作（可在 macOS 本机完成，无需 CANN）：用 ascriptor 的 run.py 在本地补跑 reference 与 sim，建立基线并记录到本仓。严重度因首个目标改为 KDA 而由 P2 提升至 P0。",
       "resolution": "2026-09-11 在本地补齐：kda_fwd reference(4 cases)+sim(4 cases)、kda_bwd reference(5 cases)+sim(5 cases) 全部 passed，ascriptor 0.1.0 / python 3.11.15 / torch 2.10.0+cpu / numpy 2.4.6。"
+    },
+    {
+      "id": "kernel-nd2nz-suboptimal",
+      "title": "kda_fwd 的 5 个 kernel 里有 15 处 ub_to_l1.nd2nz，ascriptor lint 实测它比 compact-NZ 慢 10 倍",
+      "category": "performance",
+      "severity": "P2",
+      "applies_to": [
+        "kda"
+      ],
+      "evidence": "编译 kda_fwd 时 ascriptor lint 在 intra.py(2)、triangular_inverse.py(8)、wy.py(2)、recurrent.py(3) 共 15 处报同一条 warning：ub_to_l1.nd2nz 会展开成多次 MTE3 burst（每个 NZ fractal 列一次），不是单条指令，板上实测比 compact-NZ move 慢 10 倍（D-084）。lint 还给了第二条：staging tile 的自然 block stride 是 tile 行数（天然 16 对齐，正好是 bank 阶梯最差的一档，~8.7 cycle/store vs ~1.1），补一行 padding 让它变奇数；D-226 里两个返工的 kernel 上这步收益 -12.3us / -10.8us（总量 -17.7us / -28.2us），比换 move 本身更大。",
+      "impact": "这 15 处在 kernel 源码里，不在本仓。按 D-226 的比例，单 kernel 量级的收益在数十微秒 —— 但要先确认设备侧耗时占比（见 bridge-per-call-overhead），占比低的话改了也看不出来。",
+      "blocks": [],
+      "proposed_action": "第四期。kernel 源码归 ascriptor 仓所有（AGENTS.md §3：只读），所以这里只登记线索，改动要走 ascriptor 侧。动手前先用 benchmarks/profile_bridge_overhead.py 确认设备侧占比足够大，否则是在优化一个不在关键路径上的东西。"
+    },
+    {
+      "id": "bridge-per-call-overhead",
+      "title": "runtime 桥的缓存键自身吃掉 95% 的端到端耗时",
+      "category": "runtime",
+      "severity": "resolved",
+      "applies_to": [
+        "all"
+      ],
+      "evidence": "benchmarks/profile_bridge_overhead.py 把 chunk_kda_fwd 拆成 layout / GetWorkspaceSize / launch / 设备侧四段。kimi_linear_layer 修复前：总 10.119ms，设备侧 0.230ms（2.3%），已计时 host 段 0.273ms —— 余下 9.6ms 全在未计时的 Python 路径里。根因是 runtime/compile.py 的 _signature() 每次调用都走 inspect.getsource + json.dumps + sha256，每 kernel ~2ms，一次前向查 5 个 kernel。",
+      "impact": "这个开销让所有性能数失真：修复前自编译侧在四个形状上都是 torch_npu 基线的 0.38~0.58x，且 block_dim 1→4 毫无差别 —— 当时我据此推断\"并行度推理不成立\"，其实是并行度的影响被10ms 的固定 host 开销完全淹没了。",
+      "blocks": [],
+      "proposed_action": "给签名加进程内备忘，让\"查缓存\"便宜到可以放在热路径上。",
+      "resolution": "2026-09-11 修复并实测。runtime/compile.py 加 _sig_memo（key 含 id(kernel)，value 一并持有 kernel 强引用以保证 id 不被复用）；ops/kda/chunk.py 加 _compiled_chain() 按 (device, block_dim) lru_cache 整条 5-kernel 链，热路径上不再重建。kimi_linear_layer 总耗时 10.119→4.930ms，host 侧 9.889→0.306ms，设备侧占比 2.3%→93.8%。教训：profile 之前不要相信任何性能推断 —— 我对 block_dim 的第一版结论就是被这个开销误导的。"
+    },
+    {
+      "id": "op-name-collision-in-process",
+      "title": "同一算子名的多份 build 在一个进程里互相覆盖，且静默",
+      "category": "runtime",
+      "severity": "resolved",
+      "applies_to": [
+        "all"
+      ],
+      "evidence": "ASCEND_CUSTOM_OPP_PATH 是冒号分隔的搜索路径，CANN 按**算子名**在里面查，第一个命中的 vendor 树胜出，且该解析每进程只发生一次。实测：同进程扫 block_dim=1,2,3,4，四次耗时分别 4.908/4.917/4.922/4.934ms（完全相同）；各自独立进程则 bd=1 的三个重 kernel 为 1.583/1.354/1.311ms，bd=4 为 0.407/0.361/0.329ms —— 相差 3.9 倍，近乎完美的 4 倍扩展。",
+      "impact": "性能上：任何同进程的 build 扫描都会得出\"这一维无效\"的错误结论。我就据此写下过\"block_dim 毫无差别\"，错了两次（第一次被 bridge-per-call-overhead 淹没，第二次被本问题覆盖）。正确性上更严重：若两份 build 的差别不止 block_dim（例如不同的标量绑定被特化进生成代码），静默执行错的那份就是静默给出错的答案。",
+      "blocks": [],
+      "proposed_action": "算子名由 ascriptor 的 kernel 名决定，不是我们能改的，所以只能在桥里挡住。",
+      "resolution": "2026-09-11 修复。runtime/binding.py 加 _claim_op_name()：一个进程内一个算子名只认一份 vendor 树，第二份直接 raise AclError 并说明要分进程。benchmarks/bench_kda_ascriptor.py 的 --block-dim 收到多值时自动每个值派一个子进程并在父进程汇总。"
     }
   ],
   "summary": {
     "P0": 0,
-    "P1": 10,
+    "P1": 11,
     "P2": 7,
-    "total": 20,
-    "first_milestone": "第一期五项已全部有结论：aclnn 编译、runtime 桥、kda_fwd 接线、KDA 本地基线均实测通过；torch_npu 基线在带 ascend950 算子包的机器上跑通。下一个障碍是 kda-fwd-bwd-dtype-mismatch（第二期前置）。",
+    "total": 23,
+    "first_milestone": "第一期五项已全部有结论，并补齐了同机性能对比：aclnn 编译、runtime 桥、kda_fwd 接线、KDA 本地基线均实测通过；自编译算子在 block_dim=4 下比 torch_npu 组合快 4.43x（kimi_linear_layer）/ 2.38x（long_context T=4096）/ 19.7x（smoke）。过程中修掉两个自己的 bug（bridge-per-call-overhead、op-name-collision-in-process），它们先后让 block_dim 的效果被完全掩盖。当前最大的性能项是 block-dim-ceiling（已升 P1）：扩展性一路线性到契约上限 4，而硬件有 28 cube。第二期的前置障碍仍是 kda-fwd-bwd-dtype-mismatch。",
     "recommended_first_target": "KDA（Kimi-Linear / fla-kda-default 形状）。其 ABI 已是 token-major BTHK、GQA 原生支持、initial_state 与 final_state 均为 FP32、backward 产出 dh0 —— 上述多数 ABI 缺口对它都不适用。唯一需要前置补齐的是本地验证证据（kda-no-local-evidence）。",
     "kda_vs_gdn": {
       "note": "选择 KDA 作为首个目标的依据：下列能力 KDA 有、GDN 没有。",
@@ -337,6 +380,6 @@
         "本地 validation.json 证据齐全"
       ]
     },
-    "resolved": 3
+    "resolved": 5
   }
 }

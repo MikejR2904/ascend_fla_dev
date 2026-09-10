@@ -164,6 +164,31 @@ CANN 9.1.0 的机器**只有** 910 系列。这是算子包安装差异，不是
   实验，并且拆出中间对照组（"替换实现"与"改精度"是两件事，混在一起测会把账记错）。
 - **失败要留证据**：贴真实输出和报错，不要用"应该没问题"收尾。日志留在 `tmp/<task>/`。
 
+### 性能测量的三条铁律（都是踩出来的）
+
+1. **profile 之前不要相信任何性能推断。** 我在 KDA 上对 `block_dim` 连续判断错两次：
+   第一次结论"无效"是因为桥的缓存键每次调用都算一遍（`inspect.getsource` + sha256，
+   5 个 kernel 共 ~10ms），把设备侧 0.23ms 淹没在 95% 的 host 开销里；第二次结论
+   "无效"是因为同进程的四份 build 互相覆盖。两次都是先有推断、后看数据。
+2. **一个算子名，一个进程，一份 build。** `ASCEND_CUSTOM_OPP_PATH` 是搜索路径，CANN
+   按算子名查，第一个命中的 vendor 树胜出，解析每进程只发生一次 —— 第二份 build 被
+   **静默**忽略。扫 `block_dim` 或标量绑定必须一份 build 一个进程。`runtime/binding.py`
+   的 `_claim_op_name()` 会在越界时报错。
+3. **缓存键不能比缓存贵。** 凡是放在每次前向热路径上的缓存查询，键的计算必须是 O(1)
+   的字典查找级别。读源码、算 hash、遍历文件系统都不行。
+
+`block_dim` 对 KDA 的实际效果（分进程实测，kimi_linear_layer）：三个重 kernel 从
+bd=1 的 1.583/1.354/1.311ms 降到 bd=4 的 0.407/0.361/0.329ms，**近乎完美的 4 倍扩展**。
+kernel 内部用 `GetVecIdx()/GetVecNum()` 自行切分，而 `GetVecNum() == 2 * block_dim`，
+所以 bd=1 只用到 2 个向量核。契约只声明到 4。
+
+### 卡会中途挂掉
+
+179 那台的 NPU 7 在本次调试中途从 OK 变成 `Critical` / 0.0W，表现为 `TsdOpen failed,
+devId=7` + `error code is 507033`。**先看 `npu-smi info` 的 Health 列再怀疑自己的代码。**
+共享主机上不要尝试复位别人也在用的卡；换一张 Health=OK 且 `npu-smi info -t proc-mem -i N`
+无进程的卡，并把换卡理由写进环境脚本的注释。
+
 ### 不继承 A2 的结论
 
 同级的 `fla_infer` 工作区有 A2/910B3 上的 GDN 精度与 HF32 实测结论。

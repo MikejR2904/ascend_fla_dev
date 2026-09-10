@@ -30,6 +30,10 @@ __all__ = ["chunk_kda_fwd", "kda_fwd_kernels"]
 L_PER_CHUNK = 64
 HEAD_DIM = 128
 VALUE_DIM = 128
+# ascriptor kda_fwd contract.json 的 shapes.block_dim 声明；只有这几个值被 cases 覆盖过。
+# 契约的 core_ownership 说明分区方式：gate 按向量核切 B*HV*C，scores/WY/inverse 按 cube
+# 组切，融合尾部按 B*HV 头对切（两个 V=64 tile 必须留在同一组）。
+SUPPORTED_BLOCK_DIM = (1, 2, 3, 4)
 
 _KERNEL_MODULES = {
     "gate": ("gate", "kda_sub1_gate_kernel"),
@@ -91,8 +95,27 @@ def kda_fwd_kernels() -> dict[str, Any]:
     return out
 
 
-def _check(q, k, v, g, beta, initial_state) -> tuple[int, int, int, int]:
+@functools.lru_cache(maxsize=None)
+def _compiled_chain(device: str, block_dim: int) -> dict[str, Any]:
+    """(device, block_dim) → 已编译的 5 个 kernel。
+
+    缓存到这一层是因为热路径不该每次前向都去查 5 次编译缓存；``compile_kernel``
+    自己也有进程内缓存，但查它要算签名（见 runtime/compile.py 的 ``_sig_memo``）。
+    """
+    from ...runtime.compile import compile_kernel
+
+    return {name: compile_kernel(fn, device=device, block_dim=block_dim)
+            for name, fn in kda_fwd_kernels().items()}
+
+
+def _check(q, k, v, g, beta, initial_state, block_dim) -> tuple[int, int, int, int]:
     """门控。返回 ``(B, H, HV, C)``。任何不满足都报错，绝不静默降级。"""
+    if block_dim not in SUPPORTED_BLOCK_DIM:
+        raise ValueError(
+            f"block_dim 只支持 {SUPPORTED_BLOCK_DIM}（ascriptor kda_fwd 契约声明的范围），"
+            f"收到 {block_dim}；更大的值未经契约 case 覆盖，且超过物理核数会在硬件 "
+            f"barrier 死锁，见 docs/matrix/gaps.json 的 block-dim-ceiling"
+        )
     if q.dim() != 4 or k.dim() != 4 or v.dim() != 4:
         raise ValueError(f"q/k/v 应为 4 维 [B,T,H,D]，收到 {q.shape} / {k.shape} / {v.shape}")
     b, t, h, kd = q.shape
@@ -209,8 +232,11 @@ def chunk_kda_fwd(
         initial_state: ``[B, HV, 128, 128]`` float32，可选。
         output_final_state: 是否返回末态。
         device: ascriptor 设备名。
-        block_dim: 启动核组数。ascriptor 契约声明 ``[1,2,3,4]``；Ascend950PR 只有
-            28 cube，超过物理核数会在硬件 barrier 死锁。
+        block_dim: 启动核组数，只接受 ``SUPPORTED_BLOCK_DIM``。kernel 用
+            ``GetVecIdx()/GetVecNum()`` 自行切分，而 ``GetVecNum() == 2 * block_dim``，
+            所以这个值直接决定并行度 —— ``block_dim=1`` 只用到 2 个向量核。
+            契约只覆盖到 4；Ascend950PR 物理上有 28 cube / 56 vec，但超过物理核数
+            会在硬件 barrier 死锁。
         layout_device: token-major ↔ BHCLD 的重排在哪做。``"npu"`` 最快但需要
             内置 copy 算子；``"cpu"`` 绕主机往返（数值相同，计时不可用于性能结论）；
             ``"auto"``（默认）探测一次后自行选择。
@@ -219,17 +245,13 @@ def chunk_kda_fwd(
         ``(o, final_state)``，``o`` 为 ``[B, T, HV, 128]`` bfloat16；
         ``final_state`` 为 ``[B, HV, 128, 128]`` float32 或 ``None``。
     """
-    from ...runtime.compile import compile_kernel
-
-    b, h, hv, c = _check(q, k, v, g, beta, initial_state)
+    b, h, hv, c = _check(q, k, v, g, beta, initial_state, block_dim)
     if layout_device not in ("auto", "npu", "cpu"):
         raise ValueError(f"layout_device 只能是 auto/npu/cpu，收到 {layout_device!r}")
     on_cpu = (layout_device == "cpu") or (layout_device == "auto" and not _npu_supports_d2d_copy())
     scale = HEAD_DIM ** -0.5 if scale is None else float(scale)
-    kern = kda_fwd_kernels()
     dev = q.device
-    compiled = {name: compile_kernel(fn, device=device, block_dim=block_dim)
-                for name, fn in kern.items()}
+    compiled = _compiled_chain(device, block_dim)
 
     def empty(shape, dtype):
         return torch.empty(*shape, dtype=dtype, device=dev)

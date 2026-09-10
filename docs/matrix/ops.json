@@ -664,8 +664,8 @@
     ]
   },
   "performance_baselines": {
-    "note": "基线一：torch_npu 原生算子拼出的同语义 KDA（ascend_fla/reference/kda.py 的 kda_chunk_vectorized）。它同时是第二 oracle。报数必须带形状/dtype/warmup/iters/是否同步 —— 见 AGENTS.md §6。",
-    "machine": "8-card Ascend950PR docker host, CANN 9.2.0 (V100R001C25B046), torch 2.10.0+cpu / torch_npu 2.10.0.post2, python 3.11.16, NPU 7",
+    "note": "两条基线。基线一：torch_npu 原生算子拼出的同语义 KDA（ascend_fla/reference/kda.py 的 kda_chunk_vectorized），它同时是第二 oracle。基线二：本仓经 runtime 桥调用的 ascriptor 自编译算子（ascend_fla/ops/kda/chunk.py）。两者**同机同卡同输入**测量，否则加速比无意义。报数必须带形状/dtype/warmup/iters/是否同步 —— 见 AGENTS.md §6。",
+    "machine": "8-card Ascend950PR docker host, CANN 9.2.0 (V100R001C25B046), torch 2.10.0+cpu / torch_npu 2.10.0.post2, python 3.11.16, NPU 0",
     "recorded_at": "2026-09-11",
     "conditions": {
       "dtype": "bfloat16",
@@ -673,38 +673,140 @@
       "V": 128,
       "chunk": 64,
       "warmup": 3,
-      "iters": 5,
+      "iters": 10,
       "synchronized": true,
-      "forward_only": true
+      "forward_only": true,
+      "layout_device": "npu",
+      "one_process_per_block_dim": true
     },
-    "torch_npu_vectorized": [
-      {
-        "shape": "smoke",
-        "dims": "B1/H1/HV1/T64",
-        "ms": 5.866,
-        "rel_l2_vs_cpu": 1.898e-05
+    "torch_npu_vectorized": {
+      "note": "与 ascriptor_self_compiled 同一批运行测得（每个 block_dim 的子进程各自重测一次基线），所以两张表可以直接比。先前在 NPU 7 / iters=5 下测的 5.866 / 6.497 / 7.040 / 14.469ms 已被这组取代 —— 条件不同的数不能混用。",
+      "ms_per_run": [
+        {
+          "shape": "smoke",
+          "dims": "B1/H1/HV1/T64",
+          "runs": [
+            6.633,
+            6.473,
+            4.581,
+            4.684
+          ],
+          "median": 5.579,
+          "rel_l2_vs_cpu": 1.898e-05
+        },
+        {
+          "shape": "kimi_linear_layer",
+          "dims": "B1/H32/HV32/T1024",
+          "runs": [
+            7.92,
+            5.445,
+            5.439,
+            5.811
+          ],
+          "median": 5.628,
+          "rel_l2_vs_cpu": 2.721e-05
+        },
+        {
+          "shape": "qwen3_next_layer",
+          "dims": "B1/H16/HV32/T1024",
+          "runs": [
+            8.051,
+            5.524,
+            5.115,
+            5.697
+          ],
+          "median": 5.611,
+          "rel_l2_vs_cpu": 2.765e-05
+        },
+        {
+          "shape": "long_context",
+          "dims": "B1/H16/HV32/T4096",
+          "runs": [
+            17.668,
+            12.155,
+            11.816,
+            12.223
+          ],
+          "median": 12.189,
+          "rel_l2_vs_cpu": 2.622e-05
+        }
+      ],
+      "variance_note": "四次测量里**第一个子进程始终最慢**（6.633 / 7.920 / 8.051 / 17.668），应是设备初始化与缓存冷启的成本漏进了它的计时。中位数比均值更能代表稳态。"
+    },
+    "observation": "torch_npu 基线：数据量从 smoke 到 kimi_linear_layer 差 512 倍，耗时只差 ~15% —— 它完全被 kernel launch 开销支配（向量化后仍有 63 次求逆迭代 + NT 次 chunk 迭代的 python 循环），**不是硬件算力上限**。自编译侧相反：耗时随工作量近线性（T 从 1024 到 4096，bd4 下 1.311→5.138ms，正好 3.9 倍），是真正的算力账。这也解释了 smoke 上 19.7x 的加速 —— 那里 torch_npu 在付固定开销而我们不付。",
+    "cross_cann_consistency": "kda_fwd 经 runtime 桥在 CANN 9.1.0 与 9.2.0 两台机器上的 relL2 逐位相同（smoke 3.288e-03 / multi_chunk 3.383e-03 / gva 3.359e-03），说明这个偏差来自算子自身的数值路径（见 gaps.json 的 kda-fwd-bwd-dtype-mismatch），与 CANN 版本无关。",
+    "ascriptor_self_compiled": {
+      "note": "每个 block_dim 一个子进程 —— 同名算子多 build 在一进程内会互相覆盖，见 gaps.json 的 op-name-collision-in-process。四个 block_dim 的 relL2 完全相同。",
+      "ms_by_block_dim": [
+        {
+          "shape": "smoke",
+          "dims": "B1/H1/HV1/T64",
+          "bd1": 0.334,
+          "bd2": 0.238,
+          "bd3": 0.222,
+          "bd4": 0.238,
+          "rel_l2_o_vs_cpu": 0.003288
+        },
+        {
+          "shape": "kimi_linear_layer",
+          "dims": "B1/H32/HV32/T1024",
+          "bd1": 4.955,
+          "bd2": 2.516,
+          "bd3": 1.724,
+          "bd4": 1.311,
+          "rel_l2_o_vs_cpu": 0.003962
+        },
+        {
+          "shape": "qwen3_next_layer",
+          "dims": "B1/H16/HV32/T1024",
+          "bd1": 4.923,
+          "bd2": 2.491,
+          "bd3": 1.713,
+          "bd4": 1.302,
+          "rel_l2_o_vs_cpu": 0.003964
+        },
+        {
+          "shape": "long_context",
+          "dims": "B1/H16/HV32/T4096",
+          "bd1": 19.622,
+          "bd2": 9.971,
+          "bd3": 6.794,
+          "bd4": 5.138,
+          "rel_l2_o_vs_cpu": 0.004168
+        }
+      ],
+      "speedup_vs_torch_npu_at_bd4": {
+        "smoke": "19.7x",
+        "kimi_linear_layer": "4.43x",
+        "qwen3_next_layer": "4.38x",
+        "long_context": "2.38x"
       },
-      {
-        "shape": "kimi_linear_layer",
-        "dims": "B1/H32/HV32/T1024",
-        "ms": 6.497,
-        "rel_l2_vs_cpu": 2.721e-05
-      },
-      {
-        "shape": "qwen3_next_layer",
-        "dims": "B1/H16/HV32/T1024",
-        "ms": 7.04,
-        "rel_l2_vs_cpu": 2.765e-05
-      },
-      {
-        "shape": "long_context",
-        "dims": "B1/H16/HV32/T4096",
-        "ms": 14.469,
-        "rel_l2_vs_cpu": 2.622e-05
+      "kernel_breakdown_kimi_linear_layer": {
+        "note": "benchmarks/profile_bridge_overhead.py --sync-each 的设备耗时归因（ms/次）。同步会破坏流水，所以总和大于流水模式下的总耗时。",
+        "bd1": {
+          "KdaSub2ScoreKernel": 1.583,
+          "TrilInverse64V2StrictBf16Kernel": 1.354,
+          "KdaSub45FusedKernel": 1.311,
+          "KdaSub3WyKernel": 0.486,
+          "KdaSub1GateKernel": 0.198,
+          "layout_to_bhcld_x5": 0.318,
+          "layout_from_bhcld": 0.095,
+          "total": 5.838
+        },
+        "bd4": {
+          "KdaSub2ScoreKernel": 0.407,
+          "TrilInverse64V2StrictBf16Kernel": 0.361,
+          "KdaSub45FusedKernel": 0.329,
+          "KdaSub3WyKernel": 0.129,
+          "KdaSub1GateKernel": 0.058,
+          "layout_to_bhcld_x5": 0.276,
+          "layout_from_bhcld": 0.064,
+          "total": 1.901
+        },
+        "reading": "layout 重排只占 7%（bd1）—— 我先前猜它是瓶颈，错了。大头是三个 kernel，而它们正是 ascriptor lint 里 15 处 ub_to_l1.nd2nz 的所在（见 gaps.json 的 kernel-nd2nz-suboptimal）。bd=4 下 layout 占比升到 18%，因为 kernel 侧随核数缩短而重排不随。"
       }
-    ],
-    "observation": "数据量从 smoke 到 kimi_linear_layer 差 512 倍，耗时只差 11%（5.87→6.50ms）—— 这个 torch_npu 实现完全被 kernel launch 开销支配（向量化后仍有 63 次求逆迭代 + NT 次 chunk 迭代的 python 循环，每次若干小 op），不是算力受限。自编译的融合算子应当在这里大幅胜出；这也意味着**不要把这个基线当成硬件算力上限**。",
-    "not_yet_measured": "ascriptor 自编译算子（ops/kda/chunk.py）的同形状耗时。第二期补 —— 前置条件已满足：aclnn 编译在本机 CANN 9.2.0 上实测可用，且本机 npu permute+contiguous 可用（layout 重排走 NPU，不必绕 CPU）。",
-    "cross_cann_consistency": "kda_fwd 经 runtime 桥在 CANN 9.1.0 与 9.2.0 两台机器上的 relL2 逐位相同（smoke 3.288e-03 / multi_chunk 3.383e-03 / gva 3.359e-03），说明这个偏差来自算子自身的数值路径（见 gaps.json 的 kda-fwd-bwd-dtype-mismatch），与 CANN 版本无关。"
+    },
+    "caveats": "torch_npu 基线的跑间波动约 20%（kimi_linear_layer 在四个子进程里测到 7.920 / 5.445 / 5.439 / 5.811ms），所以加速比带同等量级的不确定度。每行的比值用的是该子进程自己测的基线，不是跨进程平均。",
+    "next": "① 抬高 block_dim 上限（gaps.json 的 block-dim-ceiling，已升 P1）—— 扩展性到 4 仍线性，物理上有 28 cube。② kernel 侧的 nd2nz 返工（kernel-nd2nz-suboptimal）。③ 反向的同类测量，第二期随 kda_bwd 一起做。"
   }
 }

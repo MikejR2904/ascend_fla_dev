@@ -99,13 +99,46 @@ def acl_libs() -> _AclLibs:
 def register_custom_opp_path(vendor_dir: str | os.PathLike) -> None:
     """把 vendor 树加进 ``ASCEND_CUSTOM_OPP_PATH``，让 CANN 找得到算子配置。
 
-    已存在的路径保持在前，多个自定义算子包可共存（冒号分隔）。
+    已存在的路径保持在前。**算子名不同的**自定义算子包可以共存（冒号分隔）；
+    同名算子的多份 build 不能 —— 见 :func:`_claim_op_name`。
     """
     path = str(vendor_dir)
     current = os.environ.get("ASCEND_CUSTOM_OPP_PATH", "")
     entries = [e for e in current.split(":") if e]
     if path not in entries:
         os.environ["ASCEND_CUSTOM_OPP_PATH"] = ":".join([*entries, path])
+
+
+# op 名 → 本进程已认领它的 vendor 树。见 _claim_op_name 的说明。
+_op_name_owner: dict[str, str] = {}
+
+
+def _claim_op_name(op_name: str, vendor_dir: str) -> None:
+    """一个进程内，一个算子名只能由一份 build 提供 —— 否则报错。
+
+    ``ASCEND_CUSTOM_OPP_PATH`` 是冒号分隔的搜索路径，CANN 按 **算子名** 在里面查，
+    第一个命中的 vendor 树胜出；而这个解析只在进程内发生一次。于是同一个算子名的
+    第二份 build 会被静默忽略 —— 调用它拿到的是第一份的二进制。
+
+    这不是理论风险，是实测踩到的：同进程内扫 ``block_dim=1,2,3,4`` 时四次都执行了
+    block_dim=1 的二进制，四个耗时完全相同（4.908/4.917/4.922/4.934ms），而各自
+    独立进程测得 1 与 4 相差 3.9 倍。当时差点据此写下"block_dim 无效"的错误结论。
+
+    比性能更要紧的是正确性：若两份 build 的差别不止 block_dim（例如把不同的标量
+    绑定特化进了代码），静默执行错的那份就是静默出错的答案。所以这里直接报错，
+    让调用方改成一份 build 一个进程。
+    """
+    owner = _op_name_owner.setdefault(op_name, vendor_dir)
+    if owner != vendor_dir:
+        raise AclError(
+            f"算子名 {op_name} 在本进程里已由另一份 build 提供：\n"
+            f"  已认领: {owner}\n"
+            f"  本次请求: {vendor_dir}\n"
+            "CANN 按算子名在 ASCEND_CUSTOM_OPP_PATH 里查，第一个命中的胜出，"
+            "所以第二份 build 会被静默忽略 —— 拿到的是第一份的二进制。"
+            "扫 block_dim 或标量绑定时请一份 build 一个进程"
+            "（benchmarks/bench_kda_ascriptor.py 的 --block-dim 多值会自动这么做）。"
+        )
 
 
 def current_stream_ptr() -> int:
@@ -186,6 +219,7 @@ class AclnnOp:
         if len(self.scalar_dtypes) != len(self.scalar_names):
             raise AclError(f"{op_name}: scalar_dtypes 与 scalar_names 长度不一致")
         self._scalar_ctypes = [SCALAR_CTYPE[d] for d in self.scalar_dtypes]
+        _claim_op_name(op_name, str(vendor_dir))
         register_custom_opp_path(vendor_dir)
 
         self._lib = ctypes.CDLL(str(opapi_lib), mode=ctypes.RTLD_GLOBAL)

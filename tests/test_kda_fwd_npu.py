@@ -82,3 +82,14 @@ def test_gate_rejects_bad_shapes():
 
     with pytest.raises(ValueError, match="dtype"):          # q 用了 fp32
         chunk_kda_fwd(npu["q"].float(), npu["k"], npu["v"], npu["g"], npu["beta"])
+
+    with pytest.raises(ValueError, match="K=V=128"):        # 头维不是 128
+        q = torch.randn(1, 64, 1, 64, dtype=torch.bfloat16, device="npu")
+        chunk_kda_fwd(q, q, q, npu["g"], npu["beta"])
+
+    # block_dim 超出契约声明的 [1,2,3,4]。这一项尤其重要：超过物理核数不会报错，
+    # 会在硬件 barrier 上死锁 —— 必须在 host 侧挡住。
+    for bd in (0, 5, 8, 28, 32):
+        with pytest.raises(ValueError, match="block_dim"):
+            chunk_kda_fwd(npu["q"], npu["k"], npu["v"], npu["g"], npu["beta"], block_dim=bd)
+
