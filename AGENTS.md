@@ -91,6 +91,13 @@ ascriptor 现在的执行模型全是"**落盘 + 独立进程**"：`aclnn` launc
 - 传大文件要留意带宽：整包 `git archive` 往往有大量 examples/docs，
   只打包 `ascriptor` 包 + `pyproject.toml` 能把 29MB 压到 2.7MB。
   `scp` 中断会留下**不完整**的文件且不报错 —— 传完一定对 `md5sum`。
+- 等远端长任务结束时，**`pgrep -f <模式>` 会匹配到等待循环自己的命令行**，
+  于是 `until ! pgrep -f "pytest tests/foo"; do sleep 10; done` 条件恒真、永不退出。
+  实测在容器里留下 9 个空转循环（测试早就跑完了），表现为本地的后台等待命令超时退出
+  （exit 124），很容易误读成"测试失败"。**判失败前先看日志有没有正常收尾。**
+  写法：盯文件而不是盯进程 —— `until grep -q "passed\|failed\|error" <log>; do sleep 10; done`，
+  或给模式加 `[p]ytest` 这类自排除。收工前 `pgrep -af "until ! pgrep"` 扫一遍自己的残留
+  （**只清自己容器里自己起的**）。
 
 ### 开机必查：opp 有没有 `ascend950` 算子包
 
