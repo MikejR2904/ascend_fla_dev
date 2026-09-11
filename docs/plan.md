@@ -305,7 +305,7 @@ token 递推参考 + autograd（`tests/test_kda_bwd_deep_npu.py`）：
 `A_log` 与 `dt_bias` 误差大一个量级是预期的：它们的梯度都要穿过 `exp`/`softplus`，
 深衰减下对 `g` 的扰动放大最厉害 —— 正是算子级曲线里 `dg` 预算放宽到 0.25 的同一个原因。
 同批次的算子级宽域三档：跨度 46 → `dq` 2.889e-02、94 → 4.550e-02、104 → 4.782e-02。
-`tests/test_kda_layer_npu.py` 8 项 + `tests/test_kda_bwd_deep_npu.py` 4 项，**12 passed**。
+当时是 `tests/test_kda_layer_npu.py` 8 项 + `tests/test_kda_bwd_deep_npu.py` 4 项 = 12 passed；**接完 decode 后全量真机套件 63 passed**（层测试增到 11 项），见本节末。
 
 **六条教训。**
 
@@ -449,6 +449,16 @@ prefill 4.595e-03、decode 4.628e-03 / 5.030e-03 / 4.650e-03 / 4.257e-03 / 4.783
 此外纠正一处此前写错的：我曾说"还要短卷积的逐 token 状态推进"——
 **`modules/convolution.py` 本来就支持** `cache` + `output_final_state` 的单步解码，
 还处理了 T < kernel_size 的补零。接线时直接用上了。
+
+### 当前的真机验证总账
+
+接完 decode 之后跑了一次全量：**`pytest tests/` 在 A5 / CANN 9.2.0 上 63 passed**
+（346s，NPU 7，`tests/conftest.py` 的 session fixture 先把 chunk 前向+反向+decode 全部 kernel
+编完）。主机侧（macOS，无 NPU）42 passed / 5 skipped。
+
+按文件：门控 22 + decode 主机侧 6 + modules 若干（主机侧），
+算子级前向/反向/检查点/宽域/层级/decode 一致性（真机侧）。
+**两边的数都要报** —— 主机侧那些是常量与声明的一致性检查，真机侧才是数值结论。
 
 ## 6. 性能基线
 
