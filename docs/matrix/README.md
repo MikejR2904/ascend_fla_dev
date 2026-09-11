@@ -169,7 +169,7 @@ kimi_linear_layer / bd=4 的拆分（ms）：fwd_kernels 1.314 · caches_host_si
 
 ## 缺口
 
-P0 0 项 · P1 12 项 · P2 11 项 · 已解决 9 项 · 共 32 项
+P0 0 项 · P1 12 项 · P2 10 项 · 已解决 10 项 · 共 32 项
 
 **第一期里程碑**：第一期五项已全部有结论，并补齐了同机性能对比：aclnn 编译、runtime 桥、kda_fwd 接线、KDA 本地基线均实测通过；自编译算子在 block_dim=4 下比 torch_npu 组合快 4.43x（kimi_linear_layer）/ 2.38x（long_context T=4096）/ 19.7x（smoke）。过程中修掉两个自己的 bug（bridge-per-call-overhead、op-name-collision-in-process），它们先后让 block_dim 的效果被完全掩盖。当前最大的性能项是 block-dim-ceiling（已升 P1）：扩展性一路线性到契约上限 4，而硬件有 28 cube。第二期的前置障碍 kda-fwd-bwd-dtype-mismatch 已量化（降 P2）。
 
@@ -198,9 +198,9 @@ P0 0 项 · P1 12 项 · P2 11 项 · 已解决 9 项 · 共 32 项
 
 | 算子族 | P0 | P1 | P2 |
 |---|---|---|---|
-| KDA | — | `fused-recurrent-missing`<br>`no-varlen`<br>`no-tail-path`<br>`block-dim-ceiling`<br>`qk-l2norm-not-in-kernel`<br>`state-layout-k-first` | `kda-fwd-bwd-dtype-mismatch`<br>`npu-builtin-ops-missing`<br>`toy-case-shapes`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`torch-npu-baseline-missing`<br>`kernel-nd2nz-suboptimal`<br>`fwd-caches-not-emitted`<br>`modules-are-torch-not-kernels`<br>`stable-unit-no-harness`<br>`gate-span-still-bounded` |
-| GDN | — | `gdn-no-gqa`<br>`layout-not-token-major`<br>`nonzero-initial-state`<br>`d-initial-state-absent`<br>`state-dtype-bf16`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`scale-param-no-slot`<br>`no-tail-path`<br>`block-dim-ceiling` | `npu-builtin-ops-missing`<br>`toy-case-shapes`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`torch-npu-baseline-missing` |
-| DeltaNet | — | `layout-not-token-major`<br>`nonzero-initial-state`<br>`d-initial-state-absent`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`scale-param-no-slot`<br>`no-tail-path` | `npu-builtin-ops-missing`<br>`toy-case-shapes`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`torch-npu-baseline-missing` |
+| KDA | — | `fused-recurrent-missing`<br>`no-varlen`<br>`no-tail-path`<br>`block-dim-ceiling`<br>`qk-l2norm-not-in-kernel`<br>`state-layout-k-first` | `kda-fwd-bwd-dtype-mismatch`<br>`npu-builtin-ops-missing`<br>`toy-case-shapes`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`kernel-nd2nz-suboptimal`<br>`fwd-caches-not-emitted`<br>`modules-are-torch-not-kernels`<br>`stable-unit-no-harness`<br>`gate-span-still-bounded` |
+| GDN | — | `gdn-no-gqa`<br>`layout-not-token-major`<br>`nonzero-initial-state`<br>`d-initial-state-absent`<br>`state-dtype-bf16`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`scale-param-no-slot`<br>`no-tail-path`<br>`block-dim-ceiling` | `npu-builtin-ops-missing`<br>`toy-case-shapes`<br>`fixed-kv-128`<br>`asymmetric-kv-dim` |
+| DeltaNet | — | `layout-not-token-major`<br>`nonzero-initial-state`<br>`d-initial-state-absent`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`scale-param-no-slot`<br>`no-tail-path` | `npu-builtin-ops-missing`<br>`toy-case-shapes`<br>`fixed-kv-128`<br>`asymmetric-kv-dim` |
 
 ### P1
 
@@ -309,12 +309,15 @@ P0 0 项 · P1 12 项 · P2 11 项 · 已解决 9 项 · 共 32 项
 - **影响** 选机器决定能做什么：装了 ascend950 算子包的机器上 torch_npu 基线与 layer 级验证都可做；没装的机器上只能跑自编译 kernel（empty/H2D/D2H/data_ptr/stream 可用，计算算子全不可用）。runtime 桥在两种机器上都工作 —— 这正是它的价值。 【2026-09-11 修正】「runtime 桥在两种机器上都工作」只对**前向**成立。训练路径要在 host 侧补三个反向检查点（`fwd-caches-not-emitted`），那一段是 torch 算子 —— 在缺算子包的机器上原本直接失败。已加 CPU 绕行；层级验证仍然只能在有 ascend950 算子包的机器上做（层里的投影/卷积/softplus/RMSNorm 全是 torch_npu 算子）。 另外：算子入口现在**要求输入连续**并在不满足时报错（`chunk.py` 与 `chunk_bwd.py` 的 `_check`）。在这种机器上「悄悄 .contiguous() 一下」根本做不到 —— device 上要 d2d copy，跨步 D2H 要 Slice，两条都缺，所以只能报错。
 - **建议** 三条路：① 性能基线改用 ascriptor 自己的 profile 子命令 + 自编译 kernel 之间的对比；② 在有完整算子包的机器上做 torch_npu 基线（a2/910B3 有 ascend910b）；③ 确认是否存在 950PR 的算子包可安装。选哪条取决于基线要回答的问题 —— 要对比 ascriptor vs torch_npu 就必须有内置算子，换机器是最直接的。
 
-#### `toy-case-shapes` — 现有算子 case 全是玩具形状，未在真实模型形状上验证
+#### `toy-case-shapes` — 精度验收仍是玩具形状：所有误差数都测在 H=1、C≤2 上，真实形状（H32/HV32/C16）零数据
 
 - **类别** validation · **适用于** 全部 · **阻塞** `phase 1 验收`
-- **依据** kda_fwd 四个 case 为 B=1, H=1, HV=1~2, C=1~2；gdn_fwd 为 B=1, H=1~3, C=1~3。
-- **影响** 正确性证据的形状覆盖与真实负载相距很远（Kimi-Linear 单层为 H=HV=32，T=1024 时 C=16）。多核分区、UB 压力、核归属路径在玩具形状下可能根本没被触发。
-- **建议** 第一期的精度验收必须用 models.json 的 test_case_shapes.kimi_linear_layer，而不是沿用上游 case。
+- **依据** **性能侧已经在真实形状上测过了**：第一期与第二期的倍数都来自 `models.json` 的 `kimi_linear_layer`(B1/H32/HV32/C16/T1024)、`qwen3_next_layer`、`long_context`(T4096)。
+**精度侧没有。** 至今全部误差数字的形状是：`kda_fwd` 接线 B1/H1/HV1~2/C1~2；`kda_bwd` 契约五 case 最大 HV2/C2；层级验证 B1/T128/H1/HV2/hidden256；宽门控跨度 B1/T128/H1/HV1。**最大的 C 是 2，最大的 H/HV 是 2。**
+真实形状会多出三件窄形状测不到的东西：① C=16 意味着 chunk 间 state 传递串 16 层深，误差累积与 `final_state` 的漂移在 C≤2 上根本看不出来；② H=32/HV=32 才真正压到 `block_dim=4` 的核切分（contract 的 core_ownership 按 B*HV 与 B*HV*C 切，kimi 形状下是 32 与 512，窄形状下是 1~4，连一个核组都喂不满）；③ GQA 分组在 HV/H=2 上只跨了一组。
+**这与刚修完的门控跨度是同一类风险**：契约声明的域 ≠ 模型会用的域，窄域全绿不代表可用。那次是量程维度，这次是形状维度。
+- **影响** 性能结论不受影响（本来就在真实形状上测的）。受影响的是**精度结论的外推**：现在说「算子精度在预算内」，依据只有 H=1/C≤2 的数据。C=16 的 state 链路、bd=4 的核切分边界都没有任何精度证据 —— 如果那里有问题，表现会是「小形状全绿、真实模型精度差」，与门控跨度那次的失效模式完全一样。
+- **建议** 在有 `ascend950` 算子包的机器上，按 `kimi_linear_layer` 与 `long_context` 两个形状跑一遍前向+反向精度，判据仍用 fp32 递推参考（它在任何形状下都安全）。重点看三个量：① `final_state` 随 C 的漂移（C=1→16 逐 chunk 记一遍，看是累积还是恒定）；② 同一形状下 bd=1 与 bd=4 的输出是否逐位相同（不同只能来自核切分，那就是 bug 不是精度）；③ GQA 分组在 HV/H=2 且 H=16 时各组是否独立正确。T=1024 的 CPU fp32 递推参考是 1024 步小张量循环，可接受。
 
 #### `fixed-kv-128` — K=V=128 固定，不支持其他 head_dim
 
@@ -329,13 +332,6 @@ P0 0 项 · P1 12 项 · P2 11 项 · 已解决 9 项 · 共 32 项
 - **依据** 各单元 inputs 中 q/k/v 的末维同为 128，domain 只声明单一 D=128（kda 分别声明 K=128 与 V=128，但两者都固定）。
 - **影响** expand_v != 1.0 的配置不被支持（fla GatedDeltaNetConfig 默认 expand_v=2.0 → head_v 是 head_k 的两倍）。
 - **建议** 与 fixed-kv-128 同样处置：两个真实目标模型都是 head_k == head_v == 128，不去支持非对称维度。门控拒绝并说明。
-
-#### `torch-npu-baseline-missing` — 缺少 torch_npu 组合实现作基线与第二 oracle
-
-- **类别** validation · **适用于** 全部 · **阻塞** `phase 1 验收`, `phase 2 性能报告`
-- **依据** 本仓尚无任何实现代码。
-- **影响** 没有它就只有一个 oracle（fla naive），也没有性能对照 —— 无法判断"高效率"是否达成。
-- **建议** 第一期与 runtime 桥并行做：reference/ 下用 torch_npu 原生算子拼出同语义 KDA，同时充当基线与第二 oracle。
 
 #### `kernel-nd2nz-suboptimal` — kda 的前后向 kernel 里有一批 ascriptor lint 标出的访存低效点（nd2nz 展开、偶数 block stride）
 

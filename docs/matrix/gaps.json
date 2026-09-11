@@ -174,18 +174,18 @@
     },
     {
       "id": "toy-case-shapes",
-      "title": "现有算子 case 全是玩具形状，未在真实模型形状上验证",
+      "title": "精度验收仍是玩具形状：所有误差数都测在 H=1、C≤2 上，真实形状（H32/HV32/C16）零数据",
       "category": "validation",
       "severity": "P2",
       "applies_to": [
         "all"
       ],
-      "evidence": "kda_fwd 四个 case 为 B=1, H=1, HV=1~2, C=1~2；gdn_fwd 为 B=1, H=1~3, C=1~3。",
-      "impact": "正确性证据的形状覆盖与真实负载相距很远（Kimi-Linear 单层为 H=HV=32，T=1024 时 C=16）。多核分区、UB 压力、核归属路径在玩具形状下可能根本没被触发。",
+      "evidence": "**性能侧已经在真实形状上测过了**：第一期与第二期的倍数都来自 `models.json` 的 `kimi_linear_layer`(B1/H32/HV32/C16/T1024)、`qwen3_next_layer`、`long_context`(T4096)。\n**精度侧没有。** 至今全部误差数字的形状是：`kda_fwd` 接线 B1/H1/HV1~2/C1~2；`kda_bwd` 契约五 case 最大 HV2/C2；层级验证 B1/T128/H1/HV2/hidden256；宽门控跨度 B1/T128/H1/HV1。**最大的 C 是 2，最大的 H/HV 是 2。**\n真实形状会多出三件窄形状测不到的东西：① C=16 意味着 chunk 间 state 传递串 16 层深，误差累积与 `final_state` 的漂移在 C≤2 上根本看不出来；② H=32/HV=32 才真正压到 `block_dim=4` 的核切分（contract 的 core_ownership 按 B*HV 与 B*HV*C 切，kimi 形状下是 32 与 512，窄形状下是 1~4，连一个核组都喂不满）；③ GQA 分组在 HV/H=2 上只跨了一组。\n**这与刚修完的门控跨度是同一类风险**：契约声明的域 ≠ 模型会用的域，窄域全绿不代表可用。那次是量程维度，这次是形状维度。",
+      "impact": "性能结论不受影响（本来就在真实形状上测的）。受影响的是**精度结论的外推**：现在说「算子精度在预算内」，依据只有 H=1/C≤2 的数据。C=16 的 state 链路、bd=4 的核切分边界都没有任何精度证据 —— 如果那里有问题，表现会是「小形状全绿、真实模型精度差」，与门控跨度那次的失效模式完全一样。",
       "blocks": [
         "phase 1 验收"
       ],
-      "proposed_action": "第一期的精度验收必须用 models.json 的 test_case_shapes.kimi_linear_layer，而不是沿用上游 case。"
+      "proposed_action": "在有 `ascend950` 算子包的机器上，按 `kimi_linear_layer` 与 `long_context` 两个形状跑一遍前向+反向精度，判据仍用 fp32 递推参考（它在任何形状下都安全）。重点看三个量：① `final_state` 随 C 的漂移（C=1→16 逐 chunk 记一遍，看是累积还是恒定）；② 同一形状下 bd=1 与 bd=4 的输出是否逐位相同（不同只能来自核切分，那就是 bug 不是精度）；③ GQA 分组在 HV/H=2 且 H=16 时各组是否独立正确。T=1024 的 CPU fp32 递推参考是 1024 步小张量循环，可接受。"
     },
     {
       "id": "block-dim-ceiling",
@@ -252,19 +252,18 @@
     },
     {
       "id": "torch-npu-baseline-missing",
-      "title": "缺少 torch_npu 组合实现作基线与第二 oracle",
+      "title": "【已完成】torch_npu 组合实现（第二 oracle + 性能基线）",
       "category": "validation",
-      "severity": "P2",
+      "severity": "resolved",
       "applies_to": [
         "all"
       ],
-      "evidence": "本仓尚无任何实现代码。",
+      "evidence": "**这条我一度忘了关。** 证据写的还是「本仓尚无任何实现代码」，而第一期 ⑤ 早已 ✅ —— `benchmarks/bench_kda_torch_npu.py`（166 行）用 torch_npu 原生算子拼出同语义 KDA，`ascend_fla/reference/kda.py`（264 行）提供 CPU fp32 oracle 与逐 token 递推参考。两者都在用：第一期给出「自编译算子 bd=4 比 torch_npu 组合快 2.4~4.4x」，第二期给出训练步 4.83x（kimi）/ 5.06x（qwen）/ 5.67x（T=4096）。\n**它一度被判为「SoC 不支持」，那个判断是错的** —— 真因是算子包安装差异（缺 `ascend950` 内置算子包的机器上 torch_npu 的计算算子全不可用），换到有该算子包的机器就跑通了。这条纠正留着，见 npu-builtin-ops-missing。",
       "impact": "没有它就只有一个 oracle（fla naive），也没有性能对照 —— 无法判断\"高效率\"是否达成。",
-      "blocks": [
-        "phase 1 验收",
-        "phase 2 性能报告"
-      ],
-      "proposed_action": "第一期与 runtime 桥并行做：reference/ 下用 torch_npu 原生算子拼出同语义 KDA，同时充当基线与第二 oracle。"
+      "blocks": [],
+      "proposed_action": "无。",
+      "resolved_at": "2026-09-11",
+      "resolution": "第一期与 runtime 桥并行做掉的。缺口本身忘了同步状态 —— **教训：验收项打 ✅ 的同时要回头关对应的缺口**，否则矩阵会一边说「已完成」一边说「尚无任何实现代码」，而矩阵是单一事实源（AGENTS.md §8）。"
     },
     {
       "id": "aclnn-compile-untested",
@@ -494,7 +493,7 @@
   "summary": {
     "P0": 0,
     "P1": 12,
-    "P2": 11,
+    "P2": 10,
     "total": 32,
     "first_milestone": "第一期五项已全部有结论，并补齐了同机性能对比：aclnn 编译、runtime 桥、kda_fwd 接线、KDA 本地基线均实测通过；自编译算子在 block_dim=4 下比 torch_npu 组合快 4.43x（kimi_linear_layer）/ 2.38x（long_context T=4096）/ 19.7x（smoke）。过程中修掉两个自己的 bug（bridge-per-call-overhead、op-name-collision-in-process），它们先后让 block_dim 的效果被完全掩盖。当前最大的性能项是 block-dim-ceiling（已升 P1）：扩展性一路线性到契约上限 4，而硬件有 28 cube。第二期的前置障碍 kda-fwd-bwd-dtype-mismatch 已量化（降 P2）。",
     "second_milestone": "第二期已完成：kda_bwd 九 kernel 链 + 九个前向检查点 + autograd + KDA layer（含 2 modules），训练步在 bd=4 下比 torch_npu 组合版快 4.83x~5.67x。\n过程中发现并根治了第二期最关键的一个缺口：**按 fla 的默认初始化（chunk 内门控跨度 ~94），上游 kernel 在前向与反向各有一处量程失效，方向相反** —— 前向在 87.3 下溢、反向在 88.72 上溢。两处都在本仓建了派生单元（kda_fwd_stable / kda_bwd_stable），把成对衰减分解的锚点从区间端点改到中点，数学同义。\n门控闸因此做成二维 `{impl: {forward, backward}}`：前向 155（受有限性约束，到 155.97 精度完全不退化）、反向 100（受**精度**约束，它先于有限性到来 —— 梯度到 169.8 都有限但 dq 在 130 处超预算）。**「不吐 NaN」不等于「能用」，两者要分别测、闸按更严的定。**\n剩一项端到端确认（默认初始化下整层反向的精度）卡在机器可用性上 —— 算子层面的同一件事已由 test_kda_bwd_deep_npu.py 在跨度 94 测过，六项梯度全在契约预算内。\n当前最大的性能项仍是 block-dim-ceiling（P1）。",
@@ -513,6 +512,6 @@
         "本地 validation.json 证据齐全"
       ]
     },
-    "resolved": 9
+    "resolved": 10
   }
 }
