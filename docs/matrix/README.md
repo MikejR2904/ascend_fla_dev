@@ -445,12 +445,15 @@ P0 1 项 · P1 14 项 · P2 9 项 · 已解决 11 项 · 共 35 项
 - **影响** ① 这些步骤在内置算子包不全的机器上不可用（需要 conv1d/silu/matmul），而自编译的 kda 算子本身不受影响 —— 所以层级验证比算子级验证对机器挑剔。② 层级耗时里有一部分不归本仓的"高效率算子"管，报层级性能数时必须拆开说，否则会把 torch 的开销算进算子账上。
 - **建议** 第四期按测得的占比决定做哪些。归一化与门控是 elementwise，融合收益直接；短卷积是 depthwise，值得单独做一个 kernel。动手前先 profile 层级耗时拆分，别重复 bridge-per-call-overhead 那次"先推断后测量"的错。
 
-#### `stable-unit-no-harness` — 本仓的 kda_fwd_stable 单元还不能用 ascriptor harness 独立跑
+#### `stable-unit-no-harness` — 本仓自有的三个单元都还不能用 ascriptor harness 独立跑
 
 - **类别** verification · **适用于** KDA · **阻塞** —
 - **依据** kernels/projects/a5/kda_fwd_stable/ 目前有 contract.json、README.md 与三个 kernel 文件，但缺 unit 协议要求的 unit.py（make_inputs/reference/execute）与 run.py —— 它们要对接 ascriptor 的 _unit_runner。现在的验证全部经本仓 runtime 桥 + pytest 做。
+（2026-09-11 起这条覆盖三个单元：`kda_fwd_stable`、`kda_bwd_stable`、以及本仓自写的 `kda_fused_recurrent`。三者的 `ascriptor check` 与 runtime 桥都过了，缺的是 `unit.py` + `run.py` 对接 `_unit_runner`。）
 - **影响** ① 拿不到 ascriptor harness 的 sim / pipesim / cannsim 几个 stage 的证据，也就用不上它的逐 stage checkpoint 比对（那对定位 kernel 内部错误很有用）。② 这个单元不能被 ascriptor 侧的人独立复现，不利于把修法推回上游。contract.json 的 support 里已如实标注证据来源，没有假装有 harness 证据。
+（2026-09-11 起这条覆盖三个单元：`kda_fwd_stable`、`kda_bwd_stable`、以及本仓自写的 `kda_fused_recurrent`。三者的 `ascriptor check` 与 runtime 桥都过了，缺的是 `unit.py` + `run.py` 对接 `_unit_runner`。）
 - **建议** 补 unit.py 与 run.py。reference 可以直接用 ascend_fla/reference/kda.py 的逐 token 递推版（它没有跨度上限，正是宽域下唯一可用的 oracle）。做完后把 contract.json 的 support 按 harness 实际结果更新。
+（2026-09-11 起这条覆盖三个单元：`kda_fwd_stable`、`kda_bwd_stable`、以及本仓自写的 `kda_fused_recurrent`。三者的 `ascriptor check` 与 runtime 桥都过了，缺的是 `unit.py` + `run.py` 对接 `_unit_runner`。）
 
 #### `gate-span-still-bounded` — 稳定化把门控跨度上限从 80 抬到前向 155 / 反向 105，但没有去掉上限
 

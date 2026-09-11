@@ -3,6 +3,10 @@
 本仓库是 **fla 系列线性注意力算子在昇腾 NPU 上的高效实现库**，后端用
 [ascriptor](https://github.com/ddddwee1/ascriptor)（指令级 Python 编译器）。
 
+> **接手工作先读 `docs/handoff.md`** —— 那里有当前状态、下一步的候选与推荐、
+> 以及"这两个会话里被实测纠正过的判断"（别重新推导错一遍）。本文件讲的是长期纪律，
+> 那份讲的是此刻进度。
+
 ## 1. 定位
 
 - **是什么**：独立的昇腾算子库。实现 GDN / KDA / DeltaNet 等 fla 系列算子的
@@ -352,6 +356,7 @@ ascend_fla/
 │   └── reference/       # torch oracle
 ├── kernels/             # 本仓自有的 ascriptor 单元（unit 协议）
 ├── tests/  benchmarks/
+├── docs/handoff.md      # ★ 会话交接：现状 + 下一步 + 已纠正的判断
 ├── docs/plan.md         # 构建规划
 ├── docs/matrix/         # ★ 支持矩阵（json 权威，md 生成）
 ├── tools/               # gen_matrix.py 等

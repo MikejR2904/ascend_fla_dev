@@ -533,16 +533,16 @@
     },
     {
       "id": "stable-unit-no-harness",
-      "title": "本仓的 kda_fwd_stable 单元还不能用 ascriptor harness 独立跑",
+      "title": "本仓自有的三个单元都还不能用 ascriptor harness 独立跑",
       "category": "verification",
       "severity": "P2",
       "applies_to": [
         "kda"
       ],
-      "evidence": "kernels/projects/a5/kda_fwd_stable/ 目前有 contract.json、README.md 与三个 kernel 文件，但缺 unit 协议要求的 unit.py（make_inputs/reference/execute）与 run.py —— 它们要对接 ascriptor 的 _unit_runner。现在的验证全部经本仓 runtime 桥 + pytest 做。",
-      "impact": "① 拿不到 ascriptor harness 的 sim / pipesim / cannsim 几个 stage 的证据，也就用不上它的逐 stage checkpoint 比对（那对定位 kernel 内部错误很有用）。② 这个单元不能被 ascriptor 侧的人独立复现，不利于把修法推回上游。contract.json 的 support 里已如实标注证据来源，没有假装有 harness 证据。",
+      "evidence": "kernels/projects/a5/kda_fwd_stable/ 目前有 contract.json、README.md 与三个 kernel 文件，但缺 unit 协议要求的 unit.py（make_inputs/reference/execute）与 run.py —— 它们要对接 ascriptor 的 _unit_runner。现在的验证全部经本仓 runtime 桥 + pytest 做。\n（2026-09-11 起这条覆盖三个单元：`kda_fwd_stable`、`kda_bwd_stable`、以及本仓自写的 `kda_fused_recurrent`。三者的 `ascriptor check` 与 runtime 桥都过了，缺的是 `unit.py` + `run.py` 对接 `_unit_runner`。）",
+      "impact": "① 拿不到 ascriptor harness 的 sim / pipesim / cannsim 几个 stage 的证据，也就用不上它的逐 stage checkpoint 比对（那对定位 kernel 内部错误很有用）。② 这个单元不能被 ascriptor 侧的人独立复现，不利于把修法推回上游。contract.json 的 support 里已如实标注证据来源，没有假装有 harness 证据。\n（2026-09-11 起这条覆盖三个单元：`kda_fwd_stable`、`kda_bwd_stable`、以及本仓自写的 `kda_fused_recurrent`。三者的 `ascriptor check` 与 runtime 桥都过了，缺的是 `unit.py` + `run.py` 对接 `_unit_runner`。）",
       "blocks": [],
-      "proposed_action": "补 unit.py 与 run.py。reference 可以直接用 ascend_fla/reference/kda.py 的逐 token 递推版（它没有跨度上限，正是宽域下唯一可用的 oracle）。做完后把 contract.json 的 support 按 harness 实际结果更新。"
+      "proposed_action": "补 unit.py 与 run.py。reference 可以直接用 ascend_fla/reference/kda.py 的逐 token 递推版（它没有跨度上限，正是宽域下唯一可用的 oracle）。做完后把 contract.json 的 support 按 harness 实际结果更新。\n（2026-09-11 起这条覆盖三个单元：`kda_fwd_stable`、`kda_bwd_stable`、以及本仓自写的 `kda_fused_recurrent`。三者的 `ascriptor check` 与 runtime 桥都过了，缺的是 `unit.py` + `run.py` 对接 `_unit_runner`。）"
     },
     {
       "id": "bwd-gate-range-overflow",
