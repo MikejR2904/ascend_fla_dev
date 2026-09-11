@@ -231,10 +231,15 @@ def gaps_section(gaps: dict) -> list[str]:
     out = [
         "## 缺口",
         "",
-        f"P0 {s['P0']} 项 · P1 {s['P1']} 项 · P2 {s['P2']} 项 · 共 {s['total']} 项",
+        f"P0 {s['P0']} 项 · P1 {s['P1']} 项 · P2 {s['P2']} 项 · "
+        f"已解决 {s.get('resolved', 0)} 项 · 共 {s['total']} 项",
         "",
-        f"**首个里程碑**：{s['first_milestone']}",
+        f"**第一期里程碑**：{s['first_milestone']}",
         "",
+    ]
+    if second := s.get("second_milestone"):
+        out += [f"**第二期里程碑**：{second}", ""]
+    out += [
         f"**建议的首个目标**：{s['recommended_first_target']}",
         "",
     ]
