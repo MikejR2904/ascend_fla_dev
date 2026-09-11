@@ -45,6 +45,7 @@ ascriptor pin：`0.1.0.dev1` · library `77619116f9b3` · 支持硬件 a5 · def
 | **`a5.kda_bwd_stable`** ★ | kda | backward | ✅ | ⬜ | ⬜ | ✅ | ✅ | ✅ | ✅ 完成 |
 | `a5.delta_rule_fwd` | delta_rule | forward | ✅ | ✅ | ✅ | ✅ | ⬜ | ✅ | ⬜ 未开始 |
 | `a5.delta_rule_bwd` | delta_rule | backward | ✅ | ✅ | ✅ | ✅ | ⬜ | ✅ | ⬜ 未开始 |
+| `a5.kda_fused_recurrent` | kda | forward | ✅ | ⬜ | ⬜ | ✅ | ✅ | ✅ | ✅ 完成 |
 
 ★ 标记第一期的首个目标。
 
@@ -169,7 +170,7 @@ kimi_linear_layer / bd=4 的拆分（ms）：fwd_kernels 1.314 · caches_host_si
 
 ## 缺口
 
-P0 1 项 · P1 12 项 · P2 9 项 · 已解决 11 项 · 共 33 项
+P0 1 项 · P1 13 项 · P2 9 项 · 已解决 11 项 · 共 34 项
 
 **第一期里程碑**：第一期五项已全部有结论，并补齐了同机性能对比：aclnn 编译、runtime 桥、kda_fwd 接线、KDA 本地基线均实测通过；自编译算子在 block_dim=4 下比 torch_npu 组合快 4.43x（kimi_linear_layer）/ 2.38x（long_context T=4096）/ 19.7x（smoke）。过程中修掉两个自己的 bug（bridge-per-call-overhead、op-name-collision-in-process），它们先后让 block_dim 的效果被完全掩盖。当前最大的性能项是 block-dim-ceiling（已升 P1）：扩展性一路线性到契约上限 4，而硬件有 28 cube。第二期的前置障碍 kda-fwd-bwd-dtype-mismatch 已量化（降 P2）。
 
@@ -198,20 +199,21 @@ P0 1 项 · P1 12 项 · P2 9 项 · 已解决 11 项 · 共 33 项
 
 | 算子族 | P0 | P1 | P2 |
 |---|---|---|---|
-| KDA | `c1-multihead-o-corrupt` | `fused-recurrent-missing`<br>`no-varlen`<br>`no-tail-path`<br>`block-dim-ceiling`<br>`qk-l2norm-not-in-kernel`<br>`state-layout-k-first` | `kda-fwd-bwd-dtype-mismatch`<br>`npu-builtin-ops-missing`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`kernel-nd2nz-suboptimal`<br>`fwd-caches-not-emitted`<br>`modules-are-torch-not-kernels`<br>`stable-unit-no-harness`<br>`gate-span-still-bounded` |
+| KDA | `c1-multihead-o-corrupt` | `decode-call-overhead`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`no-tail-path`<br>`block-dim-ceiling`<br>`qk-l2norm-not-in-kernel`<br>`state-layout-k-first` | `kda-fwd-bwd-dtype-mismatch`<br>`npu-builtin-ops-missing`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`kernel-nd2nz-suboptimal`<br>`fwd-caches-not-emitted`<br>`modules-are-torch-not-kernels`<br>`stable-unit-no-harness`<br>`gate-span-still-bounded` |
 | GDN | — | `gdn-no-gqa`<br>`layout-not-token-major`<br>`nonzero-initial-state`<br>`d-initial-state-absent`<br>`state-dtype-bf16`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`scale-param-no-slot`<br>`no-tail-path`<br>`block-dim-ceiling` | `npu-builtin-ops-missing`<br>`fixed-kv-128`<br>`asymmetric-kv-dim` |
 | DeltaNet | — | `layout-not-token-major`<br>`nonzero-initial-state`<br>`d-initial-state-absent`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`scale-param-no-slot`<br>`no-tail-path` | `npu-builtin-ops-missing`<br>`fixed-kv-128`<br>`asymmetric-kv-dim` |
 
 ### 待统一修复的 kernel 问题
 
-> **kernel 源码层面的问题统一修一轮，不零散改。** 这是 2026-09-11 定的：发现一条就去改一条，会在 ascriptor 侧留下一串互相干扰的小改动，而且每改一次都要重跑全部 case。做法：发现时把它记进本表并打 `requires_kernel_change`，本仓侧先按 AGENTS.md §7 **装闸报错或记为声明限制**，保证不静默出错；等攒够一批再统一进 ascriptor 侧（§3：本仓不改那个仓，要改走那一侧的流程或建本仓派生单元）。当前队列 20 项，见下表。
+> **kernel 源码层面的问题统一修一轮，不零散改。** 这是 2026-09-11 定的：发现一条就去改一条，会在 ascriptor 侧留下一串互相干扰的小改动，而且每改一次都要重跑全部 case。做法：发现时把它记进本表并打 `requires_kernel_change`，本仓侧先按 AGENTS.md §7 **装闸报错或记为声明限制**，保证不静默出错；等攒够一批再统一进 ascriptor 侧（§3：本仓不改那个仓，要改走那一侧的流程或建本仓派生单元）。当前队列 21 项，见下表。
 
 | 缺口 | 级别 | 要在 kernel 侧改什么 |
 |---|---|---|
 | `c1-multihead-o-corrupt` | P0 | kda_fwd/kernels/recurrent.py 的手写同步：pair 循环跨头时缺一次 L0C/L1 的同步，C≥2 时被 chunk 循环第二遍掩盖。**只掌握症状规律（每核最后一个头对），还没定位到确切缺哪一次 DEvent/Mutex 配对** —— 修之前必须先找出来。 |
 | `block-dim-ceiling` | P1 | kda_fwd/kda_bwd 的 contract domain.block_dim 上限由 4 抬高并补 case。物理 28 cube / 56 vec，实测到 4 仍是线性扩展，所以这是当前最大的单点性能头寸。 |
 | `d-initial-state-absent` | P1 | gdn / delta_rule 的 backward 产出 dh0。 |
-| `fused-recurrent-missing` | P1 | decode 路径的 kernel 整族缺失（逐 token 递推）。 |
+| `decode-call-overhead` | P1 | 若要消掉 host 侧 15.4µs 的布局转换：kda_fused_recurrent 改成直接吃 token-major [B,T,H/HV,128] 并在 kernel 内按 hv//groups 取 q/k 的头。桥侧那 25µs 不用改 kernel。 |
+| `fused-recurrent-missing` | P1 | KDA 的 decode kernel 已自写完（kernels/projects/a5/kda_fused_recurrent）。剩下的是 GDN / DeltaNet 的 decode kernel，照 KDA 这个的结构做。 |
 | `gdn-no-gqa` | P1 | gdn_fwd/bwd 加独立 value-head 维度。 |
 | `layout-not-token-major` | P1 | gdn / delta_rule 的公开布局改 token-major。 |
 | `no-tail-path` | P1 | kda kernel 加 partial chunk 的 tail 路径，解除 T % 64 == 0。 |
@@ -256,6 +258,19 @@ P0 1 项 · P1 12 项 · P2 9 项 · 已解决 11 项 · 共 33 项
 
 ### P1
 
+#### `decode-call-overhead` — decode 的瓶颈是每次调用约 48µs 的固定成本，不是 kernel 也不是带宽
+
+- **类别** performance · **适用于** KDA · **阻塞** `phase 3`
+- **依据** kimi decode 形状 B1/HV32/T1（warmup 5 / iters 50 / 同步）：整次 **53~67 µs**，其中 host 布局转换 15.4~15.7 µs（26~29%）；T=1→16 的**设备侧边际 2.7~4.8 µs/token**（两次运行 T=16 整次分别 101.0 与 125.4 µs —— 报区间而不是单点），于是**每次调用的固定成本约 48~58 µs**。边际与按「4 头/核 × 2 趟 × 128 行」估的设备时间同量级。block_dim 1/2/4/8/16/28 的总时长 54~67 µs **没有趋势** —— 固定成本主导的征兆。
+**我原本预测 decode 是带宽瓶颈（按 state 64KB×2/头估下限约 2.5µs），那个预测错了。**而且如果不拆开量，bd 无效会被误判成「扩展性不行」—— AGENTS.md §6 铁律一说的就是这个。
+复现：`benchmarks/verify_decode.py --check split`。
+- **影响** 48 层模型按 55µs/层算是 **2.6ms/token**，不可接受（decode 一步的预算是几十 µs 量级）。所以 decode 算子虽然正确，但还不能用；这是 fused-recurrent-missing 接层之前必须先解的。
+- **建议** 按占比从大到小：
+① **桥侧（约 25µs）**：decode 期间形状固定，`aclCreateTensor` 的描述符与 workspace 查询可以按 (算子, 形状签名) 缓存复用，每步只换 data_ptr。要先 profile 确认 25µs 花在哪一段 —— **别再先推断后看数据**。
+② **host 布局（15.4µs）**：让 kernel 直接吃 token-major 并在 kernel 内做 GQA 取头，就不用 permute/repeat_interleave/contiguous。这会改 ABI，归入 kernel 修复队列。
+③ **输出（约 7µs）**：同理，让 kernel 直接写 token-major。
+④ 设备侧 4.8µs/token 先不动 —— 它已经是最小的一项。
+
 #### `gdn-no-gqa` — gdn_fwd/bwd 无独立 value-head 维度，不支持 GQA 分组
 
 - **类别** abi · **适用于** GDN · **阻塞** `qwen3-next-80b-a3b`, `phase 4`
@@ -291,12 +306,20 @@ P0 1 项 · P1 12 项 · P2 9 项 · 已解决 11 项 · 共 33 项
 - **影响** state 是跨 chunk 累积量，BF16 存储的误差会进入下一段递推。影响幅度未在 A5 上测过。KDA 不受影响。
 - **建议** GDN 接线时测：同形状下 BF16 state 与 FP32 state 的输出差异，长 C（如 C=64）下是否放大。不要沿用 A2 上的结论。
 
-#### `fused-recurrent-missing` — decode 路径算子完全缺失（全算子族）
+#### `fused-recurrent-missing` — decode 路径：KDA 的 kernel 已自写并真机验过，但未接进 layer；GDN/DeltaNet 仍整族缺失
 
 - **类别** coverage · **适用于** KDA / GDN / DeltaNet · **阻塞** `phase 3`
-- **依据** ascriptor kernels catalog 中无 fused_recurrent 类单元；现有六个单元均为 chunk 路径。
-- **影响** 只有训练与 prefill，没有推理解码。也失去了 chunk↔recurrent 互验这个最好的 oracle。
-- **建议** 第三期为 KDA 新写（非接线），以 fla.ops.kda.fused_recurrent_kda 为语义基准。GDN/DeltaNet 的 decode 路径随各自扩族再补。
+- **依据** ascriptor kernels catalog 中无 fused_recurrent 类单元；六个 a5 单元均为 chunk 路径。
+**KDA 这半已经补上**（2026-09-11）：本仓自写 `kernels/projects/a5/kda_fused_recurrent`，state 常驻 UB、两趟扫、按 B*HV 切给向量核（每头一核，核间无同步）。`ascriptor check` 0 error / 0 warning / 156 ops；真机八个形状下 o 的相对 L2 9.575e-08~1.789e-07、final_state 3.199e-08~1.440e-07（对 fp32 递推参考）；**逐 token 调 T 次并串接 state 与一次调 T 个 token 逐位相同**（decode 正确性就靠这条）；block_dim 1~28 全通（28 即 56 个向量核的物理上限）。
+**它还顺带消掉一个约束**：逐 token 只用 `exp(g_i)`（~1.5），所以**门控跨度没有上限** —— 对比 chunk 路径的前向 155 / 反向 105（gate-span-still-bounded）。
+- **影响** **仍然没有可用的 decode**，但原因变了：不再是「没有算子」，而是两条 ——
+① **没接进 layer**：`layers/kda.py` 的 `mode="fused_recurrent"` 仍报错。decode 还要短卷积的逐 token 状态推进与 cache 寻址（`modules/convolution.py` 的 ShortConvolution 目前只有整段前向）。
+② **性能还不可用**：每次调用约 48µs 固定成本，48 层就是 2.4ms/token。见 decode-call-overhead。
+③ GDN / DeltaNet 的 decode 仍整族缺失，随各自扩族再补（第四期）。
+chunk↔recurrent 互验这个 oracle 现在**有了**：KDA 两条路径都能跑，可以互相验。
+- **建议** ① 先解 decode-call-overhead（不是调 kernel —— kernel 的边际已经只有 4.8 µs/token）。
+② 给 ShortConvolution 加逐 token 状态推进，然后接 `mode="fused_recurrent"`，并用 prefill/decode 一致性做验收（AGENTS.md §6：chunk 与 recurrent 互为最好的 oracle）。
+③ GDN / DeltaNet 的 decode 随扩族做，可以照 KDA 这个单元的结构抄（两趟扫 + 每头一核）。
 
 #### `no-varlen` — 无变长序列（cu_seqlens）支持
 

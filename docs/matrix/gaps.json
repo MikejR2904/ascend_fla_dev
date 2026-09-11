@@ -26,6 +26,23 @@
       "kernel_change_note": "kda_fwd/kernels/recurrent.py 的手写同步：pair 循环跨头时缺一次 L0C/L1 的同步，C≥2 时被 chunk 循环第二遍掩盖。**只掌握症状规律（每核最后一个头对），还没定位到确切缺哪一次 DEvent/Mutex 配对** —— 修之前必须先找出来。"
     },
     {
+      "id": "decode-call-overhead",
+      "title": "decode 的瓶颈是每次调用约 48µs 的固定成本，不是 kernel 也不是带宽",
+      "category": "performance",
+      "severity": "P1",
+      "applies_to": [
+        "kda"
+      ],
+      "evidence": "kimi decode 形状 B1/HV32/T1（warmup 5 / iters 50 / 同步）：整次 **53~67 µs**，其中 host 布局转换 15.4~15.7 µs（26~29%）；T=1→16 的**设备侧边际 2.7~4.8 µs/token**（两次运行 T=16 整次分别 101.0 与 125.4 µs —— 报区间而不是单点），于是**每次调用的固定成本约 48~58 µs**。边际与按「4 头/核 × 2 趟 × 128 行」估的设备时间同量级。block_dim 1/2/4/8/16/28 的总时长 54~67 µs **没有趋势** —— 固定成本主导的征兆。\n**我原本预测 decode 是带宽瓶颈（按 state 64KB×2/头估下限约 2.5µs），那个预测错了。**而且如果不拆开量，bd 无效会被误判成「扩展性不行」—— AGENTS.md §6 铁律一说的就是这个。\n复现：`benchmarks/verify_decode.py --check split`。",
+      "impact": "48 层模型按 55µs/层算是 **2.6ms/token**，不可接受（decode 一步的预算是几十 µs 量级）。所以 decode 算子虽然正确，但还不能用；这是 fused-recurrent-missing 接层之前必须先解的。",
+      "blocks": [
+        "phase 3"
+      ],
+      "proposed_action": "按占比从大到小：\n① **桥侧（约 25µs）**：decode 期间形状固定，`aclCreateTensor` 的描述符与 workspace 查询可以按 (算子, 形状签名) 缓存复用，每步只换 data_ptr。要先 profile 确认 25µs 花在哪一段 —— **别再先推断后看数据**。\n② **host 布局（15.4µs）**：让 kernel 直接吃 token-major 并在 kernel 内做 GQA 取头，就不用 permute/repeat_interleave/contiguous。这会改 ABI，归入 kernel 修复队列。\n③ **输出（约 7µs）**：同理，让 kernel 直接写 token-major。\n④ 设备侧 4.8µs/token 先不动 —— 它已经是最小的一项。",
+      "requires_kernel_change": true,
+      "kernel_change_note": "若要消掉 host 侧 15.4µs 的布局转换：kda_fused_recurrent 改成直接吃 token-major [B,T,H/HV,128] 并在 kernel 内按 hv//groups 取 q/k 的头。桥侧那 25µs 不用改 kernel。"
+    },
+    {
       "id": "kda-fwd-bwd-dtype-mismatch",
       "title": "kda 的 fwd 与 bwd 对同名张量声明了不同 dtype",
       "category": "abi",
@@ -129,7 +146,7 @@
     },
     {
       "id": "fused-recurrent-missing",
-      "title": "decode 路径算子完全缺失（全算子族）",
+      "title": "decode 路径：KDA 的 kernel 已自写并真机验过，但未接进 layer；GDN/DeltaNet 仍整族缺失",
       "category": "coverage",
       "severity": "P1",
       "applies_to": [
@@ -137,14 +154,14 @@
         "gated_delta_rule",
         "delta_rule"
       ],
-      "evidence": "ascriptor kernels catalog 中无 fused_recurrent 类单元；现有六个单元均为 chunk 路径。",
-      "impact": "只有训练与 prefill，没有推理解码。也失去了 chunk↔recurrent 互验这个最好的 oracle。",
+      "evidence": "ascriptor kernels catalog 中无 fused_recurrent 类单元；六个 a5 单元均为 chunk 路径。\n**KDA 这半已经补上**（2026-09-11）：本仓自写 `kernels/projects/a5/kda_fused_recurrent`，state 常驻 UB、两趟扫、按 B*HV 切给向量核（每头一核，核间无同步）。`ascriptor check` 0 error / 0 warning / 156 ops；真机八个形状下 o 的相对 L2 9.575e-08~1.789e-07、final_state 3.199e-08~1.440e-07（对 fp32 递推参考）；**逐 token 调 T 次并串接 state 与一次调 T 个 token 逐位相同**（decode 正确性就靠这条）；block_dim 1~28 全通（28 即 56 个向量核的物理上限）。\n**它还顺带消掉一个约束**：逐 token 只用 `exp(g_i)`（~1.5），所以**门控跨度没有上限** —— 对比 chunk 路径的前向 155 / 反向 105（gate-span-still-bounded）。",
+      "impact": "**仍然没有可用的 decode**，但原因变了：不再是「没有算子」，而是两条 ——\n① **没接进 layer**：`layers/kda.py` 的 `mode=\"fused_recurrent\"` 仍报错。decode 还要短卷积的逐 token 状态推进与 cache 寻址（`modules/convolution.py` 的 ShortConvolution 目前只有整段前向）。\n② **性能还不可用**：每次调用约 48µs 固定成本，48 层就是 2.4ms/token。见 decode-call-overhead。\n③ GDN / DeltaNet 的 decode 仍整族缺失，随各自扩族再补（第四期）。\nchunk↔recurrent 互验这个 oracle 现在**有了**：KDA 两条路径都能跑，可以互相验。",
       "blocks": [
         "phase 3"
       ],
-      "proposed_action": "第三期为 KDA 新写（非接线），以 fla.ops.kda.fused_recurrent_kda 为语义基准。GDN/DeltaNet 的 decode 路径随各自扩族再补。",
+      "proposed_action": "① 先解 decode-call-overhead（不是调 kernel —— kernel 的边际已经只有 4.8 µs/token）。\n② 给 ShortConvolution 加逐 token 状态推进，然后接 `mode=\"fused_recurrent\"`，并用 prefill/decode 一致性做验收（AGENTS.md §6：chunk 与 recurrent 互为最好的 oracle）。\n③ GDN / DeltaNet 的 decode 随扩族做，可以照 KDA 这个单元的结构抄（两趟扫 + 每头一核）。",
       "requires_kernel_change": true,
-      "kernel_change_note": "decode 路径的 kernel 整族缺失（逐 token 递推）。"
+      "kernel_change_note": "KDA 的 decode kernel 已自写完（kernels/projects/a5/kda_fused_recurrent）。剩下的是 GDN / DeltaNet 的 decode kernel，照 KDA 这个的结构做。"
     },
     {
       "id": "no-varlen",
@@ -546,9 +563,9 @@
   ],
   "summary": {
     "P0": 1,
-    "P1": 12,
+    "P1": 13,
     "P2": 9,
-    "total": 33,
+    "total": 34,
     "first_milestone": "第一期五项已全部有结论，并补齐了同机性能对比：aclnn 编译、runtime 桥、kda_fwd 接线、KDA 本地基线均实测通过；自编译算子在 block_dim=4 下比 torch_npu 组合快 4.43x（kimi_linear_layer）/ 2.38x（long_context T=4096）/ 19.7x（smoke）。过程中修掉两个自己的 bug（bridge-per-call-overhead、op-name-collision-in-process），它们先后让 block_dim 的效果被完全掩盖。当前最大的性能项是 block-dim-ceiling（已升 P1）：扩展性一路线性到契约上限 4，而硬件有 28 cube。第二期的前置障碍 kda-fwd-bwd-dtype-mismatch 已量化（降 P2）。",
     "second_milestone": "第二期已完成：kda_bwd 九 kernel 链 + 九个前向检查点 + autograd + KDA layer（含 2 modules），训练步在 bd=4 下比 torch_npu 组合版快 4.83x~5.67x。\n过程中发现并根治了第二期最关键的一个缺口：**按 fla 的默认初始化（chunk 内门控跨度 ~94），上游 kernel 在前向与反向各有一处量程失效，方向相反** —— 前向在 87.3 下溢、反向在 88.72 上溢。两处都在本仓建了派生单元（kda_fwd_stable / kda_bwd_stable），把成对衰减分解的锚点从区间端点改到中点，数学同义。\n门控闸因此做成二维 `{impl: {forward, backward}}`：前向 155（受有限性约束，到 155.97 精度完全不退化）、反向 100（受**精度**约束，它先于有限性到来 —— 梯度到 169.8 都有限但 dq 在 130 处超预算）。**「不吐 NaN」不等于「能用」，两者要分别测、闸按更严的定。**\n剩一项端到端确认（默认初始化下整层反向的精度）卡在机器可用性上 —— 算子层面的同一件事已由 test_kda_bwd_deep_npu.py 在跨度 94 测过，六项梯度全在契约预算内。\n当前最大的性能项仍是 block-dim-ceiling（P1）。",
     "recommended_first_target": "KDA（Kimi-Linear / fla-kda-default 形状）。其 ABI 已是 token-major BTHK、GQA 原生支持、initial_state 与 final_state 均为 FP32、backward 产出 dh0 —— 上述多数 ABI 缺口对它都不适用。唯一需要前置补齐的是本地验证证据（kda-no-local-evidence）。",
@@ -567,9 +584,10 @@
       ]
     },
     "resolved": 11,
-    "kernel_fix_policy": "**kernel 源码层面的问题统一修一轮，不零散改。** 这是 2026-09-11 定的：发现一条就去改一条，会在 ascriptor 侧留下一串互相干扰的小改动，而且每改一次都要重跑全部 case。做法：发现时把它记进本表并打 `requires_kernel_change`，本仓侧先按 AGENTS.md §7 **装闸报错或记为声明限制**，保证不静默出错；等攒够一批再统一进 ascriptor 侧（§3：本仓不改那个仓，要改走那一侧的流程或建本仓派生单元）。当前队列 20 项，见下表。",
+    "kernel_fix_policy": "**kernel 源码层面的问题统一修一轮，不零散改。** 这是 2026-09-11 定的：发现一条就去改一条，会在 ascriptor 侧留下一串互相干扰的小改动，而且每改一次都要重跑全部 case。做法：发现时把它记进本表并打 `requires_kernel_change`，本仓侧先按 AGENTS.md §7 **装闸报错或记为声明限制**，保证不静默出错；等攒够一批再统一进 ascriptor 侧（§3：本仓不改那个仓，要改走那一侧的流程或建本仓派生单元）。当前队列 21 项，见下表。",
     "kernel_fix_queue": [
       "c1-multihead-o-corrupt",
+      "decode-call-overhead",
       "kda-fwd-bwd-dtype-mismatch",
       "gdn-no-gqa",
       "layout-not-token-major",

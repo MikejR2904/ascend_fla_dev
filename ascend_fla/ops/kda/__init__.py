@@ -3,6 +3,10 @@
 * :func:`chunk_kda` —— 可求导入口，第一选择。
 * :func:`chunk_kda_fwd` / :func:`chunk_kda_fwd_with_caches` / :func:`chunk_kda_bwd`
   —— 不建图的底层入口，用于基准测试与精度比对。
+* :func:`fused_recurrent_kda` —— decode 路径（逐 token，T≤16）。精度已真机验过
+  （对 fp32 递推参考 1e-07 量级，state 串接逐位相同），但**每次调用约 48µs 的固定成本**
+  使它暂时不适合真实解码，且**还没接进 layer** —— 见 ``gaps.json`` 的
+  ``decode-call-overhead`` 与 ``fused-recurrent-missing``。
 
 注意本族算子**不做** q/k 的 L2 归一化、门控变换、beta 的 sigmoid —— fla 把这三步放在
 kernel 里（``use_*_in_kernel=True``），这里要调用方做。``ascend_fla.layers.kda`` 已按
@@ -12,6 +16,7 @@ kernel 里（``use_*_in_kernel=True``），这里要调用方做。``ascend_fla.
 from .autograd import chunk_kda
 from .chunk import BWD_CACHE_NAMES, chunk_kda_fwd, chunk_kda_fwd_with_caches
 from .chunk_bwd import chunk_kda_bwd
+from .fused_recurrent import fused_recurrent_kda
 
 __all__ = [
     "BWD_CACHE_NAMES",
@@ -19,6 +24,7 @@ __all__ = [
     "chunk_kda_bwd",
     "chunk_kda_fwd",
     "chunk_kda_fwd_with_caches",
+    "fused_recurrent_kda",
 ]
 
 

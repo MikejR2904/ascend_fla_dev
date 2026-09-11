@@ -1,0 +1,213 @@
+{
+  "schema": "ascriptor.kernel-unit/1",
+  "id": "a5.kda_fused_recurrent",
+  "kind": "project",
+  "owner": "ascend_fla",
+  "description": "KDA 的逐 token 递推（decode）。本仓自写 —— ascriptor 侧整族没有 recurrent 单元。state 常驻 UB，一次调用推 1~16 个 token。",
+  "inputs": {
+    "qs": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "HV",
+        "T",
+        128
+      ],
+      "note": "已乘 scale 的 q，且已按 GQA 扩到 HV 个头（host 侧做）。"
+    },
+    "k": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "HV",
+        "T",
+        128
+      ]
+    },
+    "v": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "HV",
+        "T",
+        128
+      ]
+    },
+    "g": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "HV",
+        "T",
+        128
+      ],
+      "note": "log 空间的 per-token 衰减增量。**不做 chunk 内 cumsum** —— 逐 token 直接用 exp(g)。"
+    },
+    "beta": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "HV",
+        1,
+        "T"
+      ]
+    },
+    "initial_state": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "HV",
+        128,
+        128
+      ]
+    }
+  },
+  "outputs": {
+    "o": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "HV",
+        "T",
+        128
+      ]
+    },
+    "final_state": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "HV",
+        128,
+        128
+      ]
+    }
+  },
+  "domain": {
+    "B": "positive",
+    "HV": "positive（q/k 的 GQA 扩展在 host 侧完成，kernel 只见 HV）",
+    "T": "1..16（T_MAX，流式缓冲的行数）。更长的序列走 chunk 路径，或自己按 16 分批并串接 state。",
+    "K": 128,
+    "V": 128,
+    "block_dim": [
+      1,
+      2,
+      4,
+      8,
+      16,
+      28
+    ],
+    "gate_span": "**无上限** —— 逐 token 只用 exp(g_i)（量级 ~1.5），不存在 chunk 路径那种 exp(累计跨度) 的量程问题。这是 recurrent 形式的结构性优势。",
+    "layout": "BHV-major（不是 chunk 路径的 token-major）。decode 的 q/k/v/g 合计才几 KB，而 state 是 64KB/头 —— 省 cast 与跨步读比省那几 KB 带宽重要。",
+    "dtype": "全 fp32。实测对 fp32 递推参考的相对 L2 是 1e-07 量级（chunk 路径因为有 bf16 中间量，是 3.2e-03）。"
+  },
+  "parallelism": {
+    "split": "按 B*HV 切给向量核（GetVecIdx()/GetVecNum()），**每个头整份 state 常驻一个核的 UB**。",
+    "why": "核间因此不需要任何同步。上游 chunk 的融合尾部把 K 切给 sub-block、于是要手写同步，而手写那份假设了 C≥2 —— 那就是 c1-multihead-o-corrupt。本 kernel 的 kernel 级循环只有一层（头），auto_sync() 能覆盖。",
+    "ub": "state 64KB（Tensor，单缓冲、跨 T 常驻）+ 六个 DBuff 流式缓冲（[16,128] fp32 各 16KB）。ascriptor check 未报容量错。"
+  },
+  "comparison": {
+    "default": {
+      "mode": "allclose",
+      "rtol": 1e-05,
+      "atol": 1e-06,
+      "max_relative_l2": 1e-05,
+      "reason": "全 fp32、逐 token，与 fp32 递推参考只差舍入。实测 9.6e-08~1.8e-07，所以预算可以比 chunk 路径紧三个数量级。"
+    }
+  },
+  "cases": [
+    {
+      "id": "single_token",
+      "seed": 2026,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "H": 1,
+        "HV": 1,
+        "T": 1
+      }
+    },
+    {
+      "id": "single_token_gva",
+      "seed": 2026,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "H": 1,
+        "HV": 2,
+        "T": 1
+      },
+      "note": "HV/H=2，GQA 分组。"
+    },
+    {
+      "id": "speculative_4",
+      "seed": 2026,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "H": 1,
+        "HV": 1,
+        "T": 4
+      },
+      "note": "投机解码的典型长度。"
+    },
+    {
+      "id": "t_max",
+      "seed": 2026,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "H": 1,
+        "HV": 1,
+        "T": 16
+      },
+      "note": "T_MAX 边界。"
+    },
+    {
+      "id": "kimi_decode",
+      "seed": 7,
+      "block_dim": 4,
+      "parameters": {
+        "B": 1,
+        "H": 32,
+        "HV": 32,
+        "T": 1
+      },
+      "note": "kimi_linear_layer 的 decode 形状。"
+    },
+    {
+      "id": "kimi_decode_gqa",
+      "seed": 2026,
+      "block_dim": 4,
+      "parameters": {
+        "B": 1,
+        "H": 16,
+        "HV": 32,
+        "T": 1
+      },
+      "note": "qwen 形状的头配置。"
+    }
+  ],
+  "support": {
+    "reference": "passed",
+    "sim": "untested",
+    "emit": "passed",
+    "compile": "passed",
+    "board_cce": "passed",
+    "note": "emit/compile/board 的证据来自本仓 runtime 桥（aclnn 本地编译 + 进程内零拷贝调用），不是 ascriptor harness。ascriptor check：0 error / 0 warning / 156 ops。harness 集成未做（与两个 stable 单元同，见 gaps.json 的 stable-unit-no-harness）。"
+  },
+  "measured": {
+    "at": "2026-09-11, Ascend950PR / CANN 9.2.0",
+    "accuracy": "八个形状下 o 的相对 L2 9.575e-08~1.789e-07、final_state 3.199e-08~1.440e-07（对 fp32 递推参考）。",
+    "state_chaining": "逐 token 调 T 次并串接 state，与一次调 T 个 token **逐位相同**（bd=1 与 bd=4 都验过）。decode 正确性就靠这条。",
+    "block_dim": "1/2/4/8/16/28 全部跑通且结果相同（28 → 56 个向量核，是物理上限，未死锁）。但总时长几乎不随 bd 变 —— 因为设备侧占不到 10%，见 latency_breakdown。",
+    "latency_breakdown": "kimi decode 形状 B1/HV32/T1（warmup 5 / iters 50 / 同步）：整次 **53~67 µs**，其中 host 布局转换 15.4~15.7 µs（26~29%）；T=1→16 的**设备侧边际 2.7~4.8 µs/token**（两次运行 T=16 整次分别 101.0 与 125.4 µs —— 报区间而不是单点），于是**每次调用的固定成本约 48~58 µs**。边际与按「4 头/核 × 2 趟 × 128 行」估的设备时间同量级。block_dim 1/2/4/8/16/28 的总时长 54~67 µs **没有趋势** —— 固定成本主导的征兆。 见 gaps.json 的 decode-call-overhead。",
+    "reproduce": "benchmarks/verify_decode.py（acc / chain / bd / split 四项）"
+  },
+  "release_scope": {
+    "version": "0.1.0",
+    "hardware": [
+      "a5"
+    ],
+    "note": "只支持 A5。"
+  }
+}

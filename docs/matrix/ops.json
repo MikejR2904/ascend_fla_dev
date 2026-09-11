@@ -644,6 +644,62 @@
         "accuracy_vs_oracle": "not-started",
         "perf_vs_baseline": "not-started"
       }
+    },
+    {
+      "id": "a5.kda_fused_recurrent",
+      "op_family": "kda",
+      "direction": "forward",
+      "owner": "ascend_fla",
+      "ascriptor_path": "（无）本仓自写：kernels/projects/a5/kda_fused_recurrent",
+      "contract_sha256": "0341475bb2517c803f72ba13bdd04beec318a8bf31117fc4dbf5c6f4d036653d",
+      "leaf_kernels": [],
+      "own_kernels": [
+        "kda_fused_recurrent_kernel"
+      ],
+      "declared_cases": 6,
+      "why": "decode 路径。ascriptor 侧六个 a5 单元全是 chunk，整族没有 recurrent 单元 —— 所以这是本仓**自写**的第一个 kernel，不是上游改写。T=1 时 chunk 要补到 64，白做 64 倍。",
+      "abi": {
+        "inputs": "qs/k/v/g [B,HV,T,128] fp32、beta [B,HV,1,T] fp32、initial_state [B,HV,128,128] fp32",
+        "outputs": "o [B,HV,T,128] fp32、final_state [B,HV,128,128] fp32",
+        "note": "BHV-major 而非 chunk 路径的 token-major，且全 fp32。decode 的 q/k/v/g 合计几 KB，state 才 64KB/头 —— 省 cast 与跨步读比省那几 KB 带宽重要。GQA 扩头与 scale 预乘在 host 侧。"
+      },
+      "constraints": {
+        "T": "1..16（T_MAX = 流式缓冲行数）。更长走 chunk，或自己按 16 分批串接 state。",
+        "K": 128,
+        "V": 128,
+        "block_dim": [
+          1,
+          2,
+          4,
+          8,
+          16,
+          28
+        ],
+        "gate_span": "**无上限** —— 逐 token 只用 exp(g_i)（~1.5），没有 chunk 那种 exp(累计跨度) 的量程问题。",
+        "parallelism": "按 B*HV 切给向量核，每头整份 state 常驻一核 UB，核间无同步 —— 刻意避开 c1-multihead-o-corrupt 那类手写同步缺陷。"
+      },
+      "validation": {
+        "reference": "passed",
+        "sim": "untested",
+        "pipesim": "untested",
+        "emit": "passed",
+        "compile": "passed",
+        "board_cce": "passed",
+        "note": "ascriptor check：0 error / 0 warning / 156 ops。emit/compile/board 的证据来自本仓 runtime 桥，不是 ascriptor harness（harness 集成未做，见 stable-unit-no-harness）。"
+      },
+      "our_status": {
+        "wiring": "done",
+        "binding": "done",
+        "accuracy_vs_oracle": "done",
+        "perf_vs_baseline": "not-started",
+        "layer_wired": "not-started",
+        "evidence": "**精度**：八个形状（B1，HV 1/2/4/32，H 1/2/16/32，T 1/4/8/16，bd 1/4）下 o 的相对 L2 9.575e-08~1.789e-07、final_state 3.199e-08~1.440e-07（对 fp32 递推参考）—— 比 chunk 路径的 3.2e-03 紧四个数量级，因为全程 fp32 无 bf16 中间量。\n**state 串接**：逐 token 调 T 次并串接 state，与一次调 T 个 token **逐位相同**（bd=1 与 bd=4 都验）。decode 的正确性就建立在这条上。\n**block_dim**：1/2/4/8/16/28 全部跑通、结果相同（28 → 56 向量核，物理上限，未死锁）。\n**延迟**：kimi decode 形状 B1/HV32/T1（warmup 5 / iters 50 / 同步）：整次 **53~67 µs**，其中 host 布局转换 15.4~15.7 µs（26~29%）；T=1→16 的**设备侧边际 2.7~4.8 µs/token**（两次运行 T=16 整次分别 101.0 与 125.4 µs —— 报区间而不是单点），于是**每次调用的固定成本约 48~58 µs**。边际与按「4 头/核 × 2 趟 × 128 行」估的设备时间同量级。block_dim 1/2/4/8/16/28 的总时长 54~67 µs **没有趋势** —— 固定成本主导的征兆。 复现：benchmarks/verify_decode.py。见 gaps.json 的 decode-call-overhead。",
+        "note": "**还没接进 layer**：layers/kda.py 的 mode=\"fused_recurrent\" 仍报错 —— decode 还要短卷积的逐 token 状态推进与 cache 寻址。性能也还不可用（见上）。"
+      },
+      "fla_counterpart": {
+        "name": "fla.ops.kda.fused_recurrent_kda",
+        "note": "语义基准。本仓 oracle 是 reference/kda.py 的 kda_recurrent_ref（纯 torch fp32 逐 token）。"
+      }
     }
   ],
   "missing_ops": [

@@ -145,7 +145,7 @@ fla 的模型定义，只把我们的 layer 替换进去 —— 规格自动跟�
 | **0** ✅ | 形状清单反推 + 缺口表 + 矩阵 schema | 已完成：`docs/matrix/` 三份 json，19 项缺口显式列出 |
 | **1** ✅ | ① aclnn 编译 ✅ ② runtime 桥 ✅ ③ `kda_fwd` 接线 ✅ ④ KDA 本地基线 ✅ ⑤ torch_npu 基线 ✅ | 见下「第一期实测结果」。自编译算子在 bd=4 下比 torch_npu 组合快 2.4~4.4x |
 | **2** ✅ | `kda_bwd`（九 kernel）+ 九个前向检查点 + autograd + KDA layer（含 2 modules） | 见下「第二期实测结果」。层级梯度对齐，训练步比 torch_npu 组合版快 4.8~5.7x |
-| **3** | model 注入（Kimi-Linear）+ KDA `fused_recurrent`(decode) + 矩阵 CI 生成 | 端到端跑通一个模型；chunk↔recurrent 互验通过 |
+| **3** 进行中 | model 注入（Kimi-Linear）+ KDA `fused_recurrent`(decode) ◐ + 矩阵 CI 生成 | 端到端跑通一个模型；chunk↔recurrent 互验通过 |
 | **4** | GDN 扩族（含 GQA、token-major 布局、非零初始 state）+ DeltaNet + 性能迭代 | Qwen3-Next 可用；兑现"高效率算子" |
 
 ### 第一期实测结果（A5 / Ascend950PR，CANN 9.1.0，2026-09-11）
@@ -386,6 +386,41 @@ checkpoint 是**重算**不是近似，fp32 的精确性不变，峰值内存降
 过程里差点走错一步：`o` 经过主机侧的 `_from_bhcld` 重排而 `final_state` 不经过，第一反应
 是怀疑那段代码。**直接比裸 kernel 输出（BHCLD，未重排）错得一样**，才把锅定到 kernel。
 "只有这个量经过那段代码"不是证据，先测再归因。
+
+### decode 路径：算子通了，瓶颈不在算子
+
+第三期的 decode 先探了一轮。ascriptor 侧整族没有 recurrent 单元，所以
+`kernels/projects/a5/kda_fused_recurrent` 是**本仓自写的第一个 kernel**（前两个本仓单元是
+上游的带标注改写）。`ascriptor check` 0 error / 0 warning / 156 ops。
+
+设计上两件事值得记：
+
+* **两趟扫 state**：第一趟衰减并攒 `kᵀ·state_dec`（给 delta），第二趟做 rank-1 更新并
+  **顺手攒 `qᵀ·state_new`**。两趟都在 UB 内，GM 只碰一次 state。
+* **一个头一个核**：按 `B*HV` 切给向量核，每头整份 state（64KB）常驻一核的 UB，
+  **核间不需要任何同步**。这是刻意避开 `c1-multihead-o-corrupt` 那一类 —— 上游 chunk 的
+  融合尾部把 K 切给 sub-block 才要手写同步，而手写那份假设了 C≥2。本 kernel 的 kernel 级
+  循环只有一层，`auto_sync()` 能覆盖。
+
+实测（CANN 9.2.0，`benchmarks/verify_decode.py`）：
+
+| 项 | 结果 |
+|---|---|
+| 精度 | 八个形状 `o` 9.6e-08~1.8e-07、`final_state` 3.2e-08~1.4e-07（对 fp32 递推参考，预算 1e-05）—— 比 chunk 路径紧四个数量级，因为全程 fp32 |
+| state 串接 | 逐 token 调 16 次并串接 state 与一次调 16 token **逐位相同**（两种形状、bd=1/4）。decode 的正确性就是这条 |
+| 门控跨度 | **无上限** —— 逐 token 只用 `exp(g_i)`（~1.5），没有 chunk 那种 `exp(累计跨度)` 的量程问题 |
+| block_dim | 1/2/4/8/16/28 全通（28 = 56 个向量核，物理上限，未死锁） |
+| 延迟 | 整次 53~67µs，host 布局 26~29%，**设备侧边际只有 2.7~4.8 µs/token**，固定成本约 48~58µs |
+
+**最重要的结论是个反直觉的**：我原本预测 decode 是带宽瓶颈（按 state 64KB×2/头估下限约
+2.5µs），实测是**每次调用的固定成本主导**。`block_dim` 从 1 到 28 总时长没有趋势，正是这个
+的征兆 —— 若不拆开量，就会把它误判成"扩展性不行"，与第一期在 `block_dim` 上连错两次
+是同一个坑（§6 铁律一）。所以下一步是 `decode-call-overhead`（桥侧约 25µs + host 布局
+15.7µs），不是调 kernel。
+
+还没做：**没接进 layer**（`mode="fused_recurrent"` 仍报错 —— 还要短卷积的逐 token 状态推进
+与 cache 寻址）、没做 harness 集成、T>16 要调用方自己分批（入口报错而不是自动分批：
+自动分批会把一次调用的语义悄悄变成多次）。
 
 ## 6. 性能基线
 
