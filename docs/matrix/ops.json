@@ -709,7 +709,7 @@
       "purpose": "decode 路径（逐 token 递推 + state 传递）",
       "ascriptor_asset": "none",
       "fla_counterpart": "fla.ops.kda.fused_recurrent_kda",
-      "note": "完全缺失，需要新写，不是接线。没有它就只有 prefill/训练，没有推理解码，也失去 chunk↔recurrent 互验这个最好的 oracle。第三期目标。",
+      "note": "**KDA 那半已经做完**（2026-09-11）：本仓自写 `a5.kda_fused_recurrent` 并接进 `layers/kda.py`，prefill/decode 一致性验过（见该条目的 our_status）。剩下的是 GDN / DeltaNet 的 decode（随各自扩族，第四期），以及 decode 的性能 —— 整层一步 458µs、瓶颈在层侧不在算子，见 gaps.json 的 decode-layer-overhead。chunk↔recurrent 互验这个 oracle 现在 KDA 上**已经有了**。",
       "blocks": [
         "phase 3 端到端模型跑通"
       ]

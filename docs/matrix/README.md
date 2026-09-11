@@ -53,7 +53,7 @@ ascriptor pin：`0.1.0.dev1` · library `77619116f9b3` · 支持硬件 a5 · def
 
 ### 缺失的算子
 
-- **kda_fused_recurrent**（kda）— decode 路径（逐 token 递推 + state 传递）。完全缺失，需要新写，不是接线。没有它就只有 prefill/训练，没有推理解码，也失去 chunk↔recurrent 互验这个最好的 oracle。第三期目标。
+- **kda_fused_recurrent**（kda）— decode 路径（逐 token 递推 + state 传递）。**KDA 那半已经做完**（2026-09-11）：本仓自写 `a5.kda_fused_recurrent` 并接进 `layers/kda.py`，prefill/decode 一致性验过（见该条目的 our_status）。剩下的是 GDN / DeltaNet 的 decode（随各自扩族，第四期），以及 decode 的性能 —— 整层一步 458µs、瓶颈在层侧不在算子，见 gaps.json 的 decode-layer-overhead。chunk↔recurrent 互验这个 oracle 现在 KDA 上**已经有了**。
 - **gdn_fused_recurrent**（gated_delta_rule）— decode 路径。同上。随 GDN 扩族（第四期）再补。
 
 ### 可复用原语
