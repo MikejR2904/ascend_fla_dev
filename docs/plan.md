@@ -387,7 +387,7 @@ checkpoint 是**重算**不是近似，fp32 的精确性不变，峰值内存降
 是怀疑那段代码。**直接比裸 kernel 输出（BHCLD，未重排）错得一样**，才把锅定到 kernel。
 "只有这个量经过那段代码"不是证据，先测再归因。
 
-### decode 路径：算子通了，瓶颈不在算子
+### decode 路径：已接进 layer，瓶颈在层不在算子
 
 第三期的 decode 先探了一轮。ascriptor 侧整族没有 recurrent 单元，所以
 `kernels/projects/a5/kda_fused_recurrent` 是**本仓自写的第一个 kernel**（前两个本仓单元是
@@ -418,9 +418,37 @@ checkpoint 是**重算**不是近似，fp32 的精确性不变，峰值内存降
 是同一个坑（§6 铁律一）。所以下一步是 `decode-call-overhead`（桥侧约 25µs + host 布局
 15.7µs），不是调 kernel。
 
-还没做：**没接进 layer**（`mode="fused_recurrent"` 仍报错 —— 还要短卷积的逐 token 状态推进
-与 cache 寻址）、没做 harness 集成、T>16 要调用方自己分批（入口报错而不是自动分批：
-自动分批会把一次调用的语义悄悄变成多次）。
+**已接进 layer**（同日）：`layers/kda.py` 支持两条路径，用一个原地更新的 `cache` 字典交接
+`recurrent_state` 与三份 `conv_state`。prefill 走 `mode="chunk"` 并传空 `cache`，之后每步
+`mode="fused_recurrent"` 传同一个字典。验收是 prefill/decode 一致性（§6：chunk 与 recurrent
+互为最好的 oracle）：prefill 128 token + 逐 token 解码 5 步，对整段 CPU fp32 参考的相对 L2 是
+prefill 4.595e-03、decode 4.628e-03 / 5.030e-03 / 4.650e-03 / 4.257e-03 / 4.783e-03。
+**逐 token 报数而不是报平均** —— `conv_state` 漏传只会坏前 `conv_size−1` 个 token，平均会掩盖它。
+
+接线时发现三件事，都不在算子里：
+
+1. **整层 decode 的瓶颈是层，不是算子。** 实测（hidden=2048/H16/HV32/bd1）整层一步
+   **458µs**：KDA 算子 83µs（18%）、层里其余 305µs（67%），48 层外推 **22 ms/token**。
+   层里 T=1 时要走 7 个投影 + 3 个短卷积 + 两次 fp32 l2norm 往返 + norm，每个几乎没有计算量
+   却各要一次 launch。**把 kernel 再快一倍，整层只快 9%** —— 所以该动的是层这一侧
+   （图捕获、合投影、把 l2norm 搬进 kernel）。记为 `decode-layer-overhead`。
+2. **prefill+decode 的进程必须先 `prepare(decode=True)`。** CANN 只在首次算子解析时读
+   `ASCEND_CUSTOM_OPP_PATH`，decode 的 kernel 晚于 chunk 第一次执行才编译就会失败。
+   **在测试函数内部调 prepare 来不及** —— pytest 把所有测试跑在同一进程里，前面的测试
+   已经执行过算子了，所以加了 `tests/conftest.py` 的 session 级 autouse fixture。
+   这不是测试环境的特殊处理：任何 prefill+decode 的服务都有同样的约束。
+3. **C=1 那个 P0 挡住了 64 token 粒度的 prefill。** 写这个测试时 prefill 取 64 就被门控拦下
+   （T=64 即 C=1，HV=2 且 bd=1 已越界），只能改成 128。这是 `c1-multihead-o-corrupt`
+   在真实用法里的第一个具体后果。
+
+还没做：没接 harness 集成；T>16 要调用方自己分批（入口报错而不是自动分批 —— 自动分批会把
+一次调用的语义悄悄变成多次）；**decode 不可求导**（只有 chunk 有反向 kernel，层里直接报错）；
+接 HF/fla 模型还要一层 cache 适配器（我们的 `cache` 是本仓自己的两键字典，而 fla 的 KDA layer
+用 `state_v_first=True`，见 `state-layout-k-first`）。
+
+此外纠正一处此前写错的：我曾说"还要短卷积的逐 token 状态推进"——
+**`modules/convolution.py` 本来就支持** `cache` + `output_final_state` 的单步解码，
+还处理了 T < kernel_size 的补零。接线时直接用上了。
 
 ## 6. 性能基线
 

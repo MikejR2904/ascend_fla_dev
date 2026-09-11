@@ -29,8 +29,24 @@ chunk 内门控跨度约 94，而 ascriptor 原版 kernel 在**前向与反向�
 **不支持的上游开关**（传了就报错，不静默忽略 —— AGENTS.md §7）：
 ``allow_neg_eigval``、``safe_gate``、``lower_bound``、``cu_seqlens``（varlen）。
 
-**尚未接 decode 路径**：``mode="fused_recurrent"`` 要等 ``kda_fused_recurrent``
-（``gaps.json`` 的 ``fused-recurrent-missing``，第三期）。本层只做 chunk 前向/反向。
+**两条路径，不自动互换**：``mode="chunk"``（训练与 prefill，T 是 64 的倍数）与
+``mode="fused_recurrent"``（decode，T ≤ 16、不可求导）。数学等价但数值与性能都不同，
+所以请求的路径服务不了输入时**报错并指出另一条**，不悄悄换（AGENTS.md §7）。
+典型用法：prefill 传 ``mode="chunk"`` 与一个空 ``cache={}``，之后每步传
+``mode="fused_recurrent"`` 和同一个 ``cache``。``cache`` 原地更新，装 ``recurrent_state``
+与三份 ``conv_state``。
+
+**decode 的已知代价（实测，hidden=2048/H16/HV32/bd1）**：整层一步 **458 µs**，
+其中 KDA 算子 83 µs（18%）、层里其余部分 305 µs（67%）—— 48 层外推 **22 ms/token**。
+也就是说**瓶颈在层这一侧**（7 个投影 + 3 个短卷积 + 两次 fp32 l2norm 往返 + norm，
+T=1 时每个都几乎没有计算量却各要一次 launch），算子侧的设备时间只有 2.7~4.8 µs/token。
+把 kernel 再快一倍，整层只快 9%。见 ``gaps.json`` 的 ``decode-layer-overhead``
+与 ``decode-call-overhead``。
+
+**同一进程里既要 prefill 又要 decode 的，启动时必须调一次**
+``ascend_fla.ops.kda.prepare(decode=True)``：CANN 只在首次算子解析时读
+``ASCEND_CUSTOM_OPP_PATH``，decode 的 kernel 晚于 chunk 第一次执行才编译就会失败
+（``gaps.json`` 的 ``opp-path-read-once``）。
 """
 from __future__ import annotations
 
@@ -44,6 +60,12 @@ from ..modules.convolution import ShortConvolution
 from ..modules.fused_norm_gated import FusedRMSNormGated
 from ..ops.kda.autograd import chunk_kda
 from ..ops.kda.chunk import HEAD_DIM, L_PER_CHUNK, VALUE_DIM
+from ..ops.kda.fused_recurrent import T_MAX as RECURRENT_T_MAX
+from ..ops.kda.fused_recurrent import fused_recurrent_kda
+
+#: 两条路径。数学等价，但**不自动互换** —— 见 :meth:`KimiDeltaAttention.forward` 的
+#: ``mode`` 说明。``chunk`` 要 T 是 64 的倍数；``fused_recurrent`` 要 T ≤ 16 且不可求导。
+MODES = ("chunk", "fused_recurrent")
 
 __all__ = ["KimiDeltaAttention"]
 
@@ -103,11 +125,8 @@ class KimiDeltaAttention(nn.Module):
         **kwargs,
     ) -> None:
         super().__init__()
-        if mode != "chunk":
-            raise ValueError(
-                f"只实现了 mode='chunk'，收到 {mode!r}；decode 路径要等 "
-                "kda_fused_recurrent，见 docs/matrix/gaps.json 的 fused-recurrent-missing"
-            )
+        if mode not in MODES:
+            raise ValueError(f"mode 只支持 {MODES}，收到 {mode!r}")
         for name, value, default in (("allow_neg_eigval", allow_neg_eigval, False),
                                      ("safe_gate", safe_gate, False),
                                      ("lower_bound", lower_bound, None)):
@@ -199,18 +218,36 @@ class KimiDeltaAttention(nn.Module):
         initial_state: torch.Tensor | None = None,
         output_final_state: bool = False,
         cu_seqlens: torch.Tensor | None = None,
+        *,
+        cache: dict | None = None,
+        mode: str | None = None,
         **kwargs,
     ) -> tuple[torch.Tensor, torch.Tensor | None]:
         """Args:
-            hidden_states: ``[B, T, hidden_size]``。``T`` 必须是 64 的整数倍。
+            hidden_states: ``[B, T, hidden_size]``。``chunk`` 路径要求 ``T`` 是 64 的
+                整数倍；``fused_recurrent`` 路径要求 ``T <= 16``。
             initial_state: ``[B, HV, 128, 128]`` float32，**K 在前**。
                 fla 的 KDA layer 用 ``state_v_first=True``（V 在前），对接它的 cache
                 要转置 —— 见 ``gaps.json`` 的 ``state-layout-k-first``。
+                与 ``cache`` 二者只能给一个。
             output_final_state: 是否返回末态。
             cu_seqlens: **不支持**，传了就报错。
+            cache: decode 用的状态袋，**原地更新**（与 HF 的 ``past_key_values`` 习惯一致）。
+                两个键：``"recurrent_state"``（``[B,HV,128,128]`` fp32）与
+                ``"conv_state"``（``(q, k, v)`` 三个 ``[B, D, conv_size]``）。
+                空字典即"从零开始并开始记录"。prefill 走 ``chunk`` 时也会写它，
+                所以 prefill→decode 的交接就是同一个字典传下去。
+            mode: 本次用哪条路径，``None`` 表示用构造时的 ``self.mode``。
+                **两条路径不会自动互换** —— 请求的路径服务不了输入时报错并指出另一条。
+                数学上等价，但数值与性能都不同（``fused_recurrent`` 全 fp32、无 bf16 中间量，
+                对参考的相对 L2 是 1e-07 量级；``chunk`` 是 3e-03），
+                静默换路会让"用的是哪条"变得不可知（AGENTS.md §7）。
+                典型用法：prefill ``mode="chunk"``，之后每步 ``mode="fused_recurrent"``。
 
         Returns:
             ``(o, final_state)``，``o`` 为 ``[B, T, hidden_size]``。
+            ``final_state`` 只在 ``output_final_state=True`` 时返回；用 ``cache`` 时
+            状态已经写回字典里，不必再取返回值。
         """
         if cu_seqlens is not None:
             raise ValueError(
@@ -224,17 +261,61 @@ class KimiDeltaAttention(nn.Module):
                 f"hidden_states 应为 [B,T,{self.hidden_size}]，收到 {tuple(hidden_states.shape)}"
             )
         b, t, _ = hidden_states.shape
-        if t % L_PER_CHUNK:
+        path = self.mode if mode is None else mode
+        if path not in MODES:
+            raise ValueError(f"mode 只支持 {MODES}，收到 {path!r}")
+        if cache is not None and initial_state is not None:
             raise ValueError(
-                f"T 必须是 {L_PER_CHUNK} 的整数倍（算子无 tail 路径），收到 T={t}；"
-                "见 docs/matrix/gaps.json 的 no-tail-path"
+                "cache 与 initial_state 只能给一个 —— 两个都给时哪个是初态有歧义"
             )
+        if path == "chunk":
+            if t % L_PER_CHUNK:
+                raise ValueError(
+                    f"chunk 路径要求 T 是 {L_PER_CHUNK} 的整数倍（算子无 tail 路径），"
+                    f"收到 T={t}；T ≤ {RECURRENT_T_MAX} 时可以用 mode=\"fused_recurrent\"；"
+                    "见 docs/matrix/gaps.json 的 no-tail-path"
+                )
+        else:
+            if t > RECURRENT_T_MAX:
+                raise ValueError(
+                    f"fused_recurrent 路径一次最多 {RECURRENT_T_MAX} 个 token，收到 T={t}；"
+                    f"T 是 {L_PER_CHUNK} 的倍数时请用 mode=\"chunk\"，"
+                    f"否则自己按 {RECURRENT_T_MAX} 分批并把 cache 传下去"
+                )
+            # decode 路径**没有反向 kernel**。不拦住的话不会报错，只是不建图 ——
+            # 梯度静默消失，比报错糟得多（AGENTS.md §7）。
+            needs_grad = torch.is_grad_enabled() and (
+                hidden_states.requires_grad
+                or any(p.requires_grad for p in self.parameters())
+            )
+            if needs_grad:
+                raise ValueError(
+                    "fused_recurrent 路径不可求导（本仓只有 chunk 的反向 kernel）。"
+                    "它不会报错而是**不建图**，梯度会静默消失，所以这里拦住。"
+                    "训练请用 mode=\"chunk\"；只做推理请包 torch.no_grad()。"
+                )
+
+        # cache 里取初态。空字典（而不是 None）表示"从零开始并开始记录"
+        state_in = initial_state
+        conv_in: tuple = (None, None, None)
+        if cache is not None:
+            state_in = cache.get("recurrent_state")
+            conv_in = tuple(cache.get("conv_state") or (None, None, None))
+            if len(conv_in) != 3:
+                raise ValueError(
+                    f"cache['conv_state'] 应为 (q, k, v) 三项，收到 {len(conv_in)} 项"
+                )
+        keep_state = output_final_state or cache is not None
 
         q, k, v = self.q_proj(hidden_states), self.k_proj(hidden_states), self.v_proj(hidden_states)
+        conv_out: list = [None, None, None]
         if self.use_short_conv:
-            q, _ = self.q_conv1d(q)
-            k, _ = self.k_conv1d(k)
-            v, _ = self.v_conv1d(v)
+            q, conv_out[0] = self.q_conv1d(q, cache=conv_in[0], output_final_state=keep_state)
+            k, conv_out[1] = self.k_conv1d(k, cache=conv_in[1], output_final_state=keep_state)
+            v, conv_out[2] = self.v_conv1d(v, cache=conv_in[2], output_final_state=keep_state)
+        elif cache is not None:
+            # 没有短卷积时 conv_state 恒为空 —— 明确写回 None，免得调用方以为忘了更新
+            conv_out = [None, None, None]
 
         q = q.view(b, t, self.num_heads, self.head_k_dim)
         k = k.view(b, t, self.num_heads, self.head_k_dim)
@@ -248,11 +329,21 @@ class KimiDeltaAttention(nn.Module):
         g = self._gate(hidden_states, b, t)
         beta = torch.sigmoid(self.b_proj(hidden_states).float())
 
-        o, final_state = chunk_kda(
-            q, k, v, g, beta,
-            initial_state=initial_state, output_final_state=output_final_state,
-            block_dim=self.block_dim, impl=self.impl,
-        )
+        if path == "chunk":
+            o, final_state = chunk_kda(
+                q, k, v, g, beta,
+                initial_state=state_in, output_final_state=keep_state,
+                block_dim=self.block_dim, impl=self.impl,
+            )
+        else:
+            o, final_state = fused_recurrent_kda(
+                q, k, v, g, beta,
+                initial_state=state_in, output_final_state=keep_state,
+                block_dim=self.block_dim,
+            )
+        if cache is not None:
+            cache["recurrent_state"] = final_state
+            cache["conv_state"] = tuple(conv_out)
 
         gate = self.g_proj(hidden_states).view(b, t, self.num_v_heads, self.head_v_dim)
         # gate 保持投影出来的 dtype（通常 fp32）——o_norm 内部一律升到 fp32 算，
@@ -261,4 +352,4 @@ class KimiDeltaAttention(nn.Module):
         # 算子输出是 bf16，而 o_proj 的权重可能是 fp32（整层 .float() 的常见情形）。
         # nn.Linear 不做 dtype 提升，会直接报错 —— 这里显式对齐到权重的 dtype。
         o = o.reshape(b, t, self.value_dim).to(self.o_proj.weight.dtype)
-        return self.o_proj(o), final_state
+        return self.o_proj(o), (final_state if output_final_state else None)

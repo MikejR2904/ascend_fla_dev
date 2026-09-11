@@ -26,6 +26,7 @@ q/k 的 L2 归一化、beta 的 sigmoid、KDA 算子、``FusedRMSNormGated``、�
 """
 from __future__ import annotations
 
+import copy
 import pathlib
 import sys
 import math
@@ -41,6 +42,7 @@ if not torch.npu.is_available():  # pragma: no cover
     pytest.skip("没有可用的 NPU", allow_module_level=True)
 
 from ascend_fla.layers.kda import KimiDeltaAttention  # noqa: E402
+from ascend_fla.ops.kda.chunk import HEAD_DIM  # noqa: E402
 from ascend_fla.reference.kda import kda_recurrent_ref  # noqa: E402
 
 # dg 的契约预算是 0.25，A_log/dt_bias 的梯度直接由它来
@@ -140,11 +142,14 @@ def test_layer_rejects_unsupported_config():
     with pytest.raises(ValueError, match="lower_bound"):
         KimiDeltaAttention(**base, lower_bound=0.5)
     with pytest.raises(ValueError, match="mode"):
-        KimiDeltaAttention(**base, mode="fused_recurrent")
+        KimiDeltaAttention(**base, mode="recurrent")      # 不存在的 mode
+    # 两条路径都该被接受（decode 已接线）
+    for m in ("chunk", "fused_recurrent"):
+        KimiDeltaAttention(**base, mode=m)
 
     layer = KimiDeltaAttention(**base).to("npu")
     with pytest.raises(ValueError, match="64 的整数倍"):
-        layer(torch.randn(1, 100, 256, device="npu"))
+        layer(torch.randn(1, 100, 256, device="npu"))     # 既不是 64 的倍数也 >16
     with pytest.raises(ValueError, match="cu_seqlens|varlen"):
         layer(torch.randn(1, 64, 256, device="npu"), cu_seqlens=torch.tensor([0, 64]))
 
@@ -353,3 +358,97 @@ def test_layer_gate_span_is_a_random_variable_with_a_ceiling():
     assert max(by_scale) / min(by_scale) < 1.2, (
         f"跨度随输入尺度明显变化（{by_scale}），与「由初始化决定」的结论矛盾"
     )
+
+
+# ------------------------------------------------------- prefill → decode 一致性
+def _layer_and_input(b=1, t=64, num_heads=2, num_v_heads=2, hidden=256, seed=11):
+    torch.manual_seed(seed)
+    layer = KimiDeltaAttention(
+        hidden_size=hidden, num_heads=num_heads, num_v_heads=num_v_heads,
+        head_dim=HEAD_DIM, layer_idx=0, block_dim=1,
+    ).to("npu").eval()
+    x = torch.randn(b, t, hidden, generator=torch.Generator().manual_seed(seed + 1))
+    return layer, x
+
+
+@torch.no_grad()
+def test_prefill_then_decode_matches_one_shot_reference():
+    """prefill 走 chunk + cache，再逐 token 走 fused_recurrent —— 对整段 CPU 参考。
+
+    **这是 decode 接线的验收判据**（AGENTS.md §6：chunk 与 recurrent 互为最好的 oracle，
+    prefill/decode 一致性同理）。它同时盯三件事：① 两条路径数学一致；
+    ② ``cache`` 把 recurrent_state 与三份 conv_state 都正确交接了 ——
+    **漏掉 conv_state 的表现是只有前几个 decode token 错**，整段平均误差会掩盖它，
+    所以下面逐 token 报数；③ 层里 l2norm / 门控 / o_norm 在 T=1 上与 T=64 行为一致。
+    """
+    from ascend_fla.layers.kda import RECURRENT_T_MAX
+    from ascend_fla.ops.kda import prepare
+
+    # **必须先 prepare(decode=True)**：CANN 只在首次算子解析时读 ASCEND_CUSTOM_OPP_PATH，
+    # 所以 decode 的 kernel 必须在 chunk 第一次执行**之前**编译好。不这么做会报
+    # "已经执行过 aclnn 算子" —— 实测踩过，而且任何"prefill 完再解码"的进程都会遇到。
+    prepare(decode=True)
+
+    # PREFILL 取 128 而不是 64：64 个 token 就是 C=1，而 C=1 且 B*HV > block_dim 时
+    # 上游 kda_sub45_fused_kernel 的 o 是错的（c1-multihead-o-corrupt），会被门控拦下。
+    # **这就是那个 P0 在真实用法里的后果：64 token 粒度的 prefill 用不了。**
+    PREFILL, DECODE = 128, 5
+    assert DECODE <= RECURRENT_T_MAX
+    layer, x_all = _layer_and_input(t=PREFILL + DECODE)
+    xd = x_all.to("npu")
+
+    cache: dict = {}
+    o_pre, _ = layer(xd[:, :PREFILL], cache=cache, mode="chunk")
+    assert set(cache) == {"recurrent_state", "conv_state"}, f"cache 的键不对：{sorted(cache)}"
+    assert cache["recurrent_state"] is not None
+    assert all(c is not None for c in cache["conv_state"]), "conv_state 没被写回"
+
+    steps = []
+    for i in range(DECODE):
+        oi, _ = layer(xd[:, PREFILL + i:PREFILL + i + 1], cache=cache,
+                      mode="fused_recurrent")
+        steps.append(oi)
+    o_dec = torch.cat(steps, dim=1)
+
+    # 整段参考：同一份权重的 CPU 层，KDA 算子换成逐 token 递推
+    # 参考要一次过 133 个 token，而层里 T%64 那个闸是**算子**的约束（无 tail 路径），
+    # CPU 参考没有这个约束 —— chunk_kda 已经被换成逐 token 递推了。所以把 L_PER_CHUNK
+    # 临时打成 1 只是绕开那个闸，不改任何算术。
+    ref = copy.deepcopy(layer).cpu().float()
+    with mock.patch("ascend_fla.layers.kda.chunk_kda", _cpu_reference_attn), \
+            mock.patch("ascend_fla.layers.kda.L_PER_CHUNK", 1):
+        o_ref, _ = ref(x_all.float(), mode="chunk")
+
+    o_pre, o_dec = o_pre.cpu(), o_dec.cpu()      # 先 D2H 再比，_rel_l2 不跨设备
+    e_pre = _rel_l2(o_pre, o_ref[:, :PREFILL])
+    print(f"\nprefill（chunk，{PREFILL} token）相对 L2 = {e_pre:.3e}")
+    per_step = [_rel_l2(o_dec[:, i:i + 1], o_ref[:, PREFILL + i:PREFILL + i + 1])
+                for i in range(DECODE)]
+    print("decode 逐 token 相对 L2：" + "  ".join(f"t{PREFILL + i}={e:.3e}"
+                                                for i, e in enumerate(per_step)))
+    budget = _budget("output")
+    assert e_pre < budget, f"prefill 段就不对：{e_pre:.3e} ≥ {budget}"
+    # 逐 token 判，而不是判平均 —— conv_state 漏传只会坏前 conv_size-1 个 token
+    bad = [(i, e) for i, e in enumerate(per_step) if not e < budget]
+    assert not bad, f"decode 这些步超预算（预算 {budget}）：{bad}"
+
+
+@torch.no_grad()
+def test_layer_refuses_to_switch_paths_silently():
+    """请求的路径服务不了输入时必须报错并指出另一条，不悄悄换（AGENTS.md §7）。"""
+    from ascend_fla.layers.kda import RECURRENT_T_MAX
+
+    layer, x = _layer_and_input(t=64)
+    xd = x.to("npu")
+    with pytest.raises(ValueError, match="fused_recurrent"):
+        layer(xd[:, :1], mode="chunk")                      # T=1 不是 64 的倍数
+    with pytest.raises(ValueError, match="chunk"):
+        layer(xd, mode="fused_recurrent")                   # T=64 > T_MAX
+    assert RECURRENT_T_MAX < 64
+
+
+def test_decode_path_refuses_to_run_under_grad():
+    """decode 没有反向 kernel。不拦的话不报错、只是不建图 —— 梯度静默消失。"""
+    layer, x = _layer_and_input(t=64)
+    with pytest.raises(ValueError, match="不可求导"):
+        layer(x[:, :1].to("npu"), mode="fused_recurrent")   # 默认 grad 开着，参数 requires_grad

@@ -186,6 +186,11 @@ dev.cpu()[:, 63::64]   # ✅ 整块 D2H 是纯 memcpy，切和 contiguous 都在
   执行之前全部编译完（`ascend_fla.ops.kda.prepare()`）。
 - `ascriptor` 的 `a5` → `950` profile（32 cube / 64 vec），而 Ascend950PR 物理上
   只有 **28 cube / 56 vec**。`block_dim` 超过物理核数会在硬件 barrier 上死锁。
+- 由上一条派生的一个实践约束：**一个进程要用的 kernel 必须在第一次执行之前全部编完。**
+  既要 prefill（chunk）又要 decode（fused_recurrent）的进程，启动时调一次
+  `ascend_fla.ops.kda.prepare(decode=True)`；否则 decode 的 kernel 晚于 chunk 第一次执行
+  才注册 vendor 树，报"已经执行过 aclnn 算子"。**测试里在测试函数内部调 prepare 来不及** ——
+  pytest 把所有测试跑在同一进程里，所以放在 `tests/conftest.py` 的 session 级 autouse fixture。
 
 ## 6. 验证方法论
 

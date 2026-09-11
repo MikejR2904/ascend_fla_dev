@@ -18,7 +18,7 @@
         "kda"
       ],
       "evidence": "**这是真实形状精度验收的第一个产出，而且是最坏的一类缺陷：没有 NaN、没有报错、范数还正常。** 发现路径：按 models.json 的 kimi 形状扫 C=1…16，C=1 那档 `o` 的相对 L2 是 **1.06**（其余档 3.2e-03），而同一次运行的 `final_state` 正常（2.46e-03）。\n**失效规律**（2026-09-11，Ascend950PR / CANN 9.2.0，B=1、H=1、跨度 46，正确 = 相对 L2 < 0.01）：\n| block_dim | HV=2 | HV=4 | HV=8 | HV=16 |\n|---|---|---|---|---|\n| 1 | 仅头 1 | 仅头 3 | 仅头 7 | 仅头 15 |\n| 2 | 全对 | 头 1,3 | 头 3,7 | 头 7,15 |\n| 4 | 全对 | 全对 | 头 1,3,5,7 | 头 3,7,11,15 |\n正确的恰好是**每个 cube 核分到的最后一个头**。kernel 的 `pair_begin = (B*HV * GetCubeIdx()) // GetCubeNum()` 按 cube 核切 `B*HV`，而 `GetCubeNum() == block_dim` —— 所以安全条件是 **`B*HV <= block_dim`**。\n**只在 C=1 出现**：C=2/3/16/64 下全对（HV 到 32 都试过）。chunk 循环跑第二遍时补上了缺的那次同步。kernel 源码里 `recurrent.py:176` 写着 `auto sync is not used here because the nested for loops interfere with it` —— 同步是手写的，而手写的那份假设了 C≥2。\n**范围已逐条核实**：① `upstream` 与 `stable` 的错误值**逐位相同**（都 2.721e-01）→ 是共享的 `kda_sub45_fused_kernel`，不是本仓的 stable 派生引入的；② `final_state` 不受影响；③ **反向不受影响** —— C=1/HV=8 的六项梯度 dq 2.48e-02 / dk 3.94e-02 / dv 3.22e-03 / dbeta 3.35e-03 / dg 7.16e-02 / dh0 2.40e-03，与 C=2 同量级，因为反向不消费 `o`，只消费 `do` 与九个检查点。\n**为什么契约的 case 测不到**：`kda_fwd` 四个 case 里 C=1 的三个都是 HV=1，唯一 HV=2 的那个是 C=2 —— **`C=1 且 HV≥2` 一个 case 都没覆盖**。这正是 toy-case-shapes 说的那件事。",
-      "impact": "① **T=64 的前向输出是错的**（HV>block_dim 时），错得没有任何信号：有限值、量级正常、`final_state` 还对。短 prompt 的 prefill 正好落在这里 —— kimi 形状 HV=32、bd=4 时 32 个头里只有 4 个对。\n② 训练同样中招：梯度本身没问题，但**前向输出错 → loss 错**，所以 T=64 的训练步是垃圾。\n③ 之前所有精度结论都不受影响 —— 它们用的形状要么 HV=1（安全），要么 C≥2（安全）。这也是它藏了两期没被发现的原因。",
+      "impact": "① **T=64 的前向输出是错的**（HV>block_dim 时），错得没有任何信号：有限值、量级正常、`final_state` 还对。短 prompt 的 prefill 正好落在这里 —— kimi 形状 HV=32、bd=4 时 32 个头里只有 4 个对。\n② 训练同样中招：梯度本身没问题，但**前向输出错 → loss 错**，所以 T=64 的训练步是垃圾。\n③ 之前所有精度结论都不受影响 —— 它们用的形状要么 HV=1（安全），要么 C≥2（安全）。这也是它藏了两期没被发现的原因。\n④ **实测到的一个具体后果（decode 接线时撞上）**：64 token 粒度的 prefill 用不了 —— T=64 就是 C=1，HV=2 且 bd=1 时就已经越界。prefill 要么一次 ≥128 个 token，要么按头分批。写 prefill→decode 的测试时被闸拦下，只能把 prefill 从 64 改成 128。",
       "blocks": [],
       "proposed_action": "**已做**：`ops/kda/chunk.py` 的 `_check` 里加了 `_check_single_chunk_heads`，`C==1 and B*HV > block_dim` 直接报错并给出两条绕法（AGENTS.md §7：绝不静默降级）。闸的边界照实测表逐个钉在 tests/test_kda_gating.py 里 —— 这类缺陷一旦闸被改松，没有别的东西会报警。\n**要做（按代价排序）**：\n① 按头分批调用：C=1 时把 `B*HV` 切成每批 ≤ block_dim 个头，多发几次 kernel。数学完全不变（头之间独立，已由头独立性检查证明），代价是多几次发射。**这是可用性修复，但会悄悄改变性能特征，要显式声明而不是默默做掉。**\n② 建本仓派生单元修手写同步（照 kda_fwd_stable / kda_bwd_stable 的先例，AGENTS.md §3 不改 ascriptor 仓）。要先读懂 `recurrent.py` 的 DEvent/Mutex 配对 —— 目前只掌握了**症状规律**（每核最后一个头对）而不是确切缺哪一次同步，动手前必须先把那个找出来，否则改了也不知道为什么好。\n③ 上游补 case：`C=1 且 HV≥2`。这条不管我们怎么修都该做，否则上游下次改这个 kernel 还会踩。",
       "status_note": "**方法论上的一条：形状维度要像量程维度那样逐格扫。** 门控跨度那次的教训是「把整条链同类算式列一遍」，这次是同一句话的形状版 —— 契约的 case 在 (C, HV) 平面上只覆盖了 (1,1) 与 (2,2) 两个点，而 (1,2) 就是坏的。**两个维度各自全绿，不等于它们的组合全绿。**\n过程里有一步差点走错：第一反应是怀疑本仓主机侧的 `_from_bhcld` 重排（因为 `o` 经过它、`final_state` 不经过），但**直接比裸 kernel 输出（BHCLD，未经重排）错得一样**（1.672e-01），才把锅定到 kernel。先测再归因，不要因为「只有这个量经过那段代码」就认定是那段代码。",
@@ -41,6 +41,21 @@
       "proposed_action": "按占比从大到小：\n① **桥侧（约 25µs）**：decode 期间形状固定，`aclCreateTensor` 的描述符与 workspace 查询可以按 (算子, 形状签名) 缓存复用，每步只换 data_ptr。要先 profile 确认 25µs 花在哪一段 —— **别再先推断后看数据**。\n② **host 布局（15.4µs）**：让 kernel 直接吃 token-major 并在 kernel 内做 GQA 取头，就不用 permute/repeat_interleave/contiguous。这会改 ABI，归入 kernel 修复队列。\n③ **输出（约 7µs）**：同理，让 kernel 直接写 token-major。\n④ 设备侧 4.8µs/token 先不动 —— 它已经是最小的一项。",
       "requires_kernel_change": true,
       "kernel_change_note": "若要消掉 host 侧 15.4µs 的布局转换：kda_fused_recurrent 改成直接吃 token-major [B,T,H/HV,128] 并在 kernel 内按 hv//groups 取 q/k 的头。桥侧那 25µs 不用改 kernel。"
+    },
+    {
+      "id": "decode-layer-overhead",
+      "title": "整层 decode 一步 458µs，其中 KDA 算子只占 18%，层里那十几个小算子占 67%",
+      "category": "performance",
+      "severity": "P1",
+      "applies_to": [
+        "kda"
+      ],
+      "evidence": "`benchmarks/bench_kda_decode_layer.py`，hidden=2048 / H16 / HV32 / bd1 / prefill 128，warmup 10 / iters 50 / 同步（2026-09-11，CANN 9.2.0）：\n| 项 | 耗时 | 占比 |\n|---|---|---|\n| 整层一步 | 458.0 µs | 100% |\n| 其中 KDA 算子 | 83.1 µs | 18% |\n| 其中层里其余部分 | 305.1 µs | 67% |\n**48 层外推 22 ms/token。**\n层里 T=1 时要走的调用：7 个投影（q/k/v/f/b/g/o）、3 个短卷积、softplus、sigmoid、两次 fp32 l2norm（含 bf16↔fp32 往返）、FusedRMSNormGated —— 每个都几乎没有计算量却各要一次 launch。所以这 305µs 基本是**启动开销之和**，不是算力。\n拆法是逐段替换而不是推断（AGENTS.md §6 铁律一）：`without_op` 那条跑完层里除 KDA 算子以外的全部步骤，`t_op` 只跑算子。",
+      "impact": "decode 现在**功能可用但性能不可用**：22 ms/token 意味着 45 token/s，而同级别模型的目标是几十到上百倍于此。\n注意优化的着力点：算子侧只占 18%，且其中设备时间只有几 µs —— **把 kernel 再优化一倍，整层只快 9%**。该动的是层这一侧。",
+      "blocks": [
+        "phase 3"
+      ],
+      "proposed_action": "按占比排序，且都要先 profile 再动手：\n① **图捕获**（最大头）：decode 每步的形状完全固定，整层可以用 ACL/torch_npu 的 graph capture 录一次重放，把十几次 launch 压成一次。这是业界对 decode 的标准解法，但要确认 torch_npu 在本版本支持、且我们的自定义算子能进图。\n② **合投影**：q/k/v 三个投影可以并成一个 `[hidden, 3*key_dim]`（权重拼接，数学不变）；f/b/g 同理。能把 7 次降到 3 次。\n③ **去掉 l2norm 的 dtype 往返**：现在是 bf16→fp32→normalize→bf16。T=1 时这两次 cast 各是一次 launch。若 `qk-l2norm-not-in-kernel` 做掉（搬进 kernel），这一段连带消失。\n④ 算子侧的 `decode-call-overhead` 只值 18% × 其中的固定成本，排在后面。"
     },
     {
       "id": "kda-fwd-bwd-dtype-mismatch",
@@ -146,7 +161,7 @@
     },
     {
       "id": "fused-recurrent-missing",
-      "title": "decode 路径：KDA 的 kernel 已自写并真机验过，但未接进 layer；GDN/DeltaNet 仍整族缺失",
+      "title": "decode 路径：KDA 已自写 kernel 并接进 layer，性能不可用；GDN/DeltaNet 仍整族缺失",
       "category": "coverage",
       "severity": "P1",
       "applies_to": [
@@ -155,11 +170,11 @@
         "delta_rule"
       ],
       "evidence": "ascriptor kernels catalog 中无 fused_recurrent 类单元；六个 a5 单元均为 chunk 路径。\n**KDA 这半已经补上**（2026-09-11）：本仓自写 `kernels/projects/a5/kda_fused_recurrent`，state 常驻 UB、两趟扫、按 B*HV 切给向量核（每头一核，核间无同步）。`ascriptor check` 0 error / 0 warning / 156 ops；真机八个形状下 o 的相对 L2 9.575e-08~1.789e-07、final_state 3.199e-08~1.440e-07（对 fp32 递推参考）；**逐 token 调 T 次并串接 state 与一次调 T 个 token 逐位相同**（decode 正确性就靠这条）；block_dim 1~28 全通（28 即 56 个向量核的物理上限）。\n**它还顺带消掉一个约束**：逐 token 只用 `exp(g_i)`（~1.5），所以**门控跨度没有上限** —— 对比 chunk 路径的前向 155 / 反向 105（gate-span-still-bounded）。",
-      "impact": "**仍然没有可用的 decode**，但原因变了：不再是「没有算子」，而是两条 ——\n① **没接进 layer**：`layers/kda.py` 的 `mode=\"fused_recurrent\"` 仍报错。decode 还要短卷积的逐 token 状态推进与 cache 寻址（`modules/convolution.py` 的 ShortConvolution 目前只有整段前向）。\n② **性能还不可用**：每次调用约 48µs 固定成本，48 层就是 2.4ms/token。见 decode-call-overhead。\n③ GDN / DeltaNet 的 decode 仍整族缺失，随各自扩族再补（第四期）。\nchunk↔recurrent 互验这个 oracle 现在**有了**：KDA 两条路径都能跑，可以互相验。",
+      "impact": "**KDA 的 decode 现在功能上可用了**（2026-09-11 接进 `layers/kda.py`）：prefill 走 `mode=\"chunk\"` 并传一个空 `cache`，之后每步 `mode=\"fused_recurrent\"` 传同一个 `cache`（原地更新，装 `recurrent_state` 与三份 `conv_state`）。实测 prefill 128 token 后逐 token 解码 5 步，对整段 CPU fp32 参考的相对 L2：prefill 4.595e-03、decode 4.628e-03 / 5.030e-03 / 4.650e-03 / 4.257e-03 / 4.783e-03 —— **逐 token 报数**而不是报平均，因为 conv_state 漏传只会坏前 conv_size−1 个 token，平均会掩盖它。\n剩下三条：\n① **性能不可用**：整层一步 458µs、48 层 22ms/token，见 decode-layer-overhead（层侧 67%）与 decode-call-overhead（算子侧的固定成本）。\n② **不可求导**：本仓只有 chunk 的反向 kernel。层里会直接报错而不是静默不建图。\n③ GDN / DeltaNet 的 decode 仍整族缺失，随各自扩族再补（第四期）。\n（**此前我在这里写过「ShortConvolution 只有整段前向」，那是错的** —— `modules/convolution.py` 本来就支持 `cache` + `output_final_state` 的单步解码，还处理了 T < kernel_size 的补零。接线时直接用上了。）",
       "blocks": [
         "phase 3"
       ],
-      "proposed_action": "① 先解 decode-call-overhead（不是调 kernel —— kernel 的边际已经只有 4.8 µs/token）。\n② 给 ShortConvolution 加逐 token 状态推进，然后接 `mode=\"fused_recurrent\"`，并用 prefill/decode 一致性做验收（AGENTS.md §6：chunk 与 recurrent 互为最好的 oracle）。\n③ GDN / DeltaNet 的 decode 随扩族做，可以照 KDA 这个单元的结构抄（两趟扫 + 每头一核）。",
+      "proposed_action": "① 先解 decode-layer-overhead（层侧占 67%），再看 decode-call-overhead（算子侧）。**别先去优化 kernel** —— 它只占 18%，其中设备时间才几 µs。\n② GDN / DeltaNet 的 decode 随扩族做，照 KDA 这个单元的结构抄（两趟扫 + 每头一核）。\n③ 接 HF/fla 模型时要一层 cache 适配器：我们的 `cache` 是本仓自己的两键字典，而 fla 的 KDA layer 用 `state_v_first=True`（V 在前），见 state-layout-k-first。",
       "requires_kernel_change": true,
       "kernel_change_note": "KDA 的 decode kernel 已自写完（kernels/projects/a5/kda_fused_recurrent）。剩下的是 GDN / DeltaNet 的 decode kernel，照 KDA 这个的结构做。"
     },
@@ -494,7 +509,8 @@
       "impact": "报错信息把运行期注册时序问题说成了编译产物/算子包问题 —— 我照它的字面意思先去查了构建产物和 SoC 支持，都是好的，白查一轮。这类误导性报错值得单独记一条。",
       "blocks": [],
       "proposed_action": "结构化修，不能靠\"记得先编译反向\"。",
-      "resolution": "2026-09-11 修复。① runtime/binding.py：AclnnOp.__call__ 置 _aclnn_called，register_custom_opp_path 在那之后收到新路径直接 raise 并说明原因，不让它静默失效。② ops/kda/chunk.py 的 chunk_kda_fwd_with_caches 先编译反向链 —— 要缓存的唯一理由就是接着跑反向。③ ops/kda/prepare() 给\"先只跑前向、之后又想跑反向\"的用法一个显式入口。"
+      "resolution": "2026-09-11 修复。① runtime/binding.py：AclnnOp.__call__ 置 _aclnn_called，register_custom_opp_path 在那之后收到新路径直接 raise 并说明原因，不让它静默失效。② ops/kda/chunk.py 的 chunk_kda_fwd_with_caches 先编译反向链 —— 要缓存的唯一理由就是接着跑反向。③ ops/kda/prepare() 给\"先只跑前向、之后又想跑反向\"的用法一个显式入口。",
+      "status_note": "**2026-09-11 新增一条后果（decode 接线时踩到）**：一个进程如果既要 prefill（chunk）又要 decode（fused_recurrent），**decode 的 kernel 必须在 chunk 第一次执行之前编好** —— 否则报「已经执行过 aclnn 算子，不能再注册新的 vendor 树」。所以 `prepare()` 加了 `decode=` 参数，而测试套件用 `tests/conftest.py` 的 session 级 autouse fixture 在任何测试之前把全部 kernel 编完（**在测试函数内部调 prepare 来不及** —— pytest 把所有测试跑在同一个进程里，前面的测试已经执行过算子了）。这不是测试环境的特殊处理：任何 prefill+decode 的服务都要在启动时调一次 `prepare(decode=True)`。"
     },
     {
       "id": "gate-range-beyond-declared",
@@ -563,9 +579,9 @@
   ],
   "summary": {
     "P0": 1,
-    "P1": 13,
+    "P1": 14,
     "P2": 9,
-    "total": 34,
+    "total": 35,
     "first_milestone": "第一期五项已全部有结论，并补齐了同机性能对比：aclnn 编译、runtime 桥、kda_fwd 接线、KDA 本地基线均实测通过；自编译算子在 block_dim=4 下比 torch_npu 组合快 4.43x（kimi_linear_layer）/ 2.38x（long_context T=4096）/ 19.7x（smoke）。过程中修掉两个自己的 bug（bridge-per-call-overhead、op-name-collision-in-process），它们先后让 block_dim 的效果被完全掩盖。当前最大的性能项是 block-dim-ceiling（已升 P1）：扩展性一路线性到契约上限 4，而硬件有 28 cube。第二期的前置障碍 kda-fwd-bwd-dtype-mismatch 已量化（降 P2）。",
     "second_milestone": "第二期已完成：kda_bwd 九 kernel 链 + 九个前向检查点 + autograd + KDA layer（含 2 modules），训练步在 bd=4 下比 torch_npu 组合版快 4.83x~5.67x。\n过程中发现并根治了第二期最关键的一个缺口：**按 fla 的默认初始化（chunk 内门控跨度 ~94），上游 kernel 在前向与反向各有一处量程失效，方向相反** —— 前向在 87.3 下溢、反向在 88.72 上溢。两处都在本仓建了派生单元（kda_fwd_stable / kda_bwd_stable），把成对衰减分解的锚点从区间端点改到中点，数学同义。\n门控闸因此做成二维 `{impl: {forward, backward}}`：前向 155（受有限性约束，到 155.97 精度完全不退化）、反向 100（受**精度**约束，它先于有限性到来 —— 梯度到 169.8 都有限但 dq 在 130 处超预算）。**「不吐 NaN」不等于「能用」，两者要分别测、闸按更严的定。**\n剩一项端到端确认（默认初始化下整层反向的精度）卡在机器可用性上 —— 算子层面的同一件事已由 test_kda_bwd_deep_npu.py 在跨度 94 测过，六项梯度全在契约预算内。\n当前最大的性能项仍是 block-dim-ceiling（P1）。",
     "recommended_first_target": "KDA（Kimi-Linear / fla-kda-default 形状）。其 ABI 已是 token-major BTHK、GQA 原生支持、initial_state 与 final_state 均为 FP32、backward 产出 dh0 —— 上述多数 ABI 缺口对它都不适用。唯一需要前置补齐的是本地验证证据（kda-no-local-evidence）。",
