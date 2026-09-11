@@ -1,0 +1,101 @@
+{
+  "schema": "ascriptor.kernel-unit/1",
+  "id": "a5.kda_bwd_stable",
+  "kind": "project",
+  "description": "KDA 定长反向，成对衰减的分解锚点由 g_last 改为 g_last/2。与 a5.kda_bwd 数学同义，可用门控跨度从 ~88.7 扩到实测 169.76（理论 177.4）。与 a5.kda_fwd_stable 成对使用。",
+  "inputs": {
+    "same_as": "a5.kda_bwd",
+    "note": "ABI 完全不变。九个 kernel 里只换了 finalize_pre / finalize_post 两个的内部算术，签名与张量形状一字未改。"
+  },
+  "outputs": {
+    "same_as": "a5.kda_bwd",
+    "note": "dq / dk / dv / dbeta / dg / dh0，dtype 与形状均与上游一致。"
+  },
+  "domain": {
+    "same_as": "a5.kda_bwd（L=64 / K=V=128 / T=C*64 / HV % H == 0 / block_dim ≤ 4 / 无 varlen）",
+    "gate_span": {
+      "upstream_limit": 88.72,
+      "theoretical_limit": "2 × ln(BF16_MAX) ≈ 177.4",
+      "recommended_limit": 160.0,
+      "max_measured_ok": 169.76,
+      "first_failure_at": 174.23,
+      "note": "gate_span = chunk 内 max(cumsum) − min(cumsum)。上游 finalize_pre/post 的 rscale = exp((g−g_last)·ln2) 在 span > ln(MAX)≈88.72 时**上溢**到 inf（q_scaled/k_scaled 是 bf16 GM 输出），配对的 cscale 同时下溢到 0，下游矩阵乘得 inf×0 = NaN。改锚点后两个因子各压到 ±span/2。实测（Ascend950PR / CANN 9.1.0 / block_dim=1，B1/T64/H1/HV1）：upstream 在 89.35 起六项梯度全坏；本单元在 1.12 / 11.17 / 50.26 / 74.83 / 89.35 / 100.51 / 125.09 / 149.66 / 155.24 / 159.71 / 169.76 十一档下六项梯度全部有限，174.23 时 dq/dk/dbeta/dg 各 64 个元素坏（gate_span 是逐通道最大值，边缘只有最深通道越界），与理论上限 177.4 吻合。recommended_limit 取 160 与 a5.kda_fwd_stable 对齐，且 159.71 已实测通过。"
+    }
+  },
+  "dependencies": {
+    "derived_from": "a5.kda_bwd",
+    "pairs_with": "a5.kda_fwd_stable",
+    "shared_kernels": [
+      "scan_fused_kernel",
+      "inverse_mm_kernel",
+      "inverse_epilogue_kernel",
+      "inverse_dainv_kernel",
+      "inverse_dakk_fused_kernel",
+      "finalize_pair_kernel",
+      "finalize_reduce_kernel"
+    ],
+    "own_kernels": [
+      "finalize_pre_stable_kernel",
+      "finalize_post_stable_kernel"
+    ],
+    "note": "七个复用的 kernel 里的指数都 ≤1，下溢到 0 正是「完全衰减」的正确结果，不存在 0/0 或 0×inf。inverse_epilogue 的 exp(g_last−g) 本来就是先减后指数。细节与逐项核对见 README.md。"
+  },
+  "comparison": {
+    "default": {
+      "mode": "allclose",
+      "rtol": 0.02,
+      "atol": 0.02,
+      "max_relative_l2": 0.05,
+      "per_output": {"dk": 0.15, "dg": 0.25},
+      "reason": "沿用 a5.kda_bwd 的预算，逐项不放宽。dk / dg 的单独预算也照搬 —— 它们对深衰减更敏感（bf16 对 log2 累积门控的舍入改变乘性导数），这条成因与锚点无关，改锚点不会改善它。"
+    }
+  },
+  "cases": [
+    {"id": "narrow_gate", "seed": 2026, "block_dim": 1,
+     "parameters": {"B": 1, "H": 1, "HV": 1, "C": 1, "L": 64, "K": 128, "V": 128,
+                    "gate_multiplier": 1, "initial_state": "random"},
+     "note": "与上游 single_chunk 同条件，用于证明窄域下两套实现同义。"},
+    {"id": "multi_chunk_deep", "seed": 2026, "block_dim": 1,
+     "parameters": {"B": 1, "H": 1, "HV": 1, "C": 2, "L": 64, "K": 128, "V": 128,
+                    "gate_multiplier": 80, "initial_state": "random"},
+     "note": "跨度约 89 —— 上游在这里开始出 inf/NaN。"},
+    {"id": "very_deep_gate", "seed": 2026, "block_dim": 1,
+     "parameters": {"B": 1, "H": 1, "HV": 1, "C": 1, "L": 64, "K": 128, "V": 128,
+                    "gate_multiplier": 140, "initial_state": "random"},
+     "note": "跨度约 156，与 a5.kda_fwd_stable 的最深点对齐。"},
+    {"id": "grouped_heads_deep", "seed": 2028, "block_dim": 2,
+     "parameters": {"B": 1, "H": 1, "HV": 2, "C": 2, "L": 64, "K": 128, "V": 128,
+                    "gate_multiplier": 80, "initial_state": "random"}}
+  ],
+  "support": {
+    "reference": "passed",
+    "sim": "untested",
+    "emit": "passed",
+    "compile": "passed",
+    "board_cce": "passed",
+    "static_check": "passed",
+    "note": "真机证据（Ascend950PR / CANN 9.1.0，经本仓 runtime 桥，2026-09-11）：① 上游 a5.kda_bwd 契约的五个 case 全部通过本单元，预算取 comparison（默认 0.05 / dk 0.15 / dg 0.25），相对 L2 与上游反向三位有效数字全同、只第四位有差（最大差是 gentle_decay 的 dbeta 3.928e-03 对 3.854e-03）；② 有限性逐档到 169.76，见 domain.gate_span。emit/compile/board 的证据来自本仓的 runtime 桥而**不是** ascriptor harness —— sim 要等 harness 集成（gaps.json 的 stable-unit-no-harness）。**还差一项**：默认初始化（跨度 ~94）下整层反向的精度，需要有 ascend950 算子包的机器（层里的投影/卷积/softplus 是 torch_npu 算子），测试已写好（tests/test_kda_layer_npu.py::test_default_init_backward_matches_cpu_reference）。"
+  },
+  "provenance": {
+    "derived_from": {
+      "unit": "a5.kda_bwd",
+      "repository": "ascriptor kernels",
+      "note": "本仓只读引用 ascriptor（AGENTS.md §3）。finalize_pre.py / finalize_post.py 是带标注的改写，每个文件只有 4 行实质改动 + 改名。"
+    },
+    "changes": [
+      "finalize_pre：新增 gmid = g_last × 0.5，rscale/cscale 的指数改以 gmid 为锚（2 行）。",
+      "finalize_post：同样的 2 行。两个文件必须用同一个锚点 —— finalize_pre 产出的 q_scaled/k_scaled/kg 要与 finalize_post 补的因子配对。",
+      "两个 kernel 函数改名加 _stable 后缀：一个算子名只能有一份 build（AGENTS.md §6 铁律二），不改名会与上游的 build 互相覆盖。"
+    ],
+    "static_cost": {
+      "finalize_pre": {"upstream_ops": 247, "stable_ops": 251},
+      "finalize_post": {"upstream_ops": 368, "stable_ops": 372},
+      "note": "ascriptor check 报的 IR op 数，**不是周期数**，只用来界定改动规模。多出的 4 个是 2 个 RegList lane 的乘法，且在 64 行循环外，每 chunk 只算一次。"
+    }
+  },
+  "release_scope": {
+    "version": "0.1.0",
+    "hardware": ["a5"],
+    "note": "只支持 A5，与上游一致。"
+  }
+}

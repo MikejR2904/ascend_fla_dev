@@ -22,7 +22,8 @@ __all__ = [
 ]
 
 
-def prepare(device: str = "a5", block_dim: int = 1, *, backward: bool = True) -> None:
+def prepare(device: str = "a5", block_dim: int = 1, *, backward: bool = True,
+            impl: str = "stable") -> None:
     """把本进程要用到的 kernel 全部编译好（并注册 vendor 树）。
 
     **为什么需要它**：CANN 只在首次算子解析时读 ``ASCEND_CUSTOM_OPP_PATH``，之后追加的
@@ -37,14 +38,16 @@ def prepare(device: str = "a5", block_dim: int = 1, *, backward: bool = True) ->
         block_dim: 启动核组数。**一个进程只能用一个值**（见 ``runtime/binding.py`` 的
             ``_claim_op_name``），扫 ``block_dim`` 要分进程。
         backward: 是否连反向的九个 kernel 一起编译。
+        impl: ``"stable"``（默认）或 ``"upstream"``。前向与反向用同一个值 —— 混用会让
+            门控检查的上限对不上实际会失效的那一侧。
     """
     from .chunk import _compiled_chain as _fwd_chain
 
-    _fwd_chain(device, block_dim)
+    _fwd_chain(device, block_dim, impl)
     if backward:
         from .chunk_bwd import _compiled_chain as _bwd_chain
 
-        _bwd_chain(device, block_dim)
+        _bwd_chain(device, block_dim, impl)
 
 
 __all__.append("prepare")

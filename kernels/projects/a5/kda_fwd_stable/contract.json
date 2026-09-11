@@ -1,0 +1,106 @@
+{
+  "schema": "ascriptor.kernel-unit/1",
+  "id": "a5.kda_fwd_stable",
+  "kind": "project",
+  "description": "KDA 定长前向，门控算术改成对深衰减数值稳定的形式。与 a5.kda_fwd 数学同义，可用门控跨度从 ~87 扩到 ~156（实测）。",
+  "inputs": {
+    "q": {"dtype": "bfloat16", "shape": ["B", "C*64", "H", 128]},
+    "k": {"dtype": "bfloat16", "shape": ["B", "C*64", "H", 128]},
+    "v": {"dtype": "bfloat16", "shape": ["B", "C*64", "HV", 128]},
+    "g_raw": {"dtype": "float32", "shape": ["B", "C*64", "HV", 128]},
+    "beta": {"dtype": "float32", "shape": ["B", "C*64", "HV"]},
+    "initial_state": {"dtype": "float32", "shape": ["B", "HV", 128, 128]}
+  },
+  "outputs": {
+    "o": {"dtype": "bfloat16", "shape": ["B", "C*64", "HV", 128]},
+    "final_state": {"dtype": "float32", "shape": ["B", "HV", 128, 128]},
+    "g_cumsum": {
+      "dtype": "float32",
+      "shape": ["B", "HV", "C", 64, 128],
+      "note": "自然底的 chunk 内 cumsum。a5.kda_fwd 不输出它；a5.kda_bwd 的九个检查点要它（log2 空间，换底即可）。"
+    }
+  },
+  "domain": {
+    "B": "positive",
+    "H_HV": "positive; HV % H == 0",
+    "L": 64,
+    "K": 128,
+    "V": 128,
+    "C": "positive",
+    "block_dim": [1, 2, 3, 4],
+    "gate_span": {
+      "max_measured_ok": 155.97,
+      "recommended_limit": 160.0,
+      "theoretical_limit": "2 * -ln(FLT_MIN_NORMAL) ≈ 174.7",
+      "upstream_limit": 80.0,
+      "note": "gate_span = chunk 内 max(cumsum) - min(cumsum)。上游 a5.kda_fwd 在 ≥88.67 时输出 NaN（gate 只写 exp(gc)，它在 -ln(FLT_MIN_NORMAL)≈87.3 下溢到 0，下游的 k/eg 与 eg_last/eg 变成 0×inf 与 0/0）。本单元把除法改成 log 空间的减法，scores 再按逐通道中点对称分解，两个指数因子都压到 ±span/2。"
+    },
+    "tails": "T=C*64；与上游一致，partial chunk / K-V tail / fp16 / L=32 均不支持。",
+    "layout": "公开张量 token-major；内部显式重排到 BHCLK / BHVCLK。"
+  },
+  "dependencies": {
+    "derived_from": "a5.kda_fwd",
+    "shared_kernels": [
+      "tril_inverse64_v2_strict_bf16_kernel",
+      "kda_sub45_fused_kernel"
+    ],
+    "own_kernels": [
+      "kda_sub1_gate_stable_kernel",
+      "kda_sub2_score_stable_kernel",
+      "kda_sub3_wy_stable_kernel"
+    ],
+    "note": "inverse 与 recurrent 直接复用上游 —— 它们只用绝对量，下溢到 0 本身就是正确结果（完全衰减），不存在 0/0。"
+  },
+  "comparison": {
+    "default": {
+      "mode": "allclose",
+      "rtol": 0.02,
+      "atol": 0.02,
+      "max_relative_l2": 0.05,
+      "reason": "沿用 a5.kda_fwd 的预算。实测在跨度 1.11~155.97 的全范围内 o 的相对 L2 稳定在 2.85e-03~3.19e-03，没有随跨度退化。"
+    }
+  },
+  "cases": [
+    {"id": "narrow_gate", "seed": 2026, "block_dim": 1,
+     "parameters": {"B": 1, "H": 1, "HV": 1, "C": 1, "L": 64, "K": 128, "V": 128,
+                    "gate_multiplier": 1, "initial_state": "random"},
+     "note": "与上游 single_chunk 同条件，用于证明窄域下两套实现同义。"},
+    {"id": "deep_gate", "seed": 2026, "block_dim": 1,
+     "parameters": {"B": 1, "H": 1, "HV": 1, "C": 1, "L": 64, "K": 128, "V": 128,
+                    "gate_multiplier": 80, "initial_state": "random"},
+     "note": "跨度约 89 —— 上游在这里开始出 NaN。"},
+    {"id": "very_deep_gate", "seed": 2026, "block_dim": 1,
+     "parameters": {"B": 1, "H": 1, "HV": 1, "C": 1, "L": 64, "K": 128, "V": 128,
+                    "gate_multiplier": 140, "initial_state": "random"},
+     "note": "跨度约 156，本单元实测可用的最深点。"},
+    {"id": "grouped_heads_deep", "seed": 2028, "block_dim": 2,
+     "parameters": {"B": 1, "H": 1, "HV": 2, "C": 2, "L": 64, "K": 128, "V": 128,
+                    "gate_multiplier": 80, "initial_state": "random"}}
+  ],
+  "support": {
+    "reference": "passed",
+    "sim": "untested",
+    "emit": "passed",
+    "compile": "passed",
+    "board_cce": "passed",
+    "note": "emit/compile/board 的证据来自本仓 runtime 桥（aclnn 本地编译 + 进程内零拷贝调用），不是 ascriptor harness。harness 集成（unit.py + run.py 对接 _unit_runner）尚未做 —— 见 README.md。"
+  },
+  "provenance": {
+    "derived_from": {
+      "unit": "a5.kda_fwd",
+      "repository": "ascriptor kernels",
+      "note": "本仓只读引用 ascriptor（AGENTS.md §3），需要改 kernel 时在这里建自己的单元。gate/intra/wy 三个文件是带标注的改写，矩阵乘结构、流水、掩码一概不变。"
+    },
+    "changes": [
+      "gate：额外写出 log 空间的 g_cumsum（cumsum 本来就在寄存器里，只多一次 store）。",
+      "intra(scores)：收 g_cumsum 而不是 eg；按逐通道中点 m[d] = gc[L-1,d]/2 构造 exp(gc-m) 与 exp(m-gc)，把原来的 k/eg 除法换成乘法。乘积与原版逐位同义（m 抵消）。",
+      "wy：收 g_cumsum；kg 由 eg_last/eg 改为 exp(gc_last - gc)，先减后指数。qg/kexp 仍是绝对量，下溢到 0 即正确。"
+    ],
+    "measured_at": "2026-09-11, Ascend950PR / CANN 9.2.0"
+  },
+  "release_scope": {
+    "version": "0.1.0",
+    "hardware": ["a5"],
+    "note": "只支持 A5，与上游一致。"
+  }
+}

@@ -13,6 +13,17 @@
 
 这三步在 fp32 下做，再按算子 ABI 交给 kernel（q/k/v bf16，g/beta fp32）。
 
+**本层默认用 ``impl="stable"``。** 按 fla 的初始化，``A_log`` 与 ``dt_bias`` 给出的
+chunk 内门控跨度约 94，而 ascriptor 原版 kernel 在**前向与反向各有一处**撑不住：
+
+* 前向约 87 —— gate 只写 ``eg = exp(gc)``，它下溢到 0 后下游的除法变成 ``0/0``；
+* 反向约 88.7 —— ``finalize_pre/post`` 的 ``exp(g − g_last)`` **上溢**到 inf，配对的因子
+  同时下溢到 0，矩阵乘得 ``inf × 0``。方向与前向相反，是独立的一处。
+
+本仓 ``kernels/projects/a5/kda_fwd_stable`` 与 ``kda_bwd_stable`` 分别把两处改成对深衰减
+稳定的形式，上限约 160。``impl`` 同时选两条链。细节见 ``docs/matrix/gaps.json`` 的
+``gate-range-beyond-declared`` 与 ``bwd-gate-range-overflow``。
+
 **不支持的上游开关**（传了就报错，不静默忽略 —— AGENTS.md §7）：
 ``allow_neg_eigval``、``safe_gate``、``lower_bound``、``cu_seqlens``（varlen）。
 
@@ -51,6 +62,12 @@ class KimiDeltaAttention(nn.Module):
         layer_idx: 层序号，仅用于 cache 寻址。
         allow_neg_eigval / safe_gate / lower_bound: **不支持**，非默认值即报错。
         block_dim: 传给底层算子的启动核组数。
+        impl: 底层算子的实现，**同时作用于前向与反向**。``"stable"``（默认）用本仓的
+            gate/scores/wy 与 finalize_pre/post，可用门控跨度约 160；``"upstream"`` 用
+            ascriptor 原版，约 80。**本层按 fla 的默认初始化产生的跨度约 94，所以
+            ``upstream`` 前向反向都会吐 NaN、``stable`` 才能用** —— 见
+            ``docs/matrix/gaps.json`` 的 ``gate-range-beyond-declared``
+            与 ``bwd-gate-range-overflow``。
         device / dtype: 参数的设备与 dtype。
 
     算子侧的硬约束（不满足在 forward 里报错）：``head_k_dim == head_v_dim == 128``、
@@ -75,6 +92,7 @@ class KimiDeltaAttention(nn.Module):
         norm_eps: float = 1e-5,
         *,
         block_dim: int = 1,
+        impl: str = "stable",
         dt_min: float = 0.001,
         dt_max: float = 0.1,
         dt_init_floor: float = 1e-4,
@@ -114,6 +132,7 @@ class KimiDeltaAttention(nn.Module):
         self.use_short_conv = use_short_conv
         self.conv_size = conv_size
         self.block_dim = block_dim
+        self.impl = impl
 
         if self.head_k_dim != HEAD_DIM or self.head_v_dim != VALUE_DIM:
             raise ValueError(
@@ -230,7 +249,7 @@ class KimiDeltaAttention(nn.Module):
         o, final_state = chunk_kda(
             q, k, v, g, beta,
             initial_state=initial_state, output_final_state=output_final_state,
-            block_dim=self.block_dim,
+            block_dim=self.block_dim, impl=self.impl,
         )
 
         gate = self.g_proj(hidden_states).view(b, t, self.num_v_heads, self.head_v_dim)

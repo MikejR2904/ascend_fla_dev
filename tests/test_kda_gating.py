@@ -54,3 +54,119 @@ def test_supported_block_dim_matches_ascriptor_contract():
     assert tuple(declared) == SUPPORTED_BLOCK_DIM, (
         f"contract.json 声明 {declared}，chunk.py 写的是 {list(SUPPORTED_BLOCK_DIM)}"
     )
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# 门控跨度的上限：代码、两个单元的 contract、以及两条链的理论值必须互相对得上。
+# 这些都是纯常量核对，没卡也能跑 —— 而它们守的是一类很隐蔽的错：上限只按前向定，
+# 于是跨度 94 能过检查、前向正常、反向吐 NaN（见 gaps.json 的 bwd-gate-range-overflow）。
+# ──────────────────────────────────────────────────────────────────────────────
+
+#: fp32/bf16 的两条硬线。前向失效于下溢、反向失效于上溢，所以两个常数都要用到。
+UNDERFLOW_LN = 87.3368   # -ln(FLT_MIN_NORMAL)
+OVERFLOW_LN = 88.7228    # ln(FLT_MAX) == ln(BF16_MAX) 到四位有效数字
+
+
+def _unit_contract(name: str) -> dict:
+    path = REPO / "kernels/projects/a5" / name / "contract.json"
+    assert path.is_file(), f"本仓自有单元缺 contract.json：{path}"
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def test_gate_span_keys_match_impls():
+    from ascend_fla.ops.kda.chunk import IMPLS, MAX_GATE_SPAN
+
+    assert set(MAX_GATE_SPAN) == set(IMPLS), (
+        f"MAX_GATE_SPAN 的键 {sorted(MAX_GATE_SPAN)} 与 IMPLS {sorted(IMPLS)} 不一致 ——"
+        f"多一个实现却没给上限，门控就会 KeyError 而不是报出有用的错"
+    )
+
+
+def test_upstream_limit_guards_the_stricter_chain():
+    """``upstream`` 的上限必须挡住**两条链里更早失效的那条**。
+
+    前向在 ``-ln(FLT_MIN_NORMAL) ≈ 87.34`` 处下溢，反向在 ``ln(FLT_MAX) ≈ 88.72`` 处上溢。
+    上限只按其中一条定就会放过另一条。
+    """
+    from ascend_fla.ops.kda.chunk import MAX_GATE_SPAN
+
+    limit = MAX_GATE_SPAN["upstream"]
+    assert limit < min(UNDERFLOW_LN, OVERFLOW_LN), (
+        f"upstream 上限 {limit} 没有挡在 {min(UNDERFLOW_LN, OVERFLOW_LN):.2f} 以内"
+    )
+
+
+def test_stable_limit_guards_the_stricter_chain():
+    """``stable`` 同理，只是两条链的理论上限都翻倍了（对称分解，各压到 ±span/2）。"""
+    from ascend_fla.ops.kda.chunk import MAX_GATE_SPAN
+
+    limit = MAX_GATE_SPAN["stable"]
+    theoretical = min(2 * UNDERFLOW_LN, 2 * OVERFLOW_LN)
+    assert limit < theoretical, f"stable 上限 {limit} 超过理论值 {theoretical:.1f}"
+    assert limit > MAX_GATE_SPAN["upstream"], "stable 的上限不比 upstream 宽，那就白改了"
+    # 也必须宽于 fla 默认初始化的跨度（~94），否则默认初始化的层根本用不了
+    assert limit > 100, f"stable 上限 {limit} 不足以覆盖 fla 默认初始化的跨度 ~94"
+
+
+@pytest.mark.parametrize("unit", ["kda_fwd_stable", "kda_bwd_stable"])
+def test_stable_units_declare_the_same_limit_as_the_code(unit):
+    """两个单元的 contract 与 ``MAX_GATE_SPAN["stable"]`` 必须是同一个数。"""
+    from ascend_fla.ops.kda.chunk import MAX_GATE_SPAN
+
+    span = _unit_contract(unit)["domain"]["gate_span"]
+    assert span["recommended_limit"] == MAX_GATE_SPAN["stable"], (
+        f"{unit}/contract.json 声明 {span['recommended_limit']}，"
+        f"chunk.py 写的是 {MAX_GATE_SPAN['stable']}"
+    )
+
+
+def test_bwd_stable_overrides_exactly_the_kernels_it_declares():
+    """``_STABLE_BWD_KERNELS`` 与 contract 的 ``own_kernels`` 必须一字不差。
+
+    漏一个的后果很隐蔽：九个 kernel 里只换了一个，两个文件的锚点就不一致，
+    ``finalize_pre`` 产出的因子和 ``finalize_post`` 补的因子配不上 —— 结果是**静默错**
+    （不是 NaN），只能靠精度回归发现。
+    """
+    from ascend_fla.ops.kda.chunk_bwd import _KERNEL_MODULES, _STABLE_BWD_KERNELS
+
+    assert set(_STABLE_BWD_KERNELS) <= set(_KERNEL_MODULES), (
+        f"覆盖了不存在的 stage：{set(_STABLE_BWD_KERNELS) - set(_KERNEL_MODULES)}"
+    )
+    declared = set(_unit_contract("kda_bwd_stable")["dependencies"]["own_kernels"])
+    assert set(_STABLE_BWD_KERNELS.values()) == declared, (
+        f"chunk_bwd.py 覆盖 {sorted(_STABLE_BWD_KERNELS.values())}，"
+        f"contract.json 声明 {sorted(declared)}"
+    )
+
+
+@pytest.mark.parametrize("unit,stems", [
+    ("kda_fwd_stable", ("gate", "intra", "wy")),
+    ("kda_bwd_stable", ("finalize_pre", "finalize_post")),
+])
+def test_stable_units_define_the_functions_they_claim(unit, stems):
+    """单元里 contract 声明的 kernel 函数必须真的定义在对应文件里。
+
+    纯文本核对，不 import（import 要 ascriptor DSL，而这个测试要在无卡机器上能跑）。
+    """
+    root = REPO / "kernels/projects/a5" / unit / "kernels"
+    src = "\n".join((root / f"{s}.py").read_text(encoding="utf-8") for s in stems)
+    for fn in _unit_contract(unit)["dependencies"]["own_kernels"]:
+        assert f"def {fn}(" in src, f"{unit} 的 contract 声明了 {fn}，但 kernels/ 下没有它"
+
+
+def test_bwd_stable_keeps_the_anchor_consistent_across_both_files():
+    """两个文件必须用**同一个锚点** —— 这是改法能成立的前提。
+
+    ``finalize_pre`` 产出 ``q_scaled``/``k_scaled``/``kg``，``finalize_post`` 补上配对因子；
+    锚点不一致的话乘积不再是 ``exp(g_i − g_j)``，而且不会报错。
+    """
+    root = REPO / "kernels/projects/a5/kda_bwd_stable/kernels"
+    for stem in ("finalize_pre", "finalize_post"):
+        src = (root / f"{stem}.py").read_text(encoding="utf-8")
+        assert "gmid <<= glast * MID" in src, f"{stem} 没有按中点算锚点"
+        assert "tmp <<= g - gmid" in src, f"{stem} 的 rscale 没用中点锚"
+        assert "tmp <<= gmid - g" in src, f"{stem} 的 cscale 没用中点锚"
+        assert "tmp <<= g - glast" not in src, f"{stem} 还留着上游的端点锚"
+    # MID 必须是 0.5 —— 取别的值虽然数学上仍同义，但两个因子不再对称，上限就不是翻倍
+    for stem in ("finalize_pre", "finalize_post"):
+        assert "MID = 0.5" in (root / f"{stem}.py").read_text(encoding="utf-8")

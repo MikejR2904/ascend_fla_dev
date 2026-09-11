@@ -113,6 +113,24 @@ def ops_section(ops: dict) -> list[str]:
         "",
     ]
 
+    # 「接线完成」不等于「验过」。这两件事在表里是不同的列，容易一眼扫过去看漏，
+    # 所以把差集显式列出来 —— 由数据算出，不手写（手写的必然腐烂）。
+    wired_unverified = [
+        op for op in ops["linear_attention_ops"]
+        if op["our_status"].get("wiring") == "done"
+        and op["validation"].get("board_cce", "untested") != "passed"
+    ]
+    if wired_unverified:
+        out += [
+            "> ⚠️ **接线完成 ≠ 真机验过。** 下列算子的「本仓接线」是完成，但 `board` 一列"
+            "仍是 untested —— 不要当已验证：",
+            "",
+        ]
+        for op in wired_unverified:
+            note = op["validation"].get("note", "").split("。")[0]
+            out.append(f"> - `{op['id']}` — {note}。")
+        out.append("")
+
     out += ["### 缺失的算子", ""]
     for m in ops["missing_ops"]:
         out.append(f"- **{m['id']}**（{m['op_family']}）— {m['purpose']}。{m.get('note', '')}")

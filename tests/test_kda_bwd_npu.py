@@ -108,7 +108,8 @@ def run_case(case_id: str) -> dict:
         out["errors"][name] = _rel_l2(got[name].cpu(), exp)
         # 契约要求预算"足以拒绝零梯度"。relL2 对全零会给 1.0，但若参考本身也近零就可能
         # 漏过，所以显式查一次。
-        if got[name].float().abs().max().item() == 0.0:
+        # 先 D2H 再 cast —— 缺内置算子包的机器上 NPU 侧的 .float() 不可用（AGENTS.md §5）
+        if got[name].cpu().float().abs().max().item() == 0.0:
             out["all_zero"].append(name)
     return out
 
@@ -148,10 +149,21 @@ def test_bwd_gate_rejects_bad_inputs():
         chunk_kda_bwd(**base, block_dim=5)
 
     with pytest.raises(ValueError, match="bfloat16"):       # beta 用了 fp32
-        chunk_kda_bwd(**{**base, "beta": base["beta"].float()})
+        # 在 CPU 上 cast 再 H2D —— NPU 侧的 .float() 在缺内置算子包的机器上不可用，
+        # 那会让这条门控测试死在构造输入上而不是验到门控（AGENTS.md §5）
+        chunk_kda_bwd(**{**base, "beta": x["beta"].float().to("npu")})
 
     with pytest.raises(ValueError, match="caches 必须恰好是"):
         chunk_kda_bwd(**{**base, "caches": {k: v for k, v in caches.items() if k != "h"}})
+
+    with pytest.raises(ValueError, match="必须是连续张量"):
+        # 非连续输入必须报错而不是悄悄修正 —— 缺内置算子包的机器上既不能在 device 上
+        # contiguous()，也不能对跨步视图 D2H（要 Slice，实测 errno 561000）。
+        # 造法：在 CPU 上把 T 翻倍、H2D（连续），再取 ::2 的视图 —— 形状对得上、仅改 stride，
+        # 纯元数据操作不需要任何 NPU 算子，所以这条门控在两种机器上都测得到。
+        strided = x["do"].repeat(1, 2, 1, 1).to("npu")[:, ::2]
+        assert not strided.is_contiguous() and strided.shape == base["do"].shape
+        chunk_kda_bwd(**{**base, "do": strided})
 
     with pytest.raises(ValueError, match=r"caches\['h'\]"):  # h 形状错
         bad = dict(caches)

@@ -46,16 +46,16 @@ class _ChunkKDA(torch.autograd.Function):
 
     @staticmethod
     def forward(ctx, q, k, v, g, beta, scale, initial_state, output_final_state,
-                device, block_dim, layout_device, check_gate_range):
+                device, block_dim, layout_device, check_gate_range, impl):
         o, final_state, caches = chunk_kda_fwd_with_caches(
             q, k, v, g, beta, scale, initial_state,
             device=device, block_dim=block_dim, layout_device=layout_device,
-            check_gate_range=check_gate_range,
+            check_gate_range=check_gate_range, impl=impl,
         )
         # beta 在前向 ABI 里是 fp32、反向 ABI 里是 bf16。这一步降精度的代价已量化
         # （见 gaps.json 的 kda-fwd-bwd-dtype-mismatch），**显式**做，不当无害的类型适配。
         ctx.save_for_backward(q, k, v, beta.bfloat16(), *(caches[n] for n in BWD_CACHE_NAMES))
-        ctx.bwd_options = dict(device=device, block_dim=block_dim)
+        ctx.bwd_options = dict(device=device, block_dim=block_dim, impl=impl)
         ctx.state_shape = (q.shape[0], v.shape[2], HEAD_DIM, VALUE_DIM)
         return o, final_state
 
@@ -88,8 +88,9 @@ class _ChunkKDA(torch.autograd.Function):
             grads["dbeta"].float() if need[4] else None,
             None,                                              # scale
             grads["dh0"].float() if need[6] else None,          # initial_state
-            # output_final_state / device / block_dim / layout_device / check_gate_range
-            None, None, None, None, None,
+            # output_final_state / device / block_dim / layout_device /
+            # check_gate_range / impl
+            None, None, None, None, None, None,
         )
 
 
@@ -107,6 +108,7 @@ def chunk_kda(
     block_dim: int = 1,
     layout_device: str = "auto",
     check_gate_range: bool = True,
+    impl: str = "stable",
 ) -> tuple[torch.Tensor, torch.Tensor | None]:
     """可求导的 KDA 分块注意力。
 
@@ -125,9 +127,13 @@ def chunk_kda(
         block_dim: 启动核组数，只接受 ``SUPPORTED_BLOCK_DIM``。
         layout_device: 见 :func:`~ascend_fla.ops.kda.chunk.chunk_kda_fwd`。
         check_gate_range: 校验 chunk 内门控跨度不超过
-            :data:`~ascend_fla.ops.kda.chunk.MAX_GATE_SPAN`（默认 80）。超限时 kernel 会
-            fp32 上溢吐 NaN。**注意 fla 默认初始化的 KDA 层会越过这条线**（跨度约 94），
-            见 ``gaps.json`` 的 ``gate-range-beyond-declared``。
+            :data:`~ascend_fla.ops.kda.chunk.MAX_GATE_SPAN` 里该实现的上限。超限时
+            kernel 会吐 NaN。
+        impl: ``"stable"``（默认，可用跨度约 160）或 ``"upstream"``（约 80）。
+            **同时选前向与反向两条链**，没有分开的开关 —— 两条链的失效点不同
+            （前向在 87.3 下溢、反向在 88.72 上溢），混用会让门控检查的上限对不上实际
+            会失效的那一侧。fla 默认初始化的 KDA 层跨度约 94，``upstream`` 两边都撑不住。
+            见 ``gaps.json`` 的 ``gate-range-beyond-declared`` 与 ``bwd-gate-range-overflow``。
 
     Returns:
         ``(o, final_state)``。``o`` 为 ``[B, T, HV, 128]`` bfloat16。
@@ -136,4 +142,4 @@ def chunk_kda(
         ValueError: 任何定尺/dtype/设备约束不满足。绝不静默降级（AGENTS.md §7）。
     """
     return _ChunkKDA.apply(q, k, v, g, beta, scale, initial_state, output_final_state,
-                           device, block_dim, layout_device, check_gate_range)
+                           device, block_dim, layout_device, check_gate_range, impl)

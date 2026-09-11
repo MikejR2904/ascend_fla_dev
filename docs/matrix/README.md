@@ -40,7 +40,9 @@ ascriptor pin：`0.1.0.dev1` · library `77619116f9b3` · 支持硬件 a5 · def
 | `a5.gdn_fwd` | gated_delta_rule | forward | ✅ | ✅ | ✅ | ✅ | ⬜ | ✅ | ⬜ 未开始 |
 | `a5.gdn_bwd` | gated_delta_rule | backward | ✅ | ✅ | ✅ | ✅ | ⬜ | ✅ | ⬜ 未开始 |
 | **`a5.kda_fwd`** ★ | kda | forward | ✅ | ✅ | ⬜ | ⬜ | ⬜ | ✅ | ✅ 完成 |
+| **`a5.kda_fwd_stable`** ★ | kda | forward | ✅ | ⬜ | ⬜ | ✅ | ✅ | ✅ | ✅ 完成 |
 | **`a5.kda_bwd`** ★ | kda | backward | ✅ | ✅ | ⬜ | ⬜ | ⬜ | ✅ | ✅ 完成 |
+| **`a5.kda_bwd_stable`** ★ | kda | backward | ✅ | ⬜ | ⬜ | ✅ | ✅ | ✅ | ✅ 完成 |
 | `a5.delta_rule_fwd` | delta_rule | forward | ✅ | ✅ | ✅ | ✅ | ⬜ | ✅ | ⬜ 未开始 |
 | `a5.delta_rule_bwd` | delta_rule | backward | ✅ | ✅ | ✅ | ✅ | ⬜ | ✅ | ⬜ 未开始 |
 
@@ -157,7 +159,7 @@ kimi_linear_layer / bd=4 的拆分（ms）：fwd_kernels 1.314 · caches_host_si
 **layers**
 
 - `kda` — 🔶 完成（torch 实现）
-  - 证据：2026-09-11 第二期：ascend_fla/layers/kda.py KimiDeltaAttention，参数名与 fla 逐项对齐（KDA 算子自编译，周边 modules 是 torch —— modules-are-torch-not-kernels）。层级梯度实测：三个形状下输出相对 L2 4.9e-03，全部 17 个参数的梯度在 3.6e-03~2.2e-02，预算 0.1（A_log/dt_bias/f_proj 用 0.25，因为它们的梯度直接由 dg 来）。参考是同一份权重的 CPU 层，只把 KDA 算子换成 fp32 逐 token 递推版。承担了 fla 放在 kernel 里的三件事（q/k 的 l2norm、门控变换、beta sigmoid）。⚠️ 梯度对齐是在 exp(A_log)=1 下测的 —— fla 默认初始化会让算子 fp32 上溢，见 gate-range-beyond-declared。decode 路径未接（fused-recurrent-missing）。
+  - 证据：2026-09-11 第二期：ascend_fla/layers/kda.py KimiDeltaAttention，参数名与 fla 逐项对齐（KDA 算子自编译，周边 modules 是 torch —— modules-are-torch-not-kernels）。层级梯度实测：三个形状下输出相对 L2 4.9e-03，全部 17 个参数的梯度在 3.6e-03~2.2e-02，预算 0.1（A_log/dt_bias/f_proj 用 0.25，因为它们的梯度直接由 dg 来）。参考是同一份权重的 CPU 层，只把 KDA 算子换成 fp32 逐 token 递推版。承担了 fla 放在 kernel 里的三件事（q/k 的 l2norm、门控变换、beta sigmoid）。默认初始化（跨度 ~94）另有两项：前向对递推 oracle 相对 L2 4.697e-03（已测）；整层反向的有限性与精度由 test_default_init_backward_matches_cpu_reference 盯，**真机未跑**（反向的 kda_bwd_stable 还没在真机比对过，见 bwd-gate-range-overflow）。梯度对齐那三个形状是在 exp(A_log)=1 下测的 —— 为的是把「接线对不对」和「深衰减下 bf16 本来就糙」分开，不是因为默认初始化跑不了。decode 路径未接（fused-recurrent-missing）。
 - `gated_deltanet` — ⬜ 未开始
 
 **models**
@@ -167,7 +169,7 @@ kimi_linear_layer / bd=4 的拆分（ms）：fwd_kernels 1.314 · caches_host_si
 
 ## 缺口
 
-P0 0 项 · P1 13 项 · P2 9 项 · 共 29 项
+P0 0 项 · P1 12 项 · P2 11 项 · 共 32 项
 
 **首个里程碑**：第一期五项已全部有结论，并补齐了同机性能对比：aclnn 编译、runtime 桥、kda_fwd 接线、KDA 本地基线均实测通过；自编译算子在 block_dim=4 下比 torch_npu 组合快 4.43x（kimi_linear_layer）/ 2.38x（long_context T=4096）/ 19.7x（smoke）。过程中修掉两个自己的 bug（bridge-per-call-overhead、op-name-collision-in-process），它们先后让 block_dim 的效果被完全掩盖。当前最大的性能项是 block-dim-ceiling（已升 P1）：扩展性一路线性到契约上限 4，而硬件有 28 cube。第二期的前置障碍仍是 kda-fwd-bwd-dtype-mismatch。
 
@@ -190,7 +192,7 @@ P0 0 项 · P1 13 项 · P2 9 项 · 共 29 项
 
 | 算子族 | P0 | P1 | P2 |
 |---|---|---|---|
-| KDA | — | `fused-recurrent-missing`<br>`no-varlen`<br>`no-tail-path`<br>`block-dim-ceiling`<br>`qk-l2norm-not-in-kernel`<br>`state-layout-k-first`<br>`gate-range-beyond-declared` | `kda-fwd-bwd-dtype-mismatch`<br>`npu-builtin-ops-missing`<br>`toy-case-shapes`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`torch-npu-baseline-missing`<br>`kernel-nd2nz-suboptimal`<br>`fwd-caches-not-emitted`<br>`modules-are-torch-not-kernels` |
+| KDA | — | `fused-recurrent-missing`<br>`no-varlen`<br>`no-tail-path`<br>`block-dim-ceiling`<br>`qk-l2norm-not-in-kernel`<br>`state-layout-k-first` | `kda-fwd-bwd-dtype-mismatch`<br>`npu-builtin-ops-missing`<br>`toy-case-shapes`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`torch-npu-baseline-missing`<br>`kernel-nd2nz-suboptimal`<br>`fwd-caches-not-emitted`<br>`modules-are-torch-not-kernels`<br>`stable-unit-no-harness`<br>`gate-span-still-bounded` |
 | GDN | — | `gdn-no-gqa`<br>`layout-not-token-major`<br>`nonzero-initial-state`<br>`d-initial-state-absent`<br>`state-dtype-bf16`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`scale-param-no-slot`<br>`no-tail-path`<br>`block-dim-ceiling` | `npu-builtin-ops-missing`<br>`toy-case-shapes`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`torch-npu-baseline-missing` |
 | DeltaNet | — | `layout-not-token-major`<br>`nonzero-initial-state`<br>`d-initial-state-absent`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`scale-param-no-slot`<br>`no-tail-path` | `npu-builtin-ops-missing`<br>`toy-case-shapes`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`torch-npu-baseline-missing` |
 
@@ -280,18 +282,6 @@ P0 0 项 · P1 13 项 · P2 9 项 · 共 29 项
 - **影响** 第三期把本仓的 layer 注入 Kimi-Linear 时，与上游 cache 交接要转置，否则 decode 第一步就会用错的状态起算。K=V=128 让形状相同，**转置错了不会报形状错** —— 又是一个静默失败面。
 - **建议** 第三期在注入层里做转置并加一个显式断言（比如用非对称测试值验证方向）。不要在算子里改布局 —— 算子的布局由 kernel 决定，改它等于改 kernel。
 
-#### `gate-range-beyond-declared` — 按 fla 的默认初始化，KDA 层的门控跨度(~94) 越过算子的 fp32 上溢线(~88.7)
-
-- **类别** numerics · **适用于** KDA · **阻塞** `phase 3`
-- **依据** **上溢阈值实测**（benchmarks 侧扫门控倍数，B1/T64/H1/HV1）：chunk 内跨度 1.11→66.84 时前向全部有限且相对 L2 稳定在 2.86e-03~2.98e-03（**完全没有退化**）；跨度 89.12 与 111.40 时o 与 final_state 均出现 NaN/Inf。分界正是 ``ln(FLT_MAX) ≈ 88.72`` —— kernel 把成对衰减分解成 ``exp(g−m)·exp(m−g)``，后一项在跨度超过它时 fp32 上溢。
-**层侧跨度实测**：KDA 层按 fla 自己的初始化（A_log = log(U(1,16)) → exp(A_log) ≈ 15.35；dt_bias 为 Mamba inv-softplus → dt ∈ [0.001, 0.096]）给出的 per-token g 最大约 -15.35 × 0.096 ≈ -1.47，64 token 累计约 **-94**，已越线。跨度**几乎与输入尺度无关**（scale 0.5→94.04、0.01→92.97），由那两个参数的初始化决定。
-**对比声明域**：contract 的 input_generation 是 g_raw ∈ [-0.03, 0]，即跨度 ≤1.92 —— 比失效阈值还窄 46 倍。
-**反向精度对门控深度的依赖也已实测**：gentle_decay case（gate_multiplier=0.03）下 dk=5.40e-03、dg=6.20e-03，同形状的 multi_chunk（×1）下是 dk=9.17e-02、dg=1.65e-01，差一个数量级 —— 与契约给出的成因一致（bf16 对 log2 累积门控的舍入在深衰减下改变乘性导数）。
-钉在 tests/test_kda_layer_npu.py 的 test_layer_default_init_overflows_the_operator 与 test_layer_gate_span_exceeds_declared_domain。
-- **影响** ① **按 fla 的默认初始化，这个算子直接不可用** —— 不是精度变差，是吐 NaN。② 此前所有前向/反向精度数都测在跨度 ≤1.92 的窄域里，而那是真实模型不会出现的区间，不能外推到层级/模型级。③ 向量化 CPU 参考在跨度 >80 时自己也上溢，宽域下不能当 oracle，只能用逐 token 递推版。④ fla 用 safe_gate / lower_bound 给门控设界，而我们把这两个开关判为不支持 —— 等于把这个风险留给调用方。
-- **建议** 已加门控：ops/kda/chunk.py 的 MAX_GATE_SPAN=80 + check_gate_range（默认开），超限报错而不是让 kernel 吐 NaN。**但这只是把静默失败变成了明确失败，没有扩大可用域。**
-第三期模型注入前必须做决策，三条路：① 在 ascriptor 侧把成对衰减改成稳定形式（减去行最大值再做减法，不要分解成两个 exp 相乘）—— 这是根治，且不改数学；② 实现 fla 的 lower_bound 式门控下界 —— **会改变数学**，需显式决策，不能当数值修补；③ 在宽域下用递推 oracle 重测，若契约预算在那里仍成立且只是窄域没覆盖，则推动 ascriptor 扩 cases。不要因为窄域测试全绿就认为算子在真实模型上可用。
-
 ### P2
 
 #### `kda-fwd-bwd-dtype-mismatch` — kda 的 fwd 与 bwd 对同名张量声明了不同 dtype
@@ -304,8 +294,13 @@ P0 0 项 · P1 13 项 · P2 9 项 · 共 29 项
 #### `npu-builtin-ops-missing` — 内置算子包的覆盖随机器而异：部分 Ascend950PR 机器上 torch_npu 的计算算子不可用
 
 - **类别** environment · **适用于** 全部 · **阻塞** —
-- **依据** 238（Ascend950PR_957b / CANN 9.1.0）上 $ASCEND_OPP_PATH/built-in/op_impl/ai_core/tbe/kernel/ 只有 ascend910_93 与 ascend910b 两个 SoC 目录。torch.randn(device='npu') 报 aclnnInplaceNormal_1_StatelessNormalAiCore 找不到 JSON 配置；torch.zeros、bf16->fp32 Cast 同样失败。torch 本身是 2.10.0+cpu。 【2026-09-11 补充】另一台 8 卡 Ascend950PR 机器（CANN 9.2.0，innerversion V100R001C25B046）的 opp 下有 **ascend950** 算子包，SoC 报 Ascend950PR_9579，实测 randn / zeros / fp32+bf16 matmul / bf16↔fp32 cast / permute+contiguous / einsum / cumsum 全部可用。所以这不是 SoC 级缺陷，而是**算子包安装差异**：CANN 9.1.0 的 opp 只装了 910 系列。
-- **影响** 选机器决定能做什么：装了 ascend950 算子包的机器上 torch_npu 基线与 layer 级验证都可做；没装的机器上只能跑自编译 kernel（empty/H2D/D2H/data_ptr/stream 可用，计算算子全不可用）。runtime 桥在两种机器上都工作 —— 这正是它的价值。
+- **依据** CANN 9.1.0 的那台 Ascend950PR（见 machine_specs.md）上 $ASCEND_OPP_PATH/built-in/op_impl/ai_core/tbe/kernel/ 只有 ascend910_93 与 ascend910b 两个 SoC 目录。torch.randn(device='npu') 报 aclnnInplaceNormal_1_StatelessNormalAiCore 找不到 JSON 配置；torch.zeros、bf16->fp32 Cast 同样失败。torch 本身是 2.10.0+cpu。 【2026-09-11 补充】另一台 8 卡 Ascend950PR 机器（CANN 9.2.0，innerversion V100R001C25B046）的 opp 下有 **ascend950** 算子包，SoC 报 Ascend950PR_9579，实测 randn / zeros / fp32+bf16 matmul / bf16↔fp32 cast / permute+contiguous / einsum / cumsum 全部可用。所以这不是 SoC 级缺陷，而是**算子包安装差异**：CANN 9.1.0 的 opp 只装了 910 系列。
+【2026-09-11 再补充】缺算子包时**跨步视图的 D2H 也不可用** —— 它要走 NPU 侧的 `Slice`。最小复现（形状 [1,128,2,8]，对应 C=2 的 g_cumsum）：
+  `dev[:, 63::64].cpu()` → RuntimeError：`Op Slice does not has any binary` / `launch failed for Slice, errno:561000`
+  `dev.cpu()[:, 63::64]` → 一致
+  同一块张量按 C=1 切（`[:, 127::128]`，只取一行）→ 两种写法**都一致**，因为切片等效连续。
+这条 C=1/C≥2 的分界正好解释了一次真实失败：`chunk_kda_bwd` 里 `g_last = g_cumsum[:, 63::64]` 绕 CPU 时，single_chunk 与 grouped_idle_cores（都是 C=1）通过，multi_chunk / grouped_heads / gentle_decay（都是 C≥2）全挂。**是硬报错不是静默出错** —— 我最初写成「静默给出错误数据」，最小复现证伪了。修法：先整块 D2H 再在 CPU 上切。
+- **影响** 选机器决定能做什么：装了 ascend950 算子包的机器上 torch_npu 基线与 layer 级验证都可做；没装的机器上只能跑自编译 kernel（empty/H2D/D2H/data_ptr/stream 可用，计算算子全不可用）。runtime 桥在两种机器上都工作 —— 这正是它的价值。 【2026-09-11 修正】「runtime 桥在两种机器上都工作」只对**前向**成立。训练路径要在 host 侧补三个反向检查点（`fwd-caches-not-emitted`），那一段是 torch 算子 —— 在缺算子包的机器上原本直接失败。已加 CPU 绕行；层级验证仍然只能在有 ascend950 算子包的机器上做（层里的投影/卷积/softplus/RMSNorm 全是 torch_npu 算子）。 另外：算子入口现在**要求输入连续**并在不满足时报错（`chunk.py` 与 `chunk_bwd.py` 的 `_check`）。在这种机器上「悄悄 .contiguous() 一下」根本做不到 —— device 上要 d2d copy，跨步 D2H 要 Slice，两条都缺，所以只能报错。
 - **建议** 三条路：① 性能基线改用 ascriptor 自己的 profile 子命令 + 自编译 kernel 之间的对比；② 在有完整算子包的机器上做 torch_npu 基线（a2/910B3 有 ascend910b）；③ 确认是否存在 950PR 的算子包可安装。选哪条取决于基线要回答的问题 —— 要对比 ascriptor vs torch_npu 就必须有内置算子，换机器是最直接的。
 
 #### `toy-case-shapes` — 现有算子 case 全是玩具形状，未在真实模型形状上验证
@@ -349,7 +344,9 @@ P0 0 项 · P1 13 项 · P2 9 项 · 共 29 项
 - **依据** kda_bwd 的 unit.py validate_inputs 要求 saved 恰好含九项：g_cumsum/w/u/qg/kg/v_new 为 (B,T,HV,128)、Aqk/Akk 为 (B,T,HV,64)、h 为 (B,C,HV,128,128)，全 bf16、token-major。前向 kernel 直接产出的只有 w/u/qg/kg（kda_sub3_wy_kernel）、Aqk（kda_sub2_score_kernel）、Akk（tril_inverse64_v2_strict_bf16_kernel）六项。gate kernel 只写 eg = 2**g_cumsum，不写 cumsum 本身；kda_sub45_fused_kernel 内部算了逐 chunk 状态 h 与 v_new = u - w @ h，但只写出 o 与 final_state。单元自己是用 CPU 参考 build_saved_forward() 造 saved 的，不是用 kernel。 | **代价已实测**（benchmarks/bench_kda_train_step.py，Ascend950PR / CANN 9.2.0，bf16，warmup 2 / iters 5，同步）：kimi_linear_layer 形状下补检查点 1.053ms（bd=1）/ 1.065ms（bd=4），long_context 4.242 / 4.351ms —— **随 block_dim 基本不变**，因为它是 torch 算子而不是我们的 kernel。于是它的占比随 block_dim 上升：fwd+bwd 的 7%（bd=1）→ 21%（bd=4）。
 - **影响** autograd 的前向必须补齐这三项。g_cumsum 可由 log2(eg) 得到（一次 elementwise）；h 与 v_new 只能重跑 chunk 递推，当前在 host 侧用 torch 做（C 次迭代 × 2 次 bmm）。
 **修正先前的判断**：我曾写它是"反向链的性能瓶颈"，实测不是 —— kimi_linear_layer / bd=4 下它占 21%，而九个反向 kernel 占 53%（2.690ms / 5.069ms）。它是一笔确定的、值得收的账，但不是主因。**真正要紧的是它不随核数缩短**：block_dim 上限若被抬高（block-dim-ceiling），kernel 侧会继续变快而这一段不会，占比会继续涨。
+**2026-09-11 新发现的第二个后果：它让训练路径依赖内置算子包，而纯前向路径不依赖。**`_scan_states` 与检查点的降 bf16 用的是 Cast / bmm / stack，在只装了 910 算子包的机器上全部不可用 —— 实测表现为 `copy_d2d_baseformat_opapi … error code is 561103` + `Cast ADD_TO_LAUNCHER_LIST_AICORE failed`。这推翻了「我们自己编译的 kernel 在两种机器上都不受影响」这句话的适用范围：它对**前向**成立，对**训练**不成立，因为训练要补的三项检查点不在 kernel 里。已加 `on_cpu` 绕行（`_scan_states(on_cpu=)`、`chunk_kda_bwd` 的 `layout_device`），把检查点生产和那一次 strided `contiguous()` 整段搬到 CPU —— 这是**可用性**开关不是性能开关。把三项挪进 kernel 之后这些绕行可以删掉。
 - **建议** 按 AGENTS.md §3 在本仓 kernels/ 下建自己的单元：做一个 kda_sub45_fused_kernel 的变体，额外写出 h 与 v_new（两个 GM 输出 + store，内部量已有），再做一个 gate 变体直接写 g_cumsum。改 ascriptor 仓是不允许的。优先级排在 block-dim-ceiling 之后 —— 先抬核数上限，那一项的收益更大，而且抬完之后这一项的占比才真正凸显。
+做完之后顺带删掉 `_scan_states(on_cpu=…)` 与 `chunk_kda_bwd(layout_device=…)` 两处绕行。
 
 #### `modules-are-torch-not-kernels` — modules 层是 torch 原生算子实现，不是本仓自编译的算子
 
@@ -357,3 +354,21 @@ P0 0 项 · P1 13 项 · P2 9 项 · 共 29 项
 - **依据** ascend_fla/modules/convolution.py 用 F.conv1d + F.silu；fused_norm_gated.py 用 rsqrt/mean/sigmoid 两趟完成（名字里的 Fused 只为与 fla 对齐，并未融合）。layers/kda.py 里的投影、l2norm、softplus 门控、sigmoid 也都是 torch 算子。
 - **影响** ① 这些步骤在内置算子包不全的机器上不可用（需要 conv1d/silu/matmul），而自编译的 kda 算子本身不受影响 —— 所以层级验证比算子级验证对机器挑剔。② 层级耗时里有一部分不归本仓的"高效率算子"管，报层级性能数时必须拆开说，否则会把 torch 的开销算进算子账上。
 - **建议** 第四期按测得的占比决定做哪些。归一化与门控是 elementwise，融合收益直接；短卷积是 depthwise，值得单独做一个 kernel。动手前先 profile 层级耗时拆分，别重复 bridge-per-call-overhead 那次"先推断后测量"的错。
+
+#### `stable-unit-no-harness` — 本仓的 kda_fwd_stable 单元还不能用 ascriptor harness 独立跑
+
+- **类别** verification · **适用于** KDA · **阻塞** —
+- **依据** kernels/projects/a5/kda_fwd_stable/ 目前有 contract.json、README.md 与三个 kernel 文件，但缺 unit 协议要求的 unit.py（make_inputs/reference/execute）与 run.py —— 它们要对接 ascriptor 的 _unit_runner。现在的验证全部经本仓 runtime 桥 + pytest 做。
+- **影响** ① 拿不到 ascriptor harness 的 sim / pipesim / cannsim 几个 stage 的证据，也就用不上它的逐 stage checkpoint 比对（那对定位 kernel 内部错误很有用）。② 这个单元不能被 ascriptor 侧的人独立复现，不利于把修法推回上游。contract.json 的 support 里已如实标注证据来源，没有假装有 harness 证据。
+- **建议** 补 unit.py 与 run.py。reference 可以直接用 ascend_fla/reference/kda.py 的逐 token 递推版（它没有跨度上限，正是宽域下唯一可用的 oracle）。做完后把 contract.json 的 support 按 harness 实际结果更新。
+
+#### `gate-span-still-bounded` — 稳定化只把门控跨度上限翻倍（~160），没有去掉上限
+
+- **类别** numerics · **适用于** KDA · **阻塞** —
+- **依据** `kda_fwd_stable` / `kda_bwd_stable` 走的是**对称分解**：把 `exp(g_i − g_j)` 拆成两个以中点为锚的因子，各压到 ±span/2。理论上限因此正好翻倍 —— 前向 `2 × -ln(FLT_MIN_NORMAL) ≈ 174.7`，反向 `2 × ln(BF16_MAX) ≈ 177.4`，`MAX_GATE_SPAN["stable"]` 取 160 留余量。前向实测到 155.97 仍不退化（相对 L2 2.850e-03）。
+**为什么不能彻底去掉上限**：要用 matmul 在通道维求和就必须把成对量分解成两个单边因子，而单边因子一定要落到 bf16 GM。能做到的最好是对称分解。
+**跨度不随 T 增长** —— 它是 chunk 内（64 token）的量，cumsum 每 chunk 重置，所以长序列不会把它推高。推高它的是 `exp(A_log)` 与 `dt` 的乘积。
+- **影响** ① fla 默认初始化给出跨度 ~94，离 160 还有 1.7 倍余量，**当前可用**。但 `A_log` 与 `dt_bias` 都是可训练参数，训练中 `dt` 变大会把跨度推高 —— 训练久了可能撞上限。届时表现是门控检查**报错**（不是 NaN），这是设计如此，但会中断训练。
+② 门控检查默认开，每次前向对 g 做一次 cumsum + 两次规约，实测 0.212ms / 步（bd=4 / kimi_linear_layer，占训练步 4%）。确知安全时可 `check_gate_range=False` 关掉。
+- **建议** 现在不做。真撞上限时的下一步：把 64×64 的 tile 再按行列分块，每对子块用各自的中点（等价于分块 log-sum-exp），上限随分块数线性增长。代价是更多的 matmul 调用与更复杂的掩码 —— 在有真实训练曲线证明需要之前不值得。
+另一条是 fla 的 `lower_bound` / `safe_gate`：给门控设下界。那**会改变数学**，属于模型侧决策，不能当数值修补悄悄加上（本仓目前显式拒绝这两个开关）。

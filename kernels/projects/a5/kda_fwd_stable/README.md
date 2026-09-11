@@ -1,0 +1,73 @@
+# a5.kda_fwd_stable
+
+KDA 定长前向，**门控算术改成对深衰减数值稳定的形式**。派生自 ascriptor 的 `a5.kda_fwd`
+（只读引用，见仓库 `AGENTS.md` §3：需要改 kernel 时在本仓 `kernels/` 下建自己的单元，
+不改 ascriptor 仓）。
+
+## 为什么存在
+
+`a5.kda_fwd` 的 gate kernel 只写出 `eg = exp(g_cumsum)`，于是下游必须取比值：
+
+| kernel | 用法 | 深衰减时 |
+|---|---|---|
+| scores | `k / eg` | `eg → 0` 后是 `k/0 = inf`，再乘 `qg = 0` → **NaN** |
+| wy | `eg_last / eg` | 两者同时为 0 → **`0/0` = NaN** |
+
+`eg` 在 `-ln(FLT_MIN_NORMAL) ≈ 87.3` 处下溢（fp32 非正规数被硬件 flush 到 0）。
+**信息在 `exp()` 落盘那一刻就没了，下游无论怎么写都救不回来。**
+
+而按 fla 自己的 KDA 初始化（`A_log = log(U(1,16))`、`dt ∈ [0.001, 0.1]`），chunk 内门控
+跨度约 **94** —— 越过这条线。也就是说上游 kernel 配 fla 的默认初始化**直接不可用**。
+见 `docs/matrix/gaps.json` 的 `gate-range-beyond-declared`。
+
+## 改了什么
+
+三个 kernel，矩阵乘结构、流水、掩码一概不变：
+
+- **`kernels/gate.py`** — 额外写出 log 空间的 `g_cumsum`。cumsum 本来就在寄存器里，
+  只多一次 store。顺带解决 `a5.kda_bwd` 九个检查点之一（`fwd-caches-not-emitted`）。
+- **`kernels/intra.py`** — 收 `g_cumsum`，按**逐通道中点** `m[d] = gc[L-1,d]/2` 构造
+  `exp(gc-m)` 与 `exp(m-gc)`，把 `k / eg` 换成乘法。乘积 `exp(gc_i - gc_j)` 与原版同义
+  （m 抵消），但两个因子的指数都被压到 `±span/2`，上限因此翻倍。
+- **`kernels/wy.py`** — 收 `g_cumsum`，`kg` 由 `eg_last/eg` 改为 `exp(gc_last - gc)`，
+  先减后指数，恒 ≤1。`qg`/`kexp` 仍是绝对量，下溢到 0 即正确。
+
+`inverse` 与 `recurrent` 直接复用上游 —— 它们只用绝对量，没有 `0/0`。
+
+**这不是"完全不分解"。** 用 matmul 在通道维求和就必须分解；能做到的最好是**对称地**分解。
+要彻底去掉上限得把 64×64 的 tile 再按行列分块（每对子块用各自的 m），那是更大的改动，
+等实测需要再做。
+
+## 实测（Ascend950PR / CANN 9.2.0，2026-09-11）
+
+`o` 对逐 token 递推 oracle 的相对 L2：
+
+| chunk 内门控跨度 | upstream | stable |
+|---|---|---|
+| 1.11 | 2.956e-03 | 2.956e-03 |
+| 11.14 | 2.939e-03 | 2.939e-03 |
+| 44.56 | 2.975e-03 | 2.975e-03 |
+| 66.84 | 2.925e-03 | 2.925e-03 |
+| 89.12 | **NaN** | 2.924e-03 |
+| 111.40 | **NaN** | 3.191e-03 |
+| 133.69 | **NaN** | 3.053e-03 |
+| 155.97 | **NaN** | 2.850e-03 |
+
+重叠域内**四位有效数字相同** —— 数学没变。之后上游失效，本单元精度不退化。
+
+## 怎么跑
+
+目前经本仓的 runtime 桥调用，不经 ascriptor 的 harness：
+
+```python
+from ascend_fla.ops.kda import chunk_kda_fwd
+o, state = chunk_kda_fwd(q, k, v, g, beta, initial_state=h0,
+                         output_final_state=True, impl="stable")   # impl 默认就是 stable
+```
+
+验证见 `tests/test_kda_layer_npu.py` 与 `benchmarks/` 下的扫描脚本。
+
+**尚未做：harness 集成。** unit 协议的 `unit.py`（`make_inputs`/`reference`/`execute`）与
+`run.py` 需要对接 ascriptor 的 `_unit_runner`，还没写，所以这个单元还不能用
+`ascriptor run` 独立跑。`contract.json` 的 `support` 里如实标了证据来源。
+记在 `docs/matrix/gaps.json` 的 `stable-unit-no-harness`。

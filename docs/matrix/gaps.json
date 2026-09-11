@@ -166,8 +166,8 @@
       "applies_to": [
         "all"
       ],
-      "evidence": "238（Ascend950PR_957b / CANN 9.1.0）上 $ASCEND_OPP_PATH/built-in/op_impl/ai_core/tbe/kernel/ 只有 ascend910_93 与 ascend910b 两个 SoC 目录。torch.randn(device='npu') 报 aclnnInplaceNormal_1_StatelessNormalAiCore 找不到 JSON 配置；torch.zeros、bf16->fp32 Cast 同样失败。torch 本身是 2.10.0+cpu。 【2026-09-11 补充】另一台 8 卡 Ascend950PR 机器（CANN 9.2.0，innerversion V100R001C25B046）的 opp 下有 **ascend950** 算子包，SoC 报 Ascend950PR_9579，实测 randn / zeros / fp32+bf16 matmul / bf16↔fp32 cast / permute+contiguous / einsum / cumsum 全部可用。所以这不是 SoC 级缺陷，而是**算子包安装差异**：CANN 9.1.0 的 opp 只装了 910 系列。",
-      "impact": "选机器决定能做什么：装了 ascend950 算子包的机器上 torch_npu 基线与 layer 级验证都可做；没装的机器上只能跑自编译 kernel（empty/H2D/D2H/data_ptr/stream 可用，计算算子全不可用）。runtime 桥在两种机器上都工作 —— 这正是它的价值。",
+      "evidence": "CANN 9.1.0 的那台 Ascend950PR（见 machine_specs.md）上 $ASCEND_OPP_PATH/built-in/op_impl/ai_core/tbe/kernel/ 只有 ascend910_93 与 ascend910b 两个 SoC 目录。torch.randn(device='npu') 报 aclnnInplaceNormal_1_StatelessNormalAiCore 找不到 JSON 配置；torch.zeros、bf16->fp32 Cast 同样失败。torch 本身是 2.10.0+cpu。 【2026-09-11 补充】另一台 8 卡 Ascend950PR 机器（CANN 9.2.0，innerversion V100R001C25B046）的 opp 下有 **ascend950** 算子包，SoC 报 Ascend950PR_9579，实测 randn / zeros / fp32+bf16 matmul / bf16↔fp32 cast / permute+contiguous / einsum / cumsum 全部可用。所以这不是 SoC 级缺陷，而是**算子包安装差异**：CANN 9.1.0 的 opp 只装了 910 系列。\n【2026-09-11 再补充】缺算子包时**跨步视图的 D2H 也不可用** —— 它要走 NPU 侧的 `Slice`。最小复现（形状 [1,128,2,8]，对应 C=2 的 g_cumsum）：\n  `dev[:, 63::64].cpu()` → RuntimeError：`Op Slice does not has any binary` / `launch failed for Slice, errno:561000`\n  `dev.cpu()[:, 63::64]` → 一致\n  同一块张量按 C=1 切（`[:, 127::128]`，只取一行）→ 两种写法**都一致**，因为切片等效连续。\n这条 C=1/C≥2 的分界正好解释了一次真实失败：`chunk_kda_bwd` 里 `g_last = g_cumsum[:, 63::64]` 绕 CPU 时，single_chunk 与 grouped_idle_cores（都是 C=1）通过，multi_chunk / grouped_heads / gentle_decay（都是 C≥2）全挂。**是硬报错不是静默出错** —— 我最初写成「静默给出错误数据」，最小复现证伪了。修法：先整块 D2H 再在 CPU 上切。",
+      "impact": "选机器决定能做什么：装了 ascend950 算子包的机器上 torch_npu 基线与 layer 级验证都可做；没装的机器上只能跑自编译 kernel（empty/H2D/D2H/data_ptr/stream 可用，计算算子全不可用）。runtime 桥在两种机器上都工作 —— 这正是它的价值。 【2026-09-11 修正】「runtime 桥在两种机器上都工作」只对**前向**成立。训练路径要在 host 侧补三个反向检查点（`fwd-caches-not-emitted`），那一段是 torch 算子 —— 在缺算子包的机器上原本直接失败。已加 CPU 绕行；层级验证仍然只能在有 ascend950 算子包的机器上做（层里的投影/卷积/softplus/RMSNorm 全是 torch_npu 算子）。 另外：算子入口现在**要求输入连续**并在不满足时报错（`chunk.py` 与 `chunk_bwd.py` 的 `_check`）。在这种机器上「悄悄 .contiguous() 一下」根本做不到 —— device 上要 d2d copy，跨步 D2H 要 Slice，两条都缺，所以只能报错。",
       "blocks": [],
       "proposed_action": "三条路：① 性能基线改用 ascriptor 自己的 profile 子命令 + 自编译 kernel 之间的对比；② 在有完整算子包的机器上做 torch_npu 基线（a2/910B3 有 ascend910b）；③ 确认是否存在 950PR 的算子包可安装。选哪条取决于基线要回答的问题 —— 要对比 ascriptor vs torch_npu 就必须有内置算子，换机器是最直接的。",
       "resolution": "2026-09-11 改用带 ascend950 算子包的 CANN 9.2.0 机器后，⑤ torch_npu 基线与第二期 layer 验证的阻塞均解除。选机器时先查 $ASCEND_OPP_PATH/built-in/op_impl/ai_core/tbe/kernel/ 下是否有 ascend950 目录 —— 这一步应进入任何 A5 任务的开机检查。"
@@ -366,12 +366,12 @@
         "kda"
       ],
       "evidence": "kda_bwd 的 unit.py validate_inputs 要求 saved 恰好含九项：g_cumsum/w/u/qg/kg/v_new 为 (B,T,HV,128)、Aqk/Akk 为 (B,T,HV,64)、h 为 (B,C,HV,128,128)，全 bf16、token-major。前向 kernel 直接产出的只有 w/u/qg/kg（kda_sub3_wy_kernel）、Aqk（kda_sub2_score_kernel）、Akk（tril_inverse64_v2_strict_bf16_kernel）六项。gate kernel 只写 eg = 2**g_cumsum，不写 cumsum 本身；kda_sub45_fused_kernel 内部算了逐 chunk 状态 h 与 v_new = u - w @ h，但只写出 o 与 final_state。单元自己是用 CPU 参考 build_saved_forward() 造 saved 的，不是用 kernel。 | **代价已实测**（benchmarks/bench_kda_train_step.py，Ascend950PR / CANN 9.2.0，bf16，warmup 2 / iters 5，同步）：kimi_linear_layer 形状下补检查点 1.053ms（bd=1）/ 1.065ms（bd=4），long_context 4.242 / 4.351ms —— **随 block_dim 基本不变**，因为它是 torch 算子而不是我们的 kernel。于是它的占比随 block_dim 上升：fwd+bwd 的 7%（bd=1）→ 21%（bd=4）。",
-      "impact": "autograd 的前向必须补齐这三项。g_cumsum 可由 log2(eg) 得到（一次 elementwise）；h 与 v_new 只能重跑 chunk 递推，当前在 host 侧用 torch 做（C 次迭代 × 2 次 bmm）。\n**修正先前的判断**：我曾写它是\"反向链的性能瓶颈\"，实测不是 —— kimi_linear_layer / bd=4 下它占 21%，而九个反向 kernel 占 53%（2.690ms / 5.069ms）。它是一笔确定的、值得收的账，但不是主因。**真正要紧的是它不随核数缩短**：block_dim 上限若被抬高（block-dim-ceiling），kernel 侧会继续变快而这一段不会，占比会继续涨。",
+      "impact": "autograd 的前向必须补齐这三项。g_cumsum 可由 log2(eg) 得到（一次 elementwise）；h 与 v_new 只能重跑 chunk 递推，当前在 host 侧用 torch 做（C 次迭代 × 2 次 bmm）。\n**修正先前的判断**：我曾写它是\"反向链的性能瓶颈\"，实测不是 —— kimi_linear_layer / bd=4 下它占 21%，而九个反向 kernel 占 53%（2.690ms / 5.069ms）。它是一笔确定的、值得收的账，但不是主因。**真正要紧的是它不随核数缩短**：block_dim 上限若被抬高（block-dim-ceiling），kernel 侧会继续变快而这一段不会，占比会继续涨。\n**2026-09-11 新发现的第二个后果：它让训练路径依赖内置算子包，而纯前向路径不依赖。**`_scan_states` 与检查点的降 bf16 用的是 Cast / bmm / stack，在只装了 910 算子包的机器上全部不可用 —— 实测表现为 `copy_d2d_baseformat_opapi … error code is 561103` + `Cast ADD_TO_LAUNCHER_LIST_AICORE failed`。这推翻了「我们自己编译的 kernel 在两种机器上都不受影响」这句话的适用范围：它对**前向**成立，对**训练**不成立，因为训练要补的三项检查点不在 kernel 里。已加 `on_cpu` 绕行（`_scan_states(on_cpu=)`、`chunk_kda_bwd` 的 `layout_device`），把检查点生产和那一次 strided `contiguous()` 整段搬到 CPU —— 这是**可用性**开关不是性能开关。把三项挪进 kernel 之后这些绕行可以删掉。",
       "blocks": [
         "phase 2 性能",
         "phase 3"
       ],
-      "proposed_action": "按 AGENTS.md §3 在本仓 kernels/ 下建自己的单元：做一个 kda_sub45_fused_kernel 的变体，额外写出 h 与 v_new（两个 GM 输出 + store，内部量已有），再做一个 gate 变体直接写 g_cumsum。改 ascriptor 仓是不允许的。优先级排在 block-dim-ceiling 之后 —— 先抬核数上限，那一项的收益更大，而且抬完之后这一项的占比才真正凸显。"
+      "proposed_action": "按 AGENTS.md §3 在本仓 kernels/ 下建自己的单元：做一个 kda_sub45_fused_kernel 的变体，额外写出 h 与 v_new（两个 GM 输出 + store，内部量已有），再做一个 gate 变体直接写 g_cumsum。改 ascriptor 仓是不允许的。优先级排在 block-dim-ceiling 之后 —— 先抬核数上限，那一项的收益更大，而且抬完之后这一项的占比才真正凸显。\n做完之后顺带删掉 `_scan_states(on_cpu=…)` 与 `chunk_kda_bwd(layout_device=…)` 两处绕行。"
     },
     {
       "id": "modules-are-torch-not-kernels",
@@ -430,25 +430,71 @@
     },
     {
       "id": "gate-range-beyond-declared",
-      "title": "按 fla 的默认初始化，KDA 层的门控跨度(~94) 越过算子的 fp32 上溢线(~88.7)",
+      "title": "【已根治·前向】按 fla 默认初始化的门控跨度(~94) 超出 a5.kda_fwd 的 fp32 域(~87)；本仓 kda_fwd_stable 把域扩到 ~156",
       "category": "numerics",
-      "severity": "P1",
+      "severity": "resolved",
       "applies_to": [
         "kda"
       ],
-      "evidence": "**上溢阈值实测**（benchmarks 侧扫门控倍数，B1/T64/H1/HV1）：chunk 内跨度 1.11→66.84 时前向全部有限且相对 L2 稳定在 2.86e-03~2.98e-03（**完全没有退化**）；跨度 89.12 与 111.40 时o 与 final_state 均出现 NaN/Inf。分界正是 ``ln(FLT_MAX) ≈ 88.72`` —— kernel 把成对衰减分解成 ``exp(g−m)·exp(m−g)``，后一项在跨度超过它时 fp32 上溢。\n**层侧跨度实测**：KDA 层按 fla 自己的初始化（A_log = log(U(1,16)) → exp(A_log) ≈ 15.35；dt_bias 为 Mamba inv-softplus → dt ∈ [0.001, 0.096]）给出的 per-token g 最大约 -15.35 × 0.096 ≈ -1.47，64 token 累计约 **-94**，已越线。跨度**几乎与输入尺度无关**（scale 0.5→94.04、0.01→92.97），由那两个参数的初始化决定。\n**对比声明域**：contract 的 input_generation 是 g_raw ∈ [-0.03, 0]，即跨度 ≤1.92 —— 比失效阈值还窄 46 倍。\n**反向精度对门控深度的依赖也已实测**：gentle_decay case（gate_multiplier=0.03）下 dk=5.40e-03、dg=6.20e-03，同形状的 multi_chunk（×1）下是 dk=9.17e-02、dg=1.65e-01，差一个数量级 —— 与契约给出的成因一致（bf16 对 log2 累积门控的舍入在深衰减下改变乘性导数）。\n钉在 tests/test_kda_layer_npu.py 的 test_layer_default_init_overflows_the_operator 与 test_layer_gate_span_exceeds_declared_domain。",
-      "impact": "① **按 fla 的默认初始化，这个算子直接不可用** —— 不是精度变差，是吐 NaN。② 此前所有前向/反向精度数都测在跨度 ≤1.92 的窄域里，而那是真实模型不会出现的区间，不能外推到层级/模型级。③ 向量化 CPU 参考在跨度 >80 时自己也上溢，宽域下不能当 oracle，只能用逐 token 递推版。④ fla 用 safe_gate / lower_bound 给门控设界，而我们把这两个开关判为不支持 —— 等于把这个风险留给调用方。",
-      "blocks": [
-        "phase 3"
+      "evidence": "**根因（我第一次归因错了，记在这里）**：最初写的是 `exp(m−g)` 在 `ln(FLT_MAX)≈88.72` 处**上溢**。逐 kernel 二分后证伪 —— 实际是 gate kernel 只写 `eg = exp(gc)`，它在 `-ln(FLT_MIN_NORMAL) ≈ 87.3` 处**下溢**到恰好 0.0（NPU 把非规格化数清零），下游 intra 的 `k/eg` 变成 `0×inf`、wy 的 `eg_last/eg` 变成 `0/0`。证据：失效时 `eg` 的最小值恰为 0.0，输出全 NaN、零个 Inf —— 上溢会先给 Inf。方向相反，修法也不同，所以这条纠正必须留着。\n**上游失效点实测**（B1/T64/H1/HV1，o 对逐 token 递推 oracle 的相对 L2）：跨度 1.11/11.14/44.56/66.84 → 2.956/2.939/2.975/2.925e-03（完全不退化）；≥89.12 → 全 NaN。\n**层侧跨度实测**：按 fla 自己的初始化（A_log=log(U(1,16)) → exp(A_log)≈15.35；dt_bias 为 Mamba inv-softplus → dt ∈ [0.001,0.096]），per-token g 最大约 -1.47，64 token 累计约 **-94**，已越线。跨度**几乎与输入尺度无关**（scale 0.5→94.04、0.01→92.97），由那两个参数的初始化决定。\n**修复后实测**（本仓 kernels/projects/a5/kda_fwd_stable）：跨度 89.12/111.40/133.68/155.97 → 2.924/3.191/3.053/2.850e-03，全部有限；**重叠域内与上游四位有效数字相同**。层级：默认初始化下整层前向相对 L2 = 4.697e-03（预算 0.05）。\n钉在 tests/test_kda_layer_npu.py 的 test_default_init_needs_stable_impl、test_default_init_forward_matches_recurrent_oracle 与 test_layer_gate_span_exceeds_declared_domain。",
+      "impact": "修复前：**按 fla 的默认初始化这个算子直接不可用** —— 不是精度变差，是吐 NaN，第三期的模型注入无从开始。修复后前向在真实初始化下可用且准。\n仍然成立的两点：① 此前所有精度数都测在跨度 ≤1.92 的窄域里，宽域的数要单独看（已补，见上）；② 向量化 CPU 参考在跨度 >80 时自己也上溢，宽域下**只能**用逐 token 递推版当 oracle。",
+      "resolution": "走的是当初三条路里的 ①（改成数值稳定形式，不改数学），不是 ② 的 lower_bound（那会改数学）。AGENTS.md §3 规定不改 ascriptor 仓，所以在本仓 kernels/projects/a5/kda_fwd_stable 建了派生单元，改三个 VF 的逐元素算术：gate 额外输出 log 空间 cumsum；intra 按逐通道中点 m[d]=gc[L-1,d]/2 把两个指数因子都压到 ±span/2（配对时 m 抵消）；wy 用 exp(gc_last−gc) 代替 eg_last/eg。inverse 与 recurrent 不用改 —— 它们只用绝对量，下溢到 0 正是「完全衰减」的正确结果。\n`ops/kda/chunk.py` 的 `impl` 参数默认 `\"stable\"`，`MAX_GATE_SPAN` 成了 `{\"upstream\": 80.0, \"stable\": 160.0}`，门控检查照旧默认开（超出仍报错，不静默）。",
+      "resolved_at": "2026-09-11",
+      "follow_ups": [
+        "gate-span-still-bounded",
+        "stable-unit-no-harness"
       ],
-      "proposed_action": "已加门控：ops/kda/chunk.py 的 MAX_GATE_SPAN=80 + check_gate_range（默认开），超限报错而不是让 kernel 吐 NaN。**但这只是把静默失败变成了明确失败，没有扩大可用域。**\n第三期模型注入前必须做决策，三条路：① 在 ascriptor 侧把成对衰减改成稳定形式（减去行最大值再做减法，不要分解成两个 exp 相乘）—— 这是根治，且不改数学；② 实现 fla 的 lower_bound 式门控下界 —— **会改变数学**，需显式决策，不能当数值修补；③ 在宽域下用递推 oracle 重测，若契约预算在那里仍成立且只是窄域没覆盖，则推动 ascriptor 扩 cases。不要因为窄域测试全绿就认为算子在真实模型上可用。"
+      "blocks": [],
+      "proposed_action": "无。残余约束另立 gate-span-still-bounded。"
+    },
+    {
+      "id": "stable-unit-no-harness",
+      "title": "本仓的 kda_fwd_stable 单元还不能用 ascriptor harness 独立跑",
+      "category": "verification",
+      "severity": "P2",
+      "applies_to": [
+        "kda"
+      ],
+      "evidence": "kernels/projects/a5/kda_fwd_stable/ 目前有 contract.json、README.md 与三个 kernel 文件，但缺 unit 协议要求的 unit.py（make_inputs/reference/execute）与 run.py —— 它们要对接 ascriptor 的 _unit_runner。现在的验证全部经本仓 runtime 桥 + pytest 做。",
+      "impact": "① 拿不到 ascriptor harness 的 sim / pipesim / cannsim 几个 stage 的证据，也就用不上它的逐 stage checkpoint 比对（那对定位 kernel 内部错误很有用）。② 这个单元不能被 ascriptor 侧的人独立复现，不利于把修法推回上游。contract.json 的 support 里已如实标注证据来源，没有假装有 harness 证据。",
+      "blocks": [],
+      "proposed_action": "补 unit.py 与 run.py。reference 可以直接用 ascend_fla/reference/kda.py 的逐 token 递推版（它没有跨度上限，正是宽域下唯一可用的 oracle）。做完后把 contract.json 的 support 按 harness 实际结果更新。"
+    },
+    {
+      "id": "bwd-gate-range-overflow",
+      "title": "【已根治】反向的 finalize_pre/post 在门控跨度 >88.7 时**上溢**到 inf（与前向的下溢是独立的一处）",
+      "category": "numerics",
+      "severity": "resolved",
+      "applies_to": [
+        "kda"
+      ],
+      "evidence": "**这条是我修完前向之后读反向源码发现的，不是测出来的 —— 最初以为修了前向就完事。**\nascriptor `kda_bwd` 的 `finalize_pre.py:61,64` 与 `finalize_post.py:81,84` 把 chunk 内成对衰减分解成两个因子，锚点取 chunk 末行 `g_last`：\n  rscale = exp((g − g_last)·ln2)   g − g_last ≥ 0 → 最大 exp(+span)\n  cscale = exp((g_last − g)·ln2)   ≤ 0            → 最小 exp(−span)\n`rscale` 是**真上溢**（前向那边是下溢，方向相反）。而 `finalize_pre` 的 `q_scaled` / `k_scaled` / `kg` 是 **bf16** GM 输出（kernel 签名如此），bf16 与 fp32 的上溢线都在 `ln(MAX) ≈ 88.72`。\n**本机纯算术复现**（照抄那四行，不需要 NPU）：span 1.92/66.84/88.72 时 rscale 最大 6.82e+00 / 1.07e+29 / 3.39e+38，`q_scaled`(bf16) 有限；span 94.00 起 rscale = **inf**、`q_scaled` = **inf**，同时 cscale = 1.50e-41 使 `kg`(bf16) = **0** —— 下游 finalize_pair 的四个矩阵乘里 `inf × 0 = NaN`。94 正是 fla 默认初始化的 KDA 层给出的跨度。\n**为什么契约的五个 case 全绿却没暴露**：它们的 `gate_multiplier` 最大 1，跨度 ≤1.92，离失效线 46 倍远。\n**真机实测**（Ascend950PR / CANN 9.1.0，B1/T64/H1/HV1，block_dim=1，直接调 chunk_kda_fwd_with_caches + chunk_kda_bwd，数六个梯度里非有限元素的个数；逐档表格见 docs/plan.md 的「门控跨度：两处、两个方向」）：\nupstream 在跨度 1.12 / 11.17 / 50.26 / 74.83 下六项梯度全部有限，**89.35 一步跨过去就全坏** —— dh0 16384/16384、dk·dv·dg 各 8192/8192、dbeta 64/64、dq 689/8192（到 125.09 时 dq 也满了）。与 88.72 这条线吻合。\nstable 在 1.12 → 149.66 的全部七档里六项梯度**全部有限**；到 174.23 时 dq/dk/dbeta/dg 各有 64 个元素坏 —— `_gate_span` 报的是**逐通道的最大**跨度，所以边缘上只有最深的那个通道越界，这与理论上限 2×88.72 = 177.4 吻合。\n**重叠域内 stable 与 upstream 的逐梯度相对 L2**（同上配置，取前 64 个元素）：跨度 1.12 时 dq 6.04e-04 / dk 2.18e-03 / dv 0 / dbeta 2.99e-04 / dg 2.30e-03 / dh0 0；跨度 74.83 时 dq 1.87e-03 / dk 3.88e-03 / dv 0 / dbeta 5.73e-05 / dg 6.99e-03 / dh0 0。\n**不是 0，但也不该是 0。** 改锚点在实数上是恒等变形，可中间量落在 bf16 GM 上 —— 换锚点就换了舍入发生的位置。`dv` / `dh0` 逐位相同（它们不经过被重标的那条路），这反过来证明差异只来自重标那条路而不是别处写错。量级与已量化的 fwd/bwd dtype 降精度（2.2e-03~2.4e-03）同档，远在契约预算（dk 0.15 / dg 0.25）内。",
+      "impact": "① **前向修好不等于能训练。** `kda_fwd_stable` 把前向可用跨度扩到 ~156，但反向在 88.7 就上溢 —— 按 fla 默认初始化（跨度 ~94）做训练仍然拿到 NaN 梯度。\n② 更糟的是**门控检查会放过它**：`MAX_GATE_SPAN[\"stable\"] = 160` 是按前向定的，跨度 94 过检查、前向正常、反向吐 NaN —— 这正是 AGENTS.md §7 要避免的静默失败。\n③ 直接阻塞第三期的模型注入（训练路径）。",
+      "blocks": [],
+      "proposed_action": "无。残余的跨度上限见 gate-span-still-bounded。",
+      "status_note": "**还差一项**：默认初始化（跨度 ~94）下整层反向的精度。需要有 ascend950 算子包的机器（层里的投影/卷积/softplus 都是 torch_npu 算子，CANN 9.1.0 那台跑不了），测试已写好 —— `tests/test_kda_layer_npu.py::test_default_init_backward_matches_cpu_reference`。算子层面的证据已齐（有限性 + 五个 case 的精度），所以这条标 resolved；层级那项是确认，不是未知。\n**过程里有一次归因错误值得留着**：C≥2 的三个 case 一开始全挂，我判为「跨步视图的 D2H 静默给出错误数据」。最小复现证伪了 —— 它是**硬报错**（`Op Slice does not has any binary` / `errno:561000`），因为跨步 D2H 要 NPU 侧的 Slice 算子，而那台机器的算子包里没有。修法（先整块 D2H 再切）不变，但机制写错了就会误导下一个人。记在 npu-builtin-ops-missing。",
+      "resolved_at": "2026-09-11",
+      "resolution": "与前向同一个思路：锚点由区间端点 `g_last` 改成中点 `g_last/2`，两个因子各压到 ±span/2，上限翻倍到 `2 × 88.72 ≈ 177`。**锚点可以任选** —— `rscale_i · cscale_j = exp(g_i − g_j)` 与锚点无关，而 finalize_pair 的四个矩阵乘全是成对的（`Mqk@kg.T` 后乘 rscale、`Mqk.T@q_scaled` 后乘 cscale、`Mbase@kg.T` 后乘 rscale、`Mbeta.T@k_scaled` 后乘 cscale），常数逐项抵消。已逐行核对 `finalize_post` 里 rscale/cscale 的全部四处用法，没有落单的。其余七个 kernel 不用改：指数都 ≤1，下溢到 0 正是「完全衰减」的正确结果。\nAGENTS.md §3 不改 ascriptor 仓，所以建了本仓单元 `kernels/projects/a5/kda_bwd_stable`，每个文件 4 行实质改动 + 改名（一个算子名一份 build）。`impl=\"stable\"` 默认生效，同时选前向与反向两条链，不提供分开的开关。\n**实测**：有限性到 169.76（上游 89.35 起全坏），契约五个 case 全部通过且与上游反向三位有效数字全同 —— 逐项数见 ops.json 的 a5.kda_bwd_stable.our_status.evidence。"
+    },
+    {
+      "id": "gate-span-still-bounded",
+      "title": "稳定化只把门控跨度上限翻倍（~160），没有去掉上限",
+      "category": "numerics",
+      "severity": "P2",
+      "applies_to": [
+        "kda"
+      ],
+      "evidence": "`kda_fwd_stable` / `kda_bwd_stable` 走的是**对称分解**：把 `exp(g_i − g_j)` 拆成两个以中点为锚的因子，各压到 ±span/2。理论上限因此正好翻倍 —— 前向 `2 × -ln(FLT_MIN_NORMAL) ≈ 174.7`，反向 `2 × ln(BF16_MAX) ≈ 177.4`，`MAX_GATE_SPAN[\"stable\"]` 取 160 留余量。前向实测到 155.97 仍不退化（相对 L2 2.850e-03）。\n**为什么不能彻底去掉上限**：要用 matmul 在通道维求和就必须把成对量分解成两个单边因子，而单边因子一定要落到 bf16 GM。能做到的最好是对称分解。\n**跨度不随 T 增长** —— 它是 chunk 内（64 token）的量，cumsum 每 chunk 重置，所以长序列不会把它推高。推高它的是 `exp(A_log)` 与 `dt` 的乘积。",
+      "impact": "① fla 默认初始化给出跨度 ~94，离 160 还有 1.7 倍余量，**当前可用**。但 `A_log` 与 `dt_bias` 都是可训练参数，训练中 `dt` 变大会把跨度推高 —— 训练久了可能撞上限。届时表现是门控检查**报错**（不是 NaN），这是设计如此，但会中断训练。\n② 门控检查默认开，每次前向对 g 做一次 cumsum + 两次规约，实测 0.212ms / 步（bd=4 / kimi_linear_layer，占训练步 4%）。确知安全时可 `check_gate_range=False` 关掉。",
+      "blocks": [],
+      "proposed_action": "现在不做。真撞上限时的下一步：把 64×64 的 tile 再按行列分块，每对子块用各自的中点（等价于分块 log-sum-exp），上限随分块数线性增长。代价是更多的 matmul 调用与更复杂的掩码 —— 在有真实训练曲线证明需要之前不值得。\n另一条是 fla 的 `lower_bound` / `safe_gate`：给门控设下界。那**会改变数学**，属于模型侧决策，不能当数值修补悄悄加上（本仓目前显式拒绝这两个开关）。"
     }
   ],
   "summary": {
     "P0": 0,
-    "P1": 13,
-    "P2": 9,
-    "total": 29,
+    "P1": 12,
+    "P2": 11,
+    "total": 32,
     "first_milestone": "第一期五项已全部有结论，并补齐了同机性能对比：aclnn 编译、runtime 桥、kda_fwd 接线、KDA 本地基线均实测通过；自编译算子在 block_dim=4 下比 torch_npu 组合快 4.43x（kimi_linear_layer）/ 2.38x（long_context T=4096）/ 19.7x（smoke）。过程中修掉两个自己的 bug（bridge-per-call-overhead、op-name-collision-in-process），它们先后让 block_dim 的效果被完全掩盖。当前最大的性能项是 block-dim-ceiling（已升 P1）：扩展性一路线性到契约上限 4，而硬件有 28 cube。第二期的前置障碍仍是 kda-fwd-bwd-dtype-mismatch。",
     "recommended_first_target": "KDA（Kimi-Linear / fla-kda-default 形状）。其 ABI 已是 token-major BTHK、GQA 原生支持、initial_state 与 final_state 均为 FP32、backward 产出 dh0 —— 上述多数 ABI 缺口对它都不适用。唯一需要前置补齐的是本地验证证据（kda-no-local-evidence）。",
     "kda_vs_gdn": {
@@ -465,6 +511,6 @@
         "本地 validation.json 证据齐全"
       ]
     },
-    "resolved": 7
+    "resolved": 9
   }
 }

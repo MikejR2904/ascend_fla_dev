@@ -39,11 +39,13 @@ import torch
 
 from .chunk import (
     BWD_CACHE_NAMES,
+    IMPLS,
     HEAD_DIM,
     L_PER_CHUNK,
     VALUE_DIM,
     SUPPORTED_BLOCK_DIM,
     _kernels_root,
+    _resolve_layout,
 )
 
 __all__ = ["chunk_kda_bwd", "kda_bwd_kernels"]
@@ -59,6 +61,15 @@ _KERNEL_MODULES = {
     "finalize_pair": "finalize_pair_kernel",
     "finalize_post": "finalize_post_kernel",
     "finalize_reduce": "finalize_reduce_kernel",
+}
+
+#: 本仓 ``kda_bwd_stable`` 单元覆盖的两个 kernel。其余七个仍用上游的。
+#: 为什么只这两个：它们是反向里唯一把成对衰减分解成两个指数相乘的地方。
+#: ``inverse_epilogue`` / ``scan_fused`` 里的 ``exp(g)`` / ``exp(g_last−g)`` 都 ≤1，
+#: 下溢到 0 正是「完全衰减」的正确结果，不存在 0×inf。
+_STABLE_BWD_KERNELS = {
+    "finalize_pre": "finalize_pre_stable_kernel",
+    "finalize_post": "finalize_post_stable_kernel",
 }
 
 
@@ -77,20 +88,44 @@ def _bwd_kernels_root() -> pathlib.Path:
     return root
 
 
-@functools.lru_cache(maxsize=1)
-def kda_bwd_kernels() -> dict[str, Any]:
+def _stable_bwd_root() -> pathlib.Path:
+    """本仓自有单元 ``kernels/projects/a5/kda_bwd_stable`` 的位置。"""
+    root = pathlib.Path(__file__).resolve().parents[3] / "kernels/projects/a5/kda_bwd_stable"
+    if not (root / "kernels").is_dir():
+        raise FileNotFoundError(f"找不到本仓的 kda_bwd_stable 单元（试了 {root}）")
+    return root
+
+
+@functools.lru_cache(maxsize=2)
+def kda_bwd_kernels(impl: str = "stable") -> dict[str, Any]:
     """按文件逐个加载九个 kernel。
 
     不 import 单元的 ``kernels`` 包 —— 它的 ``stages.py`` 依赖 ``_unit_runner``
     （harness 专用），而九个 kernel 文件本身只依赖 ``ascriptor.a5``。
+
+    Args:
+        impl: ``"stable"``（默认）把 ``finalize_pre`` / ``finalize_post`` 换成本仓
+            ``kda_bwd_stable`` 单元的版本；``"upstream"`` 全用 ascriptor 的。
+            **必须与前向的 impl 一致** —— 两边对可用门控跨度的上限不同，混用会让
+            门控检查挡不住实际会失效的那一侧。
     """
-    root = _bwd_kernels_root() / "kernels"
-    out = {}
+    if impl not in IMPLS:
+        raise ValueError(f"impl 只能是 {IMPLS}，收到 {impl!r}")
+    up_dir = _bwd_kernels_root() / "kernels"
+    st_dir = _stable_bwd_root() / "kernels" if impl == "stable" else None
+    plan = []
     for stem, fn_name in _KERNEL_MODULES.items():
-        path = root / f"{stem}.py"
+        if st_dir is not None and stem in _STABLE_BWD_KERNELS:
+            plan.append((st_dir, stem, _STABLE_BWD_KERNELS[stem], "st"))
+        else:
+            plan.append((up_dir, stem, fn_name, "up"))
+
+    out = {}
+    for root_dir, stem, fn_name, tag in plan:
+        path = root_dir / f"{stem}.py"
         if not path.is_file():
             raise FileNotFoundError(f"缺少 kernel 文件 {path}")
-        spec = importlib.util.spec_from_file_location(f"_afla_kda_bwd_{stem}", path)
+        spec = importlib.util.spec_from_file_location(f"_afla_kda_bwd_{tag}_{stem}", path)
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
         out[stem] = getattr(module, fn_name)
@@ -98,12 +133,12 @@ def kda_bwd_kernels() -> dict[str, Any]:
 
 
 @functools.lru_cache(maxsize=None)
-def _compiled_chain(device: str, block_dim: int) -> dict[str, Any]:
-    """(device, block_dim) → 已编译的九个 kernel。理由同前向的 ``_compiled_chain``。"""
+def _compiled_chain(device: str, block_dim: int, impl: str = "stable") -> dict[str, Any]:
+    """(device, block_dim, impl) → 已编译的九个 kernel。理由同前向的 ``_compiled_chain``。"""
     from ...runtime.compile import compile_kernel
 
     return {name: compile_kernel(fn, device=device, block_dim=block_dim)
-            for name, fn in kda_bwd_kernels().items()}
+            for name, fn in kda_bwd_kernels(impl).items()}
 
 
 def _check(q, k, v, beta, do, dht, caches, block_dim) -> tuple[int, int, int, int]:
@@ -138,6 +173,11 @@ def _check(q, k, v, beta, do, dht, caches, block_dim) -> tuple[int, int, int, in
             raise ValueError(f"{name} 的 dtype 应为 bfloat16（kda_bwd ABI），收到 {tensor.dtype}")
         if tensor.device.type != "npu":
             raise ValueError(f"{name} 应在 NPU 上，收到 device={tensor.device}")
+        if not tensor.is_contiguous():
+            raise ValueError(
+                f"{name} 必须是连续张量，收到 stride={tuple(tensor.stride())}；"
+                f"理由同 chunk.py 的 _check"
+            )
 
     if set(caches) != set(BWD_CACHE_NAMES):
         raise ValueError(
@@ -158,6 +198,8 @@ def _check(q, k, v, beta, do, dht, caches, block_dim) -> tuple[int, int, int, in
             raise ValueError(f"caches[{name!r}] 应为 {shape}，收到 {tuple(got.shape)}")
         if got.dtype != torch.bfloat16:
             raise ValueError(f"caches[{name!r}] 的 dtype 应为 bfloat16，收到 {got.dtype}")
+        if not got.is_contiguous():
+            raise ValueError(f"caches[{name!r}] 必须是连续张量，收到 stride={tuple(got.stride())}")
     return b, h, hv, c
 
 
@@ -172,6 +214,8 @@ def chunk_kda_bwd(
     *,
     device: str = "a5",
     block_dim: int = 1,
+    impl: str = "stable",
+    layout_device: str = "auto",
 ) -> dict[str, torch.Tensor]:
     """KDA 分块反向。
 
@@ -185,6 +229,11 @@ def chunk_kda_bwd(
             由 :func:`~ascend_fla.ops.kda.chunk.chunk_kda_fwd_with_caches` 产出。
         device: ascriptor 设备名。
         block_dim: 启动核组数，只接受 ``SUPPORTED_BLOCK_DIM``。
+        impl: ``"stable"``（默认）或 ``"upstream"``，见 :func:`kda_bwd_kernels`。
+            **要与造 caches 时用的前向 impl 一致。**
+        layout_device: 取 ``g_last`` 那一次 strided ``contiguous()`` 在哪做。``"auto"``
+            时探测内置算子包是否可用（见 ``chunk.py`` 的 ``_resolve_layout``）—— 缺算子包
+            的机器上 NPU 侧的 d2d copy 不可用，要绕 CPU。
 
     Returns:
         ``{"dq", "dk", "dv", "dbeta", "dg", "dh0"}``，全部 bfloat16。
@@ -192,9 +241,12 @@ def chunk_kda_bwd(
         ``[B,T,HV,128]``，``dbeta`` 为 ``[B,T,HV]``，``dh0`` 为 ``[B,HV,128,128]``。
     """
     b, h, hv, c = _check(q, k, v, beta, do, dht, caches, block_dim)
-    compiled = _compiled_chain(device, block_dim)
+    compiled = _compiled_chain(device, block_dim, impl)
     dev = q.device
     t = c * L_PER_CHUNK
+    # 本函数只有两处用到内置算子：g_last 的 strided contiguous() 与 dw 的取负。
+    # 缺算子包的机器上两处都要绕 CPU（见 chunk.py 的 _resolve_layout 与 AGENTS.md §5）。
+    on_cpu_layout = _resolve_layout(layout_device)
 
     def empty(shape, dtype=torch.bfloat16):
         return torch.empty(*shape, dtype=dtype, device=dev)
@@ -206,8 +258,19 @@ def chunk_kda_bwd(
     state = (b, hv, HEAD_DIM, VALUE_DIM)
 
     # ---- scan：沿 chunk 反向扫 ----
-    # g_last 取每个 chunk 的末行；dht 按 (B,HV,64,256) 看（kernel 的 GM 声明如此）
-    g_last = caches["g_cumsum"][:, L_PER_CHUNK - 1::L_PER_CHUNK].contiguous()
+    # g_last 取每个 chunk 的末行；dht 按 (B,HV,64,256) 看（kernel 的 GM 声明如此）。
+    # 这个 strided contiguous() 是本函数唯一一处内置算子依赖 —— 缺算子包的机器要绕 CPU。
+    # ⚠️ 绕 CPU 时必须**先整块 D2H 再切**，不能对跨步视图直接 .cpu()。
+    # 缺内置算子包的机器上，跨步视图的 D2H 要走 NPU 侧的 `Slice`，而那个算子不在包里：
+    # 实测抛 `Op Slice does not has any binary` / `errno:561000`（最小复现见
+    # gaps.json 的 npu-builtin-ops-missing）。C=1 时切片只取一行、等效连续，所以碰巧能过 ——
+    # 表现就是 single_chunk 通过而 multi_chunk / grouped_heads / gentle_decay 三个 C≥2 的
+    # case 全挂。整块 g_cumsum 本身连续，D2H 是一次纯 memcpy，切和 contiguous 都在 CPU 上做。
+    if on_cpu_layout:
+        g_last = caches["g_cumsum"].cpu()[:, L_PER_CHUNK - 1::L_PER_CHUNK] \
+            .contiguous().to(dev)
+    else:
+        g_last = caches["g_cumsum"][:, L_PER_CHUNK - 1::L_PER_CHUNK].contiguous()
     d_aqk, dh, dv_scan, dh0 = (empty(tok_l), empty((b, c, hv, HEAD_DIM, VALUE_DIM)),
                                empty(tok_d), empty(state))
     compiled["scan_fused"](
@@ -228,7 +291,8 @@ def chunk_kda_bwd(
          "d_v_beta": d_v_beta, "d_k_beta_g": d_k_beta_g},
     )
     # ⚠️ stages.py 在 host 侧对这一项取负才得到 dw。漏掉负号不报错，只会让梯度系统性偏。
-    dw = -d_vh
+    # Neg 也是内置算子 —— 缺算子包的机器上要绕 CPU（同 g_last 那处）。
+    dw = (-d_vh.cpu()).to(dev) if on_cpu_layout else -d_vh
 
     dq_hv, dk_hv = empty(tok_d), empty(tok_d)
     dv_out, dg_core, k_exp = empty(tok_d), empty(tok_d), empty(bhcld)
