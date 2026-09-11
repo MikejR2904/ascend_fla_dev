@@ -274,6 +274,17 @@ def gaps_section(gaps: dict) -> list[str]:
         out.append("| " + " | ".join(row) + " |")
     out.append("")
 
+    if policy := s.get("kernel_fix_policy"):
+        out += ["### 待统一修复的 kernel 问题", "", f"> {policy}", ""]
+        queue = [g for g in gaps["gaps"] if g.get("requires_kernel_change")]
+        order = {"P0": 0, "P1": 1, "P2": 2, "P3": 3}
+        queue.sort(key=lambda g: (order.get(g["severity"], 9), g["id"]))
+        out += ["| 缺口 | 级别 | 要在 kernel 侧改什么 |", "|---|---|---|"]
+        for g in queue:
+            note = g.get("kernel_change_note", "—").replace("\n", " ")
+            out.append(f"| `{g['id']}` | {g['severity']} | {note} |")
+        out.append("")
+
     for sev in ("P0", "P1", "P2"):
         items = [g for g in gaps["gaps"] if g["severity"] == sev]
         if not items:
@@ -314,6 +325,22 @@ def validate(models: dict, ops: dict, gaps: dict) -> list[str]:
         problems.append(f"gaps.json: summary.total={gaps['summary'].get('total')}，实际 {len(gaps['gaps'])}")
 
     # 缺口 id 不得重复
+    # 统一修复队列：summary 里的列表与各条的 requires_kernel_change 必须一致 ——
+    # 两处各写一遍就会漂移，而这张表的用处全在"没漏项"上
+    marked = [g["id"] for g in gaps["gaps"] if g.get("requires_kernel_change")]
+    declared = gaps["summary"].get("kernel_fix_queue")
+    if declared is not None and declared != marked:
+        problems.append(
+            f"gaps.json: summary.kernel_fix_queue 与打了 requires_kernel_change 的条目不一致"
+            f"（队列 {len(declared)} 项，实际 {len(marked)} 项）")
+    for g in gaps["gaps"]:
+        if g.get("requires_kernel_change") and not g.get("kernel_change_note"):
+            problems.append(f"gaps.json: {g['id']} 要改 kernel 但没写 kernel_change_note")
+        if g.get("requires_kernel_change") and g["severity"] == "resolved":
+            problems.append(f"gaps.json: {g['id']} 已 resolved 却还在 kernel 修复队列里")
+    if declared and f"当前队列 {len(declared)} 项" not in gaps["summary"].get("kernel_fix_policy", ""):
+        problems.append("gaps.json: kernel_fix_policy 里写的队列条数与实际不符")
+
     dupes = {gid for gid in gap_ids if sum(g["id"] == gid for g in gaps["gaps"]) > 1}
     problems += [f"gaps.json: 缺口 id 重复 {gid!r}" for gid in sorted(dupes)]
 

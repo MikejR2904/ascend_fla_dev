@@ -202,6 +202,33 @@ P0 1 项 · P1 12 项 · P2 9 项 · 已解决 11 项 · 共 33 项
 | GDN | — | `gdn-no-gqa`<br>`layout-not-token-major`<br>`nonzero-initial-state`<br>`d-initial-state-absent`<br>`state-dtype-bf16`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`scale-param-no-slot`<br>`no-tail-path`<br>`block-dim-ceiling` | `npu-builtin-ops-missing`<br>`fixed-kv-128`<br>`asymmetric-kv-dim` |
 | DeltaNet | — | `layout-not-token-major`<br>`nonzero-initial-state`<br>`d-initial-state-absent`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`scale-param-no-slot`<br>`no-tail-path` | `npu-builtin-ops-missing`<br>`fixed-kv-128`<br>`asymmetric-kv-dim` |
 
+### 待统一修复的 kernel 问题
+
+> **kernel 源码层面的问题统一修一轮，不零散改。** 这是 2026-09-11 定的：发现一条就去改一条，会在 ascriptor 侧留下一串互相干扰的小改动，而且每改一次都要重跑全部 case。做法：发现时把它记进本表并打 `requires_kernel_change`，本仓侧先按 AGENTS.md §7 **装闸报错或记为声明限制**，保证不静默出错；等攒够一批再统一进 ascriptor 侧（§3：本仓不改那个仓，要改走那一侧的流程或建本仓派生单元）。当前队列 20 项，见下表。
+
+| 缺口 | 级别 | 要在 kernel 侧改什么 |
+|---|---|---|
+| `c1-multihead-o-corrupt` | P0 | kda_fwd/kernels/recurrent.py 的手写同步：pair 循环跨头时缺一次 L0C/L1 的同步，C≥2 时被 chunk 循环第二遍掩盖。**只掌握症状规律（每核最后一个头对），还没定位到确切缺哪一次 DEvent/Mutex 配对** —— 修之前必须先找出来。 |
+| `block-dim-ceiling` | P1 | kda_fwd/kda_bwd 的 contract domain.block_dim 上限由 4 抬高并补 case。物理 28 cube / 56 vec，实测到 4 仍是线性扩展，所以这是当前最大的单点性能头寸。 |
+| `d-initial-state-absent` | P1 | gdn / delta_rule 的 backward 产出 dh0。 |
+| `fused-recurrent-missing` | P1 | decode 路径的 kernel 整族缺失（逐 token 递推）。 |
+| `gdn-no-gqa` | P1 | gdn_fwd/bwd 加独立 value-head 维度。 |
+| `layout-not-token-major` | P1 | gdn / delta_rule 的公开布局改 token-major。 |
+| `no-tail-path` | P1 | kda kernel 加 partial chunk 的 tail 路径，解除 T % 64 == 0。 |
+| `no-varlen` | P1 | kda kernel 支持 cu_seqlens（变长序列打包）。 |
+| `nonzero-initial-state` | P1 | gdn / delta_rule 支持非零初始 state。 |
+| `qk-l2norm-not-in-kernel` | P1 | 把 q/k 的 L2 归一化、门控变换、beta sigmoid 融进 kernel（fla 的 KDA 在 kernel 内做）。 |
+| `scale-param-no-slot` | P1 | 给 scale 参数开 kernel 标量入口。 |
+| `state-dtype-bf16` | P1 | gdn 的 final_state 由 bf16 改 fp32。 |
+| `state-layout-k-first` | P1 | state 布局支持 v-first（fla 的 KDA layer 用 state_v_first=True）。 |
+| `asymmetric-kv-dim` | P2 | 拆开 K 与 V 的维度，支持 head_k != head_v。 |
+| `fixed-kv-128` | P2 | 解除 K=V=128 定尺。 |
+| `fwd-caches-not-emitted` | P2 | kda_fwd 的 gate / wy / recurrent 各多写一个 GM 输出：g_cumsum（stable 已有）、v_new、h。搬进 kernel 后 _scan_states 与两处 CPU 绕行可以一起删掉。 |
+| `gate-span-still-bounded` | P2 | 若要继续抬门控跨度：把 64×64 tile 按行列分块、每对子块用各自的中点（等价分块 log-sum-exp），有限性上限随分块数线性增长。**但反向的约束是精度不是有限性，这一项可能帮不上忙** —— 先做 kda-fwd-bwd-dtype-mismatch。 |
+| `kda-fwd-bwd-dtype-mismatch` | P2 | kda_bwd 九个 kernel 的 g_cumsum 入参由 bf16 改 fp32（前向入口的 g 本来就是 fp32）。这是降低反向精度曲线的主要候选 —— 但**是推测，要测**。 |
+| `kernel-nd2nz-suboptimal` | P2 | ascriptor lint 标出的访存低效点：nd2nz 展开、偶数 block stride 撞 UB bank。lint 信息里带了板上实测倍数与具体改法，照着做即可。 |
+| `modules-are-torch-not-kernels` | P2 | causal_conv1d / RMSNorm / FusedRMSNormGated 目前是 torch 算子。 |
+
 ### P0
 
 #### `c1-multihead-o-corrupt` — 【P0·静默错误】C=1 且一个 cube 核要处理多个头时，kda_sub45_fused_kernel 写出内容错误的 o

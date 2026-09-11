@@ -21,7 +21,9 @@
       "impact": "① **T=64 的前向输出是错的**（HV>block_dim 时），错得没有任何信号：有限值、量级正常、`final_state` 还对。短 prompt 的 prefill 正好落在这里 —— kimi 形状 HV=32、bd=4 时 32 个头里只有 4 个对。\n② 训练同样中招：梯度本身没问题，但**前向输出错 → loss 错**，所以 T=64 的训练步是垃圾。\n③ 之前所有精度结论都不受影响 —— 它们用的形状要么 HV=1（安全），要么 C≥2（安全）。这也是它藏了两期没被发现的原因。",
       "blocks": [],
       "proposed_action": "**已做**：`ops/kda/chunk.py` 的 `_check` 里加了 `_check_single_chunk_heads`，`C==1 and B*HV > block_dim` 直接报错并给出两条绕法（AGENTS.md §7：绝不静默降级）。闸的边界照实测表逐个钉在 tests/test_kda_gating.py 里 —— 这类缺陷一旦闸被改松，没有别的东西会报警。\n**要做（按代价排序）**：\n① 按头分批调用：C=1 时把 `B*HV` 切成每批 ≤ block_dim 个头，多发几次 kernel。数学完全不变（头之间独立，已由头独立性检查证明），代价是多几次发射。**这是可用性修复，但会悄悄改变性能特征，要显式声明而不是默默做掉。**\n② 建本仓派生单元修手写同步（照 kda_fwd_stable / kda_bwd_stable 的先例，AGENTS.md §3 不改 ascriptor 仓）。要先读懂 `recurrent.py` 的 DEvent/Mutex 配对 —— 目前只掌握了**症状规律**（每核最后一个头对）而不是确切缺哪一次同步，动手前必须先把那个找出来，否则改了也不知道为什么好。\n③ 上游补 case：`C=1 且 HV≥2`。这条不管我们怎么修都该做，否则上游下次改这个 kernel 还会踩。",
-      "status_note": "**方法论上的一条：形状维度要像量程维度那样逐格扫。** 门控跨度那次的教训是「把整条链同类算式列一遍」，这次是同一句话的形状版 —— 契约的 case 在 (C, HV) 平面上只覆盖了 (1,1) 与 (2,2) 两个点，而 (1,2) 就是坏的。**两个维度各自全绿，不等于它们的组合全绿。**\n过程里有一步差点走错：第一反应是怀疑本仓主机侧的 `_from_bhcld` 重排（因为 `o` 经过它、`final_state` 不经过），但**直接比裸 kernel 输出（BHCLD，未经重排）错得一样**（1.672e-01），才把锅定到 kernel。先测再归因，不要因为「只有这个量经过那段代码」就认定是那段代码。"
+      "status_note": "**方法论上的一条：形状维度要像量程维度那样逐格扫。** 门控跨度那次的教训是「把整条链同类算式列一遍」，这次是同一句话的形状版 —— 契约的 case 在 (C, HV) 平面上只覆盖了 (1,1) 与 (2,2) 两个点，而 (1,2) 就是坏的。**两个维度各自全绿，不等于它们的组合全绿。**\n过程里有一步差点走错：第一反应是怀疑本仓主机侧的 `_from_bhcld` 重排（因为 `o` 经过它、`final_state` 不经过），但**直接比裸 kernel 输出（BHCLD，未经重排）错得一样**（1.672e-01），才把锅定到 kernel。先测再归因，不要因为「只有这个量经过那段代码」就认定是那段代码。",
+      "requires_kernel_change": true,
+      "kernel_change_note": "kda_fwd/kernels/recurrent.py 的手写同步：pair 循环跨头时缺一次 L0C/L1 的同步，C≥2 时被 chunk 循环第二遍掩盖。**只掌握症状规律（每核最后一个头对），还没定位到确切缺哪一次 DEvent/Mutex 配对** —— 修之前必须先找出来。"
     },
     {
       "id": "kda-fwd-bwd-dtype-mismatch",
@@ -34,7 +36,9 @@
       "evidence": "kda_fwd inputs：beta float32、initial_state float32、g_raw float32，final_state 输出 float32。kda_bwd inputs：beta bfloat16、initial_state bfloat16、g bfloat16、dht bfloat16。 | 2026-09-11 量化（benchmarks/quantify_bwd_dtype_mismatch.py，CPU fp32 参考 + autograd，四个形状 smoke/multi_chunk/gva/kimi_shaped 结论一致）。把三个效应拆开，基准为全程 fp32：A 保存值走 bf16 往返（bwd kernel 实际看到的输入）：dq/dk/dv/dg 相对 L2 1.4e-03~1.6e-03，dbeta 1.6e-04，dinitial_state 3.3e-04。B 梯度输出舍到 bf16（bwd ABI 的输出精度）：一律 ~1.65e-03。C 两者叠加：2.17e-03~2.37e-03，且 C ≈ √(A²+B²)（1.633²+1.686² → 2.347 vs 实测 2.370）—— 两个效应相互独立，没有病态放大。",
       "impact": "**降精度不免费，但与契约已声明的输出精度同量级。** B（输出舍到 bf16）是 bwd ABI 规定的，无论如何都要付；A（保存值降精度）把总误差从 1.65e-03 的地板抬到 2.3e-03，即 ×1.4。没有引入新性质的误差，因此第二期可以按 .to(bfloat16) 组装 autograd，把这个数记在案。注意这是**算子级**相对 L2，按 AGENTS.md §6 的纪律不能外推成任务级精度结论 —— 要声称对训练的影响，得跑任务级实验并拆出\"替换实现\"与\"改精度\"两个对照组。",
       "blocks": [],
-      "proposed_action": "已量化，不再阻塞第二期。组装 autograd 时照 bwd ABI 降到 bf16，但**显式**做、在 docstring 里写明代价，不要当成无害的类型适配。若后续任务级实验显示不可接受，再回头推动 bwd ABI 接受 FP32（那是 ascriptor 侧的改动）。"
+      "proposed_action": "已量化，不再阻塞第二期。组装 autograd 时照 bwd ABI 降到 bf16，但**显式**做、在 docstring 里写明代价，不要当成无害的类型适配。若后续任务级实验显示不可接受，再回头推动 bwd ABI 接受 FP32（那是 ascriptor 侧的改动）。",
+      "requires_kernel_change": true,
+      "kernel_change_note": "kda_bwd 九个 kernel 的 g_cumsum 入参由 bf16 改 fp32（前向入口的 g 本来就是 fp32）。这是降低反向精度曲线的主要候选 —— 但**是推测，要测**。"
     },
     {
       "id": "gdn-no-gqa",
@@ -50,7 +54,9 @@
         "qwen3-next-80b-a3b",
         "phase 4"
       ],
-      "proposed_action": "第四期做 GDN 扩族时一并解决，实现可借鉴 kda 已有的 HV%H==0 分区方式。严重度因第一期改走 KDA 而由 P0 降至 P1。"
+      "proposed_action": "第四期做 GDN 扩族时一并解决，实现可借鉴 kda 已有的 HV%H==0 分区方式。严重度因第一期改走 KDA 而由 P0 降至 P1。",
+      "requires_kernel_change": true,
+      "kernel_change_note": "gdn_fwd/bwd 加独立 value-head 维度。"
     },
     {
       "id": "layout-not-token-major",
@@ -66,7 +72,9 @@
       "blocks": [
         "phase 4"
       ],
-      "proposed_action": "GDN 接线时让 kernel 内部做 permute（照 kda 的做法），而不是把转换推给调用方。"
+      "proposed_action": "GDN 接线时让 kernel 内部做 permute（照 kda 的做法），而不是把转换推给调用方。",
+      "requires_kernel_change": true,
+      "kernel_change_note": "gdn / delta_rule 的公开布局改 token-major。"
     },
     {
       "id": "nonzero-initial-state",
@@ -82,7 +90,9 @@
       "blocks": [
         "phase 4"
       ],
-      "proposed_action": "GDN 扩族时照 kda_fwd 的方式加非零初始 state 入口。在此之前，门控必须对 GDN 传入非零 initial_state 的调用报错。"
+      "proposed_action": "GDN 扩族时照 kda_fwd 的方式加非零初始 state 入口。在此之前，门控必须对 GDN 传入非零 initial_state 的调用报错。",
+      "requires_kernel_change": true,
+      "kernel_change_note": "gdn / delta_rule 支持非零初始 state。"
     },
     {
       "id": "d-initial-state-absent",
@@ -98,7 +108,9 @@
       "blocks": [
         "phase 4"
       ],
-      "proposed_action": "记录为 GDN/DeltaNet 的已知限制。门控应在 initial_state.requires_grad 时报错。"
+      "proposed_action": "记录为 GDN/DeltaNet 的已知限制。门控应在 initial_state.requires_grad 时报错。",
+      "requires_kernel_change": true,
+      "kernel_change_note": "gdn / delta_rule 的 backward 产出 dh0。"
     },
     {
       "id": "state-dtype-bf16",
@@ -111,7 +123,9 @@
       "evidence": "gdn_fwd contract outputs.final_state: bfloat16 [B,H,128,128]。对比 kda_fwd 的 final_state 为 float32。",
       "impact": "state 是跨 chunk 累积量，BF16 存储的误差会进入下一段递推。影响幅度未在 A5 上测过。KDA 不受影响。",
       "blocks": [],
-      "proposed_action": "GDN 接线时测：同形状下 BF16 state 与 FP32 state 的输出差异，长 C（如 C=64）下是否放大。不要沿用 A2 上的结论。"
+      "proposed_action": "GDN 接线时测：同形状下 BF16 state 与 FP32 state 的输出差异，长 C（如 C=64）下是否放大。不要沿用 A2 上的结论。",
+      "requires_kernel_change": true,
+      "kernel_change_note": "gdn 的 final_state 由 bf16 改 fp32。"
     },
     {
       "id": "fused-recurrent-missing",
@@ -128,7 +142,9 @@
       "blocks": [
         "phase 3"
       ],
-      "proposed_action": "第三期为 KDA 新写（非接线），以 fla.ops.kda.fused_recurrent_kda 为语义基准。GDN/DeltaNet 的 decode 路径随各自扩族再补。"
+      "proposed_action": "第三期为 KDA 新写（非接线），以 fla.ops.kda.fused_recurrent_kda 为语义基准。GDN/DeltaNet 的 decode 路径随各自扩族再补。",
+      "requires_kernel_change": true,
+      "kernel_change_note": "decode 路径的 kernel 整族缺失（逐 token 递推）。"
     },
     {
       "id": "no-varlen",
@@ -141,7 +157,9 @@
       "evidence": "kda_fwd contract domain.scope 明确写 \"Fixed length; no cu_seqlens, cp_context, safe_gate, gate fusion or state_v_first\"。其余单元 ABI 亦均为规整形状。",
       "impact": "训练常用的 sequence packing 无法使用，等长 padding 会浪费算力。顺带：gate fusion 不支持，意味着 g 必须在 kernel 外算好再传入。",
       "blocks": [],
-      "proposed_action": "列为开放问题（见 docs/plan.md §7）。短期门控拒绝。gate 在外计算对 KDA layer 是自然的（f_proj 本就是 Linear），不构成阻塞。"
+      "proposed_action": "列为开放问题（见 docs/plan.md §7）。短期门控拒绝。gate 在外计算对 KDA layer 是自然的（f_proj 本就是 Linear），不构成阻塞。",
+      "requires_kernel_change": true,
+      "kernel_change_note": "kda kernel 支持 cu_seqlens（变长序列打包）。"
     },
     {
       "id": "scale-param-no-slot",
@@ -157,7 +175,9 @@
       "blocks": [
         "phase 4"
       ],
-      "proposed_action": "优先在 kernel 内吸收 scale（已有 q 的读取点可顺带乘）。第一期若先用 host 预乘打通，必须在性能报告中标注这部分开销。"
+      "proposed_action": "优先在 kernel 内吸收 scale（已有 q 的读取点可顺带乘）。第一期若先用 host 预乘打通，必须在性能报告中标注这部分开销。",
+      "requires_kernel_change": true,
+      "kernel_change_note": "给 scale 参数开 kernel 标量入口。"
     },
     {
       "id": "no-tail-path",
@@ -170,7 +190,9 @@
       "evidence": "kda_fwd domain.tails：\"T=C*64; partial chunks, K/V tails, fp16, and L=32 are rejected by this authored kernel unit.\" 其余单元同为 \"No L/D tails\"。",
       "impact": "任意序列长度的推理与训练都需要 host 侧 padding，或拒绝。另：fp16 与 L=32 同样被拒绝。",
       "blocks": [],
-      "proposed_action": "门控显式报错并给出最近的合法 T。padding 方案要在性能报告中算进开销。"
+      "proposed_action": "门控显式报错并给出最近的合法 T。padding 方案要在性能报告中算进开销。",
+      "requires_kernel_change": true,
+      "kernel_change_note": "kda kernel 加 partial chunk 的 tail 路径，解除 T % 64 == 0。"
     },
     {
       "id": "npu-builtin-ops-missing",
@@ -215,7 +237,9 @@
       "blocks": [
         "phase 4"
       ],
-      "proposed_action": "已有答案：是声明限制。下一步是在 ascriptor 侧把 kda_fwd/kda_bwd 的 domain.block_dim 上限抬高并补 cases 覆盖（contract 的 core_ownership 说 gate 按 B*HV*C 切、scores/WY/inverse 按 cube 组切、融合尾部按 B*HV 头对切 —— kimi 形状下 B*HV=32、B*HV*C=512，工作量足够喂满 28 核）。kernel 源码归 ascriptor 仓所有（AGENTS.md §3：只读），改动要走那一侧。本仓的 SUPPORTED_BLOCK_DIM 与 contract 的声明由 tests/test_kda_gating.py 锁在一起，抬高后会同时提醒。"
+      "proposed_action": "已有答案：是声明限制。下一步是在 ascriptor 侧把 kda_fwd/kda_bwd 的 domain.block_dim 上限抬高并补 cases 覆盖（contract 的 core_ownership 说 gate 按 B*HV*C 切、scores/WY/inverse 按 cube 组切、融合尾部按 B*HV 头对切 —— kimi 形状下 B*HV=32、B*HV*C=512，工作量足够喂满 28 核）。kernel 源码归 ascriptor 仓所有（AGENTS.md §3：只读），改动要走那一侧。本仓的 SUPPORTED_BLOCK_DIM 与 contract 的声明由 tests/test_kda_gating.py 锁在一起，抬高后会同时提醒。",
+      "requires_kernel_change": true,
+      "kernel_change_note": "kda_fwd/kda_bwd 的 contract domain.block_dim 上限由 4 抬高并补 case。物理 28 cube / 56 vec，实测到 4 仍是线性扩展，所以这是当前最大的单点性能头寸。"
     },
     {
       "id": "fixed-kv-128",
@@ -230,7 +254,9 @@
       "blocks": [
         "fla-gated-deltanet-default"
       ],
-      "proposed_action": "不去支持它 —— 那是 fla 的参考默认值，不是落地模型规格。两个真实目标模型都是 128。门控明确拒绝并在错误信息中说明。"
+      "proposed_action": "不去支持它 —— 那是 fla 的参考默认值，不是落地模型规格。两个真实目标模型都是 128。门控明确拒绝并在错误信息中说明。",
+      "requires_kernel_change": true,
+      "kernel_change_note": "解除 K=V=128 定尺。"
     },
     {
       "id": "asymmetric-kv-dim",
@@ -245,7 +271,9 @@
       "blocks": [
         "fla-gated-deltanet-default"
       ],
-      "proposed_action": "与 fixed-kv-128 同样处置：两个真实目标模型都是 head_k == head_v == 128，不去支持非对称维度。门控拒绝并说明。"
+      "proposed_action": "与 fixed-kv-128 同样处置：两个真实目标模型都是 head_k == head_v == 128，不去支持非对称维度。门控拒绝并说明。",
+      "requires_kernel_change": true,
+      "kernel_change_note": "拆开 K 与 V 的维度，支持 head_k != head_v。"
     },
     {
       "id": "modules-layer-missing",
@@ -340,7 +368,9 @@
       "evidence": "编译 kda_fwd 时 ascriptor lint 在 intra.py(2)、triangular_inverse.py(8)、wy.py(2)、recurrent.py(3) 共 15 处报同一条 warning：ub_to_l1.nd2nz 会展开成多次 MTE3 burst（每个 NZ fractal 列一次），不是单条指令，板上实测比 compact-NZ move 慢 10 倍（D-084）。lint 还给了第二条：staging tile 的自然 block stride 是 tile 行数（天然 16 对齐，正好是 bank 阶梯最差的一档，~8.7 cycle/store vs ~1.1），补一行 padding 让它变奇数；D-226 里两个返工的 kernel 上这步收益 -12.3us / -10.8us（总量 -17.7us / -28.2us），比换 move 本身更大。 | 反向侧同族线索：scan_fused.py:53 的 snapshot_and_cast_state_vf 报\"strided block store with an even block stride (64)\" —— 连续 datablock 撞同一组 UB bank、store 口串行化，板上实测比奇数 stride 慢 ~2x、在 16 的倍数上慢 ~8x（同一条 D-084）；处置同样是把目标行补 1 让 stride 变奇数（65）。",
       "impact": "这 15 处在 kernel 源码里，不在本仓。按 D-226 的比例，单 kernel 量级的收益在数十微秒 —— 但要先确认设备侧耗时占比（见 bridge-per-call-overhead），占比低的话改了也看不出来。 反向侧的占比尚未测 —— 当前反向的瓶颈在 host 侧补检查点（fwd-caches-not-emitted），要先换掉那一段，kernel 级优化才看得出效果。",
       "blocks": [],
-      "proposed_action": "第四期。kernel 源码归 ascriptor 仓所有（AGENTS.md §3：只读），所以这里只登记线索，改动要走 ascriptor 侧。动手前先用 benchmarks/profile_bridge_overhead.py 确认设备侧占比足够大，否则是在优化一个不在关键路径上的东西。"
+      "proposed_action": "第四期。kernel 源码归 ascriptor 仓所有（AGENTS.md §3：只读），所以这里只登记线索，改动要走 ascriptor 侧。动手前先用 benchmarks/profile_bridge_overhead.py 确认设备侧占比足够大，否则是在优化一个不在关键路径上的东西。",
+      "requires_kernel_change": true,
+      "kernel_change_note": "ascriptor lint 标出的访存低效点：nd2nz 展开、偶数 block stride 撞 UB bank。lint 信息里带了板上实测倍数与具体改法，照着做即可。"
     },
     {
       "id": "bridge-per-call-overhead",
@@ -384,7 +414,9 @@
         "phase 2 性能",
         "phase 3"
       ],
-      "proposed_action": "按 AGENTS.md §3 在本仓 kernels/ 下建自己的单元：做一个 kda_sub45_fused_kernel 的变体，额外写出 h 与 v_new（两个 GM 输出 + store，内部量已有），再做一个 gate 变体直接写 g_cumsum。改 ascriptor 仓是不允许的。优先级排在 block-dim-ceiling 之后 —— 先抬核数上限，那一项的收益更大，而且抬完之后这一项的占比才真正凸显。\n做完之后顺带删掉 `_scan_states(on_cpu=…)` 与 `chunk_kda_bwd(layout_device=…)` 两处绕行。"
+      "proposed_action": "按 AGENTS.md §3 在本仓 kernels/ 下建自己的单元：做一个 kda_sub45_fused_kernel 的变体，额外写出 h 与 v_new（两个 GM 输出 + store，内部量已有），再做一个 gate 变体直接写 g_cumsum。改 ascriptor 仓是不允许的。优先级排在 block-dim-ceiling 之后 —— 先抬核数上限，那一项的收益更大，而且抬完之后这一项的占比才真正凸显。\n做完之后顺带删掉 `_scan_states(on_cpu=…)` 与 `chunk_kda_bwd(layout_device=…)` 两处绕行。",
+      "requires_kernel_change": true,
+      "kernel_change_note": "kda_fwd 的 gate / wy / recurrent 各多写一个 GM 输出：g_cumsum（stable 已有）、v_new、h。搬进 kernel 后 _scan_states 与两处 CPU 绕行可以一起删掉。"
     },
     {
       "id": "modules-are-torch-not-kernels",
@@ -397,7 +429,9 @@
       "evidence": "ascend_fla/modules/convolution.py 用 F.conv1d + F.silu；fused_norm_gated.py 用 rsqrt/mean/sigmoid 两趟完成（名字里的 Fused 只为与 fla 对齐，并未融合）。layers/kda.py 里的投影、l2norm、softplus 门控、sigmoid 也都是 torch 算子。",
       "impact": "① 这些步骤在内置算子包不全的机器上不可用（需要 conv1d/silu/matmul），而自编译的 kda 算子本身不受影响 —— 所以层级验证比算子级验证对机器挑剔。② 层级耗时里有一部分不归本仓的\"高效率算子\"管，报层级性能数时必须拆开说，否则会把 torch 的开销算进算子账上。",
       "blocks": [],
-      "proposed_action": "第四期按测得的占比决定做哪些。归一化与门控是 elementwise，融合收益直接；短卷积是 depthwise，值得单独做一个 kernel。动手前先 profile 层级耗时拆分，别重复 bridge-per-call-overhead 那次\"先推断后测量\"的错。"
+      "proposed_action": "第四期按测得的占比决定做哪些。归一化与门控是 elementwise，融合收益直接；短卷积是 depthwise，值得单独做一个 kernel。动手前先 profile 层级耗时拆分，别重复 bridge-per-call-overhead 那次\"先推断后测量\"的错。",
+      "requires_kernel_change": true,
+      "kernel_change_note": "causal_conv1d / RMSNorm / FusedRMSNormGated 目前是 torch 算子。"
     },
     {
       "id": "qk-l2norm-not-in-kernel",
@@ -410,7 +444,9 @@
       "evidence": "fla 的 KimiDeltaAttention 调 chunk_kda 时传 use_qk_l2norm_in_kernel=True、use_gate_in_kernel=True、use_beta_sigmoid_in_kernel=True，即三步都在它的 kernel 里：g 的变换是 -exp(A_log) * softplus(g + dt_bias.view(HV,K))，beta 过 sigmoid，q/k 沿头维 L2 归一化。ascriptor 的 kda_fwd/kda_bwd 的 inlet 只收已经变换好的 q/k/g/beta，contract 里没有 A_log / dt_bias 这两个入口。",
       "impact": "**门控挡不住这一条** —— 没做归一化的 q/k 在数值上完全合法，算子会照算并给出一个静静地错的结果。这是本仓目前唯一\"错了不报错\"的语义缺口，因此列 P1。另外这三步的梯度也落在调用方这边，autograd 链要从层级算起。",
       "blocks": [],
-      "proposed_action": "当前处置：ascend_fla/layers/kda.py 显式做这三步并在 fp32 下做，ops/kda 的 docstring 与 __init__ 写明\"调用方需已做\"。直接调算子的人要自己负责。若要彻底消除风险，得在 ascriptor 侧给 kernel 加 A_log/dt_bias 入口与 l2norm —— 那是第四期的事，收益还包括省掉几趟 elementwise 的访存。"
+      "proposed_action": "当前处置：ascend_fla/layers/kda.py 显式做这三步并在 fp32 下做，ops/kda 的 docstring 与 __init__ 写明\"调用方需已做\"。直接调算子的人要自己负责。若要彻底消除风险，得在 ascriptor 侧给 kernel 加 A_log/dt_bias 入口与 l2norm —— 那是第四期的事，收益还包括省掉几趟 elementwise 的访存。",
+      "requires_kernel_change": true,
+      "kernel_change_note": "把 q/k 的 L2 归一化、门控变换、beta sigmoid 融进 kernel（fla 的 KDA 在 kernel 内做）。"
     },
     {
       "id": "state-layout-k-first",
@@ -425,7 +461,9 @@
       "blocks": [
         "phase 3"
       ],
-      "proposed_action": "第三期在注入层里做转置并加一个显式断言（比如用非对称测试值验证方向）。不要在算子里改布局 —— 算子的布局由 kernel 决定，改它等于改 kernel。"
+      "proposed_action": "第三期在注入层里做转置并加一个显式断言（比如用非对称测试值验证方向）。不要在算子里改布局 —— 算子的布局由 kernel 决定，改它等于改 kernel。",
+      "requires_kernel_change": true,
+      "kernel_change_note": "state 布局支持 v-first（fla 的 KDA layer 用 state_v_first=True）。"
     },
     {
       "id": "opp-path-read-once",
@@ -501,7 +539,9 @@
       "impact": "① fla 默认初始化的跨度上界是 100.8，反向的闸 105 只剩 4% 余量，而实测 HV=8 时 8 个 seed 里就有一个到 100.6。`A_log` 与 `dt_bias` 都是可训练参数，训练中 `dt` 变大就会撞上限 —— 届时是**报错**（设计如此），但会中断训练。要继续得显式 `check_gate_range=False` 并接受超预算的梯度，或者压 `dt`。\n② 门控检查默认开，每次前向对 g 做一次 cumsum + 两次规约，实测 0.212ms / 步（bd=4 / kimi_linear_layer，占训练步 4%）。\n③ **有限性上限（反向 169.76）比声明上限宽**。需要更深跨度又能接受精度退化的调用方，可以自己关掉检查 —— 曲线在 `kda_bwd_stable/contract.json` 的 `accuracy_vs_span` 里，照着选，不要瞎试。",
       "blocks": [],
       "proposed_action": "现在不做。真撞上限时按代价排序：\n① **先查 dq 为什么是约束项**。它在跨度 46 时就已用掉 58% 预算，说明深衰减下 `dq` 的主项（`d_qg · exp(g) · scale`，见 inverse_epilogue）对 bf16 的 `g` 最敏感。若把 `g_cumsum` 检查点从 bf16 升到 fp32（kda_bwd 的 ABI 问题，见 kda-fwd-bwd-dtype-mismatch），这条曲线可能整体下移 —— **这是推测，要测**。\n② 把 64×64 的 tile 再按行列分块，每对子块用各自的中点（等价于分块 log-sum-exp），有限性上限随分块数线性增长。但若约束是精度而不是有限性，这一项帮不上忙。\n③ fla 的 `lower_bound` / `safe_gate`：给门控设下界。那**会改变数学**，属于模型侧决策，不能当数值修补悄悄加上（本仓目前显式拒绝这两个开关）。",
-      "status_note": "**一次被证伪的假设，留着免得别人重走。** 我曾以为跨度 94 处 dq 的 4.55e-02 主要来自反向 ABI 把 `g_cumsum` 定为 bf16（前向入口的 g 是 fp32），即「任何实现都只能这么准」，于是想把判据换成「喂了 bf16 往返 g 的 fp32 参考」。**实测证伪**：算子离 fp32 参考反而更近（跨度 46：对 fp32 的 dq 2.889e-02，对那个参考 4.169e-02；94 档 2.889→6.766e-02）。原因是那个构造把 bf16 cumsum **差分回** per-token 增量，属于灾难性相消；而 kernel 是**直接用** cumsum 去算 `exp(g_i − g_j)`，从不差分回去。所以那不是 ABI 的地板，是构造方式引入的误差 —— 判据仍然是 fp32 递推参考。这段反过来解释了**为什么 kernel 必须直接用 cumsum**，诊断保留在 tests/test_kda_bwd_deep_npu.py 里会打印出来。"
+      "status_note": "**一次被证伪的假设，留着免得别人重走。** 我曾以为跨度 94 处 dq 的 4.55e-02 主要来自反向 ABI 把 `g_cumsum` 定为 bf16（前向入口的 g 是 fp32），即「任何实现都只能这么准」，于是想把判据换成「喂了 bf16 往返 g 的 fp32 参考」。**实测证伪**：算子离 fp32 参考反而更近（跨度 46：对 fp32 的 dq 2.889e-02，对那个参考 4.169e-02；94 档 2.889→6.766e-02）。原因是那个构造把 bf16 cumsum **差分回** per-token 增量，属于灾难性相消；而 kernel 是**直接用** cumsum 去算 `exp(g_i − g_j)`，从不差分回去。所以那不是 ABI 的地板，是构造方式引入的误差 —— 判据仍然是 fp32 递推参考。这段反过来解释了**为什么 kernel 必须直接用 cumsum**，诊断保留在 tests/test_kda_bwd_deep_npu.py 里会打印出来。",
+      "requires_kernel_change": true,
+      "kernel_change_note": "若要继续抬门控跨度：把 64×64 tile 按行列分块、每对子块用各自的中点（等价分块 log-sum-exp），有限性上限随分块数线性增长。**但反向的约束是精度不是有限性，这一项可能帮不上忙** —— 先做 kda-fwd-bwd-dtype-mismatch。"
     }
   ],
   "summary": {
@@ -526,6 +566,29 @@
         "本地 validation.json 证据齐全"
       ]
     },
-    "resolved": 11
+    "resolved": 11,
+    "kernel_fix_policy": "**kernel 源码层面的问题统一修一轮，不零散改。** 这是 2026-09-11 定的：发现一条就去改一条，会在 ascriptor 侧留下一串互相干扰的小改动，而且每改一次都要重跑全部 case。做法：发现时把它记进本表并打 `requires_kernel_change`，本仓侧先按 AGENTS.md §7 **装闸报错或记为声明限制**，保证不静默出错；等攒够一批再统一进 ascriptor 侧（§3：本仓不改那个仓，要改走那一侧的流程或建本仓派生单元）。当前队列 20 项，见下表。",
+    "kernel_fix_queue": [
+      "c1-multihead-o-corrupt",
+      "kda-fwd-bwd-dtype-mismatch",
+      "gdn-no-gqa",
+      "layout-not-token-major",
+      "nonzero-initial-state",
+      "d-initial-state-absent",
+      "state-dtype-bf16",
+      "fused-recurrent-missing",
+      "no-varlen",
+      "scale-param-no-slot",
+      "no-tail-path",
+      "block-dim-ceiling",
+      "fixed-kv-128",
+      "asymmetric-kv-dim",
+      "kernel-nd2nz-suboptimal",
+      "fwd-caches-not-emitted",
+      "modules-are-torch-not-kernels",
+      "qk-l2norm-not-in-kernel",
+      "state-layout-k-first",
+      "gate-span-still-bounded"
+    ]
   }
 }
