@@ -199,7 +199,48 @@ def _check(q, k, v, g, beta, initial_state, block_dim) -> tuple[int, int, int, i
                 f"{name} 必须是连续张量，收到 stride={tuple(x.stride())} "
                 f"shape={tuple(x.shape)}；先自己 .contiguous() 再传进来"
             )
-    return b, h, hv, t // L_PER_CHUNK
+    c = t // L_PER_CHUNK
+    _check_single_chunk_heads(b, hv, c, block_dim)
+    return b, h, hv, c
+
+
+def _check_single_chunk_heads(b: int, hv: int, c: int, block_dim: int) -> None:
+    """C=1 且一个 cube 核要连续处理多个头时，``kda_sub45_fused_kernel`` 的 ``o`` 是错的。
+
+    **这是实测出来的上游 kernel 缺陷，不是定尺限制。** 现象：``o`` 有限、量级正常
+    （``|got| ≈ |ref|``）、**内容错** —— 逐元素比值完全乱。``final_state`` 不受影响，
+    反向也不受影响（它不消费 ``o``）。所以这是最难发现的那一类：没有 NaN、没有报错、
+    范数看起来对。
+
+    失效规律（2026-09-11 实测，H=1，跨度 46，``upstream`` 与 ``stable`` 逐位相同 ——
+    是共享的 ``kda_sub45_fused_kernel``，不是本仓派生引入的）::
+
+        bd=1: HV=2 只有头 1 对   HV=4 只有头 3 对   HV=8 只有头 7 对   HV=16 只有头 15 对
+        bd=2: HV=2 全对          HV=4 头 {1,3} 对    HV=8 头 {3,7} 对    HV=16 头 {7,15} 对
+        bd=4: HV=4 全对          HV=8 头 {1,3,5,7}   HV=16 头 {3,7,11,15}
+
+    正确的恰好是**每个 cube 核分到的最后一个头**。kernel 里
+    ``pair_begin/pair_end`` 按 ``GetCubeIdx()/GetCubeNum()`` 切 ``B*HV``，而
+    ``GetCubeNum() == block_dim``，所以安全条件是 ``B*HV <= block_dim``。
+    C≥2 时全对 —— chunk 循环跑第二遍时补上了缺的那次同步。kernel 源码里那句
+    ``auto sync is not used here because the nested for loops interfere with it``
+    说明同步是手写的，而手写的那份假设了 C≥2。
+
+    **为什么契约的 case 测不到**：``kda_fwd`` 四个 case 里 C=1 的三个都是 HV=1，
+    唯一 HV=2 的那个是 C=2 —— ``C=1 且 HV≥2`` 一个 case 都没覆盖。
+    详见 docs/matrix/gaps.json 的 ``c1-multihead-o-corrupt``。
+    """
+    if c != 1 or b * hv <= block_dim:
+        return
+    raise ValueError(
+        f"C=1（T={L_PER_CHUNK}）且 B*HV={b * hv} > block_dim={block_dim} 时，上游 "
+        f"kda_sub45_fused_kernel 会写出**静默错误**的 o（有限、量级正常、内容错；"
+        f"只有每个 cube 核的最后一个头是对的，本例即 {block_dim}/{b * hv} 个头）。"
+        f"final_state 与反向梯度不受影响。"
+        f"绕法：① T 取 {2 * L_PER_CHUNK} 的倍数（C≥2 时全对，实测）；"
+        f"② 或把 B*HV 降到 ≤{block_dim}（例如按头分批调用）。"
+        f"详见 docs/matrix/gaps.json 的 c1-multihead-o-corrupt"
+    )
 
 
 @functools.lru_cache(maxsize=1)

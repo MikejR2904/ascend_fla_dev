@@ -281,7 +281,8 @@
           "first_nan_at": 88.67,
           "declared_by_contract": 1.92,
           "note": "实测在 ≥88.67 时输出全 NaN。根因是 gate 只写 exp(gc)，它在 -ln(FLT_MIN_NORMAL)≈87.3 下溢到 0（NPU 把非规格化数清零），下游 intra 的 k/eg 与 wy 的 eg_last/eg 于是变成 0×inf 与 0/0。**不是上溢** —— 我最初归因为 ln(FLT_MAX) 的上溢，逐 kernel 二分后证伪。"
-        }
+        },
+        "single_chunk_multihead": "**C=1 且 B*HV > block_dim 时 o 是静默错误的**（上游 kda_sub45_fused_kernel 的手写同步假设了 C≥2）：有限值、量级正常、内容错，只有每个 cube 核的最后一个头对；final_state 与反向梯度不受影响。安全条件 B*HV ≤ block_dim（pair 按 GetCubeIdx()/GetCubeNum() 切 B*HV，而 GetCubeNum()==block_dim）。已在 ops/kda/chunk.py 的 _check 里报错拦掉。详见 gaps.json 的 c1-multihead-o-corrupt。"
       },
       "comparison_budget": {
         "mode": "allclose",
@@ -330,7 +331,7 @@
       "direction": "forward",
       "owner": "本仓",
       "ascriptor_path": "kernels/projects/a5/kda_fwd_stable（本仓自有单元，不在 ascriptor 仓）",
-      "contract_sha256": "246671ce9bca3f0f619d3fd3046c988f1bd90d7b714d41ea17f38ae056364abc",
+      "contract_sha256": "766b3c76dae5b099cba4ce42f4686109ad48b501c2d90d8c0d6b5e9183e4e2df",
       "derived_from": "a5.kda_fwd",
       "leaf_kernels": 5,
       "own_kernels": 3,
@@ -357,7 +358,8 @@
           "theoretical_limit": "2 × -ln(FLT_MIN_NORMAL) ≈ 174.7",
           "upstream_limit": 80.0,
           "note": "gate_span = chunk 内 max(cumsum) − min(cumsum)。两个指数因子各压到 ±span/2，所以上限正好翻倍。recommended_limit 取实测仍不退化的最深点（155.97 向下取整），不取理论值 —— 闸必须落在实测点上。**这是前向的闸**；训练走反向，受 100 约束。"
-        }
+        },
+        "single_chunk_multihead": "**C=1 且 B*HV > block_dim 时 o 是静默错误的**（上游 kda_sub45_fused_kernel 的手写同步假设了 C≥2）：有限值、量级正常、内容错，只有每个 cube 核的最后一个头对；final_state 与反向梯度不受影响。安全条件 B*HV ≤ block_dim（pair 按 GetCubeIdx()/GetCubeNum() 切 B*HV，而 GetCubeNum()==block_dim）。已在 ops/kda/chunk.py 的 _check 里报错拦掉。详见 gaps.json 的 c1-multihead-o-corrupt。"
       },
       "change_vs_upstream": [
         "gate：额外写出 log 空间的 g_cumsum（cumsum 本来就在寄存器里，只多一次 store）。",
@@ -382,7 +384,7 @@
         "binding": "done",
         "accuracy_vs_oracle": "done",
         "perf_vs_baseline": "not-started",
-        "evidence": "**与上游的逐档对照**（B1/T64/H1/HV1，o 对逐 token 递推 oracle 的相对 L2）：\n  跨度    1.11   11.14   44.56   66.84 |  89.12   111.40   133.68   155.97\n  upstream 2.956e-03 2.939e-03 2.975e-03 2.925e-03 |  NaN      NaN      NaN      NaN\n  stable   2.956e-03 2.939e-03 2.975e-03 2.925e-03 | 2.924e-03 3.191e-03 3.053e-03 2.850e-03\n重叠域内两套实现**四位有效数字相同**（不是「接近」，是同一个数），宽域里 stable 不退化。\n层级：默认初始化（跨度 ~94）下整层前向对 CPU 递推 oracle 的相对 L2 = 4.697e-03（预算 0.05），tests/test_kda_layer_npu.py::test_default_init_forward_matches_recurrent_oracle。",
+        "evidence": "**与上游的逐档对照**（B1/T64/H1/HV1，o 对逐 token 递推 oracle 的相对 L2）：\n  跨度    1.11   11.14   44.56   66.84 |  89.12   111.40   133.68   155.97\n  upstream 2.956e-03 2.939e-03 2.975e-03 2.925e-03 |  NaN      NaN      NaN      NaN\n  stable   2.956e-03 2.939e-03 2.975e-03 2.925e-03 | 2.924e-03 3.191e-03 3.053e-03 2.850e-03\n重叠域内两套实现**四位有效数字相同**（不是「接近」，是同一个数），宽域里 stable 不退化。\n层级：默认初始化（跨度 ~94）下整层前向对 CPU 递推 oracle 的相对 L2 = 4.697e-03（预算 0.05），tests/test_kda_layer_npu.py::test_default_init_forward_matches_recurrent_oracle。\n**真实形状精度验收**（2026-09-11，CANN 9.2.0，跨度固定 46 以把差异归因到形状；此前所有误差数的最大 C 是 2、最大 H/HV 是 2）：\n* chunk 链长：kimi 形状 H32/HV32，C=1/2/4/8/16 → o 的相对 L2 （C=1 被新闸拦下，见上）3.185e-03 / 3.248e-03 / 3.245e-03 / 3.265e-03，final_state 2.463e-03 / 2.397e-03 / 2.521e-03 / 2.562e-03 —— **C 从 2 到 16 误差只变 1.04 倍，不随链长累积**。这是 C≤2 上看不出来的那件事。\n* GQA：qwen 形状 H16/HV32（16 组）→ o 3.264e-03、final_state 2.536e-03；逐 v 头误差 3.193e-03~3.335e-03，**离散度只有 1.04 倍**（映射错会表现为某些头明显更差）。\n* 头独立性：第 0/8/15 组单独按 H=1/HV=2 跑，与全量跑的对应切片**逐位相同（0.000e+00）**。",
         "note": "性能未单独测。三个改动都只换了 VF 里的逐元素算术（除法→乘法，多一次 store），矩阵乘结构、流水、掩码一概未动，预期与上游同档 —— 但**这是推断，没 profile 过**（AGENTS.md §6 铁律一）。"
       },
       "fla_counterpart": {

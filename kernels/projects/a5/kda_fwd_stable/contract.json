@@ -4,19 +4,88 @@
   "kind": "project",
   "description": "KDA 定长前向，门控算术改成对深衰减数值稳定的形式。与 a5.kda_fwd 数学同义，可用门控跨度从 ~87 扩到 ~156（实测）。",
   "inputs": {
-    "q": {"dtype": "bfloat16", "shape": ["B", "C*64", "H", 128]},
-    "k": {"dtype": "bfloat16", "shape": ["B", "C*64", "H", 128]},
-    "v": {"dtype": "bfloat16", "shape": ["B", "C*64", "HV", 128]},
-    "g_raw": {"dtype": "float32", "shape": ["B", "C*64", "HV", 128]},
-    "beta": {"dtype": "float32", "shape": ["B", "C*64", "HV"]},
-    "initial_state": {"dtype": "float32", "shape": ["B", "HV", 128, 128]}
+    "q": {
+      "dtype": "bfloat16",
+      "shape": [
+        "B",
+        "C*64",
+        "H",
+        128
+      ]
+    },
+    "k": {
+      "dtype": "bfloat16",
+      "shape": [
+        "B",
+        "C*64",
+        "H",
+        128
+      ]
+    },
+    "v": {
+      "dtype": "bfloat16",
+      "shape": [
+        "B",
+        "C*64",
+        "HV",
+        128
+      ]
+    },
+    "g_raw": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "C*64",
+        "HV",
+        128
+      ]
+    },
+    "beta": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "C*64",
+        "HV"
+      ]
+    },
+    "initial_state": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "HV",
+        128,
+        128
+      ]
+    }
   },
   "outputs": {
-    "o": {"dtype": "bfloat16", "shape": ["B", "C*64", "HV", 128]},
-    "final_state": {"dtype": "float32", "shape": ["B", "HV", 128, 128]},
+    "o": {
+      "dtype": "bfloat16",
+      "shape": [
+        "B",
+        "C*64",
+        "HV",
+        128
+      ]
+    },
+    "final_state": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "HV",
+        128,
+        128
+      ]
+    },
     "g_cumsum": {
       "dtype": "float32",
-      "shape": ["B", "HV", "C", 64, 128],
+      "shape": [
+        "B",
+        "HV",
+        "C",
+        64,
+        128
+      ],
       "note": "自然底的 chunk 内 cumsum。a5.kda_fwd 不输出它；a5.kda_bwd 的九个检查点要它（log2 空间，换底即可）。"
     }
   },
@@ -27,7 +96,12 @@
     "K": 128,
     "V": 128,
     "C": "positive",
-    "block_dim": [1, 2, 3, 4],
+    "block_dim": [
+      1,
+      2,
+      3,
+      4
+    ],
     "gate_span": {
       "max_measured_ok": 155.97,
       "recommended_limit": 155.0,
@@ -36,7 +110,8 @@
       "note": "gate_span = chunk 内 max(cumsum) - min(cumsum)。上游 a5.kda_fwd 在 ≥88.67 时输出 NaN（gate 只写 exp(gc)，它在 -ln(FLT_MIN_NORMAL)≈87.3 下溢到 0，下游的 k/eg 与 eg_last/eg 变成 0×inf 与 0/0）。本单元把除法改成 log 空间的减法，scores 再按逐通道中点对称分解，两个指数因子都压到 ±span/2。recommended_limit 取实测仍不退化的最深点 155.97（向下取整 155），不取理论值 —— 闸必须落在实测点上。**这是前向的上限**；训练要走反向，受 a5.kda_bwd_stable 更严的 105 约束（反向是精度先于有限性失效）。"
     },
     "tails": "T=C*64；与上游一致，partial chunk / K-V tail / fp16 / L=32 均不支持。",
-    "layout": "公开张量 token-major；内部显式重排到 BHCLK / BHVCLK。"
+    "layout": "公开张量 token-major；内部显式重排到 BHCLK / BHVCLK。",
+    "single_chunk_multihead": "**C=1 且 B*HV > block_dim 时 o 是静默错误的**（上游 kda_sub45_fused_kernel 的手写同步假设了 C≥2）：有限值、量级正常、内容错，只有每个 cube 核的最后一个头对；final_state 与反向梯度不受影响。安全条件 B*HV ≤ block_dim（pair 按 GetCubeIdx()/GetCubeNum() 切 B*HV，而 GetCubeNum()==block_dim）。已在 ops/kda/chunk.py 的 _check 里报错拦掉。详见 gaps.json 的 c1-multihead-o-corrupt。"
   },
   "dependencies": {
     "derived_from": "a5.kda_fwd",
@@ -49,7 +124,7 @@
       "kda_sub2_score_stable_kernel",
       "kda_sub3_wy_stable_kernel"
     ],
-    "note": "inverse 与 recurrent 直接复用上游 —— 它们只用绝对量，下溢到 0 本身就是正确结果（完全衰减），不存在 0/0。"
+    "note": "inverse 与 recurrent 直接复用上游 —— 它们只用绝对量，下溢到 0 本身就是正确结果（完全衰减），不存在 0/0。 ⚠️ 共享的 kda_sub45_fused_kernel 有一处独立缺陷：C=1 且 B*HV > block_dim 时 o 内容错（见 domain.single_chunk_multihead）。它与门控跨度无关，upstream 与本单元表现逐位相同。"
   },
   "comparison": {
     "default": {
@@ -61,21 +136,73 @@
     }
   },
   "cases": [
-    {"id": "narrow_gate", "seed": 2026, "block_dim": 1,
-     "parameters": {"B": 1, "H": 1, "HV": 1, "C": 1, "L": 64, "K": 128, "V": 128,
-                    "gate_multiplier": 1, "initial_state": "random"},
-     "note": "与上游 single_chunk 同条件，用于证明窄域下两套实现同义。"},
-    {"id": "deep_gate", "seed": 2026, "block_dim": 1,
-     "parameters": {"B": 1, "H": 1, "HV": 1, "C": 1, "L": 64, "K": 128, "V": 128,
-                    "gate_multiplier": 80, "initial_state": "random"},
-     "note": "跨度约 89 —— 上游在这里开始出 NaN。"},
-    {"id": "very_deep_gate", "seed": 2026, "block_dim": 1,
-     "parameters": {"B": 1, "H": 1, "HV": 1, "C": 1, "L": 64, "K": 128, "V": 128,
-                    "gate_multiplier": 140, "initial_state": "random"},
-     "note": "跨度约 156，本单元实测可用的最深点。"},
-    {"id": "grouped_heads_deep", "seed": 2028, "block_dim": 2,
-     "parameters": {"B": 1, "H": 1, "HV": 2, "C": 2, "L": 64, "K": 128, "V": 128,
-                    "gate_multiplier": 80, "initial_state": "random"}}
+    {
+      "id": "narrow_gate",
+      "seed": 2026,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "H": 1,
+        "HV": 1,
+        "C": 1,
+        "L": 64,
+        "K": 128,
+        "V": 128,
+        "gate_multiplier": 1,
+        "initial_state": "random"
+      },
+      "note": "与上游 single_chunk 同条件，用于证明窄域下两套实现同义。"
+    },
+    {
+      "id": "deep_gate",
+      "seed": 2026,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "H": 1,
+        "HV": 1,
+        "C": 1,
+        "L": 64,
+        "K": 128,
+        "V": 128,
+        "gate_multiplier": 80,
+        "initial_state": "random"
+      },
+      "note": "跨度约 89 —— 上游在这里开始出 NaN。"
+    },
+    {
+      "id": "very_deep_gate",
+      "seed": 2026,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "H": 1,
+        "HV": 1,
+        "C": 1,
+        "L": 64,
+        "K": 128,
+        "V": 128,
+        "gate_multiplier": 140,
+        "initial_state": "random"
+      },
+      "note": "跨度约 156，本单元实测可用的最深点。"
+    },
+    {
+      "id": "grouped_heads_deep",
+      "seed": 2028,
+      "block_dim": 2,
+      "parameters": {
+        "B": 1,
+        "H": 1,
+        "HV": 2,
+        "C": 2,
+        "L": 64,
+        "K": 128,
+        "V": 128,
+        "gate_multiplier": 80,
+        "initial_state": "random"
+      }
+    }
   ],
   "support": {
     "reference": "passed",
@@ -100,7 +227,9 @@
   },
   "release_scope": {
     "version": "0.1.0",
-    "hardware": ["a5"],
+    "hardware": [
+      "a5"
+    ],
     "note": "只支持 A5，与上游一致。"
   }
 }

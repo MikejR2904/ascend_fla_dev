@@ -169,7 +169,7 @@ kimi_linear_layer / bd=4 的拆分（ms）：fwd_kernels 1.314 · caches_host_si
 
 ## 缺口
 
-P0 0 项 · P1 12 项 · P2 10 项 · 已解决 10 项 · 共 32 项
+P0 1 项 · P1 12 项 · P2 10 项 · 已解决 10 项 · 共 33 项
 
 **第一期里程碑**：第一期五项已全部有结论，并补齐了同机性能对比：aclnn 编译、runtime 桥、kda_fwd 接线、KDA 本地基线均实测通过；自编译算子在 block_dim=4 下比 torch_npu 组合快 4.43x（kimi_linear_layer）/ 2.38x（long_context T=4096）/ 19.7x（smoke）。过程中修掉两个自己的 bug（bridge-per-call-overhead、op-name-collision-in-process），它们先后让 block_dim 的效果被完全掩盖。当前最大的性能项是 block-dim-ceiling（已升 P1）：扩展性一路线性到契约上限 4，而硬件有 28 cube。第二期的前置障碍 kda-fwd-bwd-dtype-mismatch 已量化（降 P2）。
 
@@ -198,9 +198,34 @@ P0 0 项 · P1 12 项 · P2 10 项 · 已解决 10 项 · 共 32 项
 
 | 算子族 | P0 | P1 | P2 |
 |---|---|---|---|
-| KDA | — | `fused-recurrent-missing`<br>`no-varlen`<br>`no-tail-path`<br>`block-dim-ceiling`<br>`qk-l2norm-not-in-kernel`<br>`state-layout-k-first` | `kda-fwd-bwd-dtype-mismatch`<br>`npu-builtin-ops-missing`<br>`toy-case-shapes`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`kernel-nd2nz-suboptimal`<br>`fwd-caches-not-emitted`<br>`modules-are-torch-not-kernels`<br>`stable-unit-no-harness`<br>`gate-span-still-bounded` |
+| KDA | `c1-multihead-o-corrupt` | `fused-recurrent-missing`<br>`no-varlen`<br>`no-tail-path`<br>`block-dim-ceiling`<br>`qk-l2norm-not-in-kernel`<br>`state-layout-k-first` | `kda-fwd-bwd-dtype-mismatch`<br>`npu-builtin-ops-missing`<br>`toy-case-shapes`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`kernel-nd2nz-suboptimal`<br>`fwd-caches-not-emitted`<br>`modules-are-torch-not-kernels`<br>`stable-unit-no-harness`<br>`gate-span-still-bounded` |
 | GDN | — | `gdn-no-gqa`<br>`layout-not-token-major`<br>`nonzero-initial-state`<br>`d-initial-state-absent`<br>`state-dtype-bf16`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`scale-param-no-slot`<br>`no-tail-path`<br>`block-dim-ceiling` | `npu-builtin-ops-missing`<br>`toy-case-shapes`<br>`fixed-kv-128`<br>`asymmetric-kv-dim` |
 | DeltaNet | — | `layout-not-token-major`<br>`nonzero-initial-state`<br>`d-initial-state-absent`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`scale-param-no-slot`<br>`no-tail-path` | `npu-builtin-ops-missing`<br>`toy-case-shapes`<br>`fixed-kv-128`<br>`asymmetric-kv-dim` |
+
+### P0
+
+#### `c1-multihead-o-corrupt` — 【P0·静默错误】C=1 且一个 cube 核要处理多个头时，kda_sub45_fused_kernel 写出内容错误的 o
+
+- **类别** correctness · **适用于** KDA · **阻塞** —
+- **依据** **这是真实形状精度验收的第一个产出，而且是最坏的一类缺陷：没有 NaN、没有报错、范数还正常。** 发现路径：按 models.json 的 kimi 形状扫 C=1…16，C=1 那档 `o` 的相对 L2 是 **1.06**（其余档 3.2e-03），而同一次运行的 `final_state` 正常（2.46e-03）。
+**失效规律**（2026-09-11，Ascend950PR / CANN 9.2.0，B=1、H=1、跨度 46，正确 = 相对 L2 < 0.01）：
+| block_dim | HV=2 | HV=4 | HV=8 | HV=16 |
+|---|---|---|---|---|
+| 1 | 仅头 1 | 仅头 3 | 仅头 7 | 仅头 15 |
+| 2 | 全对 | 头 1,3 | 头 3,7 | 头 7,15 |
+| 4 | 全对 | 全对 | 头 1,3,5,7 | 头 3,7,11,15 |
+正确的恰好是**每个 cube 核分到的最后一个头**。kernel 的 `pair_begin = (B*HV * GetCubeIdx()) // GetCubeNum()` 按 cube 核切 `B*HV`，而 `GetCubeNum() == block_dim` —— 所以安全条件是 **`B*HV <= block_dim`**。
+**只在 C=1 出现**：C=2/3/16/64 下全对（HV 到 32 都试过）。chunk 循环跑第二遍时补上了缺的那次同步。kernel 源码里 `recurrent.py:176` 写着 `auto sync is not used here because the nested for loops interfere with it` —— 同步是手写的，而手写的那份假设了 C≥2。
+**范围已逐条核实**：① `upstream` 与 `stable` 的错误值**逐位相同**（都 2.721e-01）→ 是共享的 `kda_sub45_fused_kernel`，不是本仓的 stable 派生引入的；② `final_state` 不受影响；③ **反向不受影响** —— C=1/HV=8 的六项梯度 dq 2.48e-02 / dk 3.94e-02 / dv 3.22e-03 / dbeta 3.35e-03 / dg 7.16e-02 / dh0 2.40e-03，与 C=2 同量级，因为反向不消费 `o`，只消费 `do` 与九个检查点。
+**为什么契约的 case 测不到**：`kda_fwd` 四个 case 里 C=1 的三个都是 HV=1，唯一 HV=2 的那个是 C=2 —— **`C=1 且 HV≥2` 一个 case 都没覆盖**。这正是 toy-case-shapes 说的那件事。
+- **影响** ① **T=64 的前向输出是错的**（HV>block_dim 时），错得没有任何信号：有限值、量级正常、`final_state` 还对。短 prompt 的 prefill 正好落在这里 —— kimi 形状 HV=32、bd=4 时 32 个头里只有 4 个对。
+② 训练同样中招：梯度本身没问题，但**前向输出错 → loss 错**，所以 T=64 的训练步是垃圾。
+③ 之前所有精度结论都不受影响 —— 它们用的形状要么 HV=1（安全），要么 C≥2（安全）。这也是它藏了两期没被发现的原因。
+- **建议** **已做**：`ops/kda/chunk.py` 的 `_check` 里加了 `_check_single_chunk_heads`，`C==1 and B*HV > block_dim` 直接报错并给出两条绕法（AGENTS.md §7：绝不静默降级）。闸的边界照实测表逐个钉在 tests/test_kda_gating.py 里 —— 这类缺陷一旦闸被改松，没有别的东西会报警。
+**要做（按代价排序）**：
+① 按头分批调用：C=1 时把 `B*HV` 切成每批 ≤ block_dim 个头，多发几次 kernel。数学完全不变（头之间独立，已由头独立性检查证明），代价是多几次发射。**这是可用性修复，但会悄悄改变性能特征，要显式声明而不是默默做掉。**
+② 建本仓派生单元修手写同步（照 kda_fwd_stable / kda_bwd_stable 的先例，AGENTS.md §3 不改 ascriptor 仓）。要先读懂 `recurrent.py` 的 DEvent/Mutex 配对 —— 目前只掌握了**症状规律**（每核最后一个头对）而不是确切缺哪一次同步，动手前必须先把那个找出来，否则改了也不知道为什么好。
+③ 上游补 case：`C=1 且 HV≥2`。这条不管我们怎么修都该做，否则上游下次改这个 kernel 还会踩。
 
 ### P1
 
