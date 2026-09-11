@@ -188,18 +188,18 @@
     },
     {
       "id": "toy-case-shapes",
-      "title": "精度验收仍是玩具形状：所有误差数都测在 H=1、C≤2 上，真实形状（H32/HV32/C16）零数据",
+      "title": "【已完成】精度验收已在 models.json 的真实形状上跑过（并由此抓到一个 P0）",
       "category": "validation",
-      "severity": "P2",
+      "severity": "resolved",
       "applies_to": [
         "all"
       ],
       "evidence": "**性能侧已经在真实形状上测过了**：第一期与第二期的倍数都来自 `models.json` 的 `kimi_linear_layer`(B1/H32/HV32/C16/T1024)、`qwen3_next_layer`、`long_context`(T4096)。\n**精度侧没有。** 至今全部误差数字的形状是：`kda_fwd` 接线 B1/H1/HV1~2/C1~2；`kda_bwd` 契约五 case 最大 HV2/C2；层级验证 B1/T128/H1/HV2/hidden256；宽门控跨度 B1/T128/H1/HV1。**最大的 C 是 2，最大的 H/HV 是 2。**\n真实形状会多出三件窄形状测不到的东西：① C=16 意味着 chunk 间 state 传递串 16 层深，误差累积与 `final_state` 的漂移在 C≤2 上根本看不出来；② H=32/HV=32 才真正压到 `block_dim=4` 的核切分（contract 的 core_ownership 按 B*HV 与 B*HV*C 切，kimi 形状下是 32 与 512，窄形状下是 1~4，连一个核组都喂不满）；③ GQA 分组在 HV/H=2 上只跨了一组。\n**这与刚修完的门控跨度是同一类风险**：契约声明的域 ≠ 模型会用的域，窄域全绿不代表可用。那次是量程维度，这次是形状维度。",
       "impact": "性能结论不受影响（本来就在真实形状上测的）。受影响的是**精度结论的外推**：现在说「算子精度在预算内」，依据只有 H=1/C≤2 的数据。C=16 的 state 链路、bd=4 的核切分边界都没有任何精度证据 —— 如果那里有问题，表现会是「小形状全绿、真实模型精度差」，与门控跨度那次的失效模式完全一样。",
-      "blocks": [
-        "phase 1 验收"
-      ],
-      "proposed_action": "在有 `ascend950` 算子包的机器上，按 `kimi_linear_layer` 与 `long_context` 两个形状跑一遍前向+反向精度，判据仍用 fp32 递推参考（它在任何形状下都安全）。重点看三个量：① `final_state` 随 C 的漂移（C=1→16 逐 chunk 记一遍，看是累积还是恒定）；② 同一形状下 bd=1 与 bd=4 的输出是否逐位相同（不同只能来自核切分，那就是 bug 不是精度）；③ GQA 分组在 HV/H=2 且 H=16 时各组是否独立正确。T=1024 的 CPU fp32 递推参考是 1024 步小张量循环，可接受。"
+      "blocks": [],
+      "proposed_action": "无。后续新增算子族时照 verify_real_shapes.py 的四个 check 各补一遍。",
+      "resolved_at": "2026-09-11",
+      "resolution": "benchmarks/verify_real_shapes.py，四个 check 各对一件窄形状结构上测不到的事，跨度固定 46 以把差异归因到形状：\n① **链长**：C=2→64（T=128→4096）o 3.200e-03→3.277e-03、final_state 2.345e-03→2.456e-03 —— **链长 32 倍，误差 ×1.02，不累积**。\n② **核切分**：kimi 形状 bd=1 vs bd=4 的 o / final_state / 六项梯度**全部逐位相同**。这是不需要参考的硬判据。\n③ **GQA**：qwen 形状 H16/HV32（16 组）o 3.264e-03，逐 v 头 3.193e-03~3.335e-03（离散度 1.04 倍）；第 0/8/15 组单独按 H=1/HV=2 跑与全量跑的切片**逐位相同**。\n④ **反向**：kimi 形状六项梯度全部在预算内（dq 3.021e-02/0.05 … dg 6.386e-02/0.25），与玩具形状同跨度下几乎同值。参考按 chunk 做 gradient checkpointing —— 1024 步的完整图在 HV=32 下要十几 GB，checkpoint 是重算不是近似，fp32 的精确性不变。\n**顺带抓到一个 P0**（c1-multihead-o-corrupt）：C=1 且 B*HV > block_dim 时 o 内容错。这条缺口的价值主要就在那个 P0 上 —— 性能早就在真实形状上测了，缺的是精度，而缺陷恰好藏在这个空隙里。"
     },
     {
       "id": "block-dim-ceiling",
@@ -507,7 +507,7 @@
   "summary": {
     "P0": 1,
     "P1": 12,
-    "P2": 10,
+    "P2": 9,
     "total": 33,
     "first_milestone": "第一期五项已全部有结论，并补齐了同机性能对比：aclnn 编译、runtime 桥、kda_fwd 接线、KDA 本地基线均实测通过；自编译算子在 block_dim=4 下比 torch_npu 组合快 4.43x（kimi_linear_layer）/ 2.38x（long_context T=4096）/ 19.7x（smoke）。过程中修掉两个自己的 bug（bridge-per-call-overhead、op-name-collision-in-process），它们先后让 block_dim 的效果被完全掩盖。当前最大的性能项是 block-dim-ceiling（已升 P1）：扩展性一路线性到契约上限 4，而硬件有 28 cube。第二期的前置障碍 kda-fwd-bwd-dtype-mismatch 已量化（降 P2）。",
     "second_milestone": "第二期已完成：kda_bwd 九 kernel 链 + 九个前向检查点 + autograd + KDA layer（含 2 modules），训练步在 bd=4 下比 torch_npu 组合版快 4.83x~5.67x。\n过程中发现并根治了第二期最关键的一个缺口：**按 fla 的默认初始化（chunk 内门控跨度 ~94），上游 kernel 在前向与反向各有一处量程失效，方向相反** —— 前向在 87.3 下溢、反向在 88.72 上溢。两处都在本仓建了派生单元（kda_fwd_stable / kda_bwd_stable），把成对衰减分解的锚点从区间端点改到中点，数学同义。\n门控闸因此做成二维 `{impl: {forward, backward}}`：前向 155（受有限性约束，到 155.97 精度完全不退化）、反向 100（受**精度**约束，它先于有限性到来 —— 梯度到 169.8 都有限但 dq 在 130 处超预算）。**「不吐 NaN」不等于「能用」，两者要分别测、闸按更严的定。**\n剩一项端到端确认（默认初始化下整层反向的精度）卡在机器可用性上 —— 算子层面的同一件事已由 test_kda_bwd_deep_npu.py 在跨度 94 测过，六项梯度全在契约预算内。\n当前最大的性能项仍是 block-dim-ceiling（P1）。",
@@ -526,6 +526,6 @@
         "本地 validation.json 证据齐全"
       ]
     },
-    "resolved": 10
+    "resolved": 11
   }
 }

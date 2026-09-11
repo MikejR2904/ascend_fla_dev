@@ -98,6 +98,10 @@ ascriptor 现在的执行模型全是"**落盘 + 独立进程**"：`aclnn` launc
   写法：盯文件而不是盯进程 —— `until grep -q "passed\|failed\|error" <log>; do sleep 10; done`，
   或给模式加 `[p]ytest` 这类自排除。收工前 `pgrep -af "until ! pgrep"` 扫一遍自己的残留
   （**只清自己容器里自己起的**）。
+- 同理，**按噪声模式 `grep -v` 过滤远端日志会连正经输出一起删** —— CANN 会打不带换行的
+  `path string is NULL`，它粘在下一行前面，于是那一整行被滤掉。我因此差点对着少了两行的
+  输出下结论（8 个张量只列出 7 个）。**要判结论就读未过滤的原始日志**：重定向到文件再
+  `nl -ba` 看，不要在管道里过滤。
 
 ### 开机必查：opp 有没有 `ascend950` 算子包
 

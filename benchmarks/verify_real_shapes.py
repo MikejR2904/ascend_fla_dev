@@ -128,24 +128,35 @@ def ref_fwd(x: dict):
 # --------------------------------------------------------------------------- drift
 def check_drift(args) -> int:
     """`final_state` / `o` 的误差是随 chunk 链长累积，还是恒定？"""
-    shape = SHAPES["kimi_linear_layer"]
-    print(f"\n=== drift：kimi 形状 H{shape['H']}/HV{shape['HV']}，跨度 {args.span}，"
-          f"bd={args.block_dim} ===")
+    shape = dict(SHAPES[args.shapes[0]])
+    shape.pop("C")
+    print(f"\n=== drift：{args.shapes[0]} 的头配置 H{shape['H']}/HV{shape['HV']}，"
+          f"跨度 {args.span}，bd={args.block_dim} ===")
     print("  每 chunk 的门控深度固定，只有 C 在变 —— 看的是斜率，不是单点")
     rows = []
-    for C in (1, 2, 4, 8, 16):
-        x = make_inputs(**shape | dict(C=C), span=args.span)
+    for C in args.cs:
+        x = make_inputs(**shape, C=C, span=args.span)
         assert x["q"].shape[1] == C * L_PER_CHUNK
         dev = to_npu(x)
-        o, ht = chunk_kda_fwd(dev["q"], dev["k"], dev["v"], dev["g"], dev["beta"],
-                              initial_state=dev["h0"], output_final_state=True,
-                              block_dim=args.block_dim)
+        try:
+            o, ht = chunk_kda_fwd(dev["q"], dev["k"], dev["v"], dev["g"], dev["beta"],
+                                  initial_state=dev["h0"], output_final_state=True,
+                                  block_dim=args.block_dim)
+        except ValueError as exc:
+            # C=1 多头被闸拦下是**预期行为**（c1-multihead-o-corrupt）。如实打印并继续，
+            # 不要当成失败 —— 但也不要静静跳过，否则表里会凭空少一行而没人知道为什么。
+            print(f"  C={C:<3d} T={C * L_PER_CHUNK:<5d} 被门控拒绝：{str(exc)[:60]}…")
+            continue
         o_ref, ht_ref = ref_fwd(x)
         rows.append((C, rel_l2(o, o_ref), rel_l2(ht, ht_ref)))
         print(f"  C={C:<3d} T={C * L_PER_CHUNK:<5d} o={rows[-1][1]:.3e}  "
               f"final_state={rows[-1][2]:.3e}")
+    if not rows:
+        print("  没有一档跑成功")
+        return 1
     first, last = rows[0], rows[-1]
-    print(f"  C=1 → C=16：o ×{last[1] / first[1]:.2f}，final_state ×{last[2] / first[2]:.2f}")
+    print(f"  C={first[0]} → C={last[0]}：o ×{last[1] / first[1]:.2f}，"
+          f"final_state ×{last[2] / first[2]:.2f}")
     over = [(n, C, e) for C, eo, eh in rows
             for n, e in (("o", eo), ("final_state", eh)) if not e < BUDGET[n]]
     print("  判定：" + ("全部在预算内" if not over else f"超预算 {over}"))
@@ -336,6 +347,8 @@ def main() -> int:
                     help="门控跨度。默认 46 = 契约 case 所在的档，固定它才能把差异归因到形状")
     ap.add_argument("--shapes", nargs="+", default=["kimi_linear_layer"],
                     choices=list(SHAPES))
+    ap.add_argument("--cs", type=int, nargs="+", default=[1, 2, 4, 8, 16],
+                    help="drift 扫的 C 列表。C=1 会被 C=1 多头闸拦下（那是预期的）")
     ap.add_argument("--_dump", help="内部：bitwise 子进程的落盘目录")
     args = ap.parse_args()
 
