@@ -26,7 +26,13 @@ from __future__ import annotations
 
 import torch
 
-from .chunk import BWD_CACHE_NAMES, HEAD_DIM, VALUE_DIM, chunk_kda_fwd_with_caches
+from .chunk import (
+    BWD_CACHE_NAMES,
+    HEAD_DIM,
+    VALUE_DIM,
+    chunk_kda_fwd,
+    chunk_kda_fwd_with_caches,
+)
 from .chunk_bwd import chunk_kda_bwd
 
 __all__ = ["chunk_kda"]
@@ -142,8 +148,29 @@ def chunk_kda(
     Returns:
         ``(o, final_state)``。``o`` 为 ``[B, T, HV, 128]`` bfloat16。
 
+    Note:
+        **不需要梯度时（``no_grad`` 或所有输入都不 ``requires_grad``）本函数直接走
+        :func:`~ascend_fla.ops.kda.chunk.chunk_kda_fwd`**：不产那九个检查点（在那种情况下是
+        纯浪费，实测占训练步 21%），并且用前向那条更宽的闸。``o`` / ``final_state`` 逐位相同，
+        因为两条路共用同一次 kernel 调用。
+
     Raises:
         ValueError: 任何定尺/dtype/设备约束不满足。绝不静默降级（AGENTS.md §7）。
     """
+    # 不需要梯度时绕开 autograd.Function：走纯前向那条路。
+    # 两个实打实的好处，不是"优化"：
+    #   ① 不产那九个检查点 —— 它们在 no_grad 下是纯浪费（实测占训练步 21%，bd=4）；
+    #   ② 用**前向**那条更宽的闸（stable 下 155 而不是 100）。推理本来就不受反向精度约束，
+    #      被反向的闸挡住是错的。
+    # o 与 final_state 逐位相同 —— 两条路共用同一次 kernel 调用（见 chunk.py 的 _run_chain），
+    # 所以这不是"近似等价的替换路径"（AGENTS.md §7 禁止的那种）。
+    needs_grad = torch.is_grad_enabled() and any(
+        t is not None and t.requires_grad for t in (q, k, v, g, beta, initial_state))
+    if not needs_grad:
+        return chunk_kda_fwd(
+            q, k, v, g, beta, scale, initial_state, output_final_state,
+            device=device, block_dim=block_dim, layout_device=layout_device,
+            check_gate_range=check_gate_range, impl=impl,
+        )
     return _ChunkKDA.apply(q, k, v, g, beta, scale, initial_state, output_final_state,
                            device, block_dim, layout_device, check_gate_range, impl)

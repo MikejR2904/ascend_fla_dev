@@ -194,3 +194,41 @@ def test_bwd_stable_keeps_the_anchor_consistent_across_both_files():
     # MID 必须是 0.5 —— 取别的值虽然数学上仍同义，但两个因子不再对称，上限就不是翻倍
     for stem in ("finalize_pre", "finalize_post"):
         assert "MID = 0.5" in (root / f"{stem}.py").read_text(encoding="utf-8")
+
+
+def test_chunk_kda_skips_caches_when_no_grad_is_needed():
+    """``chunk_kda`` 在不需要梯度时必须走纯前向那条路 —— 纯 host 侧，不需要 NPU。
+
+    两件事：① 省掉九个检查点（no_grad 下它们是纯浪费）；② 用前向那条更宽的闸
+    （``stable`` 下 155 而不是 100）—— 推理不受反向的精度约束，被反向的闸挡住是错的。
+
+    用 mock 盯住"调了哪一条"，而不是比结果 —— 结果本来就该相同（共用同一次 kernel 调用），
+    所以比结果验不出这件事。
+    """
+    from unittest import mock
+
+    import torch
+
+    from ascend_fla.ops.kda import autograd as ag
+
+    x = {n: torch.zeros(1) for n in "qkvgb"}
+    sentinel = ("o", "state")
+    with mock.patch.object(ag, "chunk_kda_fwd", return_value=sentinel) as fwd, \
+            mock.patch.object(ag._ChunkKDA, "apply") as apply_:
+        got = ag.chunk_kda(x["q"], x["k"], x["v"], x["g"], x["b"])
+        assert got is sentinel, "不需要梯度时没有走 chunk_kda_fwd"
+        assert fwd.call_count == 1 and apply_.call_count == 0
+
+    # 有叶子要梯度时必须走 autograd.Function
+    leaf = torch.zeros(1, requires_grad=True)
+    with mock.patch.object(ag, "chunk_kda_fwd") as fwd, \
+            mock.patch.object(ag._ChunkKDA, "apply", return_value=sentinel) as apply_:
+        ag.chunk_kda(leaf, x["k"], x["v"], x["g"], x["b"])
+        assert apply_.call_count == 1 and fwd.call_count == 0, "要梯度时却走了纯前向"
+
+    # no_grad 里即使输入 requires_grad 也走纯前向
+    with torch.no_grad():
+        with mock.patch.object(ag, "chunk_kda_fwd", return_value=sentinel) as fwd, \
+                mock.patch.object(ag._ChunkKDA, "apply") as apply_:
+            ag.chunk_kda(leaf, x["k"], x["v"], x["g"], x["b"])
+            assert fwd.call_count == 1 and apply_.call_count == 0, "no_grad 下仍走了 autograd"

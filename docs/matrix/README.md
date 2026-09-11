@@ -345,6 +345,7 @@ P0 0 项 · P1 12 项 · P2 11 项 · 共 32 项
 - **影响** autograd 的前向必须补齐这三项。g_cumsum 可由 log2(eg) 得到（一次 elementwise）；h 与 v_new 只能重跑 chunk 递推，当前在 host 侧用 torch 做（C 次迭代 × 2 次 bmm）。
 **修正先前的判断**：我曾写它是"反向链的性能瓶颈"，实测不是 —— kimi_linear_layer / bd=4 下它占 21%，而九个反向 kernel 占 53%（2.690ms / 5.069ms）。它是一笔确定的、值得收的账，但不是主因。**真正要紧的是它不随核数缩短**：block_dim 上限若被抬高（block-dim-ceiling），kernel 侧会继续变快而这一段不会，占比会继续涨。
 **2026-09-11 新发现的第二个后果：它让训练路径依赖内置算子包，而纯前向路径不依赖。**`_scan_states` 与检查点的降 bf16 用的是 Cast / bmm / stack，在只装了 910 算子包的机器上全部不可用 —— 实测表现为 `copy_d2d_baseformat_opapi … error code is 561103` + `Cast ADD_TO_LAUNCHER_LIST_AICORE failed`。这推翻了「我们自己编译的 kernel 在两种机器上都不受影响」这句话的适用范围：它对**前向**成立，对**训练**不成立，因为训练要补的三项检查点不在 kernel 里。已加 `on_cpu` 绕行（`_scan_states(on_cpu=)`、`chunk_kda_bwd` 的 `layout_device`），把检查点生产和那一次 strided `contiguous()` 整段搬到 CPU —— 这是**可用性**开关不是性能开关。把三项挪进 kernel 之后这些绕行可以删掉。
+**2026-09-11 顺带修掉的一条**：`chunk_kda` 此前**无条件**走 autograd.Function，于是`no_grad` 下的推理也照样产那九个检查点（纯浪费，占训练步的 21%），而且被**反向**那条更严的门控闸（stable 下 100）挡着 —— 推理本来只受前向的 155 约束。现在不需要梯度时直接走 `chunk_kda_fwd`；`o` / `final_state` 逐位相同（共用同一次 kernel 调用），钉在 tests/test_kda_gating.py::test_chunk_kda_skips_caches_when_no_grad_is_needed。
 - **建议** 按 AGENTS.md §3 在本仓 kernels/ 下建自己的单元：做一个 kda_sub45_fused_kernel 的变体，额外写出 h 与 v_new（两个 GM 输出 + store，内部量已有），再做一个 gate 变体直接写 g_cumsum。改 ascriptor 仓是不允许的。优先级排在 block-dim-ceiling 之后 —— 先抬核数上限，那一项的收益更大，而且抬完之后这一项的占比才真正凸显。
 做完之后顺带删掉 `_scan_states(on_cpu=…)` 与 `chunk_kda_bwd(layout_device=…)` 两处绕行。
 
