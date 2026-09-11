@@ -32,10 +32,12 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent / "tests")
 
 
 def main() -> int:
-    if len(sys.argv) != 3:
-        print(f"用法：{sys.argv[0]} <case_id> <stable|upstream>", file=sys.stderr)
+    if len(sys.argv) not in (3, 4):
+        print(f"用法：{sys.argv[0]} <case_id> <stable|upstream> [gate_multiplier]",
+              file=sys.stderr)
         return 2
     case_id, impl = sys.argv[1], sys.argv[2]
+    gate_override = float(sys.argv[3]) if len(sys.argv) == 4 else None
 
     import torch_npu  # noqa: F401
 
@@ -47,6 +49,8 @@ def main() -> int:
         print(f"未知 case {case_id}，可选 {list(CASES)}", file=sys.stderr)
         return 2
     b, h, hv, c, gate_mul, block_dim = CASES[case_id]
+    if gate_override is not None:
+        gate_mul = gate_override      # 把契约 case 推到宽域，用来在深衰减下比精度而不只是有限性
     prepare("a5", block_dim, backward=True, impl=impl)
 
     oracle, make_inputs, Inputs = _load_ref()
@@ -64,8 +68,14 @@ def main() -> int:
         do=x["do"].to("npu"), dht=x["dht"].to("npu"), caches=caches,
         block_dim=block_dim, impl=impl,
     )
-    out = {"case": case_id, "impl": impl, "block_dim": block_dim,
-           "C": c, "errors": {}, "nonfinite": {}}
+    out = {"case": case_id, "impl": impl, "block_dim": block_dim, "C": c,
+           "gate_multiplier": gate_mul, "errors": {}, "nonfinite": {},
+           # oracle 自己在宽域下是否还有限 —— 它不成立的话下面的相对 L2 没有意义
+           "oracle_nonfinite": {n: int((~t.float().isfinite()).sum())
+                                for n, t in want.items() if hasattr(t, "float")}}
+    g_cpu = x["g"].float() * 1.0
+    cum = g_cpu.view(b, c, 64, hv, 128).cumsum(2)
+    out["gate_span"] = (cum.amax(2) - cum.amin(2)).max().item() * 0.6931471805599453
     for name, exp in want.items():
         if name not in got:
             continue

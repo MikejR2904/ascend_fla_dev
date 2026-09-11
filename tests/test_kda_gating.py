@@ -82,30 +82,53 @@ def test_gate_span_keys_match_impls():
     )
 
 
+def test_gate_span_has_both_paths():
+    """每套实现都必须给出前向与反向两条链各自的上限。
+
+    它们不是同一回事：前向的约束是**有限性**（越线吐 NaN），反向的约束是**精度**
+    （到 169.8 都还有限，但 dq 在 130 处就超出契约预算 0.05）。用一个数会说谎。
+    """
+    from ascend_fla.ops.kda.chunk import GATE_PATHS, MAX_GATE_SPAN
+
+    for impl, limits in MAX_GATE_SPAN.items():
+        assert set(limits) == set(GATE_PATHS), (
+            f"{impl} 的上限键是 {sorted(limits)}，应当是 {sorted(GATE_PATHS)}"
+        )
+
+
 def test_upstream_limit_guards_the_stricter_chain():
-    """``upstream`` 的上限必须挡住**两条链里更早失效的那条**。
+    """``upstream`` 两条链的上限都必须挡在更早失效的那条线以内。
 
     前向在 ``-ln(FLT_MIN_NORMAL) ≈ 87.34`` 处下溢，反向在 ``ln(FLT_MAX) ≈ 88.72`` 处上溢。
-    上限只按其中一条定就会放过另一条。
     """
     from ascend_fla.ops.kda.chunk import MAX_GATE_SPAN
 
-    limit = MAX_GATE_SPAN["upstream"]
-    assert limit < min(UNDERFLOW_LN, OVERFLOW_LN), (
-        f"upstream 上限 {limit} 没有挡在 {min(UNDERFLOW_LN, OVERFLOW_LN):.2f} 以内"
-    )
+    for path, limit in MAX_GATE_SPAN["upstream"].items():
+        assert limit < min(UNDERFLOW_LN, OVERFLOW_LN), (
+            f"upstream 的 {path} 上限 {limit} 没有挡在 "
+            f"{min(UNDERFLOW_LN, OVERFLOW_LN):.2f} 以内"
+        )
 
 
-def test_stable_limit_guards_the_stricter_chain():
-    """``stable`` 同理，只是两条链的理论上限都翻倍了（对称分解，各压到 ±span/2）。"""
+def test_stable_limits_are_wider_than_upstream_and_cover_default_init():
+    """``stable`` 两条链都要比 upstream 宽，且都要覆盖 fla 默认初始化的跨度 ~94。
+
+    后半条是这次改动的**目的**：默认初始化的层要能训练。反向的闸若退到 94 以下，
+    默认初始化就又用不了了。
+    """
     from ascend_fla.ops.kda.chunk import MAX_GATE_SPAN
 
-    limit = MAX_GATE_SPAN["stable"]
     theoretical = min(2 * UNDERFLOW_LN, 2 * OVERFLOW_LN)
-    assert limit < theoretical, f"stable 上限 {limit} 超过理论值 {theoretical:.1f}"
-    assert limit > MAX_GATE_SPAN["upstream"], "stable 的上限不比 upstream 宽，那就白改了"
-    # 也必须宽于 fla 默认初始化的跨度（~94），否则默认初始化的层根本用不了
-    assert limit > 100, f"stable 上限 {limit} 不足以覆盖 fla 默认初始化的跨度 ~94"
+    for path, limit in MAX_GATE_SPAN["stable"].items():
+        assert limit < theoretical, f"stable 的 {path} 上限 {limit} 超过理论值 {theoretical:.1f}"
+        assert limit > MAX_GATE_SPAN["upstream"][path], (
+            f"stable 的 {path} 上限不比 upstream 宽，那就白改了"
+        )
+        assert limit > 94, f"stable 的 {path} 上限 {limit} 覆盖不了 fla 默认初始化的跨度 ~94"
+    # 反向的闸必须**不宽于**前向 —— 它守的是精度，而精度先于有限性失效
+    assert MAX_GATE_SPAN["stable"]["backward"] <= MAX_GATE_SPAN["stable"]["forward"], (
+        "反向上限比前向还宽，说明两条链的约束关系记错了"
+    )
 
 
 @pytest.mark.parametrize("unit", ["kda_fwd_stable", "kda_bwd_stable"])
@@ -113,10 +136,11 @@ def test_stable_units_declare_the_same_limit_as_the_code(unit):
     """两个单元的 contract 与 ``MAX_GATE_SPAN["stable"]`` 必须是同一个数。"""
     from ascend_fla.ops.kda.chunk import MAX_GATE_SPAN
 
+    path = "forward" if unit.endswith("fwd_stable") else "backward"
     span = _unit_contract(unit)["domain"]["gate_span"]
-    assert span["recommended_limit"] == MAX_GATE_SPAN["stable"], (
+    assert span["recommended_limit"] == MAX_GATE_SPAN["stable"][path], (
         f"{unit}/contract.json 声明 {span['recommended_limit']}，"
-        f"chunk.py 写的是 {MAX_GATE_SPAN['stable']}"
+        f"chunk.py 的 {path} 上限是 {MAX_GATE_SPAN['stable'][path]}"
     )
 
 

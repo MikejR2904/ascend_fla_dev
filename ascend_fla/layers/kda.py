@@ -21,8 +21,10 @@ chunk 内门控跨度约 94，而 ascriptor 原版 kernel 在**前向与反向�
   同时下溢到 0，矩阵乘得 ``inf × 0``。方向与前向相反，是独立的一处。
 
 本仓 ``kernels/projects/a5/kda_fwd_stable`` 与 ``kda_bwd_stable`` 分别把两处改成对深衰减
-稳定的形式，上限约 160。``impl`` 同时选两条链。细节见 ``docs/matrix/gaps.json`` 的
-``gate-range-beyond-declared`` 与 ``bwd-gate-range-overflow``。
+稳定的形式：前向可用跨度到 155，反向到 100（反向更严是因为它的约束是**精度**而非有限性 ——
+到 169.8 都还有限，但 ``dq`` 在 130 处就超出契约预算）。默认初始化的 94 两条都满足。
+``impl`` 同时选两条链。细节见 ``docs/matrix/gaps.json`` 的 ``gate-range-beyond-declared``
+与 ``bwd-gate-range-overflow``。
 
 **不支持的上游开关**（传了就报错，不静默忽略 —— AGENTS.md §7）：
 ``allow_neg_eigval``、``safe_gate``、``lower_bound``、``cu_seqlens``（varlen）。
@@ -63,8 +65,8 @@ class KimiDeltaAttention(nn.Module):
         allow_neg_eigval / safe_gate / lower_bound: **不支持**，非默认值即报错。
         block_dim: 传给底层算子的启动核组数。
         impl: 底层算子的实现，**同时作用于前向与反向**。``"stable"``（默认）用本仓的
-            gate/scores/wy 与 finalize_pre/post，可用门控跨度约 160；``"upstream"`` 用
-            ascriptor 原版，约 80。**本层按 fla 的默认初始化产生的跨度约 94，所以
+            gate/scores/wy 与 finalize_pre/post，可用门控跨度前向 155 / 反向 100；
+            ``"upstream"`` 用 ascriptor 原版，两条都 80。**本层按 fla 的默认初始化产生的跨度约 94，所以
             ``upstream`` 前向反向都会吐 NaN、``stable`` 才能用** —— 见
             ``docs/matrix/gaps.json`` 的 ``gate-range-beyond-declared``
             与 ``bwd-gate-range-overflow``。

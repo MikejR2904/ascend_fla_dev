@@ -251,28 +251,31 @@ def _from_bhcld(x: torch.Tensor, *, on_cpu: bool) -> torch.Tensor:
     return out.to(dev) if on_cpu else out
 
 
-#: 每套实现能承受的 chunk 内门控跨度上限。
+#: chunk 内门控跨度的上限，按 **实现 × 跑哪条链** 两维。
 #:
-#: ``upstream``：实测跨度 ≤66.84 时前向完全正常（相对 L2 稳定 2.86e-03~2.98e-03），
-#: ≥88.67 时 ``Aqk``/``strict``/``kg`` 出 NaN。根因是 gate 只写 ``eg = exp(gc)``，而它在
-#: ``-ln(FLT_MIN_NORMAL) ≈ 87.3`` 处下溢到 0（fp32 非正规数被 flush），下游的 ``k/eg`` 与
-#: ``eg_last/eg`` 就变成 ``0×inf`` 和 ``0/0``。取 80 留约 8% 余量，也与
-#: ``reference.kda.kda_chunk_vectorized`` 的上限一致，好让两边对同一组输入都可用。
+#: **为什么要分前向/反向。** 两条链的约束不是同一回事，用一个数会说谎：
 #:
-#: ``stable``：本仓的 gate 额外写出 log 空间的 ``g_cumsum``，scores 按逐通道中点对称分解
-#: （两个因子的指数都压到 ``±S/2``），wy 改成先减后指数。前向理论上限因此翻倍到
-#: ``2 × 87.3 ≈ 174``，实测到 155.97 仍不退化。
+#: * 前向的限制是**有限性** —— 越线就是 NaN。``upstream`` 的 gate 只写 ``eg = exp(gc)``，
+#:   它在 ``-ln(FLT_MIN_NORMAL) ≈ 87.3`` 处下溢到 0，下游 ``k/eg`` 变 ``0×inf``；
+#:   ``stable`` 按逐通道中点对称分解，实测跨度到 155.97 时 ``o`` 的相对 L2 仍稳定在
+#:   2.85e-03~3.19e-03（**完全不退化**）。
+#: * 反向的限制是**精度** —— 它先于有限性到来。``stable`` 的反向到 169.76 都还是有限值，
+#:   但对 fp32 递推参考的相对 L2 随跨度单调上升，``dq`` 在 130 处越过契约预算 0.05
+#:   （实测 46→2.89e-02、94→4.55e-02、105→4.86e-02、130→6.17e-02、169→6.88e-02，
+#:   且 169 处 ``dg`` 直接崩到 6.49e-01）。让它"有限但超预算"地跑过去就是静默降级
+#:   （AGENTS.md §7），所以反向的闸设在实测仍有余量的 100。
 #:
-#: ⚠️ **这两个上限同时管前向与反向，取两者较小者。** 反向是独立的一处：ascriptor 的
-#: ``finalize_pre`` / ``finalize_post`` 把成对衰减分解成 ``exp(g−g_last)·exp(g_last−g)``，
-#: 前者在 ``ln(MAX) ≈ 88.72`` 处**上溢**（方向与前向的下溢相反），而它的输出是 bf16 GM。
-#: 所以 ``upstream`` 的 80 对反向同样适用；``stable`` 的反向把锚点改成 ``g_last/2``，
-#: 理论上限 ``2 × 88.72 ≈ 177``，取 160 是两条链的公共安全值。见 ``gaps.json`` 的
-#: ``bwd-gate-range-overflow`` 与 ``gate-span-still-bounded``。
-#:
-#: **混用 impl 会让这张表说谎** —— 前向 stable + 反向 upstream 时跨度 94 能过检查却在反向
-#: 吐 NaN。所以 ``prepare`` / ``chunk_kda`` 的 ``impl`` 同时选两条链，不提供分开的开关。
-MAX_GATE_SPAN = {"upstream": 80.0, "stable": 160.0}
+#: 于是：纯推理（``chunk_kda_fwd``）可以用到 155，训练（``chunk_kda_fwd_with_caches`` /
+#: ``chunk_kda``）只到 100。fla 默认初始化的 KDA 层跨度约 94，两条都满足。
+#: 数字全部是**实测点**，不是推算：见两个单元 contract.json 的 ``domain.gate_span``。
+MAX_GATE_SPAN = {
+    # upstream 两条链都受 ~87/88.7 那条硬线约束（前向下溢、反向上溢），取 80 留余量
+    "upstream": {"forward": 80.0, "backward": 80.0},
+    "stable": {"forward": 155.0, "backward": 100.0},
+}
+
+#: 两条链的名字。``_check_gate_range`` 的 ``path`` 只接受这两个。
+GATE_PATHS = ("forward", "backward")
 
 
 def _gate_span(g: torch.Tensor, c: int, *, on_cpu: bool) -> float:
@@ -287,7 +290,8 @@ def _gate_span(g: torch.Tensor, c: int, *, on_cpu: bool) -> float:
     return (cum.amax(dim=2) - cum.amin(dim=2)).max().item()
 
 
-def _check_gate_range(g: torch.Tensor, c: int, *, on_cpu: bool, impl: str) -> None:
+def _check_gate_range(g: torch.Tensor, c: int, *, on_cpu: bool, impl: str,
+                      path: str = "backward") -> None:
     """门控跨度超限就报错，绝不让 kernel 静默吐 NaN（AGENTS.md §7）。
 
     ⚠️ **这条限制比 contract 声明的输入域宽得多。** contract 的 ``input_generation`` 是
@@ -296,18 +300,32 @@ def _check_gate_range(g: torch.Tensor, c: int, *, on_cpu: bool, impl: str) -> No
     ``upstream`` 的上限 80 撑不住它（会吐 NaN），``stable`` 的 160 可以。两个上限的由来
     与实测见 ``docs/matrix/gaps.json`` 的 ``gate-range-beyond-declared``。
     """
-    limit = MAX_GATE_SPAN[impl]
+    if path not in GATE_PATHS:
+        raise ValueError(f"path 只能是 {GATE_PATHS}，收到 {path!r}")
+    limit = MAX_GATE_SPAN[impl][path]
     span = _gate_span(g, c, on_cpu=on_cpu)
-    if span > limit:
-        hint = ("换 impl=\"stable\"（本仓的数值稳定实现，上限 "
-                f"{MAX_GATE_SPAN['stable']}）" if impl == "upstream" else
-                "减小 g 的量级：KDA 层里即减小 exp(A_log) 或 dt")
-        raise ValueError(
-            f"chunk 内门控跨度 {span:.1f} 超过 impl={impl!r} 的上限 {limit}，"
-            f"kernel 会在 fp32 下溢/上溢并输出 NaN。g 是 log 空间的 per-token 衰减增量；"
-            f"{hint}。确知安全时可传 check_gate_range=False 跳过本检查。"
-            f"详见 docs/matrix/gaps.json 的 gate-range-beyond-declared"
-        )
+    if span <= limit:
+        return
+    if impl == "upstream":
+        why = "kernel 会在 fp32 下溢/上溢并输出 NaN"
+        hint = (f"换 impl=\"stable\"（本仓的数值稳定实现，{path} 上限 "
+                f"{MAX_GATE_SPAN['stable'][path]}）")
+    elif path == "forward":
+        why = "kernel 会在 fp32 下溢/上溢并输出 NaN"
+        hint = "减小 g 的量级：KDA 层里即减小 exp(A_log) 或 dt"
+    else:
+        # 反向的闸守的是精度而不是有限性 —— 说清楚，否则用户会以为越线就是 NaN
+        why = (f"反向梯度仍是**有限值**（实测到 169.8 都有限），但精度会超出契约预算："
+               f"dq 在跨度 130 处达 6.17e-02（预算 0.05），dg 在 169 处达 6.49e-01（预算 0.25）")
+        hint = ("减小 g 的量级（KDA 层里即减小 exp(A_log) 或 dt）；"
+                f"只做推理不需要反向时用 chunk_kda_fwd，它的上限是 "
+                f"{MAX_GATE_SPAN[impl]['forward']}")
+    raise ValueError(
+        f"chunk 内门控跨度 {span:.1f} 超过 impl={impl!r} 在 {path} 链上的上限 {limit}。"
+        f"{why}。g 是 log 空间的 per-token 衰减增量；{hint}。"
+        f"确知可接受时传 check_gate_range=False 跳过本检查。"
+        f"详见 docs/matrix/gaps.json 的 gate-range-beyond-declared 与 gate-span-still-bounded"
+    )
 
 
 def _resolve_layout(layout_device: str) -> bool:
@@ -429,12 +447,15 @@ def chunk_kda_fwd(
         layout_device: token-major ↔ BHCLD 的重排在哪做。``"npu"`` 最快但需要
             内置 copy 算子；``"cpu"`` 绕主机往返（数值相同，计时不可用于性能结论）；
             ``"auto"``（默认）探测一次后自行选择。
-        check_gate_range: 是否校验 chunk 内门控跨度不超过 :data:`MAX_GATE_SPAN` 里
-            该实现的上限。默认开 —— 超限时 kernel 会静默吐 NaN，那比报错糟得多。
-            代价是对 ``g`` 做一次 cumsum + 两次规约。
+        check_gate_range: 是否校验 chunk 内门控跨度不超过
+            :data:`MAX_GATE_SPAN` ``[impl]["forward"]``。默认开 —— 超限时 kernel 会静默吐
+            NaN，那比报错糟得多。代价是对 ``g`` 做一次 cumsum + 两次规约。
+            **这里用的是前向那条闸**（``stable`` 下 155）；要跑反向请走
+            :func:`chunk_kda_fwd_with_caches` 或 :func:`~ascend_fla.ops.kda.chunk_kda`，
+            它们用更严的反向闸（100）。
         impl: ``"stable"``（默认）用本仓 ``kernels/projects/a5/kda_fwd_stable`` 的
-            gate / scores / wy，门控算术对深衰减数值稳定，可用跨度约 160；
-            ``"upstream"`` 原样用 ascriptor 的五个 kernel，可用跨度约 80。
+            gate / scores / wy，门控算术对深衰减数值稳定，前向可用跨度 155；
+            ``"upstream"`` 原样用 ascriptor 的五个 kernel，可用跨度 80。
             两者数学同义，差别只在浮点表示范围。
 
     Returns:
@@ -444,7 +465,7 @@ def chunk_kda_fwd(
     b, h, hv, c = _check(q, k, v, g, beta, initial_state, block_dim)
     on_cpu = _resolve_layout(layout_device)
     if check_gate_range:
-        _check_gate_range(g, c, on_cpu=on_cpu, impl=impl)
+        _check_gate_range(g, c, on_cpu=on_cpu, impl=impl, path="forward")
     scale = HEAD_DIM ** -0.5 if scale is None else float(scale)
     chain = _run_chain(q, k, v, g, beta, scale, initial_state, device=device,
                        block_dim=block_dim, on_cpu=on_cpu, b=b, h=h, hv=hv, c=c, impl=impl)
@@ -551,7 +572,8 @@ def chunk_kda_fwd_with_caches(
     _bwd_chain(device, block_dim, impl)
     on_cpu = _resolve_layout(layout_device)
     if check_gate_range:
-        _check_gate_range(g, c, on_cpu=on_cpu, impl=impl)
+        # 这是训练入口（产检查点就是为了跑反向），所以用反向那条更严的闸
+        _check_gate_range(g, c, on_cpu=on_cpu, impl=impl, path="backward")
     scale = HEAD_DIM ** -0.5 if scale is None else float(scale)
     chain = _run_chain(q, k, v, g, beta, scale, initial_state, device=device,
                        block_dim=block_dim, on_cpu=on_cpu, b=b, h=h_q, hv=hv, c=c, impl=impl)

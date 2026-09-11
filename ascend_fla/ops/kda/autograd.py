@@ -127,9 +127,13 @@ def chunk_kda(
         block_dim: 启动核组数，只接受 ``SUPPORTED_BLOCK_DIM``。
         layout_device: 见 :func:`~ascend_fla.ops.kda.chunk.chunk_kda_fwd`。
         check_gate_range: 校验 chunk 内门控跨度不超过
-            :data:`~ascend_fla.ops.kda.chunk.MAX_GATE_SPAN` 里该实现的上限。超限时
-            kernel 会吐 NaN。
-        impl: ``"stable"``（默认，可用跨度约 160）或 ``"upstream"``（约 80）。
+            :data:`~ascend_fla.ops.kda.chunk.MAX_GATE_SPAN` ``[impl]["backward"]``
+            （``stable`` 下 100）。**这条闸守的是精度而不是有限性** —— 反向到跨度 169.8
+            都还是有限值，但 ``dq`` 对 fp32 递推参考的相对 L2 在 130 处就越过契约预算
+            0.05。让它"有限但超预算"地跑过去就是静默降级（AGENTS.md §7）。曲线见
+            ``kernels/projects/a5/kda_bwd_stable/contract.json`` 的
+            ``domain.gate_span.accuracy_vs_span``。
+        impl: ``"stable"``（默认；前向可用跨度 155、反向 100）或 ``"upstream"``（两条都 80）。
             **同时选前向与反向两条链**，没有分开的开关 —— 两条链的失效点不同
             （前向在 87.3 下溢、反向在 88.72 上溢），混用会让门控检查的上限对不上实际
             会失效的那一侧。fla 默认初始化的 KDA 层跨度约 94，``upstream`` 两边都撑不住。

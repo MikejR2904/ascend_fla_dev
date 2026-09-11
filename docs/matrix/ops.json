@@ -330,7 +330,7 @@
       "direction": "forward",
       "owner": "本仓",
       "ascriptor_path": "kernels/projects/a5/kda_fwd_stable（本仓自有单元，不在 ascriptor 仓）",
-      "contract_sha256": "107e6dc96dd412cf27e867ba92cb46e352a0ca9f33f392372ed3ca4674c64f13",
+      "contract_sha256": "246671ce9bca3f0f619d3fd3046c988f1bd90d7b714d41ea17f38ae056364abc",
       "derived_from": "a5.kda_fwd",
       "leaf_kernels": 5,
       "own_kernels": 3,
@@ -353,10 +353,10 @@
         "same_as": "a5.kda_fwd（L=64 / K=V=128 / T=C*64 / block_dim≤4 / 无 varlen）",
         "gate_span": {
           "max_measured_ok": 155.97,
-          "recommended_limit": 160.0,
+          "recommended_limit": 155.0,
           "theoretical_limit": "2 × -ln(FLT_MIN_NORMAL) ≈ 174.7",
           "upstream_limit": 80.0,
-          "note": "gate_span = chunk 内 max(cumsum) − min(cumsum)。两个指数因子各压到 ±span/2，所以上限正好翻倍。"
+          "note": "gate_span = chunk 内 max(cumsum) − min(cumsum)。两个指数因子各压到 ±span/2，所以上限正好翻倍。recommended_limit 取实测仍不退化的最深点（155.97 向下取整），不取理论值 —— 闸必须落在实测点上。**这是前向的闸**；训练走反向，受 100 约束。"
         }
       },
       "change_vs_upstream": [
@@ -512,7 +512,7 @@
       "direction": "backward",
       "owner": "本仓",
       "ascriptor_path": "kernels/projects/a5/kda_bwd_stable（本仓自有单元，不在 ascriptor 仓）",
-      "contract_sha256": "df9fcd0ca809383bb4ea0341a3cb7e9216fb37006525ba4b4a5a047a445ade1b",
+      "contract_sha256": "ec389c101c396562746c121fe99379f2ff4ac06c9978338a03daedda7bb106b6",
       "derived_from": "a5.kda_bwd",
       "pairs_with": "a5.kda_fwd_stable",
       "leaf_kernels": 9,
@@ -530,10 +530,12 @@
         "gate_span": {
           "upstream_limit": 88.72,
           "theoretical_limit": "2 × ln(BF16_MAX) ≈ 177.4",
-          "recommended_limit": 160.0,
-          "max_measured_ok": 169.76,
-          "note": "recommended_limit 与 a5.kda_fwd_stable 对齐（取两条链较小者），且 159.71 已实测通过。174.23 时只有 64 个元素坏 —— gate_span 是逐通道最大值，边缘上只有最深通道越界。",
-          "first_failure_at": 174.23
+          "recommended_limit": 100.0,
+          "note": "**反向的约束是精度先于有限性。** 到跨度 169.76 梯度都还是有限值，但对 fp32 递推参考的相对 L2 随跨度单调上升，dq 在 130 处越过契约预算 0.05（46→2.89e-02、94→4.55e-02、105→4.86e-02、110→4.99e-02 即 99.8% 预算、130→6.17e-02、169→6.88e-02，且 169 处 dg 崩到 6.49e-01）。让它有限但超预算地跑过去就是静默降级（AGENTS.md §7），所以闸取 100 —— 实测仍有余量的点。完整曲线见 contract.json 的 domain.gate_span.accuracy_vs_span。前向没有这个问题，它的闸是 155。",
+          "max_finite_ok": 169.76,
+          "first_nonfinite_at": 174.23,
+          "max_within_budget": 105.0,
+          "first_over_budget_at": 130.0
         }
       },
       "change_vs_upstream": [
@@ -559,8 +561,8 @@
         "binding": "done",
         "accuracy_vs_oracle": "done",
         "perf_vs_baseline": "not-started",
-        "evidence": "**有限性逐档**（B1/T64/H1/HV1，block_dim=1，数六个梯度里非有限元素的个数）：上游在跨度 1.12 / 11.17 / 50.26 / 74.83 下全有限，**89.35 起六项全坏**（dh0 16384/16384、dk·dv·dg 各 8192/8192）—— 与 ln(MAX)=88.72 吻合。本单元在 1.12 → 169.76 的十一档里全部有限，174.23 时 dq/dk/dbeta/dg 各 64 个坏，与理论上限 177.4 吻合。\n**精度**：上游 a5.kda_bwd 契约的五个 case 全部通过本单元（预算取 contract 的 comparison：默认 0.05 / dk 0.15 / dg 0.25），与上游反向**三位有效数字全同、只第四位有差**：\n  single_chunk       dq=1.282e-02 dk=7.330e-02 dv=3.089e-03 dbeta=3.407e-03 dg=1.094e-01 dh0=2.977e-03\n  multi_chunk        dq=2.239e-02 dk=9.168e-02 dv=3.504e-03 dbeta=3.337e-03 dg=1.649e-01 dh0=2.589e-03\n  grouped_heads      dq=2.152e-02 dk=9.298e-02 dv=3.307e-03 dbeta=9.192e-04 dg=1.441e-01 dh0=2.785e-03\n  gentle_decay       dq=3.662e-03 dk=5.383e-03 dv=3.821e-03 dbeta=3.928e-03 dg=6.211e-03 dh0=5.163e-03\n  grouped_idle_cores dq=1.442e-02 dk=8.685e-02 dv=2.927e-03 dbeta=6.476e-03 dg=1.555e-01 dh0=2.542e-03\n最大的差是 gentle_decay 的 dbeta（3.928e-03 对上游 3.854e-03，1.9%）—— 这是换锚点应有的效果：实数上恒等，但中间量落在 bf16 GM 上，舍入位置变了。",
-        "note": "性能未单独测。**还差一项验证**：默认初始化（跨度 ~94）下整层反向的精度，需要有 ascend950 算子包的机器（层里的投影/卷积/softplus 是 torch_npu 算子）；测试已写好 —— tests/test_kda_layer_npu.py::test_default_init_backward_matches_cpu_reference。"
+        "evidence": "**有限性逐档**（B1/T64/H1/HV1，block_dim=1，数六个梯度里非有限元素的个数）：上游在跨度 1.12 / 11.17 / 50.26 / 74.83 下全有限，**89.35 起六项全坏**（dh0 16384/16384、dk·dv·dg 各 8192/8192）—— 与 ln(MAX)=88.72 吻合。本单元在 1.12 → 169.76 的十一档里全部有限，174.23 时 dq/dk/dbeta/dg 各 64 个坏，与理论上限 177.4 吻合。\n**精度**：上游 a5.kda_bwd 契约的五个 case 全部通过本单元（预算取 contract 的 comparison：默认 0.05 / dk 0.15 / dg 0.25），与上游反向**三位有效数字全同、只第四位有差**：\n  single_chunk       dq=1.282e-02 dk=7.330e-02 dv=3.089e-03 dbeta=3.407e-03 dg=1.094e-01 dh0=2.977e-03\n  multi_chunk        dq=2.239e-02 dk=9.168e-02 dv=3.504e-03 dbeta=3.337e-03 dg=1.649e-01 dh0=2.589e-03\n  grouped_heads      dq=2.152e-02 dk=9.298e-02 dv=3.307e-03 dbeta=9.192e-04 dg=1.441e-01 dh0=2.785e-03\n  gentle_decay       dq=3.662e-03 dk=5.383e-03 dv=3.821e-03 dbeta=3.928e-03 dg=6.211e-03 dh0=5.163e-03\n  grouped_idle_cores dq=1.442e-02 dk=8.685e-02 dv=2.927e-03 dbeta=6.476e-03 dg=1.555e-01 dh0=2.542e-03\n最大的差是 gentle_decay 的 dbeta（3.928e-03 对上游 3.854e-03，1.9%）—— 这是换锚点应有的效果：实数上恒等，但中间量落在 bf16 GM 上，舍入位置变了。\n**宽域精度**（对 fp32 递推参考，因为单元自己的 ref.oracle 在 93.84 就有 3286/6507/16320 个非有限值 —— 它按 exp2(g_i−g_j) 算整个成对矩阵再掩码，非因果半边先变 inf）：跨度 46/94/100 三档六项梯度全部在契约预算内，其中 94 正是 fla 默认初始化的层给出的跨度，dq=4.550e-02（预算 0.05）、dg=1.511e-01（预算 0.25）。tests/test_kda_bwd_deep_npu.py 的四项全通过。",
+        "note": "性能未单独测。**反向的声明上限 100 比有限性上限 169.76 严**，因为精度先于有限性失效 —— 这不是保守，是不让它静默降级。剩一项验证：默认初始化下**整层**反向的精度，需要有 ascend950 算子包的机器；算子层面的同一件事已由 test_kda_bwd_deep_npu.py 在跨度 94 测过。"
       },
       "fla_counterpart": {
         "entry": "fla.ops.kda",

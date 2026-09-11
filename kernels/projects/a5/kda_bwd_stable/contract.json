@@ -2,7 +2,7 @@
   "schema": "ascriptor.kernel-unit/1",
   "id": "a5.kda_bwd_stable",
   "kind": "project",
-  "description": "KDA 定长反向，成对衰减的分解锚点由 g_last 改为 g_last/2。与 a5.kda_bwd 数学同义，可用门控跨度从 ~88.7 扩到实测 169.76（理论 177.4）。与 a5.kda_fwd_stable 成对使用。",
+  "description": "KDA 定长反向，成对衰减的分解锚点由 g_last 改为 g_last/2。与 a5.kda_bwd 数学同义。有限性实测到跨度 169.76；**契约精度预算内到 105**，声明上限取 100。与 a5.kda_fwd_stable 成对使用。",
   "inputs": {
     "same_as": "a5.kda_bwd",
     "note": "ABI 完全不变。九个 kernel 里只换了 finalize_pre / finalize_post 两个的内部算术，签名与张量形状一字未改。"
@@ -16,10 +16,142 @@
     "gate_span": {
       "upstream_limit": 88.72,
       "theoretical_limit": "2 × ln(BF16_MAX) ≈ 177.4",
-      "recommended_limit": 160.0,
-      "max_measured_ok": 169.76,
-      "first_failure_at": 174.23,
-      "note": "gate_span = chunk 内 max(cumsum) − min(cumsum)。上游 finalize_pre/post 的 rscale = exp((g−g_last)·ln2) 在 span > ln(MAX)≈88.72 时**上溢**到 inf（q_scaled/k_scaled 是 bf16 GM 输出），配对的 cscale 同时下溢到 0，下游矩阵乘得 inf×0 = NaN。改锚点后两个因子各压到 ±span/2。实测（Ascend950PR / CANN 9.1.0 / block_dim=1，B1/T64/H1/HV1）：upstream 在 89.35 起六项梯度全坏；本单元在 1.12 / 11.17 / 50.26 / 74.83 / 89.35 / 100.51 / 125.09 / 149.66 / 155.24 / 159.71 / 169.76 十一档下六项梯度全部有限，174.23 时 dq/dk/dbeta/dg 各 64 个元素坏（gate_span 是逐通道最大值，边缘只有最深通道越界），与理论上限 177.4 吻合。recommended_limit 取 160 与 a5.kda_fwd_stable 对齐，且 159.71 已实测通过。"
+      "recommended_limit": 100.0,
+      "note": "gate_span = chunk 内 max(cumsum) − min(cumsum)。上游 finalize_pre/post 的 rscale = exp((g−g_last)·ln2) 在 span > ln(MAX)≈88.72 时**上溢**到 inf（q_scaled/k_scaled 是 bf16 GM 输出），配对的 cscale 同时下溢到 0，下游矩阵乘得 inf×0 = NaN。改锚点后两个因子各压到 ±span/2。实测（Ascend950PR / CANN 9.1.0 / block_dim=1，B1/T64/H1/HV1）：upstream 在 89.35 起六项梯度全坏；本单元在 1.12 / 11.17 / 50.26 / 74.83 / 89.35 / 100.51 / 125.09 / 149.66 / 155.24 / 159.71 / 169.76 十一档下六项梯度全部有限，174.23 时 dq/dk/dbeta/dg 各 64 个元素坏（gate_span 是逐通道最大值，边缘只有最深通道越界），与理论上限 177.4 吻合。**recommended_limit 取 100 而不是按有限性取 160** —— 反向的约束是**精度先于有限性**：到 169.8 都还是有限值，但 dq 对递推参考的相对 L2 在 130 处越过契约预算 0.05（曲线见 accuracy_vs_span）。让它有限但超预算地跑过去就是静默降级（AGENTS.md §7）。100 是实测仍有余量的点（105 也过，110 只剩 0.2% 余量，130 超）。前向没有这个问题，它的闸是 155。",
+      "max_finite_ok": 169.76,
+      "first_nonfinite_at": 174.23,
+      "max_within_budget": 105.0,
+      "first_over_budget_at": 130.0,
+      "accuracy_vs_span": {
+        "note": "六个梯度对 fp32 逐 token 递推参考（ascend_fla/reference/kda.py 的 kda_recurrent_ref）的相对 L2。**宽域下只有它能当 oracle** —— 单元自己的 ref.oracle 在跨度 93.84 时dq/dk/dg 分别有 3286/6507/16320 个非有限值（它按 exp2(g_i − g_j) 算整个成对矩阵再掩码，非因果半边先变 inf）。B1/T128/H1/HV1/C2、block_dim=1。预算：默认 0.05、dk 0.15、dg 0.25。**dq 是约束项**。",
+        "rows": [
+          {
+            "span": 46.0,
+            "dq": 0.02889,
+            "dk": 0.04006,
+            "dv": 0.00321,
+            "dbeta": 0.00642,
+            "dg": 0.0633,
+            "dh0": 0.00244,
+            "within_budget": true,
+            "note": "a5.kda_bwd 契约 case 所在的档"
+          },
+          {
+            "span": 60.0,
+            "dq": 0.03868,
+            "dk": 0.05778,
+            "dv": 0.00311,
+            "dbeta": 0.00477,
+            "dg": 0.1273,
+            "dh0": 0.00244,
+            "within_budget": true
+          },
+          {
+            "span": 80.0,
+            "dq": 0.04245,
+            "dk": 0.05979,
+            "dv": 0.00308,
+            "dbeta": 0.00611,
+            "dg": 0.1759,
+            "dh0": 0.00231,
+            "within_budget": true
+          },
+          {
+            "span": 94.0,
+            "dq": 0.0455,
+            "dk": 0.05836,
+            "dv": 0.00314,
+            "dbeta": 0.00487,
+            "dg": 0.1511,
+            "dh0": 0.00218,
+            "within_budget": true,
+            "note": "fla 默认初始化的 KDA 层给出的跨度"
+          },
+          {
+            "span": 96.0,
+            "dq": 0.04369,
+            "dk": 0.05734,
+            "dv": 0.00307,
+            "dbeta": 0.00947,
+            "dg": 0.1488,
+            "dh0": 0.0024,
+            "within_budget": true
+          },
+          {
+            "span": 100.0,
+            "dq": 0.04727,
+            "dk": 0.0608,
+            "dv": 0.0031,
+            "dbeta": 0.01056,
+            "dg": 0.144,
+            "dh0": 0.00259,
+            "within_budget": true,
+            "note": "recommended_limit 取在这里"
+          },
+          {
+            "span": 105.0,
+            "dq": 0.04861,
+            "dk": 0.06052,
+            "dv": 0.00307,
+            "dbeta": 0.00908,
+            "dg": 0.1516,
+            "dh0": 0.00222,
+            "within_budget": true
+          },
+          {
+            "span": 110.0,
+            "dq": 0.0499,
+            "dk": 0.08981,
+            "dv": 0.0031,
+            "dbeta": 0.01048,
+            "dg": 0.2316,
+            "dh0": 0.00243,
+            "within_budget": true,
+            "note": "dq 用掉预算的 99.8% —— 过了但没余量，所以闸不设在这里"
+          },
+          {
+            "span": 130.0,
+            "dq": 0.06172,
+            "dk": 0.06904,
+            "dv": 0.00305,
+            "dbeta": 0.0084,
+            "dg": 0.2372,
+            "dh0": 0.00232,
+            "within_budget": false,
+            "over": [
+              "dq"
+            ]
+          },
+          {
+            "span": 150.0,
+            "dq": 0.06689,
+            "dk": 0.0683,
+            "dv": 0.00302,
+            "dbeta": 0.00596,
+            "dg": 0.2401,
+            "dh0": 0.00239,
+            "within_budget": false,
+            "over": [
+              "dq"
+            ]
+          },
+          {
+            "span": 169.0,
+            "dq": 0.06882,
+            "dk": 0.07757,
+            "dv": 0.00302,
+            "dbeta": 0.00346,
+            "dg": 0.6487,
+            "dh0": 0.00253,
+            "within_budget": false,
+            "over": [
+              "dq",
+              "dg"
+            ],
+            "note": "有限性的边缘；dg 在这里崩掉"
+          }
+        ]
+      }
     }
   },
   "dependencies": {
@@ -46,26 +178,81 @@
       "rtol": 0.02,
       "atol": 0.02,
       "max_relative_l2": 0.05,
-      "per_output": {"dk": 0.15, "dg": 0.25},
+      "per_output": {
+        "dk": 0.15,
+        "dg": 0.25
+      },
       "reason": "沿用 a5.kda_bwd 的预算，逐项不放宽。dk / dg 的单独预算也照搬 —— 它们对深衰减更敏感（bf16 对 log2 累积门控的舍入改变乘性导数），这条成因与锚点无关，改锚点不会改善它。"
     }
   },
   "cases": [
-    {"id": "narrow_gate", "seed": 2026, "block_dim": 1,
-     "parameters": {"B": 1, "H": 1, "HV": 1, "C": 1, "L": 64, "K": 128, "V": 128,
-                    "gate_multiplier": 1, "initial_state": "random"},
-     "note": "与上游 single_chunk 同条件，用于证明窄域下两套实现同义。"},
-    {"id": "multi_chunk_deep", "seed": 2026, "block_dim": 1,
-     "parameters": {"B": 1, "H": 1, "HV": 1, "C": 2, "L": 64, "K": 128, "V": 128,
-                    "gate_multiplier": 80, "initial_state": "random"},
-     "note": "跨度约 89 —— 上游在这里开始出 inf/NaN。"},
-    {"id": "very_deep_gate", "seed": 2026, "block_dim": 1,
-     "parameters": {"B": 1, "H": 1, "HV": 1, "C": 1, "L": 64, "K": 128, "V": 128,
-                    "gate_multiplier": 140, "initial_state": "random"},
-     "note": "跨度约 156，与 a5.kda_fwd_stable 的最深点对齐。"},
-    {"id": "grouped_heads_deep", "seed": 2028, "block_dim": 2,
-     "parameters": {"B": 1, "H": 1, "HV": 2, "C": 2, "L": 64, "K": 128, "V": 128,
-                    "gate_multiplier": 80, "initial_state": "random"}}
+    {
+      "id": "narrow_gate",
+      "seed": 2026,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "H": 1,
+        "HV": 1,
+        "C": 1,
+        "L": 64,
+        "K": 128,
+        "V": 128,
+        "gate_multiplier": 1,
+        "initial_state": "random"
+      },
+      "note": "与上游 single_chunk 同条件，用于证明窄域下两套实现同义。"
+    },
+    {
+      "id": "multi_chunk_deep",
+      "seed": 2026,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "H": 1,
+        "HV": 1,
+        "C": 2,
+        "L": 64,
+        "K": 128,
+        "V": 128,
+        "gate_multiplier": 80,
+        "initial_state": "random"
+      },
+      "note": "跨度约 89 —— 上游在这里开始出 inf/NaN。"
+    },
+    {
+      "id": "very_deep_gate",
+      "seed": 2026,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "H": 1,
+        "HV": 1,
+        "C": 1,
+        "L": 64,
+        "K": 128,
+        "V": 128,
+        "gate_multiplier": 140,
+        "initial_state": "random"
+      },
+      "note": "跨度约 156，与 a5.kda_fwd_stable 的最深点对齐。"
+    },
+    {
+      "id": "grouped_heads_deep",
+      "seed": 2028,
+      "block_dim": 2,
+      "parameters": {
+        "B": 1,
+        "H": 1,
+        "HV": 2,
+        "C": 2,
+        "L": 64,
+        "K": 128,
+        "V": 128,
+        "gate_multiplier": 80,
+        "initial_state": "random"
+      }
+    }
   ],
   "support": {
     "reference": "passed",
@@ -88,14 +275,22 @@
       "两个 kernel 函数改名加 _stable 后缀：一个算子名只能有一份 build（AGENTS.md §6 铁律二），不改名会与上游的 build 互相覆盖。"
     ],
     "static_cost": {
-      "finalize_pre": {"upstream_ops": 247, "stable_ops": 251},
-      "finalize_post": {"upstream_ops": 368, "stable_ops": 372},
+      "finalize_pre": {
+        "upstream_ops": 247,
+        "stable_ops": 251
+      },
+      "finalize_post": {
+        "upstream_ops": 368,
+        "stable_ops": 372
+      },
       "note": "ascriptor check 报的 IR op 数，**不是周期数**，只用来界定改动规模。多出的 4 个是 2 个 RegList lane 的乘法，且在 64 行循环外，每 chunk 只算一次。"
     }
   },
   "release_scope": {
     "version": "0.1.0",
-    "hardware": ["a5"],
+    "hardware": [
+      "a5"
+    ],
     "note": "只支持 A5，与上游一致。"
   }
 }
