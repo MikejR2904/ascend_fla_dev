@@ -134,3 +134,43 @@ o, state = chunk_kda(q, k, v, g, beta, initial_state=h0,
   （层里的投影/卷积/softplus 都是 torch_npu 算子，9.1.0 那台跑不了）。测试已写好：
   `tests/test_kda_layer_npu.py::test_default_init_backward_matches_cpu_reference`。
 - ⏳ harness 集成同 `kda_fwd_stable`，见 `stable-unit-no-harness`。
+
+## 层级验证（2026-09-11 补齐）
+
+算子级证据齐了之后还差一项：**默认初始化下整层反向的精度**。它做不了的原因是机器 ——
+KDA 层里的投影、causal conv、softplus、RMSNorm 全是 torch_npu 算子，缺 `ascend950`
+内置算子包的机器上一个都跑不了（AGENTS.md §5）。换到有该算子包的 CANN 9.2.0 机器后补上。
+
+门控跨度**确定性校准**到 94（平移 `A_log`，不靠默认初始化 —— 跨度是随机变量，见下），
+B1/T128/H1/HV2/hidden256，对同一份权重的 CPU fp32 层（只把 KDA 算子换成逐 token 递推）
+逐参数比对，预算 0.25：
+
+| 量 | 相对 L2 |
+|---|---|
+| output | 4.694e-03 |
+| dx | 9.024e-03 |
+| `A_log` | 1.551e-01 |
+| `dt_bias` | 6.542e-02 |
+| `f_proj.0.weight` / `f_proj.1.weight` | 5.040e-02 / 5.153e-02 |
+| 其余 14 项（q/k/v/o 投影、conv、norm） | ≤1.090e-02 |
+
+**18 项全部在预算内。** `A_log` 与 `dt_bias` 比别的大一个量级是预期的 —— 它们的梯度都要
+穿过 `exp` / `softplus`，深衰减下对 `g` 的扰动放大最厉害，与算子级曲线里 `dg` 的预算
+（0.25，比 `dq` 的 0.05 宽五倍）是同一个原因。
+
+同一次运行里的算子级宽域三档：跨度 46 → `dq` 2.889e-02、94 → 4.550e-02、104 → 4.782e-02。
+`tests/test_kda_layer_npu.py` 8 项 + `tests/test_kda_bwd_deep_npu.py` 4 项 = **12 passed**。
+
+### 跨度是随机变量，这改了闸的取法
+
+我一开始把"默认初始化 ≈ 94"当常数用，结果整层反向那个测试的前置断言（跨度 >80）自己先挂了
+—— 那个 seed 实测只有 55.2。跨度 ∝ `max_hv exp(A_log)`，而 fla 取 `A_log = log(U(1,16))`，
+所以它是随机变量：同一个 seed 只要换一下 RNG 的消耗顺序就从 64.55 变 94.0，HV=8 实测 8 个
+seed 落在 54.2~100.6，上界 `exp(A_log)≤16 × dt≤0.1 × 63 步 ≈ 100.8`。
+
+两个后果，都已落地：
+
+1. 测试用 `_calibrate_span` 平移 `A_log` **确定性地**标定到目标跨度，不指望默认初始化碰上。
+2. **闸的下界由 100.8 定** —— `recommended_limit` 从 100 改成 **105**。低于 100.8 的闸会把
+   默认初始化的层用我们自己的门控拒掉，那等于自断链路。上界仍由契约预算定（110 处 `dq`
+   只剩 0.2% 余量，不取）。**闸是双边约束：上边界看精度实测，下边界看调用方真会送什么进来。**

@@ -2,7 +2,7 @@
   "schema": "ascriptor.kernel-unit/1",
   "id": "a5.kda_bwd_stable",
   "kind": "project",
-  "description": "KDA 定长反向，成对衰减的分解锚点由 g_last 改为 g_last/2。与 a5.kda_bwd 数学同义。有限性实测到跨度 169.76；**契约精度预算内到 105**，声明上限取 100。与 a5.kda_fwd_stable 成对使用。",
+  "description": "KDA 定长反向，成对衰减的分解锚点由 g_last 改为 g_last/2。与 a5.kda_bwd 数学同义。有限性实测到跨度 169.76；**契约精度预算内到 105**，声明上限取 105。与 a5.kda_fwd_stable 成对使用。",
   "inputs": {
     "same_as": "a5.kda_bwd",
     "note": "ABI 完全不变。九个 kernel 里只换了 finalize_pre / finalize_post 两个的内部算术，签名与张量形状一字未改。"
@@ -16,14 +16,14 @@
     "gate_span": {
       "upstream_limit": 88.72,
       "theoretical_limit": "2 × ln(BF16_MAX) ≈ 177.4",
-      "recommended_limit": 100.0,
-      "note": "gate_span = chunk 内 max(cumsum) − min(cumsum)。上游 finalize_pre/post 的 rscale = exp((g−g_last)·ln2) 在 span > ln(MAX)≈88.72 时**上溢**到 inf（q_scaled/k_scaled 是 bf16 GM 输出），配对的 cscale 同时下溢到 0，下游矩阵乘得 inf×0 = NaN。改锚点后两个因子各压到 ±span/2。实测（Ascend950PR / CANN 9.1.0 / block_dim=1，B1/T64/H1/HV1）：upstream 在 89.35 起六项梯度全坏；本单元在 1.12 / 11.17 / 50.26 / 74.83 / 89.35 / 100.51 / 125.09 / 149.66 / 155.24 / 159.71 / 169.76 十一档下六项梯度全部有限，174.23 时 dq/dk/dbeta/dg 各 64 个元素坏（gate_span 是逐通道最大值，边缘只有最深通道越界），与理论上限 177.4 吻合。**recommended_limit 取 100 而不是按有限性取 160** —— 反向的约束是**精度先于有限性**：到 169.8 都还是有限值，但 dq 对递推参考的相对 L2 在 130 处越过契约预算 0.05（曲线见 accuracy_vs_span）。让它有限但超预算地跑过去就是静默降级（AGENTS.md §7）。100 是实测仍有余量的点（105 也过，110 只剩 0.2% 余量，130 超）。前向没有这个问题，它的闸是 155。",
+      "recommended_limit": 105.0,
+      "note": "gate_span = chunk 内 max(cumsum) − min(cumsum)。上游 finalize_pre/post 的 rscale = exp((g−g_last)·ln2) 在 span > ln(MAX)≈88.72 时**上溢**到 inf（q_scaled/k_scaled 是 bf16 GM 输出），配对的 cscale 同时下溢到 0，下游矩阵乘得 inf×0 = NaN。改锚点后两个因子各压到 ±span/2。实测（Ascend950PR / CANN 9.1.0 / block_dim=1，B1/T64/H1/HV1）：upstream 在 89.35 起六项梯度全坏；本单元在 1.12 / 11.17 / 50.26 / 74.83 / 89.35 / 100.51 / 125.09 / 149.66 / 155.24 / 159.71 / 169.76 十一档下六项梯度全部有限，174.23 时 dq/dk/dbeta/dg 各 64 个元素坏（gate_span 是逐通道最大值，边缘只有最深通道越界），与理论上限 177.4 吻合。**recommended_limit 取 105 而不是按有限性取 160** —— 反向的约束是**精度先于有限性**：到 169.8 都还是有限值，但 dq 对递推参考的相对 L2 在 130 处越过契约预算 0.05（曲线见 accuracy_vs_span）。让它有限但超预算地跑过去就是静默降级（AGENTS.md §7）。105 的取法：下界是 fla 初始化能产生的跨度上界 —— exp(A_log)≤16、dt≤0.1、63 步 → 16×0.1×63 ≈ 100.8（实测 HV=8 时 8 个 seed 给 54.2~100.6，顶到上界），闸必须覆盖它否则默认初始化的层会被自己的门控拒掉；上界是契约预算还成立的最深实测点（110 处 dq 只剩 0.2% 余量，不取），105 实测 dq=4.861e-02 有 2.8% 余量。前向没有这个问题，它的闸是 155。",
       "max_finite_ok": 169.76,
       "first_nonfinite_at": 174.23,
       "max_within_budget": 105.0,
       "first_over_budget_at": 130.0,
       "accuracy_vs_span": {
-        "note": "六个梯度对 fp32 逐 token 递推参考（ascend_fla/reference/kda.py 的 kda_recurrent_ref）的相对 L2。**宽域下只有它能当 oracle** —— 单元自己的 ref.oracle 在跨度 93.84 时dq/dk/dg 分别有 3286/6507/16320 个非有限值（它按 exp2(g_i − g_j) 算整个成对矩阵再掩码，非因果半边先变 inf）。B1/T128/H1/HV1/C2、block_dim=1。预算：默认 0.05、dk 0.15、dg 0.25。**dq 是约束项**。",
+        "note": "六个梯度对 fp32 逐 token 递推参考（ascend_fla/reference/kda.py 的 kda_recurrent_ref）的相对 L2。**宽域下只有它能当 oracle** —— 单元自己的 ref.oracle 在跨度 93.84 时dq/dk/dg 分别有 3286/6507/16320 个非有限值（它按 exp2(g_i − g_j) 算整个成对矩阵再掩码，非因果半边先变 inf）。B1/T128/H1/HV1/C2、block_dim=1。预算：默认 0.05、dk 0.15、dg 0.25。**dq 是约束项**。 ⚠️ 曾试过换一个「更公平」的参考：把 g 经 bf16 g_cumsum 往返，以为那才是 ABI 允许的可达目标。**实测证伪** —— 算子离 fp32 参考反而更近（跨度 46：对 fp32 的 dq 2.889e-02，对那个参考 4.169e-02）。原因是那个构造把 bf16 cumsum 差分回 per-token 增量，属于灾难性相消；kernel 是直接用 cumsum 算 exp(g_i − g_j)，从不差分回去。所以判据仍是 fp32 参考。",
         "rows": [
           {
             "span": 46.0,
@@ -85,8 +85,7 @@
             "dbeta": 0.01056,
             "dg": 0.144,
             "dh0": 0.00259,
-            "within_budget": true,
-            "note": "recommended_limit 取在这里"
+            "within_budget": true
           },
           {
             "span": 105.0,
@@ -96,7 +95,8 @@
             "dbeta": 0.00908,
             "dg": 0.1516,
             "dh0": 0.00222,
-            "within_budget": true
+            "within_budget": true,
+            "note": "recommended_limit 取在这里：覆盖默认初始化的上界 100.8，且 dq 留 2.8% 余量"
           },
           {
             "span": 110.0,
@@ -151,7 +151,8 @@
             "note": "有限性的边缘；dg 在这里崩掉"
           }
         ]
-      }
+      },
+      "default_init_ceiling": 100.8
     }
   },
   "dependencies": {

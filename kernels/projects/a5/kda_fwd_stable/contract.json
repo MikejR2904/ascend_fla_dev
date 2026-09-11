@@ -33,7 +33,7 @@
       "recommended_limit": 155.0,
       "theoretical_limit": "2 * -ln(FLT_MIN_NORMAL) ≈ 174.7",
       "upstream_limit": 80.0,
-      "note": "gate_span = chunk 内 max(cumsum) - min(cumsum)。上游 a5.kda_fwd 在 ≥88.67 时输出 NaN（gate 只写 exp(gc)，它在 -ln(FLT_MIN_NORMAL)≈87.3 下溢到 0，下游的 k/eg 与 eg_last/eg 变成 0×inf 与 0/0）。本单元把除法改成 log 空间的减法，scores 再按逐通道中点对称分解，两个指数因子都压到 ±span/2。recommended_limit 取实测仍不退化的最深点 155.97（向下取整 155），不取理论值 —— 闸必须落在实测点上。**这是前向的上限**；训练要走反向，受 a5.kda_bwd_stable 更严的 100 约束（反向是精度先于有限性失效）。"
+      "note": "gate_span = chunk 内 max(cumsum) - min(cumsum)。上游 a5.kda_fwd 在 ≥88.67 时输出 NaN（gate 只写 exp(gc)，它在 -ln(FLT_MIN_NORMAL)≈87.3 下溢到 0，下游的 k/eg 与 eg_last/eg 变成 0×inf 与 0/0）。本单元把除法改成 log 空间的减法，scores 再按逐通道中点对称分解，两个指数因子都压到 ±span/2。recommended_limit 取实测仍不退化的最深点 155.97（向下取整 155），不取理论值 —— 闸必须落在实测点上。**这是前向的上限**；训练要走反向，受 a5.kda_bwd_stable 更严的 105 约束（反向是精度先于有限性失效）。"
     },
     "tails": "T=C*64；与上游一致，partial chunk / K-V tail / fp16 / L=32 均不支持。",
     "layout": "公开张量 token-major；内部显式重排到 BHCLK / BHVCLK。"

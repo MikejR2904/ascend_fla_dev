@@ -512,7 +512,7 @@
       "direction": "backward",
       "owner": "本仓",
       "ascriptor_path": "kernels/projects/a5/kda_bwd_stable（本仓自有单元，不在 ascriptor 仓）",
-      "contract_sha256": "ec389c101c396562746c121fe99379f2ff4ac06c9978338a03daedda7bb106b6",
+      "contract_sha256": "e8cb381455a5304e02109aee7ec8f8fe5b9ff7149b3976893b7e50e25be254d1",
       "derived_from": "a5.kda_bwd",
       "pairs_with": "a5.kda_fwd_stable",
       "leaf_kernels": 9,
@@ -530,12 +530,13 @@
         "gate_span": {
           "upstream_limit": 88.72,
           "theoretical_limit": "2 × ln(BF16_MAX) ≈ 177.4",
-          "recommended_limit": 100.0,
-          "note": "**反向的约束是精度先于有限性。** 到跨度 169.76 梯度都还是有限值，但对 fp32 递推参考的相对 L2 随跨度单调上升，dq 在 130 处越过契约预算 0.05（46→2.89e-02、94→4.55e-02、105→4.86e-02、110→4.99e-02 即 99.8% 预算、130→6.17e-02、169→6.88e-02，且 169 处 dg 崩到 6.49e-01）。让它有限但超预算地跑过去就是静默降级（AGENTS.md §7），所以闸取 100 —— 实测仍有余量的点。完整曲线见 contract.json 的 domain.gate_span.accuracy_vs_span。前向没有这个问题，它的闸是 155。",
+          "recommended_limit": 105.0,
+          "note": "**反向的约束是精度先于有限性。** 到跨度 169.76 梯度都还是有限值，但对 fp32 递推参考的相对 L2 随跨度单调上升，dq 在 130 处越过契约预算 0.05（46→2.89e-02、94→4.55e-02、105→4.86e-02、110→4.99e-02 即 99.8% 预算、130→6.17e-02、169→6.88e-02，且 169 处 dg 崩到 6.49e-01）。让它有限但超预算地跑过去就是静默降级（AGENTS.md §7），所以闸取 105：下界是 fla 初始化能产生的跨度上界 16×0.1×63 ≈ 100.8（闸必须覆盖它，否则默认初始化的层会被自己的门控拒掉），上界是预算还成立的最深实测点（110 只剩 0.2% 余量）。完整曲线见 contract.json 的 domain.gate_span.accuracy_vs_span。前向没有这个问题，它的闸是 155。",
           "max_finite_ok": 169.76,
           "first_nonfinite_at": 174.23,
           "max_within_budget": 105.0,
-          "first_over_budget_at": 130.0
+          "first_over_budget_at": 130.0,
+          "default_init_ceiling": 100.8
         }
       },
       "change_vs_upstream": [
@@ -554,15 +555,15 @@
         "board_cce": "passed",
         "evidence": "本仓 runtime 桥（aclnn 本地编译 + 进程内零拷贝），2026-09-11 / Ascend950PR / CANN 9.1.0；另有本机 ascriptor check：finalize_pre 0 error/0 warning/251 ops，finalize_post 0/0/372 ops（上游 247 / 368）。",
         "evidence_recorded_at": "2026-09-11",
-        "note": "emit/compile/board 的证据来自本仓的桥，**不是** ascriptor harness —— sim/pipesim/cannsim 要等 harness 集成（gaps.json 的 stable-unit-no-harness）。"
+        "note": "emit/compile/board 的证据来自本仓的桥，**不是** ascriptor harness —— sim/pipesim/cannsim 要等 harness 集成（gaps.json 的 stable-unit-no-harness）。层级验证在有 ascend950 算子包的 CANN 9.2.0 机器上完成（12 passed）；算子级在 CANN 9.1.0 的机器上完成 —— 两台机器的结论一致。"
       },
       "our_status": {
         "wiring": "done",
         "binding": "done",
         "accuracy_vs_oracle": "done",
         "perf_vs_baseline": "not-started",
-        "evidence": "**有限性逐档**（B1/T64/H1/HV1，block_dim=1，数六个梯度里非有限元素的个数）：上游在跨度 1.12 / 11.17 / 50.26 / 74.83 下全有限，**89.35 起六项全坏**（dh0 16384/16384、dk·dv·dg 各 8192/8192）—— 与 ln(MAX)=88.72 吻合。本单元在 1.12 → 169.76 的十一档里全部有限，174.23 时 dq/dk/dbeta/dg 各 64 个坏，与理论上限 177.4 吻合。\n**精度**：上游 a5.kda_bwd 契约的五个 case 全部通过本单元（预算取 contract 的 comparison：默认 0.05 / dk 0.15 / dg 0.25），与上游反向**三位有效数字全同、只第四位有差**：\n  single_chunk       dq=1.282e-02 dk=7.330e-02 dv=3.089e-03 dbeta=3.407e-03 dg=1.094e-01 dh0=2.977e-03\n  multi_chunk        dq=2.239e-02 dk=9.168e-02 dv=3.504e-03 dbeta=3.337e-03 dg=1.649e-01 dh0=2.589e-03\n  grouped_heads      dq=2.152e-02 dk=9.298e-02 dv=3.307e-03 dbeta=9.192e-04 dg=1.441e-01 dh0=2.785e-03\n  gentle_decay       dq=3.662e-03 dk=5.383e-03 dv=3.821e-03 dbeta=3.928e-03 dg=6.211e-03 dh0=5.163e-03\n  grouped_idle_cores dq=1.442e-02 dk=8.685e-02 dv=2.927e-03 dbeta=6.476e-03 dg=1.555e-01 dh0=2.542e-03\n最大的差是 gentle_decay 的 dbeta（3.928e-03 对上游 3.854e-03，1.9%）—— 这是换锚点应有的效果：实数上恒等，但中间量落在 bf16 GM 上，舍入位置变了。\n**宽域精度**（对 fp32 递推参考，因为单元自己的 ref.oracle 在 93.84 就有 3286/6507/16320 个非有限值 —— 它按 exp2(g_i−g_j) 算整个成对矩阵再掩码，非因果半边先变 inf）：跨度 46/94/100 三档六项梯度全部在契约预算内，其中 94 正是 fla 默认初始化的层给出的跨度，dq=4.550e-02（预算 0.05）、dg=1.511e-01（预算 0.25）。tests/test_kda_bwd_deep_npu.py 的四项全通过。",
-        "note": "性能未单独测。**反向的声明上限 100 比有限性上限 169.76 严**，因为精度先于有限性失效 —— 这不是保守，是不让它静默降级。剩一项验证：默认初始化下**整层**反向的精度，需要有 ascend950 算子包的机器；算子层面的同一件事已由 test_kda_bwd_deep_npu.py 在跨度 94 测过。"
+        "evidence": "**有限性逐档**（B1/T64/H1/HV1，block_dim=1，数六个梯度里非有限元素的个数）：上游在跨度 1.12 / 11.17 / 50.26 / 74.83 下全有限，**89.35 起六项全坏**（dh0 16384/16384、dk·dv·dg 各 8192/8192）—— 与 ln(MAX)=88.72 吻合。本单元在 1.12 → 169.76 的十一档里全部有限，174.23 时 dq/dk/dbeta/dg 各 64 个坏，与理论上限 177.4 吻合。\n**精度**：上游 a5.kda_bwd 契约的五个 case 全部通过本单元（预算取 contract 的 comparison：默认 0.05 / dk 0.15 / dg 0.25），与上游反向**三位有效数字全同、只第四位有差**：\n  single_chunk       dq=1.282e-02 dk=7.330e-02 dv=3.089e-03 dbeta=3.407e-03 dg=1.094e-01 dh0=2.977e-03\n  multi_chunk        dq=2.239e-02 dk=9.168e-02 dv=3.504e-03 dbeta=3.337e-03 dg=1.649e-01 dh0=2.589e-03\n  grouped_heads      dq=2.152e-02 dk=9.298e-02 dv=3.307e-03 dbeta=9.192e-04 dg=1.441e-01 dh0=2.785e-03\n  gentle_decay       dq=3.662e-03 dk=5.383e-03 dv=3.821e-03 dbeta=3.928e-03 dg=6.211e-03 dh0=5.163e-03\n  grouped_idle_cores dq=1.442e-02 dk=8.685e-02 dv=2.927e-03 dbeta=6.476e-03 dg=1.555e-01 dh0=2.542e-03\n最大的差是 gentle_decay 的 dbeta（3.928e-03 对上游 3.854e-03，1.9%）—— 这是换锚点应有的效果：实数上恒等，但中间量落在 bf16 GM 上，舍入位置变了。\n**宽域精度**（对 fp32 递推参考，因为单元自己的 ref.oracle 在 93.84 就有 3286/6507/16320 个非有限值 —— 它按 exp2(g_i−g_j) 算整个成对矩阵再掩码，非因果半边先变 inf）：跨度 46/94/100 三档六项梯度全部在契约预算内，其中 94 正是 fla 默认初始化的层给出的跨度，dq=4.550e-02（预算 0.05）、dg=1.511e-01（预算 0.25）。tests/test_kda_bwd_deep_npu.py 的四项全通过。\n**整层反向（此前唯一缺的那项，已在有 ascend950 算子包的 CANN 9.2.0 机器上跑完）**：门控跨度确定性校准到 94、B1/T128/H1/HV2/hidden256，对同一份权重的 CPU fp32 层（KDA 算子换成逐 token 递推）逐参数比对，**18 项全在预算 0.25 内**：output 4.694e-03、dx 9.024e-03、A_log 1.551e-01、dt_bias 6.542e-02、f_proj 5.04e-02/5.15e-02、其余投影与 norm 4.5e-03~1.09e-02。tests/test_kda_layer_npu.py 8 项 + tests/test_kda_bwd_deep_npu.py 4 项，**12 passed**。\n算子级宽域三档（同一次运行）：跨度 46 → dq 2.889e-02、94 → 4.550e-02、104 → 4.782e-02，全部在契约预算内。",
+        "note": "性能未单独测。**反向的声明上限 105 比有限性上限 169.76 严**，因为精度先于有限性失效；105 的下界由 fla 初始化的跨度上界 100.8 定，上界由预算还成立的最深实测点定。算子级与层级验证都已完成，没有待办项。"
       },
       "fla_counterpart": {
         "entry": "fla.ops.kda",
@@ -758,7 +759,7 @@
         },
         "gate_formula": "g = -exp(A_log) * softplus(f_proj(x) + dt_bias)",
         "our_status": "done-torch",
-        "our_evidence": "2026-09-11 第二期：ascend_fla/layers/kda.py KimiDeltaAttention，参数名与 fla 逐项对齐（KDA 算子自编译，周边 modules 是 torch —— modules-are-torch-not-kernels）。层级梯度实测：三个形状下输出相对 L2 4.9e-03，全部 17 个参数的梯度在 3.6e-03~2.2e-02，预算 0.1（A_log/dt_bias/f_proj 用 0.25，因为它们的梯度直接由 dg 来）。参考是同一份权重的 CPU 层，只把 KDA 算子换成 fp32 逐 token 递推版。承担了 fla 放在 kernel 里的三件事（q/k 的 l2norm、门控变换、beta sigmoid）。默认初始化（跨度 ~94）另有两项：前向对递推 oracle 相对 L2 4.697e-03（已测）；整层反向的有限性与精度由 test_default_init_backward_matches_cpu_reference 盯，**真机未跑**（反向的 kda_bwd_stable 还没在真机比对过，见 bwd-gate-range-overflow）。梯度对齐那三个形状是在 exp(A_log)=1 下测的 —— 为的是把「接线对不对」和「深衰减下 bf16 本来就糙」分开，不是因为默认初始化跑不了。decode 路径未接（fused-recurrent-missing）。"
+        "our_evidence": "2026-09-11 第二期：ascend_fla/layers/kda.py KimiDeltaAttention，参数名与 fla 逐项对齐（KDA 算子自编译，周边 modules 是 torch —— modules-are-torch-not-kernels）。层级梯度实测：三个形状下输出相对 L2 4.9e-03，全部 17 个参数的梯度在 3.6e-03~2.2e-02，预算 0.1（A_log/dt_bias/f_proj 用 0.25，因为它们的梯度直接由 dg 来）。参考是同一份权重的 CPU 层，只把 KDA 算子换成 fp32 逐 token 递推版。承担了 fla 放在 kernel 里的三件事（q/k 的 l2norm、门控变换、beta sigmoid）。默认初始化（跨度 ~94）另有两项：前向对递推 oracle 相对 L2 4.697e-03（已测）；整层反向（门控跨度校准到 94）对同一份权重的 CPU 层逐参数比对，18 项全在预算 0.25 内（output 4.694e-03、dx 9.024e-03、A_log 1.551e-01、dt_bias 6.542e-02、f_proj 5.0e-02/5.2e-02，其余 4.5e-03~1.1e-02），由 test_deep_gate_backward_matches_cpu_reference 盯，已在有 ascend950 算子包的机器上跑通。梯度对齐那三个形状是在 exp(A_log)=1 下测的 —— 为的是把「接线对不对」和「深衰减下 bf16 本来就糙」分开，不是因为默认初始化跑不了。decode 路径未接（fused-recurrent-missing）。"
       },
       {
         "id": "gated_deltanet",

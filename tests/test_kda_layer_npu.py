@@ -16,7 +16,7 @@ q/k 的 L2 归一化、beta 的 sigmoid、KDA 算子、``FusedRMSNormGated``、�
 **梯度对齐测试里把 ``exp(A_log)`` 压到了 1**，为的是把"接线对不对"和"深衰减下 bf16 本来
 就糙"分开测，不是因为默认初始化跑不了 —— 默认初始化（跨度 ~94）由
 ``test_default_init_forward_matches_recurrent_oracle`` 与
-``test_default_init_backward_matches_cpu_reference`` 专门盯。
+``test_deep_gate_backward_matches_cpu_reference`` 专门盯。
 
 预算：参数梯度比单个算子输出更敏感（经过了投影的放大）。算子侧 ``dg`` 的契约预算是
 0.25，而 ``A_log`` / ``dt_bias`` 的梯度直接由 ``dg`` 来，所以它们用同一档；其余参数
@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import pathlib
 import sys
+import math
 from unittest import mock
 
 import pytest
@@ -85,7 +86,7 @@ def test_layer_grads_match_cpu_reference(b, t, num_heads, num_v_heads, hidden):
     layer_cpu = KimiDeltaAttention(**kw).float()
     # ⚠️ 把 exp(A_log) 从 fla 初始化的 ~15 压到 1，让 chunk 内门控跨度落在 ~6 而不是 ~94。
     # **不是为了让测试通过** —— stable 实现在 94 下也能跑（见
-    # test_default_init_backward_matches_cpu_reference）。这里压低是为了把两件事分开：
+    # test_deep_gate_backward_matches_cpu_reference）。这里压低是为了把两件事分开：
     # 本测试验"算子在层里接对了"（17 个参数的梯度逐个对账），深衰减下 bf16 对 log2 累积
     # 门控的舍入会让 dk/dg 的误差涨一个数量级（契约里 dk 0.15 / dg 0.25 就是为它留的），
     # 混在一起测会让"接线错了"和"深衰减本来就糙"分不开。
@@ -148,40 +149,62 @@ def test_layer_rejects_unsupported_config():
         layer(torch.randn(1, 64, 256, device="npu"), cu_seqlens=torch.tensor([0, 64]))
 
 
-def test_default_init_needs_stable_impl():
-    """默认初始化的层只能用 ``impl="stable"`` —— 钉成一个会说话的测试。
+def _calibrate_span(layer, x, target: float) -> float:
+    """把层的门控跨度确定性地平移到 ``target``，返回实际值。
 
-    按 fla 自己的初始化，chunk 内门控跨度约 94。实测（benchmarks 侧扫描）：
+    为什么必须校准而不是靠默认抽样：跨度 ∝ ``max_hv exp(A_log)``，而 fla 取
+    ``A_log = log(U(1,16))``，所以它是**随机变量** —— 实测同一配置换 seed 能从 15 跳到 96，
+    甚至**同一个 seed 下只要建层与抽 x 的先后顺序不同就从 64.6 变成 94.0**（RNG 消耗顺序不同）。
+    靠抽样碰深跨度的测试必然时好时坏。``g ∝ exp(A_log)``，所以加 ``log(target/current)`` 即可。
+    """
+    with torch.no_grad():
+        layer.A_log += math.log(target / _gate_span_of(layer, x))
+    return _gate_span_of(layer, x)
 
-    * ``upstream``（ascriptor 原版）：跨度 ≤66.84 正常（relL2 2.9e-03），≥89.12 全 NaN。
-      根因是 gate 只写 ``eg = exp(gc)``，它在 ``-ln(FLT_MIN_NORMAL) ≈ 87.3`` 下溢到 0，
-      下游的 ``k/eg`` 与 ``eg_last/eg`` 变成 ``0×inf`` 与 ``0/0``。
-    * ``stable``（本仓 ``kernels/projects/a5/kda_fwd_stable``）：跨度到 155.97 仍全部有限，
-      relL2 稳定 2.85e-03~3.19e-03，**重叠域内与 upstream 四位有效数字相同**。
 
-    所以：默认层在 ``upstream`` 下应当被门控**挡住并报错**（不是返回 NaN），在 ``stable``
-    下应当正常工作。见 ``docs/matrix/gaps.json`` 的 ``gate-range-beyond-declared``。
+def test_deep_gate_needs_stable_impl():
+    """深门控跨度下 ``upstream`` 必须被挡住报错、``stable`` 必须跑得通。
+
+    跨度校准到 94 —— fla 的初始化确实能产生这个量级（理论上界 ``16 × 0.1 × 63 ≈ 100.8``，
+    实测 HV=8 时 12 个 seed 的中位数 93.1、最大 100.9）。实测两套实现的分界：
+
+    * ``upstream``：跨度 ≤66.84 正常（relL2 2.9e-03），≥89.12 全 NaN。根因是 gate 只写
+      ``eg = exp(gc)``，它在 ``-ln(FLT_MIN_NORMAL) ≈ 87.3`` 下溢到 0，下游的 ``k/eg`` 与
+      ``eg_last/eg`` 变成 ``0×inf`` 与 ``0/0``。
+    * ``stable``：跨度到 155.97 仍全部有限，relL2 稳定 2.85e-03~3.19e-03。
+
+    ``upstream`` 要**报错**而不是返回 NaN（AGENTS.md §7）。见 ``docs/matrix/gaps.json`` 的
+    ``gate-range-beyond-declared``。
     """
     torch.manual_seed(2026)
-    x = torch.randn(1, 64, 256, device="npu") * 0.5
     kw = dict(hidden_size=256, head_dim=128, num_heads=1, num_v_heads=1)
+    x_cpu = torch.randn(1, 64, 256) * 0.5
+    x = x_cpu.to("npu")
 
-    up = KimiDeltaAttention(**kw, impl="upstream").float().to("npu")
-    with pytest.raises(ValueError, match="门控跨度"):
+    up = KimiDeltaAttention(**kw, impl="upstream").float()
+    span = _calibrate_span(up, x_cpu, 94.0)
+    assert abs(span - 94.0) < 1.0, f"跨度校准失败：{span:.1f}"
+    up = up.to("npu")
+    with pytest.raises(ValueError, match="门控跨度") as e:
         up(x)
+    assert "upstream" in str(e.value), f"报错没指明是哪套实现：{e.value}"
 
     # 默认就是 stable —— 同样的跨度应当跑得通
-    st = KimiDeltaAttention(**kw).float().to("npu")
+    st = KimiDeltaAttention(**kw).float()
     assert st.impl == "stable", "默认实现应当是 stable"
-    o, _ = st(x)
-    assert o.float().isfinite().all(), "stable 实现下默认初始化的层仍不是有限值"
+    _calibrate_span(st, x_cpu, 94.0)
+    o, _ = st.to("npu")(x)
+    assert o.float().isfinite().all(), f"stable 在跨度 {span:.1f} 下仍不是有限值"
 
 
 def test_default_init_forward_matches_recurrent_oracle():
-    """默认初始化（跨度 ~94）下，整层前向对逐 token 递推 oracle 的精度。
+    """默认初始化下整层前向对逐 token 递推 oracle 的精度。
 
     这是 stable 实现的意义所在：上一个测试只证明"不是 NaN"，这里要求它**准**。
     预算取 0.05，与算子契约的 max_relative_l2 同档。
+
+    **不固定跨度**：用 fla 原样的初始化，跨度是多少就是多少（会打印出来）。深跨度下的
+    精度由 :func:`test_deep_gate_backward_matches_cpu_reference` 校准到 94 专门测。
     """
     torch.manual_seed(2026)
     kw = dict(hidden_size=256, head_dim=128, num_heads=1, num_v_heads=2, conv_size=4)
@@ -195,12 +218,17 @@ def test_default_init_forward_matches_recurrent_oracle():
         o_cpu, _ = layer_cpu(x)
     o_npu, _ = layer_npu(x.to("npu"))
     err = _rel_l2(o_npu.detach().cpu(), o_cpu.detach())
-    print(f"\n默认初始化（跨度 ~94）下整层前向相对 L2 = {err:.3e}")
+    print(f"\n默认初始化（本 seed 下跨度 {_gate_span_of(layer_cpu, x):.1f}）"
+          f"整层前向相对 L2 = {err:.3e}")
     assert err < 0.05, f"相对 L2 {err:.3e} 超出 0.05"
 
 
-def test_default_init_backward_matches_cpu_reference():
-    """默认初始化（跨度 ~94）下**整层反向**对 CPU 参考的精度。
+def test_deep_gate_backward_matches_cpu_reference():
+    """门控跨度校准到 94 时**整层反向**对 CPU 参考的精度。
+
+    94 是 fla 初始化能产生的量级（理论上界 ``16 × 0.1 × 63 ≈ 100.8``，实测 HV=8 时 12 个
+    seed 的中位数 93.1、最大 100.9），但**不是常量** —— 所以这里确定性地校准，
+    见 :func:`_calibrate_span`。
 
     为什么单独立一个：前向修好不等于能训练。ascriptor 的反向在 ``finalize_pre`` /
     ``finalize_post`` 里把成对衰减分解成 ``exp(g − g_last) · exp(g_last − g)``，前者在
@@ -215,7 +243,9 @@ def test_default_init_backward_matches_cpu_reference():
        因为 bf16 对 log2 累积门控的舍入在深衰减下确实会放大 —— 那是
        ``kda-fwd-bwd-dtype-mismatch`` 已量化过的成因，不是接线错。
 
-    ``A_log`` **不压低** —— 这正是与 ``test_layer_grads_match_cpu_reference`` 的分工。
+    与 ``test_layer_grads_match_cpu_reference`` 的分工：那个把 ``exp(A_log)`` 压到 1（浅跨度）
+    只验接线，这个在深跨度验同一条链 —— 深衰减下 bf16 的舍入会让 ``dk``/``dg`` 涨一个数量级，
+    混在一起测就分不开"接线错了"和"深衰减本来就糙"。
     """
     torch.manual_seed(2026)
     kw = dict(hidden_size=256, head_dim=128, num_heads=1, num_v_heads=2, conv_size=4)
@@ -225,8 +255,18 @@ def test_default_init_backward_matches_cpu_reference():
     layer_npu = layer_npu.to("npu")
 
     x = torch.randn(1, 128, 256) * 0.5
+    # 默认初始化的跨度是**随机变量**：它 ∝ max_hv exp(A_log)，而 fla 取 A_log = log(U(1,16))，
+    # 所以同一配置换个 seed 能从 15 跳到 96（实测 12 个 seed：HV=1 给 21.5~96.2、
+    # HV=8 给 63.1~100.9）。靠抽样碰一个深跨度会让这个测试时好时坏，所以**确定性地**
+    # 把 A_log 整体平移到目标跨度 —— g ∝ exp(A_log)，加 log(target/current) 即可。
+    # 目标取 94（实测过的深档，也在反向闸 100 以内）。
+    target = 94.0
+    with torch.no_grad():
+        shift = math.log(target / _gate_span_of(layer_cpu, x))
+        layer_cpu.A_log += shift
+        layer_npu.A_log += shift
     span = _gate_span_of(layer_cpu, x)
-    assert span > 80, f"跨度只有 {span:.1f}，没到要测的深衰减区间，本测试前提失效"
+    assert abs(span - target) < 1.0, f"跨度校准失败：想要 {target}，得到 {span:.1f}"
 
     seed_grad = torch.randn(1, 128, 256, generator=torch.Generator().manual_seed(7))
 
@@ -270,28 +310,46 @@ def _gate_span_of(layer, x) -> float:
     return (cum.amax(dim=2) - cum.amin(dim=2)).max().item()
 
 
-def test_layer_gate_span_exceeds_declared_domain():
-    """把"层产生的门控远超算子声明域"这件事钉成一个会说话的测试。
+def test_layer_gate_span_is_a_random_variable_with_a_ceiling():
+    """把"层产生的门控跨度是随机变量、且有上界"钉成测试 —— 纯 CPU。
 
-    ``kda_fwd`` contract 的 ``input_generation`` 声明 ``g_raw ∈ [-0.03, 0]``，即 64 个
-    token 的 chunk 内跨度 ≤ 1.92。而 KDA 层按 **fla 自己的初始化**
-    （``A_log = log(U(1,16))``、``dt_bias`` 为 Mamba 的 inv-softplus，``dt ∈ [0.001,0.1]``）
-    产生的 per-token ``g`` 可达 ``-15 × 0.096 ≈ -1.47``，64 个 token 累计约 **-94** ——
-    比声明域宽约 50 倍，且**几乎与输入尺度无关**（由两个参数的初始化决定）。
+    两件此前被我写错的事：
 
-    所以这个测试不是在查 bug，而是固定住一个事实：算子被验证过的门控域不覆盖真实层的
-    初始化。见 ``docs/matrix/gaps.json`` 的 ``gate-range-beyond-declared``。
+    1. **它不是常量 ~94。** 跨度 ∝ ``max_hv exp(A_log)``，而 fla 取 ``A_log = log(U(1,16))``，
+       所以 ``exp(A_log) ∈ [1,16]``，跨度能差 16 倍。实测 12 个 seed：HV=1 给 21.5~96.2、
+       HV=2 给 15.3~94.8、HV=8 给 63.1~100.9。**头数越多，最大值越稳地顶到上界**
+       （取 max 的样本更多）。甚至同一个 seed 下，建层与抽 ``x`` 的先后顺序不同就能从 64.6
+       变成 94.0 —— RNG 消耗顺序不同。
+    2. **它有上界**：``exp(A_log) ≤ 16``、``dt ≤ 0.1``、63 步 → ``16 × 0.1 × 63 ≈ 100.8``。
+       这个数**恰好顶在反向闸 100 上** —— 即 fla 默认初始化的最坏情形会被我们的门控挡住。
+       记在 ``docs/matrix/gaps.json`` 的 ``gate-span-still-bounded``。
+
+    对比：``kda_fwd`` contract 的 ``input_generation`` 是 ``g_raw ∈ [-0.03, 0]``，即 64 token
+    跨度 ≤1.89 —— 算子被验证过的域比真实层窄 50 倍。
     """
+    kw = dict(hidden_size=256, head_dim=128, num_heads=1, num_v_heads=8, conv_size=4)
+    spans = []
+    for seed in range(8):
+        torch.manual_seed(seed)
+        layer = KimiDeltaAttention(**kw).float()
+        torch.manual_seed(1000 + seed)
+        spans.append(_gate_span_of(layer, torch.randn(1, 128, kw["hidden_size"]) * 0.5))
+    ceiling = 16.0 * 0.1 * 63
+    print(f"\nHV=8 下 8 个 seed 的 chunk 内门控跨度："
+          + " / ".join(f"{v:.1f}" for v in sorted(spans))
+          + f"   （fla 初始化的理论上界 {ceiling:.1f}）")
+    assert max(spans) / min(spans) > 1.2, (
+        f"8 个 seed 的跨度几乎一样（{spans}），与「它是随机变量」矛盾 —— 初始化被改过？"
+    )
+    assert max(spans) <= ceiling * 1.05, (
+        f"最大跨度 {max(spans):.1f} 超过理论上界 {ceiling:.1f}，说明上界推导错了"
+    )
+    # 输入尺度几乎不影响它 —— 这条是原先那个测试的有效部分，保留
     torch.manual_seed(2026)
     layer = KimiDeltaAttention(hidden_size=256, head_dim=128, num_heads=1, num_v_heads=1).float()
-    spans = []
-    for scale in (0.5, 0.05, 0.01):
-        g = layer._gate(torch.randn(1, 64, 256) * scale, 1, 64)
-        cum = g.cumsum(1)
-        spans.append((cum.amax(dim=1) - cum.amin(dim=1)).max().item())
-    print(f"\n输入 scale 0.5/0.05/0.01 下的 chunk 内门控跨度："
-          + " / ".join(f"{s:.1f}" for s in spans))
-    assert min(spans) > 20, f"跨度 {spans} 远小于预期，说明初始化被改过，本测试的前提失效"
-    assert max(spans) / min(spans) < 1.2, (
-        f"跨度随输入尺度明显变化（{spans}），与「由初始化决定」的结论矛盾"
+    by_scale = [_gate_span_of(layer, torch.randn(1, 64, 256) * sc) for sc in (0.5, 0.05, 0.01)]
+    print(f"输入 scale 0.5/0.05/0.01 下的跨度："
+          + " / ".join(f"{v:.1f}" for v in by_scale) + "   （应当几乎相同）")
+    assert max(by_scale) / min(by_scale) < 1.2, (
+        f"跨度随输入尺度明显变化（{by_scale}），与「由初始化决定」的结论矛盾"
     )

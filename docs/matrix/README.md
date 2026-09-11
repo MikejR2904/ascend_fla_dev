@@ -159,7 +159,7 @@ kimi_linear_layer / bd=4 的拆分（ms）：fwd_kernels 1.314 · caches_host_si
 **layers**
 
 - `kda` — 🔶 完成（torch 实现）
-  - 证据：2026-09-11 第二期：ascend_fla/layers/kda.py KimiDeltaAttention，参数名与 fla 逐项对齐（KDA 算子自编译，周边 modules 是 torch —— modules-are-torch-not-kernels）。层级梯度实测：三个形状下输出相对 L2 4.9e-03，全部 17 个参数的梯度在 3.6e-03~2.2e-02，预算 0.1（A_log/dt_bias/f_proj 用 0.25，因为它们的梯度直接由 dg 来）。参考是同一份权重的 CPU 层，只把 KDA 算子换成 fp32 逐 token 递推版。承担了 fla 放在 kernel 里的三件事（q/k 的 l2norm、门控变换、beta sigmoid）。默认初始化（跨度 ~94）另有两项：前向对递推 oracle 相对 L2 4.697e-03（已测）；整层反向的有限性与精度由 test_default_init_backward_matches_cpu_reference 盯，**真机未跑**（反向的 kda_bwd_stable 还没在真机比对过，见 bwd-gate-range-overflow）。梯度对齐那三个形状是在 exp(A_log)=1 下测的 —— 为的是把「接线对不对」和「深衰减下 bf16 本来就糙」分开，不是因为默认初始化跑不了。decode 路径未接（fused-recurrent-missing）。
+  - 证据：2026-09-11 第二期：ascend_fla/layers/kda.py KimiDeltaAttention，参数名与 fla 逐项对齐（KDA 算子自编译，周边 modules 是 torch —— modules-are-torch-not-kernels）。层级梯度实测：三个形状下输出相对 L2 4.9e-03，全部 17 个参数的梯度在 3.6e-03~2.2e-02，预算 0.1（A_log/dt_bias/f_proj 用 0.25，因为它们的梯度直接由 dg 来）。参考是同一份权重的 CPU 层，只把 KDA 算子换成 fp32 逐 token 递推版。承担了 fla 放在 kernel 里的三件事（q/k 的 l2norm、门控变换、beta sigmoid）。默认初始化（跨度 ~94）另有两项：前向对递推 oracle 相对 L2 4.697e-03（已测）；整层反向（门控跨度校准到 94）对同一份权重的 CPU 层逐参数比对，18 项全在预算 0.25 内（output 4.694e-03、dx 9.024e-03、A_log 1.551e-01、dt_bias 6.542e-02、f_proj 5.0e-02/5.2e-02，其余 4.5e-03~1.1e-02），由 test_deep_gate_backward_matches_cpu_reference 盯，已在有 ascend950 算子包的机器上跑通。梯度对齐那三个形状是在 exp(A_log)=1 下测的 —— 为的是把「接线对不对」和「深衰减下 bf16 本来就糙」分开，不是因为默认初始化跑不了。decode 路径未接（fused-recurrent-missing）。
 - `gated_deltanet` — ⬜ 未开始
 
 **models**
@@ -369,16 +369,17 @@ P0 0 项 · P1 12 项 · P2 11 项 · 已解决 9 项 · 共 32 项
 - **影响** ① 拿不到 ascriptor harness 的 sim / pipesim / cannsim 几个 stage 的证据，也就用不上它的逐 stage checkpoint 比对（那对定位 kernel 内部错误很有用）。② 这个单元不能被 ascriptor 侧的人独立复现，不利于把修法推回上游。contract.json 的 support 里已如实标注证据来源，没有假装有 harness 证据。
 - **建议** 补 unit.py 与 run.py。reference 可以直接用 ascend_fla/reference/kda.py 的逐 token 递推版（它没有跨度上限，正是宽域下唯一可用的 oracle）。做完后把 contract.json 的 support 按 harness 实际结果更新。
 
-#### `gate-span-still-bounded` — 稳定化把门控跨度上限从 80 抬到前向 155 / 反向 100，但没有去掉上限
+#### `gate-span-still-bounded` — 稳定化把门控跨度上限从 80 抬到前向 155 / 反向 105，但没有去掉上限
 
 - **类别** numerics · **适用于** KDA · **阻塞** —
 - **依据** `kda_fwd_stable` / `kda_bwd_stable` 走的是**对称分解**：把 `exp(a_i − a_j)` 拆成两个以中点为锚的因子，各压到 ±span/2，有限性的理论上限正好翻倍 —— 前向 `2 × -ln(FLT_MIN_NORMAL) ≈ 174.7`，反向 `2 × ln(BF16_MAX) ≈ 177.4`。
 **但两条链的闸不是同一回事，这是实测出来的**：
 * 前向的约束是**有限性**。实测跨度到 155.97 时 `o` 的相对 L2 仍稳定在 2.85e-03~3.19e-03，完全不随跨度退化 —— 所以闸就设在实测最深点 155。
-* 反向的约束是**精度，而且它先于有限性到来**。梯度到 169.76 都还是有限值，但对 fp32 递推参考的相对 L2 随跨度单调上升：dq 在 46/94/105/110/130/169 处是 2.89e-02 / 4.55e-02 / 4.86e-02 / 4.99e-02 / 6.17e-02 / 6.88e-02，**130 处越过契约预算 0.05**；dg 在 169 处崩到 6.49e-01（预算 0.25）。所以反向的闸设在 100（105 也过，110 只剩 0.2% 余量）。
+* 反向的约束是**精度，而且它先于有限性到来**。梯度到 169.76 都还是有限值，但对 fp32 递推参考的相对 L2 随跨度单调上升：dq 在 46/94/105/110/130/169 处是 2.89e-02 / 4.55e-02 / 4.86e-02 / 4.99e-02 / 6.17e-02 / 6.88e-02，**130 处越过契约预算 0.05**；dg 在 169 处崩到 6.49e-01（预算 0.25）。所以反向的闸设在 105。
+**105 的下界是 fla 初始化本身的上界，这点此前被我写错了。** 跨度不是常量 ~94，它是**随机变量** —— 跨度 ∝ `max_hv exp(A_log)`，而 fla 取 `A_log = log(U(1,16))`，所以 `exp(A_log) ∈ [1,16]`。实测 12 个 seed：HV=1 给 21.5~96.2、HV=2 给 15.3~94.8、**HV=8 给 63.1~100.9**（头数越多越稳地顶到上界，因为取 max 的样本更多）。甚至同一个 seed 下，建层与抽 x 的先后顺序不同就从 64.6 变成 94.0（RNG 消耗顺序不同）。上界是 `exp(A_log)≤16 × dt≤0.1 × 63 步 ≈ 100.8`。**闸必须覆盖 100.8**，否则默认初始化的层会被我们自己的门控拒掉 —— 这就排除了 100。上限那头是契约预算还成立的最深实测点：110 处 dq=4.99e-02 只剩 0.2% 余量，不取；105 处 dq=4.861e-02，余量 2.8%。
 于是 `MAX_GATE_SPAN` 是二维的：`{impl: {forward, backward}}`，纯推理用前向那条、训练用反向那条。fla 默认初始化的层跨度约 94，两条都满足。
 **跨度不随 T 增长** —— 它是 chunk 内（64 token）的量，cumsum 每 chunk 重置。推高它的是 `exp(A_log)` 与 `dt` 的乘积。
-- **影响** ① fla 默认初始化给出跨度 ~94，反向的闸 100 只剩 6% 余量。`A_log` 与 `dt_bias` 都是可训练参数，训练中 `dt` 变大就会撞上限 —— 届时是**报错**（设计如此），但会中断训练。要继续得显式 `check_gate_range=False` 并接受超预算的梯度，或者压 `dt`。
+- **影响** ① fla 默认初始化的跨度上界是 100.8，反向的闸 105 只剩 4% 余量，而实测 HV=8 时 8 个 seed 里就有一个到 100.6。`A_log` 与 `dt_bias` 都是可训练参数，训练中 `dt` 变大就会撞上限 —— 届时是**报错**（设计如此），但会中断训练。要继续得显式 `check_gate_range=False` 并接受超预算的梯度，或者压 `dt`。
 ② 门控检查默认开，每次前向对 g 做一次 cumsum + 两次规约，实测 0.212ms / 步（bd=4 / kimi_linear_layer，占训练步 4%）。
 ③ **有限性上限（反向 169.76）比声明上限宽**。需要更深跨度又能接受精度退化的调用方，可以自己关掉检查 —— 曲线在 `kda_bwd_stable/contract.json` 的 `accuracy_vs_span` 里，照着选，不要瞎试。
 - **建议** 现在不做。真撞上限时按代价排序：

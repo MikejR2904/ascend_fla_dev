@@ -33,20 +33,28 @@ if not torch.npu.is_available():  # pragma: no cover
     pytest.skip("没有可用的 NPU", allow_module_level=True)
 
 from ascend_fla.ops.kda import chunk_kda_fwd_with_caches  # noqa: E402
-from ascend_fla.ops.kda.chunk import MAX_GATE_SPAN, _gate_span  # noqa: E402
+from ascend_fla.ops.kda.chunk import (  # noqa: E402
+    L_PER_CHUNK,
+    MAX_GATE_SPAN,
+    _gate_span,
+)
 from ascend_fla.ops.kda.chunk_bwd import chunk_kda_bwd  # noqa: E402
 from ascend_fla.reference.kda import kda_recurrent_ref  # noqa: E402
 
 B, T, H, HV, D = 1, 128, 1, 1, 128          # C=2 —— 单 chunk 测不到 chunk 间的状态传递
 BUDGET = {"dq": 0.05, "dk": 0.15, "dv": 0.05, "dbeta": 0.05, "dg": 0.25, "dh0": 0.05}
 
-#: 目标跨度。46 是契约 case 所在的档（标定用），94 是 fla 默认初始化的层给出的值。
+#: 目标跨度。46 是 a5.kda_bwd 契约 case 所在的档（标定用），94 是 fla 默认初始化常见的档
+#: （它是随机变量，上界 ≈100.8 —— 见 test_kda_layer_npu.py 的
+#: ``test_layer_gate_span_is_a_random_variable_with_a_ceiling``）。
 #: 上限取 :data:`~ascend_fla.ops.kda.chunk.MAX_GATE_SPAN` 的 ``stable`` 值 —— 门控声明为
 #: 安全的跨度，就必须在契约预算内，否则门控等于在默许静默降级（AGENTS.md §7）。
 #: 更深的档精度会继续退化（到 169.76 都还是**有限值**，但 ``dq`` 在 130 处越过预算 0.05），
 #: 曲线记在 ``kda_bwd_stable/contract.json`` 的 ``domain.gate_span.accuracy_vs_span``；
 #: 要用更深的跨度就得显式 ``check_gate_range=False``，那是调用方自己的决定。
-TARGET_SPANS = (46.0, 94.0, MAX_GATE_SPAN["stable"]["backward"])
+#: 最深档取闸减 1 —— 正好等于闸时，按比例缩放出的跨度可能是 105.0000x 而被门控拒掉，
+#: 那测的就是浮点噪声而不是精度。
+TARGET_SPANS = (46.0, 94.0, MAX_GATE_SPAN["stable"]["backward"] - 1.0)
 
 
 def _rel_l2(a: torch.Tensor, b: torch.Tensor) -> float:
@@ -73,17 +81,36 @@ def _inputs(span: float, seed: int = 2026):
     )
 
 
-def _reference_grads(x: dict) -> dict:
-    """fp32 递推参考的梯度。用 ``autograd.grad`` 而不是 ``.backward()``，避免污染叶子。"""
+def _through_bf16_cumsum(g: torch.Tensor) -> torch.Tensor:
+    """per-token 增量 → chunk 内 cumsum → bf16 → 回 fp32 → 差分回增量。
+
+    这正是反向 kernel 能看到的门控信息：``kda_bwd`` 的 ABI 把 ``g_cumsum`` 定为 **bf16**
+    （前向入口的 g 是 fp32）。所以喂了这个 g 的 fp32 参考，才是**任何实现都只能做到**的目标。
+    """
+    b, t, hv, d = g.shape
+    c = t // L_PER_CHUNK
+    cum = g.view(b, c, L_PER_CHUNK, hv, d).cumsum(2).bfloat16().float()
+    prev = torch.cat([torch.zeros_like(cum[:, :, :1]), cum[:, :, :-1]], dim=2)
+    return (cum - prev).view(b, t, hv, d)
+
+
+def _reference_grads(x: dict, g: torch.Tensor | None = None) -> dict:
+    """fp32 递推参考的梯度。用 ``autograd.grad`` 而不是 ``.backward()``，避免污染叶子。
+
+    ``g`` 不传时用 ``x["g"]``（fp32，比反向 ABI 更准）；传 :func:`_through_bf16_cumsum`
+    的结果则得到**可达目标**。
+    """
     leaves = {n: x[n].clone().float().requires_grad_(True)
-              for n in ("q", "k", "v", "beta", "g", "h0")}
+              for n in ("q", "k", "v", "beta", "h0")}
+    gl = (x["g"] if g is None else g).clone().float().requires_grad_(True)
     o, ht = kda_recurrent_ref(
-        leaves["q"], leaves["k"], leaves["v"], leaves["g"], leaves["beta"],
+        leaves["q"], leaves["k"], leaves["v"], gl, leaves["beta"],
         initial_state=leaves["h0"], output_final_state=True,
     )
     # 与喂给 kernel 的上游梯度完全一致：o 配 do、final_state 配 dht
     loss = (o * x["do"].float()).sum() + (ht * x["dht"].float()).sum()
-    grads = torch.autograd.grad(loss, [leaves[n] for n in ("q", "k", "v", "beta", "g", "h0")])
+    grads = torch.autograd.grad(
+        loss, [leaves["q"], leaves["k"], leaves["v"], leaves["beta"], gl, leaves["h0"]])
     return dict(zip(("dq", "dk", "dv", "dbeta", "dg", "dh0"), grads))
 
 
@@ -111,9 +138,24 @@ def test_bwd_matches_recurrent_reference(span):
     bad_ref = [n for n in BUDGET if not want[n].isfinite().all()]
     assert not bad_ref, f"递推参考在跨度 {got_span:.2f} 下自己不是有限值：{bad_ref}，本档无效"
 
+
+    # 判据是**对 fp32 递推参考**的相对 L2 —— 它是语义权威。
+    #
+    # ⚠️ 我试过换一个"更公平"的参考：把 g 经 bf16 `g_cumsum` 往返（反向 ABI 把该检查点定为
+    # bf16），以为那才是可达目标。**那个想法是错的**，实测证伪：算子离 fp32 参考反而更近
+    # （跨度 46：对 fp32 的 dq 2.889e-02，对 bf16-g 的 4.169e-02）。原因是那个构造把 bf16
+    # cumsum **差分回** per-token 增量，属于灾难性相消；而 kernel 是**直接用** cumsum 去算
+    # `exp(g_i − g_j)`，从不差分回去。所以那不是 ABI 的地板，是构造方式引入的误差。
+    # 留着这段诊断是因为它解释了**为什么 kernel 必须直接用 cumsum**。
     errors = {n: _rel_l2(got[n].cpu(), want[n]) for n in BUDGET}
-    print(f"\n跨度 {got_span:.2f}：" + "  ".join(
-        f"{n}={errors[n]:.3e}/{BUDGET[n]}" for n in BUDGET))
+    want_diffed = _reference_grads(x, _through_bf16_cumsum(x["g"]))
+    diffed = {n: _rel_l2(got[n].cpu(), want_diffed[n]) for n in BUDGET}
+    print(f"\n跨度 {got_span:.2f}")
+    print("  对 fp32 递推参考（判据）：        "
+          + "  ".join(f"{n}={errors[n]:.3e}/{BUDGET[n]}" for n in BUDGET))
+    print("  对「bf16 cumsum 差分回」的参考：  "
+          + "  ".join(f"{n}={diffed[n]:.3e}" for n in BUDGET)
+          + "   ← 更差，见上方注释")
     over = {n: (e, BUDGET[n]) for n, e in errors.items() if not (e < BUDGET[n])}
     assert not over, f"跨度 {got_span:.2f} 下超出契约预算：{over}"
 

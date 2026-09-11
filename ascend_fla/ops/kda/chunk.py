@@ -261,17 +261,22 @@ def _from_bhcld(x: torch.Tensor, *, on_cpu: bool) -> torch.Tensor:
 #:   2.85e-03~3.19e-03（**完全不退化**）。
 #: * 反向的限制是**精度** —— 它先于有限性到来。``stable`` 的反向到 169.76 都还是有限值，
 #:   但对 fp32 递推参考的相对 L2 随跨度单调上升，``dq`` 在 130 处越过契约预算 0.05
-#:   （实测 46→2.89e-02、94→4.55e-02、105→4.86e-02、130→6.17e-02、169→6.88e-02，
-#:   且 169 处 ``dg`` 直接崩到 6.49e-01）。让它"有限但超预算"地跑过去就是静默降级
-#:   （AGENTS.md §7），所以反向的闸设在实测仍有余量的 100。
+#:   （实测 46→2.89e-02、94→4.55e-02、105→4.86e-02、110→4.99e-02、130→6.17e-02、
+#:   169→6.88e-02，且 169 处 ``dg`` 崩到 6.49e-01）。让它"有限但超预算"地跑过去就是
+#:   静默降级（AGENTS.md §7），所以反向的闸设在实测仍有余量的 105。
+#:
+#: **反向的 105 是怎么选的**：下界是 fla 初始化能产生的跨度上界 ——
+#: ``exp(A_log) ≤ 16``、``dt ≤ 0.1``、63 步 → ``16 × 0.1 × 63 ≈ 100.8``（实测 HV=8 时
+#: 8 个 seed 给 54.2~100.6，顶到上界）；上界是契约预算还成立的最深实测点（110 处 ``dq``
+#: 只剩 0.2% 余量，所以不取它）。105 同时满足两头，余量 2.8%。
 #:
 #: 于是：纯推理（``chunk_kda_fwd``）可以用到 155，训练（``chunk_kda_fwd_with_caches`` /
-#: ``chunk_kda``）只到 100。fla 默认初始化的 KDA 层跨度约 94，两条都满足。
+#: ``chunk_kda``）到 105。
 #: 数字全部是**实测点**，不是推算：见两个单元 contract.json 的 ``domain.gate_span``。
 MAX_GATE_SPAN = {
     # upstream 两条链都受 ~87/88.7 那条硬线约束（前向下溢、反向上溢），取 80 留余量
     "upstream": {"forward": 80.0, "backward": 80.0},
-    "stable": {"forward": 155.0, "backward": 100.0},
+    "stable": {"forward": 155.0, "backward": 105.0},
 }
 
 #: 两条链的名字。``_check_gate_range`` 的 ``path`` 只接受这两个。
@@ -315,8 +320,8 @@ def _check_gate_range(g: torch.Tensor, c: int, *, on_cpu: bool, impl: str,
         hint = "减小 g 的量级：KDA 层里即减小 exp(A_log) 或 dt"
     else:
         # 反向的闸守的是精度而不是有限性 —— 说清楚，否则用户会以为越线就是 NaN
-        why = (f"反向梯度仍是**有限值**（实测到 169.8 都有限），但精度会超出契约预算："
-               f"dq 在跨度 130 处达 6.17e-02（预算 0.05），dg 在 169 处达 6.49e-01（预算 0.25）")
+        why = ("反向梯度仍是**有限值**（实测到 169.8 都有限），但精度会超出契约预算："
+               "dq 在跨度 130 处达 6.17e-02（预算 0.05），dg 在 169 处达 6.49e-01（预算 0.25）")
         hint = ("减小 g 的量级（KDA 层里即减小 exp(A_log) 或 dt）；"
                 f"只做推理不需要反向时用 chunk_kda_fwd，它的上限是 "
                 f"{MAX_GATE_SPAN[impl]['forward']}")
@@ -564,16 +569,22 @@ def chunk_kda_fwd_with_caches(
         全部 bfloat16、token-major（``h`` 为 ``[B,C,HV,128,128]``），可直接喂 ``kda_bwd``。
     """
     b, h_q, hv, c = _check(q, k, v, g, beta, initial_state, block_dim)
+    on_cpu = _resolve_layout(layout_device)
+    # ⚠️ 门控必须在编译**之前**查。两个理由：
+    #   ① 注定要被拒的调用不该先付一次完整编译的代价（十几个 kernel，分钟级）；
+    #   ② 更要紧的是**错误信息会被换掉**：编译会注册新的 vendor 树，而 CANN 只在首次算子
+    #      解析时读 ASCEND_CUSTOM_OPP_PATH，所以同进程里换 impl 时 binding 会先抛
+    #      "不能再注册新的 vendor 树"，把本该报的"门控跨度超限"盖掉 —— 实测踩过，
+    #      排查时一路看的是 opp 路径而不是真正的原因。
+    if check_gate_range:
+        # 这是训练入口（产检查点就是为了跑反向），所以用反向那条更严的闸
+        _check_gate_range(g, c, on_cpu=on_cpu, impl=impl, path="backward")
     # 反向链要在**首次 aclnn 调用之前**注册完 vendor 树，否则它的算子解析不到
     # （见 runtime/binding.py 的 register_custom_opp_path）。要缓存的唯一理由就是
     # 接着跑反向，所以在这里一并编译好。编译有两级缓存，重复调用不花钱。
     from .chunk_bwd import _compiled_chain as _bwd_chain
 
     _bwd_chain(device, block_dim, impl)
-    on_cpu = _resolve_layout(layout_device)
-    if check_gate_range:
-        # 这是训练入口（产检查点就是为了跑反向），所以用反向那条更严的闸
-        _check_gate_range(g, c, on_cpu=on_cpu, impl=impl, path="backward")
     scale = HEAD_DIM ** -0.5 if scale is None else float(scale)
     chain = _run_chain(q, k, v, g, beta, scale, initial_state, device=device,
                        block_dim=block_dim, on_cpu=on_cpu, b=b, h=h_q, hv=hv, c=c, impl=impl)
