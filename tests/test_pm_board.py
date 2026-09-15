@@ -1,7 +1,7 @@
 """任务看板校验器的测试 —— 纯标准库，**不需要 NPU，也不需要 torch**。
 
-看板的用处全在"不会把同一个文件或同一张卡同时给两个 agent"，所以这里每条冲突
-都造一个最小反例，确认 ``check`` 真的会报，而不只是验证正常看板能通过。
+看板的用处全在"不会把同一个文件同时给两个 agent、不会派出依赖没完成的任务"，所以这里
+每条冲突都造一个最小反例，确认 ``check`` 真的会报，而不只是验证正常看板能通过。
 
     pytest tests/test_pm_board.py -v
     python -m unittest tests.test_pm_board -v
@@ -22,7 +22,8 @@ import pm_board  # noqa: E402
 def _task(tid, status="open", deps=(), write_set=("x.py",), npu=False, soc="any", **extra):
     t = {"id": tid, "title": tid, "wave": "W0", "soc": soc, "priority": "P1", "status": status,
          "deps": list(deps), "write_set": list(write_set),
-         "needs": {"npu": npu, "ascriptor": False, "fla": False}, "spec": f"{tid}.md"}
+         "needs": {"npu": npu, "ascriptor": False, "fla": False}, "spec": f"{tid}.md",
+         "issue": None, "pr": None}
     if status in pm_board.IN_FLIGHT:
         t.update(assignee="agent-" + tid, branch="task/" + tid)
     if status == "gated":
@@ -58,6 +59,10 @@ class TestRepoBoard(unittest.TestCase):
         for t in board["tasks"]:
             self.assertIn(f"| {t['id']} |", text)
 
+    def test_no_card_leases_left(self):
+        """机器归 agent 管（D-PM-4）：看板不再有租约字段。"""
+        self.assertFalse(any("lease" in t for t in pm_board.load()["tasks"]))
+
 
 class TestCheck(_Tmp):
     def test_minimal_board_passes(self):
@@ -76,15 +81,24 @@ class TestCheck(_Tmp):
         self.assertTrue(pm_board.paths_overlap("AGENTS.md#§2", "AGENTS.md#§9"))
         self.assertFalse(pm_board.paths_overlap("pkg/a.py", "pkg/ab.py"))
 
-    def test_double_leased_card(self):
-        lease = {"soc": "a2", "card": 4}
-        found = self.problems(_task("A", "in_progress", write_set=["a.py"], npu=True, soc="a2", lease=lease),
-                              _task("B", "in_progress", write_set=["b.py"], npu=True, soc="a2", lease=dict(lease)))
-        self.assertTrue(any("卡重复租出" in p for p in found), found)
-
-    def test_npu_task_without_lease(self):
+    def test_npu_task_requires_declared_soc(self):
         found = self.problems(_task("A", "in_progress", npu=True, soc="a2"))
-        self.assertTrue(any("租约" in p for p in found), found)
+        self.assertTrue(any("声明的 SoC" in p for p in found), found)
+        ok = self.problems(_task("B", "in_progress", npu=True, soc="a2", assignee_caps={"socs": ["a2"]}))
+        self.assertEqual(ok, [])
+
+    def test_one_task_per_agent(self):
+        found = self.problems(_task("A", "in_progress", write_set=["a.py"], assignee="bob"),
+                              _task("B", "assigned", write_set=["b.py"], assignee="bob"))
+        self.assertTrue(any("同时只接一个任务" in p for p in found), found)
+
+    def test_duplicate_issue_number(self):
+        found = self.problems(_task("A", issue=7, write_set=["a.py"]), _task("B", issue=7, write_set=["b.py"]))
+        self.assertTrue(any("#7" in p for p in found), found)
+
+    def test_issue_must_be_positive_int(self):
+        found = self.problems(_task("A", issue="7"))
+        self.assertTrue(any("正整数" in p for p in found), found)
 
     def test_npu_task_must_name_soc(self):
         found = self.problems(_task("A", npu=True, soc="any"))

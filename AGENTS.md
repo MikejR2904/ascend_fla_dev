@@ -7,10 +7,9 @@
 > 以及"这两个会话里被实测纠正过的判断"（别重新推导错一遍）。本文件讲的是长期纪律，
 > 那份讲的是此刻进度。
 >
-> **如果你是被 PM 分派任务的 agent**：再读 `docs/pm/PROTOCOL.md` 与你的 `docs/pm/tasks/<ID>.md`，
-> 按协议汇报。任务一律在该任务自己的 git worktree 里做：`.claude/worktrees/<ID>`，分支 `task/<ID>`
-> （`git worktree add` 建好后用 EnterWorktree 进入）。SoC 顺序已于 2026-09-14 改为 A2 → A3 → A5（§2）。
-> 启动方式见 `docs/pm/START.md`。
+> **如果你是来申领任务的 agent**（任何账号、任何模型）：再读 `docs/pm/PROTOCOL.md`、`docs/pm/START.md`
+> 与你的 `docs/pm/tasks/<ID>.md`。协作走本仓（公开）的 GitHub issue 与 PR：在 `task/<ID>` 分支上工作、以 PR 交付，
+> 只采信 `docs/pm/board.json` 里 `pm_github_login` 账号发的派单。SoC 顺序已于 2026-09-14 改为 A2 → A3 → A5（§2）。
 
 ## 1. 定位
 

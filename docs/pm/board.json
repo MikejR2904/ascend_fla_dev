@@ -1,8 +1,10 @@
 {
-  "schema": "fla-pm-board/1",
+  "schema": "fla-pm-board/2",
   "updated_at": "2026-09-15",
-  "pm": "ascend-fla-dev-management-team",
-  "note": "唯一事实源，只有 PM 写。协议见 docs/pm/PROTOCOL.md；python tools/pm_board.py --check / --render / --next。tasks 的顺序即派单顺序。",
+  "repo": "ddddwee1/ascend_fla_dev",
+  "pm_github_login": null,
+  "intake_issue": null,
+  "note": "唯一事实源，只有 PM 写。协作走本仓（公开）GitHub issue/PR，协议见 docs/pm/PROTOCOL.md；python tools/pm_board.py --check / --render / --next；python tools/pm_github.py sync / poll / post。tasks 的顺序即派单顺序。pm_github_login 在 PM 的 bot 账号建好后填写。",
   "decisions": [
     {
       "id": "D-PM-1",
@@ -20,208 +22,840 @@
     {
       "id": "D-PM-3",
       "date": "2026-09-14",
-      "decision": "一任务一分支（task/<ID>）一 worktree，PM 验收后合入 main；agent 不提交 main、不 push",
+      "decision": "一任务一分支 task/<ID>（agent 的 fork 或本仓），以 PR 交付；PM 审查、验收后合入 main",
       "by": "user"
     },
     {
       "id": "D-PM-4",
-      "date": "2026-09-14",
-      "decision": "agent 自带机器与 ascriptor 访问；PM 按 SoC 分配卡租约（A5 只用 4~7 卡，A2/A3 卡号待 machine_specs.md）",
-      "by": "user"
+      "date": "2026-09-15",
+      "by": "user",
+      "decision": "机器由 agent 自己管理；PM 不分配卡租约，只记录 agent 声明的能力（SoC / CANN / 算子包，不含主机信息）"
+    },
+    {
+      "id": "D-PM-5",
+      "date": "2026-09-15",
+      "by": "user",
+      "decision": "agent 可以是任何账号、任何模型；协作通道是本仓（公开）的 GitHub issue 与 PR：一任务一 issue，协议消息是评论，交付是 PR"
+    },
+    {
+      "id": "D-PM-6",
+      "date": "2026-09-15",
+      "by": "user",
+      "decision": "外部提交先读完整 diff 再运行：写集外改动、CI / 凭据 / 网络相关改动一律拒绝；在不带令牌的临时 clone 里跑；每个新账号的第一次合入需用户明确同意"
+    },
+    {
+      "id": "D-PM-7",
+      "date": "2026-09-15",
+      "by": "user",
+      "decision": "PM 用专用 GitHub bot 账号运行（gh 登录该账号），与用户个人账号区分"
     }
   ],
   "gated_epics": [
-    {"id": "G1", "title": "注册为 fla 后端 / drop-in API", "reason": "改变仓库定位（AGENTS.md §1）"},
-    {"id": "G3", "title": "INT8 / MXFP8 / MXFP4 / HiF8 / HiF4 + RHT", "reason": "未排期；硬件数字未核实"},
-    {"id": "G4", "title": "其余 13 个算子族（Mamba、GLA、GDN-2、PKDA、Log-Linear、DLA、StateX、NAtS-L、NHA、Local、DeltaStack、TTT、NSA）", "reason": "窄切片原则：没有目标模型不做"},
-    {"id": "G5", "title": "Paged linear state / vLLM / SGLang / 投机解码", "reason": "未排期"},
-    {"id": "G6", "title": "KCP / HCCL 上下文并行", "reason": "未排期"},
-    {"id": "G7", "title": "wheel 打包与发布", "reason": "未排期"},
-    {"id": "G8", "title": "PyPTO / PyPTO Pro 路线", "reason": "用户选定只用 ascriptor（D-PM-2）"},
-    {"id": "G9", "title": "Qwen3.8-Flash-Next / GLM-5.3-Flash / Ling 2.0 的融合 RoPE、门控残差、分组 RMSNorm", "reason": "models.json 无来源可查的 config"}
+    {
+      "id": "G1",
+      "title": "注册为 fla 后端 / drop-in API",
+      "reason": "改变仓库定位（AGENTS.md §1）"
+    },
+    {
+      "id": "G3",
+      "title": "INT8 / MXFP8 / MXFP4 / HiF8 / HiF4 + RHT",
+      "reason": "未排期；硬件数字未核实"
+    },
+    {
+      "id": "G4",
+      "title": "其余 13 个算子族（Mamba、GLA、GDN-2、PKDA、Log-Linear、DLA、StateX、NAtS-L、NHA、Local、DeltaStack、TTT、NSA）",
+      "reason": "窄切片原则：没有目标模型不做"
+    },
+    {
+      "id": "G5",
+      "title": "Paged linear state / vLLM / SGLang / 投机解码",
+      "reason": "未排期"
+    },
+    {
+      "id": "G6",
+      "title": "KCP / HCCL 上下文并行",
+      "reason": "未排期"
+    },
+    {
+      "id": "G7",
+      "title": "wheel 打包与发布",
+      "reason": "未排期"
+    },
+    {
+      "id": "G8",
+      "title": "PyPTO / PyPTO Pro 路线",
+      "reason": "用户选定只用 ascriptor（D-PM-2）"
+    },
+    {
+      "id": "G9",
+      "title": "Qwen3.8-Flash-Next / GLM-5.3-Flash / Ling 2.0 的融合 RoPE、门控残差、分组 RMSNorm",
+      "reason": "models.json 无来源可查的 config"
+    }
   ],
   "waves": [
-    {"id": "W0", "title": "主机侧准备（不需要机器）", "exit": "W0 全部 done 或显式搁置"},
-    {"id": "W-A2", "title": "910B：KDA 算子 + Kimi-Linear，然后 GDN + Qwen3-Next", "entry": "A2 机器写入 machine_specs.md；A2-11 给出 split-K 结论", "exit": "Kimi-Linear 在 910B 上端到端；A2 上 chunk↔recurrent 互验通过；A2 矩阵格有运行记录"},
-    {"id": "W-A3", "title": "910C：复制 A2 波次，所有限值重测", "entry": "W-A2 退出且 A3 机器就绪"},
-    {"id": "W-A5", "title": "回到 A5：decode 性能、block_dim、48B 端到端、GDN", "entry": "W-A3 退出"}
+    {
+      "id": "W0",
+      "title": "主机侧准备（不需要机器）",
+      "exit": "W0 全部 done 或显式搁置"
+    },
+    {
+      "id": "W-A2",
+      "title": "910B：KDA 算子 + Kimi-Linear，然后 GDN + Qwen3-Next",
+      "entry": "A2 机器写入 machine_specs.md；A2-11 给出 split-K 结论",
+      "exit": "Kimi-Linear 在 910B 上端到端；A2 上 chunk↔recurrent 互验通过；A2 矩阵格有运行记录"
+    },
+    {
+      "id": "W-A3",
+      "title": "910C：复制 A2 波次，所有限值重测",
+      "entry": "W-A2 退出且 A3 机器就绪"
+    },
+    {
+      "id": "W-A5",
+      "title": "回到 A5：decode 性能、block_dim、48B 端到端、GDN",
+      "entry": "W-A3 退出"
+    }
   ],
   "tasks": [
     {
-      "id": "PM-0", "title": "建立 PM 系统并记录 SoC 顺序决策", "wave": "W0", "soc": "any", "priority": "-",
-      "status": "in_progress", "deps": [],
-      "write_set": ["docs/pm/**", "tools/pm_board.py", "tests/test_pm_board.py", "AGENTS.md", "docs/plan.md", "docs/handoff.md"],
-      "needs": {"npu": false, "ascriptor": false, "fla": false},
-      "spec": "docs/pm/tasks/PM-0.md", "assignee": "ascend-fla-dev-management-team", "branch": "task/PM-0",
-      "lease": null, "timebox_h": 6, "reports": [], "result": null
+      "id": "PM-0",
+      "title": "建立 PM 系统并记录 SoC 顺序决策",
+      "wave": "W0",
+      "soc": "any",
+      "priority": "-",
+      "status": "in_progress",
+      "deps": [],
+      "write_set": [
+        "docs/pm/**",
+        "tools/pm_board.py",
+        "tools/pm_github.py",
+        "tools/pm_start.sh",
+        "tools/agent_setup.sh",
+        "tools/dev_env.sh",
+        "tests/test_pm_board.py",
+        "tests/test_pm_github.py",
+        "AGENTS.md",
+        "docs/plan.md",
+        "docs/handoff.md",
+        ".gitignore"
+      ],
+      "needs": {
+        "npu": false,
+        "ascriptor": false,
+        "fla": false
+      },
+      "spec": "docs/pm/tasks/PM-0.md",
+      "issue": null,
+      "pr": null,
+      "assignee": "pm",
+      "assignee_caps": null,
+      "branch": "task/PM-0",
+      "timebox_h": 6,
+      "reports": [],
+      "result": null
     },
     {
-      "id": "A2-01", "title": "定性 split-K FP32 cube 缺陷（a2 profile，sim）", "wave": "W0", "soc": "a2", "priority": "P0",
-      "status": "open", "deps": [],
-      "write_set": ["benchmarks/a2/repro_splitk_fp32.py", "benchmarks/a2/README.md"],
-      "needs": {"npu": false, "ascriptor": true, "fla": false},
-      "spec": "docs/pm/tasks/A2-01.md", "assignee": null, "branch": null, "lease": null, "timebox_h": 12, "reports": [], "result": null
+      "id": "A2-01",
+      "title": "定性 split-K FP32 cube 缺陷（a2 profile，sim）",
+      "wave": "W0",
+      "soc": "a2",
+      "priority": "P0",
+      "status": "open",
+      "deps": [],
+      "write_set": [
+        "benchmarks/a2/repro_splitk_fp32.py",
+        "benchmarks/a2/README.md"
+      ],
+      "needs": {
+        "npu": false,
+        "ascriptor": true,
+        "fla": false
+      },
+      "spec": "docs/pm/tasks/A2-01.md",
+      "issue": null,
+      "pr": null,
+      "assignee": null,
+      "assignee_caps": null,
+      "branch": null,
+      "timebox_h": 12,
+      "reports": [],
+      "result": null
     },
     {
-      "id": "A2-04", "title": "sim 定位 c1-multihead-o-corrupt 的缺失同步（只诊断）", "wave": "W0", "soc": "any", "priority": "P0",
-      "status": "open", "deps": [],
-      "write_set": ["benchmarks/diag_c1_multihead.py"],
-      "needs": {"npu": false, "ascriptor": true, "fla": false},
-      "spec": "docs/pm/tasks/A2-04.md", "assignee": null, "branch": null, "lease": null, "timebox_h": 12, "reports": [], "result": null
+      "id": "A2-04",
+      "title": "sim 定位 c1-multihead-o-corrupt 的缺失同步（只诊断）",
+      "wave": "W0",
+      "soc": "any",
+      "priority": "P0",
+      "status": "open",
+      "deps": [],
+      "write_set": [
+        "benchmarks/diag_c1_multihead.py"
+      ],
+      "needs": {
+        "npu": false,
+        "ascriptor": true,
+        "fla": false
+      },
+      "spec": "docs/pm/tasks/A2-04.md",
+      "issue": null,
+      "pr": null,
+      "assignee": null,
+      "assignee_caps": null,
+      "branch": null,
+      "timebox_h": 12,
+      "reports": [],
+      "result": null
     },
     {
-      "id": "A2-02", "title": "platform.py：SoC 显式化，去掉写死的 a5", "wave": "W0", "soc": "any", "priority": "P1",
-      "status": "open", "deps": [],
-      "write_set": ["ascend_fla/platform.py", "ascend_fla/runtime/compile.py", "ascend_fla/ops/kda/**", "ascend_fla/layers/kda.py", "tests/test_platform.py", "tests/conftest.py"],
-      "needs": {"npu": false, "ascriptor": false, "fla": false},
-      "spec": "docs/pm/tasks/A2-02.md", "assignee": null, "branch": null, "lease": null, "timebox_h": 10, "reports": [], "result": null
+      "id": "A2-02",
+      "title": "platform.py：SoC 显式化，去掉写死的 a5",
+      "wave": "W0",
+      "soc": "any",
+      "priority": "P1",
+      "status": "open",
+      "deps": [],
+      "write_set": [
+        "ascend_fla/platform.py",
+        "ascend_fla/runtime/compile.py",
+        "ascend_fla/ops/kda/**",
+        "ascend_fla/layers/kda.py",
+        "tests/test_platform.py",
+        "tests/conftest.py"
+      ],
+      "needs": {
+        "npu": false,
+        "ascriptor": false,
+        "fla": false
+      },
+      "spec": "docs/pm/tasks/A2-02.md",
+      "issue": null,
+      "pr": null,
+      "assignee": null,
+      "assignee_caps": null,
+      "branch": null,
+      "timebox_h": 10,
+      "reports": [],
+      "result": null
     },
     {
-      "id": "A2-05", "title": "state-layout-k-first：cache 适配器", "wave": "W0", "soc": "any", "priority": "P1",
-      "status": "open", "deps": [],
-      "write_set": ["ascend_fla/compat/**", "tests/test_cache_adapter.py"],
-      "needs": {"npu": false, "ascriptor": false, "fla": true},
-      "spec": "docs/pm/tasks/A2-05.md", "assignee": null, "branch": null, "lease": null, "timebox_h": 8, "reports": [], "result": null
+      "id": "A2-05",
+      "title": "state-layout-k-first：cache 适配器",
+      "wave": "W0",
+      "soc": "any",
+      "priority": "P1",
+      "status": "open",
+      "deps": [],
+      "write_set": [
+        "ascend_fla/compat/**",
+        "tests/test_cache_adapter.py"
+      ],
+      "needs": {
+        "npu": false,
+        "ascriptor": false,
+        "fla": true
+      },
+      "spec": "docs/pm/tasks/A2-05.md",
+      "issue": null,
+      "pr": null,
+      "assignee": null,
+      "assignee_caps": null,
+      "branch": null,
+      "timebox_h": 8,
+      "reports": [],
+      "result": null
     },
     {
-      "id": "A2-06", "title": "矩阵按 SoC 分维 + 运行记录 + 主机侧 CI", "wave": "W0", "soc": "any", "priority": "P1",
-      "status": "open", "deps": ["PM-0"],
-      "write_set": ["tools/gen_matrix.py", "tools/record_run.py", ".github/workflows/host-ci.yml", "tests/test_gen_matrix.py", "docs/matrix/**"],
-      "needs": {"npu": false, "ascriptor": false, "fla": false},
-      "spec": "docs/pm/tasks/A2-06.md", "assignee": null, "branch": null, "lease": null, "timebox_h": 12, "reports": [], "result": null
+      "id": "A2-06",
+      "title": "矩阵按 SoC 分维 + 运行记录 + 主机侧 CI",
+      "wave": "W0",
+      "soc": "any",
+      "priority": "P1",
+      "status": "open",
+      "deps": [
+        "PM-0"
+      ],
+      "write_set": [
+        "tools/gen_matrix.py",
+        "tools/record_run.py",
+        ".github/workflows/host-ci.yml",
+        "tests/test_gen_matrix.py",
+        "docs/matrix/**"
+      ],
+      "needs": {
+        "npu": false,
+        "ascriptor": false,
+        "fla": false
+      },
+      "spec": "docs/pm/tasks/A2-06.md",
+      "issue": null,
+      "pr": null,
+      "assignee": null,
+      "assignee_caps": null,
+      "branch": null,
+      "timebox_h": 12,
+      "reports": [],
+      "result": null
     },
     {
-      "id": "A2-03", "title": "KDA 单元派生到 kernels/projects/a2（check/reference/sim）", "wave": "W0", "soc": "a2", "priority": "P1",
-      "status": "open", "deps": ["A2-01"],
-      "write_set": ["kernels/projects/a2/**"],
-      "needs": {"npu": false, "ascriptor": true, "fla": false},
-      "spec": "docs/pm/tasks/A2-03.md", "assignee": null, "branch": null, "lease": null, "timebox_h": 20, "reports": [], "result": null
+      "id": "A2-03",
+      "title": "KDA 单元派生到 kernels/projects/a2（check/reference/sim）",
+      "wave": "W0",
+      "soc": "a2",
+      "priority": "P1",
+      "status": "open",
+      "deps": [
+        "A2-01"
+      ],
+      "write_set": [
+        "kernels/projects/a2/**"
+      ],
+      "needs": {
+        "npu": false,
+        "ascriptor": true,
+        "fla": false
+      },
+      "spec": "docs/pm/tasks/A2-03.md",
+      "issue": null,
+      "pr": null,
+      "assignee": null,
+      "assignee_caps": null,
+      "branch": null,
+      "timebox_h": 20,
+      "reports": [],
+      "result": null
     },
     {
-      "id": "A2-07", "title": "Qwen3-Next 在 A2 上的 GDN ABI 方案（调研+设计）", "wave": "W0", "soc": "a2", "priority": "P1",
-      "status": "open", "deps": ["A2-01"],
-      "write_set": ["docs/research/a2_gdn_abi.md"],
-      "needs": {"npu": false, "ascriptor": true, "fla": true},
-      "spec": "docs/pm/tasks/A2-07.md", "assignee": null, "branch": null, "lease": null, "timebox_h": 12, "reports": [], "result": null
+      "id": "A2-07",
+      "title": "Qwen3-Next 在 A2 上的 GDN ABI 方案（调研+设计）",
+      "wave": "W0",
+      "soc": "a2",
+      "priority": "P1",
+      "status": "open",
+      "deps": [
+        "A2-01"
+      ],
+      "write_set": [
+        "docs/research/a2_gdn_abi.md"
+      ],
+      "needs": {
+        "npu": false,
+        "ascriptor": true,
+        "fla": true
+      },
+      "spec": "docs/pm/tasks/A2-07.md",
+      "issue": null,
+      "pr": null,
+      "assignee": null,
+      "assignee_caps": null,
+      "branch": null,
+      "timebox_h": 12,
+      "reports": [],
+      "result": null
     },
     {
-      "id": "A2-08", "title": "Kimi-Linear 注入脚手架（CPU fp32）", "wave": "W0", "soc": "any", "priority": "P2",
-      "status": "open", "deps": ["A2-05"],
-      "write_set": ["ascend_fla/models/**", "tests/test_models_kimi.py"],
-      "needs": {"npu": false, "ascriptor": false, "fla": true},
-      "spec": "docs/pm/tasks/A2-08.md", "assignee": null, "branch": null, "lease": null, "timebox_h": 16, "reports": [], "result": null
+      "id": "A2-08",
+      "title": "Kimi-Linear 注入脚手架（CPU fp32）",
+      "wave": "W0",
+      "soc": "any",
+      "priority": "P2",
+      "status": "open",
+      "deps": [
+        "A2-05"
+      ],
+      "write_set": [
+        "ascend_fla/models/**",
+        "tests/test_models_kimi.py"
+      ],
+      "needs": {
+        "npu": false,
+        "ascriptor": false,
+        "fla": true
+      },
+      "spec": "docs/pm/tasks/A2-08.md",
+      "issue": null,
+      "pr": null,
+      "assignee": null,
+      "assignee_caps": null,
+      "branch": null,
+      "timebox_h": 16,
+      "reports": [],
+      "result": null
     },
     {
-      "id": "A2-10", "title": "A2 上机：算子包覆盖、CANN、runtime 桥逐位对 harness", "wave": "W-A2", "soc": "a2", "priority": "P0",
-      "status": "gated", "gate": "machines:a2", "deps": ["A2-02"],
-      "write_set": ["benchmarks/a2/bringup.py"],
-      "needs": {"npu": true, "ascriptor": true, "fla": false},
-      "spec": null, "assignee": null, "branch": null, "lease": null, "timebox_h": 12, "reports": [], "result": null
+      "id": "A2-10",
+      "title": "A2 上机：算子包覆盖、CANN、runtime 桥逐位对 harness",
+      "wave": "W-A2",
+      "soc": "a2",
+      "priority": "P0",
+      "status": "gated",
+      "gate": "machines:a2",
+      "deps": [
+        "A2-02"
+      ],
+      "write_set": [
+        "benchmarks/a2/bringup.py"
+      ],
+      "needs": {
+        "npu": true,
+        "ascriptor": true,
+        "fla": false
+      },
+      "spec": null,
+      "issue": null,
+      "pr": null,
+      "assignee": null,
+      "assignee_caps": null,
+      "branch": null,
+      "timebox_h": 12,
+      "reports": [],
+      "result": null
     },
     {
-      "id": "A2-11", "title": "真机复现 split-K FP32 + 验证绕行方案（A2 算子任务的总闸）", "wave": "W-A2", "soc": "a2", "priority": "P0",
-      "status": "gated", "gate": "machines:a2", "deps": ["A2-01", "A2-10"],
-      "write_set": ["benchmarks/a2/repro_splitk_fp32.py"],
-      "needs": {"npu": true, "ascriptor": true, "fla": false},
-      "spec": null, "assignee": null, "branch": null, "lease": null, "timebox_h": 16, "reports": [], "result": null
+      "id": "A2-11",
+      "title": "真机复现 split-K FP32 + 验证绕行方案（A2 算子任务的总闸）",
+      "wave": "W-A2",
+      "soc": "a2",
+      "priority": "P0",
+      "status": "gated",
+      "gate": "machines:a2",
+      "deps": [
+        "A2-01",
+        "A2-10"
+      ],
+      "write_set": [
+        "benchmarks/a2/repro_splitk_fp32.py"
+      ],
+      "needs": {
+        "npu": true,
+        "ascriptor": true,
+        "fla": false
+      },
+      "spec": null,
+      "issue": null,
+      "pr": null,
+      "assignee": null,
+      "assignee_caps": null,
+      "branch": null,
+      "timebox_h": 16,
+      "reports": [],
+      "result": null
     },
     {
-      "id": "A2-12", "title": "A2 KDA 前向：契约 case + 真实形状 + (C,HV) 网格 + 门控跨度重测", "wave": "W-A2", "soc": "a2", "priority": "P1",
-      "status": "gated", "gate": "machines:a2", "deps": ["A2-03", "A2-11"],
-      "write_set": ["tests/test_kda_fwd_npu.py", "benchmarks/verify_real_shapes.py"],
-      "needs": {"npu": true, "ascriptor": true, "fla": true},
-      "spec": null, "assignee": null, "branch": null, "lease": null, "timebox_h": 16, "reports": [], "result": null
+      "id": "A2-12",
+      "title": "A2 KDA 前向：契约 case + 真实形状 + (C,HV) 网格 + 门控跨度重测",
+      "wave": "W-A2",
+      "soc": "a2",
+      "priority": "P1",
+      "status": "gated",
+      "gate": "machines:a2",
+      "deps": [
+        "A2-03",
+        "A2-11"
+      ],
+      "write_set": [
+        "tests/test_kda_fwd_npu.py",
+        "benchmarks/verify_real_shapes.py"
+      ],
+      "needs": {
+        "npu": true,
+        "ascriptor": true,
+        "fla": true
+      },
+      "spec": null,
+      "issue": null,
+      "pr": null,
+      "assignee": null,
+      "assignee_caps": null,
+      "branch": null,
+      "timebox_h": 16,
+      "reports": [],
+      "result": null
     },
     {
-      "id": "A2-13", "title": "A2 KDA 反向 + autograd：检查点、宽域精度曲线重测", "wave": "W-A2", "soc": "a2", "priority": "P1",
-      "status": "gated", "gate": "machines:a2", "deps": ["A2-12"],
-      "write_set": ["tests/test_kda_bwd_npu.py", "tests/test_kda_bwd_deep_npu.py", "tests/test_kda_caches_npu.py", "benchmarks/probe_bwd_span.py"],
-      "needs": {"npu": true, "ascriptor": true, "fla": true},
-      "spec": null, "assignee": null, "branch": null, "lease": null, "timebox_h": 16, "reports": [], "result": null
+      "id": "A2-13",
+      "title": "A2 KDA 反向 + autograd：检查点、宽域精度曲线重测",
+      "wave": "W-A2",
+      "soc": "a2",
+      "priority": "P1",
+      "status": "gated",
+      "gate": "machines:a2",
+      "deps": [
+        "A2-12"
+      ],
+      "write_set": [
+        "tests/test_kda_bwd_npu.py",
+        "tests/test_kda_bwd_deep_npu.py",
+        "tests/test_kda_caches_npu.py",
+        "benchmarks/probe_bwd_span.py"
+      ],
+      "needs": {
+        "npu": true,
+        "ascriptor": true,
+        "fla": true
+      },
+      "spec": null,
+      "issue": null,
+      "pr": null,
+      "assignee": null,
+      "assignee_caps": null,
+      "branch": null,
+      "timebox_h": 16,
+      "reports": [],
+      "result": null
     },
     {
-      "id": "A2-14", "title": "A2 KDA decode：acc / chain / bd / split", "wave": "W-A2", "soc": "a2", "priority": "P1",
-      "status": "gated", "gate": "machines:a2", "deps": ["A2-12"],
-      "write_set": ["benchmarks/verify_decode.py", "tests/test_kda_decode.py"],
-      "needs": {"npu": true, "ascriptor": true, "fla": false},
-      "spec": null, "assignee": null, "branch": null, "lease": null, "timebox_h": 10, "reports": [], "result": null
+      "id": "A2-14",
+      "title": "A2 KDA decode：acc / chain / bd / split",
+      "wave": "W-A2",
+      "soc": "a2",
+      "priority": "P1",
+      "status": "gated",
+      "gate": "machines:a2",
+      "deps": [
+        "A2-12"
+      ],
+      "write_set": [
+        "benchmarks/verify_decode.py",
+        "tests/test_kda_decode.py"
+      ],
+      "needs": {
+        "npu": true,
+        "ascriptor": true,
+        "fla": false
+      },
+      "spec": null,
+      "issue": null,
+      "pr": null,
+      "assignee": null,
+      "assignee_caps": null,
+      "branch": null,
+      "timebox_h": 10,
+      "reports": [],
+      "result": null
     },
     {
-      "id": "A2-15", "title": "A2 KDA 层：前反向 + prefill→decode + torch_npu 基线", "wave": "W-A2", "soc": "a2", "priority": "P1",
-      "status": "gated", "gate": "machines:a2", "deps": ["A2-13", "A2-14"],
-      "write_set": ["tests/test_kda_layer_npu.py", "benchmarks/bench_kda_train_step.py", "benchmarks/bench_kda_torch_npu.py"],
-      "needs": {"npu": true, "ascriptor": true, "fla": true},
-      "spec": null, "assignee": null, "branch": null, "lease": null, "timebox_h": 16, "reports": [], "result": null
+      "id": "A2-15",
+      "title": "A2 KDA 层：前反向 + prefill→decode + torch_npu 基线",
+      "wave": "W-A2",
+      "soc": "a2",
+      "priority": "P1",
+      "status": "gated",
+      "gate": "machines:a2",
+      "deps": [
+        "A2-13",
+        "A2-14"
+      ],
+      "write_set": [
+        "tests/test_kda_layer_npu.py",
+        "benchmarks/bench_kda_train_step.py",
+        "benchmarks/bench_kda_torch_npu.py"
+      ],
+      "needs": {
+        "npu": true,
+        "ascriptor": true,
+        "fla": true
+      },
+      "spec": null,
+      "issue": null,
+      "pr": null,
+      "assignee": null,
+      "assignee_caps": null,
+      "branch": null,
+      "timebox_h": 16,
+      "reports": [],
+      "result": null
     },
     {
-      "id": "A2-16", "title": "Kimi-Linear 在 910B 上：缩层真实形状，然后 48B 真实权重", "wave": "W-A2", "soc": "a2", "priority": "P1",
-      "status": "gated", "gate": "machines:a2", "deps": ["A2-08", "A2-15"],
-      "write_set": ["benchmarks/e2e_kimi.py", "tests/test_models_kimi_npu.py"],
-      "needs": {"npu": true, "ascriptor": true, "fla": true},
-      "spec": null, "assignee": null, "branch": null, "lease": null, "timebox_h": 24, "reports": [], "result": null
+      "id": "A2-16",
+      "title": "Kimi-Linear 在 910B 上：缩层真实形状，然后 48B 真实权重",
+      "wave": "W-A2",
+      "soc": "a2",
+      "priority": "P1",
+      "status": "gated",
+      "gate": "machines:a2",
+      "deps": [
+        "A2-08",
+        "A2-15"
+      ],
+      "write_set": [
+        "benchmarks/e2e_kimi.py",
+        "tests/test_models_kimi_npu.py"
+      ],
+      "needs": {
+        "npu": true,
+        "ascriptor": true,
+        "fla": true
+      },
+      "spec": null,
+      "issue": null,
+      "pr": null,
+      "assignee": null,
+      "assignee_caps": null,
+      "branch": null,
+      "timebox_h": 24,
+      "reports": [],
+      "result": null
     },
     {
-      "id": "A2-K1", "title": "kernel 批次 A2-K1（split-K 绕行、c1 修复、fwd 检查点、GDN ABI）", "wave": "W-A2", "soc": "a2", "priority": "P1",
-      "status": "gated", "gate": "kernel-batch-approval", "deps": ["A2-04", "A2-07", "A2-11"],
-      "write_set": ["kernels/projects/a2/**"],
-      "needs": {"npu": true, "ascriptor": true, "fla": true},
-      "spec": null, "assignee": null, "branch": null, "lease": null, "timebox_h": 40, "reports": [], "result": null
+      "id": "A2-K1",
+      "title": "kernel 批次 A2-K1（split-K 绕行、c1 修复、fwd 检查点、GDN ABI）",
+      "wave": "W-A2",
+      "soc": "a2",
+      "priority": "P1",
+      "status": "gated",
+      "gate": "kernel-batch-approval",
+      "deps": [
+        "A2-04",
+        "A2-07",
+        "A2-11"
+      ],
+      "write_set": [
+        "kernels/projects/a2/**"
+      ],
+      "needs": {
+        "npu": true,
+        "ascriptor": true,
+        "fla": true
+      },
+      "spec": null,
+      "issue": null,
+      "pr": null,
+      "assignee": null,
+      "assignee_caps": null,
+      "branch": null,
+      "timebox_h": 40,
+      "reports": [],
+      "result": null
     },
     {
-      "id": "A2-20", "title": "GDN on A2：派生单元 → 前/反/decode → GDN 层（+RMSNorm）→ Qwen3-Next 注入 → 端到端（批准后拆分）", "wave": "W-A2", "soc": "a2", "priority": "P1",
-      "status": "gated", "gate": "kernel-batch-approval", "deps": ["A2-K1", "A2-16"],
-      "write_set": ["ascend_fla/ops/gated_delta_rule/**", "ascend_fla/layers/gated_deltanet.py", "ascend_fla/modules/layernorm.py"],
-      "needs": {"npu": true, "ascriptor": true, "fla": true},
-      "spec": null, "assignee": null, "branch": null, "lease": null, "timebox_h": 80, "reports": [], "result": null
+      "id": "A2-20",
+      "title": "GDN on A2：派生单元 → 前/反/decode → GDN 层（+RMSNorm）→ Qwen3-Next 注入 → 端到端（批准后拆分）",
+      "wave": "W-A2",
+      "soc": "a2",
+      "priority": "P1",
+      "status": "gated",
+      "gate": "kernel-batch-approval",
+      "deps": [
+        "A2-K1",
+        "A2-16"
+      ],
+      "write_set": [
+        "ascend_fla/ops/gated_delta_rule/**",
+        "ascend_fla/layers/gated_deltanet.py",
+        "ascend_fla/modules/layernorm.py"
+      ],
+      "needs": {
+        "npu": true,
+        "ascriptor": true,
+        "fla": true
+      },
+      "spec": null,
+      "issue": null,
+      "pr": null,
+      "assignee": null,
+      "assignee_caps": null,
+      "branch": null,
+      "timebox_h": 80,
+      "reports": [],
+      "result": null
     },
     {
-      "id": "A3-00", "title": "A3 波次：复制 A2-10…A2-20，所有门控/限值/速度重测（开波时拆分）", "wave": "W-A3", "soc": "a3", "priority": "P1",
-      "status": "gated", "gate": "wave:W-A2", "deps": ["A2-16"],
-      "write_set": ["kernels/projects/a3/**"],
-      "needs": {"npu": true, "ascriptor": true, "fla": true},
-      "spec": null, "assignee": null, "branch": null, "lease": null, "timebox_h": 80, "reports": [], "result": null
+      "id": "A3-00",
+      "title": "A3 波次：复制 A2-10…A2-20，所有门控/限值/速度重测（开波时拆分）",
+      "wave": "W-A3",
+      "soc": "a3",
+      "priority": "P1",
+      "status": "gated",
+      "gate": "wave:W-A2",
+      "deps": [
+        "A2-16"
+      ],
+      "write_set": [
+        "kernels/projects/a3/**"
+      ],
+      "needs": {
+        "npu": true,
+        "ascriptor": true,
+        "fla": true
+      },
+      "spec": null,
+      "issue": null,
+      "pr": null,
+      "assignee": null,
+      "assignee_caps": null,
+      "branch": null,
+      "timebox_h": 80,
+      "reports": [],
+      "result": null
     },
     {
-      "id": "A5-01", "title": "decode-layer-overhead：合投影、去 l2norm dtype 往返", "wave": "W-A5", "soc": "a5", "priority": "P1",
-      "status": "gated", "gate": "wave:W-A3", "deps": [],
-      "write_set": ["ascend_fla/layers/kda.py", "benchmarks/bench_kda_decode_layer.py"],
-      "needs": {"npu": true, "ascriptor": true, "fla": false},
-      "spec": null, "assignee": null, "branch": null, "lease": null, "timebox_h": 12, "reports": [], "result": null
+      "id": "A5-01",
+      "title": "decode-layer-overhead：合投影、去 l2norm dtype 往返",
+      "wave": "W-A5",
+      "soc": "a5",
+      "priority": "P1",
+      "status": "gated",
+      "gate": "wave:W-A3",
+      "deps": [],
+      "write_set": [
+        "ascend_fla/layers/kda.py",
+        "benchmarks/bench_kda_decode_layer.py"
+      ],
+      "needs": {
+        "npu": true,
+        "ascriptor": true,
+        "fla": false
+      },
+      "spec": null,
+      "issue": null,
+      "pr": null,
+      "assignee": null,
+      "assignee_caps": null,
+      "branch": null,
+      "timebox_h": 12,
+      "reports": [],
+      "result": null
     },
     {
-      "id": "A5-02", "title": "decode-call-overhead：桥侧与 host 布局的每次调用固定成本", "wave": "W-A5", "soc": "a5", "priority": "P1",
-      "status": "gated", "gate": "wave:W-A3", "deps": [],
-      "write_set": ["ascend_fla/runtime/binding.py", "ascend_fla/ops/kda/fused_recurrent.py", "benchmarks/profile_bridge_overhead.py"],
-      "needs": {"npu": true, "ascriptor": true, "fla": false},
-      "spec": null, "assignee": null, "branch": null, "lease": null, "timebox_h": 12, "reports": [], "result": null
+      "id": "A5-02",
+      "title": "decode-call-overhead：桥侧与 host 布局的每次调用固定成本",
+      "wave": "W-A5",
+      "soc": "a5",
+      "priority": "P1",
+      "status": "gated",
+      "gate": "wave:W-A3",
+      "deps": [],
+      "write_set": [
+        "ascend_fla/runtime/binding.py",
+        "ascend_fla/ops/kda/fused_recurrent.py",
+        "benchmarks/profile_bridge_overhead.py"
+      ],
+      "needs": {
+        "npu": true,
+        "ascriptor": true,
+        "fla": false
+      },
+      "spec": null,
+      "issue": null,
+      "pr": null,
+      "assignee": null,
+      "assignee_caps": null,
+      "branch": null,
+      "timebox_h": 12,
+      "reports": [],
+      "result": null
     },
     {
-      "id": "A5-03", "title": "spike：decode 步图捕获能否容纳 ctypes aclnn 调用", "wave": "W-A5", "soc": "a5", "priority": "P2",
-      "status": "gated", "gate": "wave:W-A3", "deps": [],
-      "write_set": ["benchmarks/spike_decode_graph.py"],
-      "needs": {"npu": true, "ascriptor": true, "fla": false},
-      "spec": null, "assignee": null, "branch": null, "lease": null, "timebox_h": 8, "reports": [], "result": null
+      "id": "A5-03",
+      "title": "spike：decode 步图捕获能否容纳 ctypes aclnn 调用",
+      "wave": "W-A5",
+      "soc": "a5",
+      "priority": "P2",
+      "status": "gated",
+      "gate": "wave:W-A3",
+      "deps": [],
+      "write_set": [
+        "benchmarks/spike_decode_graph.py"
+      ],
+      "needs": {
+        "npu": true,
+        "ascriptor": true,
+        "fla": false
+      },
+      "spec": null,
+      "issue": null,
+      "pr": null,
+      "assignee": null,
+      "assignee_caps": null,
+      "branch": null,
+      "timebox_h": 8,
+      "reports": [],
+      "result": null
     },
     {
-      "id": "A5-04", "title": "block-dim-ceiling 扫描（一 bd 一进程，逐位对比）", "wave": "W-A5", "soc": "a5", "priority": "P2",
-      "status": "gated", "gate": "wave:W-A3", "deps": [],
-      "write_set": ["benchmarks/probe_block_dim_scaling.py"],
-      "needs": {"npu": true, "ascriptor": true, "fla": false},
-      "spec": null, "assignee": null, "branch": null, "lease": null, "timebox_h": 8, "reports": [], "result": null
+      "id": "A5-04",
+      "title": "block-dim-ceiling 扫描（一 bd 一进程，逐位对比）",
+      "wave": "W-A5",
+      "soc": "a5",
+      "priority": "P2",
+      "status": "gated",
+      "gate": "wave:W-A3",
+      "deps": [],
+      "write_set": [
+        "benchmarks/probe_block_dim_scaling.py"
+      ],
+      "needs": {
+        "npu": true,
+        "ascriptor": true,
+        "fla": false
+      },
+      "spec": null,
+      "issue": null,
+      "pr": null,
+      "assignee": null,
+      "assignee_caps": null,
+      "branch": null,
+      "timebox_h": 8,
+      "reports": [],
+      "result": null
     },
     {
-      "id": "A5-05", "title": "kda-fwd-bwd-dtype-mismatch：fp32 g_cumsum 能否压低反向精度曲线", "wave": "W-A5", "soc": "a5", "priority": "P2",
-      "status": "gated", "gate": "wave:W-A3", "deps": [],
-      "write_set": ["benchmarks/quantify_bwd_gcumsum_fp32.py"],
-      "needs": {"npu": false, "ascriptor": false, "fla": false},
-      "spec": null, "assignee": null, "branch": null, "lease": null, "timebox_h": 8, "reports": [], "result": null
+      "id": "A5-05",
+      "title": "kda-fwd-bwd-dtype-mismatch：fp32 g_cumsum 能否压低反向精度曲线",
+      "wave": "W-A5",
+      "soc": "a5",
+      "priority": "P2",
+      "status": "gated",
+      "gate": "wave:W-A3",
+      "deps": [],
+      "write_set": [
+        "benchmarks/quantify_bwd_gcumsum_fp32.py"
+      ],
+      "needs": {
+        "npu": false,
+        "ascriptor": false,
+        "fla": false
+      },
+      "spec": null,
+      "issue": null,
+      "pr": null,
+      "assignee": null,
+      "assignee_caps": null,
+      "branch": null,
+      "timebox_h": 8,
+      "reports": [],
+      "result": null
     },
     {
-      "id": "A5-06", "title": "Kimi-Linear-48B-A3B 在 A5 上真实权重端到端", "wave": "W-A5", "soc": "a5", "priority": "P1",
-      "status": "gated", "gate": "wave:W-A3", "deps": ["A2-16", "A5-01", "A5-02"],
-      "write_set": ["benchmarks/e2e_kimi.py"],
-      "needs": {"npu": true, "ascriptor": true, "fla": true},
-      "spec": null, "assignee": null, "branch": null, "lease": null, "timebox_h": 24, "reports": [], "result": null
+      "id": "A5-06",
+      "title": "Kimi-Linear-48B-A3B 在 A5 上真实权重端到端",
+      "wave": "W-A5",
+      "soc": "a5",
+      "priority": "P1",
+      "status": "gated",
+      "gate": "wave:W-A3",
+      "deps": [
+        "A2-16",
+        "A5-01",
+        "A5-02"
+      ],
+      "write_set": [
+        "benchmarks/e2e_kimi.py"
+      ],
+      "needs": {
+        "npu": true,
+        "ascriptor": true,
+        "fla": true
+      },
+      "spec": null,
+      "issue": null,
+      "pr": null,
+      "assignee": null,
+      "assignee_caps": null,
+      "branch": null,
+      "timebox_h": 24,
+      "reports": [],
+      "result": null
     }
   ]
 }

@@ -2,7 +2,7 @@
 """多 agent 任务看板：校验、渲染、派单候选。
 
 ``docs/pm/board.json`` 是唯一事实源，**只有 PM 写**；本工具只读。协议见
-``docs/pm/PROTOCOL.md``。
+``docs/pm/PROTOCOL.md``，与 GitHub 的同步见 ``tools/pm_github.py``。
 
     python tools/pm_board.py --check                          # 校验（CI 用）
     python tools/pm_board.py --render                         # 按波次打印进度表
@@ -22,12 +22,12 @@ ROOT = Path(__file__).resolve().parent.parent
 BOARD = ROOT / "docs" / "pm" / "board.json"
 
 STATUSES = ("gated", "open", "assigned", "in_progress", "blocked", "review", "rework", "done", "cancelled")
-# 占着写集与卡的状态。blocked 也算：暂停中的任务仍持有分支与租约。
+# 占着写集的状态。blocked 也算：暂停中的任务仍持有分支。
 IN_FLIGHT = frozenset({"assigned", "in_progress", "blocked", "review", "rework"})
 SOCS = ("any", "a2", "a3", "a5")
 PRIORITIES = ("P0", "P1", "P2", "-")
 REQUIRED = ("id", "title", "wave", "soc", "priority", "status", "deps", "write_set", "needs", "spec")
-# 看板会被提交，绝不能混进机器信息（AGENTS.md §5）。这里只能拦最明显的一类。
+# 仓库是公开的，看板会被提交，绝不能混进机器信息（AGENTS.md §5）。这里只能拦最明显的一类。
 _IP = re.compile(r"(?<![\d.])\d{1,3}(?:\.\d{1,3}){3}(?![\d.])")
 
 
@@ -113,16 +113,21 @@ def check(board: dict, root: Path = ROOT) -> list[str]:
                 problems.append(f"{tid}: 状态 {status} 的任务必须有 spec")
             elif not (Path(root) / t["spec"]).is_file():
                 problems.append(f"{tid}: spec 文件不存在 {t['spec']}")
+        for key in ("issue", "pr"):
+            value = t.get(key)
+            if value is not None and (not isinstance(value, int) or isinstance(value, bool) or value <= 0):
+                problems.append(f"{tid}: {key} 必须是正整数或 null，实际 {value!r}")
         if status in IN_FLIGHT:
             if not t.get("assignee") or not t.get("branch"):
                 problems.append(f"{tid}: {status} 必须有 assignee 与 branch")
             undone = [d for d in t["deps"] if by_id.get(d, {}).get("status") != "done"]
             if undone:
                 problems.append(f"{tid}: 依赖 {undone} 未完成却已在进行中")
+            # 机器归 agent 管；PM 只核对 agent 声明过这个 SoC 的真机能力。
             if needs.get("npu"):
-                lease = t.get("lease") or {}
-                if lease.get("soc") != t["soc"] or not isinstance(lease.get("card"), int):
-                    problems.append(f"{tid}: 需要 NPU 的进行中任务必须持有同 SoC 的卡租约，实际 {lease}")
+                declared = (t.get("assignee_caps") or {}).get("socs") or []
+                if t["soc"] not in declared:
+                    problems.append(f"{tid}: 需要 {t['soc']} 真机，assignee 声明的 SoC 是 {declared}")
         if status == "done" and not (t.get("result") or {}).get("commits"):
             problems.append(f"{tid}: done 必须在 result.commits 记下合入的提交")
 
@@ -134,15 +139,16 @@ def check(board: dict, root: Path = ROOT) -> list[str]:
         for other in write_conflicts(t, flying[i + 1:]):
             problems.append(f"写集冲突: {t['id']} 与 {other} 同时在进行中")
 
-    leased: dict[tuple, str] = {}
+    holders: dict[str, str] = {}
     for t in flying:
-        lease = t.get("lease") or {}
-        if lease.get("card") is None:
-            continue
-        key = (lease.get("soc"), lease.get("card"))
-        if key in leased:
-            problems.append(f"卡重复租出: {key} 同时给了 {leased[key]} 与 {t['id']}")
-        leased[key] = t["id"]
+        who = t.get("assignee")
+        if who in holders:
+            problems.append(f"{who} 同时持有 {holders[who]} 与 {t['id']} —— 一个 agent 同时只接一个任务")
+        elif who:
+            holders[who] = t["id"]
+
+    numbers = [t["issue"] for t in valid if isinstance(t.get("issue"), int)]
+    problems += [f"issue #{n} 被多个任务引用" for n in sorted({n for n in numbers if numbers.count(n) > 1})]
 
     if m := _IP.search(json.dumps(board, ensure_ascii=False)):
         problems.append(f"看板里出现了疑似 IP 地址 {m.group(0)!r} —— 机器信息只能写在 machine_specs.md")
@@ -150,10 +156,7 @@ def check(board: dict, root: Path = ROOT) -> list[str]:
 
 
 def next_candidates(board: dict, socs: set[str], ascriptor: bool, fla: bool) -> list[dict]:
-    """某个 agent 按能力可以接的任务，按看板顺序（即 PM 定的派单顺序）。
-
-    不看卡是否空闲 —— 那由 PM 按 ``tmp/pm/leases.json`` 与 agent 报的 ``npu-smi`` 读数决定。
-    """
+    """某个 agent 按声明的能力可以接的任务，按看板顺序（即 PM 定的派单顺序）。"""
     tasks = board["tasks"]
     by_id = {t["id"]: t for t in tasks}
     flying = [t for t in tasks if t["status"] in IN_FLIGHT]
@@ -188,10 +191,12 @@ def render(board: dict) -> str:
         counts = {s: sum(t["status"] == s for t in rows) for s in STATUSES}
         summary = " ".join(f"{s}={n}" for s, n in counts.items() if n)
         lines += [f"## {wave} {title}（{summary}）", "",
-                  "| id | soc | pri | status | assignee | deps | title |", "|---|---|---|---|---|---|---|"]
+                  "| id | issue | soc | pri | status | assignee | deps | title |",
+                  "|---|---|---|---|---|---|---|---|"]
         for t in rows:
             status = t["status"] + (f" ({t['gate']})" if t["status"] == "gated" else "")
-            lines.append(f"| {t['id']} | {t['soc']} | {t['priority']} | {status} | {t.get('assignee') or ''} "
+            issue = f"#{t['issue']}" if t.get("issue") else ""
+            lines.append(f"| {t['id']} | {issue} | {t['soc']} | {t['priority']} | {status} | {t.get('assignee') or ''} "
                          f"| {', '.join(t['deps'])} | {t['title']} |")
         lines.append("")
     return "\n".join(lines)
@@ -203,7 +208,7 @@ def main() -> int:
     ap.add_argument("--check", action="store_true", help="校验看板")
     ap.add_argument("--render", action="store_true", help="按波次打印进度表")
     ap.add_argument("--next", action="store_true", help="列出某个 agent 能接的任务")
-    ap.add_argument("--socs", default="", help="agent 可用的 SoC，逗号分隔，如 a2,a3；纯主机侧留空")
+    ap.add_argument("--socs", default="", help="agent 声明可用的 SoC，逗号分隔，如 a2,a3；纯主机侧留空")
     ap.add_argument("--ascriptor", action="store_true", help="agent 有 ascriptor workspace")
     ap.add_argument("--fla", action="store_true", help="agent 装了 fla（oracle）")
     args = ap.parse_args()
