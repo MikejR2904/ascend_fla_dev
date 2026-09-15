@@ -340,10 +340,36 @@ def _require_pm(board: dict) -> str:
 
 
 def fetch_remote(repo: str) -> tuple[list[dict], list[str]]:
-    issues = _gh_lines("api", "--paginate", f"repos/{repo}/issues?state=all&per_page=100", "--jq",
-                       '.[] | {number, title, body, state, labels: [.labels[].name], pull_request: has("pull_request")}')
+    """列出远端 issue 与标签。
+
+    **必须走 `gh issue list`（GraphQL），不能用 REST 的 `/issues` 列表端点。**
+    实测过一次：全新的 bot 账号短时间内建了 26 个 issue，被 GitHub 的反滥用过滤器判为可疑，
+    REST 列表端点从此只返回 PR、一个 issue 都不给（匿名访问甚至 404），而 GraphQL 照常返回 26 个。
+    如果按 REST 的空列表去规划，`sync --apply` 会把 25 个 issue 全部重建一遍。
+    """
+    raw = _gh("issue", "list", "-R", repo, "--state", "all", "--limit", "500",
+              "--json", "number,title,body,state,labels")
+    issues = [{"number": i["number"], "title": i["title"], "body": i["body"],
+               "state": i["state"].lower(), "labels": [x["name"] for x in i["labels"]],
+               "pull_request": False}
+              for i in json.loads(raw)]
     labels = _gh("api", "--paginate", f"repos/{repo}/labels?per_page=100", "--jq", ".[].name").split()
     return issues, labels
+
+
+def guard_known_issues(board: dict, remote_issues: list[dict]) -> None:
+    """看板里记过编号的 issue，必须在列表里出现过；否则宁可停下，也不要重建。"""
+    seen = {i["number"] for i in remote_issues}
+    known = {t["issue"]: t["id"] for t in board["tasks"] if t.get("issue")}
+    if board.get("intake_issue"):
+        known[board["intake_issue"]] = "<intake>"
+    missing = {n: tid for n, tid in known.items() if n not in seen}
+    if missing:
+        raise SystemExit(
+            "拒绝继续：看板记着这些 issue，但远端列表里没有它们 —— "
+            f"{', '.join(f'#{n}({tid})' for n, tid in sorted(missing.items()))}。\n"
+            "多半是列表被 GitHub 过滤了（新账号反滥用），此时 sync 会重建重复 issue。\n"
+            "先确认这些 issue 的实际状态（gh issue view <号> -R <repo>），必要时联系 GitHub 支持。")
 
 
 def apply_actions(board: dict, actions: list[dict], repo: str) -> None:
@@ -399,6 +425,8 @@ def cmd_sync(board: dict, apply: bool, offline: bool) -> int:
         raise SystemExit("--apply 与 --offline 不能同时用")
     repo = _repo(board)
     remote_issues, remote_labels = ([], []) if offline else fetch_remote(repo)
+    if not offline:
+        guard_known_issues(board, remote_issues)
     actions = plan_sync(board, remote_issues, remote_labels)
     for a in actions:
         detail = {k: v for k, v in a.items() if k not in ("op", "body")}

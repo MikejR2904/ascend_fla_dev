@@ -149,6 +149,34 @@ class TestClassifyIssue(unittest.TestCase):
         self.assertTrue(set(pm_github.TRIAGE_LABELS) <= names)
 
 
+class TestGuardKnownIssues(unittest.TestCase):
+    """看板记过编号的 issue 从列表里消失时必须停下 —— 否则 sync 会重建一遍。
+
+    这不是假想：全新 bot 账号连建 26 个 issue 之后被 GitHub 反滥用过滤，REST 列表端点只剩 PR。
+    """
+
+    def test_missing_known_issue_aborts(self):
+        board = _board()
+        board["tasks"][1]["issue"] = 12
+        with self.assertRaises(SystemExit) as cm:
+            pm_github.guard_known_issues(board, [{"number": 1}])   # 12 不见了
+        self.assertIn("#12", str(cm.exception))
+
+    def test_missing_intake_aborts(self):
+        with self.assertRaises(SystemExit) as cm:
+            pm_github.guard_known_issues(_board(), [{"number": 12}])   # intake 1 不见了
+        self.assertIn("#1", str(cm.exception))
+
+    def test_all_present_passes(self):
+        board = _board()
+        pm_github.guard_known_issues(board, [{"number": 1}, {"number": 12}])
+
+    def test_board_without_numbers_passes(self):
+        board = _board(intake_issue=None)
+        board["tasks"][1]["issue"] = None
+        pm_github.guard_known_issues(board, [])
+
+
 class TestPlanSync(unittest.TestCase):
     def setUp(self):
         self._dir = tempfile.TemporaryDirectory()
