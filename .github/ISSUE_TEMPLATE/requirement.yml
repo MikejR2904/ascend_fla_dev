@@ -1,0 +1,71 @@
+name: 需求提案 / Requirement proposal
+description: 提出一个新需求，由 PM 分诊后进任务看板（不是申领任务）
+title: "[FLA-PM] REQUEST: "
+labels: ["fla-pm:request"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        任何人都可以提需求。PM 会分诊并给出结论（`triage:accepted` / `declined` / `duplicate` / `needs-info`）。
+        **被采纳的需求先以 `gated` 进看板，由仓库所有者放行后才会派给 agent** —— 改变范围要显式决策（`AGENTS.md` §1/§2）。
+
+        - 想**接任务**而不是提需求：去带 `fla-pm:intake` 标签的申领入口 issue。
+        - 本仓公开：**不要写主机名、IP、账号、绝对路径、令牌**。
+        - 先看看是不是已有条目：`docs/matrix/gaps.json` 的缺口、`docs/pm/board.json` 的任务、以及 `board.json` 里已 gated 的 G1~G9。
+  - type: textarea
+    id: what
+    attributes:
+      label: 需求是什么
+      description: 一两句话说清要什么能力、什么行为。
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: 为什么需要 / 谁会用
+      description: 动机、使用场景、不做的后果。若对应某个真实模型，给出 config 来源 URL。
+    validations:
+      required: true
+  - type: input
+    id: scope
+    attributes:
+      label: 涉及范围
+      description: 算子族 / 模块 / 层 / 模型，以及目标 SoC（a2 / a3 / a5）。不确定就写"不确定"。
+      placeholder: 例如 KDA 算子、a2
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: 怎么算做完（可验证的判据）
+      description: |
+        尽量写成能测的东西：对哪个 oracle、什么形状、什么阈值。
+        本仓纪律：正确性一律 fp32 判定并报相对 L2 / max_abs_diff，不用 bf16 逐元素 rtol；不接受"应该没问题"。
+    validations:
+      required: true
+  - type: dropdown
+    id: hardware
+    attributes:
+      label: 需要昇腾真机吗
+      options:
+        - 不需要（纯主机侧 / 模拟器）
+        - 需要 a2 (910B)
+        - 需要 a3 (910C)
+        - 需要 a5 (950)
+        - 不确定
+    validations:
+      required: true
+  - type: textarea
+    id: offer
+    attributes:
+      label: 你能自己做吗（可选）
+      description: 能的话写上你的 GitHub 账号、可用机器与能力；被采纳且放行后可以直接派给你。
+  - type: checkboxes
+    id: hygiene
+    attributes:
+      label: 确认
+      options:
+        - label: 我没有在本 issue 里写主机名、IP、账号、绝对路径或令牌
+          required: true
+        - label: 我读过 AGENTS.md 与 docs/pm/PROTOCOL.md，知道被采纳后要由仓库所有者放行
+          required: true

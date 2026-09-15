@@ -145,8 +145,25 @@ fla 的模型定义，只把我们的 layer 替换进去 —— 规格自动跟�
 | **0** ✅ | 形状清单反推 + 缺口表 + 矩阵 schema | 已完成：`docs/matrix/` 三份 json，19 项缺口显式列出 |
 | **1** ✅ | ① aclnn 编译 ✅ ② runtime 桥 ✅ ③ `kda_fwd` 接线 ✅ ④ KDA 本地基线 ✅ ⑤ torch_npu 基线 ✅ | 见下「第一期实测结果」。自编译算子在 bd=4 下比 torch_npu 组合快 2.4~4.4x |
 | **2** ✅ | `kda_bwd`（九 kernel）+ 九个前向检查点 + autograd + KDA layer（含 2 modules） | 见下「第二期实测结果」。层级梯度对齐，训练步比 torch_npu 组合版快 4.8~5.7x |
-| **3** 进行中 | model 注入（Kimi-Linear）+ KDA `fused_recurrent`(decode) ◐ + 矩阵 CI 生成 | 端到端跑通一个模型；chunk↔recurrent 互验通过 |
-| **4** | GDN 扩族（含 GQA、token-major 布局、非零初始 state）+ DeltaNet + 性能迭代 | Qwen3-Next 可用；兑现"高效率算子" |
+| **3** 在 A5 上暂停 | model 注入（Kimi-Linear）+ KDA `fused_recurrent`(decode) ◐ + 矩阵 CI 生成 | 被 2026-09-14 的 SoC 顺序变更重排进下面的波次 |
+| **4** | GDN 扩族（含 GQA、token-major 布局、非零初始 state）+ DeltaNet + 性能迭代 | 重排进下面的波次 |
+
+### 2026-09-14 重排：按 SoC 分波次
+
+SoC 顺序改成 **A2 (910B) → A3 (910C) → A5**，首波模型是 Kimi-Linear（KDA），之后 Qwen3-Next（GDN），
+工具链只用 ascriptor。第三、四期的内容一条都不删，按下表重新归入波次。
+逐项任务、依赖与验收在 `docs/pm/board.json`。
+
+| 波次 | 内容 | 进入条件 | 退出条件 |
+|---|---|---|---|
+| **W0** | 主机侧准备：split-K FP32 缺陷定性、C=1 多头 P0 根因、`platform.py` SoC 显式化、KDA 单元派生到 a2、cache 适配器、矩阵按 SoC 分维 + CI、GDN ABI 方案、Kimi-Linear 注入脚手架 | 无 | 全部 done 或显式搁置 |
+| **W-A2** | 910B 上机 → split-K 真机结论（总闸）→ KDA 前向/反向/decode/层 → Kimi-Linear 端到端 → kernel 批次 → GDN + Qwen3-Next | A2 机器就绪 | Kimi-Linear 在 910B 上端到端；chunk↔recurrent 互验；矩阵格有运行记录 |
+| **W-A3** | 复制 W-A2，所有门控/限值/速度重测 | W-A2 退出且 A3 机器就绪 | 同上（910C） |
+| **W-A5** | 回到 A5：decode 性能（层侧 + 调用固定成本）、`block_dim` 上限、48B 端到端、GDN | W-A3 退出 | 原第三、四期验收 |
+
+最大的风险还是那条：ascriptor 侧 A2/A3 是 deferred 状态，带着未解决的 split-K FP32 cube 数值缺陷。
+W-A2 的所有算子任务都挂在 A2-01（主机侧定性）与 A2-11（真机结论）下面。
+万一没有可行的绕行，是否退回 A5 由用户决定。
 
 ### 第一期实测结果（A5 / Ascend950PR，CANN 9.1.0，2026-09-11）
 
