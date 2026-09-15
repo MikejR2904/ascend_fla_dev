@@ -47,13 +47,15 @@ KDA"，依据见 `gaps.json` 的 `summary.kda_vs_gdn`。
 **首波在 A2 (910B) 上做 KDA 算子 + Kimi-Linear 整模型，然后 GDN + Qwen3-Next；再做 A3 (910C)；
 最后回到 A5。** 工具链仍只用 ascriptor。第一、二期在 A5 上的全部结论保留，但**只属于 A5**。
 
-已知风险，接 A2 工作前必须知道：
+接 A2 的活之前，先知道这两条风险。
 
-- ascriptor 侧 A2/A3 于 2026-09-06 被 **deferred**（D-250），且有**未解决的 split-K FP32 cube 数值缺陷**。
-  在它被定性（`docs/pm/tasks/A2-01.md`）并在真机上有绕行或闸（A2-11）之前，**A2 上任何算子结论都不算数**。
-- A2 的核数、UB、`block_dim` 上限、门控跨度上限、内置算子包覆盖**全部未知**，必须重测（见 §6「结论不跨 SoC 继承」）。
-  A5 上 profile 声明与物理核数不一致会死锁 —— A2 同样要先查实。
-- 本仓用多 agent 协作推进，任务、派单与汇报协议见 `docs/pm/PROTOCOL.md`，看板是 `docs/pm/board.json`。
+ascriptor 侧 A2/A3 在 2026-09-06 被 deferred（D-250），还带着一个没解决的 split-K FP32 cube 数值缺陷。
+在它被定性（`docs/pm/tasks/A2-01.md`）、并且真机上有了绕行或闸（A2-11）之前，**A2 上任何算子结论都不算数**。
+
+A2 的核数、UB、`block_dim` 上限、门控跨度上限、内置算子包覆盖，眼下一个都不知道，全要重测（见 §6「结论不跨 SoC 继承」）。
+A5 上 profile 声明与物理核数对不上会死锁，A2 同样要先查实这一条。
+
+协作方式：本仓用多 agent 推进，派单与汇报协议见 `docs/pm/PROTOCOL.md`，看板是 `docs/pm/board.json`。
 
 ## 3. 与 ascriptor workspace 的关系
 

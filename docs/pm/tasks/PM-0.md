@@ -6,9 +6,9 @@
 
 1. 建立 PM 的事实源与工具：`docs/pm/board.json`、`docs/pm/PROTOCOL.md`、`docs/pm/tasks/*.md`、
    `tools/pm_board.py`（`--check` / `--render` / `--next`）、`tests/test_pm_board.py`。
-2. 把 2026-09-14 的用户决策写进长期文档，否则 agent 会照旧版 `AGENTS.md` 拒绝做 A2：
-   - SoC 顺序 **A2 (910B) → A3 (910C) → A5**；首波模型 Kimi-Linear（KDA）然后 Qwen3-Next（GDN）。
-   - 工具链只用 ascriptor；A2 上先定性 split-K FP32 cube 缺陷。
+2. 把 2026-09-14 的用户决策写进长期文档，不然 agent 会照着旧版 `AGENTS.md` 拒绝做 A2。要写进去的是：
+   SoC 顺序改成 A2 (910B) → A3 (910C) → A5，首波模型先 Kimi-Linear（KDA）再 Qwen3-Next（GDN）；
+   工具链只用 ascriptor；A2 上先把 split-K FP32 cube 缺陷定性。
 3. 按 PM 计划切出 W0 的 8 个主机侧任务规格。
 
 ## 写集
@@ -18,13 +18,16 @@
 
 ## 验收
 
-- `python tools/pm_board.py --check` 通过；`tests/test_pm_board.py` 全过，且每条冲突（写集交叠、一个 agent 持有两个任务、
-  真机任务的 assignee 未声明该 SoC、依赖成环、依赖未完成却在进行中、缺 spec、issue 编号重复、IP 地址）都有反例测试。
-- 2026-09-15 用户追加：agent 可来自任何账号 / 模型，机器归 agent 管理，通道改为公开仓库的 GitHub issue/PR，PM 用 bot 账号。
-  `tools/pm_github.py`（sync / poll / post / label，写操作前校验 gh 账号）与 `tests/test_pm_github.py`（消息解析、冒充与非 assignee 警告、
-  同步计划）不连网络即可全过；首次把任务发布成 issue 需用户确认。
-- 2026-09-15 再追加：**任何人都可以提新需求**（GitHub issue + Requirement 模板 / `[FLA-PM] REQUEST`），PM 分诊后进看板。
-  被采纳的需求以 `gated` 入库，看板校验拦住"外部需求未经用户批准却可派"的情况（`origin.approved_by_user`）。
-- `python tools/gen_matrix.py --check` 仍通过（本任务不改矩阵 json；矩阵按 SoC 分维是 A2-06 的事）。
-- 主机侧全量 `pytest tests/ -q` 不退化（基线 42 passed / 5 skipped）。
-- `AGENTS.md` 的改动经用户过目后再合入 main。
+- `python tools/pm_board.py --check` 通过，`tests/test_pm_board.py` 全过。每条冲突都要配反例测试：写集交叠、
+  一个 agent 持有两个任务、真机任务的 assignee 未声明该 SoC、依赖成环、依赖未完成却在进行中、缺 spec、
+  issue 编号重复、IP 地址。
+- 2026-09-15 用户追加的：agent 可来自任何账号或模型，机器归 agent 管理，通道改为公开仓库的 GitHub issue/PR，
+  PM 用 bot 账号。对应 `tools/pm_github.py`（sync / poll / post / label，写操作前先校验 gh 账号）和
+  `tests/test_pm_github.py`（消息解析、冒充与非 assignee 警告、同步计划），不连网络就要能全过。
+  首次把任务发布成 issue 得用户确认。
+- 2026-09-15 再追加的：任何人都可以提新需求，走 GitHub issue 的 Requirement 模板或者 `[FLA-PM] REQUEST`，
+  PM 分诊后进看板。被采纳的需求以 `gated` 入库，看板校验要拦住"外部需求未经用户批准却被派出去"的情况
+  （`origin.approved_by_user`）。
+- `python tools/gen_matrix.py --check` 仍然通过。本任务不改矩阵 json，矩阵按 SoC 分维是 A2-06 的事。
+- 主机侧全量 `pytest tests/ -q` 不退化，基线是 42 passed / 5 skipped。
+- `AGENTS.md` 的改动要用户过目后才合入 main。
