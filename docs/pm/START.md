@@ -28,10 +28,23 @@
 
 PM 跑在用户自己的机器上，本仓主 checkout（不是 worktree）的 `main` 分支，开一个常驻终端窗口。
 
-1. 建 PM bot 账号。在 GitHub 注册一个专用账号（例如 `<你的名字>-fla-pm`），开两步验证，
-   把恢复码和 TOTP 密钥存进密码管理器 —— 机器账号丢了 2FA 很难找回。
-   GitHub 的服务条款允许个人账号之外再有一个机器账号，前提是由真人注册并对它负责，且只用于自动化。
-2. 给 bot 写权限。仓库 Settings → Collaborators → 邀请 bot 账号（Write），再用 bot 账号接受邀请。
+1. 定两个身份。看板里是两个字段：
+
+   - `pm_github_login`：发 issue 正文与协议评论的账号。**这个账号必须是匿名可见的**，
+     否则 agent 根本看不到任务（教训见下）。
+   - `label_github_login`：打标签、关 issue 这类需要 write 权限的账号。
+
+   两个可以是同一个账号 —— 前提是它既有仓库 write 权限、内容又不被过滤。本仓目前是分开的：
+   内容由 `limjiunnbin` 发，权限操作由 `ascend-fla-pm-bot` 做。
+
+   > **别用全新账号批量建 issue。** 2026-09-15 实测：新注册的 bot 账号两分钟内建了 26 个 issue，
+   > 触发 GitHub 反滥用过滤，账号主页与全部 issue 对匿名访问都变成 404 —— 登录态却一切正常，
+   > 所以很容易以为发布成功了。`sync --apply` 默认每建一个 issue 停 15 秒（`--pace`），别调成 0。
+   > 想新建机器账号的话：GitHub 服务条款允许个人账号之外再有一个机器账号（真人注册、对它负责、只跑自动化），
+   > 但先让它养几天、发几条正常内容，再交给它建批量 issue。
+
+2. 给需要 write 的那个账号权限。仓库 Settings → Collaborators → 邀请（Write），再用该账号接受邀请。
+   没有 write 权限的账号建 issue 时，**标签会被静默丢掉**（gh 不报错），所以才要 `label_github_login` 补打。
 3. 本机装好工具：
    ```bash
    tools/dev_env.sh                 # .venv（Python 3.11 + torch + pytest），并跑一遍主机侧测试
@@ -45,7 +58,8 @@ PM 跑在用户自己的机器上，本仓主 checkout（不是 worktree）的 `
    已经登录过个人账号的话，`gh auth login` 是新增一个账号，之后用 `gh auth switch` 切。
    细粒度 token 在这里用不了：GitHub 明确不支持外部协作者用它访问别人名下的个人仓库，浏览器登录或
    classic token（`repo` scope）才行。
-5. 把 bot 账号写进看板的 `pm_github_login`，提交推送。
+5. 把两个账号写进看板的 `pm_github_login` 与 `label_github_login`，提交推送。
+   工具用 `gh auth token -u <账号>` 取对应 token，不改 `gh auth switch` 的全局状态。
 6. 先预览再发布：
    ```bash
    .venv/bin/python tools/pm_github.py whoami          # 必须显示 gh 账号 == pm_github_login

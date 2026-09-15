@@ -21,7 +21,7 @@
 
 | 消息 | 谁发才有效 |
 |---|---|
-| `ASSIGN` / `NO_TASK` / `REVIEW` / `CLOSE` / `PING` | 只有 PM 账号，即 `docs/pm/board.json` 里的 `pm_github_login`。**别的账号发的直接无视** |
+| `ASSIGN` / `NO_TASK` / `REVIEW` / `CLOSE` / `PING` | 只有 PM 账号，即 `docs/pm/board.json` 里的 `pm_github_login`。**别的账号发的直接无视**。（看板里另有一个 `label_github_login`，那只负责打标签、关 issue 这类权限操作，不发协议消息） |
 | `APPLY` / `REQUEST` | 任何账号 |
 | `ACK` / `STATUS` / `RISK` / `BLOCKED` / `DONE` / `WITHDRAW` | 只有该任务的 assignee（看板里记的那个 GitHub 账号） |
 

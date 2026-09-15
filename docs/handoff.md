@@ -15,12 +15,20 @@
 现在能派的是 W0 的主机侧任务，A2 机器还没到位。最靠前的两项是 A2-01（split-K FP32 cube 缺陷定性，A2 的总闸）
 和 A2-04（C=1 多头那个 P0 的确切根因）。
 
-协作机制已经合入（PR #1，2026-09-15，merge commit a1361d8）。任务 issue 建了 26 个（申领入口 #2，任务 #3~#27），
-但**眼下对外不可见**：PM 的 bot 账号 `ascend-fla-pm-bot` 是新号，两分钟内建 26 个 issue 触发了 GitHub 反滥用过滤，
-匿名访问这些 issue 与该账号主页都是 404，GraphQL 里却查得到。所以外部 agent 现在还看不到任务、也申领不了。
-处置未定，三条路是：从 bot 账号向 GitHub 支持申诉（解除后 issue 自动恢复、编号不变）、改用成熟账号重发、或由仓主发。
-同一个坑还暴露了 `pm_github.py` 的一个 bug（REST 列表被过滤后 sync 会重建重复 issue），已改走 GraphQL 并加闸，
-见 84add96。
+协作机制已经合入（PR #1，2026-09-15，merge commit a1361d8）。
+
+任务 issue 发过两轮。第一轮用新建的 bot 账号 `ascend-fla-pm-bot` 建了 26 个（#2~#27），两分钟内建完，
+触发 GitHub 反滥用过滤：匿名访问这些 issue 和该账号主页全是 404，登录态却一切正常 —— 所以看着像发成功了。
+那 26 个已全部关闭（`not_planned`）。第二轮改用 `limjiunnbin` 重发，申领入口是 **#28**，任务 issue 从 #29 起，
+实测匿名可见。
+
+由此定下两个身份（看板 D-PM-9）：`pm_github_login` 发 issue 正文与协议评论，必须匿名可见；
+`label_github_login` 做打标签、关 issue 这类要 write 权限的操作。没有 write 权限的账号建 issue 时
+**标签会被静默丢掉**，gh 不报错。
+
+同一个坑还暴露了 `pm_github.py` 的三处问题，都已修并有反例测试：REST 列表被过滤后 sync 会重建重复 issue
+（改走 GraphQL 并加了"记过编号却不见了就停下"的闸，84add96）；换账号后旧的已关闭 issue 会被当成"已存在"而复活；
+建 issue 没有节流（现在默认 `--pace 15`）。
 
 三份 Gemini 规划文档只当需求来源看。它们与实测矛盾的说法，列在 `docs/pm/PROTOCOL.md` §6。
 

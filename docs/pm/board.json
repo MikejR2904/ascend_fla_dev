@@ -2,9 +2,9 @@
   "schema": "fla-pm-board/2",
   "updated_at": "2026-09-15",
   "repo": "ddddwee1/ascend_fla_dev",
-  "pm_github_login": "ascend-fla-pm-bot",
-  "intake_issue": 2,
-  "note": "唯一事实源，只有 PM 写。协作走本仓（公开）GitHub issue/PR，协议见 docs/pm/PROTOCOL.md；python tools/pm_board.py --check / --render / --next；python tools/pm_github.py sync / poll / post / label。tasks 的顺序即派单顺序。pm_github_login 在 PM 的 bot 账号建好后填写。任何人都可以提需求（标签 fla-pm:request）：PM 分诊后以 gated 入库，用户放行才可派（PROTOCOL §3.9）。",
+  "pm_github_login": "limjiunnbin",
+  "intake_issue": 28,
+  "note": "唯一事实源，只有 PM 写。协作走本仓（公开）GitHub issue/PR，协议见 docs/pm/PROTOCOL.md；python tools/pm_board.py --check / --render / --next；python tools/pm_github.py sync / poll / post / label。tasks 的顺序即派单顺序。pm_github_login 在 PM 的 bot 账号建好后填写。任何人都可以提需求（标签 fla-pm:request）：PM 分诊后以 gated 入库，用户放行才可派（PROTOCOL §3.9）。（2026-09-15 起：issue 正文与协议评论由 pm_github_login 发，因为它对匿名可见；打标签/关 issue 需要 write 权限，由 label_github_login 做。）",
   "decisions": [
     {
       "id": "D-PM-1",
@@ -54,6 +54,13 @@
       "date": "2026-09-15",
       "by": "user",
       "decision": "任何人都可以提交新需求：GitHub issue（Requirement 模板 / [FLA-PM] REQUEST）→ PM 分诊 → 被采纳者以 gated 进看板 → 用户放行后才可派单"
+    },
+    {
+      "id": "D-PM-9",
+      "date": "2026-09-15",
+      "by": "user",
+      "decision": "任务 issue 改用 limjiunnbin 重发：bot 账号 ascend-fla-pm-bot 触发 GitHub 反滥用过滤，它建的 26 个 issue 对匿名访问全部 404。bot 保留，只用于打标签等需要 write 权限的操作",
+      "evidence": "实测：匿名取 bot 建的 issue/4 → 404、bot 主页 → 404；limjiunnbin 建的 #28 → 200。另实测 limjiunnbin 无 write，建 issue 时标签被静默丢掉，需由 bot 补打"
     }
   ],
   "gated_epics": [
@@ -151,7 +158,7 @@
         "fla": false
       },
       "spec": "docs/pm/tasks/PM-0.md",
-      "issue": 3,
+      "issue": null,
       "pr": 1,
       "assignee": "pm",
       "assignee_caps": null,
@@ -203,7 +210,7 @@
         "fla": false
       },
       "spec": "docs/pm/tasks/A2-01.md",
-      "issue": 4,
+      "issue": 29,
       "pr": null,
       "assignee": null,
       "assignee_caps": null,
@@ -229,7 +236,7 @@
         "fla": false
       },
       "spec": "docs/pm/tasks/A2-04.md",
-      "issue": 5,
+      "issue": 30,
       "pr": null,
       "assignee": null,
       "assignee_caps": null,
@@ -260,7 +267,7 @@
         "fla": false
       },
       "spec": "docs/pm/tasks/A2-02.md",
-      "issue": 6,
+      "issue": 31,
       "pr": null,
       "assignee": null,
       "assignee_caps": null,
@@ -287,7 +294,7 @@
         "fla": true
       },
       "spec": "docs/pm/tasks/A2-05.md",
-      "issue": 7,
+      "issue": 32,
       "pr": null,
       "assignee": null,
       "assignee_caps": null,
@@ -319,7 +326,7 @@
         "fla": false
       },
       "spec": "docs/pm/tasks/A2-06.md",
-      "issue": 8,
+      "issue": 33,
       "pr": null,
       "assignee": null,
       "assignee_caps": null,
@@ -347,7 +354,7 @@
         "fla": false
       },
       "spec": "docs/pm/tasks/A2-03.md",
-      "issue": 9,
+      "issue": 34,
       "pr": null,
       "assignee": null,
       "assignee_caps": null,
@@ -375,7 +382,7 @@
         "fla": true
       },
       "spec": "docs/pm/tasks/A2-07.md",
-      "issue": 10,
+      "issue": 35,
       "pr": null,
       "assignee": null,
       "assignee_caps": null,
@@ -404,7 +411,7 @@
         "fla": true
       },
       "spec": "docs/pm/tasks/A2-08.md",
-      "issue": 11,
+      "issue": 36,
       "pr": null,
       "assignee": null,
       "assignee_caps": null,
@@ -433,7 +440,7 @@
         "fla": false
       },
       "spec": null,
-      "issue": 12,
+      "issue": 37,
       "pr": null,
       "assignee": null,
       "assignee_caps": null,
@@ -463,7 +470,7 @@
         "fla": false
       },
       "spec": null,
-      "issue": 13,
+      "issue": 38,
       "pr": null,
       "assignee": null,
       "assignee_caps": null,
@@ -494,7 +501,7 @@
         "fla": true
       },
       "spec": null,
-      "issue": 14,
+      "issue": 39,
       "pr": null,
       "assignee": null,
       "assignee_caps": null,
@@ -526,7 +533,7 @@
         "fla": true
       },
       "spec": null,
-      "issue": 15,
+      "issue": 40,
       "pr": null,
       "assignee": null,
       "assignee_caps": null,
@@ -556,7 +563,7 @@
         "fla": false
       },
       "spec": null,
-      "issue": 16,
+      "issue": 41,
       "pr": null,
       "assignee": null,
       "assignee_caps": null,
@@ -588,7 +595,7 @@
         "fla": true
       },
       "spec": null,
-      "issue": 17,
+      "issue": 42,
       "pr": null,
       "assignee": null,
       "assignee_caps": null,
@@ -619,7 +626,7 @@
         "fla": true
       },
       "spec": null,
-      "issue": 18,
+      "issue": 43,
       "pr": null,
       "assignee": null,
       "assignee_caps": null,
@@ -650,7 +657,7 @@
         "fla": true
       },
       "spec": null,
-      "issue": 19,
+      "issue": 44,
       "pr": null,
       "assignee": null,
       "assignee_caps": null,
@@ -682,7 +689,7 @@
         "fla": true
       },
       "spec": null,
-      "issue": 20,
+      "issue": 45,
       "pr": null,
       "assignee": null,
       "assignee_caps": null,
@@ -711,7 +718,7 @@
         "fla": true
       },
       "spec": null,
-      "issue": 21,
+      "issue": 46,
       "pr": null,
       "assignee": null,
       "assignee_caps": null,
@@ -739,7 +746,7 @@
         "fla": false
       },
       "spec": null,
-      "issue": 22,
+      "issue": 47,
       "pr": null,
       "assignee": null,
       "assignee_caps": null,
@@ -768,7 +775,7 @@
         "fla": false
       },
       "spec": null,
-      "issue": 23,
+      "issue": 48,
       "pr": null,
       "assignee": null,
       "assignee_caps": null,
@@ -795,7 +802,7 @@
         "fla": false
       },
       "spec": null,
-      "issue": 24,
+      "issue": 49,
       "pr": null,
       "assignee": null,
       "assignee_caps": null,
@@ -822,7 +829,7 @@
         "fla": false
       },
       "spec": null,
-      "issue": 25,
+      "issue": 50,
       "pr": null,
       "assignee": null,
       "assignee_caps": null,
@@ -849,7 +856,7 @@
         "fla": false
       },
       "spec": null,
-      "issue": 26,
+      "issue": 51,
       "pr": null,
       "assignee": null,
       "assignee_caps": null,
@@ -880,7 +887,7 @@
         "fla": true
       },
       "spec": null,
-      "issue": 27,
+      "issue": 52,
       "pr": null,
       "assignee": null,
       "assignee_caps": null,
@@ -889,5 +896,6 @@
       "reports": [],
       "result": null
     }
-  ]
+  ],
+  "label_github_login": "ascend-fla-pm-bot"
 }

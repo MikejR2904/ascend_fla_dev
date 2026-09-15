@@ -25,6 +25,7 @@ import os
 import re
 import subprocess
 import sys
+import time
 import urllib.parse
 from datetime import datetime, timezone
 from pathlib import Path
@@ -169,10 +170,15 @@ def plan_sync(board: dict, remote_issues: list[dict], remote_labels: list[str], 
         wanted |= desired_labels(t)
     actions += [{"op": "create_label", "name": n, "color": label_color(n)} for n in sorted(wanted - set(remote_labels))]
 
+    # 已经关掉、而且看板没记它编号的 issue：当作废弃，不要复活。
+    # （换发布账号时会留下一批这样的旧 issue —— 它们正文里还带着 task marker。）
+    linked = {t.get("issue") for t in board["tasks"]} | {board.get("intake_issue")}
     by_task: dict[str, dict] = {}
     intake = None
     for iss in remote_issues:
         if iss.get("pull_request"):
+            continue
+        if iss.get("state") == "closed" and iss["number"] not in linked:
             continue
         body = iss.get("body") or ""
         if m := _TASK_MARKER_RE.search(body):
@@ -307,13 +313,27 @@ def classify_pr(pr: dict, board: dict) -> dict:
 
 # ---------------------------------------------------------------- gh 调用
 
-def _gh(*args: str) -> str:
+def _gh(*args: str, as_login: str | None = None) -> str:
+    """跑一条 gh 命令。
+
+    ``as_login`` 用来临时换账号执行：取该账号的 token 塞进 ``GH_TOKEN``，不动 ``gh auth switch``
+    的全局状态。这是为了应付一种分工 —— issue 正文与协议评论必须由公开可见的账号发
+    （见 ``board.json`` 的 ``pm_github_login``），而打标签、关 issue 这类操作要 write 权限，
+    由 ``label_github_login`` 指定的账号做。
+    """
+    env = None
+    if as_login:
+        token = subprocess.run(["gh", "auth", "token", "-u", as_login], capture_output=True, text=True)
+        if token.returncode != 0:
+            raise SystemExit(f"取不到 {as_login} 的 token：{token.stderr.strip()}；先 gh auth login")
+        env = {**os.environ, "GH_TOKEN": token.stdout.strip()}
     try:
-        res = subprocess.run(["gh", *args], capture_output=True, text=True, check=False)
+        res = subprocess.run(["gh", *args], capture_output=True, text=True, check=False, env=env)
     except FileNotFoundError:
-        raise SystemExit("找不到 gh；安装后用 PM 的 bot 账号 `gh auth login`（见 docs/pm/START.md）")
+        raise SystemExit("找不到 gh；安装后用 PM 账号 `gh auth login`（见 docs/pm/START.md）")
     if res.returncode != 0:
-        raise SystemExit(f"gh {' '.join(args[:3])} … 失败：{res.stderr.strip()}")
+        who = f"（以 {as_login} 身份）" if as_login else ""
+        raise SystemExit(f"gh {' '.join(args[:3])} …{who} 失败：{res.stderr.strip()}")
     return res.stdout
 
 
@@ -372,16 +392,30 @@ def guard_known_issues(board: dict, remote_issues: list[dict]) -> None:
             "先确认这些 issue 的实际状态（gh issue view <号> -R <repo>），必要时联系 GitHub 支持。")
 
 
-def apply_actions(board: dict, actions: list[dict], repo: str) -> None:
-    by_id = {t["id"]: t for t in board["tasks"]}
+def apply_actions(board: dict, actions: list[dict], repo: str, pace_s: float = 15.0) -> None:
+    """执行同步动作。
+
+    ``pace_s`` 是两次"建 issue"之间的间隔。**别把它调成 0**：全新账号两分钟内建 26 个 issue
+    被 GitHub 反滥用过滤判为可疑，账号与全部 issue 对匿名访问变成 404（见 fetch_remote 的说明）。
+    """
+    by_id = {t['id']: t for t in board['tasks']}
+    labeler = board.get('label_github_login')   # None = 用当前账号
+    created = 0
     for a in actions:
         op = a["op"]
+        if op in ("create_issue", "create_intake"):
+            if created and pace_s:
+                time.sleep(pace_s)
+            created += 1
         if op == "create_label":
             _gh("api", f"repos/{repo}/labels", "-f", f"name={a['name']}", "-f", f"color={a['color']}")
         elif op in ("create_issue", "create_intake"):
-            label_args = [x for n in a["labels"] for x in ("-f", f"labels[]={n}")]
+            # 正文必须由 pm_github_login 发（公开可见）；标签随后由 labeler 补，
+            # 因为没有 write 权限的账号建 issue 时标签会被**静默丢掉**（实测 #28）。
             number = int(_gh("api", f"repos/{repo}/issues", "-f", f"title={a['title']}", "-f", f"body={a['body']}",
-                             *label_args, "--jq", ".number").strip())
+                             "--jq", ".number").strip())
+            _gh("api", f"repos/{repo}/issues/{number}/labels",
+                *[x for n in a["labels"] for x in ("-f", f"labels[]={n}")], as_login=labeler)
             if op == "create_issue":
                 by_id[a["task"]]["issue"] = number
             else:
@@ -392,9 +426,10 @@ def apply_actions(board: dict, actions: list[dict], repo: str) -> None:
                 _gh("api", "-X", "PATCH", f"repos/{repo}/issues/{a['number']}", *fields)
             if a.get("add"):
                 _gh("api", f"repos/{repo}/issues/{a['number']}/labels",
-                    *[x for n in a["add"] for x in ("-f", f"labels[]={n}")])
+                    *[x for n in a["add"] for x in ("-f", f"labels[]={n}")], as_login=labeler)
             for name in a.get("remove", []):
-                _gh("api", "-X", "DELETE", f"repos/{repo}/issues/{a['number']}/labels/{urllib.parse.quote(name, safe='')}")
+                _gh("api", "-X", "DELETE", f"repos/{repo}/issues/{a['number']}/labels/{urllib.parse.quote(name, safe='')}",
+                    as_login=labeler)
         elif op in ("close_issue", "reopen_issue"):
             state = "closed" if op == "close_issue" else "open"
             _gh("api", "-X", "PATCH", f"repos/{repo}/issues/{a['number']}", "-f", f"state={state}")
@@ -420,7 +455,7 @@ def cmd_whoami(board: dict) -> int:
     return 0 if want and got == want else 1
 
 
-def cmd_sync(board: dict, apply: bool, offline: bool) -> int:
+def cmd_sync(board: dict, apply: bool, offline: bool, pace_s: float = 15.0) -> int:
     if apply and offline:
         raise SystemExit("--apply 与 --offline 不能同时用")
     repo = _repo(board)
@@ -434,7 +469,11 @@ def cmd_sync(board: dict, apply: bool, offline: bool) -> int:
     print(f"共 {len(actions)} 个动作（{'将执行' if apply else 'dry-run，未执行'}）", file=sys.stderr)
     if apply and actions:
         _require_pm(board)
-        apply_actions(board, actions, repo)
+        n = sum(a["op"] in ("create_issue", "create_intake") for a in actions)
+        if n > 1:
+            print(f"要新建 {n} 个 issue，每个之间停 {pace_s:g}s（约 {n * pace_s / 60:.1f} 分钟）——"
+                  "太快会触发 GitHub 反滥用过滤", file=sys.stderr)
+        apply_actions(board, actions, repo, pace_s)
         _save_board(board)
         print("看板已写回 issue 编号；记得提交并推送 docs/pm/board.json", file=sys.stderr)
     return 0
@@ -522,6 +561,8 @@ def main() -> int:
     s = sub.add_parser("sync")
     s.add_argument("--apply", action="store_true")
     s.add_argument("--offline", action="store_true")
+    s.add_argument("--pace", type=float, default=15.0,
+                   help="每建一个 issue 之间停多少秒，默认 15；0 表示不停（有触发反滥用过滤的风险）")
     p = sub.add_parser("poll")
     p.add_argument("--advance", action="store_true")
     c = sub.add_parser("post")
@@ -536,7 +577,7 @@ def main() -> int:
     if args.cmd == "whoami":
         return cmd_whoami(board)
     if args.cmd == "sync":
-        return cmd_sync(board, args.apply, args.offline)
+        return cmd_sync(board, args.apply, args.offline, args.pace)
     if args.cmd == "poll":
         return cmd_poll(board, args.advance)
     if args.cmd == "label":

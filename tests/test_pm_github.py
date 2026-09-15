@@ -229,6 +229,26 @@ class TestPlanSync(unittest.TestCase):
         self.assertEqual((upd["number"], upd["add"], upd["remove"]), (11, ["status:done"], ["status:open"]))
         self.assertIn({"op": "close_issue", "task": "A2-01", "number": 11}, actions)
 
+    def test_abandoned_closed_issue_is_not_resurrected(self):
+        """换发布账号后，旧账号那批已关闭的 issue 正文里还有 marker —— 不能被当成"已存在"。"""
+        board = _board(intake_issue=None)
+        abandoned = [{"number": 4, "title": pm_github.issue_title(board["tasks"][0]),
+                      "body": pm_github.issue_body(board["tasks"][0], board, self.root),
+                      "state": "closed", "labels": []}]
+        actions = pm_github.plan_sync(board, abandoned, [], self.root)
+        self.assertIn("A2-01", [a.get("task") for a in actions if a["op"] == "create_issue"])
+        self.assertFalse([a for a in actions if a["op"] in ("reopen_issue", "link")])
+
+    def test_closed_issue_still_linked_in_board_is_kept(self):
+        board = _board(intake_issue=None)
+        board["tasks"][0]["issue"] = 4
+        board["tasks"][0].update(status="done", result={"commits": ["a"]})
+        closed = [{"number": 4, "title": pm_github.issue_title(board["tasks"][0]),
+                   "body": pm_github.issue_body(board["tasks"][0], board, self.root),
+                   "state": "closed", "labels": sorted(pm_github.desired_labels(board["tasks"][0]))}]
+        self.assertFalse([a for a in pm_github.plan_sync(board, closed, [], self.root)
+                          if a["op"] == "create_issue" and a.get("task") == "A2-01"])
+
     def test_existing_issue_found_by_marker_gets_linked(self):
         board = _board()
         issues, labels = self._remote(board)
