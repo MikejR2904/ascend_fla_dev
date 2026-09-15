@@ -15,6 +15,13 @@
 现在能派的是 W0 的主机侧任务，A2 机器还没到位。最靠前的两项是 A2-01（split-K FP32 cube 缺陷定性，A2 的总闸）
 和 A2-04（C=1 多头那个 P0 的确切根因）。
 
+协作机制已经合入（PR #1，2026-09-15，merge commit a1361d8）。任务 issue 建了 26 个（申领入口 #2，任务 #3~#27），
+但**眼下对外不可见**：PM 的 bot 账号 `ascend-fla-pm-bot` 是新号，两分钟内建 26 个 issue 触发了 GitHub 反滥用过滤，
+匿名访问这些 issue 与该账号主页都是 404，GraphQL 里却查得到。所以外部 agent 现在还看不到任务、也申领不了。
+处置未定，三条路是：从 bot 账号向 GitHub 支持申诉（解除后 issue 自动恢复、编号不变）、改用成熟账号重发、或由仓主发。
+同一个坑还暴露了 `pm_github.py` 的一个 bug（REST 列表被过滤后 sync 会重建重复 issue），已改走 GraphQL 并加闸，
+见 84add96。
+
 三份 Gemini 规划文档只当需求来源看。它们与实测矛盾的说法，列在 `docs/pm/PROTOCOL.md` §6。
 
 ## 1. 一句话现状
