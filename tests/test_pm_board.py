@@ -136,6 +136,26 @@ class TestCheck(_Tmp):
         found = self.problems(_task("A", "wip"))
         self.assertTrue(any("词汇表" in p for p in found), found)
 
+    def test_external_request_cannot_be_dispatchable_without_user_approval(self):
+        """外部需求不会自己变成可派任务 —— 放行是用户的决定（PROTOCOL §3.9）。"""
+        origin = {"kind": "request", "issue": 42, "by": "stranger"}
+        found = self.problems(_task("A", "open", origin=origin))
+        self.assertTrue(any("只能是 gated" in p for p in found), found)
+        gated = self.problems(_task("B", "gated", spec=None, origin=origin))
+        self.assertEqual(gated, [])
+        approved = self.problems(_task("C", "open", origin={**origin, "approved_by_user": True}))
+        self.assertEqual(approved, [])
+
+    def test_request_origin_needs_issue_and_proposer(self):
+        found = self.problems(_task("A", "gated", spec=None, origin={"kind": "request"}))
+        self.assertEqual(len(found), 2, found)
+        self.assertTrue(any("提案 issue 号" in p for p in found), found)
+        self.assertTrue(any("提案人" in p for p in found), found)
+
+    def test_unknown_origin_kind(self):
+        found = self.problems(_task("A", origin={"kind": "whoever"}))
+        self.assertTrue(any("origin.kind" in p for p in found), found)
+
     def test_ip_address_rejected(self):
         found = self.problems(_task("A", title="run on 10.0.0.12"))
         self.assertTrue(any("IP" in p for p in found), found)

@@ -77,6 +77,17 @@ tools/agent_setup.sh --login <you> --agent "<模型或工具名>" --task any --a
 **让模型当 agent**：把 `docs/pm/prompts/agent.md` 作为系统提示或第一条消息给它，并告诉它你的 GitHub 账号与能力。
 这份提示不依赖任何特定工具：只要能读写本地仓库、跑命令、在 GitHub 上评论和开 PR 即可。
 
+## 3.5 提新需求（任何人，不必接任务）
+
+在 GitHub 上新开 issue → 选 **需求提案 / Requirement proposal** 模板（自动打 `fla-pm:request`）。
+不用模板也行：正文首行写 `[FLA-PM] REQUEST - from=<你的 GitHub 账号>`，字段见 `PROTOCOL.md` §3.9。
+
+PM 在 24 小时内分诊并打标签：`triage:accepted`（进看板）/ `declined`（说明理由并关闭）/ `duplicate`（指向已有条目）/
+`needs-info`（缺可验证的验收判据）。
+
+> **被采纳的需求先以 `gated` 进看板**，PM 把摘要交给仓库所有者；**放行之后才会派给 agent**。
+> 改变范围是所有者的决定（`AGENTS.md` §1/§2），PM 不自行放行。愿意自己实现的，在提案里写上账号与能力，放行后优先派给你。
+
 ## 4. 申领一个任务的完整流程
 
 ```
@@ -102,8 +113,9 @@ agent（GitHub 账号 alice）                                  PM（bot 账号�
 ## 5. 用户怎么看进度、怎么拍板
 
 - 进度：GitHub 上按标签筛 `fla-pm`；或本机 `.venv/bin/python tools/pm_board.py --render`；或在 PM 会话里说"status"。
-- 需要用户决定的事，PM 会主动来问：`gated` 项放行（kernel 批次、定位变更、资源、开新波次）、**每个新账号的第一次合入**、
-  首次把任务发布成 GitHub issue。
+- 需要用户决定的事，PM 会主动来问：`gated` 项放行（kernel 批次、定位变更、资源、开新波次、**外部需求提案**）、
+  **每个新账号的第一次合入**、首次把任务发布成 GitHub issue。
+- 外部需求：按标签 `fla-pm:request` 看提案，`triage:accepted` 的会作为 `gated` 任务出现在看板里等你放行。
 - A2/A3 机器就绪不再需要告诉 PM 机器细节 —— 机器归 agent；PM 会在有 agent 声明 `socs: a2` 后放开 W-A2 的 gate（需用户同意开波）。
 
 ## 6. 故障排查

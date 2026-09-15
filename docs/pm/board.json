@@ -4,7 +4,7 @@
   "repo": "ddddwee1/ascend_fla_dev",
   "pm_github_login": null,
   "intake_issue": null,
-  "note": "唯一事实源，只有 PM 写。协作走本仓（公开）GitHub issue/PR，协议见 docs/pm/PROTOCOL.md；python tools/pm_board.py --check / --render / --next；python tools/pm_github.py sync / poll / post。tasks 的顺序即派单顺序。pm_github_login 在 PM 的 bot 账号建好后填写。",
+  "note": "唯一事实源，只有 PM 写。协作走本仓（公开）GitHub issue/PR，协议见 docs/pm/PROTOCOL.md；python tools/pm_board.py --check / --render / --next；python tools/pm_github.py sync / poll / post / label。tasks 的顺序即派单顺序。pm_github_login 在 PM 的 bot 账号建好后填写。任何人都可以提需求（标签 fla-pm:request）：PM 分诊后以 gated 入库，用户放行才可派（PROTOCOL §3.9）。",
   "decisions": [
     {
       "id": "D-PM-1",
@@ -48,6 +48,12 @@
       "date": "2026-09-15",
       "by": "user",
       "decision": "PM 用专用 GitHub bot 账号运行（gh 登录该账号），与用户个人账号区分"
+    },
+    {
+      "id": "D-PM-8",
+      "date": "2026-09-15",
+      "by": "user",
+      "decision": "任何人都可以提交新需求：GitHub issue（Requirement 模板 / [FLA-PM] REQUEST）→ PM 分诊 → 被采纳者以 gated 进看板 → 用户放行后才可派单"
     }
   ],
   "gated_epics": [
@@ -125,18 +131,19 @@
       "status": "in_progress",
       "deps": [],
       "write_set": [
+        ".github/ISSUE_TEMPLATE/**",
+        ".gitignore",
+        "AGENTS.md",
+        "docs/handoff.md",
+        "docs/plan.md",
         "docs/pm/**",
-        "tools/pm_board.py",
-        "tools/pm_github.py",
-        "tools/pm_start.sh",
-        "tools/agent_setup.sh",
-        "tools/dev_env.sh",
         "tests/test_pm_board.py",
         "tests/test_pm_github.py",
-        "AGENTS.md",
-        "docs/plan.md",
-        "docs/handoff.md",
-        ".gitignore"
+        "tools/agent_setup.sh",
+        "tools/dev_env.sh",
+        "tools/pm_board.py",
+        "tools/pm_github.py",
+        "tools/pm_start.sh"
       ],
       "needs": {
         "npu": false,

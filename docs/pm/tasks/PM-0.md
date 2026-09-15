@@ -21,8 +21,10 @@
 - `python tools/pm_board.py --check` 通过；`tests/test_pm_board.py` 全过，且每条冲突（写集交叠、一个 agent 持有两个任务、
   真机任务的 assignee 未声明该 SoC、依赖成环、依赖未完成却在进行中、缺 spec、issue 编号重复、IP 地址）都有反例测试。
 - 2026-09-15 用户追加：agent 可来自任何账号 / 模型，机器归 agent 管理，通道改为公开仓库的 GitHub issue/PR，PM 用 bot 账号。
-  `tools/pm_github.py`（sync / poll / post，写操作前校验 gh 账号）与 `tests/test_pm_github.py`（消息解析、冒充与非 assignee 警告、
+  `tools/pm_github.py`（sync / poll / post / label，写操作前校验 gh 账号）与 `tests/test_pm_github.py`（消息解析、冒充与非 assignee 警告、
   同步计划）不连网络即可全过；首次把任务发布成 issue 需用户确认。
+- 2026-09-15 再追加：**任何人都可以提新需求**（GitHub issue + Requirement 模板 / `[FLA-PM] REQUEST`），PM 分诊后进看板。
+  被采纳的需求以 `gated` 入库，看板校验拦住"外部需求未经用户批准却可派"的情况（`origin.approved_by_user`）。
 - `python tools/gen_matrix.py --check` 仍通过（本任务不改矩阵 json；矩阵按 SoC 分维是 A2-06 的事）。
 - 主机侧全量 `pytest tests/ -q` 不退化（基线 42 passed / 5 skipped）。
 - `AGENTS.md` 的改动经用户过目后再合入 main。

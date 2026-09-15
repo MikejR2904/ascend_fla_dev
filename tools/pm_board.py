@@ -26,6 +26,8 @@ STATUSES = ("gated", "open", "assigned", "in_progress", "blocked", "review", "re
 IN_FLIGHT = frozenset({"assigned", "in_progress", "blocked", "review", "rework"})
 SOCS = ("any", "a2", "a3", "a5")
 PRIORITIES = ("P0", "P1", "P2", "-")
+# 任务是怎么来的：用户提的 / PM 拆的 / 外部需求提案（GitHub issue，见 PROTOCOL §3.9）
+ORIGIN_KINDS = ("user", "pm", "request")
 REQUIRED = ("id", "title", "wave", "soc", "priority", "status", "deps", "write_set", "needs", "spec")
 # 仓库是公开的，看板会被提交，绝不能混进机器信息（AGENTS.md §5）。这里只能拦最明显的一类。
 _IP = re.compile(r"(?<![\d.])\d{1,3}(?:\.\d{1,3}){3}(?![\d.])")
@@ -54,6 +56,29 @@ def write_conflicts(task: dict, others: list[dict]) -> list[str]:
         o["id"] for o in others if o["id"] != task["id"]
         for x in task["write_set"] for y in o["write_set"] if paths_overlap(x, y)
     })
+
+
+def _check_origin(task: dict) -> list[str]:
+    """任务来源。外部需求（GitHub issue）**不会自己变成可派的任务** —— 放行是用户的事
+    （`AGENTS.md` §1：改变范围要显式决策），所以 request 来源的任务在用户批准前只能是 gated。
+    """
+    origin = task.get("origin")
+    if origin is None:
+        return []
+    tid = task["id"]
+    if not isinstance(origin, dict) or origin.get("kind") not in ORIGIN_KINDS:
+        return [f"{tid}: origin.kind 必须是 {ORIGIN_KINDS} 之一，实际 {origin!r}"]
+    if origin["kind"] != "request":
+        return []
+    problems = []
+    num = origin.get("issue")
+    if not isinstance(num, int) or isinstance(num, bool) or num <= 0:
+        problems.append(f"{tid}: request 来源必须记下提案 issue 号，实际 {num!r}")
+    if not origin.get("by"):
+        problems.append(f"{tid}: request 来源必须记下提案人 GitHub 账号")
+    if not origin.get("approved_by_user") and task["status"] not in ("gated", "cancelled"):
+        problems.append(f"{tid}: 来自外部需求且用户尚未批准，只能是 gated（当前 {task['status']}）")
+    return problems
 
 
 def _find_cycle(by_id: dict[str, dict]) -> list[str] | None:
@@ -117,6 +142,7 @@ def check(board: dict, root: Path = ROOT) -> list[str]:
             value = t.get(key)
             if value is not None and (not isinstance(value, int) or isinstance(value, bool) or value <= 0):
                 problems.append(f"{tid}: {key} 必须是正整数或 null，实际 {value!r}")
+        problems += _check_origin(t)
         if status in IN_FLIGHT:
             if not t.get("assignee") or not t.get("branch"):
                 problems.append(f"{tid}: {status} 必须有 assignee 与 branch")

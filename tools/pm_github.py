@@ -9,9 +9,10 @@ agent 可以是任何账号、任何模型，所以协作走本仓的 GitHub iss
     python tools/pm_github.py sync --offline         # 不连 GitHub，按"远端为空"预览要建的标签与 issue
     python tools/pm_github.py sync                   # 连 GitHub 的 dry-run：打印要建/改/关的内容
     python tools/pm_github.py sync --apply           # 执行，并把 issue 编号写回看板
-    python tools/pm_github.py poll                   # 打印游标之后的新评论与 PR（JSON 行），不推进游标
+    python tools/pm_github.py poll                   # 打印游标之后的新评论、需求 issue 与 PR（JSON 行）
     python tools/pm_github.py poll --advance         # 处理完之后推进游标
     python tools/pm_github.py post A2-01 reply.md    # 在任务 issue 下发评论（也接受 '#12' 或 'intake'）
+    python tools/pm_github.py label 42 triage:accepted   # 给需求 issue 打分诊标签
 
 所有写操作（sync --apply、post）都要求当前 gh 账号等于 ``pm_github_login``，防止用个人账号发帖。
 只依赖标准库与 ``gh``。
@@ -37,19 +38,22 @@ STATE = ROOT / "tmp" / "pm" / "github_state.json"
 TASK_MARKER = "<!-- fla-pm-task:{id} -->"
 INTAKE_MARKER = "<!-- fla-pm-intake -->"
 INTAKE_TITLE = "[FLA-PM] 申领入口 / task intake"
+REQUEST_LABEL = "fla-pm:request"
+# 需求提案的分诊标签：PM 处置后打上，poll 据此不再重复提醒
+TRIAGE_LABELS = ("triage:accepted", "triage:declined", "triage:duplicate", "triage:needs-info")
 _TASK_MARKER_RE = re.compile(r"<!-- fla-pm-task:([A-Za-z0-9_.-]+) -->")
 _TITLE_ID_RE = re.compile(r"^\[([A-Za-z0-9_.-]+)\]")
 _BRANCH_ID_RE = re.compile(r"^task/([A-Za-z0-9_.-]+)$")
 
-AGENT_TYPES = frozenset({"APPLY", "ACK", "STATUS", "RISK", "BLOCKED", "DONE", "WITHDRAW"})
+AGENT_TYPES = frozenset({"APPLY", "ACK", "STATUS", "RISK", "BLOCKED", "DONE", "WITHDRAW", "REQUEST"})
 PM_TYPES = frozenset({"ASSIGN", "NO_TASK", "REVIEW", "CLOSE", "PING"})
-# 只有这些类型不要求发送者是 assignee
-_OPEN_TYPES = frozenset({"APPLY"})
+# 只有这些类型不要求发送者是 assignee —— 任何人都可以申领、任何人都可以提需求
+_OPEN_TYPES = frozenset({"APPLY", "REQUEST"})
 _HEADER_RE = re.compile(r"^\[FLA-PM\]\s+([A-Z_]+)\s+(\S+)(?:\s+from=(\S+))?\s*$")
 _FIELD_RE = re.compile(r"^([A-Za-z_][A-Za-z0-9_]*):\s?(.*)$")
 _LABEL_PREFIXES = ("status:", "wave:", "soc:", "prio:")
-_LABEL_COLORS = {"fla-pm": "5319e7", "fla-pm:intake": "0e8a16", "status:": "fbca04",
-                 "wave:": "c5def5", "soc:": "d4c5f9", "prio:": "e99695"}
+_LABEL_COLORS = {"fla-pm": "5319e7", "fla-pm:intake": "0e8a16", REQUEST_LABEL: "1d76db", "status:": "fbca04",
+                 "wave:": "c5def5", "soc:": "d4c5f9", "prio:": "e99695", "triage:": "bfdadc"}
 
 
 # ---------------------------------------------------------------- 纯函数（有单元测试）
@@ -148,6 +152,10 @@ def intake_body(board: dict) -> str:
         "   不挑任务：在本 issue 下评论 `[FLA-PM] APPLY any from=<你的 GitHub 账号>`，PM 按优先级派给你。",
         f"3. 等 {pm} 回复 ASSIGN。**其他账号发的 ASSIGN 一律无效。**",
         "",
+        f"**提需求**（不是申领）：新开一个 issue，用 Requirement 模板，或正文首行写 "
+        f"`[FLA-PM] REQUEST - from=<你的 GitHub 账号>`，PM 会分诊后进看板（`{REQUEST_LABEL}` 标签）。",
+        "细则见 `docs/pm/PROTOCOL.md` §3.9。",
+        "",
         "本仓公开：评论、PR、日志里不得出现主机名、IP、账号、路径等机器信息。",
         "",
     ])
@@ -156,7 +164,7 @@ def intake_body(board: dict) -> str:
 def plan_sync(board: dict, remote_issues: list[dict], remote_labels: list[str], root: Path = ROOT) -> list[dict]:
     """算出让 GitHub 与看板一致所需的动作。不做任何网络调用。"""
     actions: list[dict] = []
-    wanted = {"fla-pm", "fla-pm:intake"}
+    wanted = {"fla-pm", "fla-pm:intake", REQUEST_LABEL, *TRIAGE_LABELS}
     for t in board["tasks"]:
         wanted |= desired_labels(t)
     actions += [{"op": "create_label", "name": n, "color": label_color(n)} for n in sorted(wanted - set(remote_labels))]
@@ -241,6 +249,37 @@ def classify_comment(comment: dict, board: dict, pm_login: str | None) -> dict:
     if msg["type"] not in _OPEN_TYPES and target is not None and target.get("assignee") != author:
         warn.append(f"{msg['type']} 来自 {author}，但 {task_id} 的 assignee 是 {target.get('assignee')} —— 不采信")
     return event
+
+
+def classify_issue(issue: dict, board: dict) -> dict | None:
+    """新开的 issue → 需求提案事件。任务 issue、申领入口、已分诊过的返回 ``None``。
+
+    任何人都可以提需求（`AGENTS.md` §1 的定位由用户把关，所以 PM 只分诊、不自行放行）。
+    """
+    body = issue.get("body") or ""
+    labels = set(issue.get("labels") or [])
+    if _TASK_MARKER_RE.search(body) or INTAKE_MARKER in body:
+        return None
+    if issue["number"] == board.get("intake_issue"):
+        return None
+    msg = parse_message(body)
+    is_request = REQUEST_LABEL in labels or (msg or {}).get("type") == "REQUEST"
+    existing = next((t for t in board["tasks"]
+                     if (t.get("origin") or {}).get("issue") == issue["number"]), None)
+    return {
+        "kind": "request" if is_request else "issue",
+        "issue": issue["number"],
+        "title": issue.get("title"),
+        "author": issue.get("user"),
+        "state": issue.get("state"),
+        "labels": sorted(labels),
+        "url": issue.get("html_url"),
+        "at": issue.get("updated_at"),
+        "message": msg,
+        "triaged": bool(labels & set(TRIAGE_LABELS)),
+        "linked_task": existing["id"] if existing else None,
+        "body": body,
+    }
 
 
 def task_id_of_pr(pr: dict) -> str | None:
@@ -389,6 +428,18 @@ def cmd_poll(board: dict, advance: bool) -> int:
             continue
         seen[str(c["id"])] = c["updated_at"]
         print(json.dumps(classify_comment(c, board, pm_login), ensure_ascii=False))
+    issues_seen: dict[str, str] = state.get("issues", {})
+    issues = _gh_lines("api", "--paginate",
+                       f"repos/{repo}/issues?since={since}&state=all&sort=updated&direction=asc&per_page=100",
+                       "--jq", '.[] | select(has("pull_request") | not) | {number, title, body, state, '
+                               "user: .user.login, labels: [.labels[].name], updated_at, html_url}")
+    for iss in issues:
+        latest = max(latest, iss["updated_at"])
+        if issues_seen.get(str(iss["number"])) == iss["updated_at"]:
+            continue
+        issues_seen[str(iss["number"])] = iss["updated_at"]
+        if ev := classify_issue(iss, board):
+            print(json.dumps(ev, ensure_ascii=False))
     prs_seen: dict[str, str] = state.get("prs", {})
     prs = _gh_lines("api", "--paginate", f"repos/{repo}/pulls?state=open&per_page=100", "--jq",
                     ".[] | {number, title, user: .user.login, head: .head.ref, "
@@ -400,9 +451,22 @@ def cmd_poll(board: dict, advance: bool) -> int:
     if advance:
         STATE.parent.mkdir(parents=True, exist_ok=True)
         keep = dict(sorted(seen.items(), key=lambda kv: kv[1])[-500:])
-        STATE.write_text(json.dumps({"since": latest, "seen_comments": keep, "prs": prs_seen,
+        STATE.write_text(json.dumps({"since": latest, "seen_comments": keep, "issues": issues_seen,
+                                     "prs": prs_seen,
                                      "polled_at": datetime.now(timezone.utc).isoformat()}, indent=2), encoding="utf-8")
         print(f"游标推进到 {latest}", file=sys.stderr)
+    return 0
+
+
+def cmd_label(board: dict, number: int, labels: list[str]) -> int:
+    """给需求 issue 打分诊标签（`triage:*`）。"""
+    _require_pm(board)
+    unknown = [n for n in labels if n not in TRIAGE_LABELS and n != REQUEST_LABEL]
+    if unknown:
+        raise SystemExit(f"只允许分诊标签 {TRIAGE_LABELS} 与 {REQUEST_LABEL}，收到 {unknown}")
+    _gh("api", f"repos/{_repo(board)}/issues/{number}/labels",
+        *[x for n in labels for x in ("-f", f"labels[]={n}")])
+    print(f"已给 #{number} 打上 {', '.join(labels)}")
     return 0
 
 
@@ -435,6 +499,9 @@ def main() -> int:
     c = sub.add_parser("post")
     c.add_argument("target", help="任务 id、'#<issue 号>' 或 'intake'")
     c.add_argument("body_file", type=Path)
+    lb = sub.add_parser("label", help="给需求 issue 打 triage:* 标签")
+    lb.add_argument("number", type=lambda s: int(s.lstrip("#")))
+    lb.add_argument("labels", nargs="+")
     args = ap.parse_args()
 
     board = pm_board.load()
@@ -444,6 +511,8 @@ def main() -> int:
         return cmd_sync(board, args.apply, args.offline)
     if args.cmd == "poll":
         return cmd_poll(board, args.advance)
+    if args.cmd == "label":
+        return cmd_label(board, args.number, args.labels)
     return cmd_post(board, args.target, args.body_file)
 
 

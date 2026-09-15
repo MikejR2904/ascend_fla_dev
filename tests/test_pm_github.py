@@ -104,6 +104,51 @@ class TestClassify(unittest.TestCase):
         self.assertEqual(len(bad["warnings"]), 2, bad)
 
 
+def _issue(number=42, body="", labels=(), user="stranger", title="想要 varlen", state="open"):
+    return {"number": number, "title": title, "body": body, "state": state, "user": user,
+            "labels": list(labels), "updated_at": "2026-09-15T10:00:00Z", "html_url": "u"}
+
+
+class TestClassifyIssue(unittest.TestCase):
+    """任何人都可以提需求（PROTOCOL §3.9）；任务 issue 与申领入口不算需求。"""
+
+    def test_request_by_label(self):
+        ev = pm_github.classify_issue(_issue(labels=[pm_github.REQUEST_LABEL]), _board())
+        self.assertEqual((ev["kind"], ev["author"], ev["triaged"], ev["linked_task"]),
+                         ("request", "stranger", False, None))
+
+    def test_request_by_header_without_label(self):
+        ev = pm_github.classify_issue(_issue(body="[FLA-PM] REQUEST - from=stranger\nwhat: varlen\n"), _board())
+        self.assertEqual(ev["kind"], "request")
+        self.assertEqual(ev["message"]["fields"]["what"], "varlen")
+
+    def test_plain_issue_is_not_a_request(self):
+        self.assertEqual(pm_github.classify_issue(_issue(body="how do I build this?"), _board())["kind"], "issue")
+
+    def test_task_issue_and_intake_are_skipped(self):
+        board = _board()
+        task_issue = _issue(number=12, body=pm_github.TASK_MARKER.format(id="A2-03"))
+        self.assertIsNone(pm_github.classify_issue(task_issue, board))
+        self.assertIsNone(pm_github.classify_issue(_issue(number=1, body=pm_github.INTAKE_MARKER), board))
+        self.assertIsNone(pm_github.classify_issue(_issue(number=1, body="anything"), board))  # intake_issue=1
+
+    def test_triaged_and_linked_task_are_reported(self):
+        board = _board()
+        board["tasks"][0]["origin"] = {"kind": "request", "issue": 42, "by": "stranger"}
+        ev = pm_github.classify_issue(_issue(labels=[pm_github.REQUEST_LABEL, "triage:accepted"]), board)
+        self.assertEqual((ev["triaged"], ev["linked_task"]), (True, "A2-01"))
+
+    def test_request_labels_are_created_by_sync(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = pathlib.Path(d)
+            for name in ("A2-01.md", "A2-03.md", "OLD.md"):
+                (root / name).write_text("spec", encoding="utf-8")
+            names = {a["name"] for a in pm_github.plan_sync(_board(intake_issue=None), [], [], root)
+                     if a["op"] == "create_label"}
+        self.assertIn(pm_github.REQUEST_LABEL, names)
+        self.assertTrue(set(pm_github.TRIAGE_LABELS) <= names)
+
+
 class TestPlanSync(unittest.TestCase):
     def setUp(self):
         self._dir = tempfile.TemporaryDirectory()
@@ -137,7 +182,8 @@ class TestPlanSync(unittest.TestCase):
         for n, t in ((11, board["tasks"][0]), (12, board["tasks"][1])):
             issues.append({"number": n, "title": pm_github.issue_title(t), "body": pm_github.issue_body(t, board, self.root),
                            "state": "open", "labels": sorted(pm_github.desired_labels(t))})
-        labels = sorted({n for i in issues for n in i["labels"]} | pm_github.desired_labels(board["tasks"][2]))
+        labels = sorted({n for i in issues for n in i["labels"]} | pm_github.desired_labels(board["tasks"][2])
+                        | {pm_github.REQUEST_LABEL, *pm_github.TRIAGE_LABELS})
         return issues, labels
 
     def test_in_sync_means_no_actions(self):
