@@ -4,6 +4,16 @@
 > `docs/matrix/*.json`（`gen_matrix.py` 校验），纪律在 `AGENTS.md`，分期在 `docs/plan.md`。
 > 三者冲突时以 json 为准，并顺手修本文件。
 
+## 0. 2026-09-15 更新：SoC 顺序变更 + 多 agent 协作（先读这节）
+
+- **SoC 顺序改为 A2 (910B) → A3 (910C) → A5**（用户 2026-09-14 决定，见 `AGENTS.md` §2 与 `docs/plan.md` 的「按 SoC 分波次」）。
+  下面 §2 的三个候选都是 **A5 波次**的事，暂停到 W-A3 退出之后。
+- 工作以多 agent 方式推进：PM 维护 `docs/pm/board.json`，agent 按 `docs/pm/PROTOCOL.md` 申领任务并汇报。
+  看进度：`python tools/pm_board.py --render`。
+- 当前可派的是 **W0 主机侧任务**（A2 机器尚未就绪）。优先级最高的两项：A2-01（split-K FP32 cube 缺陷定性 —— A2 的总闸）
+  与 A2-04（C=1 多头 P0 的确切根因）。
+- 三份 Gemini 规划文档只作需求来源；与实测矛盾的说法列在 `docs/pm/PROTOCOL.md` §6。
+
 ## 1. 一句话现状
 
 第一期（runtime 桥 + `kda_fwd` 接线 + 基线）与第二期（`kda_bwd` + autograd + KDA layer）

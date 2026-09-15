@@ -6,6 +6,9 @@
 > **接手工作先读 `docs/handoff.md`** —— 那里有当前状态、下一步的候选与推荐、
 > 以及"这两个会话里被实测纠正过的判断"（别重新推导错一遍）。本文件讲的是长期纪律，
 > 那份讲的是此刻进度。
+>
+> **如果你是被 PM 分派任务的 agent**：再读 `docs/pm/PROTOCOL.md` 与你的 `docs/pm/tasks/<ID>.md`，
+> 按协议汇报。SoC 顺序已于 2026-09-14 改为 A2 → A3 → A5（§2）。
 
 ## 1. 定位
 
@@ -24,7 +27,7 @@
 
 | 决策 | 选择 | 理由 |
 |---|---|---|
-| 目标 SoC | **A5 / 950 优先** | ascriptor 0.1.0 只正式声明 A5 支持，`projects/a5/` 下 GDN/KDA/DeltaNet 的 fwd+bwd 均已真机 passed |
+| 目标 SoC | **A2 (910B) → A3 (910C) → A5**（2026-09-14 改） | 用户决定首波算子与整模型先在 A2/A3 落地；A5 上已完成的第一、二期保留，下一波再回来。风险见下 |
 | 与 fla 关系 | **纯算子库** | 定尺约束远窄于 fla 公共 API 的承诺范围；做独立库才能把约束写进契约，而不是塞进 verifier 的拒绝理由 |
 | 首期范围 | **fwd + bwd** | 面向训练；反向资产已有，不做等于浪费 |
 | 首个算子族 | **KDA**（非 GDN） | 第 0 期 ABI 对比的结论，见下 |
@@ -35,12 +38,21 @@ backward 产出 `dh0`、`final_state` 为 FP32、`block_dim` 上限 4。GDN 只�
 齐全"一项上占优，而那是可补的。对照表见 `docs/matrix/README.md` 的"为什么首个目标是
 KDA"，依据见 `gaps.json` 的 `summary.kda_vs_gdn`。
 
-首要目标模型相应是 **Kimi-Linear-48B-A3B**；Qwen3-Next 受 `gdn-no-gqa` 阻塞，随 GDN
-扩族移到第四期。**不要因为 GDN 更知名就调回去** —— 换回来要先解决六项 ABI 缺口。
+首要目标模型相应是 **Kimi-Linear-48B-A3B**；第二个是 Qwen3-Next（GDN），它受 `gdn-no-gqa`
+等六项 ABI 缺口阻塞，要先过 kernel 批次。**不要因为 GDN 更知名就调换顺序** —— KDA 先。
 
-A2/A3 在 ascriptor 侧于 2026-09-06 被 deferred，且有未解决的 split-K FP32 cube
-数值缺陷。`platform.py` 按多 SoC 设计，但 A2 是后续目标，**不要在 A5 还没打通时
-分叉去做 A2**。
+### SoC 顺序（2026-09-14 用户决策，取代原来的"A5 优先、不要分叉去做 A2"）
+
+**首波在 A2 (910B) 上做 KDA 算子 + Kimi-Linear 整模型，然后 GDN + Qwen3-Next；再做 A3 (910C)；
+最后回到 A5。** 工具链仍只用 ascriptor。第一、二期在 A5 上的全部结论保留，但**只属于 A5**。
+
+已知风险，接 A2 工作前必须知道：
+
+- ascriptor 侧 A2/A3 于 2026-09-06 被 **deferred**（D-250），且有**未解决的 split-K FP32 cube 数值缺陷**。
+  在它被定性（`docs/pm/tasks/A2-01.md`）并在真机上有绕行或闸（A2-11）之前，**A2 上任何算子结论都不算数**。
+- A2 的核数、UB、`block_dim` 上限、门控跨度上限、内置算子包覆盖**全部未知**，必须重测（见 §6「结论不跨 SoC 继承」）。
+  A5 上 profile 声明与物理核数不一致会死锁 —— A2 同样要先查实。
+- 本仓用多 agent 协作推进，任务、派单与汇报协议见 `docs/pm/PROTOCOL.md`，看板是 `docs/pm/board.json`。
 
 ## 3. 与 ascriptor workspace 的关系
 
@@ -293,10 +305,12 @@ devId=7` + `error code is 507033`。**先看 `npu-smi info` 的 Health 列再怀
 共享主机上不要尝试复位别人也在用的卡；换一张 Health=OK 且 `npu-smi info -t proc-mem -i N`
 无进程的卡，并把换卡理由写进环境脚本的注释。
 
-### 不继承 A2 的结论
+### 结论不跨 SoC 继承（两个方向都是）
 
-同级的 `fla_infer` 工作区有 A2/910B3 上的 GDN 精度与 HF32 实测结论。
-**那些数字属于 A2，不要搬到 A5 当预期。** 方法论可以借，阈值和结论必须在 A5 上重测。
+同级的 `fla_infer` 工作区有 A2/910B3 上的 GDN 精度与 HF32 实测结论；本仓第一、二期的数全部来自 A5。
+**一个 SoC 上的数字不能当另一个 SoC 的预期** —— 不论是把 `fla_infer` 的 A2 数搬到本仓的 A2 工作，
+还是把本仓的 A5 门控上限、`block_dim` 上限、(C, HV) 边界行为、算子包覆盖搬到 A2/A3。
+方法论可以借，阈值和结论必须在目标 SoC 上重测。多 agent 协作里违反这一条要报 `RISK soc-assumption`。
 
 ## 6.5 kernel 源码的问题统一修一轮，不零散改
 
@@ -354,12 +368,14 @@ ascend_fla/
 │   ├── models/          # 注入式：不重写 modeling_*.py，只替换 layer
 │   ├── compat/          # 可选：fla 风格签名 wrapper（布局转换）
 │   └── reference/       # torch oracle
-├── kernels/             # 本仓自有的 ascriptor 单元（unit 协议）
+├── kernels/projects/<soc>/  # 本仓自有的 ascriptor 单元（unit 协议），按 SoC 分目录
 ├── tests/  benchmarks/
 ├── docs/handoff.md      # ★ 会话交接：现状 + 下一步 + 已纠正的判断
 ├── docs/plan.md         # 构建规划
 ├── docs/matrix/         # ★ 支持矩阵（json 权威，md 生成）
-├── tools/               # gen_matrix.py 等
+├── docs/pm/             # ★ 多 agent 协作：PROTOCOL.md、board.json（PM 唯一写者）、tasks/<ID>.md
+├── docs/research/       # 调研与设计文档（如 GDN ABI 方案），由 PM 合入
+├── tools/               # gen_matrix.py、pm_board.py 等
 └── tmp/                 # 构建产物、日志、profiling（git-ignored）
 ```
 
