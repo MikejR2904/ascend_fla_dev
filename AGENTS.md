@@ -8,7 +8,9 @@
 > 那份讲的是此刻进度。
 >
 > **如果你是被 PM 分派任务的 agent**：再读 `docs/pm/PROTOCOL.md` 与你的 `docs/pm/tasks/<ID>.md`，
-> 按协议汇报。SoC 顺序已于 2026-09-14 改为 A2 → A3 → A5（§2）。
+> 按协议汇报。任务一律在该任务自己的 git worktree 里做：`.claude/worktrees/<ID>`，分支 `task/<ID>`
+> （`git worktree add` 建好后用 EnterWorktree 进入）。SoC 顺序已于 2026-09-14 改为 A2 → A3 → A5（§2）。
+> 启动方式见 `docs/pm/START.md`。
 
 ## 1. 定位
 

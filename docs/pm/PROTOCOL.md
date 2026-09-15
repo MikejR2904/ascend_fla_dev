@@ -1,6 +1,7 @@
 # 多 agent 协作协议
 
-> 制定于 2026-09-15。**接任务的 agent 必读**，读完再发 `ACK`。本协议只**补充**
+> 制定于 2026-09-15。**接任务的 agent 必读**，读完再发 `ACK`。怎么启动 PM / agent 会话、怎么找到 PM，
+> 见 `START.md`；两类会话的系统提示在 `prompts/`。本协议只**补充**
 > `AGENTS.md`，任何一条都不放宽它；两者冲突时以 `AGENTS.md` 为准并报 `RISK contradicts-handoff`。
 
 ## 1. 角色与事实源
@@ -46,7 +47,6 @@ socs: a2            # 能用的 SoC，逗号分隔；纯主机侧写 none
 ascriptor: yes      # 有没有 ascriptor workspace（按 agent/compatibility.json 选好修订）
 fla: yes            # 装没装 fla（oracle）
 python_env: torch 2.x / pytest 可用
-worktree_base: ../ascend_fla_wt
 ```
 
 ### 3.2 ASSIGN / NO_TASK（PM → agent）
@@ -55,7 +55,7 @@ worktree_base: ../ascend_fla_wt
 [FLA-PM] ASSIGN A2-01 from=ascend-fla-dev-management-team
 spec: docs/pm/tasks/A2-01.md
 branch: task/A2-01
-worktree: git worktree add ../ascend_fla_wt/A2-01 -b task/A2-01 main
+worktree: git worktree add .claude/worktrees/A2-01 -b task/A2-01 main   # 然后 EnterWorktree(path=".claude/worktrees/A2-01")
 lease: none                         # 或 soc=a2 card=4 cache=<任务远端工作区>/A2-01/cache
 timebox_h: 12
 report_every_min: 60
