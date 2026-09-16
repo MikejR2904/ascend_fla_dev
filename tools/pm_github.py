@@ -490,6 +490,13 @@ def apply_actions(board: dict, actions: list[dict], repo: str, pace_s: float = 1
 
 
 def _save_board(board: dict) -> None:
+    """写回看板。
+
+    **先刷新派生产物再校验**，顺序不能倒过来：``check()`` 里含 README 漂移检查，
+    而 README 是从看板算出来的。倒过来的话，``sync --apply`` 刚建完 issue、编号还没写回时，
+    README 必然落后一步，校验就把这次写回整个拒掉 —— 实测踩过：issue 建成了，编号却丢了。
+    """
+    pm_board.write_readme(board)
     problems = pm_board.check(board)
     if problems:
         raise SystemExit("写回后看板校验失败：\n" + "\n".join(problems))

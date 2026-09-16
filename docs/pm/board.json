@@ -68,6 +68,12 @@
       "by": "user",
       "decision": "仓主在 A5 上的 GDN-2 工作是**并行轨道**，不改本看板的 SoC 顺序与波次；agent 轨道照已发布的 A2 优先走。两条轨道共用仓库，靠 reserved_paths 划边界",
       "risk": "共享文件仍会撞车：A2-02（runtime/compile.py、conftest.py）、A2-06（docs/matrix/**、gen_matrix.py）、A2-08（ascend_fla/models/）都与仓主刚动过的文件相交。A2-06 已 gated 等协调，另两条收窄写集并加了边界说明"
+    },
+    {
+      "id": "D-PM-11",
+      "date": "2026-09-16",
+      "by": "user",
+      "decision": "任务清单补两类：整网适配的融合算子（模块/层级，新 fusion 族），以及各数据类型的需求（dtype_inventory）。低比特那几种仍挂 G3，等放行"
     }
   ],
   "gated_epics": [
@@ -1131,6 +1137,196 @@
       "timebox_h": 24,
       "reports": [],
       "result": null
+    },
+    {
+      "id": "A2-40",
+      "title": "整网融合算子：清单、ABI 与验收设计（主机侧）",
+      "wave": "W0",
+      "soc": "any",
+      "priority": "P1",
+      "status": "open",
+      "model": [
+        "kimi-linear-48b-a3b"
+      ],
+      "kernel": [
+        "causal_conv1d",
+        "fused_rms_norm_gated",
+        "qk_l2norm_gate",
+        "packed_projection"
+      ],
+      "dtype": [
+        "bf16",
+        "fp32"
+      ],
+      "deps": [],
+      "write_set": [
+        "docs/research/a2_fusion_ops.md"
+      ],
+      "needs": {
+        "npu": false,
+        "ascriptor": true,
+        "fla": true
+      },
+      "spec": "docs/pm/tasks/A2-40.md",
+      "issue": 54,
+      "pr": null,
+      "assignee": null,
+      "assignee_caps": null,
+      "branch": null,
+      "timebox_h": 12,
+      "reports": [],
+      "result": null
+    },
+    {
+      "id": "A2-41",
+      "title": "causal_conv1d 与 fused_rms_norm_gated 的 a2 自编译单元",
+      "wave": "W-A2",
+      "soc": "a2",
+      "priority": "P2",
+      "status": "gated",
+      "model": [
+        "kimi-linear-48b-a3b"
+      ],
+      "kernel": [
+        "causal_conv1d",
+        "fused_rms_norm_gated"
+      ],
+      "dtype": [
+        "bf16",
+        "fp32"
+      ],
+      "deps": [
+        "A2-40",
+        "A2-10"
+      ],
+      "write_set": [],
+      "needs": {
+        "npu": true,
+        "ascriptor": true,
+        "fla": false
+      },
+      "spec": null,
+      "issue": 55,
+      "pr": null,
+      "assignee": null,
+      "assignee_caps": null,
+      "branch": null,
+      "timebox_h": 24,
+      "reports": [],
+      "result": null,
+      "gate": "machines:a2"
+    },
+    {
+      "id": "A2-42",
+      "title": "q/k l2norm + 门控变换 + beta sigmoid 融进前向 kernel",
+      "wave": "W-A2",
+      "soc": "a2",
+      "priority": "P1",
+      "status": "gated",
+      "model": [
+        "kimi-linear-48b-a3b"
+      ],
+      "kernel": [
+        "qk_l2norm_gate"
+      ],
+      "dtype": [
+        "bf16",
+        "fp32"
+      ],
+      "deps": [
+        "A2-40",
+        "A2-K1"
+      ],
+      "write_set": [],
+      "needs": {
+        "npu": true,
+        "ascriptor": true,
+        "fla": true
+      },
+      "spec": null,
+      "issue": 56,
+      "pr": null,
+      "assignee": null,
+      "assignee_caps": null,
+      "branch": null,
+      "timebox_h": 20,
+      "reports": [],
+      "result": null,
+      "gate": "kernel-batch-approval"
+    },
+    {
+      "id": "A2-43",
+      "title": "整层 decode：合投影 + 图捕获（层侧占 67%）",
+      "wave": "W-A2",
+      "soc": "a2",
+      "priority": "P1",
+      "status": "gated",
+      "model": [
+        "kimi-linear-48b-a3b"
+      ],
+      "kernel": [
+        "packed_projection"
+      ],
+      "dtype": [
+        "bf16",
+        "fp32"
+      ],
+      "deps": [
+        "A2-40",
+        "A2-15"
+      ],
+      "write_set": [],
+      "needs": {
+        "npu": true,
+        "ascriptor": false,
+        "fla": false
+      },
+      "spec": null,
+      "issue": 57,
+      "pr": null,
+      "assignee": null,
+      "assignee_caps": null,
+      "branch": null,
+      "timebox_h": 16,
+      "reports": [],
+      "result": null,
+      "gate": "machines:a2"
+    },
+    {
+      "id": "G3-01",
+      "title": "低比特 dtype：可行性、ABI 与量化误差预算设计",
+      "wave": "W0",
+      "soc": "any",
+      "priority": "P2",
+      "status": "gated",
+      "model": [
+        "kimi-linear-48b-a3b"
+      ],
+      "kernel": [],
+      "dtype": [
+        "int8",
+        "mxfp8",
+        "mxfp4",
+        "hif8",
+        "hif4"
+      ],
+      "deps": [],
+      "write_set": [],
+      "needs": {
+        "npu": false,
+        "ascriptor": true,
+        "fla": true
+      },
+      "spec": null,
+      "issue": 58,
+      "pr": null,
+      "assignee": null,
+      "assignee_caps": null,
+      "branch": null,
+      "timebox_h": 16,
+      "reports": [],
+      "result": null,
+      "gate": "user-decision"
     }
   ],
   "label_github_login": "ascend-fla-pm-bot",
@@ -1146,7 +1342,11 @@
       "kda_fused_recurrent",
       "gdn_fwd",
       "gdn_bwd",
-      "gdn_fused_recurrent"
+      "gdn_fused_recurrent",
+      "causal_conv1d",
+      "fused_rms_norm_gated",
+      "qk_l2norm_gate",
+      "packed_projection"
     ],
     "dtype": [
       "bf16",
@@ -1155,6 +1355,7 @@
     "dtype_gated": {
       "epic": "G3",
       "values": [
+        "fp16",
         "int8",
         "mxfp8",
         "mxfp4",
@@ -1289,6 +1490,34 @@
         "track": "owner",
         "note_zh": "仓主轨道：尚未实现，量程需单独设计",
         "note_en": "Owner track: not built; needs its own range design"
+      },
+      {
+        "id": "causal_conv1d",
+        "family": "fusion",
+        "track": "agent",
+        "note_zh": "ShortConvolution，现为 torch 实现",
+        "note_en": "ShortConvolution, torch today"
+      },
+      {
+        "id": "fused_rms_norm_gated",
+        "family": "fusion",
+        "track": "agent",
+        "note_zh": "KDA 的 o_norm，sigmoid 门控",
+        "note_en": "KDA o_norm with sigmoid gate"
+      },
+      {
+        "id": "qk_l2norm_gate",
+        "family": "fusion",
+        "track": "agent",
+        "note_zh": "q/k l2norm + 门控变换 + beta sigmoid，融进前向 kernel",
+        "note_en": "q/k l2norm + gate transform + beta sigmoid, folded into the fwd kernel"
+      },
+      {
+        "id": "packed_projection",
+        "family": "fusion",
+        "track": "agent",
+        "note_zh": "合投影与图捕获，decode 整层的 67% 在这里",
+        "note_en": "Packed projections + graph capture; 67% of decode layer time"
       }
     ]
   },
@@ -1326,6 +1555,14 @@
         "track": "owner",
         "note_zh": "仓主并行轨道，见 docs/handoff.md §1",
         "note_en": "Owner's parallel track; see docs/handoff.md §1"
+      },
+      {
+        "id": "fusion",
+        "label_zh": "整网融合算子（模块 / 层级）",
+        "label_en": "Whole-network fusion ops (module / layer)",
+        "track": "agent",
+        "note_zh": "算子本身之外，整网跑起来还要的那些：短卷积、门控 RMSNorm、q/k l2norm 与门控变换、合投影。现在全是 torch 原生算子（gaps: modules-are-torch-not-kernels / qk-l2norm-not-in-kernel / decode-layer-overhead）",
+        "note_en": "Beyond the operators themselves: short conv, gated RMSNorm, q/k l2norm and gate transform, packed projections. All torch-native today (see the three gaps above)."
       },
       {
         "id": "mamba",
@@ -1434,6 +1671,65 @@
         "note_zh": "未排期：属 gated epic G4（窄切片原则 —— 没有目标模型就不做），需用户放行",
         "note_en": "Not scheduled: gated epic G4 (narrow-slice rule — no target model, no work). Needs owner sign-off.",
         "epic": "G4"
+      }
+    ]
+  },
+  "dtype_inventory": {
+    "note": "数据类型需求。bf16/fp32 是当前算子契约实际走的；其余来自 Gemini 规划文档，统一挂 gated epic G3，硬件数字未核实、也还没有任务。放行前不派单。",
+    "dtypes": [
+      {
+        "id": "bf16",
+        "track": "agent",
+        "note_zh": "当前 ABI：q/k/v/o 与多数中间量",
+        "note_en": "Current ABI: q/k/v/o and most intermediates"
+      },
+      {
+        "id": "fp32",
+        "track": "agent",
+        "note_zh": "当前 ABI：state、门控累加、精度判定一律 fp32",
+        "note_en": "Current ABI: state, gate accumulation, all correctness judged in fp32"
+      },
+      {
+        "id": "fp16",
+        "track": "epic",
+        "epic": "G3",
+        "note_zh": "契约明确拒绝（见 ops.json 的 no-tail-path 一条）",
+        "note_en": "Explicitly rejected by the contract"
+      },
+      {
+        "id": "int8",
+        "track": "epic",
+        "epic": "G3",
+        "note_zh": "未排期；state 累积漂移需先有方案",
+        "note_en": "Not scheduled; state drift needs a design first"
+      },
+      {
+        "id": "mxfp8",
+        "track": "epic",
+        "epic": "G3",
+        "note_zh": "未排期；950 原生解码待核实",
+        "note_en": "Not scheduled; native 950 decode unverified"
+      },
+      {
+        "id": "hif8",
+        "track": "epic",
+        "epic": "G3",
+        "note_zh": "未排期",
+        "note_en": "Not scheduled"
+      },
+      {
+        "id": "mxfp4",
+        "track": "epic",
+        "epic": "G3",
+        "note_zh": "未排期；需配 RHT 抑制离群值",
+        "note_en": "Not scheduled; needs RHT for outliers"
+      },
+      {
+        "id": "hif4",
+        "track": "epic",
+        "epic": "G3",
+        "note_zh": "未排期；三级微指数解码未核实",
+        "note_en": "Not scheduled; 3-level exponent decode unverified"
       }
     ]
   }

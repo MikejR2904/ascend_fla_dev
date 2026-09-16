@@ -394,9 +394,9 @@ STATUS_MARK = {"done": "✅", "in_progress": "🔵", "assigned": "🔵", "review
 
 
 TRACK_LABEL = {
-    "zh": {"agent": "可申领", "owner": "仓主轨道", "upstream": "上游单元", "none": "尚未排任务", "epic": "未排期 (G4)"},
+    "zh": {"agent": "可申领", "owner": "仓主轨道", "upstream": "上游单元", "none": "尚未排任务", "epic": "未排期"},
     "en": {"agent": "open to agents", "owner": "owner track", "upstream": "upstream unit",
-           "none": "no task yet", "epic": "not scheduled (G4)"},
+           "none": "no task yet", "epic": "not scheduled"},
 }
 _T = {
     "zh": {"gen": "由 tools/pm_board.py --readme 生成，请勿手改。改 docs/pm/board.json 后重新运行。",
@@ -406,6 +406,7 @@ _T = {
            "done": "完成", "start": "起点", "nostart": "无起点", "startflag": "★ 起点",
            "kernels": "个 kernel", "nokernel": "本仓暂无 kernel",
            "detail": "展开看细节（算子族 → kernel → 任务）",
+           "dtypes": "数据类型", "dcols": "| dtype | 归属 | 涉及任务 | 说明 |",
            "legend": ["> 图例：⬜ 可申领 · 🔵 进行中 · 🔒 有前置条件未满足 · ✅ 已完成 · — 还没有任务。",
                       "> ★ 起点 = 该 kernel 链里传递依赖全在组外的任务，也就是要让这个 kernel 动起来先做哪一条。",
                       "> 任务顺序由依赖关系算出，不是手写的。**仓主轨道**不派给 agent（见 `docs/handoff.md` §1）；",
@@ -417,6 +418,7 @@ _T = {
            "done": "done", "start": "start", "nostart": "no start", "startflag": "★ start",
            "kernels": "kernel(s)", "nokernel": "no kernel in this repo",
            "detail": "Expand for detail (family → kernel → task)",
+           "dtypes": "Data types", "dcols": "| dtype | track | tasks | note |",
            "legend": ["> Legend: ⬜ open · 🔵 in progress · 🔒 blocked by a gate · ✅ done · — no task yet.",
                       "> ★ start = the task whose transitive deps all fall outside its kernel's chain,",
                       "> i.e. what to do first to get that kernel moving. Ordering is computed from dependencies.",
@@ -458,7 +460,8 @@ def render_readme_block(board: dict, lang: str = "zh") -> str:
     for f in families:
         ks = [k for k in inventory if k["family"] == f["id"]]
         done, total = tally(ks)
-        lines.append(f"| {f[label_key]} | `{f['id']}` | {TRACK_LABEL[lang][f['track']]} "
+        epic = f" ({f['epic']})" if f.get("epic") else ""
+        lines.append(f"| {f[label_key]} | `{f['id']}` | {TRACK_LABEL[lang][f['track']]}{epic} "
                      f"| {len(ks) or '—'} | {f'{done}/{total}' if total else '—'} |")
 
     # 第二级：展开一族，看它的 kernel；再展开一个 kernel，看它的任务链。
@@ -495,7 +498,21 @@ def render_readme_block(board: dict, lang: str = "zh") -> str:
                 lines += ["", "</details>", ""]
         lines += ["</details>", ""]
 
-    lines += tr["legend"] + [BLOCK_END]
+    # 数据类型：当前 ABI 走哪几种、哪几种还挂在 gated epic 下
+    dtypes = (board.get("dtype_inventory") or {}).get("dtypes", [])
+    if dtypes:
+        by_dtype: dict[str, list[str]] = {}
+        for t in board["tasks"]:
+            for d in t.get("dtype") or []:
+                by_dtype.setdefault(d, []).append(t["id"])
+        lines += ["", f"### {tr['dtypes']}", "", tr["dcols"], "|---|---|---|---|"]
+        for d in dtypes:
+            ids = by_dtype.get(d["id"], [])
+            epic = f" ({d['epic']})" if d.get("epic") else ""
+            lines.append(f"| `{d['id']}` | {TRACK_LABEL[lang][d['track']]}{epic} "
+                         f"| {len(ids) or '—'} | {d['note_zh' if lang == 'zh' else 'note_en']} |")
+
+    lines += [""] + tr["legend"] + [BLOCK_END]
     return "\n".join(lines)
 
 
