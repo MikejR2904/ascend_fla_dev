@@ -5,7 +5,7 @@
 是把层拼起来、让层级梯度能端到端验证，不在"高效率算子"的承诺范围内。
 """
 
-from .convolution import ShortConvolution
+from .convolution import PackedShortConvolution, ShortConvolution
 from .fused_norm_gated import FusedRMSNormGated
 
-__all__ = ["FusedRMSNormGated", "ShortConvolution"]
+__all__ = ["FusedRMSNormGated", "PackedShortConvolution", "ShortConvolution"]

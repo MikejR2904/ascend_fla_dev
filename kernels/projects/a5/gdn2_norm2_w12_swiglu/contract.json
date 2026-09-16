@@ -1,0 +1,83 @@
+{
+  "schema": "ascriptor.kernel-unit/1",
+  "id": "a5.gdn2_norm2_w12_swiglu",
+  "kind": "kernel",
+  "description": "One-launch fixed-shape BF16 RMSNorm2, paired W1/W2, and SwiGLU boundary for GDN-2 decode.",
+  "inputs": {
+    "x": {"dtype": "bfloat16", "shape": [1, 2304]},
+    "gamma": {"dtype": "bfloat16", "shape": [2304]},
+    "paired_weight": {"dtype": "bfloat16", "shape": [97, 128, 2304]}
+  },
+  "outputs": {
+    "hidden": {
+      "dtype": "bfloat16",
+      "shape": [1, 6208],
+      "initialization": "NaN poison; every element must be overwritten."
+    }
+  },
+  "domain": {
+    "B": [1],
+    "T": [1],
+    "hidden_size": [2304],
+    "intermediate_size": [6208],
+    "block_dim": [28],
+    "layout": "Each of 97 contiguous weight items contains 64 original BF16 W1 rows followed by the corresponding 64 W2 rows. Two vector subblocks publish disjoint 1152-element normalized-input halves to L1.",
+    "precision": "RMS reduction/affine and cube accumulation are FP32. The normalized input, GEMV output, SiLU output and final multiply output each materialize as BF16, preserving the vendor composition's observable boundaries.",
+    "ownership": "28 cube groups own disjoint output-item ranges. Both vector subblocks redundantly reduce RMS and own disjoint K halves for V2C. Vector subblock zero consumes both paired W1/W2 halves through a depth-two C2V handoff.",
+    "aliasing": "Inputs are read-only and hidden is a fresh complete-overwrite output."
+  },
+  "dependencies": {
+    "python": ">=3.10",
+    "ascriptor": "==0.1.0",
+    "host": ["torch>=2.9.0", "numpy"]
+  },
+  "comparison": {
+    "default": {
+      "mode": "allclose",
+      "atol": 0.015625,
+      "rtol": 0.002,
+      "max_relative_l2": 0.001,
+      "reason": "CCE RMS reduction order and native exponential may differ from the independent CPU expression even though all BF16 materialization boundaries are retained."
+    }
+  },
+  "cases": [
+    {
+      "id": "random",
+      "seed": 20260915,
+      "block_dim": 28,
+      "parameters": {"x_scale": 1.0, "weight_scale": 0.02}
+    },
+    {
+      "id": "structured",
+      "seed": 20260916,
+      "block_dim": 28,
+      "parameters": {"structured": true}
+    }
+  ],
+  "support": [
+    {"device": "a5", "backend": "cce", "stage": "reference", "status": "passed", "cases": ["random", "structured"]},
+    {"device": "a5", "backend": "cce", "stage": "sim", "status": "passed", "cases": ["random"]},
+    {"device": "a5", "backend": "cce", "stage": "pipesim", "status": "passed", "cases": ["random"]},
+    {"device": "a5", "backend": "cce", "stage": "emit", "status": "passed"},
+    {"device": "a5", "backend": "cce", "stage": "compile", "status": "untested"},
+    {"device": "a5", "backend": "cce", "stage": "board", "status": "untested"}
+  ],
+  "measured": {
+    "at": "2026-09-15",
+    "static": "Conservative-boundary rewrite: pinned Ascriptor 0.1.0 verifier has zero errors/warnings and lowered event balance is empty.",
+    "simulation": "Reference 2/2 passed. Random functional sim and lowered pipesim both passed with relative-L2 3.416e-7 and max_abs_diff 1.526e-5; pipesim has no hazard/deadlock and models 672723 cycles.",
+    "rejected_gamma_fold_predecessor": "The prior gamma-fold/FP32-epilogue probe was 1.0772x faster at the isolated boundary, but real-95B four-token recurrence reached logits/recurrent relative-L2 1.037e-2/1.523e-2 and was rejected. This rewrite removes gamma folding and restores normalized-input, GEMV-output and SiLU-output BF16 boundaries."
+  },
+  "provenance": [
+    {
+      "source": "GDN-2 released RMSNorm and SwiGLU semantics",
+      "disposition": "The fixed-shape formula and paired weight layout were independently implemented; no upstream kernel source was copied."
+    }
+  ],
+  "profile": {"warmup": 20, "repeat": 500},
+  "release_scope": {
+    "version": "0.0.1.dev0",
+    "hardware": ["a5"],
+    "note": "Repository-owned model-specific inference unit; B=T=1 only."
+  }
+}

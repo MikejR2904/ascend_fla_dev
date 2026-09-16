@@ -18,7 +18,11 @@ import torch.nn.functional as F
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
 
-from ascend_fla.modules import FusedRMSNormGated, ShortConvolution  # noqa: E402
+from ascend_fla.modules import (  # noqa: E402
+    FusedRMSNormGated,
+    PackedShortConvolution,
+    ShortConvolution,
+)
 
 
 def _rel_l2(a, b):
@@ -166,3 +170,95 @@ class TestShortConvolution:
             m(torch.randn(1, 4, 16))
         with pytest.raises(ValueError, match="cache 应为"):
             m(torch.randn(1, 4, 8), cache=torch.zeros(1, 8, 3))
+
+
+class TestPackedShortConvolution:
+    def test_one_token_reuses_window_as_new_cache(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """T=1 decode 只构造一次 Cat；window 与新 cache 在数学上是同一个张量。"""
+        torch.manual_seed(11)
+        packed = PackedShortConvolution(8, 4, activation="silu")
+        with torch.no_grad():
+            packed.weight.normal_()
+        x = torch.randn(1, 1, 24)
+        cache = torch.randn(1, 24, 4)
+        original_cat = torch.cat
+        cat_calls: list[tuple[tuple[torch.Size, ...], int]] = []
+
+        def counted_cat(tensors, dim=0, *, out=None):
+            tensors = tuple(tensors)
+            cat_calls.append((tuple(tensor.shape for tensor in tensors), dim))
+            return original_cat(tensors, dim=dim, out=out)
+
+        monkeypatch.setattr(torch, "cat", counted_cat)
+        got, new_cache = packed(x, cache=cache, output_final_state=True)
+
+        assert len(cat_calls) == 1
+        assert cat_calls[0] == (((torch.Size([1, 24, 3]), torch.Size([1, 24, 1]))), -1)
+        xt = x.transpose(1, 2)
+        expected_cache = original_cat([cache[..., -3:], xt], dim=-1)
+        expected = F.silu(
+            F.conv1d(expected_cache, packed.weight, groups=24).transpose(1, 2)
+        )
+        assert torch.equal(new_cache, expected_cache)
+        assert new_cache.is_contiguous()
+        assert torch.allclose(got, expected, atol=1e-6, rtol=1e-6)
+
+    def test_matches_three_streams_with_and_without_cache(self):
+        torch.manual_seed(0)
+        streams = [ShortConvolution(8, 4, activation="silu") for _ in range(3)]
+        for stream in streams:
+            with torch.no_grad():
+                stream.weight.normal_()
+        packed = PackedShortConvolution.from_convolutions(*streams)
+        x_parts = [torch.randn(1, 7, 8) for _ in range(3)]
+        x_packed = torch.cat(x_parts, dim=-1)
+
+        separate_full = torch.cat(
+            [stream(part, output_final_state=True)[0] for stream, part in zip(streams, x_parts)],
+            dim=-1,
+        )
+        packed_full, packed_full_cache = packed(x_packed, output_final_state=True)
+        assert torch.allclose(packed_full, separate_full, atol=1e-6, rtol=1e-6)
+
+        separate_first = [
+            stream(part[:, :2], output_final_state=True)
+            for stream, part in zip(streams, x_parts)
+        ]
+        packed_first, packed_cache = packed(x_packed[:, :2], output_final_state=True)
+        assert torch.allclose(
+            packed_first,
+            torch.cat([item[0] for item in separate_first], dim=-1),
+            atol=1e-6,
+            rtol=1e-6,
+        )
+        assert torch.equal(packed_cache, torch.cat([item[1] for item in separate_first], dim=1))
+
+        separate_second = [
+            stream(part[:, 2:], cache=item[1], output_final_state=True)
+            for stream, part, item in zip(streams, x_parts, separate_first)
+        ]
+        packed_second, packed_second_cache = packed(
+            x_packed[:, 2:], cache=packed_cache, output_final_state=True
+        )
+        assert torch.allclose(
+            packed_second,
+            torch.cat([item[0] for item in separate_second], dim=-1),
+            atol=1e-6,
+            rtol=1e-6,
+        )
+        assert torch.equal(
+            packed_second_cache, torch.cat([item[1] for item in separate_second], dim=1)
+        )
+        assert torch.equal(packed_second_cache, packed_full_cache)
+
+    def test_rejects_mismatched_streams_and_cache(self):
+        q = ShortConvolution(8, 4)
+        with pytest.raises(ValueError, match="规格"):
+            PackedShortConvolution.from_convolutions(q, ShortConvolution(8, 3), q)
+        packed = PackedShortConvolution(8, 4)
+        with pytest.raises(ValueError, match="packed q/k/v"):
+            packed(torch.randn(1, 2, 8))
+        with pytest.raises(ValueError, match="cache 应为"):
+            packed(torch.randn(1, 2, 24), cache=torch.zeros(1, 24, 3))

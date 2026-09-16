@@ -51,8 +51,19 @@ def default_cache_root() -> pathlib.Path:
 
 
 def _kernel_source(kernel: Any) -> str:
-    """kernel 的源码文本，用于算签名。取不到时退回模块+名字。"""
+    """kernel 所在模块的源码文本，用于算签名。
+
+    不能只取 decorated entry 的函数体：CCE kernel 常把实际算术放在同文件的 ``@vf`` /
+    ``@func`` helper 中。只 hash entry 会在 helper 改动后误命中旧二进制。这个读取只发生在
+    每个 kernel 对象第一次编译前，热路径仍由 ``_sig_memo`` 做 O(1) 查询。
+    """
     target = getattr(kernel, "fn", kernel)
+    try:
+        source_path = inspect.getsourcefile(target)
+        if source_path:
+            return pathlib.Path(source_path).read_text(encoding="utf-8")
+    except (OSError, TypeError, UnicodeError):
+        pass
     try:
         return inspect.getsource(target)
     except (OSError, TypeError):

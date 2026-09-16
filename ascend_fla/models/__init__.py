@@ -1,5 +1,33 @@
-"""models — 注入式模型支持。
+"""模型层。
 
-不重写 modeling_*.py：用 HF transformers / fla 的模型定义，只把本仓的 layer
-替换进去，使模型规格自动跟随上游。
+生产方向仍采用注入式集成；``gdn2`` 额外提供一个纯 torch / torch_npu 的完整基线，
+用于先严格加载原始 LitGPT checkpoint、跑通模型，再按实测调用链替换昇腾算子。
 """
+
+from .gdn2 import (
+    GDN2Config,
+    GDN2ForCausalLM,
+    GDN2LayerCache,
+    GatedDeltaNet2,
+    checkpoint_state_dict,
+)
+from .generation import (
+    GDN2_DECODE_BACKENDS,
+    GDN2GenerationResult,
+    GDN2GenerationTimings,
+    GDN2NPUGraphDecodeRunner,
+    generate_tokens,
+)
+
+__all__ = [
+    "GDN2Config",
+    "GDN2_DECODE_BACKENDS",
+    "GDN2ForCausalLM",
+    "GDN2GenerationResult",
+    "GDN2GenerationTimings",
+    "GDN2LayerCache",
+    "GDN2NPUGraphDecodeRunner",
+    "GatedDeltaNet2",
+    "checkpoint_state_dict",
+    "generate_tokens",
+]
