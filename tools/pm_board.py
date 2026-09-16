@@ -262,6 +262,13 @@ def check(board: dict, root: Path = ROOT) -> list[str]:
     numbers = [t["issue"] for t in valid if isinstance(t.get("issue"), int)]
     problems += [f"issue #{n} 被多个任务引用" for n in sorted({n for n in numbers if numbers.count(n) > 1})]
 
+    # 仓主并行轨道的文件不能落进任何任务的写集 —— 两条轨道共用仓库，撞车只能靠边界预防
+    reserved = (board.get("reserved_paths") or {}).get("paths", [])
+    for t in valid:
+        hits = sorted({r for r in reserved for w in t["write_set"] if paths_overlap(r, w)})
+        if hits:
+            problems.append(f"{t['id']}: 写集碰到仓主并行轨道的路径 {hits}（见 board.reserved_paths）")
+
     # 每个 kernel 都要有起点，否则"从哪条开始"这个问题没有答案
     for kernel, entries in kernel_entries(board).items():
         if not entries:

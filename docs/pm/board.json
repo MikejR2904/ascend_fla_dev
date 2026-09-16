@@ -1,6 +1,6 @@
 {
   "schema": "fla-pm-board/2",
-  "updated_at": "2026-09-15",
+  "updated_at": "2026-09-16",
   "repo": "ddddwee1/ascend_fla_dev",
   "pm_github_login": "limjiunnbin",
   "intake_issue": 28,
@@ -61,6 +61,13 @@
       "by": "user",
       "decision": "任务 issue 改用 limjiunnbin 重发：bot 账号 ascend-fla-pm-bot 触发 GitHub 反滥用过滤，它建的 26 个 issue 对匿名访问全部 404。bot 保留，只用于打标签等需要 write 权限的操作",
       "evidence": "实测：匿名取 bot 建的 issue/4 → 404、bot 主页 → 404；limjiunnbin 建的 #28 → 200。另实测 limjiunnbin 无 write，建 issue 时标签被静默丢掉，需由 bot 补打"
+    },
+    {
+      "id": "D-PM-10",
+      "date": "2026-09-16",
+      "by": "user",
+      "decision": "仓主在 A5 上的 GDN-2 工作是**并行轨道**，不改本看板的 SoC 顺序与波次；agent 轨道照已发布的 A2 优先走。两条轨道共用仓库，靠 reserved_paths 划边界",
+      "risk": "共享文件仍会撞车：A2-02（runtime/compile.py、conftest.py）、A2-06（docs/matrix/**、gen_matrix.py）、A2-08（ascend_fla/models/）都与仓主刚动过的文件相交。A2-06 已 gated 等协调，另两条收窄写集并加了边界说明"
     }
   ],
   "gated_epics": [
@@ -334,7 +341,7 @@
       "wave": "W0",
       "soc": "any",
       "priority": "P1",
-      "status": "open",
+      "status": "gated",
       "model": [],
       "kernel": [],
       "dtype": [],
@@ -361,7 +368,8 @@
       "branch": null,
       "timebox_h": 12,
       "reports": [],
-      "result": null
+      "result": null,
+      "gate": "owner-track-coordination"
     },
     {
       "id": "A2-03",
@@ -458,7 +466,7 @@
         "A2-05"
       ],
       "write_set": [
-        "ascend_fla/models/**",
+        "ascend_fla/models/kimi_linear.py",
         "tests/test_models_kimi.py"
       ],
       "needs": {
@@ -1133,5 +1141,24 @@
         "hif4"
       ]
     }
+  },
+  "reserved_paths": {
+    "note": "仓主的并行轨道（A5 上的 GDN-2）。agent 不要碰这些路径；派单时 --check 会拦住写集与它相交的任务。两条轨道共用仓库但互不指挥：本看板管 agent 轨道，GDN-2 的进度看 docs/handoff.md §1。",
+    "owner": "ddddwee1",
+    "paths": [
+      "ascend_fla/ops/gdn2/**",
+      "ascend_fla/layers/gdn2.py",
+      "ascend_fla/reference/gdn2.py",
+      "ascend_fla/models/gdn2.py",
+      "ascend_fla/models/gdn2_checkpoint.py",
+      "ascend_fla/models/gdn2_graph.py",
+      "ascend_fla/models/generation.py",
+      "kernels/projects/a5/gdn2_fused_recurrent/**",
+      "kernels/projects/a5/gdn2_fused_decode/**",
+      "kernels/projects/a5/gdn2_norm2_w12_swiglu/**",
+      "kernels/projects/a5/gdn2_short_conv_decode/**",
+      "tests/test_gdn2_model.py",
+      "tests/test_gdn2_recurrent.py"
+    ]
   }
 }

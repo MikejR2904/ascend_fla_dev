@@ -201,6 +201,23 @@ class TestKernelEntries(unittest.TestCase):
         self.assertTrue(any("未知取值" in p for p in found), found)
 
 
+class TestReservedPaths(_Tmp):
+    """仓主的并行轨道有专属路径；任何任务的写集碰到它都要报。"""
+
+    def problems_with_reserved(self, task, paths):
+        (self.root / task["spec"]).write_text("s", encoding="utf-8")
+        return pm_board.check({"tasks": [task], "reserved_paths": {"paths": paths}}, root=self.root)
+
+    def test_write_set_touching_reserved_path_is_flagged(self):
+        found = self.problems_with_reserved(_task("A", write_set=["ascend_fla/models/**"]),
+                                            ["ascend_fla/models/gdn2.py"])
+        self.assertTrue(any("并行轨道" in p for p in found), found)
+
+    def test_narrowed_write_set_passes(self):
+        self.assertEqual(self.problems_with_reserved(_task("A", write_set=["ascend_fla/models/kimi_linear.py"]),
+                                                     ["ascend_fla/models/gdn2.py"]), [])
+
+
 class TestNextCandidates(unittest.TestCase):
     def setUp(self):
         self.board = {"tasks": [

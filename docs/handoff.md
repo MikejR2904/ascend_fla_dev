@@ -6,14 +6,27 @@
 
 ## 0. 2026-09-15 更新：SoC 顺序变更 + 多 agent 协作（先读这节）
 
-**SoC 顺序改为 A2 (910B) → A3 (910C) → A5**（2026-09-14 定的，见 `AGENTS.md` §2 与 `docs/plan.md` 的「按 SoC 分波次」）。
-所以下面 §2 那三个候选都是 A5 波次的事，要等 W-A3 退出之后再说。
+**先说清楚：现在有两条并行轨道，本节讲的是 agent 那条。**
+
+| 轨道 | 谁在做 | 内容 | 看哪里 |
+|---|---|---|---|
+| 仓主轨道 | 仓主本人 | A5 上的 GDN-2（decode 链路、gdn2-1.3B 整网、四个 a5/gdn2_* 单元） | 下面 §1.1~§1.3 |
+| agent 轨道 | 外部 agent，PM 派单 | A2 (910B) → A3 (910C) → A5，首波 KDA + Kimi-Linear | `docs/pm/board.json` 与 GitHub issue |
+
+两条轨道共用仓库，但互不指挥：仓主那条不受看板的 SoC 顺序约束，看板也不因为仓主在 A5 上推进就改波次
+（2026-09-16 用户确认，看板 D-PM-10）。边界靠 `board.json` 的 `reserved_paths` 划：那些路径 agent 不碰，
+`pm_board.py --check` 会拦住写集与之相交的任务。
+
+**agent 轨道的 SoC 顺序是 A2 (910B) → A3 (910C) → A5**（2026-09-14 定的，见 `AGENTS.md` §2 与
+`docs/plan.md` 的「按 SoC 分波次」）。所以下面 §2 那三个候选属于 agent 轨道的 A5 波次，要等 W-A3 退出；
+**它们和仓主正在 A5 上做的 GDN-2 是两回事，别混起来读。**
 
 工作改成多 agent 推进：PM 维护 `docs/pm/board.json`，agent 按 `docs/pm/PROTOCOL.md` 申领任务并汇报，
 看进度跑 `python tools/pm_board.py --render`。
 
 现在能派的是 W0 的主机侧任务，A2 机器还没到位。最靠前的两项是 A2-01（split-K FP32 cube 缺陷定性，A2 的总闸）
-和 A2-04（C=1 多头那个 P0 的确切根因）。
+和 A2-04（C=1 多头那个 P0 的确切根因）。A2-06（矩阵按 SoC 分维）已改成 gated：它要重构的
+`docs/matrix/*.json` 与 `tools/gen_matrix.py` 正是仓主轨道在高频改的文件，等协调好再开。
 
 协作机制已经合入（PR #1，2026-09-15，merge commit a1361d8）。
 
