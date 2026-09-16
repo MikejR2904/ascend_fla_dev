@@ -1,0 +1,141 @@
+{
+  "schema": "ascriptor.kernel-unit/1",
+  "id": "a5.gdn2_fused_decode",
+  "kind": "kernel",
+  "description": "One-launch real-shape BF16 GDN-2 decode with raw gate activation, FP32 recurrence, RMSNorm, swish and BF16 output.",
+  "inputs": {
+    "q": {"dtype": "bfloat16", "shape": [1, 1, 16, 128]},
+    "k": {"dtype": "bfloat16", "shape": [1, 1, 16, 128]},
+    "v": {"dtype": "bfloat16", "shape": [1, 1, 16, 128]},
+    "f_raw": {"dtype": "bfloat16", "shape": [1, 1, 16, 128]},
+    "b_raw": {"dtype": "bfloat16", "shape": [1, 1, 16, 128]},
+    "w_raw": {"dtype": "bfloat16", "shape": [1, 1, 16, 128]},
+    "output_gate": {"dtype": "bfloat16", "shape": [1, 1, 16, 128]},
+    "decay_rate": {
+      "dtype": "float32",
+      "shape": [16, 128],
+      "note": "Precomputed -exp(A_log), one strictly-negative scalar broadcast across each head row."
+    },
+    "dt_bias": {"dtype": "float32", "shape": [16, 128]},
+    "norm_weight": {
+      "dtype": "float32",
+      "shape": [128],
+      "note": "The requested BF16 checkpoint value widened once to FP32 during immutable inference packing."
+    },
+    "initial_state": {
+      "dtype": "float32",
+      "shape": [1, 16, 128, 128],
+      "note": "K-major, read-only and never aliased with final_state."
+    }
+  },
+  "outputs": {
+    "o": {
+      "dtype": "bfloat16",
+      "shape": [1, 1, 16, 128],
+      "initialization": "NaN poison; every element must be overwritten."
+    },
+    "final_state": {
+      "dtype": "float32",
+      "shape": [1, 16, 128, 128],
+      "initialization": "NaN poison; every element must be overwritten."
+    }
+  },
+  "domain": {
+    "B": [1],
+    "T": [1],
+    "H": [16],
+    "K": 128,
+    "V": 128,
+    "block_dim": [8],
+    "layout": "Token-major contiguous BTHD activations/output; K-major BHKV state.",
+    "configuration": "allow_neg_eigval=false, qk_norm_eps=1e-6, norm_eps=1e-5, attention_scale=128^-0.5 and swish output gate.",
+    "precision": "BF16 activations widen on entry. Gate activation, q/k reductions, recurrence, RMSNorm, swish and state use FP32. Output narrows once with ties-to-even; state stays FP32.",
+    "ownership": "block_dim=8 yields 16 vector participants and each owns one complete head; there is no cross-core reduction or synchronization.",
+    "aliasing": "All inputs are read-only; o and final_state are fresh complete-overwrite outputs with disjoint storage."
+  },
+  "dependencies": {
+    "python": ">=3.10",
+    "ascriptor": "==0.1.0",
+    "host": ["torch>=2.9.0", "numpy"]
+  },
+  "comparison": {
+    "default": {
+      "mode": "allclose",
+      "atol": 0.001,
+      "rtol": 0.001,
+      "max_relative_l2": 0.001,
+      "reason": "All internal arithmetic is FP32, but native exp/log/reduction order and the final BF16 RNE may differ from the independent Torch tree; bitwise identity is not required."
+    },
+    "outputs": {
+      "o": {
+        "atol": 0.01,
+        "rtol": 0.001,
+        "max_relative_l2": 0.001,
+        "reason": "The BF16 output may move by one storage ULP after the CCE transcendental/reduction tree; the strong-decay simulator case measured max_abs=0.0078125 on 2/2048 values and relative-L2=4.620e-5."
+      },
+      "final_state": {
+        "atol": 0.0001,
+        "rtol": 0.0001,
+        "max_relative_l2": 0.0001,
+        "reason": "State remains FP32; only native transcendental and register reduction order may differ from the CPU formula."
+      }
+    }
+  },
+  "cases": [
+    {
+      "id": "zero_state",
+      "seed": 20260920,
+      "block_dim": 8,
+      "parameters": {"state_scale": 0.0, "raw_scale": 1.0, "decay_min": 1.0, "decay_max": 4.0}
+    },
+    {
+      "id": "real_decode",
+      "seed": 20260921,
+      "block_dim": 8,
+      "parameters": {"state_scale": 0.1, "raw_scale": 3.0, "decay_min": 1.0, "decay_max": 16.0}
+    },
+    {
+      "id": "strong_decay",
+      "seed": 20260922,
+      "block_dim": 8,
+      "parameters": {"state_scale": 0.1, "raw_scale": 6.0, "decay_min": 8.0, "decay_max": 16.0}
+    }
+  ],
+  "support": [
+    {"device": "a5", "backend": "cce", "stage": "reference", "status": "passed", "cases": ["zero_state", "real_decode", "strong_decay"]},
+    {"device": "a5", "backend": "cce", "stage": "sim", "status": "passed", "cases": ["zero_state", "real_decode", "strong_decay"]},
+    {"device": "a5", "backend": "cce", "stage": "pipesim", "status": "passed", "cases": ["zero_state", "real_decode", "strong_decay"]},
+    {"device": "a5", "backend": "cce", "stage": "emit", "status": "passed"},
+    {"device": "a5", "backend": "cce", "stage": "compile", "status": "passed"},
+    {"device": "a5", "backend": "cce", "stage": "board", "status": "passed", "cases": ["real_decode"]},
+    {"device": "a5", "backend": "cce", "stage": "board", "status": "untested", "cases": ["zero_state", "strong_decay"]}
+  ],
+  "measured": {
+    "at": "2026-09-15, Ascend950PR / CANN 9.1.0",
+    "static": "Pinned Ascriptor 0.1.0: 0 errors, 0 warnings, 404 surface operations; CCE emitted 415 lowered operations.",
+    "simulation": "All 3 cases passed functional sim and pipesim without hazard/deadlock. Strong-decay BF16 o differed at 2/2048 elements by one ULP: max_abs=0.0078125, relative-L2=4.620e-5; FP32 state relative-L2 was at most 4.108e-7. The accepted static two-slot schedule measured 9613 model cycles versus 10463 for the dynamically indexed DBuff negative control and 9444 for the serial whole-state source; modeled multi-pipe overlap rose from 3.68% to 11.44%.",
+    "board_cce": "Canonical unit runner executed real_decode through requested_backend=cce and launcher=aclnn. BF16 o max_abs=7.451e-9 / relative-L2=8.574e-11; FP32 state max_abs=3.278e-7 / relative-L2=3.044e-7.",
+    "whole_model": "Real 95B BF16 packed model passed both load orders. Prompt/step logits relative-L2=3.260e-3/3.436e-3; worst step recurrent-cache relative-L2=9.521e-3 under the existing 1e-2 budget. The fused path generated the same readable 32-token continuation.",
+    "profile": "Standalone Casts remain 74 per token after fusion. Two independent static-two-slot profiles (54 kernel calls each) measured a combined mean/median 4.247/4.256 us per layer, versus an immediate whole-state control at 4.733/4.716 us: 1.114x/1.108x faster. Combined mean AIV Vector/Scalar/MTE2/MTE3 ratios were 34.73/17.60/37.52/21.70%; the four-pipe sum was 111.55%, versus 86.84% in the matched control, establishing real overlap. Every profiler kernel row reported physical device 7.",
+    "paired_latency": "warmup=100/repeat=200: torch-first 8.087 vs 4.900 ms (1.650x); CCE-first 8.726 vs 6.188 ms (1.410x). Both numerical comparisons passed.",
+    "scheduling_negative_control": "Hazard-free dynamically indexed 16/32/64-row DBuff variants increased pipesim cycles from 9444 to 14801/11917/10463. The dynamic 64-row silicon candidate regressed 4.654->4.804 us and its four AIV pipes summed to 98.17%, exposing near serialization. Statically naming and unrolling the two 64-row slots removed the false read1->compute0 and write0->compute1 dependencies: pipesim fell to 9613 cycles, modeled overlap rose to 11.44%, and two silicon acquisitions measured 4.259/4.236 us means around a matched 4.733 us whole-state control.",
+    "exit_criteria": "Correctness, the 74-Cast floor, pairwise MTE2/Vector and Vector/MTE3 overlap, and deployed kernel latency passed. A single main pipe still does not average about 80% because the all-row erase->delta join separates the two legal pipelines; meeting that separate saturation target requires a wider useful fusion boundary rather than artificial work or fewer cores.",
+    "device_isolation": "Both profiler acquisitions and the full-model validation reported only physical device 7 and had zero physical-device-0 active samples. A later canonical aclnn fresh build showed one transient physical-device-0 python entry at 0 MB before the actual test_aclnnop appeared only on device 7; its timing aligns with the CANN opc build, but the exited PID cannot be namespace-mapped after the fact. No device-0 residency remained, and further fresh builds are prohibited during the strict device-7-only window."
+  },
+  "provenance": [
+    {
+      "source": "GatedLinearAttention2 fused_recurrent_gdn2 and FusedRMSNormGated semantics at revision 7fb9cb84260779a8715f3dba855abc4cab6924d4",
+      "disposition": "Formula and public tensor semantics were independently reimplemented; no Triton source was copied."
+    },
+    {
+      "source": "ascend_fla a5.gdn2_fused_recurrent",
+      "disposition": "Retains the measured one-complete-head-per-vector ownership and resident FP32 state, while widening the model-specific fusion boundary."
+    }
+  ],
+  "profile": {"warmup": 10, "repeat": 100},
+  "release_scope": {
+    "version": "0.0.1.dev0",
+    "hardware": ["a5"],
+    "note": "Repository-owned model-specific inference unit; not part of Ascriptor 0.1.0."
+  }
+}

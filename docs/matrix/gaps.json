@@ -1,12 +1,15 @@
 {
   "schema": "ascend_fla.gaps/3",
-  "recorded_at": "2026-09-11",
+  "recorded_at": "2026-09-15",
   "produced_by": "phase 0, derived by cross-checking models.json against ops.json",
   "note": "缺口表。severity: P0 阻塞第一期 / P1 阻塞端到端可用 / P2 覆盖面与性能。applies_to 列出受影响的算子族 —— 多数限制是算子族特有的，不要当成全局限制。每条的 evidence 必须指向可核查的来源，proposed_action 是建议而非承诺。",
   "schema_changelog": [
     "v2 (2026-09-10): 首个目标由 GDN 改为 KDA 后重排 severity；新增 applies_to 字段；新增 kda-fwd-bwd-dtype-mismatch。",
     "v3 (2026-09-11): 第一期实测后更新。aclnn-compile-untested 的依据被证伪并改写（aclnn 映射到 board stage，contract 的 compile 指 `ascriptor compile` CLI）；runtime-bridge-missing 与 kda-no-local-evidence 已解决；scale-param-no-slot 对 kda 不成立（kernel 有 f32 scale 入口）；新增 npu-builtin-ops-missing。",
-    "v3.1 (2026-09-11): npu-builtin-ops-missing 降级为 environment-specific —— 另一台 8 卡 Ascend950PR 机器（CANN 9.2.0，opp 带 ascend950 算子包）上 torch_npu 计算算子全部可用。"
+    "v3.1 (2026-09-11): npu-builtin-ops-missing 降级为 environment-specific —— 另一台 8 卡 Ascend950PR 机器（CANN 9.2.0，opp 带 ascend950 算子包）上 torch_npu 计算算子全部可用。",
+    "v3.2 (2026-09-14): 模型先行跑 GDN-2 1.3B 时确认它不是现有 gated_delta_rule/GDN 的换名：新增 gdn2 算子族与 gdn2-abi-not-gdn。",
+    "v3.3 (2026-09-14): 真实 95B 权重的边界 profile 确认 decode 应拆成 packed projection/conv、gate prep、recurrent core、norm-gate；新增 gdn2-chunk-gate-range，阻止把 KDA 的指数稳定域直接外推给 GDN-2。",
+    "v3.4 (2026-09-15): GDN-2 decode 的动态 DBuff 被确认因保守别名而串行；两个静态命名64-row槽通过pipesim、aclnn、真实95B整网和两轮真机profile，形成可测的成对pipe重叠。单pipe约80%仍受erase→delta全局join限制。"
   ],
   "gaps": [
     {
@@ -456,14 +459,16 @@
       "category": "performance",
       "severity": "P2",
       "applies_to": [
-        "kda"
+        "kda",
+        "gdn2"
       ],
-      "evidence": "ascend_fla/modules/convolution.py 用 F.conv1d + F.silu；fused_norm_gated.py 用 rsqrt/mean/sigmoid 两趟完成（名字里的 Fused 只为与 fla 对齐，并未融合）。layers/kda.py 里的投影、l2norm、softplus 门控、sigmoid 也都是 torch 算子。",
+      "current_round": "GDN-2真实B1T1 BF16 packed路径已有三个整网验收的本仓CCE单元。低内存默认为2658.78us/376.11 token/s。第三个 `a5.gdn2_norm2_w12_swiglu` 的gamma-fold v1虽在kernel级1.0772x，却因真实递推cache最坏1.523e-2被拒；保守v2恢复三个BF16边界后通过真实95B四步递推、同卡Graph夹心与Level-1 profile。显式opt-in的Graph均值2588.511us/386.323 token/s，代价是18层额外1,029,832,704 bytes派生权重；默认仍是torch_npu组合。",
+      "evidence": "通用 `ascend_fla/modules/convolution.py` 仍用 F.conv1d+F.silu，`fused_norm_gated.py` 仍用rsqrt/mean/激活；KDA的投影/l2norm/门控也仍是torch算子。GDN-2真实B1T1 BF16 packed路径的模型专用CCE例外现在有 `a5.gdn2_fused_decode`、`a5.gdn2_short_conv_decode`，以及显式opt-in的 `a5.gdn2_norm2_w12_swiglu`。后者v1整网已拒绝；v2 reference2/2与random sim/pipesim通过，relative-L2=3.416e-7、无hazard/deadlock；`mlp_backend='cce'`才启用。通用卷积、其他projection、W3、prompt MLP及训练路径仍依赖torch_npu。",
       "impact": "① 这些步骤在内置算子包不全的机器上不可用（需要 conv1d/silu/matmul），而自编译的 kda 算子本身不受影响 —— 所以层级验证比算子级验证对机器挑剔。② 层级耗时里有一部分不归本仓的\"高效率算子\"管，报层级性能数时必须拆开说，否则会把 torch 的开销算进算子账上。",
       "blocks": [],
-      "proposed_action": "第四期按测得的占比决定做哪些。归一化与门控是 elementwise，融合收益直接；短卷积是 depthwise，值得单独做一个 kernel。动手前先 profile 层级耗时拆分，别重复 bridge-per-call-overhead 那次\"先推断后测量\"的错。",
+      "proposed_action": "KDA保持原计划。GDN-2混合MLP的kernel、显式接线、真实95B递推、同卡Graph夹心与profile均已完成。下一步先决定是否用约1.030GB派生布局换2.6%吞吐，或设计不重复权重的prompt/decode统一布局；追求大幅提升则先决策weight-only低精度与任务质量预算。通用causal_conv1d与FusedRMSNormGated仍需独立算子，不能从模型专用T1 kernel外推为已完成。",
       "requires_kernel_change": true,
-      "kernel_change_note": "causal_conv1d / RMSNorm / FusedRMSNormGated 目前是 torch 算子。"
+      "kernel_change_note": "GDN-2 B1T1 BF16 output norm/gate、packed qkv short-conv/cache与RMSNorm2+W1/W2+SiLU×Mul三个模型专用CCE单元均已通过整网/profile；通用causal_conv1d、FusedRMSNormGated、其他shape与训练路径仍是torch算子。"
     },
     {
       "id": "qk-l2norm-not-in-kernel",
@@ -575,13 +580,63 @@
       "status_note": "**一次被证伪的假设，留着免得别人重走。** 我曾以为跨度 94 处 dq 的 4.55e-02 主要来自反向 ABI 把 `g_cumsum` 定为 bf16（前向入口的 g 是 fp32），即「任何实现都只能这么准」，于是想把判据换成「喂了 bf16 往返 g 的 fp32 参考」。**实测证伪**：算子离 fp32 参考反而更近（跨度 46：对 fp32 的 dq 2.889e-02，对那个参考 4.169e-02；94 档 2.889→6.766e-02）。原因是那个构造把 bf16 cumsum **差分回** per-token 增量，属于灾难性相消；而 kernel 是**直接用** cumsum 去算 `exp(g_i − g_j)`，从不差分回去。所以那不是 ABI 的地板，是构造方式引入的误差 —— 判据仍然是 fp32 递推参考。这段反过来解释了**为什么 kernel 必须直接用 cumsum**，诊断保留在 tests/test_kda_bwd_deep_npu.py 里会打印出来。",
       "requires_kernel_change": true,
       "kernel_change_note": "若要继续抬门控跨度：把 64×64 tile 按行列分块、每对子块用各自的中点（等价分块 log-sum-exp），有限性上限随分块数线性增长。**但反向的约束是精度不是有限性，这一项可能帮不上忙** —— 先做 kda-fwd-bwd-dtype-mismatch。"
+    },
+    {
+      "id": "gdn2-abi-not-gdn",
+      "title": "GDN-2 的 channel-wise erase/write/decay ABI 与现有 GDN kernel 不同",
+      "category": "abi",
+      "severity": "P1",
+      "applies_to": [
+        "gdn2"
+      ],
+      "evidence": "目标模型 revision 86327354 的 gdn2_1.3B 配置是 H=HV=16、K=V=128，形状本身匹配 A5 定尺；但训练实现传给 recurrence 的张量是 q/k/v [B,T,H,128]、g [B,T,H,128] fp32、b [B,T,H,128]、w [B,T,H,128]，其中 b 是 key-channel erase gate，w 是独立的 value-channel write gate，g 也是 key-channel decay。现有 a5.gdn_fwd 的正式 ABI 只有 beta [B,H,C,64] 与 g [B,H,C,64] 两个 per-token 标量槽，没有 w，也没有 channel-wise b/g。\n**recurrent 这一半已按独立 ABI 做完**（2026-09-14）：本仓新增 `a5.gdn2_fused_recurrent`，直接吃 token-major q/k/v/g/b/w 与非零 FP32 state，kernel 内做 q/k L2 norm 和 scale；Ascriptor unit runner 的 CCE/aclnn 五个 case 全过，o 最大 relative-L2=4.169e-6、state 最大 9.108e-8。真实 95B 的 BF16/FP32 整网 torch_npu↔CCE logits/cache 均在预算内，并由 CCE backend greedy 生成 32 个可读 token。现有 a5.gdn_* 仍未被误用或改名。",
+      "impact": "现有 a5.gdn_fwd/bwd 仍不能用于这个 checkpoint；强接会在形状层面丢掉 128 倍门控信息并无法表达独立 write gate，是确定性的语义错误。独立 recurrent kernel 已解除短 prompt/decode 的阻塞；剩余影响收窄为 T>16 的长 prefill 与训练反向，它们仍缺 gdn2_chunk_fwd_bwd。",
+      "blocks": [
+        "gdn2_chunk_fwd_bwd"
+      ],
+      "proposed_action": "recurrent 已完成，不再改。下一步只做独立 gdn2 chunk fwd+bwd：L=64、K=V=128、直接吃 token-major；数值表示先解决 gdn2-chunk-gate-range 的 1461 跨度反例。g 变换与 b/w sigmoid 是否继续融合，等整层 profile 后决定；不能因名字相近复用 a5.gdn_*。",
+      "requires_kernel_change": true,
+      "kernel_change_note": "recurrent 已由本仓 a5.gdn2_fused_recurrent 解决；队列中只剩独立 gdn2 chunk fwd/bwd，正式 ABI 需要 channel-wise g[B,T,H,K]、b[B,T,H,K]、w[B,T,H,V]。"
+    },
+    {
+      "id": "gdn2-chunk-gate-range",
+      "title": "GDN-2 的真实 chunk 衰减跨度远超 KDA stable 已验证域，chunk 算法必须单独做量程设计",
+      "category": "numerics",
+      "severity": "P1",
+      "applies_to": [
+        "gdn2"
+      ],
+      "evidence": "2026-09-14 用真实 95B checkpoint、B=1/T=4096、合法 vocab token id 的确定性随机输入（seed=20260914）逐层抓取 g=-exp(A_log)*softplus(f+dt_bias)。18 层合计观测：单 token 的 -g 最大 60.926；64-token 局部累计跨度最大 1461.214，各层 chunk-span 均值再平均为 69.041；完整 4096-token 累计跨度最大 83768.180。logits 仍全有限，说明逐 token recurrence 本身可用；证据在 tmp/gdn2-95b/gate-domains-t4096.json 与原始日志（git-ignored）。该输入不是自然语料分布，不能拿均值外推任务分布，但它是模型公开 token 域内的有效反例，足以否定“照搬 KDA 155 的量程即可”。",
+      "impact": "现有 KDA stable chunk 的前向已验证跨度约 155、反向约 105，不能直接作为 GDN-2 的设计上限。任何在 64-token 区间端点或中点形成 exp(±span) / exp(±span/2) 的实现，在观测到的 1461 跨度下都可能出现 0、inf 或 inf×0；有限输出也不能替代梯度精度验证。decode recurrence 每步只使用 exp(g_t)，g_t≤0，向 0 下溢与数学极限一致，不受这个跨 token 配对量程问题影响。",
+      "blocks": [
+        "gdn2_chunk_fwd_bwd"
+      ],
+      "proposed_action": "冻结 q/k/v/g/b/w 的公共语义 ABI，但 chunk 实现暂缓。写 kernel 前先把 forward/backward 全链路所有 exp(g_i-g_j) 逐处列出，按 4/8/16/32/64 子块扫描实测量程，并同时对 fp32 recurrent oracle 验有限性与相对 L2；算法应采用不会构造大正指数的分段/归一化表示，而不是只把端点锚改成中点。测试至少覆盖本次 1461 反例、自然文本样本、chunk↔recurrent 与梯度。",
+      "requires_kernel_change": true,
+      "kernel_change_note": "新建 gdn2 chunk fwd/bwd 时必须从一开始采用覆盖至少已观测 1461 局部跨度的数值表示；禁止直接复制 KDA stable 的 105/155 跨度实现。"
+    },
+    {
+      "id": "gdn2-decode-fragmentation",
+      "title": "GDN-2 host/elementwise fragmentation 基本收敛，BF16 decode 转为 GEMV 权重读取瓶颈",
+      "category": "performance",
+      "severity": "P1",
+      "applies_to": [
+        "gdn2"
+      ],
+      "current_round": "T=1 cache/window复用、`a5.gdn2_short_conv_decode`、原生npu_rms_norm与host-packed W1/W2先把低内存默认推到2658.782us/376.114 token/s。混合MLP的gamma-fold v1因真实95B递推cache到1.523e-2被拒；保守v2恢复BF16边界后，prompt+四步全量relative-L2=0，同卡Graph均值2588.511us/386.323 token/s，相对vendor控制延迟-2.567%、吞吐+2.635%。Level-1为2576.490us/219 rows，kernel AIC MTE2平均91.880%；显式opt-in通过但因额外1.030GB派生权重未改默认。证据：tmp/gdn2-rmsnorm-swiglu/（git-ignored）。",
+      "evidence": "2026-09-15 初始真实95B/BF16/packed/B1T1 trace：torch_npu 6043.4us/1523 kernels；旧 CCE recurrent 5108.8us/1163 kernels，Cast 565.9us/309。去掉不变weight cast并新增 `a5.gdn2_fused_decode` 后，kernel内完成raw gate、q/k norm、FP32 recurrence/state、output RMSNorm+swish和最终BF16舍入；Cast降到74次/token、147.355us，launch 1163→640，反序整网paired speedup为1.410x~1.650x。\n**动态双缓冲反例**：16/32/64-row DBuff虽无hazard/deadlock，pipesim却从整state 9444退化到14801/11917/10463 cycles；DB64真机4.804us且四AIV pipe和98.17%。Lowered IR显示auto_sync把动态 `slot[n]` 与 `slot[n-1]` 保守判为同root，插入read1→compute0和write0→compute1假依赖，因此只有存储双槽、没有流水。\n**接受实现**：把两个64-row槽静态命名并展开，保持公式、VF算术、流量、block_dim和ABI不变。check 0 error/0 warning/404 surface ops，CCE emit 415；3/3 sim与3/3 pipesim数值通过且无hazard/deadlock，pipesim=9613 cycles，同核多pipe重叠3.68%→11.44%。两次独立真机profile各54样本，kernel mean=4.259/4.236us，合并mean/median=4.247/4.256us；夹心整state即时对照=4.733/4.716us，候选快1.114x/1.108x。候选Vector/Scalar/MTE2/MTE3合并平均34.73/17.60/37.52/21.70%，四pipe和111.55%（对照86.84%），证明真实重叠。aclnn与真实95B整网数值复验均过原预算；两轮profile与整网任务所有kernel/PID只在物理7、物理0活跃0次。另一次canonical aclnn fresh build在actual launcher前捕捉到物理0的python/0MB瞬时条目，时间对齐CANN opc编译；test_aclnnop只在7，0未留驻，后续严格单卡窗口不再fresh build。证据：tmp/gdn2-cast-fusion/{tile64-profile-v1,static2-v4-profile-v1,static2-control-profile-v1,static2-v4-profile-v2,static2-v4-fullmodel-v1,static2-v4-canonical-aclnn-v1}/（git-ignored）。\n**NPU Graph 实测**：torch_npu 2.10 的 `NPUGraph` 能同时捕获整网内置算子与本仓 ctypes→aclnn custom op。固定prompt-cache对照为6735.3→3834.9us/token（148.47→260.76 token/s，1.756x）；可递推版本在图尾把18层新recurrent/conv cache拷回固定输入地址，v3~v5同轮eager为5911.9~6323.7us/token，graph稳定在3908.2~3911.9us（255.63~255.87 token/s，1.512x~1.617x）；逐token同步的graph为3915.6~3926.0us（254.71~255.39 token/s，对eager加速1.554x~1.736x）。四个不同token连续replay的logits、两类cache均与eager逐位相同。eager提交约5.67~6.78ms/token，graph提交仅2.8~7.4us/token，说明host发射已不再配速；stateful graph每token额外回写19,759,104 bytes，实测只比fixed graph多约75us。清空eager allocator历史后，捕获常驻allocated/reserved增量约39.6/130.0MB，一次捕获约13.6ms。证据：`benchmarks/bench_gdn2_graph_capture.py` 与 tmp/gdn2-graph-capture/{fixed-v1,stateful-v3,stateful-v4,stateful-v5}.json（git-ignored）。\n**真实生成接线**：`GDN2NPUGraphDecodeRunner` 与 `generate_tokens(decode_backend=\"npu-graph\")` 已接入。真实95B、64-token greedy在graph-first/eager-second与eager-first/graph-second两组独立进程中，四次token ids逐项相同。含logits D2H、CPU argmax、token H2D的graph decode为244.21/244.79 token/s，对应eager为173.02/148.84，两个顺序加速1.411x/1.645x；含冷prefill和每请求setup的64-token总吞吐graph为99.11/104.23、eager为96.73/91.60，两个顺序加速1.025x/1.138x。四个接受窗口物理0活跃均为0，物理7各只有一个本任务PID。证据：tmp/gdn2-graph-generation/{graph-greedy64-v2,eager-greedy64-v1,eager-greedy64-v2,graph-greedy64-v3}.json（git-ignored）；一轮与外部作业竞争的smoke已隔离为rejected，不作性能证据。",
+      "impact": "host gap与大部分elementwise fragmentation已经消除：低内存默认纯模型Graph约2.659ms/376.11 token/s；保守mixed显式opt-in为2.589ms/386.32 token/s。其最新device时间90.175%是native GEMV+mixed W12权重流，mixed AIC MTE2平均91.88%。gamma-fold v1的56.24us/token投影已因递推精度作废；保守v2以1,029,832,704 bytes派生权重换取clean Graph约68.20us/token，必须连同内存决策。若要下一次大步收益，需要weight-only低精度/量化及独立任务质量实验。",
+      "blocks": [],
+      "proposed_action": "精度、同卡stateful Graph A/B和profile均已完成。现在先决定：①保持vendor低内存默认；②用1.030GB派生布局换2.6%吞吐；③设计prompt/decode共用布局去掉重复权重。若继续追求大步收益，再决策weight-only低精度及真实生成/任务质量预算。明确不选：单独W1/W2 kernel、N=64小tile、减小block_dim、增加冗余工作，或已证伪的细粒度DMA双缓冲。W3融合不减少约85.8MB/layer的BF16 W12+W3权重字节，只是ceiling候选。",
+      "requires_kernel_change": true,
+      "kernel_change_note": "BF16 raw-gate recurrent+output-norm、qkv short-conv+cache、RMSNorm2+paired W1/W2+SiLU×Mul三个模型专用CCE单元均已通过整网/profile。后续大步优化需新建weight-only低精度GEMV及质量验证链。"
     }
   ],
   "summary": {
     "P0": 1,
-    "P1": 14,
+    "P1": 17,
     "P2": 9,
-    "total": 35,
+    "total": 38,
     "first_milestone": "第一期五项已全部有结论，并补齐了同机性能对比：aclnn 编译、runtime 桥、kda_fwd 接线、KDA 本地基线均实测通过；自编译算子在 block_dim=4 下比 torch_npu 组合快 4.43x（kimi_linear_layer）/ 2.38x（long_context T=4096）/ 19.7x（smoke）。过程中修掉两个自己的 bug（bridge-per-call-overhead、op-name-collision-in-process），它们先后让 block_dim 的效果被完全掩盖。当前最大的性能项是 block-dim-ceiling（已升 P1）：扩展性一路线性到契约上限 4，而硬件有 28 cube。第二期的前置障碍 kda-fwd-bwd-dtype-mismatch 已量化（降 P2）。",
     "second_milestone": "第二期已完成：kda_bwd 九 kernel 链 + 九个前向检查点 + autograd + KDA layer（含 2 modules），训练步在 bd=4 下比 torch_npu 组合版快 4.83x~5.67x。\n过程中发现并根治了第二期最关键的一个缺口：**按 fla 的默认初始化（chunk 内门控跨度 ~94），上游 kernel 在前向与反向各有一处量程失效，方向相反** —— 前向在 87.3 下溢、反向在 88.72 上溢。两处都在本仓建了派生单元（kda_fwd_stable / kda_bwd_stable），把成对衰减分解的锚点从区间端点改到中点，数学同义。\n门控闸因此做成二维 `{impl: {forward, backward}}`：前向 155（受有限性约束，到 155.97 精度完全不退化）、反向 100（受**精度**约束，它先于有限性到来 —— 梯度到 169.8 都有限但 dq 在 130 处超预算）。**「不吐 NaN」不等于「能用」，两者要分别测、闸按更严的定。**\n剩一项端到端确认（默认初始化下整层反向的精度）卡在机器可用性上 —— 算子层面的同一件事已由 test_kda_bwd_deep_npu.py 在跨度 94 测过，六项梯度全在契约预算内。\n当前最大的性能项仍是 block-dim-ceiling（P1）。",
     "recommended_first_target": "KDA（Kimi-Linear / fla-kda-default 形状）。其 ABI 已是 token-major BTHK、GQA 原生支持、initial_state 与 final_state 均为 FP32、backward 产出 dh0 —— 上述多数 ABI 缺口对它都不适用。唯一需要前置补齐的是本地验证证据（kda-no-local-evidence）。",
@@ -600,7 +655,7 @@
       ]
     },
     "resolved": 11,
-    "kernel_fix_policy": "**kernel 源码层面的问题统一修一轮，不零散改。** 这是 2026-09-11 定的：发现一条就去改一条，会在 ascriptor 侧留下一串互相干扰的小改动，而且每改一次都要重跑全部 case。做法：发现时把它记进本表并打 `requires_kernel_change`，本仓侧先按 AGENTS.md §7 **装闸报错或记为声明限制**，保证不静默出错；等攒够一批再统一进 ascriptor 侧（§3：本仓不改那个仓，要改走那一侧的流程或建本仓派生单元）。当前队列 21 项，见下表。",
+    "kernel_fix_policy": "**kernel 源码层面的问题统一修一轮，不零散改。** 这是 2026-09-11 定的：发现一条就去改一条，会在 ascriptor 侧留下一串互相干扰的小改动，而且每改一次都要重跑全部 case。做法：发现时把它记进本表并打 `requires_kernel_change`，本仓侧先按 AGENTS.md §7 **装闸报错或记为声明限制**，保证不静默出错；等攒够一批再统一进 ascriptor 侧（§3：本仓不改那个仓，要改走那一侧的流程或建本仓派生单元）。当前队列 24 项，见下表。",
     "kernel_fix_queue": [
       "c1-multihead-o-corrupt",
       "decode-call-overhead",
@@ -622,7 +677,10 @@
       "modules-are-torch-not-kernels",
       "qk-l2norm-not-in-kernel",
       "state-layout-k-first",
-      "gate-span-still-bounded"
+      "gate-span-still-bounded",
+      "gdn2-abi-not-gdn",
+      "gdn2-chunk-gate-range",
+      "gdn2-decode-fragmentation"
     ]
   }
 }

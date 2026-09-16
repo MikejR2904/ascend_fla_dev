@@ -1,6 +1,6 @@
 {
   "schema": "ascend_fla.op-support/1",
-  "recorded_at": "2026-09-11",
+  "recorded_at": "2026-09-15",
   "produced_by": "phase 0, read from ascriptor kernels contracts + catalog",
   "note": "算子资产与支持状态。ascriptor 侧的事实（ABI、定尺域、验证状态）以 contract.json 为所有者，这里只存决策所需的摘要并指向来源。our_status 是本仓的接线进度，由我们自己维护。",
   "ascriptor_pin": {
@@ -700,6 +700,250 @@
         "name": "fla.ops.kda.fused_recurrent_kda",
         "note": "语义基准。本仓 oracle 是 reference/kda.py 的 kda_recurrent_ref（纯 torch fp32 逐 token）。"
       }
+    },
+    {
+      "id": "a5.gdn2_fused_recurrent",
+      "op_family": "gdn2",
+      "direction": "forward",
+      "owner": "ascend_fla",
+      "ascriptor_path": "（无）本仓自写：kernels/projects/a5/gdn2_fused_recurrent",
+      "contract_sha256": "e3e3b39a0720d023264be6ea2705d02c74b14985e08973e3ca67947aabffd925",
+      "leaf_kernels": [],
+      "own_kernels": [
+        "gdn2_fused_recurrent_kernel"
+      ],
+      "declared_cases": 5,
+      "why": "GDN-2 的 channel-wise decay/erase/write 与现有 a5.gdn_* ABI 不同，不能改名强接；本单元以独立 ABI 先覆盖短 prompt 与 decode。q/k L2 norm 和 128^-0.5 scale 在 kernel 内完成，FP32 state 每头常驻 UB。",
+      "abi": {
+        "kernel_inputs": "q/k/v/g/erase_gate/w [B,T,H,128] fp32、initial_state [B,H,128,128] fp32；g/b/w 已由 layer 激活",
+        "kernel_outputs": "o [B,T,H,128] fp32、final_state [B,H,128,128] fp32",
+        "public_inputs": "token-major q/k/v/b/w 接受同 dtype BF16 或 FP32，g 与 state 为 FP32；wrapper 显式转 FP32 后进 aclnn，o 转回 v dtype，state 保持 FP32",
+        "binding": "现有进程内 ctypes→aclnn runtime 桥，NPU tensor data_ptr 零拷贝传入；没有 Torch fallback。pybind 不是本轮必要条件。"
+      },
+      "constraints": {
+        "B": 1,
+        "T": "1..16",
+        "H": [
+          1,
+          16
+        ],
+        "K": 128,
+        "V": 128,
+        "block_dim": [
+          8
+        ],
+        "training": "首版 inference-only；求导显式报错。长 prefill 与训练仍等 gdn2_chunk_fwd_bwd。",
+        "parallelism": "block_dim=8 给出 16 个向量参与者；真实 H=16 时每个参与者完整拥有一个 [128,128] state，核间无规约与同步。"
+      },
+      "comparison_budget": {
+        "kernel_fp32_relative_l2": 0.0001,
+        "public_bf16_output_relative_l2": 0.01,
+        "public_state_relative_l2": 0.0001,
+        "whole_model_fp32_relative_l2": 0.001,
+        "whole_model_bf16_relative_l2": 0.01,
+        "note": "NPU 与 CPU/torch_npu 的规约树不同，不要求逐位相同；bitwise 与 argmax 只作诊断。"
+      },
+      "validation": {
+        "reference": "passed",
+        "sim": "passed",
+        "pipesim": "passed",
+        "emit": "passed",
+        "compile": "passed",
+        "board_cce": "passed",
+        "note": "ascriptor check：0 error / 0 warning / 220 surface ops；CCE emit 266 lowered ops。reference 5/5、sim 3/3 scoped、pipesim 2/2 scoped；canonical Ascriptor unit runner 以 requested_backend=cce / launcher=aclnn / backend_executed=true 跑完真机 5/5。五个 contract case 的 o 最大 relative-L2=4.169e-6、final_state 最大 9.108e-8。"
+      },
+      "our_status": {
+        "wiring": "done",
+        "binding": "done",
+        "accuracy_vs_oracle": "done",
+        "perf_vs_baseline": "done",
+        "layer_wired": "done",
+        "evidence": "公开算子：BF16 B1/T6/H16 strong-decay 的 o relative-L2=0、state=6.167e-8；一次 T=4 与四次 T=1 串 state 的 o/state relative-L2=0。B1/T1/H16 完整 public call 88.165us，对 torch_npu 组合 148.400us，1.683x（warmup10/iters100/同步）。\n整网真实 95B：BF16 prompt/step logits relative-L2=3.260e-3/3.186e-3，最差 recurrent cache=9.154e-3，预算1e-2；FP32 logits=1.391e-5/2.065e-5，最差 recurrent cache=1.785e-4，预算1e-3。argmax 与 cache offset 一致。BF16 两种加载顺序下 decode 为 CCE 8.182~9.435ms、torch_npu 8.378~9.460ms（1.003x~1.024x，整网目前基本持平）；FP32 为 7.583 vs 8.338ms（1.099x）。真实 checkpoint 的 CCE greedy 生成 32 个可读 token，58.18 token/s；该值是单次 smoke。证据在 tmp/gdn2-recurrent/（git-ignored）。",
+        "note": "短 prompt 也走同一 recurrent kernel，当前只接受 T<=16；更长输入不自动拆分或回退。整网仍有 projection/conv/gate/norm 等 torch_npu 调用，因此单算子 1.683x 没直接变成整网同倍数。"
+      },
+      "fla_counterpart": {
+        "name": "GatedDeltaNet-2/lit_gpt/gdn2_ops/fused_recurrent_gdn2.py",
+        "note": "语义基准；本仓另有不依赖 DSL 的 ascend_fla/reference/gdn2.py FP32 recurrence oracle。"
+      }
+    },
+    {
+      "id": "a5.gdn2_fused_decode",
+      "op_family": "gdn2",
+      "direction": "forward",
+      "owner": "ascend_fla",
+      "ascriptor_path": "（无）本仓自写：kernels/projects/a5/gdn2_fused_decode",
+      "contract_sha256": "612dea6318f919baf11bf2bc45971e69ad7c4cb1e1862a15519de8baa234d168",
+      "leaf_kernels": [],
+      "own_kernels": [
+        "gdn2_fused_decode_kernel"
+      ],
+      "declared_cases": 3,
+      "why": "真实 BF16 decode 中，旧 FP32 recurrent ABI 两侧有 gate prep、108 次 core cast 与 72 次 output norm-gate cast/算子。这个模型专用单元直接吃 raw BF16 投影输出，在一个 CCE launch 内完成稳定 softplus/sigmoid、q/k L2 norm、FP32 recurrence/state、output RMSNorm+swish 与唯一一次 BF16 输出舍入；旧通用 recurrent ABI 保留为 oracle/非 T1 路径。",
+      "abi": {
+        "inputs": "q/k/v/f_raw/b_raw/w_raw/output_gate [1,1,16,128] BF16；channel-expanded decay_rate=-exp(A_log) 与 dt_bias [16,128] FP32；norm_weight [128] FP32；initial_state [1,16,128,128] FP32",
+        "outputs": "normalized/gated o [1,1,16,128] BF16 与 K-major final_state [1,16,128,128] FP32",
+        "binding": "进程内 ctypes→aclnn 零拷贝桥；包级 prepare() 在任何 aclnn 执行前同时编译通用 recurrent、fused decode 与 packed short-conv 三棵 vendor tree。"
+      },
+      "constraints": {
+        "B": 1,
+        "T": 1,
+        "H": 16,
+        "K": 128,
+        "V": 128,
+        "dtype": "raw activations/output BF16; parameters/reductions/state FP32",
+        "block_dim": [
+          8
+        ],
+        "configuration": "packed-inference、allow_neg_eigval=false、qk_norm_eps=1e-6、norm_eps=1e-5、scale=128^-0.5、swish output gate；其余 CCE 情形显式走既有 recurrent 路径，不回退 Torch。",
+        "parallelism": "block_dim=8 给出16个向量参与者，每个完整拥有一个 head 与64KiB state；没有核间规约或同步。每个head把128行state静态展开为两个64行UB槽，只在同一向量参与者内形成MTE2/Vector与Vector/MTE3的成对流水。"
+      },
+      "comparison_budget": {
+        "kernel_bf16_output_relative_l2": 0.001,
+        "kernel_fp32_state_relative_l2": 0.0001,
+        "whole_model_bf16_relative_l2": 0.01,
+        "note": "BF16 output 允许 CCE transcendental/reduction tree 后1个存储 ULP；NPU/CPU 不要求逐位相同。"
+      },
+      "validation": {
+        "reference": "passed",
+        "sim": "passed",
+        "pipesim": "passed",
+        "emit": "passed",
+        "compile": "passed",
+        "board_cce": "passed",
+        "note": "固定 Ascriptor 0.1.0：静态0 error/0 warning/404 surface ops，CCE emit 415 lowered ops；reference/sim/pipesim 3/3，pipesim 无 hazard/deadlock，静态双槽为9613 model cycles且多pipe交叠占11.44%。aclnn real_decode：o relative-L2=8.574e-11、state=3.044e-7。"
+      },
+      "our_status": {
+        "wiring": "done",
+        "binding": "done",
+        "accuracy_vs_oracle": "done",
+        "perf_vs_baseline": "improved-pipelined-single-pipe-open",
+        "layer_wired": "done",
+        "evidence": "真实95B BF16 packed：Cast 309→74次/token、565.925→147.355us，launch 1163→640。动态下标DB64因auto_sync保守别名把流水串行化，真机退化到4.804us；改成两个静态命名的64-row槽后，消除了read1→compute0与write0→compute1假依赖。两次独立profile各54个kernel样本，mean为4.259/4.236us，合并mean/median=4.247/4.256us；夹在两次候选之间的整state即时对照为4.733/4.716us，候选分别快1.114x/1.108x。候选AIV Vector/Scalar/MTE2/MTE3合并平均34.73/17.60/37.52/21.70%，四pipe合计111.55%，对照86.84%，证明真实重叠；全部kernel行均为物理卡7，两轮profile与整网监控中物理0活跃0次。另一次canonical aclnn fresh build在actual launcher前捕捉到物理0的python/0MB瞬时条目，时间对齐CANN opc编译；test_aclnnop只在7，0未留驻。严格单卡窗口后续不再fresh build。真实95B整网复验step logits=3.436e-3、最差recurrent cache=9.521e-3，过1e-2。",
+        "note": "成对流水与部署时延准出已通过，但单个主pipe平均约80%的独立目标仍未达到：erase必须汇总全部128行后才能形成delta，故MTE2/Vector与Vector/MTE3被全局join分成两段，无法形成三pipe长稳态。进一步满足单pipe门槛必须扩大到projection/conv等有用计算；不能靠减核或冗余工作刷比率。"
+      },
+      "fla_counterpart": {
+        "name": "GatedDeltaNet-2 recurrent + output RMSNorm/gate composition",
+        "note": "模型专用融合边界；独立 reference 保留 raw BF16 输入、FP32 state 与最终 BF16 舍入。"
+      }
+    },
+    {
+      "id": "a5.gdn2_short_conv_decode",
+      "op_family": "gdn2",
+      "direction": "forward",
+      "owner": "ascend_fla",
+      "ascriptor_path": "（无）本仓自写：kernels/projects/a5/gdn2_short_conv_decode",
+      "contract_sha256": "1895cd4cfe86381ab3a2f253392f82d124042ba7987c84dee636faf89197f0c3",
+      "leaf_kernels": [],
+      "own_kernels": [
+        "gdn2_short_conv_decode_kernel"
+      ],
+      "declared_cases": 3,
+      "why": "真实 B1T1 packed decode 的 q/k/v depthwise width-4 convolution、SiLU、cache 拼接与更新原先由 Conv2D、Swish、Cat、Slice 等多次 torch_npu launch 完成。该模型专用单元把 6144 个通道的四 tap FP32 累加、激活和 cache 更新合为一个 CCE launch。",
+      "abi": {
+        "public_inputs": "raw packed q/k/v x [1,1,6144]、cache [1,6144,4]、depthwise weight [6144,1,4]，均为连续 BF16",
+        "kernel_inputs": "用零拷贝连续 view 展平为 x [1,6144]、cache/weight [6144,4]",
+        "outputs": "activated y [1,1,6144] 与 new_cache [1,6144,4] BF16；kernel 内部写对应展平 view",
+        "binding": "进程内 ctypes→aclnn 零拷贝桥；没有 host transpose/cat/cast/copy。包级 prepare() 在首次 CANN 算子解析前注册该 vendor tree。"
+      },
+      "constraints": {
+        "B": 1,
+        "T": 1,
+        "D": 6144,
+        "W": 4,
+        "dtype": "BF16 inputs/cache/output；四 tap products、sum 与 SiLU 在 FP32；output 以 RNE 降回 BF16；cache bitwise 搬运",
+        "block_dim": [
+          8
+        ],
+        "configuration": "packed-inference、无 bias、silu/swish；必须有合法非空 cache 且 use_cache=true。prompt/T>1 保持现有 torch_npu 路径，不把不支持形状静默送入定尺 kernel。",
+        "parallelism": "block_dim=8 给出16个向量参与者，每个完整拥有384通道并处理3个128通道 tile。cache/weight 由NDDMA转为tap-major UB，四路cache通过两级interleave无转置写回；无核间规约与同步。"
+      },
+      "comparison_budget": {
+        "kernel_bf16_output_atol": 0.015625,
+        "kernel_bf16_output_relative_l2": 0.001,
+        "cache": "bitwise",
+        "note": "FP32 FMA顺序与native exp可与CPU不同，不要求NPU/CPU逐位相同；cache没有算术，必须逐bit一致。"
+      },
+      "validation": {
+        "reference": "passed",
+        "sim": "passed",
+        "pipesim": "passed",
+        "emit": "passed",
+        "compile": "passed",
+        "board_cce": "passed",
+        "note": "固定 Ascriptor 0.1.0：静态0 error/0 warning/203 surface ops，CCE emit 231 lowered ops；reference/sim/pipesim 3/3，y与cache均exact，pipesim无event imbalance/hazard/deadlock且为2215 model cycles。canonical aclnn三个case的y/cache也均exact。"
+      },
+      "our_status": {
+        "wiring": "done",
+        "binding": "done",
+        "accuracy_vs_oracle": "done",
+        "perf_vs_baseline": "passed",
+        "layer_wired": "done",
+        "evidence": "公开wrapper与packed CCE T1 cache路径已接入，定向主机测试37 passed。canonical aclnn 3/3、public runtime双顺序和真实95B双backend顺序均通过。真实模型step logits relative-L2=4.044e-3，最差recurrent/conv cache=9.313e-3/7.270e-3（预算1e-2），argmax/offset一致。54个profile样本中kernel mean/median=3.374/3.363us，MTE2/Vector/MTE3/Scalar=57.59/8.84/9.18/22.13%；它把每token的18 Conv2D+18 Cat+18 Slice+18 Swish替成18个custom call。clean同卡反序Graph A/B中CCE三轮3107.60~3110.82us/token（321.46~321.79 token/s），Torch short-conv对照3693.29us/270.76 token/s；均值延迟-15.82%、吞吐+18.80%。",
+        "note": "公开eager wrapper因aclnn/分配固定成本仍慢于torch_npu组合：40.99~42.00us vs31.79~31.82us；价值来自整网/graph内减少设备算子。当前bulk schedule四pipe和97.74%，基本串行；三路128与256+128静态buffer虽数值/hazard通过，但pipesim 2215→3745/2819 cycles，因额外DMA setup倒退，已拒绝。达到单pipe约80%需扩大到packed projection。竞争窗口的3.124ms已隔离且不得引用；clean A/B已完成。"
+      },
+      "fla_counterpart": {
+        "name": "GatedDeltaNet-2 packed q/k/v ShortConvolution decode composition",
+        "note": "模型专用T1融合；独立reference按channel构造[old1,old2,old3,x]窗口、四tap FP32累加、SiLU与BF16舍入。"
+      }
+    },
+    {
+      "id": "a5.gdn2_norm2_w12_swiglu",
+      "op_family": "gdn2",
+      "direction": "forward",
+      "owner": "ascend_fla",
+      "ascriptor_path": "（无）本仓自写：kernels/projects/a5/gdn2_norm2_w12_swiglu",
+      "contract_sha256": "49109b57e0d458e2c335bd580a55d73c41fae17c6bd3210f9a6e448f9d329794",
+      "leaf_kernels": [],
+      "own_kernels": [
+        "gdn2_norm2_w12_swiglu_kernel"
+      ],
+      "declared_cases": 2,
+      "why": "候选前profile中MatMul/GEMV占85.95%，packed W1/W2的MTE2平均94.7%；单写W1/W2 kernel不会减少权重字节。本单元只做完整的BF16 ceiling边界：把norm2、paired W1/W2和SiLU×Mul并入同一条已饱和权重流；候选后权重流占比升至90.175%。",
+      "abi": {
+        "inputs": "raw x [1,2304] BF16、gamma [2304] BF16、paired_weight [97,128,2304] BF16；每item是对应64行原始W1后接64行W2",
+        "output": "hidden [1,6208] BF16，直接作为现有W3输入",
+        "binding": "进程内ctypes→aclnn零拷贝；显式mlp_backend='cce'才接入，默认仍为vendor组合。"
+      },
+      "constraints": {
+        "B": 1,
+        "T": 1,
+        "hidden_size": 2304,
+        "intermediate_size": 6208,
+        "block_dim": [
+          28
+        ],
+        "dtype": "BF16 input/gamma/weight/output；RMS reduction/affine、cube accumulator、SiLU与multiply内部算术为FP32，但每个原组合边界均RNE物化BF16",
+        "rounding": "显式保留RMSNorm affine输出、GEMV输出、SiLU输出与最终multiply输出四个BF16物化边界；CCE规约树/native exp仍不承诺逐位相同，按整网BF16 relative-L2 1e-2验收。",
+        "prompt": "kernel只收B=T=1 decode；T>1 prompt保留原生RMSNorm+packed W12路径，不静默送入定尺kernel。",
+        "memory": "首个A/B版本为保留原prompt控制，18层保存non-persistent派生权重1,029,832,704 bytes；不进入checkpoint ABI。"
+      },
+      "comparison_budget": {
+        "kernel_vs_fused_oracle_relative_l2": 0.001,
+        "whole_model_bf16_relative_l2": 0.01,
+        "note": "NPU与CPU规约差异以及gamma-fold舍入变化均不要求bitwise。"
+      },
+      "validation": {
+        "reference": "passed",
+        "sim": "passed",
+        "pipesim": "passed",
+        "emit": "passed",
+        "compile": "untested",
+        "board_cce": "untested",
+        "note": "保守v2固定Ascriptor 0.1.0：reference 2/2；random functional sim/pipesim通过，relative-L2=3.416e-7、max_abs=1.526e-5，event balance为空且无hazard/deadlock，672723 cycles。相同源码生成的runtime binary已在真实95B整网、Graph与Level-1 profile中执行通过；这里的compile/board仍特指尚未补跑的canonical unit stage，因此保留untested。"
+      },
+      "our_status": {
+        "wiring": "done-explicit-opt-in",
+        "binding": "done",
+        "accuracy_vs_oracle": "done",
+        "perf_vs_baseline": "passed",
+        "layer_wired": "done-explicit-opt-in",
+        "evidence": "raw compact CCE GEMV两顺序均值39.272us/layer，vendor39.216us，ratio=1.0014且逐位相同。gamma-fold v1完整边界曾为40.477 vs43.601us/layer，但真实95B第2~4步recurrent cache越过1e-2、最坏1.523e-2，已拒绝。保守v2取消fold并恢复三个中间BF16舍入，真实95B prompt+4步的logits/recurrent/conv cache relative-L2均为0。同卡CCE→vendor→CCE Graph为2587.192/2656.712/2589.831us/token，CCE均值2588.511us、386.323 token/s，延迟-2.567%、吞吐+2.635%。Level-1为2576.490us/token、219 rows；kernel 54样本mean/median42.339/42.168us，AIC MTE2平均91.880%。",
+        "note": "N=64虽在pipesim把综合MTE2利用率86.42%提高到98.81%，真机却慢于N=128；compact FIX publication才让raw GEMV追平vendor。保守v2满足至少一条有用pipe接近饱和，但以1,029,832,704 bytes派生权重换2.6% Graph吞吐，故默认暂不切换。"
+      },
+      "fla_counterpart": {
+        "name": "GatedDeltaNet-2 block norm_2 + LLaMA SwiGLU w1/w2 composition",
+        "note": "模型专用B=T=1融合边界；W3与prompt路径不在kernel内。"
+      }
     }
   ],
   "missing_ops": [
@@ -721,6 +965,14 @@
       "ascriptor_asset": "none",
       "fla_counterpart": "fla.ops.gated_delta_rule.fused_recurrent_gated_delta_rule",
       "note": "同上。随 GDN 扩族（第四期）再补。"
+    },
+    {
+      "id": "gdn2_chunk_fwd_bwd",
+      "op_family": "gdn2",
+      "purpose": "GDN-2 训练与长 prefill；channel-wise erase/write/decay",
+      "ascriptor_asset": "none — 现有 a5.gdn_fwd/bwd 的 beta/g 是 per-token 标量，ABI 不兼容",
+      "fla_counterpart": "GatedDeltaNet-2/lit_gpt/gdn2_ops/chunk_gdn2.py",
+      "note": "形状 K=V=128、H=HV=16 可复用定尺与分块经验，但输入必须新增长度 K 的 b/g 和长度 V 的 w；见 gdn2-abi-not-gdn。数值算法不能照搬 KDA：真实权重的有效 T=4096 stress case 已观测 64-token 累计衰减跨度 1461，见 gdn2-chunk-gate-range。"
     }
   ],
   "reusable_primitives": [
@@ -757,44 +1009,49 @@
         "fla_source": "fla.modules.convolution (ShortConvolution)",
         "needed_by": [
           "KDA",
-          "GatedDeltaNet"
+          "GatedDeltaNet",
+          "GDN-2"
         ],
         "ascriptor_asset": "none — 需新写",
         "our_status": "done-torch",
-        "our_evidence": "2026-09-11 第二期：ascend_fla/modules/convolution.py ShortConvolution；tests/test_modules.py 纯 CPU 11 项通过（含因果性、归一化与门控的先后顺序、cache 分段与整段一致性等判别性检查）。"
+        "our_evidence": "2026-09-11 第二期：ascend_fla/modules/convolution.py ShortConvolution。2026-09-14 GDN-2 架构优化新增 PackedShortConvolution：q/k/v 三路 depthwise conv 与 cache 沿 channel 合并；CPU 覆盖无 cache、短序列补零、分段 cache 与规格拒绝，tests/test_modules.py 共 13 项。真实 95B 权重 T=6/T=64 的 packed conv state 与 canonical 三份 state 拼接后 relative-L2=0；本次也逐位相同，但只作诊断。"
       },
       {
         "id": "fused_rms_norm_gated",
         "fla_source": "fla.modules.fused_norm_gate (FusedRMSNormGated)",
         "needed_by": [
           "KDA",
-          "GatedDeltaNet"
+          "GatedDeltaNet",
+          "GDN-2"
         ],
         "ascriptor_asset": "partial — matrix_normalization 可借",
         "variant_note": "KDA 用 activation=\"sigmoid\"，GatedDeltaNet 用默认值 —— 两者不是同一配置。",
         "our_status": "done-torch",
-        "our_evidence": "2026-09-11 第二期：ascend_fla/modules/fused_norm_gated.py FusedRMSNormGated；tests/test_modules.py 纯 CPU 11 项通过（含因果性、归一化与门控的先后顺序、cache 分段与整段一致性等判别性检查）。"
+        "our_evidence": "2026-09-11 第二期：ascend_fla/modules/fused_norm_gated.py FusedRMSNormGated；tests/test_modules.py 纯 CPU 11 项通过。2026-09-15：GDN-2 真实 B1T1H16 BF16 packed 的 swish output-norm/gate 已并入 a5.gdn2_fused_decode，通用模块与 KDA sigmoid 变体仍是 torch；不能把模型专用融合外推为整项 CCE 完成。"
       },
       {
         "id": "rms_norm",
         "fla_source": "fla.modules.layernorm (RMSNorm)",
         "needed_by": [
-          "GatedDeltaNet"
+          "GatedDeltaNet",
+          "GDN-2"
         ],
         "ascriptor_asset": "partial — matrix_normalization 可借",
         "note": "KDA 不需要 —— 它只用 FusedRMSNormGated 作 o_norm。",
-        "our_status": "not-started"
+        "our_status": "done-torch",
+        "our_evidence": "2026-09-14：ascend_fla/models/gdn2.py 的 RMSNorm 在 fp32 归一化、回写输入 dtype；GDN-2 CPU 测试与 NPU 冒烟均经过它。2026-09-15 packed inference 将已按请求dtype量化的55个不变norm参数一次性扩到FP32，消掉每token weight Cast，但37个block/final RMSNorm本体仍是torch_npu。"
       },
       {
         "id": "l2norm",
         "fla_source": "fla.modules.l2norm",
         "needed_by": [
           "GatedDeltaNet(use_qk_l2norm_in_kernel)",
+          "GDN-2(use_qk_l2norm_in_kernel)",
           "KDA（kernel 不做，layer 必须做 —— 见 qk-l2norm-not-in-kernel）"
         ],
         "ascriptor_asset": "matrix_normalization.row_l2",
         "our_status": "done-torch",
-        "our_evidence": "2026-09-11：layers/kda.py 里用 F.normalize 在 fp32 下做，未单列模块。"
+        "our_evidence": "2026-09-11：layers/kda.py 里用 F.normalize 在 fp32 下做。2026-09-14：models/gdn2.py 按训练 recurrent kernel 的 sum(x²)+1e-6 语义在 fp32 做，并保留随后 q/sqrt(K) 缩放。"
       }
     ],
     "layers": [
@@ -837,6 +1094,27 @@
           "other": "7 个 nn.Linear + A_log / dt_bias 参数"
         },
         "our_status": "not-started"
+      },
+      {
+        "id": "gdn2",
+        "fla_source": "GatedDeltaNet-2/lit_gpt/gdn2.py",
+        "deps": {
+          "modules": [
+            "causal_conv1d",
+            "rms_norm",
+            "fused_rms_norm_gated(swish)",
+            "l2norm"
+          ],
+          "ops": [
+            "gdn2_chunk_fwd_bwd(缺)",
+            "a5.gdn2_fused_recurrent(done, inference)"
+          ],
+          "oracle": "ascend_fla.models.gdn2.GatedDeltaNet2._scan（torch fp32 state）",
+          "other": "canonical 是 GDN-2 mixer 10 个 Linear/层；packed-inference 把 q/k/v/b/w 五路合成一个 direct projection，B=T=1 时把 f/output-gate 的低秩首层合成一个，q/k/v short-conv 与 cache 也合成一路。MLP 3 个 Linear/层与 embedding/lm_head 不变；A_log[H]、dt_bias[H*K] 不打包。"
+        },
+        "gate_formula": "g=-exp(A_log)*softplus(f_proj(x)+dt_bias); b=sigmoid(b_proj(x)); w=sigmoid(w_proj(x))",
+        "our_status": "done-cce-inference",
+        "our_evidence": "2026-09-14：先完成 layers/reference/checkpoint/packed-inference 架构，再新增本仓 Ascriptor CCE `a5.gdn2_fused_recurrent` 并通过显式 core_backend 接入；未知 backend、CCE 求导、T>16 与 packed 求导均报错，不静默 fallback。canonical 保持发布 checkpoint 的399 keys；packed-inference加入SwiGLU W1/W2 host packing后为255个内部entry，参数数仍为1,450,096,416。算子五个aclnn contract case全过，真实95B的BF16/FP32整网torch_npu↔CCE logits与两类cache均在relative-L2预算内，cache offset/argmax一致。随后fused decode、short-conv、stateful Graph、原生RMSNorm与W1/W2 packing把纯模型decode推进到375.37~376.86 token/s，并保留相同64-token greedy序列。训练和长prefill仍缺gdn2_chunk_fwd_bwd。"
       }
     ],
     "models": [
@@ -855,9 +1133,19 @@
           "gdn-no-gqa"
         ],
         "our_status": "not-started"
+      },
+      {
+        "id": "gdn2-1.3b-fineweb-edu-100b",
+        "strategy": "独立 LitGPT-compatible canonical 基线 + inference-only packed 布局；core backend 显式分派，后续只替换 GDN-2 算子边界",
+        "layer": "gdn2",
+        "blocked_by": [
+          "gdn2_chunk_fwd_bwd"
+        ],
+        "our_status": "done-cce-inference",
+        "our_evidence": "2026-09-14 实权重完成：95B checkpoint 17,401,727,659 bytes / sha256 4ac729c6…f6d；canonical 399 项 strict load，packed-inference 参数数不变。通用 CCE recurrent 的 BF16/FP32 数值与文本均通过。2026-09-15 追加 a5.gdn2_fused_decode：真实 BF16 T1 把 raw gates、recurrence 与 output norm 合成一launch，Cast309→74、设备约5108.8→4020us/token；反序paired speedup 1.410x~1.650x。静态双槽进一步把kernel即时对照4.733/4.716us降到合并4.247/4.256us，四AIV pipe利用率和86.84%→111.55%，证明成对流水已生效。step logits=3.436e-3、最差recurrent cache=9.521e-3（预算1e-2），32-token续写token ids不变。单pipe约80%的目标仍受erase→delta全局join限制（最忙MTE2平均37.52%）；训练与长prefill仍被gdn2_chunk_fwd_bwd阻塞。证据：tmp/gdn2-recurrent/ 与 tmp/gdn2-cast-fusion/（git-ignored）。"
       }
     ],
-    "status_note": "``done-torch`` 表示功能完成但实现是 torch 原生算子拼的，不是本仓自编译的 kernel —— 见 gaps.json 的 modules-are-torch-not-kernels。``done`` 只给自编译算子。"
+    "status_note": "``done-torch`` 表示功能完成但核心实现是 torch 原生算子拼的；``done-cce-inference`` 表示自编译 CCE 核心已接入推理、但训练/长 prefill 仍有显式缺口；``done`` 给范围内前后向均完整的自编译算子。"
   },
   "our_runtime_bridge": {
     "status": "working",
@@ -1104,6 +1392,197 @@
         "total": 5.069
       },
       "reading": "① 训练步的加速比（bd=4 下 4.83x~5.67x）**高于**仅前向的（4.4x）——torch_npu 侧的反向要穿过它那张 python 循环图，被 launch 开销支配得更厉害。② host 侧补检查点 1.065ms，占训练步 21%（bd=1 时只占 7%）。它是 torch 算子，**不随核数缩短**，所以 block_dim 越高占比越大 —— 抬高 block-dim-ceiling 之后这一项才真正凸显（见 fwd-caches-not-emitted）。③ 九个反向 kernel 2.690ms 占 53%，是训练步里最大的一块。④ 门控跨度检查 0.212ms —— 占训练步 4%、占仅前向 16%，可用 check_gate_range=False 关掉，但关掉后越界就是 NaN 而不是报错。"
+    },
+    "gdn2_packed_inference": {
+      "recorded_at": "2026-09-14",
+      "environment": "Ascend950PR / CANN 9.1.0 / torch 2.10.0+cpu / torch_npu 2.10.0.post4",
+      "conditions": "真实 95B checkpoint，B=1/H=HV=16/K=V=128，BF16；prompt T=6，decode T=1；warmup=100、iters=200、每轮末同步；host 打包后 H2D，canonical/packed 顺序加载并用相反顺序复测。绝对延迟对加载顺序敏感，因此报区间并取较小加速比作保守值",
+      "runs": [
+        {
+          "order": "canonical-first",
+          "canonical_ms": 11.625,
+          "packed_ms": 9.822,
+          "speedup": 1.184
+        },
+        {
+          "order": "packed-first",
+          "canonical_ms": 10.184,
+          "packed_ms": 9.212,
+          "speedup": 1.106
+        }
+      ],
+      "equivalence": "正式闸为同 dtype relative-L2 + cache offset：FP32 T=6 预算 1e-5，BF16 T=6 与确定性 T=64 预算 1e-2；prompt/下一 token logits、18 层 recurrent state、canonical 三份 conv cache 拼接 vs packed cache 均 passed。bitwise 与 argmax 仅作诊断。参数数均为 1,450,096,416；canonical state_dict 399 项，packed 在加入SwiGLU W1/W2 packing后为255项（此前只打包mixer时273项）。最新原生RMSNorm+W1/W2版本的真实BF16 canonical↔packed为prompt/step logits relative-L2=1.252e-3/3.937e-3，最差step recurrent/conv cache=7.239e-3/4.282e-3，仍过1e-2。另有 tiny FP32 CPU↔torch_npu数值测试，最大relative-L2=5.740e-4（预算1e-3）。",
+      "generation_smoke": "最终 host-packed loader 以同 prompt 与 greedy 配置生成预期的 32 token；单次 0.502s（63.7 tok/s）。这里含首次执行影响，只作端到端 smoke，不作为稳态加速比。",
+      "packing": "q/k/v/b/w 五个无 bias 投影按输出行合成一次 F.linear；q/k/v depthwise short-conv 与 cache 沿 channel 合并。f/output-gate 低秩首层仅在 B=T=1 时合并：T>1 改用同一packed weight的两个连续row slice。SwiGLU W1/W2同样在host按行打包且不保留重复参数：T=1用一个[2304→12416] GEMV，prompt/T>1用两个连续row slice保持原尺寸路径。block/final RMSNorm weight保留模型dtype供原生NPU fused op；fused-decode的o_norm weight继续一次扩宽为FP32。所有打包在host完成后再H2D。",
+      "memory": "同参数数证明没有常驻 canonical+packed 双份权重；host packing 后实测 forward allocated 为 canonical 2,980,944,896 bytes、packed 3,007,683,584 bytes，reserved 为 3,221,225,472 / 3,141,533,696 bytes，消除了目标设备逐层 cat 的临时 reserve。",
+      "evidence": "benchmarks/verify_gdn2_packed.py、benchmarks/verify_gdn2_cpu_npu.py；tmp/gdn2-95b/cpu-npu-fp32-final.json、verify-packed-host-pack-{bf16,fp32,t64-bf16}.json、verify-packed-steady-{canonical,packed}-first.json、packed-cache-chain.json、text-greedy-packed-host-pack-final.json 及原始日志（git-ignored）"
+    },
+    "gdn2_cce_recurrent": {
+      "recorded_at": "2026-09-15",
+      "environment": "Ascend950PR / CANN 9.1.0 / torch 2.10.0+cpu / torch_npu 2.10.0.post4 / Ascriptor 0.1.0 CCE",
+      "conditions": "真实 95B checkpoint，packed-inference，B1/H16/K=V=128，prompt T=6、decode T=1；block_dim=8；warmup=10、iters=100、末尾同步。torch_npu 与 CCE 两种加载顺序各跑一次；精度按同 dtype relative-L2，bitwise/argmax 只作诊断。",
+      "operator": {
+        "shape": "B1/T1/H16/K128/V128, BF16 public inputs and FP32 state",
+        "cce_public_call_us": 88.165,
+        "torch_npu_composition_us": 148.4,
+        "speedup": 1.683,
+        "note": "CCE 数包含 public wrapper 的 BF16→FP32 cast、aclnn 调用、输出 FP32→BF16 cast；两者同进程同输入。"
+      },
+      "whole_model_bf16": {
+        "cce_decode_ms": "8.182~9.435",
+        "torch_npu_decode_ms": "8.378~9.460",
+        "speedup": "1.003x~1.024x",
+        "prompt_logits_relative_l2": 0.003259847639128566,
+        "step_logits_relative_l2": 0.00318554462864995,
+        "max_recurrent_cache_relative_l2": 0.009153869934380054,
+        "budget": 0.01,
+        "note": "两种加载顺序的精度数字逐项相同。单算子有收益，但整网其余 projection/conv/gate/norm 与发射仍占主导，因此这里只能说基本持平。"
+      },
+      "whole_model_fp32": {
+        "cce_decode_ms": 7.583,
+        "torch_npu_decode_ms": 8.338,
+        "speedup": 1.099,
+        "prompt_logits_relative_l2": 1.3907367247156799e-05,
+        "step_logits_relative_l2": 2.064762702502776e-05,
+        "max_recurrent_cache_relative_l2": 0.00017849750292953104,
+        "budget": 0.001
+      },
+      "state_chaining": "公开算子一次 T=4 与四次 T=1 的 o/final_state relative-L2=0；整网 T=2 一次前向与两次 T=1 cache 链 relative-L2=0。",
+      "layout_equivalence": "CCE core 下 canonical 与 packed-inference 的 prompt/step logits、recurrent/conv cache relative-L2 均为 0（bitwise 也相同但不作契约）；warmup10/iters100 的 decode 为 10.920ms vs 9.843ms，packed 1.109x。",
+      "paired_recheck": {
+        "conditions": "同一设备、warmup100/iters200/同步，两种 backend 加载顺序各一个独立进程。",
+        "torch_first": "torch_npu 9.721ms / CCE 9.523ms，torch/CCE=1.021x",
+        "cce_first": "torch_npu 9.318ms / CCE 9.562ms，torch/CCE=0.975x",
+        "conclusion": "两次比值跨过 1，当前 BF16 整网只能判持平；不能采用单次 profiler 前测到的 1.246x 作为稳定加速结论。"
+      },
+      "decode_profile": {
+        "conditions": "torch_npu profiler Level1 + PipeUtilization，真实 95B、BF16 packed-inference、B1/T1/H16/K=V=128；每 backend 独立进程，1 warmup + 3 active steps。临时 record_function 标记精确生产 forward，不进入正常热路径。",
+        "device_totals": "torch_npu 6043.4us/token（1523 kernels）→ CCE 5108.8us/token（1163 kernels）：少 934.6us / 15.5%，少 360 次发射 / 23.6%。几乎全部来自 core：1189.3us → 282.2us。",
+        "cce_phase_us": {
+          "mlp": 1346.7,
+          "packed_short_conv_and_cache": 861.1,
+          "packed_projections": 827.9,
+          "block_rmsnorm_x2": 615.1,
+          "output_rmsnorm_gate": 442.1,
+          "gate_prep": 376.9,
+          "recurrent_core_including_public_casts": 282.2,
+          "output_projection": 173.3,
+          "lm_head": 94.4,
+          "residual_adds": 68.2
+        },
+        "cce_kernel_types": "MatMul 2361.0us/145 calls（46.2%）；Cast 565.9us/309 calls（11.1%）；Conv2D 352.0us/18；Mul 346.1us/164；Concat 244.3us/36；Slice 224.3us/36。自编译 recurrent kernel 本体仅 96.0us/18 calls（5.336us/层，1.88%）。",
+        "cast_ledger": "309次完整归账：CCE recurrent边界108次/186.2us（5个BF16输入升FP32+1个FP32输出降BF16，每层）；37个model RMSNorm 111次/217.0us；18个output norm-gate 72次/128.5us；gate prep 18次/34.2us。CCE与torch总数完全相同，不是CCE额外增加。packed CCE inference里至少91次严格冗余：55个不变norm weight反复转FP32，以及18层recurrent output的FP32→BF16→FP32共36次往返。剩余转换承载FP32规约/state语义，但可由融合kernel内部load/store cast取代，不需要独立device op；与bitwise对齐无关。",
+        "correlation_note": "直接 ctypes→aclnn 的 custom kernel 不挂在 Torch record_function 关系树下；所以 CCE core=标记范围里的 casts 186.2us + kernel CSV 的 custom 96.0us。kernel CSV 总时长才是整步设备分母。",
+        "interpretation": "设备侧 core 已显著变快，但只占 CCE 整网 5.52%；上千次周边 kernel、FP32 ABI casts 与进程内 aclnn host 固定成本吞掉收益。MatMul 的代表性 GEMV 显示 MTE2 ratio≈94%、MAC ratio≈11%，decode 权重读取主导。"
+      },
+      "generation_smoke": "真实 checkpoint + 本地 tokenizer，greedy 32 token 得到可读英文续写；0.550s / 58.18 token/s，只作端到端 smoke。",
+      "evidence": "benchmarks/verify_gdn2_recurrent.py、benchmarks/verify_gdn2_backends.py、benchmarks/profile_gdn2_backend.py、benchmarks/generate_gdn2_text.py；tmp/gdn2-recurrent/ 与 tmp/gdn2-profiler/{cce,torch,paired}/ 的 JSON、kernel/operator CSV 和原始日志（git-ignored）"
+    },
+    "gdn2_cce_fused_decode": {
+      "recorded_at": "2026-09-15",
+      "environment": "Ascend950PR / CANN 9.1.0 / torch 2.10.0+cpu / torch_npu 2.10.0.post4 / Ascriptor 0.1.0 CCE",
+      "conditions": "真实95B checkpoint，BF16 packed-inference，B1/T1/H16/K=V=128，block_dim=8；profile 1 warmup+3 active；paired wall warmup100/iters200，两种加载顺序独立进程。数值按relative-L2，不要求bitwise。",
+      "cast_reduction": {
+        "before_calls_per_token": 309,
+        "after_invariant_norm_promotion": 254,
+        "after_fused_decode": 74,
+        "before_us_per_token": 565.925,
+        "after_us_per_token": 147.355,
+        "remaining": "37个block/final RMSNorm各一次BF16→FP32与FP32→BF16；fused decode边界已无独立Cast。"
+      },
+      "device_profile": {
+        "before_us_per_token": 5108.848,
+        "after_us_per_token": 4018.685,
+        "before_launches_per_token": 1163,
+        "after_launches_per_token": 640,
+        "kernel_mean_us_per_layer": 4.247,
+        "kernel_median_us_per_layer": 4.256,
+        "kernel_profile_samples": 108,
+        "matched_whole_state_mean_us_per_layer": 4.733,
+        "matched_whole_state_median_us_per_layer": 4.716,
+        "aiv_mean_percent": {
+          "vector": 34.73,
+          "scalar": 17.6,
+          "mte2": 37.52,
+          "mte3": 21.7
+        },
+        "main_pipe_sample_max_percent": 43.6,
+        "four_pipe_mean_sum_percent": 111.55,
+        "matched_control_four_pipe_mean_sum_percent": 86.84,
+        "pipeline_exit": "pairwise overlap and deployed latency passed; the separate one-main-pipe-about-80% target remains open because erase->delta is an all-row join."
+      },
+      "paired_wall": [
+        {
+          "order": "torch-first",
+          "torch_ms": 8.087,
+          "cce_ms": 4.9,
+          "speedup": 1.65
+        },
+        {
+          "order": "cce-first",
+          "torch_ms": 8.726,
+          "cce_ms": 6.188,
+          "speedup": 1.41
+        }
+      ],
+      "accuracy": "prompt/step logits relative-L2=3.260e-3/3.436e-3；最差step recurrent cache=9.521e-3，预算1e-2；文本生成token ids与旧CCE路径相同。",
+      "rejected_schedule": "动态下标16/32/64-row DBuff的pipesim cycles=14801/11917/10463，均差于整state的9444；64-row真机又退化到4.804us，四pipe和98.17%，证明近乎串行。",
+      "accepted_schedule": "两个静态命名64-row槽让alias/event距离显式化；pipesim=9613 cycles、同核多pipe重叠3.68%→11.44%。两次真机候选mean=4.259/4.236us，夹心整state对照mean=4.733us；合并四pipe和111.55%，且数值、hazard/deadlock与整网闸均通过。",
+      "evidence": "kernels/projects/a5/gdn2_fused_decode/contract.json；tmp/gdn2-cast-fusion/{norm-profile-1,fused-profile-v1,tile64-profile-v1,static2-v4-profile-v1,static2-control-profile-v1,static2-v4-profile-v2,static2-v4-fullmodel-v1,paired-v1,text-v1}/（git-ignored）"
+    },
+    "gdn2_short_conv_decode": {
+      "recorded_at": "2026-09-15",
+      "environment": "Ascend950PR / CANN 9.1.0 / torch 2.10.0+cpu / torch_npu 2.10.0.post4 / Ascriptor 0.1.0 CCE",
+      "low_risk_reuse": {
+        "change": "T=1 cached decode复用同一[cache后3项,新token]连续window作为卷积输入和new_cache，逐层删掉一次Cat+Slice；T>1不变。",
+        "profile": "device launches 640→604/token；Cat 36→18、Slice 36→18；short-conv+cache 约855.95→642.39us/token；device kernel total 4018.69→3800.17us/token，省约218.52us（5.44%）。",
+        "stateful_graph": "旧3轮3908.18~3911.91us/token（255.63~255.87 token/s），新2轮3693.01~3698.00us（270.42~270.78 token/s）；保守省210.17us，吞吐至少+5.68%。logits/recurrent/conv cache relative-L2均为0。",
+        "generation": "真实95B 64-token greedy的graph decode loop为256.47 calls/s，eager为147.36，1.740x；整请求101.71 vs86.45 generated token/s，1.176x。token ids逐项相同。",
+        "evidence": "ascend_fla/modules/convolution.py；tmp/gdn2-shortconv-reuse/{profile-v1,graph-v1,graph-v2,generation}/（git-ignored）"
+      },
+      "cce_kernel": {
+        "shape": "B1/T1/D6144/W4 packed BF16, block_dim=8",
+        "algorithm": "16个向量参与者各拥有384通道；NDDMA把cache/weight转为4个tap-major UB行，3个128通道tile做FP32四tap累加+SiLU，cache用b16→b32两级interleave按channel-major写回。",
+        "static_and_sim": "0 error/0 warning/203 surface ops；CCE emit 231 lowered ops；reference/sim/pipesim 3/3，y与cache均exact，无event imbalance/hazard/deadlock，pipesim=2215 cycles。",
+        "board": "canonical aclnn 3/3通过，y/cache均exact。首次random-only窗口被外部作业中途占用，只保留correctness；随后全case验收的实际launcher均落在所选空闲卡。",
+        "public_runtime": "双顺序warmup100/iters500：CCE y/cache对CPU oracle exact；torch_npu y对CPU为max_abs=0.015625、relative-L2=3.304e-3，cache exact。eager CCE为40.987/42.002us，torch_npu为31.793/31.820us，说明小边界的aclnn host/分配固定成本仍占主导。",
+        "whole_model": "真实95B BF16 packed双顺序均过1e-2闸：prompt/step logits=3.260e-3/4.044e-3，最差prompt/step recurrent cache=9.111e-3/9.313e-3、conv cache=7.132e-3/7.270e-3，argmax与offset一致。CCE decode=6.481/6.885ms，torch_npu backend=9.480/10.011ms；这是backend对照，不是short-conv单项before/after。",
+        "profile": "54个silicon样本：kernel mean/median/min/max=3.374/3.363/3.072/4.078us；MTE2/Vector/MTE3/Scalar=57.59/8.84/9.18/22.13%，四项和97.74%。每token的18 Conv2D+18 Cat+18 Slice+18 short-conv Swish消失，换成18个custom call；设备profile为launch604→550、device kernel total3800.169→3197.959us。clean同卡反序stateful Graph A/B：CCE三轮3107.60~3110.82us/token（321.46~321.79 token/s），Torch short-conv对照3693.29us/270.76 token/s；均值少584.34us/token（-15.82%），吞吐+18.80%。",
+        "scheduling_negative": "三路静态128槽与256+128静态槽均数值/hazard通过，但pipesim从bulk 2215退化到3745/2819 cycles；仅3个vector tile时，额外NDDMA/MTE3 setup大于可隐藏工作，故未上板并已回退。满足单pipe约80%需扩大到packed projection，而非减核或增加冗余工作。",
+        "integration": "公开ctypes→aclnn零拷贝wrapper与packed CCE T1 cache分派已接入；定向主机测试37 passed，kernel/公开runtime/真实95B/profile与clean stateful Graph反序A/B均完成。三轮Graph correctness的logits/recurrent/conv cache对eager relative-L2均为0；真实64-token greedy decode loop为299.93 calls/s，整请求110.10 generated token/s。",
+        "evidence": "kernels/projects/a5/gdn2_short_conv_decode/contract.json；tmp/gdn2-shortconv-kernel/{profile-v1,current-performance}/（git-ignored）"
+      }
+    },
+    "gdn2_native_rmsnorm_w12": {
+      "recorded_at": "2026-09-15",
+      "environment": "Ascend950PR / torch 2.10.0+cpu / torch_npu 2.10.0.post4 / packed BF16 CCE stateful Graph",
+      "implementation": "packed NPU inference的37个block/final RMSNorm改用已安装的单算子npu_rms_norm，norm weight保留checkpoint已量化的BF16值；18层SwiGLU W1/W2在host按输出行打包且不保留重复参数，T=1用一个[2304→12416] GEMV，prompt/T>1从同一packed weight的两个连续row slice执行原尺寸GEMV。o_norm继续以FP32 weight直入fused-decode CCE ABI。参数数仍为1,450,096,416，packed state_dict 273→255项。",
+      "graph_ablation": {
+        "baseline": "decomposed norm + separate W1/W2：3116.090us/token，320.915 token/s",
+        "native_norm_only": "两轮2697.446/2701.923us，均值2699.684us/token、370.414 token/s",
+        "packed_w12_only": "两轮3062.908/3063.391us，均值3063.150us/token、326.461 token/s",
+        "combined": "两轮2653.511/2664.053us，均值2658.782us/token、376.114 token/s；逐token同步两轮均值2663.391us/token、375.461 token/s",
+        "combined_gain": "相对同卡控制少457.308us/token（-14.676%），吞吐+17.200%",
+        "symmetric_attribution": "RMSNorm约410.387us/89.74%，W1/W2 packing约46.921us/10.26%"
+      },
+      "accuracy": "真实95B canonical↔packed两个加载顺序结果相同：prompt/step logits relative-L2=1.252e-3/3.937e-3；最差prompt/step recurrent cache=1.391e-3/7.239e-3，step conv cache=4.282e-3；均过BF16 1e-2预算，argmax与offset一致。Graph replay对各自eager的logits/recurrent/conv cache relative-L2均为0。",
+      "profile": "Cast 74→0/token，kernel rows 550→273/token，device total3197.959→2665.141us/token。剩余MatMul含Addmm=2290.572us/85.95%，原生RMSNorm=97.798us/3.67%，MLP SiLU+Mul=79.280us/2.97%。packed W1/W2 GEMV=733.967us/token，MTE2平均94.7%。",
+      "generation": "真实64-token greedy两轮token ids逐项相同；decode loop=340.62/354.33 calls/s（均值347.47）。整请求=100.50/116.45 generated token/s，波动来自冷prefill 402.6/320.4ms。",
+      "next_boundary": "RMSNorm2+packed W1/W2+SiLU×Mul保守混合CCE kernel已作为显式opt-in完成：Graph均值2588.511us/386.323 token/s，换取约1.030GB派生权重。下一决策是是否设计prompt/decode共用布局；继续BF16融合的ceiling约1%，大幅提升需要减少权重字节并另设质量预算。",
+      "evidence": "ascend_fla/models/gdn2.py；benchmarks/bench_gdn2_graph_capture.py；tmp/gdn2-rmsnorm-swiglu/{verify-*-first.json,graph-*.json,ablation-*.json,profile-current-v1,graph-greedy64-v*.json,performance-analysis.md}/（git-ignored）"
+    },
+    "gdn2_mixed_mlp": {
+      "recorded_at": "2026-09-15",
+      "status": "gamma-fold-rejected-conservative-explicit-opt-in-passed",
+      "environment": "Ascend950PR / CANN 9.1.0 / torch 2.10.0+cpu / torch_npu 2.10.0.post4 / pinned Ascriptor 0.1.0 CCE",
+      "design": "保守v2：两个vector subblock分别发布1152维BF16 RMSNorm输出到L1；cube按N=128/Ktile=256流原始paired W1/W2；C2V后显式物化BF16 GEMV与BF16 SiLU边界，再做BF16输出。W3仍是vendor GEMV。",
+      "raw_gemv": "N=64真机44.345us/layer、N=128全16行写回41.691us；N=128 compact只写有效行后39.272us，对照vendor39.216us，ratio=1.0014，输出逐位相同。pipesim对N=64的11.72%优势预测被真机否决。",
+      "mixed_boundary": "gamma-fold v1的18份不同权重双顺序为40.477 vs vendor43.601us/layer（1.0772x），但已因整网精度失败而作废。保守v2真机profile为42.339us/layer，AIC MTE2平均91.880%、cube utilization平均87.914%；相比vendor裸W12 GEMV只慢1.564us/layer，却吸收norm2、Swish与Mul。",
+      "accuracy": "v1真实95B prompt exact，但第2步logits=1.037e-2，第2~4步recurrent cache=1.216e-2/1.367e-2/1.523e-2、final conv=1.191e-2，超出1e-2，已拒绝。v2 formal unit reference2/2与random sim/pipesim通过，relative-L2=3.416e-7、max_abs=1.526e-5；真实95B prompt与4步decode的logits/recurrent/conv cache relative-L2均为0。",
+      "integration": "显式mlp_backend='cce'接入，默认不变；prompt仍走原vendor路径。v2派生原始paired权重non-persistent、不进state_dict，但当前18层额外驻留1,029,832,704 bytes。同卡CCE→vendor→CCE Graph为2587.192/2656.712/2589.831us/token，CCE均值2588.511us、386.323 token/s，延迟-2.567%、吞吐+2.635%。",
+      "profile": "Level-1 PipeUtilization：device total2665.141→2576.490us/token，rows273→219；mixed kernel 54样本mean/median42.339/42.168us，AIC MTE2平均/中位91.880%/92.150%，cube utilization平均87.914%。native GEMV+mixed W12合计2323.348us/token，占90.175%。",
+      "pending": "决定是否用约1.030GB派生权重换2.6%吞吐，或先设计prompt/decode共用布局再改默认；下一次大步优化需要weight-only低精度及独立任务质量预算。",
+      "evidence": "kernels/projects/a5/gdn2_norm2_w12_swiglu/contract.json；benchmarks/verify_gdn2_mixed_mlp.py；tmp/gdn2-rmsnorm-swiglu/{gamma-fold-real95b-v1.json,gemv-static-sim-v1.json,gemv-hardware-*.json,mixed-mlp-hardware-v*.json,conservative-whole-cce-first-v2.json,conservative-graph-*.json,profile-conservative-v1,performance-analysis.md}/（git-ignored）"
     }
   }
 }

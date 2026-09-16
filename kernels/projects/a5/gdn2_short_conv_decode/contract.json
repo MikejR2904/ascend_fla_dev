@@ -1,0 +1,105 @@
+{
+  "schema": "ascriptor.kernel-unit/1",
+  "id": "a5.gdn2_short_conv_decode",
+  "kind": "kernel",
+  "description": "One-launch fixed-shape BF16 packed q/k/v depthwise short-conv, SiLU, and cache update for GDN-2 decode.",
+  "inputs": {
+    "x": {"dtype": "bfloat16", "shape": [1, 6144]},
+    "cache": {"dtype": "bfloat16", "shape": [6144, 4]},
+    "weight": {"dtype": "bfloat16", "shape": [6144, 4]}
+  },
+  "outputs": {
+    "y": {
+      "dtype": "bfloat16",
+      "shape": [1, 6144],
+      "initialization": "NaN poison; every element must be overwritten."
+    },
+    "new_cache": {
+      "dtype": "bfloat16",
+      "shape": [6144, 4],
+      "initialization": "NaN poison; every element must be overwritten."
+    }
+  },
+  "domain": {
+    "B": [1],
+    "T": [1],
+    "D": [6144],
+    "W": [4],
+    "block_dim": [8],
+    "layout": "Kernel ABI flattens the public [1,1,6144] x/y and [1,6144,4] cache through zero-copy contiguous views.",
+    "precision": "BF16 x/cache/weight; four products accumulate in FP32; SiLU is FP32; y narrows once with ties-to-even; cache is a bit-preserving copy.",
+    "ownership": "block_dim=8 yields 16 vector participants; each owns 384 complete channels and there is no cross-core synchronization.",
+    "aliasing": "All inputs are read-only; y and new_cache are fresh complete-overwrite outputs with disjoint storage."
+  },
+  "dependencies": {
+    "python": ">=3.10",
+    "ascriptor": "==0.1.0",
+    "host": ["torch>=2.9.0", "numpy"]
+  },
+  "comparison": {
+    "default": {
+      "mode": "allclose",
+      "atol": 0.015625,
+      "rtol": 0.002,
+      "max_relative_l2": 0.001,
+      "reason": "FP32 FMA order and native exponential may differ from the independent Torch tree before the final BF16 RNE."
+    },
+    "outputs": {
+      "new_cache": {
+        "mode": "bitwise",
+        "reason": "The cache update only permutes existing BF16 storage values and must not alter any bit."
+      }
+    }
+  },
+  "cases": [
+    {
+      "id": "zero_history",
+      "seed": 20260923,
+      "block_dim": 8,
+      "parameters": {"zero_history": true, "x_scale": 0.5, "weight_scale": 0.2}
+    },
+    {
+      "id": "random",
+      "seed": 20260924,
+      "block_dim": 8,
+      "parameters": {"x_scale": 0.75, "cache_scale": 0.75, "weight_scale": 0.3}
+    },
+    {
+      "id": "structured_cache",
+      "seed": 20260925,
+      "block_dim": 8,
+      "parameters": {"structured": true}
+    }
+  ],
+  "support": [
+    {"device": "a5", "backend": "cce", "stage": "reference", "status": "passed", "cases": ["zero_history", "random", "structured_cache"]},
+    {"device": "a5", "backend": "cce", "stage": "sim", "status": "passed", "cases": ["zero_history", "random", "structured_cache"]},
+    {"device": "a5", "backend": "cce", "stage": "pipesim", "status": "passed", "cases": ["zero_history", "random", "structured_cache"]},
+    {"device": "a5", "backend": "cce", "stage": "emit", "status": "passed"},
+    {"device": "a5", "backend": "cce", "stage": "compile", "status": "passed"},
+    {"device": "a5", "backend": "cce", "stage": "board", "status": "passed", "cases": ["zero_history", "random", "structured_cache"]}
+  ],
+  "measured": {
+    "at": "2026-09-15, Ascend950PR / CANN 9.1.0",
+    "static": "Pinned Ascriptor 0.1.0: 0 errors, 0 warnings, 203 surface operations; CCE emitted 231 lowered operations.",
+    "simulation": "All 3 cases passed functional sim and pipesim. Both outputs matched exactly, including the bitwise cache rule; pipesim reported no event imbalance, hazard, or deadlock and modeled 2215 cycles.",
+    "board_cce": "Canonical unit runner executed all 3 cases through requested_backend=cce and launcher=aclnn. BF16 y and new_cache matched the independent CPU reference exactly in every case.",
+    "public_runtime": "Two process orders with warmup=100/repeat=500 passed. CCE y/cache matched the CPU oracle exactly; torch_npu y differed from that oracle by max_abs=0.015625 and relative-L2=3.304e-3, while its cache was exact. Public eager CCE measured 40.987/42.002 us versus torch_npu composition 31.793/31.820 us, so aclnn host/allocation overhead makes this boundary slower outside graph.",
+    "whole_model": "Real 95B BF16 packed model passed both backend orders. Prompt/step logits relative-L2=3.260e-3/4.044e-3; worst prompt/step recurrent cache=9.111e-3/9.313e-3 and convolution cache=7.132e-3/7.270e-3 under the 1e-2 budget; argmax and offsets matched. CCE decode was 6.481/6.885 ms versus torch_npu 9.480/10.011 ms in the two orders, but these are backend-level rather than isolated before/after-short-conv numbers.",
+    "profile": "In 54 silicon samples the kernel mean/median/min/max was 3.374/3.363/3.072/4.078 us per layer. Mean AIV MTE2/Vector/MTE3/Scalar ratios were 57.59/8.84/9.18/22.13%; their 97.74% sum shows the bulk-read schedule is essentially serial. It removes 18 Conv2D, 18 Cat, 18 Slice and 18 Swish launches per token in favor of 18 custom calls: a same-host cross-acquisition comparison shows whole-model launches falling 604->550/token and device-kernel time 3800.169->3197.959 us/token, a provisional 602.210 us (15.85%) saving. Every custom-kernel row reported the selected physical device; a same-card adjacent-process profiler/graph A/B remains the final performance gate.",
+    "scheduling_negative_control": "Static three-way 128-channel buffering was numerically correct and hazard-free but increased pipesim from 2215 to 3745 cycles; asymmetric 256+128 buffering increased it to 2819 cycles. With only three vector tiles per participant, extra NDDMA/MTE3 setup exceeds the legal overlap, so both are rejected before silicon. Reaching one pipe near 80% without sacrificing latency requires widening into packed projection, not artificial work or smaller transfers.",
+    "scheduling_note": "An initial random-only acquisition was contaminated after launch by an unrelated container and is excluded from timing. The accepted all-case run placed actual launchers on the selected device; its fresh compiler probe briefly touched a separately allowed idle device. The accepted profiler saw only the task PID on its selected device; an external VLLM job arrived several minutes after the profile had completed. A later stateful-graph run proved capture/replay correctness bitwise, but another VLLM process entered the chosen device seconds before the model process and overlapped the whole run; its 3.124 ms timing is explicitly rejected. A clean same-card graph before/after remains pending."
+  },
+  "provenance": [
+    {
+      "source": "GDN-2 released model short-convolution semantics",
+      "disposition": "The depthwise width-four decode formula was independently implemented; no upstream kernel source was copied."
+    }
+  ],
+  "profile": {"warmup": 20, "repeat": 200},
+  "release_scope": {
+    "version": "0.0.1.dev0",
+    "hardware": ["a5"],
+    "note": "Repository-owned model-specific inference unit; not part of Ascriptor 0.1.0."
+  }
+}

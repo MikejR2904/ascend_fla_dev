@@ -24,7 +24,9 @@ STATUS = {"not-started": "⬜ 未开始", "in-progress": "🟡 进行中", "done
           # done-torch：功能完成，但实现是 torch 原生算子而非自编译 kernel。
           # 单列一档是为了不让"能跑"冒充"高效率算子"——见 gaps.json 的
           # modules-are-torch-not-kernels。
-          "done-torch": "🔶 完成（torch 实现）", "blocked": "❌ 受阻"}
+          "done-torch": "🔶 完成（torch 实现）",
+          "done-cce-inference": "✅ 完成（CCE 推理）",
+          "blocked": "❌ 受阻"}
 
 
 def load(name: str) -> dict:
@@ -197,6 +199,37 @@ def ops_section(ops: dict) -> list[str]:
                 f"{k} {v:.3f}" for k, v in bk.items()), "",
                 f"**怎么读**：{ts['reading']}", ""]
 
+        if gp := bl.get("gdn2_packed_inference"):
+            out += [
+                "",
+                "#### GDN-2 packed-inference",
+                "",
+                f"> {gp['conditions']}",
+                "",
+                f"环境：{gp['environment']} · 记录于 {gp['recorded_at']}",
+                "",
+                "| 加载顺序 | canonical (ms/token) | packed (ms/token) | 加速 |",
+                "|---|---:|---:|---:|",
+            ]
+            for run in gp["runs"]:
+                out.append(
+                    f"| {run['order']} | {run['canonical_ms']:.3f} | "
+                    f"{run['packed_ms']:.3f} | {run['speedup']:.3f}x |"
+                )
+            out += [
+                "",
+                f"**数值一致性**：{gp['equivalence']}",
+                "",
+                f"**端到端冒烟**：{gp['generation_smoke']}",
+                "",
+                f"**打包边界**：{gp['packing']}",
+                "",
+                f"**内存**：{gp['memory']}",
+                "",
+                f"**证据**：{gp['evidence']}",
+                "",
+            ]
+
         out += ["", f"**观察**：{bl['observation']}", ""]
         if cc := bl.get("cross_cann_consistency"):
             out += [f"**跨 CANN 版本一致性**：{cc}", ""]
@@ -223,7 +256,13 @@ def ops_section(ops: dict) -> list[str]:
     return out
 
 
-FAMILY_LABEL = {"all": "全部", "kda": "KDA", "gated_delta_rule": "GDN", "delta_rule": "DeltaNet"}
+FAMILY_LABEL = {
+    "all": "全部",
+    "kda": "KDA",
+    "gated_delta_rule": "GDN",
+    "gdn2": "GDN-2",
+    "delta_rule": "DeltaNet",
+}
 
 
 def gaps_section(gaps: dict) -> list[str]:
@@ -262,7 +301,7 @@ def gaps_section(gaps: dict) -> list[str]:
 
     # 按算子族速查：每族受哪些缺口影响
     out += ["### 按算子族速查", "", "| 算子族 | P0 | P1 | P2 |", "|---|---|---|---|"]
-    for fam in ("kda", "gated_delta_rule", "delta_rule"):
+    for fam in ("kda", "gated_delta_rule", "gdn2", "delta_rule"):
         row = [FAMILY_LABEL[fam]]
         for sev in ("P0", "P1", "P2"):
             hit = [

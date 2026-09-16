@@ -1,8 +1,8 @@
 {
   "schema": "ascend_fla.model-shapes/1",
-  "recorded_at": "2026-09-10",
-  "produced_by": "phase 0, manual reverse-derivation from upstream configs",
-  "note": "目标模型的真实形状清单。算子测试矩阵的 case 形状必须从这里取，不得自拟。ascriptor_fit 记录与 ascriptor a5 定尺 ABI (L=64, K=V=128, BF16) 的匹配情况。 priority/target_phase 反映第 0 期结论：首个目标是 KDA 链路（Kimi-Linear），GDN 链路（Qwen3-Next）移至第四期。",
+  "recorded_at": "2026-09-14",
+  "produced_by": "phase 0 matrix + GDN-2 model bring-up, manual reverse-derivation from upstream configs",
+  "note": "目标模型的真实形状清单。算子测试矩阵的 case 形状必须从这里取，不得自拟。ascriptor_fit 记录与 ascriptor a5 定尺 ABI (L=64, K=V=128, BF16) 的匹配情况。 priority/target_phase 反映第 0 期结论：首个目标仍是 KDA 链路（Kimi-Linear），GDN 链路（Qwen3-Next）移至第四期。2026-09-14 新增的 GDN-2 1.3B 是用户指定的模型先行调查，不把 GDN-2 误当成现有 gated_delta_rule/GDN 算子。",
   "ascriptor_a5_abi": {
     "layout": "[B, H, C, L, D]",
     "L": 64,
@@ -50,6 +50,84 @@
         "note": "K=V=128 与 BF16 完全匹配定尺 ABI。唯一阻塞项是 16 key heads / 32 value heads 的分组 —— gdn_fwd 的 domain 只有 B,H,C，没有独立的 value-head 维度。 原定为首要目标，因 GQA 缺口随 GDN 扩族移至第四期。"
       },
       "target_phase": 4
+    },
+    {
+      "id": "gdn2-1.3b-fineweb-edu-100b",
+      "label": "GDN-2 1.3B FineWeb-Edu 100B（95B checkpoint）",
+      "op_family": "gdn2",
+      "priority": "investigation",
+      "source": {
+        "url": "https://huggingface.co/LLM-OS-Models/gdn2-1.3B-fineweb-edu-100b",
+        "revision": "86327354dd1e6874fe6407878087079326fee851",
+        "checkpoint_file": "checkpoint-95B-model-ckpt.pth",
+        "checkpoint_bytes": 17401727659,
+        "checkpoint_lfs_sha256": "4ac729c627febc431bf4b2011a9cb7ad9c30cc1d017ff74aeca15f76efb2df6d",
+        "architecture_url": "https://github.com/gyunggyung/GatedLinearAttention2/blob/7fb9cb84260779a8715f3dba855abc4cab6924d4/lit_gpt/config.py",
+        "tokenizer_url": "https://huggingface.co/TinyLlama/TinyLlama_v1.1",
+        "tokenizer_revision": "ff3c701f2424c7625fdefb9dd470f45ef18b02d6",
+        "retrieved": "2026-09-14"
+      },
+      "shape": {
+        "hidden_size": 2304,
+        "num_key_heads": 16,
+        "num_value_heads": 16,
+        "head_k_dim": 128,
+        "head_v_dim": 128,
+        "conv_size": 4,
+        "num_hidden_layers": 18,
+        "context_length": 4096,
+        "dtype": "bfloat16"
+      },
+      "derived": {
+        "linear_attn_layers": 18,
+        "full_attn_layers": 0,
+        "head_group_ratio": 1,
+        "key_dim": 2048,
+        "value_dim": 2048,
+        "reported_block_parameters": 1302638112,
+        "actual_model_parameters": 1450096416,
+        "parameter_note": "发布方的 1.302B 只统计 transformer.h；包含 embedding、lm_head 与 final norm 的 state_dict 是 1.450B。",
+        "checkpoint_iter_num": 725344,
+        "checkpoint_step_count": 22667,
+        "checkpoint_tokens_from_step": 95072288768,
+        "checkpoint_identity_note": "从 archive data.pkl 读取 step_count=22667；按模型卡 global batch 4,194,304 tokens/step 得 95.072B。HF 的 90B 与 95B 文件当前指向同一 LFS SHA，但对象内部进度是 95B。"
+      },
+      "ascriptor_fit": {
+        "head_k_dim": "match",
+        "head_v_dim": "match",
+        "dtype": "match",
+      "head_grouping": "match",
+      "blocking_gaps": [
+        "gdn2-chunk-gate-range"
+      ],
+    "note": "H=HV=16、K=V=128、BF16 均匹配定尺形状，但 GDN-2 的 g/b/w 都是 channel-wise，现有 a5.gdn_fwd/bwd 只接受 per-token 标量 beta/g 且没有独立 write gate。短 prompt 由独立 a5.gdn2_fused_recurrent 解决；真实 B1T1 BF16 packed decode 进一步由 a5.gdn2_fused_decode 融合 raw gates、recurrence 与 output norm。训练与长 prefill 仍受 chunk 量程设计阻塞。"
+      },
+      "validation": {
+    "recorded_at": "2026-09-15",
+        "environment": "Ascend950PR / CANN 9.1.0 / torch 2.10.0+cpu / torch_npu 2.10.0.post4",
+        "checkpoint_integrity": "passed — 17,401,727,659 bytes; sha256 4ac729c627febc431bf4b2011a9cb7ad9c30cc1d017ff74aeca15f76efb2df6d",
+        "strict_load": "passed — 399 state_dict entries; zero missing/unexpected keys",
+        "npu_forward": "passed — input [1,2], logits [1,2,32000] BF16, finite, range [-11.75,11.0]",
+        "cache_consistency": "passed — one-shot T=2 vs token-by-token relative_l2=0（本次也观测到 max_abs_diff=0，但 bitwise 不是契约）；18 FP32 states [1,16,128,128]",
+        "tokenizer": "passed — TinyLlama v1.1 vocab_size=32000; tokenizer(prompt) prepends BOS id 1 and does not append EOS id 2",
+        "text_generation": "passed — final host-packed loader, greedy prompt 'The capital of France is' generated 32 readable tokens beginning 'Paris. It is the capital of the country of France.'; 0.502s is smoke timing only",
+        "boundary_profile": "passed — warm full-model decode 10.086 ms/token without logits D2H; layer-0 block 568.5 us, mixer 433.7 us; packed projection/conv candidates passed numeric comparison（the measured tensors also happened to be bitwise equal）",
+        "packed_architecture": "passed — canonical checkpoint remains 399 keys; packed-inference consumes per-layer mixer projections/conv and SwiGLU W1/W2 into 255 internal entries with the same 1,450,096,416 parameter count; block/final RMSNorm uses the installed native NPU op with BF16 checkpoint-quantized weights; cache is typed and packed conv state is [B,6144,4] BF16",
+        "cpu_npu_numeric": "passed — tiny GDN-2 FP32 logits, recurrent cache and conv cache compare CPU oracle vs torch_npu: max relative_l2 5.740e-4 under budget 1e-3; no bitwise requirement",
+    "packed_equivalence": "passed — formal rule is same-dtype relative_l2: real 95B FP32 T=6 budget 1e-5 and BF16 T=6/T=64 budget 1e-2; prompt/next-token logits plus recurrent/conv caches all measured relative_l2=0. Bitwise equality and argmax are recorded only as diagnostics",
+    "cce_recurrent_unit": "passed — repository-owned Ascriptor CCE unit; reference 5/5, sim 3/3 scoped, pipesim 2/2 scoped, emit/compile passed, canonical aclnn board runner 5/5. FP32 contract cases: max output relative_l2 4.169e-6 and max final-state relative_l2 9.108e-8 under budget 1e-4; T=4 versus four chained T=1 calls relative_l2=0",
+    "cce_full_model": "passed — real 95B packed-inference torch_npu versus CCE: BF16 prompt/step logits relative_l2 3.260e-3/3.186e-3 and max recurrent cache 9.154e-3 under budget 1e-2; FP32 logits 1.391e-5/2.065e-5 and max recurrent cache 1.785e-4 under budget 1e-3. Argmax/cache offsets matched; BF16 reverse load order produced identical metrics. With CCE on both sides, canonical versus packed prompt/step logits and both caches had relative_l2=0",
+    "cce_generation": "passed — fused CCE decode generated the same 32 readable greedy tokens as the preceding CCE recurrent version, beginning 'Paris. It is the largest city in France and the capital of the country.'; 0.460s / 69.63 token/s is one-shot smoke timing only",
+    "cce_decode_profile": "passed — initial CCE recurrent was 5108.8us/1163 kernels and 309 Casts/token. One-time invariant norm promotion plus a5.gdn2_fused_decode reduced this to 4023.6us/640 kernels and exactly 74 Casts/token; Cast time 565.925→147.355us. The fused recurrent kernel's own busiest MTE2 pipe averaged only31.65%, and a 64-row dynamic-double-buffer candidate was slower at4.804us, so it was rejected. A later wider norm2/W12/SwiGLU boundary satisfies the requested pipe criterion with91.88% mean AIC MTE2.",
+    "cce_fused_decode": "correctness passed — pinned Ascriptor 0.1.0 static0/0, reference/sim/pipesim3/3 with no hazards, and CCE/aclnn real_decode. Real95B prompt/step logits relative-L2=3.260e-3/3.436e-3; worst step recurrent cache=9.521e-3 under1e-2. Stable paired warmup100/iters200 speedup was1.650x torch-first and1.410x CCE-first. Its local erase→delta join prevents one pipe reaching80%; the requirement was instead met at the useful wider mixed-MLP boundary without adding redundant work.",
+        "packed_decode": "warmup=100/iters=200 in both load orders: canonical 10.184-11.625 ms, packed 9.212-9.822 ms, speedup 1.106x-1.184x（conservative lower bound 1.106x）; one-shot 32-token text generation kept identical token ids and measured 0.605s canonical vs 0.367s packed, which is smoke evidence rather than a stable benchmark",
+        "gate_domain_probe": "T=4096 deterministic valid-token probe: max per-token -g 60.926; max 64-token cumulative span 1461.214; this is a valid stress counterexample, not a natural-text distribution estimate",
+        "memory": "host packing then H2D: canonical allocated/reserved 2,980,944,896/3,221,225,472 bytes; packed 3,007,683,584/3,141,533,696 bytes. Packed does not retain canonical weights and avoids the earlier target-device packing transient reserve",
+    "mixed_mlp": "passed as explicit opt-in — gamma-fold v1 was rejected after real95B recurrent cache reached relative-L2 1.523e-2. Conservative v2 restores BF16 RMSNorm/GEMV/SiLU boundaries; prompt plus four chained decode steps had logits/recurrent/conv relative-L2=0. Same-card CCE→vendor→CCE stateful Graph measured2587.192/2656.712/2589.831us/token; CCE mean2588.511us and386.323 token/s, latency-2.567% and throughput+2.635%. It currently costs1,029,832,704 extra derived-weight bytes, so the lower-memory vendor path remains default. Level-1 device total is2576.490us/219 rows; the mixed kernel is42.339us/layer with91.880% mean AIC MTE2 and87.914% cube utilization.",
+    "timing_note": "packed torch-only steady decode was 9.212-9.822ms. The old CCE recurrent boundary was parity (paired ratios crossed1). After fusion, Graph, CCE short-conv and native RMSNorm/W12 packing, the lower-memory default stateful Graph is2653.51-2664.05us/token (375.37-376.86 token/s). Conservative mixed MLP is the fastest explicit opt-in at2587.19-2589.83us/token (386.13-386.52 token/s) but adds1.030GB derived weights. FP32 remains on the old general CCE route. Text-generation request timings include cold prefill and are not interchangeable with steady pure-model Graph numbers.",
+    "evidence": "tmp/gdn2-95b/gdn2-full-run.json + text-greedy-packed-host-pack-final.json + profile-boundaries.json + gate-domains-t4096.json + cpu-npu-fp32-final.json + verify-packed-host-pack-*.json + verify-packed-steady-*.json + packed-cache-chain.json; tmp/gdn2-recurrent/operator-final.json + unit-aclnn-all/summary.json + full-backends-*.json + text-greedy-cce.json; tmp/gdn2-profiler/{cce,torch,paired}/; tmp/gdn2-cast-fusion/{norm-profile-1,fused-profile-v1,tile64-profile-v1,paired-v1,text-v1}/; tmp/gdn2-rmsnorm-swiglu/{conservative-whole-cce-first-v2.json,conservative-graph-*.json,profile-conservative-v1,performance-analysis.md}/ (all git-ignored)"
+      },
+      "target_phase": null
     },
     {
       "id": "kimi-linear-48b-a3b",
@@ -216,6 +294,14 @@
       "C": 16,
       "T": 1024,
       "comment": "单层真实形状，第一期精度验收目标"
+    },
+    "gdn2_1_3b_layer": {
+      "B": 1,
+      "H": 16,
+      "HV": 16,
+      "C": 16,
+      "T": 1024,
+      "comment": "GDN-2 1.3B 单层真实形状；输入槽语义与现有 a5.gdn_fwd 不同"
     },
     "kimi_linear_layer": {
       "B": 1,

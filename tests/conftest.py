@@ -23,8 +23,19 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
 
 
 @pytest.fixture(scope="session", autouse=True)
-def _compile_all_kernels_first():
-    """在第一次算子执行之前把全部 kernel 编译好。没有 NPU 时什么也不做。"""
+def _compile_all_kernels_first(request):
+    """KDA 真机测试开始前编译全部 kernel；纯模型/CPU 测试不触碰 ascriptor。"""
+    kda_device_files = {
+        "test_kda_bwd_deep_npu.py",
+        "test_kda_bwd_npu.py",
+        "test_kda_caches_npu.py",
+        "test_kda_decode.py",
+        "test_kda_fwd_npu.py",
+        "test_kda_layer_npu.py",
+    }
+    selected_files = {item.path.name for item in request.session.items}
+    if not selected_files.intersection(kda_device_files):
+        return
     try:
         import torch
         import torch_npu  # noqa: F401
