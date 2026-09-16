@@ -52,10 +52,16 @@ else
   PYINFO="未就绪"
 fi
 
-FORK="$(git remote get-url origin 2>/dev/null | sed -E 's#^(https://github.com/|git@github.com:)##; s#\.git$##')"
 UPSTREAM="ddddwee1/ascend_fla_dev"
-if [[ "$FORK" == "$UPSTREAM" ]]; then
-  echo "提示：origin 指向上游本仓；没有写权限时请先 fork，并把 origin 设为你的 fork、upstream 设为上游" >&2
+# 交付用的 fork：先看名为 fork 的 remote，再退回 origin。
+# （origin 可能指向上游本仓 —— 本机就是这样，只看 origin 会把 fork 字段填成上游。）
+slug() { git remote get-url "$1" 2>/dev/null | sed -E 's#^(https://github.com/|git@github.com:)##; s#\.git$##'; }
+FORK="$(slug fork)"
+[[ -n "$FORK" ]] || FORK="$(slug origin)"
+if [[ -z "$FORK" || "$FORK" == "$UPSTREAM" ]]; then
+  echo "提示：没找到你的 fork（fork 与 origin 两个 remote 都指向上游或不存在）。" >&2
+  echo "      先 fork 本仓，然后 git remote add fork https://github.com/<你>/ascend_fla_dev.git" >&2
+  FORK="未设置"
 fi
 git remote get-url upstream >/dev/null 2>&1 || echo "提示：git remote add upstream https://github.com/${UPSTREAM}.git" >&2
 

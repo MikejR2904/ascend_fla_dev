@@ -540,8 +540,15 @@ def cmd_poll(board: dict, advance: bool) -> int:
     latest = since
     for c in comments:
         latest = max(latest, c["updated_at"])
-        if seen.get(str(c["id"])) == c["updated_at"] or c["user"] == pm_login:
+        if seen.get(str(c["id"])) == c["updated_at"]:
             continue
+        # PM 自己发的消息不用再处理一遍，但**只跳过 PM 类型的**：APPLY / DONE 这些
+        # agent 类型的消息即使来自 PM 账号也要露出来。
+        # 实测踩到：验证流程时 agent 和 PM 共用一个账号，APPLY 被整条吞掉，poll 一片空白。
+        if c["user"] == pm_login:
+            parsed = parse_message(c.get("body") or "")
+            if not parsed or parsed.get("type") in PM_TYPES or parsed.get("type") is None:
+                continue
         seen[str(c["id"])] = c["updated_at"]
         print(json.dumps(classify_comment(c, board, pm_login), ensure_ascii=False))
     issues_seen: dict[str, str] = state.get("issues", {})

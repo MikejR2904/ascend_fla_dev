@@ -7,6 +7,7 @@
     python tools/pm_board.py --check                          # 校验（CI 用）
     python tools/pm_board.py --render                         # 按波次打印进度表
     python tools/pm_board.py --tree                           # 按 模型→kernel→dtype→机器 打印，标出起点
+    python tools/pm_board.py --readme                         # 刷新 README.md 里的 kernel 进展表
     python tools/pm_board.py --next --socs a2 --ascriptor --fla   # 某个 agent 能接的任务
 
 只依赖标准库 —— 看板校验不该因为机器上没装 torch 而跑不了。
@@ -274,6 +275,9 @@ def check(board: dict, root: Path = ROOT) -> list[str]:
         if not entries:
             problems.append(f"kernel {kernel!r} 的任务互相依赖成环，找不到起点")
 
+    if stale := readme_is_current(board, root):
+        problems.append(stale)
+
     if m := _IP.search(json.dumps(board, ensure_ascii=False)):
         problems.append(f"看板里出现了疑似 IP 地址 {m.group(0)!r} —— 机器信息只能写在 machine_specs.md")
     return problems
@@ -382,11 +386,88 @@ def render_tree(board: dict) -> str:
     return "\n".join(lines)
 
 
+README = ROOT / "README.md"
+BLOCK_START = "<!-- fla-pm:kernels start -->"
+BLOCK_END = "<!-- fla-pm:kernels end -->"
+STATUS_MARK = {"done": "✅", "in_progress": "🔵", "assigned": "🔵", "review": "🔵", "rework": "🔵",
+               "blocked": "⏸", "open": "⬜", "gated": "🔒", "cancelled": "✖"}
+
+
+def render_readme_block(board: dict) -> str:
+    """仓库首页那张 kernel 进展表。由 ``--readme`` 写进 README.md 的标记区间，不要手改。"""
+    repo = board.get("repo", "")
+    entries = kernel_entries(board)
+
+    def link(t: dict) -> str:
+        num = t.get("issue")
+        return f"[#{num}](https://github.com/{repo}/issues/{num})" if num and repo else (f"#{num}" if num else "—")
+
+    def mark(t: dict) -> str:
+        gate = f" ({t['gate']})" if t["status"] == "gated" and t.get("gate") else ""
+        return f"{STATUS_MARK.get(t['status'], '')} {t['status']}{gate}"
+
+    lines = [BLOCK_START,
+             "<!-- 由 tools/pm_board.py --readme 生成，请勿手改。改 docs/pm/board.json 后重新运行。 -->",
+             "", "| kernel | 目标模型 | 进度 | 下一步 |", "|---|---|---|---|"]
+    for kernel, starts in entries.items():
+        chain = chain_of(board, kernel)
+        done = sum(t["status"] == "done" for t in chain)
+        models = sorted({m for t in chain for m in t.get("model") or []}) or ["—"]
+        nxt = next((t for t in chain if t["id"] == starts[0]), None) if starts else None
+        nxt_cell = f"{link(nxt)} {nxt['id']}" if nxt else "—"
+        lines.append(f"| `{kernel}` | {'、'.join(models)} | {done}/{len(chain)} | {nxt_cell} |")
+
+    lines.append("")
+    for kernel, starts in entries.items():
+        chain = chain_of(board, kernel)
+        done = sum(t["status"] == "done" for t in chain)
+        lines += [f"<details><summary><b>{kernel}</b> —— {done}/{len(chain)} 完成，"
+                  f"{'起点 ' + '、'.join(starts) if starts else '无起点'}</summary>", "",
+                  "| 任务 | issue | SoC | dtype | 状态 | 说明 |", "|---|---|---|---|---|---|"]
+        for t in chain:
+            flag = "★ 起点" if t["id"] in starts else ""
+            lines.append(f"| {t['id']} | {link(t)} | `{t['soc']}` | {'、'.join(t.get('dtype') or []) or '—'} "
+                         f"| {mark(t)} | {flag} |")
+        lines += ["", "</details>", ""]
+
+    lines += ["> 图例：⬜ 可申领 · 🔵 进行中 · 🔒 有前置条件未满足 · ✅ 已完成。",
+              "> ★ 起点 = 该 kernel 链里依赖全在组外的任务，也就是要让这个 kernel 动起来先做哪一条。",
+              "> 任务顺序由依赖关系算出，不是手写的。",
+              BLOCK_END]
+    return "\n".join(lines)
+
+
+def readme_is_current(board: dict, root: Path = ROOT) -> str | None:
+    """README 的生成区间是否与看板一致。返回问题描述，None 表示一致或没有 README。"""
+    path = Path(root) / "README.md"
+    if not path.is_file():
+        return None
+    text = path.read_text(encoding="utf-8")
+    if BLOCK_START not in text or BLOCK_END not in text:
+        return "README.md 里找不到 fla-pm:kernels 标记区间"
+    current = text[text.index(BLOCK_START):text.index(BLOCK_END) + len(BLOCK_END)]
+    if current.strip() != render_readme_block(board).strip():
+        return "README.md 的 kernel 进展表与看板不一致，请运行 python tools/pm_board.py --readme"
+    return None
+
+
+def write_readme(board: dict, root: Path = ROOT) -> bool:
+    path = Path(root) / "README.md"
+    text = path.read_text(encoding="utf-8")
+    new = text[:text.index(BLOCK_START)] + render_readme_block(board) + text[text.index(BLOCK_END) + len(BLOCK_END):]
+    if new == text:
+        return False
+    path.write_text(new, encoding="utf-8")
+    return True
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--board", type=Path, default=BOARD)
     ap.add_argument("--check", action="store_true", help="校验看板")
     ap.add_argument("--render", action="store_true", help="按波次打印进度表")
+    ap.add_argument("--readme", action="store_true",
+                    help="把 kernel 进展表写进 README.md 的标记区间")
     ap.add_argument("--tree", action="store_true",
                     help="按 模型 → kernel → 数据类型 → 机器 打印，并标出每个 kernel 的起点")
     ap.add_argument("--next", action="store_true", help="列出某个 agent 能接的任务")
@@ -396,9 +477,11 @@ def main() -> int:
     args = ap.parse_args()
 
     board = load(args.board)
-    if not (args.check or args.render or args.next or args.tree):
+    if not (args.check or args.render or args.next or args.tree or args.readme):
         args.check = True
     rc = 0
+    if args.readme:
+        print('README.md 已更新' if write_readme(board) else 'README.md 已是最新')
     if args.check:
         problems = check(board)
         if problems:

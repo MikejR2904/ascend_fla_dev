@@ -201,6 +201,38 @@ class TestKernelEntries(unittest.TestCase):
         self.assertTrue(any("未知取值" in p for p in found), found)
 
 
+class TestReadmeBlock(_Tmp):
+    """首页那张 kernel 进展表是生成的；手改会被 --check 拦住（AGENTS.md §8：手写的矩阵必然腐烂）。"""
+
+    def board(self):
+        t = _task("A", kernel=["K"], model=[], dtype=["bf16"])
+        return {"repo": "o/r", "tasks": [t], "axes": {"kernel": ["K"], "model": [], "dtype": ["bf16"]}}
+
+    def test_block_lists_kernel_and_links_issue(self):
+        board = self.board()
+        board["tasks"][0]["issue"] = 7
+        block = pm_board.render_readme_block(board)
+        self.assertIn("`K`", block)
+        self.assertIn("https://github.com/o/r/issues/7", block)
+        self.assertIn("★ 起点", block)
+
+    def test_drift_is_detected_and_fixable(self):
+        board = self.board()
+        (self.root / "README.md").write_text(
+            "# x\n\n" + pm_board.render_readme_block(board) + "\n", encoding="utf-8")
+        self.assertIsNone(pm_board.readme_is_current(board, self.root))
+
+        board["tasks"][0]["status"] = "done"          # 看板变了，README 没跟上
+        board["tasks"][0]["result"] = {"commits": ["a"]}
+        self.assertIn("不一致", pm_board.readme_is_current(board, self.root))
+
+        pm_board.write_readme(board, self.root)        # 重新生成之后就一致了
+        self.assertIsNone(pm_board.readme_is_current(board, self.root))
+
+    def test_missing_readme_is_not_an_error(self):
+        self.assertIsNone(pm_board.readme_is_current(self.board(), self.root))
+
+
 class TestReservedPaths(_Tmp):
     """仓主的并行轨道有专属路径；任何任务的写集碰到它都要报。"""
 

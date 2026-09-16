@@ -149,6 +149,33 @@ class TestClassifyIssue(unittest.TestCase):
         self.assertTrue(set(pm_github.TRIAGE_LABELS) <= names)
 
 
+class TestPollSkipRule(unittest.TestCase):
+    """PM 账号发的消息只跳过 PM 类型的；agent 类型的（APPLY / DONE）必须露出来。
+
+    实测踩到：验证流程时 agent 和 PM 共用同一个账号，APPLY 被当成"PM 自己的评论"整条吞掉。
+    """
+
+    def skipped(self, body, author, pm_login="fla-pm-bot"):
+        """复刻 cmd_poll 里的跳过判断。"""
+        if author != pm_login:
+            return False
+        parsed = pm_github.parse_message(body)
+        return not parsed or parsed.get("type") in pm_github.PM_TYPES or parsed.get("type") is None
+
+    def test_agent_message_from_pm_account_is_not_skipped(self):
+        self.assertFalse(self.skipped("[FLA-PM] APPLY A2-05 from=fla-pm-bot", "fla-pm-bot"))
+        self.assertFalse(self.skipped("[FLA-PM] DONE A2-05 from=fla-pm-bot", "fla-pm-bot"))
+
+    def test_pm_message_from_pm_account_is_skipped(self):
+        self.assertTrue(self.skipped("[FLA-PM] ASSIGN A2-05 from=fla-pm-bot", "fla-pm-bot"))
+
+    def test_plain_comment_from_pm_account_is_skipped(self):
+        self.assertTrue(self.skipped("looks good", "fla-pm-bot"))
+
+    def test_anything_from_other_accounts_is_kept(self):
+        self.assertFalse(self.skipped("looks good", "alice"))
+
+
 class TestGuardKnownIssues(unittest.TestCase):
     """看板记过编号的 issue 从列表里消失时必须停下 —— 否则 sync 会重建一遍。
 
