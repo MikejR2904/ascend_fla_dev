@@ -313,7 +313,7 @@
       "wave": "W0",
       "soc": "any",
       "priority": "P1",
-      "status": "review",
+      "status": "done",
       "model": [
         "kimi-linear-48b-a3b"
       ],
@@ -358,9 +358,26 @@
         {
           "at": "2026-09-16T07:46",
           "summary": "DONE + PR #53；PM 审查已过（写集/危险模式/临时 clone 158 passed/6 skipped/关键数字独立复核），按 PROTOCOL §5.5 等用户批准新账号首次合入"
+        },
+        {
+          "at": "2026-09-16T08:54",
+          "summary": "REVIEW accept；PR #53 合入 main（a74d177）"
         }
       ],
-      "result": null
+      "result": {
+        "commits": [
+          "a9106ee",
+          "a74d177"
+        ],
+        "evidence": [
+          "临时 clone 158 passed / 6 skipped；合入后 main 170 passed / 6 skipped",
+          "往返逐位还原 0.0；一步 decode 对 fla naive o/state 均 0.0",
+          "漏转置对照 o 4.498176e-01 / state 7.774980e-01（静默失败面，形状不报错）",
+          "独立算术路径交叉校验 fla naive_chunk_kda T=64：o rel-L2 2.201289e-07",
+          "conv 逐 token 对整段前向 ≤1.19e-07，时间轴翻转对照 4.578638e+00"
+        ],
+        "note": "流程验证任务：APPLY→ASSIGN→ACK→PR→DONE→REVIEW→合入 全程走通。agent 与 PM 共用 limjiunnbin 账号，跨账号身份隔离未验到"
+      }
     },
     {
       "id": "A2-06",

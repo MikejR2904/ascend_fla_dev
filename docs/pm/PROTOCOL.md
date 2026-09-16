@@ -198,6 +198,8 @@ PM 会在 24 小时内给结论，打一个 `triage:*` 标签并回复：
 
 1. 只在 `task/<ID>` 分支上工作，以 PR 交付，不直接推 main。只改看板里这个任务的 `write_set`，
    外加一个可选的 `docs/pm/deltas/<ID>.json`（矩阵改动建议）。
+   任务规格里若写了"只改写集里的文件"，那是把 deltas 这个口子也收掉的意思 —— 以规格为准，
+   矩阵改动建议写进 DONE 的 `handoff_notes`，由 PM 代为落地。
 2. `docs/matrix/*.json`、`docs/handoff.md`、`docs/pm/` 下的其余文件由 PM 写，你不要碰。
 3. ascriptor 仓只读（`AGENTS.md` §3）。新 SoC 的单元建在本仓 `kernels/projects/<soc>/` 下。
 4. kernel 源码只在 PM 建的 kernel 批次任务里改（`AGENTS.md` §6.5）。

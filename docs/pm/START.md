@@ -83,7 +83,8 @@ PM 跑在用户自己的机器上，本仓主 checkout（不是 worktree）的 `
 # 1. fork 本仓到你的账号，然后
 git clone https://github.com/<you>/ascend_fla_dev && cd ascend_fla_dev
 git remote add upstream https://github.com/ddddwee1/ascend_fla_dev.git
-# 2. 环境（主机侧基线 89 passed / 6 skipped；跳过的是 5 个需 torch_npu、1 个需 ascriptor kernels 树）
+# 2. 环境（跳过的 6 项是 5 个需 torch_npu、1 个需 ascriptor kernels 树；
+#    基线数字别照抄文档，以你 clone 下来那一版跑出来的为准 —— 任务只要求"计数只增不减"）
 tools/dev_env.sh [--with-fla]
 # 3. 生成 APPLY 评论（按你的真实能力填）
 tools/agent_setup.sh --login <you> --agent "<模型或工具名>" --task any --ascriptor "<修订号>" --fla

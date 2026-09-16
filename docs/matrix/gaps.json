@@ -500,7 +500,8 @@
       ],
       "proposed_action": "第三期在注入层里做转置并加一个显式断言（比如用非对称测试值验证方向）。不要在算子里改布局 —— 算子的布局由 kernel 决定，改它等于改 kernel。",
       "requires_kernel_change": true,
-      "kernel_change_note": "state 布局支持 v-first（fla 的 KDA layer 用 state_v_first=True）。"
+      "kernel_change_note": "state 布局支持 v-first（fla 的 KDA layer 用 state_v_first=True）。",
+      "status_note": "2026-09-16：主机侧适配器已落地（ascend_fla/compat/cache.py + tests/test_cache_adapter.py，A2-05 / PR #53）。fla layer cache 是 V 在前（state_v_first=True），而 fla 自己的 naive.py oracle 是 K 在前 —— 两者不是一回事，接线时别混。K==V 时形状查不出方向，所以源布局由调用方显式声明；K != V 时 head_k_dim/head_v_dim 是唯一能抓住布局声明错的检查，A2-08 / A2-16 接线时建议一律传。**kernel 侧要不要也支持 v-first 是另一件事**，requires_kernel_change 仍为真指的是那一半。"
     },
     {
       "id": "opp-path-read-once",
