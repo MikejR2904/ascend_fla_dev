@@ -211,6 +211,14 @@ class TestReadmeBlock(_Tmp):
                     {"id": "K", "family": "kda", "track": "agent", "note_zh": "有任务", "note_en": "has tasks"},
                     {"id": "Q", "family": "delta_rule", "track": "none",
                      "note_zh": "尚未排任务", "note_en": "no task scheduled yet"},
+                ]},
+                "family_inventory": {"families": [
+                    {"id": "kda", "label_zh": "KDA 族", "label_en": "KDA family", "track": "agent",
+                     "note_zh": "首个目标", "note_en": "first target"},
+                    {"id": "delta_rule", "label_zh": "DeltaNet 族", "label_en": "DeltaNet family", "track": "none",
+                     "note_zh": "尚未排任务", "note_en": "no task scheduled yet"},
+                    {"id": "mamba", "label_zh": "Mamba 族", "label_en": "Mamba family", "track": "epic",
+                     "note_zh": "未排期 G4", "note_en": "not scheduled G4", "epic": "G4"},
                 ]}}
 
     def test_block_lists_kernel_and_links_issue(self):
@@ -227,6 +235,20 @@ class TestReadmeBlock(_Tmp):
         self.assertIn("`Q`", block)
         self.assertIn("尚未排任务", block)
         self.assertIn("| — |", block, "没有任务的那行进度应当是 —")
+
+    def test_families_without_kernels_are_listed(self):
+        """Gemini 列过但本仓没有 kernel 的算子族也要上表，标成未排期而不是消失。"""
+        block = pm_board.render_readme_block(self.board())
+        self.assertIn("Mamba 族", block)
+        self.assertIn("未排期 (G4)", block)
+        self.assertIn("本仓暂无 kernel", block)
+
+    def test_two_levels_are_nested(self):
+        """算子族一层、kernel 一层，都能折叠 —— 首页不铺开。"""
+        block = pm_board.render_readme_block(self.board())
+        self.assertIn("<summary><b>KDA 族", block, "第一级是算子族")
+        self.assertIn("<summary>K —— ", block, "第二级是 kernel")
+        self.assertEqual(block.count("<details>"), block.count("</details>"), "details 标签必须配对")
 
     def test_english_variant(self):
         en = pm_board.render_readme_block(self.board(), "en")

@@ -24,27 +24,40 @@ fla 系列线性注意力算子在昇腾 NPU 上的高效实现库。后端用
 <!-- fla-pm:kernels start -->
 <!-- 由 tools/pm_board.py --readme 生成，请勿手改。改 docs/pm/board.json 后重新运行。 -->
 
-| kernel | 算子族 | 归属 | 进度 | 下一步 |
+| 算子族 | id | 归属 | kernel 数 | 任务进度 |
 |---|---|---|---|---|
-| `kda_fwd_stable` | kda | 可申领 | 0/8 | [#30](https://github.com/ddddwee1/ascend_fla_dev/issues/30) A2-04 |
-| `kda_bwd_stable` | kda | 可申领 | 0/8 | [#34](https://github.com/ddddwee1/ascend_fla_dev/issues/34) A2-03 |
-| `kda_fused_recurrent` | kda | 可申领 | 0/9 | [#34](https://github.com/ddddwee1/ascend_fla_dev/issues/34) A2-03 |
-| `kda_fwd` | kda | 上游单元 | — | _上游 ascriptor 单元，本仓用 kda_fwd_stable 取代_ |
-| `kda_bwd` | kda | 上游单元 | — | _上游 ascriptor 单元，本仓用 kda_bwd_stable 取代_ |
-| `gdn_fwd` | gated_delta_rule | 可申领 | 0/3 | [#35](https://github.com/ddddwee1/ascend_fla_dev/issues/35) A2-07 |
-| `gdn_bwd` | gated_delta_rule | 可申领 | 0/3 | [#35](https://github.com/ddddwee1/ascend_fla_dev/issues/35) A2-07 |
-| `gdn_fused_recurrent` | gated_delta_rule | 可申领 | 0/1 | [#45](https://github.com/ddddwee1/ascend_fla_dev/issues/45) A2-20 |
-| `delta_rule_fwd` | delta_rule | 尚未排任务 | — | _上游单元已存在，本仓尚未排任务_ |
-| `delta_rule_bwd` | delta_rule | 尚未排任务 | — | _上游单元已存在，本仓尚未排任务_ |
-| `gdn2_fused_recurrent` | gdn2 | 仓主轨道 | — | _仓主轨道：通用 CCE recurrent_ |
-| `gdn2_fused_decode` | gdn2 | 仓主轨道 | — | _仓主轨道：模型专用融合 decode_ |
-| `gdn2_short_conv_decode` | gdn2 | 仓主轨道 | — | _仓主轨道：打包短卷积 decode_ |
-| `gdn2_norm2_w12_swiglu` | gdn2 | 仓主轨道 | — | _仓主轨道：融合 RMSNorm + SwiGLU_ |
-| `gdn2_chunk_fwd_bwd` | gdn2 | 仓主轨道 | — | _仓主轨道：尚未实现，量程需单独设计_ |
+| KDA（Kimi Delta Attention） | `kda` | 可申领 | 5 | 0/14 |
+| GDN（Gated DeltaNet） | `gated_delta_rule` | 可申领 | 3 | 0/3 |
+| DeltaNet | `delta_rule` | 尚未排任务 | 2 | — |
+| GDN-2（Gated DeltaNet 2） | `gdn2` | 仓主轨道 | 5 | — |
+| Mamba-1/2/3 | `mamba` | 未排期 (G4) | — | — |
+| GLA（Gated Linear Attention） | `gla` | 未排期 (G4) | — | — |
+| PKDA / PGDN（预条件） | `pkda` | 未排期 (G4) | — | — |
+| Log-Linear Attention | `log_linear` | 未排期 (G4) | — | — |
+| DLA（动态线性注意力） | `dla` | 未排期 (G4) | — | — |
+| StateX（宽状态） | `statex` | 未排期 (G4) | — | — |
+| NAtS-L（动态路由混合） | `natsl` | 未排期 (G4) | — | — |
+| NHA（Native Hybrid Attention） | `nha` | 未排期 (G4) | — | — |
+| Local Linear Attention | `local_linear` | 未排期 (G4) | — | — |
+| DeltaStack（栈式） | `deltastack` | 未排期 (G4) | — | — |
+| TTT / MesaNet | `ttt` | 未排期 (G4) | — | — |
+| NSA / 稀疏注意力 | `nsa` | 未排期 (G4) | — | — |
 
-### 各 kernel 的任务链
+### 展开看细节（算子族 → kernel → 任务）
 
-<details><summary><b>kda_fwd_stable</b> —— 0/8 完成，起点 A2-04、A2-03、A5-04</summary>
+<details><summary><b>KDA（Kimi Delta Attention） —— 5 个 kernel，0/14 完成</b></summary>
+
+_首个目标算子族，Kimi-Linear 用它_
+
+| kernel | 归属 | 进度 | 下一步 |
+|---|---|---|---|
+| `kda_fwd_stable` | 可申领 | 0/8 | [#30](https://github.com/ddddwee1/ascend_fla_dev/issues/30) A2-04 |
+| `kda_bwd_stable` | 可申领 | 0/8 | [#34](https://github.com/ddddwee1/ascend_fla_dev/issues/34) A2-03 |
+| `kda_fused_recurrent` | 可申领 | 0/9 | [#34](https://github.com/ddddwee1/ascend_fla_dev/issues/34) A2-03 |
+| `kda_fwd` | 上游单元 | — | _上游 ascriptor 单元，本仓用 kda_fwd_stable 取代_ |
+| `kda_bwd` | 上游单元 | — | _上游 ascriptor 单元，本仓用 kda_bwd_stable 取代_ |
+
+<details><summary>kda_fwd_stable —— 0/8 完成，起点 A2-04、A2-03、A5-04</summary>
 
 | 任务 | issue | SoC | dtype | 状态 | 说明 |
 |---|---|---|---|---|---|
@@ -59,7 +72,7 @@ fla 系列线性注意力算子在昇腾 NPU 上的高效实现库。后端用
 
 </details>
 
-<details><summary><b>kda_bwd_stable</b> —— 0/8 完成，起点 A2-03、A2-K1、A5-04、A5-05</summary>
+<details><summary>kda_bwd_stable —— 0/8 完成，起点 A2-03、A2-K1、A5-04、A5-05</summary>
 
 | 任务 | issue | SoC | dtype | 状态 | 说明 |
 |---|---|---|---|---|---|
@@ -74,7 +87,7 @@ fla 系列线性注意力算子在昇腾 NPU 上的高效实现库。后端用
 
 </details>
 
-<details><summary><b>kda_fused_recurrent</b> —— 0/9 完成，起点 A2-03、A2-K1、A5-01、A5-02、A5-03</summary>
+<details><summary>kda_fused_recurrent —— 0/9 完成，起点 A2-03、A2-K1、A5-01、A5-02、A5-03</summary>
 
 | 任务 | issue | SoC | dtype | 状态 | 说明 |
 |---|---|---|---|---|---|
@@ -90,7 +103,19 @@ fla 系列线性注意力算子在昇腾 NPU 上的高效实现库。后端用
 
 </details>
 
-<details><summary><b>gdn_fwd</b> —— 0/3 完成，起点 A2-07</summary>
+</details>
+
+<details><summary><b>GDN（Gated DeltaNet） —— 3 个 kernel，0/3 完成</b></summary>
+
+_Qwen3-Next 用它，六项 ABI 缺口待补_
+
+| kernel | 归属 | 进度 | 下一步 |
+|---|---|---|---|
+| `gdn_fwd` | 可申领 | 0/3 | [#35](https://github.com/ddddwee1/ascend_fla_dev/issues/35) A2-07 |
+| `gdn_bwd` | 可申领 | 0/3 | [#35](https://github.com/ddddwee1/ascend_fla_dev/issues/35) A2-07 |
+| `gdn_fused_recurrent` | 可申领 | 0/1 | [#45](https://github.com/ddddwee1/ascend_fla_dev/issues/45) A2-20 |
+
+<details><summary>gdn_fwd —— 0/3 完成，起点 A2-07</summary>
 
 | 任务 | issue | SoC | dtype | 状态 | 说明 |
 |---|---|---|---|---|---|
@@ -100,7 +125,7 @@ fla 系列线性注意力算子在昇腾 NPU 上的高效实现库。后端用
 
 </details>
 
-<details><summary><b>gdn_bwd</b> —— 0/3 完成，起点 A2-07</summary>
+<details><summary>gdn_bwd —— 0/3 完成，起点 A2-07</summary>
 
 | 任务 | issue | SoC | dtype | 状态 | 说明 |
 |---|---|---|---|---|---|
@@ -110,7 +135,7 @@ fla 系列线性注意力算子在昇腾 NPU 上的高效实现库。后端用
 
 </details>
 
-<details><summary><b>gdn_fused_recurrent</b> —— 0/1 完成，起点 A2-20</summary>
+<details><summary>gdn_fused_recurrent —— 0/1 完成，起点 A2-20</summary>
 
 | 任务 | issue | SoC | dtype | 状态 | 说明 |
 |---|---|---|---|---|---|
@@ -118,7 +143,107 @@ fla 系列线性注意力算子在昇腾 NPU 上的高效实现库。后端用
 
 </details>
 
-> 图例：⬜ 可申领 · 🔵 进行中 · 🔒 有前置条件未满足 · ✅ 已完成 · — 该 kernel 还没有任务。
-> ★ 起点 = 该 kernel 链里依赖全在组外的任务，也就是要让这个 kernel 动起来先做哪一条。
-> 任务顺序由依赖关系算出，不是手写的。**仓主轨道**的 kernel 不派给 agent，进度见 `docs/handoff.md` §1。
+</details>
+
+<details><summary><b>DeltaNet —— 2 个 kernel</b></summary>
+
+_上游单元已存在，本仓尚未排任务_
+
+| kernel | 归属 | 进度 | 下一步 |
+|---|---|---|---|
+| `delta_rule_fwd` | 尚未排任务 | — | _上游单元已存在，本仓尚未排任务_ |
+| `delta_rule_bwd` | 尚未排任务 | — | _上游单元已存在，本仓尚未排任务_ |
+
+</details>
+
+<details><summary><b>GDN-2（Gated DeltaNet 2） —— 5 个 kernel</b></summary>
+
+_仓主并行轨道，见 docs/handoff.md §1_
+
+| kernel | 归属 | 进度 | 下一步 |
+|---|---|---|---|
+| `gdn2_fused_recurrent` | 仓主轨道 | — | _仓主轨道：通用 CCE recurrent_ |
+| `gdn2_fused_decode` | 仓主轨道 | — | _仓主轨道：模型专用融合 decode_ |
+| `gdn2_short_conv_decode` | 仓主轨道 | — | _仓主轨道：打包短卷积 decode_ |
+| `gdn2_norm2_w12_swiglu` | 仓主轨道 | — | _仓主轨道：融合 RMSNorm + SwiGLU_ |
+| `gdn2_chunk_fwd_bwd` | 仓主轨道 | — | _仓主轨道：尚未实现，量程需单独设计_ |
+
+</details>
+
+<details><summary><b>Mamba-1/2/3 —— 本仓暂无 kernel</b></summary>
+
+_未排期：属 gated epic G4（窄切片原则 —— 没有目标模型就不做），需用户放行_
+
+</details>
+
+<details><summary><b>GLA（Gated Linear Attention） —— 本仓暂无 kernel</b></summary>
+
+_未排期：属 gated epic G4（窄切片原则 —— 没有目标模型就不做），需用户放行_
+
+</details>
+
+<details><summary><b>PKDA / PGDN（预条件） —— 本仓暂无 kernel</b></summary>
+
+_未排期：属 gated epic G4（窄切片原则 —— 没有目标模型就不做），需用户放行_
+
+</details>
+
+<details><summary><b>Log-Linear Attention —— 本仓暂无 kernel</b></summary>
+
+_未排期：属 gated epic G4（窄切片原则 —— 没有目标模型就不做），需用户放行_
+
+</details>
+
+<details><summary><b>DLA（动态线性注意力） —— 本仓暂无 kernel</b></summary>
+
+_未排期：属 gated epic G4（窄切片原则 —— 没有目标模型就不做），需用户放行_
+
+</details>
+
+<details><summary><b>StateX（宽状态） —— 本仓暂无 kernel</b></summary>
+
+_未排期：属 gated epic G4（窄切片原则 —— 没有目标模型就不做），需用户放行_
+
+</details>
+
+<details><summary><b>NAtS-L（动态路由混合） —— 本仓暂无 kernel</b></summary>
+
+_未排期：属 gated epic G4（窄切片原则 —— 没有目标模型就不做），需用户放行_
+
+</details>
+
+<details><summary><b>NHA（Native Hybrid Attention） —— 本仓暂无 kernel</b></summary>
+
+_未排期：属 gated epic G4（窄切片原则 —— 没有目标模型就不做），需用户放行_
+
+</details>
+
+<details><summary><b>Local Linear Attention —— 本仓暂无 kernel</b></summary>
+
+_未排期：属 gated epic G4（窄切片原则 —— 没有目标模型就不做），需用户放行_
+
+</details>
+
+<details><summary><b>DeltaStack（栈式） —— 本仓暂无 kernel</b></summary>
+
+_未排期：属 gated epic G4（窄切片原则 —— 没有目标模型就不做），需用户放行_
+
+</details>
+
+<details><summary><b>TTT / MesaNet —— 本仓暂无 kernel</b></summary>
+
+_未排期：属 gated epic G4（窄切片原则 —— 没有目标模型就不做），需用户放行_
+
+</details>
+
+<details><summary><b>NSA / 稀疏注意力 —— 本仓暂无 kernel</b></summary>
+
+_未排期：属 gated epic G4（窄切片原则 —— 没有目标模型就不做），需用户放行_
+
+</details>
+
+> 图例：⬜ 可申领 · 🔵 进行中 · 🔒 有前置条件未满足 · ✅ 已完成 · — 还没有任务。
+> ★ 起点 = 该 kernel 链里传递依赖全在组外的任务，也就是要让这个 kernel 动起来先做哪一条。
+> 任务顺序由依赖关系算出，不是手写的。**仓主轨道**不派给 agent（见 `docs/handoff.md` §1）；
+> **未排期 (G4)** 的算子族本仓没有 kernel，按窄切片原则要有目标模型才开工。
 <!-- fla-pm:kernels end -->

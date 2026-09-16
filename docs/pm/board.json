@@ -1291,5 +1291,150 @@
         "note_en": "Owner track: not built; needs its own range design"
       }
     ]
+  },
+  "family_inventory": {
+    "note": "算子族清单。前四个在本仓有 kernel 单元；其余来自 2026-09-14 收到的 Gemini 规划文档所列算子族，本仓没有对应 kernel，统一挂在 gated epic G4 下。首页表按 算子族 → kernel → 任务 两级折叠展示。",
+    "families": [
+      {
+        "id": "kda",
+        "label_zh": "KDA（Kimi Delta Attention）",
+        "label_en": "KDA (Kimi Delta Attention)",
+        "track": "agent",
+        "note_zh": "首个目标算子族，Kimi-Linear 用它",
+        "note_en": "First target family; used by Kimi-Linear"
+      },
+      {
+        "id": "gated_delta_rule",
+        "label_zh": "GDN（Gated DeltaNet）",
+        "label_en": "GDN (Gated DeltaNet)",
+        "track": "agent",
+        "note_zh": "Qwen3-Next 用它，六项 ABI 缺口待补",
+        "note_en": "Used by Qwen3-Next; six ABI gaps to close"
+      },
+      {
+        "id": "delta_rule",
+        "label_zh": "DeltaNet",
+        "label_en": "DeltaNet",
+        "track": "none",
+        "note_zh": "上游单元已存在，本仓尚未排任务",
+        "note_en": "Upstream units exist; no task scheduled here yet"
+      },
+      {
+        "id": "gdn2",
+        "label_zh": "GDN-2（Gated DeltaNet 2）",
+        "label_en": "GDN-2 (Gated DeltaNet 2)",
+        "track": "owner",
+        "note_zh": "仓主并行轨道，见 docs/handoff.md §1",
+        "note_en": "Owner's parallel track; see docs/handoff.md §1"
+      },
+      {
+        "id": "mamba",
+        "label_zh": "Mamba-1/2/3",
+        "label_en": "Mamba-1/2/3",
+        "track": "epic",
+        "note_zh": "未排期：属 gated epic G4（窄切片原则 —— 没有目标模型就不做），需用户放行",
+        "note_en": "Not scheduled: gated epic G4 (narrow-slice rule — no target model, no work). Needs owner sign-off.",
+        "epic": "G4"
+      },
+      {
+        "id": "gla",
+        "label_zh": "GLA（Gated Linear Attention）",
+        "label_en": "GLA (Gated Linear Attention)",
+        "track": "epic",
+        "note_zh": "未排期：属 gated epic G4（窄切片原则 —— 没有目标模型就不做），需用户放行",
+        "note_en": "Not scheduled: gated epic G4 (narrow-slice rule — no target model, no work). Needs owner sign-off.",
+        "epic": "G4"
+      },
+      {
+        "id": "pkda",
+        "label_zh": "PKDA / PGDN（预条件）",
+        "label_en": "PKDA / PGDN (preconditioned)",
+        "track": "epic",
+        "note_zh": "未排期：属 gated epic G4（窄切片原则 —— 没有目标模型就不做），需用户放行",
+        "note_en": "Not scheduled: gated epic G4 (narrow-slice rule — no target model, no work). Needs owner sign-off.",
+        "epic": "G4"
+      },
+      {
+        "id": "log_linear",
+        "label_zh": "Log-Linear Attention",
+        "label_en": "Log-Linear Attention",
+        "track": "epic",
+        "note_zh": "未排期：属 gated epic G4（窄切片原则 —— 没有目标模型就不做），需用户放行",
+        "note_en": "Not scheduled: gated epic G4 (narrow-slice rule — no target model, no work). Needs owner sign-off.",
+        "epic": "G4"
+      },
+      {
+        "id": "dla",
+        "label_zh": "DLA（动态线性注意力）",
+        "label_en": "DLA (Dynamic Linear Attention)",
+        "track": "epic",
+        "note_zh": "未排期：属 gated epic G4（窄切片原则 —— 没有目标模型就不做），需用户放行",
+        "note_en": "Not scheduled: gated epic G4 (narrow-slice rule — no target model, no work). Needs owner sign-off.",
+        "epic": "G4"
+      },
+      {
+        "id": "statex",
+        "label_zh": "StateX（宽状态）",
+        "label_en": "StateX (wide state)",
+        "track": "epic",
+        "note_zh": "未排期：属 gated epic G4（窄切片原则 —— 没有目标模型就不做），需用户放行",
+        "note_en": "Not scheduled: gated epic G4 (narrow-slice rule — no target model, no work). Needs owner sign-off.",
+        "epic": "G4"
+      },
+      {
+        "id": "natsl",
+        "label_zh": "NAtS-L（动态路由混合）",
+        "label_en": "NAtS-L (dynamic routing hybrid)",
+        "track": "epic",
+        "note_zh": "未排期：属 gated epic G4（窄切片原则 —— 没有目标模型就不做），需用户放行",
+        "note_en": "Not scheduled: gated epic G4 (narrow-slice rule — no target model, no work). Needs owner sign-off.",
+        "epic": "G4"
+      },
+      {
+        "id": "nha",
+        "label_zh": "NHA（Native Hybrid Attention）",
+        "label_en": "NHA (Native Hybrid Attention)",
+        "track": "epic",
+        "note_zh": "未排期：属 gated epic G4（窄切片原则 —— 没有目标模型就不做），需用户放行",
+        "note_en": "Not scheduled: gated epic G4 (narrow-slice rule — no target model, no work). Needs owner sign-off.",
+        "epic": "G4"
+      },
+      {
+        "id": "local_linear",
+        "label_zh": "Local Linear Attention",
+        "label_en": "Local Linear Attention",
+        "track": "epic",
+        "note_zh": "未排期：属 gated epic G4（窄切片原则 —— 没有目标模型就不做），需用户放行",
+        "note_en": "Not scheduled: gated epic G4 (narrow-slice rule — no target model, no work). Needs owner sign-off.",
+        "epic": "G4"
+      },
+      {
+        "id": "deltastack",
+        "label_zh": "DeltaStack（栈式）",
+        "label_en": "DeltaStack",
+        "track": "epic",
+        "note_zh": "未排期：属 gated epic G4（窄切片原则 —— 没有目标模型就不做），需用户放行",
+        "note_en": "Not scheduled: gated epic G4 (narrow-slice rule — no target model, no work). Needs owner sign-off.",
+        "epic": "G4"
+      },
+      {
+        "id": "ttt",
+        "label_zh": "TTT / MesaNet",
+        "label_en": "TTT / MesaNet",
+        "track": "epic",
+        "note_zh": "未排期：属 gated epic G4（窄切片原则 —— 没有目标模型就不做），需用户放行",
+        "note_en": "Not scheduled: gated epic G4 (narrow-slice rule — no target model, no work). Needs owner sign-off.",
+        "epic": "G4"
+      },
+      {
+        "id": "nsa",
+        "label_zh": "NSA / 稀疏注意力",
+        "label_en": "NSA / sparse attention",
+        "track": "epic",
+        "note_zh": "未排期：属 gated epic G4（窄切片原则 —— 没有目标模型就不做），需用户放行",
+        "note_en": "Not scheduled: gated epic G4 (narrow-slice rule — no target model, no work). Needs owner sign-off.",
+        "epic": "G4"
+      }
+    ]
   }
 }
