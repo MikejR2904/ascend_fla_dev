@@ -1177,5 +1177,115 @@
       "tests/test_gdn2_model.py",
       "tests/test_gdn2_recurrent.py"
     ]
+  },
+  "kernel_inventory": {
+    "note": "全部已知 kernel，来源是 docs/matrix/ops.json 的 linear_attention_ops 与 missing_ops。track：agent = 本看板派单；owner = 仓主并行轨道（见 reserved_paths）；upstream = 上游单元，本仓用派生版取代；none = 已知但还没排任务。首页表由 tools/pm_board.py --readme 按这份清单生成。",
+    "kernels": [
+      {
+        "id": "kda_fwd_stable",
+        "family": "kda",
+        "track": "agent",
+        "note_zh": "本仓派生单元，门控跨度稳定化改写",
+        "note_en": "Fork of upstream, gate-span stabilised"
+      },
+      {
+        "id": "kda_bwd_stable",
+        "family": "kda",
+        "track": "agent",
+        "note_zh": "本仓派生单元，成对衰减锚点取中点",
+        "note_en": "Fork of upstream, midpoint decay anchor"
+      },
+      {
+        "id": "kda_fused_recurrent",
+        "family": "kda",
+        "track": "agent",
+        "note_zh": "本仓自写的 decode kernel",
+        "note_en": "Written in-repo, decode path"
+      },
+      {
+        "id": "kda_fwd",
+        "family": "kda",
+        "track": "upstream",
+        "note_zh": "上游 ascriptor 单元，本仓用 kda_fwd_stable 取代",
+        "note_en": "Upstream unit; superseded here by kda_fwd_stable"
+      },
+      {
+        "id": "kda_bwd",
+        "family": "kda",
+        "track": "upstream",
+        "note_zh": "上游 ascriptor 单元，本仓用 kda_bwd_stable 取代",
+        "note_en": "Upstream unit; superseded here by kda_bwd_stable"
+      },
+      {
+        "id": "gdn_fwd",
+        "family": "gated_delta_rule",
+        "track": "agent",
+        "note_zh": "上游单元，六项 ABI 缺口待补",
+        "note_en": "Upstream unit; six ABI gaps to close"
+      },
+      {
+        "id": "gdn_bwd",
+        "family": "gated_delta_rule",
+        "track": "agent",
+        "note_zh": "上游单元，反向不产出 dh0",
+        "note_en": "Upstream unit; backward emits no dh0"
+      },
+      {
+        "id": "gdn_fused_recurrent",
+        "family": "gated_delta_rule",
+        "track": "agent",
+        "note_zh": "整族缺失，照 KDA 那个的结构做",
+        "note_en": "Missing entirely; model on the KDA one"
+      },
+      {
+        "id": "delta_rule_fwd",
+        "family": "delta_rule",
+        "track": "none",
+        "note_zh": "上游单元已存在，本仓尚未排任务",
+        "note_en": "Upstream unit exists; no task scheduled yet"
+      },
+      {
+        "id": "delta_rule_bwd",
+        "family": "delta_rule",
+        "track": "none",
+        "note_zh": "上游单元已存在，本仓尚未排任务",
+        "note_en": "Upstream unit exists; no task scheduled yet"
+      },
+      {
+        "id": "gdn2_fused_recurrent",
+        "family": "gdn2",
+        "track": "owner",
+        "note_zh": "仓主轨道：通用 CCE recurrent",
+        "note_en": "Owner track: generic CCE recurrent"
+      },
+      {
+        "id": "gdn2_fused_decode",
+        "family": "gdn2",
+        "track": "owner",
+        "note_zh": "仓主轨道：模型专用融合 decode",
+        "note_en": "Owner track: model-specific fused decode"
+      },
+      {
+        "id": "gdn2_short_conv_decode",
+        "family": "gdn2",
+        "track": "owner",
+        "note_zh": "仓主轨道：打包短卷积 decode",
+        "note_en": "Owner track: packed short-conv decode"
+      },
+      {
+        "id": "gdn2_norm2_w12_swiglu",
+        "family": "gdn2",
+        "track": "owner",
+        "note_zh": "仓主轨道：融合 RMSNorm + SwiGLU",
+        "note_en": "Owner track: fused RMSNorm + SwiGLU"
+      },
+      {
+        "id": "gdn2_chunk_fwd_bwd",
+        "family": "gdn2",
+        "track": "owner",
+        "note_zh": "仓主轨道：尚未实现，量程需单独设计",
+        "note_en": "Owner track: not built; needs its own range design"
+      }
+    ]
   }
 }

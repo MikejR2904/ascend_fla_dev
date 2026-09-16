@@ -206,7 +206,12 @@ class TestReadmeBlock(_Tmp):
 
     def board(self):
         t = _task("A", kernel=["K"], model=[], dtype=["bf16"])
-        return {"repo": "o/r", "tasks": [t], "axes": {"kernel": ["K"], "model": [], "dtype": ["bf16"]}}
+        return {"repo": "o/r", "tasks": [t], "axes": {"kernel": ["K"], "model": [], "dtype": ["bf16"]},
+                "kernel_inventory": {"kernels": [
+                    {"id": "K", "family": "kda", "track": "agent", "note_zh": "有任务", "note_en": "has tasks"},
+                    {"id": "Q", "family": "delta_rule", "track": "none",
+                     "note_zh": "尚未排任务", "note_en": "no task scheduled yet"},
+                ]}}
 
     def test_block_lists_kernel_and_links_issue(self):
         board = self.board()
@@ -215,6 +220,25 @@ class TestReadmeBlock(_Tmp):
         self.assertIn("`K`", block)
         self.assertIn("https://github.com/o/r/issues/7", block)
         self.assertIn("★ 起点", block)
+
+    def test_kernels_without_tasks_are_listed_with_reason(self):
+        """没有任务的 kernel 也要出现在表里 —— 不列出来，读者会以为它不存在。"""
+        block = pm_board.render_readme_block(self.board())
+        self.assertIn("`Q`", block)
+        self.assertIn("尚未排任务", block)
+        self.assertIn("| — |", block, "没有任务的那行进度应当是 —")
+
+    def test_english_variant(self):
+        en = pm_board.render_readme_block(self.board(), "en")
+        self.assertIn("no task yet", en)
+        self.assertIn("★ start", en)
+        self.assertNotIn("起点", en)
+
+    def test_both_languages_cover_the_same_kernels(self):
+        zh, en = (pm_board.render_readme_block(self.board(), x) for x in ("zh", "en"))
+        for kernel in ("`K`", "`Q`"):
+            self.assertIn(kernel, zh)
+            self.assertIn(kernel, en)
 
     def test_drift_is_detected_and_fixable(self):
         board = self.board()
