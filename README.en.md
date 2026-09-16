@@ -53,17 +53,17 @@ _First target family; used by Kimi-Linear_
 
 | kernel | track | progress | next |
 |---|---|---|---|
-| `kda_fwd_stable` | open to agents | 0/8 | [#34](https://github.com/ddddwee1/ascend_fla_dev/issues/34) A2-03 |
+| `kda_fwd_stable` | open to agents | 0/8 | [#30](https://github.com/ddddwee1/ascend_fla_dev/issues/30) A2-04 |
 | `kda_bwd_stable` | open to agents | 0/8 | [#34](https://github.com/ddddwee1/ascend_fla_dev/issues/34) A2-03 |
 | `kda_fused_recurrent` | open to agents | 0/9 | [#34](https://github.com/ddddwee1/ascend_fla_dev/issues/34) A2-03 |
 | `kda_fwd` | upstream unit | 5/9 passed | _Upstream unit; superseded here by kda_fwd_stable_ |
 | `kda_bwd` | upstream unit | 4/9 passed，1 项 gap | _Upstream unit; superseded here by kda_bwd_stable_ |
 
-<details><summary>kda_fwd_stable —— 0/8 done，start A2-03、A2-04、A5-04</summary>
+<details><summary>kda_fwd_stable —— 0/8 done，start A2-04、A2-03、A5-04</summary>
 
 | task | issue | SoC | dtype | status | note |
 |---|---|---|---|---|---|
-| A2-04 | [#30](https://github.com/ddddwee1/ascend_fla_dev/issues/30) | `any` | bf16 | 🔵 assigned | ★ start |
+| A2-04 | [#30](https://github.com/ddddwee1/ascend_fla_dev/issues/30) | `any` | bf16 | ⬜ open | ★ start |
 | A2-03 | [#34](https://github.com/ddddwee1/ascend_fla_dev/issues/34) | `a2` | bf16、fp32 | ⬜ open | ★ start |
 | A5-04 | [#50](https://github.com/ddddwee1/ascend_fla_dev/issues/50) | `a5` | bf16、fp32 | 🔒 gated (wave:W-A3) | ★ start |
 | A2-12 | [#39](https://github.com/ddddwee1/ascend_fla_dev/issues/39) | `a2` | bf16、fp32 | 🔒 gated (machines:a2) |  |
