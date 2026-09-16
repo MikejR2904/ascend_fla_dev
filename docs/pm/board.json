@@ -74,6 +74,13 @@
       "date": "2026-09-16",
       "by": "user",
       "decision": "任务清单补两类：整网适配的融合算子（模块/层级，新 fusion 族），以及各数据类型的需求（dtype_inventory）。低比特那几种仍挂 G3，等放行"
+    },
+    {
+      "id": "D-PM-12",
+      "date": "2026-09-16",
+      "by": "user",
+      "decision": "GDN-2 的进展在首页跟踪（数据取自 docs/matrix/ops.json 的 validation 阶段，不在看板造任务）；PKDA 细化排期，先做 PK-01 确立权威来源",
+      "risk": "PKDA 在 fla 0.5.2 里没有实现，Gemini 文档只有机制描述 —— 没有 oracle 就没有验收判据，所以先做来源调研而不是直接排实现任务。用户提到的 QDelta 在 fla 与本仓文档里都查不到，未排期，待澄清"
     }
   ],
   "gated_epics": [
@@ -1344,6 +1351,38 @@
       "reports": [],
       "result": null,
       "gate": "user-decision"
+    },
+    {
+      "id": "PK-01",
+      "title": "PKDA / PGDN：先把权威来源与语义定下来（本仓无 oracle）",
+      "wave": "W0",
+      "soc": "any",
+      "priority": "P2",
+      "status": "open",
+      "model": [],
+      "kernel": [],
+      "dtype": [
+        "bf16",
+        "fp32"
+      ],
+      "deps": [],
+      "write_set": [
+        "docs/research/pkda_semantics.md"
+      ],
+      "needs": {
+        "npu": false,
+        "ascriptor": false,
+        "fla": true
+      },
+      "spec": "docs/pm/tasks/PK-01.md",
+      "issue": 59,
+      "pr": null,
+      "assignee": null,
+      "assignee_caps": null,
+      "branch": null,
+      "timebox_h": 10,
+      "reports": [],
+      "result": null
     }
   ],
   "label_github_login": "ascend-fla-pm-bot",
@@ -1603,10 +1642,9 @@
         "id": "pkda",
         "label_zh": "PKDA / PGDN（预条件）",
         "label_en": "PKDA / PGDN (preconditioned)",
-        "track": "epic",
-        "note_zh": "未排期：属 gated epic G4（窄切片原则 —— 没有目标模型就不做），需用户放行",
-        "note_en": "Not scheduled: gated epic G4 (narrow-slice rule — no target model, no work). Needs owner sign-off.",
-        "epic": "G4"
+        "track": "none",
+        "note_zh": "用户 2026-09-16 点名细化排期。**fla 0.5.2 里没有 pkda 实现**，那三份 Gemini 文档也只给了机制描述（测试时回归 / 对角 Hessian 预条件），没有可对照的参考实现 —— 所以第一步是把权威来源找出来，见 PK-01",
+        "note_en": "Called out for scheduling on 2026-09-16. **No pkda implementation in fla 0.5.2**; the Gemini docs only describe the mechanism, with no reference implementation to check against — so step one is to establish the source of truth (see PK-01)"
       },
       {
         "id": "log_linear",

@@ -28,12 +28,12 @@ fla 系列线性注意力算子在昇腾 NPU 上的高效实现库。后端用
 |---|---|---|---|---|
 | KDA（Kimi Delta Attention） | `kda` | 可申领 | 5 | 0/14 |
 | GDN（Gated DeltaNet） | `gated_delta_rule` | 可申领 | 3 | 0/3 |
-| DeltaNet | `delta_rule` | 尚未排任务 | 2 | — |
-| GDN-2（Gated DeltaNet 2） | `gdn2` | 仓主轨道 | 5 | — |
+| DeltaNet | `delta_rule` | 尚未排任务 | 2 | 2/2 单元有验证记录 |
+| GDN-2（Gated DeltaNet 2） | `gdn2` | 仓主轨道 | 5 | 4/5 单元有验证记录 |
 | 整网融合算子（模块 / 层级） | `fusion` | 可申领 | 4 | 0/4 |
 | Mamba-1/2/3 | `mamba` | 未排期 (G4) | — | — |
 | GLA（Gated Linear Attention） | `gla` | 未排期 (G4) | — | — |
-| PKDA / PGDN（预条件） | `pkda` | 未排期 (G4) | — | — |
+| PKDA / PGDN（预条件） | `pkda` | 尚未排任务 | — | — |
 | Log-Linear Attention | `log_linear` | 未排期 (G4) | — | — |
 | DLA（动态线性注意力） | `dla` | 未排期 (G4) | — | — |
 | StateX（宽状态） | `statex` | 未排期 (G4) | — | — |
@@ -55,8 +55,8 @@ _首个目标算子族，Kimi-Linear 用它_
 | `kda_fwd_stable` | 可申领 | 0/8 | [#30](https://github.com/ddddwee1/ascend_fla_dev/issues/30) A2-04 |
 | `kda_bwd_stable` | 可申领 | 0/8 | [#34](https://github.com/ddddwee1/ascend_fla_dev/issues/34) A2-03 |
 | `kda_fused_recurrent` | 可申领 | 0/9 | [#34](https://github.com/ddddwee1/ascend_fla_dev/issues/34) A2-03 |
-| `kda_fwd` | 上游单元 | — | _上游 ascriptor 单元，本仓用 kda_fwd_stable 取代_ |
-| `kda_bwd` | 上游单元 | — | _上游 ascriptor 单元，本仓用 kda_bwd_stable 取代_ |
+| `kda_fwd` | 上游单元 | 5/9 passed | _上游 ascriptor 单元，本仓用 kda_fwd_stable 取代_ |
+| `kda_bwd` | 上游单元 | 4/9 passed，1 项 gap | _上游 ascriptor 单元，本仓用 kda_bwd_stable 取代_ |
 
 <details><summary>kda_fwd_stable —— 0/8 完成，起点 A2-04、A2-03、A5-04</summary>
 
@@ -152,8 +152,8 @@ _上游单元已存在，本仓尚未排任务_
 
 | kernel | 归属 | 进度 | 下一步 |
 |---|---|---|---|
-| `delta_rule_fwd` | 尚未排任务 | — | _上游单元已存在，本仓尚未排任务_ |
-| `delta_rule_bwd` | 尚未排任务 | — | _上游单元已存在，本仓尚未排任务_ |
+| `delta_rule_fwd` | 尚未排任务 | 7/9 passed | _上游单元已存在，本仓尚未排任务_ |
+| `delta_rule_bwd` | 尚未排任务 | 7/9 passed | _上游单元已存在，本仓尚未排任务_ |
 
 </details>
 
@@ -163,10 +163,10 @@ _仓主并行轨道，见 docs/handoff.md §1_
 
 | kernel | 归属 | 进度 | 下一步 |
 |---|---|---|---|
-| `gdn2_fused_recurrent` | 仓主轨道 | — | _仓主轨道：通用 CCE recurrent_ |
-| `gdn2_fused_decode` | 仓主轨道 | — | _仓主轨道：模型专用融合 decode_ |
-| `gdn2_short_conv_decode` | 仓主轨道 | — | _仓主轨道：打包短卷积 decode_ |
-| `gdn2_norm2_w12_swiglu` | 仓主轨道 | — | _仓主轨道：融合 RMSNorm + SwiGLU_ |
+| `gdn2_fused_recurrent` | 仓主轨道 | 6/6 passed | _仓主轨道：通用 CCE recurrent_ |
+| `gdn2_fused_decode` | 仓主轨道 | 6/6 passed | _仓主轨道：模型专用融合 decode_ |
+| `gdn2_short_conv_decode` | 仓主轨道 | 6/6 passed | _仓主轨道：打包短卷积 decode_ |
+| `gdn2_norm2_w12_swiglu` | 仓主轨道 | 4/6 passed | _仓主轨道：融合 RMSNorm + SwiGLU_ |
 | `gdn2_chunk_fwd_bwd` | 仓主轨道 | — | _仓主轨道：尚未实现，量程需单独设计_ |
 
 </details>
@@ -234,7 +234,7 @@ _未排期：属 gated epic G4（窄切片原则 —— 没有目标模型就不
 
 <details><summary><b>PKDA / PGDN（预条件） —— 本仓暂无 kernel</b></summary>
 
-_未排期：属 gated epic G4（窄切片原则 —— 没有目标模型就不做），需用户放行_
+_用户 2026-09-16 点名细化排期。**fla 0.5.2 里没有 pkda 实现**，那三份 Gemini 文档也只给了机制描述（测试时回归 / 对角 Hessian 预条件），没有可对照的参考实现 —— 所以第一步是把权威来源找出来，见 PK-01_
 
 </details>
 
@@ -297,8 +297,8 @@ _未排期：属 gated epic G4（窄切片原则 —— 没有目标模型就不
 
 | dtype | 归属 | 涉及任务 | 说明 |
 |---|---|---|---|
-| `bf16` | 可申领 | 16 | 当前 ABI：q/k/v/o 与多数中间量 |
-| `fp32` | 可申领 | 23 | 当前 ABI：state、门控累加、精度判定一律 fp32 |
+| `bf16` | 可申领 | 17 | 当前 ABI：q/k/v/o 与多数中间量 |
+| `fp32` | 可申领 | 24 | 当前 ABI：state、门控累加、精度判定一律 fp32 |
 | `fp16` | 未排期 (G3) | — | 契约明确拒绝（见 ops.json 的 no-tail-path 一条） |
 | `int8` | 未排期 (G3) | 1 | 未排期；state 累积漂移需先有方案 |
 | `mxfp8` | 未排期 (G3) | 1 | 未排期；950 原生解码待核实 |

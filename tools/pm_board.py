@@ -406,7 +406,7 @@ _T = {
            "done": "完成", "start": "起点", "nostart": "无起点", "startflag": "★ 起点",
            "kernels": "个 kernel", "nokernel": "本仓暂无 kernel",
            "detail": "展开看细节（算子族 → kernel → 任务）",
-           "dtypes": "数据类型", "dcols": "| dtype | 归属 | 涉及任务 | 说明 |",
+           "dtypes": "数据类型", "verified": "单元有验证记录", "dcols": "| dtype | 归属 | 涉及任务 | 说明 |",
            "legend": ["> 图例：⬜ 可申领 · 🔵 进行中 · 🔒 有前置条件未满足 · ✅ 已完成 · — 还没有任务。",
                       "> ★ 起点 = 该 kernel 链里传递依赖全在组外的任务，也就是要让这个 kernel 动起来先做哪一条。",
                       "> 任务顺序由依赖关系算出，不是手写的。**仓主轨道**不派给 agent（见 `docs/handoff.md` §1）；",
@@ -418,7 +418,7 @@ _T = {
            "done": "done", "start": "start", "nostart": "no start", "startflag": "★ start",
            "kernels": "kernel(s)", "nokernel": "no kernel in this repo",
            "detail": "Expand for detail (family → kernel → task)",
-           "dtypes": "Data types", "dcols": "| dtype | track | tasks | note |",
+           "dtypes": "Data types", "verified": "units with validation records", "dcols": "| dtype | track | tasks | note |",
            "legend": ["> Legend: ⬜ open · 🔵 in progress · 🔒 blocked by a gate · ✅ done · — no task yet.",
                       "> ★ start = the task whose transitive deps all fall outside its kernel's chain,",
                       "> i.e. what to do first to get that kernel moving. Ordering is computed from dependencies.",
@@ -426,6 +426,32 @@ _T = {
                       "> **not scheduled (G4)** families have no kernel here — narrow-slice rule: no target model, no work.",
                       "> Task specs and issues are written in Chinese."]},
 }
+
+
+MATRIX_OPS = ROOT / "docs" / "matrix" / "ops.json"
+
+
+def validation_of(kernel: str, root: Path = ROOT) -> str | None:
+    """从支持矩阵取一个 kernel 的验证阶段小结，形如 ``4/6 passed``。
+
+    仓主并行轨道（GDN-2）的进度不在看板上 —— 那条轨道不派单，也就没有任务可数。
+    但 ``docs/matrix/ops.json`` 的 validation 阶段是仓主自己维护的权威记录，
+    拿它当进度来源，比在看板里凭空造几条任务诚实，也不会跟着漂移。
+    """
+    path = Path(root) / "docs" / "matrix" / "ops.json"
+    if not path.is_file():
+        return None
+    ops = json.loads(path.read_text(encoding="utf-8")).get("linear_attention_ops", [])
+    hit = next((o for o in ops if o["id"].split(".", 1)[-1] == kernel), None)
+    if not hit:
+        return None
+    stages = {k: v for k, v in hit.get("validation", {}).items()
+              if not k.startswith("evidence") and k != "note"}
+    if not stages:
+        return None
+    ok = sum(v == "passed" for v in stages.values())
+    bad = [k for k, v in stages.items() if v in ("gap", "failed")]
+    return f"{ok}/{len(stages)} passed" + (f"，{len(bad)} 项 {'/'.join(sorted({stages[k] for k in bad}))}" if bad else "")
 
 
 def render_readme_block(board: dict, lang: str = "zh") -> str:
@@ -461,8 +487,13 @@ def render_readme_block(board: dict, lang: str = "zh") -> str:
         ks = [k for k in inventory if k["family"] == f["id"]]
         done, total = tally(ks)
         epic = f" ({f['epic']})" if f.get("epic") else ""
+        if total:
+            prog = f"{done}/{total}"
+        else:                       # 仓主轨道 / 上游单元：进度看矩阵的验证阶段，不是看板任务
+            with_records = sum(validation_of(k["id"]) is not None for k in ks)
+            prog = f"{with_records}/{len(ks)} {tr['verified']}" if with_records else "—"
         lines.append(f"| {f[label_key]} | `{f['id']}` | {TRACK_LABEL[lang][f['track']]}{epic} "
-                     f"| {len(ks) or '—'} | {f'{done}/{total}' if total else '—'} |")
+                     f"| {len(ks) or '—'} | {prog} |")
 
     # 第二级：展开一族，看它的 kernel；再展开一个 kernel，看它的任务链。
     lines += ["", f"### {tr['detail']}", ""]
@@ -479,7 +510,9 @@ def render_readme_block(board: dict, lang: str = "zh") -> str:
                 chain = chain_of(board, k["id"])
                 kdone, starts = sum(t["status"] == "done" for t in chain), entries.get(k["id"], [])
                 nxt = next((t for t in chain if t["id"] == starts[0]), None) if starts else None
-                progress = f"{kdone}/{len(chain)}" if chain else "—"
+                # 没有看板任务的 kernel（仓主轨道、上游单元），改用矩阵里的验证阶段当进度
+                stages = validation_of(k["id"]) if not chain else None
+                progress = f"{kdone}/{len(chain)}" if chain else (stages or "—")
                 nxt_cell = f"{link(nxt)} {nxt['id']}" if nxt else f"_{k[note_key]}_"
                 lines.append(f"| `{k['id']}` | {TRACK_LABEL[lang][k['track']]} | {progress} | {nxt_cell} |")
             lines.append("")

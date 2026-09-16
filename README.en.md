@@ -29,12 +29,12 @@ serves only as the semantic authority during testing (`naive.py` as a CPU fp32 o
 |---|---|---|---|---|
 | KDA (Kimi Delta Attention) | `kda` | open to agents | 5 | 0/14 |
 | GDN (Gated DeltaNet) | `gated_delta_rule` | open to agents | 3 | 0/3 |
-| DeltaNet | `delta_rule` | no task yet | 2 | — |
-| GDN-2 (Gated DeltaNet 2) | `gdn2` | owner track | 5 | — |
+| DeltaNet | `delta_rule` | no task yet | 2 | 2/2 units with validation records |
+| GDN-2 (Gated DeltaNet 2) | `gdn2` | owner track | 5 | 4/5 units with validation records |
 | Whole-network fusion ops (module / layer) | `fusion` | open to agents | 4 | 0/4 |
 | Mamba-1/2/3 | `mamba` | not scheduled (G4) | — | — |
 | GLA (Gated Linear Attention) | `gla` | not scheduled (G4) | — | — |
-| PKDA / PGDN (preconditioned) | `pkda` | not scheduled (G4) | — | — |
+| PKDA / PGDN (preconditioned) | `pkda` | no task yet | — | — |
 | Log-Linear Attention | `log_linear` | not scheduled (G4) | — | — |
 | DLA (Dynamic Linear Attention) | `dla` | not scheduled (G4) | — | — |
 | StateX (wide state) | `statex` | not scheduled (G4) | — | — |
@@ -56,8 +56,8 @@ _First target family; used by Kimi-Linear_
 | `kda_fwd_stable` | open to agents | 0/8 | [#30](https://github.com/ddddwee1/ascend_fla_dev/issues/30) A2-04 |
 | `kda_bwd_stable` | open to agents | 0/8 | [#34](https://github.com/ddddwee1/ascend_fla_dev/issues/34) A2-03 |
 | `kda_fused_recurrent` | open to agents | 0/9 | [#34](https://github.com/ddddwee1/ascend_fla_dev/issues/34) A2-03 |
-| `kda_fwd` | upstream unit | — | _Upstream unit; superseded here by kda_fwd_stable_ |
-| `kda_bwd` | upstream unit | — | _Upstream unit; superseded here by kda_bwd_stable_ |
+| `kda_fwd` | upstream unit | 5/9 passed | _Upstream unit; superseded here by kda_fwd_stable_ |
+| `kda_bwd` | upstream unit | 4/9 passed，1 项 gap | _Upstream unit; superseded here by kda_bwd_stable_ |
 
 <details><summary>kda_fwd_stable —— 0/8 done，start A2-04、A2-03、A5-04</summary>
 
@@ -153,8 +153,8 @@ _Upstream units exist; no task scheduled here yet_
 
 | kernel | track | progress | next |
 |---|---|---|---|
-| `delta_rule_fwd` | no task yet | — | _Upstream unit exists; no task scheduled yet_ |
-| `delta_rule_bwd` | no task yet | — | _Upstream unit exists; no task scheduled yet_ |
+| `delta_rule_fwd` | no task yet | 7/9 passed | _Upstream unit exists; no task scheduled yet_ |
+| `delta_rule_bwd` | no task yet | 7/9 passed | _Upstream unit exists; no task scheduled yet_ |
 
 </details>
 
@@ -164,10 +164,10 @@ _Owner's parallel track; see docs/handoff.md §1_
 
 | kernel | track | progress | next |
 |---|---|---|---|
-| `gdn2_fused_recurrent` | owner track | — | _Owner track: generic CCE recurrent_ |
-| `gdn2_fused_decode` | owner track | — | _Owner track: model-specific fused decode_ |
-| `gdn2_short_conv_decode` | owner track | — | _Owner track: packed short-conv decode_ |
-| `gdn2_norm2_w12_swiglu` | owner track | — | _Owner track: fused RMSNorm + SwiGLU_ |
+| `gdn2_fused_recurrent` | owner track | 6/6 passed | _Owner track: generic CCE recurrent_ |
+| `gdn2_fused_decode` | owner track | 6/6 passed | _Owner track: model-specific fused decode_ |
+| `gdn2_short_conv_decode` | owner track | 6/6 passed | _Owner track: packed short-conv decode_ |
+| `gdn2_norm2_w12_swiglu` | owner track | 4/6 passed | _Owner track: fused RMSNorm + SwiGLU_ |
 | `gdn2_chunk_fwd_bwd` | owner track | — | _Owner track: not built; needs its own range design_ |
 
 </details>
@@ -235,7 +235,7 @@ _Not scheduled: gated epic G4 (narrow-slice rule — no target model, no work). 
 
 <details><summary><b>PKDA / PGDN (preconditioned) —— no kernel in this repo</b></summary>
 
-_Not scheduled: gated epic G4 (narrow-slice rule — no target model, no work). Needs owner sign-off._
+_Called out for scheduling on 2026-09-16. **No pkda implementation in fla 0.5.2**; the Gemini docs only describe the mechanism, with no reference implementation to check against — so step one is to establish the source of truth (see PK-01)_
 
 </details>
 
@@ -298,8 +298,8 @@ _Not scheduled: gated epic G4 (narrow-slice rule — no target model, no work). 
 
 | dtype | track | tasks | note |
 |---|---|---|---|
-| `bf16` | open to agents | 16 | Current ABI: q/k/v/o and most intermediates |
-| `fp32` | open to agents | 23 | Current ABI: state, gate accumulation, all correctness judged in fp32 |
+| `bf16` | open to agents | 17 | Current ABI: q/k/v/o and most intermediates |
+| `fp32` | open to agents | 24 | Current ABI: state, gate accumulation, all correctness judged in fp32 |
 | `fp16` | not scheduled (G3) | — | Explicitly rejected by the contract |
 | `int8` | not scheduled (G3) | 1 | Not scheduled; state drift needs a design first |
 | `mxfp8` | not scheduled (G3) | 1 | Not scheduled; native 950 decode unverified |
