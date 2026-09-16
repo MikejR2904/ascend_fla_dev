@@ -211,7 +211,7 @@ class TestPlanSync(unittest.TestCase):
             issues.append({"number": n, "title": pm_github.issue_title(t), "body": pm_github.issue_body(t, board, self.root),
                            "state": "open", "labels": sorted(pm_github.desired_labels(t))})
         labels = sorted({n for i in issues for n in i["labels"]} | pm_github.desired_labels(board["tasks"][2])
-                        | {pm_github.REQUEST_LABEL, *pm_github.TRIAGE_LABELS})
+                        | {pm_github.REQUEST_LABEL, pm_github.ENTRY_LABEL, *pm_github.TRIAGE_LABELS})
         return issues, labels
 
     def test_in_sync_means_no_actions(self):

@@ -23,7 +23,7 @@ def _task(tid, status="open", deps=(), write_set=("x.py",), npu=False, soc="any"
     t = {"id": tid, "title": tid, "wave": "W0", "soc": soc, "priority": "P1", "status": status,
          "deps": list(deps), "write_set": list(write_set),
          "needs": {"npu": npu, "ascriptor": False, "fla": False}, "spec": f"{tid}.md",
-         "issue": None, "pr": None}
+         "issue": None, "pr": None, "model": [], "kernel": [], "dtype": []}
     if status in pm_board.IN_FLIGHT:
         t.update(assignee="agent-" + tid, branch="task/" + tid)
     if status == "gated":
@@ -159,6 +159,46 @@ class TestCheck(_Tmp):
     def test_ip_address_rejected(self):
         found = self.problems(_task("A", title="run on 10.0.0.12"))
         self.assertTrue(any("IP" in p for p in found), found)
+
+
+class TestKernelEntries(unittest.TestCase):
+    """"这个 kernel 从哪条开始" 必须从依赖图算出来，而且要看传递依赖。"""
+
+    def board(self):
+        # K 组：a（无依赖）、b（依赖 a）、c（依赖 x，x 依赖 a —— 传递上仍在 a 之后）、d（独立）
+        tasks = [_task("a", kernel=["K"]), _task("b", deps=["a"], kernel=["K"]),
+                 _task("x", deps=["a"], kernel=[]), _task("c", deps=["x"], kernel=["K"]),
+                 _task("d", kernel=["K"], wave="W-A5", status="gated", spec=None, gate="wave:W-A5")]
+        for t in tasks:
+            t.setdefault("model", []); t.setdefault("dtype", [])
+        return {"tasks": tasks, "axes": {"kernel": ["K"], "model": [], "dtype": []}}
+
+    def test_transitive_dependency_excludes_from_entry(self):
+        entries = pm_board.kernel_entries(self.board())["K"]
+        self.assertNotIn("c", entries, "c 顺着 x 依赖 a，不该算起点")
+        self.assertNotIn("b", entries)
+        self.assertEqual(entries[0], "a", "能马上做的 open 任务排第一")
+        self.assertIn("d", entries, "d 与 a 互不依赖，是另一个入口")
+
+    def test_entries_rank_actionable_first(self):
+        """gated 的入口排在 open 的后面 —— 第一个就是下一步该做的。"""
+        self.assertEqual(pm_board.kernel_entries(self.board())["K"], ["a", "d"])
+
+    def test_chain_respects_transitive_order(self):
+        chain = [t["id"] for t in pm_board.chain_of(self.board(), "K")]
+        self.assertLess(chain.index("a"), chain.index("c"), "c 必须排在 a 之后")
+        self.assertLess(chain.index("a"), chain.index("b"))
+
+    def test_unknown_axis_value_rejected(self):
+        board = self.board()
+        board["tasks"][0]["kernel"] = ["typo_kernel"]
+        with tempfile.TemporaryDirectory() as d:
+            root = pathlib.Path(d)
+            for t in board["tasks"]:
+                if t.get("spec"):
+                    (root / t["spec"]).write_text("s", encoding="utf-8")
+            found = pm_board.check(board, root=root)
+        self.assertTrue(any("未知取值" in p for p in found), found)
 
 
 class TestNextCandidates(unittest.TestCase):

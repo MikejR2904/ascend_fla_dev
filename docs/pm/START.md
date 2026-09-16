@@ -161,3 +161,29 @@ spec = importlib.util.spec_from_file_location("fla_kda_naive", p)
 naive = importlib.util.module_from_spec(spec); spec.loader.exec_module(naive)
 naive.naive_recurrent_kda, naive.naive_chunk_kda
 ```
+
+## 7. 按 模型 → kernel → 数据类型 → 机器 找任务
+
+看板给每条任务标了四个轴，issue 标签同步过去，所以在 GitHub 上可以直接组合筛：
+
+| 想找什么 | 怎么筛 |
+|---|---|
+| 某个模型的全部任务 | `label:model:kimi-linear-48b-a3b` |
+| 某个 kernel 的全部任务 | `label:kernel:kda_fwd_stable` |
+| 某个 kernel 在某台机器上的任务 | `label:kernel:kda_fwd_stable label:soc:a2` |
+| 低比特相关（排期后） | `label:dtype:hif4` |
+| **每个 kernel 从哪条开始** | `label:kernel-entry`，再叠上 `label:kernel:<名字>` |
+
+`kernel-entry` 不是手写的。它算出来的定义是：**该 kernel 组里，传递依赖中不含同组任务的那条**——
+也就是"这个 kernel 要动起来，先做哪一条"。用传递依赖而不是直接依赖，是因为同族任务会跨 kernel 相互依赖
+（A2-15 对 fwd 组没有直接依赖，但顺着 A2-13 往上要经过 A2-03，所以它不是起点）。
+
+一个 kernel 可能有多个入口（几条互不依赖的路）。任务 issue 正文里会写清楚哪条是下一步、其余是备选入口，
+还会把整条链的顺序列出来。本机看全貌：
+
+```bash
+.venv/bin/python tools/pm_board.py --tree
+```
+
+轴的取值在 `docs/pm/board.json` 的 `axes` 里，`--check` 会拦住拼错的取值。
+低比特那几种 dtype（int8 / mxfp8 / mxfp4 / hif8 / hif4）属于 gated epic G3，词汇表里留着但还没有任务。

@@ -52,9 +52,11 @@ PM_TYPES = frozenset({"ASSIGN", "NO_TASK", "REVIEW", "CLOSE", "PING"})
 _OPEN_TYPES = frozenset({"APPLY", "REQUEST"})
 _HEADER_RE = re.compile(r"^\[FLA-PM\]\s+([A-Z_]+)\s+(\S+)(?:\s+from=(\S+))?\s*$")
 _FIELD_RE = re.compile(r"^([A-Za-z_][A-Za-z0-9_]*):\s?(.*)$")
-_LABEL_PREFIXES = ("status:", "wave:", "soc:", "prio:")
+ENTRY_LABEL = "kernel-entry"        # 这条是某个 kernel 链的起点
+_LABEL_PREFIXES = ("status:", "wave:", "soc:", "prio:", "model:", "kernel:", "dtype:", ENTRY_LABEL)
 _LABEL_COLORS = {"fla-pm": "5319e7", "fla-pm:intake": "0e8a16", REQUEST_LABEL: "1d76db", "status:": "fbca04",
-                 "wave:": "c5def5", "soc:": "d4c5f9", "prio:": "e99695", "triage:": "bfdadc"}
+                 "wave:": "c5def5", "soc:": "d4c5f9", "prio:": "e99695", "triage:": "bfdadc",
+                 "model:": "0052cc", "kernel:": "5319e7", "dtype:": "006b75", ENTRY_LABEL: "b60205"}
 
 
 # ---------------------------------------------------------------- 纯函数（有单元测试）
@@ -94,9 +96,20 @@ def parse_message(body: str) -> dict | None:
             "fields": {k: v.strip("\n") for k, v in fields.items()}}
 
 
-def desired_labels(task: dict) -> set[str]:
-    return {"fla-pm", f"status:{task['status']}", f"wave:{task['wave']}",
-            f"soc:{task['soc']}", f"prio:{task['priority']}"}
+def desired_labels(task: dict, entries: dict[str, list[str]] | None = None) -> set[str]:
+    """issue 标签 = 看板的四个轴（模型 / kernel / dtype / 机器）加上状态、波次、优先级。
+
+    这样在 GitHub 上就能按 `kernel:kda_fwd_stable` + `soc:a2` 这种组合筛，
+    而 `kernel-entry` 标出"这条是某个 kernel 链的起点"。
+    """
+    labels = {"fla-pm", f"status:{task['status']}", f"wave:{task['wave']}",
+              f"soc:{task['soc']}", f"prio:{task['priority']}"}
+    labels |= {f"model:{m}" for m in task.get("model") or []}
+    labels |= {f"kernel:{k}" for k in task.get("kernel") or []}
+    labels |= {f"dtype:{d}" for d in task.get("dtype") or []}
+    if entries and any(task["id"] in ids for ids in entries.values()):
+        labels.add(ENTRY_LABEL)
+    return labels
 
 
 def label_color(name: str) -> str:
@@ -108,6 +121,38 @@ def label_color(name: str) -> str:
 
 def issue_title(task: dict) -> str:
     return f"[{task['id']}] {task['title']}"
+
+
+def _axes_section(task: dict, board: dict, by_id: dict[str, dict]) -> list[str]:
+    """把任务放进 模型 → kernel → 数据类型 → 机器 的层次里，并指出所属 kernel 链从哪条开始。"""
+    def ref(tid: str) -> str:
+        num = by_id.get(tid, {}).get("issue")
+        return f"#{num}（{tid}）" if num else tid
+
+    axis = lambda names, pre: "、".join(f"`{pre}{n}`" for n in names) or "—"          # noqa: E731
+    lines = [
+        "| 轴 | 取值 |",
+        "|---|---|",
+        f"| 模型 | {axis(task.get('model') or [], '')} |",
+        f"| kernel | {axis(task.get('kernel') or [], '')} |",
+        f"| 数据类型 | {axis(task.get('dtype') or [], '')} |",
+        f"| 机器 | `{task['soc']}` |",
+        "",
+    ]
+    entries = pm_board.kernel_entries(board)
+    for kernel in task.get("kernel") or []:
+        chain = pm_board.chain_of(board, kernel)
+        starts = entries.get(kernel, [])
+        if task["id"] in starts:
+            lines.append(f"**本条就是 `{kernel}` 链的起点。**"
+                         + (f"另有入口：{'、'.join(ref(x) for x in starts if x != task['id'])}。"
+                            if len(starts) > 1 else ""))
+        elif starts:
+            lines.append(f"`{kernel}` 链的起点是 {ref(starts[0])}，先做那条。")
+        lines.append(f"　链上顺序：{' → '.join(ref(t['id']) for t in chain)}")
+    if task.get("kernel"):
+        lines.append("")
+    return lines
 
 
 def issue_body(task: dict, board: dict, root: Path = ROOT) -> str:
@@ -127,6 +172,7 @@ def issue_body(task: dict, board: dict, root: Path = ROOT) -> str:
         f"| {deps} | {'<br>'.join(f'`{w}`' for w in task['write_set'])} "
         f"| npu={needs.get('npu')} ascriptor={needs.get('ascriptor')} fla={needs.get('fla')} |",
         "",
+        *_axes_section(task, board, by_id),
         f"**申领**：先读 `AGENTS.md`、`docs/pm/PROTOCOL.md`、`docs/pm/START.md`，再在本 issue 下评论 "
         f"`[FLA-PM] APPLY {task['id']} from=<你的 GitHub 账号>`（模板见 PROTOCOL §3.1）。"
         f"只认 {pm} 发出的 ASSIGN / REVIEW / CLOSE。",
@@ -165,9 +211,10 @@ def intake_body(board: dict) -> str:
 def plan_sync(board: dict, remote_issues: list[dict], remote_labels: list[str], root: Path = ROOT) -> list[dict]:
     """算出让 GitHub 与看板一致所需的动作。不做任何网络调用。"""
     actions: list[dict] = []
-    wanted = {"fla-pm", "fla-pm:intake", REQUEST_LABEL, *TRIAGE_LABELS}
+    entries = pm_board.kernel_entries(board)
+    wanted = {"fla-pm", "fla-pm:intake", REQUEST_LABEL, ENTRY_LABEL, *TRIAGE_LABELS}
     for t in board["tasks"]:
-        wanted |= desired_labels(t)
+        wanted |= desired_labels(t, entries)
     actions += [{"op": "create_label", "name": n, "color": label_color(n)} for n in sorted(wanted - set(remote_labels))]
 
     # 已经关掉、而且看板没记它编号的 issue：当作废弃，不要复活。
@@ -193,7 +240,7 @@ def plan_sync(board: dict, remote_issues: list[dict], remote_labels: list[str], 
 
     for t in board["tasks"]:
         closed = t["status"] in ("done", "cancelled")
-        want, title, body = desired_labels(t), issue_title(t), issue_body(t, board, root)
+        want, title, body = desired_labels(t, entries), issue_title(t), issue_body(t, board, root)
         iss = by_task.get(t["id"])
         if iss is None:
             if not closed:
@@ -408,7 +455,9 @@ def apply_actions(board: dict, actions: list[dict], repo: str, pace_s: float = 1
                 time.sleep(pace_s)
             created += 1
         if op == "create_label":
-            _gh("api", f"repos/{repo}/labels", "-f", f"name={a['name']}", "-f", f"color={a['color']}")
+            # 建标签要 write 权限；发 issue 正文的账号未必有，所以走 labeler
+            _gh("api", f"repos/{repo}/labels", "-f", f"name={a['name']}", "-f", f"color={a['color']}",
+                as_login=labeler)
         elif op in ("create_issue", "create_intake"):
             # 正文必须由 pm_github_login 发（公开可见）；标签随后由 labeler 补，
             # 因为没有 write 权限的账号建 issue 时标签会被**静默丢掉**（实测 #28）。

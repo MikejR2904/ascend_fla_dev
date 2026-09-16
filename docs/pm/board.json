@@ -136,6 +136,9 @@
       "soc": "any",
       "priority": "-",
       "status": "done",
+      "model": [],
+      "kernel": [],
+      "dtype": [],
       "deps": [],
       "write_set": [
         ".github/ISSUE_TEMPLATE/**",
@@ -199,6 +202,11 @@
       "soc": "a2",
       "priority": "P0",
       "status": "open",
+      "model": [],
+      "kernel": [],
+      "dtype": [
+        "fp32"
+      ],
       "deps": [],
       "write_set": [
         "benchmarks/a2/repro_splitk_fp32.py",
@@ -226,6 +234,13 @@
       "soc": "any",
       "priority": "P0",
       "status": "open",
+      "model": [],
+      "kernel": [
+        "kda_fwd_stable"
+      ],
+      "dtype": [
+        "bf16"
+      ],
       "deps": [],
       "write_set": [
         "benchmarks/diag_c1_multihead.py"
@@ -252,6 +267,9 @@
       "soc": "any",
       "priority": "P1",
       "status": "open",
+      "model": [],
+      "kernel": [],
+      "dtype": [],
       "deps": [],
       "write_set": [
         "ascend_fla/platform.py",
@@ -283,6 +301,13 @@
       "soc": "any",
       "priority": "P1",
       "status": "open",
+      "model": [
+        "kimi-linear-48b-a3b"
+      ],
+      "kernel": [],
+      "dtype": [
+        "fp32"
+      ],
       "deps": [],
       "write_set": [
         "ascend_fla/compat/**",
@@ -310,6 +335,9 @@
       "soc": "any",
       "priority": "P1",
       "status": "open",
+      "model": [],
+      "kernel": [],
+      "dtype": [],
       "deps": [
         "PM-0"
       ],
@@ -342,6 +370,16 @@
       "soc": "a2",
       "priority": "P1",
       "status": "open",
+      "model": [],
+      "kernel": [
+        "kda_fwd_stable",
+        "kda_bwd_stable",
+        "kda_fused_recurrent"
+      ],
+      "dtype": [
+        "bf16",
+        "fp32"
+      ],
       "deps": [
         "A2-01"
       ],
@@ -370,6 +408,17 @@
       "soc": "a2",
       "priority": "P1",
       "status": "open",
+      "model": [
+        "qwen3-next-80b-a3b"
+      ],
+      "kernel": [
+        "gdn_fwd",
+        "gdn_bwd"
+      ],
+      "dtype": [
+        "bf16",
+        "fp32"
+      ],
       "deps": [
         "A2-01"
       ],
@@ -398,6 +447,13 @@
       "soc": "any",
       "priority": "P2",
       "status": "open",
+      "model": [
+        "kimi-linear-48b-a3b"
+      ],
+      "kernel": [],
+      "dtype": [
+        "fp32"
+      ],
       "deps": [
         "A2-05"
       ],
@@ -428,6 +484,9 @@
       "priority": "P0",
       "status": "gated",
       "gate": "machines:a2",
+      "model": [],
+      "kernel": [],
+      "dtype": [],
       "deps": [
         "A2-02"
       ],
@@ -457,6 +516,11 @@
       "priority": "P0",
       "status": "gated",
       "gate": "machines:a2",
+      "model": [],
+      "kernel": [],
+      "dtype": [
+        "fp32"
+      ],
       "deps": [
         "A2-01",
         "A2-10"
@@ -487,6 +551,16 @@
       "priority": "P1",
       "status": "gated",
       "gate": "machines:a2",
+      "model": [
+        "kimi-linear-48b-a3b"
+      ],
+      "kernel": [
+        "kda_fwd_stable"
+      ],
+      "dtype": [
+        "bf16",
+        "fp32"
+      ],
       "deps": [
         "A2-03",
         "A2-11"
@@ -518,6 +592,16 @@
       "priority": "P1",
       "status": "gated",
       "gate": "machines:a2",
+      "model": [
+        "kimi-linear-48b-a3b"
+      ],
+      "kernel": [
+        "kda_bwd_stable"
+      ],
+      "dtype": [
+        "bf16",
+        "fp32"
+      ],
       "deps": [
         "A2-12"
       ],
@@ -550,6 +634,15 @@
       "priority": "P1",
       "status": "gated",
       "gate": "machines:a2",
+      "model": [
+        "kimi-linear-48b-a3b"
+      ],
+      "kernel": [
+        "kda_fused_recurrent"
+      ],
+      "dtype": [
+        "fp32"
+      ],
       "deps": [
         "A2-12"
       ],
@@ -580,6 +673,18 @@
       "priority": "P1",
       "status": "gated",
       "gate": "machines:a2",
+      "model": [
+        "kimi-linear-48b-a3b"
+      ],
+      "kernel": [
+        "kda_fwd_stable",
+        "kda_bwd_stable",
+        "kda_fused_recurrent"
+      ],
+      "dtype": [
+        "bf16",
+        "fp32"
+      ],
       "deps": [
         "A2-13",
         "A2-14"
@@ -612,6 +717,18 @@
       "priority": "P1",
       "status": "gated",
       "gate": "machines:a2",
+      "model": [
+        "kimi-linear-48b-a3b"
+      ],
+      "kernel": [
+        "kda_fwd_stable",
+        "kda_bwd_stable",
+        "kda_fused_recurrent"
+      ],
+      "dtype": [
+        "bf16",
+        "fp32"
+      ],
       "deps": [
         "A2-08",
         "A2-15"
@@ -643,6 +760,21 @@
       "priority": "P1",
       "status": "gated",
       "gate": "kernel-batch-approval",
+      "model": [
+        "kimi-linear-48b-a3b",
+        "qwen3-next-80b-a3b"
+      ],
+      "kernel": [
+        "kda_fwd_stable",
+        "kda_bwd_stable",
+        "kda_fused_recurrent",
+        "gdn_fwd",
+        "gdn_bwd"
+      ],
+      "dtype": [
+        "bf16",
+        "fp32"
+      ],
       "deps": [
         "A2-04",
         "A2-07",
@@ -674,6 +806,18 @@
       "priority": "P1",
       "status": "gated",
       "gate": "kernel-batch-approval",
+      "model": [
+        "qwen3-next-80b-a3b"
+      ],
+      "kernel": [
+        "gdn_fwd",
+        "gdn_bwd",
+        "gdn_fused_recurrent"
+      ],
+      "dtype": [
+        "bf16",
+        "fp32"
+      ],
       "deps": [
         "A2-K1",
         "A2-16"
@@ -706,6 +850,9 @@
       "priority": "P1",
       "status": "gated",
       "gate": "wave:W-A2",
+      "model": [],
+      "kernel": [],
+      "dtype": [],
       "deps": [
         "A2-16"
       ],
@@ -735,6 +882,15 @@
       "priority": "P1",
       "status": "gated",
       "gate": "wave:W-A3",
+      "model": [
+        "kimi-linear-48b-a3b"
+      ],
+      "kernel": [
+        "kda_fused_recurrent"
+      ],
+      "dtype": [
+        "fp32"
+      ],
       "deps": [],
       "write_set": [
         "ascend_fla/layers/kda.py",
@@ -763,6 +919,15 @@
       "priority": "P1",
       "status": "gated",
       "gate": "wave:W-A3",
+      "model": [
+        "kimi-linear-48b-a3b"
+      ],
+      "kernel": [
+        "kda_fused_recurrent"
+      ],
+      "dtype": [
+        "fp32"
+      ],
       "deps": [],
       "write_set": [
         "ascend_fla/runtime/binding.py",
@@ -792,6 +957,15 @@
       "priority": "P2",
       "status": "gated",
       "gate": "wave:W-A3",
+      "model": [
+        "kimi-linear-48b-a3b"
+      ],
+      "kernel": [
+        "kda_fused_recurrent"
+      ],
+      "dtype": [
+        "fp32"
+      ],
       "deps": [],
       "write_set": [
         "benchmarks/spike_decode_graph.py"
@@ -819,6 +993,17 @@
       "priority": "P2",
       "status": "gated",
       "gate": "wave:W-A3",
+      "model": [
+        "kimi-linear-48b-a3b"
+      ],
+      "kernel": [
+        "kda_fwd_stable",
+        "kda_bwd_stable"
+      ],
+      "dtype": [
+        "bf16",
+        "fp32"
+      ],
       "deps": [],
       "write_set": [
         "benchmarks/probe_block_dim_scaling.py"
@@ -846,6 +1031,16 @@
       "priority": "P2",
       "status": "gated",
       "gate": "wave:W-A3",
+      "model": [
+        "kimi-linear-48b-a3b"
+      ],
+      "kernel": [
+        "kda_bwd_stable"
+      ],
+      "dtype": [
+        "bf16",
+        "fp32"
+      ],
       "deps": [],
       "write_set": [
         "benchmarks/quantify_bwd_gcumsum_fp32.py"
@@ -873,6 +1068,18 @@
       "priority": "P1",
       "status": "gated",
       "gate": "wave:W-A3",
+      "model": [
+        "kimi-linear-48b-a3b"
+      ],
+      "kernel": [
+        "kda_fwd_stable",
+        "kda_bwd_stable",
+        "kda_fused_recurrent"
+      ],
+      "dtype": [
+        "bf16",
+        "fp32"
+      ],
       "deps": [
         "A2-16",
         "A5-01",
@@ -897,5 +1104,34 @@
       "result": null
     }
   ],
-  "label_github_login": "ascend-fla-pm-bot"
+  "label_github_login": "ascend-fla-pm-bot",
+  "axes": {
+    "note": "任务按四个轴归类：模型 → kernel → 数据类型 → 机器（soc）。kernel 名不带 SoC 前缀，SoC 是独立一轴。空列表表示这条任务不属于该轴（例如纯基础设施任务没有 model / kernel）。",
+    "model": [
+      "kimi-linear-48b-a3b",
+      "qwen3-next-80b-a3b"
+    ],
+    "kernel": [
+      "kda_fwd_stable",
+      "kda_bwd_stable",
+      "kda_fused_recurrent",
+      "gdn_fwd",
+      "gdn_bwd",
+      "gdn_fused_recurrent"
+    ],
+    "dtype": [
+      "bf16",
+      "fp32"
+    ],
+    "dtype_gated": {
+      "epic": "G3",
+      "values": [
+        "int8",
+        "mxfp8",
+        "mxfp4",
+        "hif8",
+        "hif4"
+      ]
+    }
+  }
 }
