@@ -78,7 +78,7 @@ and torch_npu baseline qualification remain untested under the CPU-only request.
 ## Host observations
 
 Five CCE stages emit successfully at the accepted library pin. Functional sim
-passes T=1/H=1; lowered pipesim passes T=2/H=1, T=65/H=1 and T=2/H=16
+passes T=1/H=1; lowered pipesim passes T=2/H=1, T=65/H=1, T=2/H=16 and T=65/H=16
 with block_dim=1, including complete stage comparisons and hazard/deadlock
 checks. CPU tests cover both zero and strong decay through T=4096/H=16;
 FLA recurrent is loaded explicitly by file path in the optional oracle test.
@@ -146,3 +146,9 @@ SHA-256, uses CPU Torch only, and reports each layer and both sample types.
 The tokenizer must be the recorded local revision; vocabulary size alone is
 not proof of tokenizer provenance. The natural-text sample is repeated to
 4096 tokens, and that construction is identified in the report.
+
+The scoped task branch passes 223 host tests (5 device-dependent skips),
+including 44 chunk tests with the supplied FLA oracle. All five entry checks
+report zero errors and warnings. The combined T=65/H=16/block_dim=1 pipesim
+case compares every intermediate and both final outputs, with no hazard or
+deadlock reported. This covers head reuse together with a cross-chunk tail.
