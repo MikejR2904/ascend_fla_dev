@@ -106,7 +106,7 @@ stored in the tracked contract.
 
 ## GD2-01 gate-range survey status
 
-### Supplemental native timing and state handoff
+### GD2-01 baseline native timing and state handoff
 
 On 950PR_9589 V100, CANN compiler/OPP 9.2.0, Torch 2.12.0+cpu with
 torch_npu 2.12.0 explicitly loaded for execution, both timing participants use
@@ -125,6 +125,8 @@ Torch NPU per-token recurrence, not an optimized FLA Triton kernel.
 Both participants pass the CPU golden before timing. Raw sample receipt SHA-256:
 `06a9f5983fb25eb14d747c73ef350f95a8143e3499d9c1b9bfe69ca64645ebeb`.
 These preliminary measurements do not claim GD2-02 completion or whole-model speedup.
+They belong to the accepted pre-optimization source
+`82dd3fec13edee5c358a336721bd8d45ef7238fb1a62a05eca668b5fbae47e66`.
 
 Native prefill (T=65 or 4096, FP32 or BF16 q/k/v) followed by one token of the
 existing recurrent decode also passes CPU golden checks. State is handed off
@@ -315,3 +317,109 @@ including 44 chunk tests with the supplied FLA oracle. All five entry checks
 report zero errors and warnings. The combined T=65/H=16/block_dim=1 pipesim
 case compares every intermediate and both final outputs, with no hazard or
 deadlock reported. This covers head reuse together with a cross-chunk tail.
+
+## Vector preweight optimization (GD2-03)
+
+The accepted `0397aa1` source was profiled before editing. One candidate then
+changed the scan and output preweights: compute `k_i * exp(G_last-G_i)` and
+`q_i * exp(G_i)` as complete FP32 channel rows, and read their scalar weights
+inside the unchanged ordered sums. Raw keys/queries have no later local reader;
+their private UB allocations hold the weighted values. GM inputs, outputs,
+launches, ownership, precision and public signatures are unchanged.
+
+At C=64/K=128, each preweight previously issued 8192 scalar-broadcast register
+exponentials per chunk. It now issues 128 register exponentials with distinct
+channels in the lanes. Scan's 128 state-decay exponentials remain unchanged.
+These are source-level instruction counts, not measured cycles. Scan/output UB
+allocations remain 224/208 KiB with one slot; each gains a 32 KiB local read and
+write. VF STORE-to-LOAD barriers publish preweights before scalar consumption;
+auto_sync retains the DMA/VF and loop-carried reuse edges. No mixed pipeline or
+new lookahead is introduced. Actual HBM traffic was not measured.
+
+Discovery measurements below use synchronized NPU wall time, 10 warmups and
+50 samples, FP32 B=1/H=16/K=V=128/block_dim=8. Hardware is 950PR_9589 V100;
+CANN compiler/OPP 9.2.0, with ascend950/ascend910b/ascend910_93 OPP directories;
+Torch 2.12.0+cpu plus torch_npu 2.12.0. Goldens run on CPU. Each stage retains
+preallocated inputs/outputs; public-call timing includes validation and allocation.
+Isolated stage times include their own bridge/synchronization overhead and are
+not additive device times. Unchanged-stage variation is not an optimization claim.
+
+| Stage | T1024 baseline us | T1024 candidate us | T4096 baseline us | T4096 candidate us |
+| --- | --- | --- | --- | --- |
+| prepare | 997.347 | 574.751 | 2763.676 | 2850.962 |
+| scores | 1034.809 | 956.495 | 3341.520 | 3220.174 |
+| WY | 1496.690 | 1379.372 | 5261.228 | 5111.855 |
+| scan | 1004.807 | 659.031 | 3185.163 | 2203.290 |
+| output | 736.008 | 463.639 | 2194.543 | 1478.769 |
+| public call | 4492.556 | 3839.584 | 16029.428 | 14685.062 |
+
+The candidate source SHA-256 is
+`a1f305eb5209420e026a1a6c82d7147f00a00c0588ea7f7f331805993d1cce5b`.
+All 12 contract cases pass all 13 stage comparisons against CPU goldens at
+block_dim=1 and 8. Every stage tensor is byte-identical across those block
+counts and versus the accepted baseline. Static checks for all five entries
+have zero errors/warnings; scan/output contain 153/122 surface operations.
+Fresh functional sim T=1/H=1 and pipesim T=2/H=1 plus T=65/H=16 pass at bd=1.
+The host suite remains 223 passed, 5 skipped. No precision budget is changed.
+The renewed canonical board check also passes T=4096/H=16/FP32/bd=8,
+including all intermediates and separate composition. Composition output/state
+relative L2 are 2.400727462e-6/4.140812156e-6; maximum absolute errors are
+1.345761120e-7/4.950910807e-6. Across all 12 native cases, final output/state
+relative L2 maxima are 3.348794618e-6/5.677315394e-6.
+
+`benchmark.py` compares the accepted source with the candidate through the same
+public launch graph in one NPU process. Only the two changed baseline entries
+are renamed to avoid CANN operator-type collisions; the identical first three
+stages share artifacts. Compilation and input transfers precede timing. Both
+variants pass CPU goldens first; each of three rounds measures baseline,
+candidate, then baseline with 10 warmups and 50 synchronized samples per phase.
+Baseline source digest and unchanged-stage identity are checked before execution.
+The fixed precompiled operator selector replaces `_compiled` equally for both
+variants; the public validation, allocations and five launches remain timed.
+
+The checked-in script produces the following medians on the environment above.
+Reduction uses the faster baseline of the same round, retaining both controls:
+
+| T | Round | Baseline before us | Candidate us | Baseline after us | Latency reduction |
+| --- | --- | --- | --- | --- | --- |
+| 1024 | 1 | 4239.288 | 3882.246 | 4366.985 | 8.422% |
+| 1024 | 2 | 4240.702 | 3876.824 | 4240.886 | 8.581% |
+| 1024 | 3 | 4236.278 | 3879.435 | 4248.421 | 8.423% |
+| 4096 | 1 | 15726.550 | 14199.110 | 15759.691 | 9.712% |
+| 4096 | 2 | 15696.767 | 14308.423 | 15802.565 | 8.845% |
+| 4096 | 3 | 15782.460 | 14178.686 | 15846.198 | 10.162% |
+
+Both final tensors are byte-identical between variants at both lengths. Peak
+Torch allocated-byte deltas are identical: 72,351,744 at T1024 and 286,261,248
+at T4096. These allocator measurements do not measure all native runtime memory.
+The preceding temporary-driver sandwich also passed all three rounds at each
+length: T1024 reduction 7.788..8.986%, T4096 8.725..8.814%. It is retained along
+with the checked-in-runner replay; neither run is discarded in favor of the other.
+
+Raw receipts are retained in ignored `tmp/gdn2-opt/`; current identities are:
+
+| Receipt | SHA-256 |
+| --- | --- |
+| `repro-sandwich.json` (checked-in runner) | `b2d4a6f88f1ea499b66ec52bf1a6ef100dc5be3e76ba048da10f530f4fd75fce` |
+| `sandwich.json` (initial same-process driver) | `7805ba7cde3d79e3d5d9c6092ebdc3b5ca56553dba7aade1efd9c06f0b152253` |
+| `preweight-grid/bd1.json` | `f5abfee687b618a72a901325fad51ae4c8eb236262a1bde211bbfd4fd887dc44` |
+| `preweight-grid/bd8.json` | `28ec977be0c10ec475b16291668450414549dd4c31044ad3fc2992b9e235f7ad` |
+
+The accepted baseline source digest is
+`82dd3fec13edee5c358a336721bd8d45ef7238fb1a62a05eca668b5fbae47e66`.
+Its benchmark-only entry renaming yields
+`da38f63331c2b59743023dc061eb4730642bdda8fa3629fc204c7b80fa3bfc37`.
+Candidate scan/output artifact signatures are `10b7bac21c287097` and
+`be946134e965d78a`; renamed baseline signatures are `064926fb0099bc1b`
+and `3b51409c544f3a7a`. Full reports retain all 50 samples for every phase.
+
+```sh
+mkdir -p tmp/GD2-03
+git show 0397aa1:kernels/projects/a5/gdn2_chunk_fwd/kernels/stages.py > tmp/GD2-03/stages-baseline.py
+python kernels/projects/a5/gdn2_chunk_fwd/benchmark.py --baseline tmp/GD2-03/stages-baseline.py --output tmp/GD2-03/sandwich.json
+```
+
+Use the assigned device environment and hardware lock. Timing compares native
+chunk implementations; it is separate from the earlier Torch NPU recurrence
+comparison. WY remains the largest stage. This round tests one candidate and
+makes no Cube, reduced-precision or whole-model performance claim.

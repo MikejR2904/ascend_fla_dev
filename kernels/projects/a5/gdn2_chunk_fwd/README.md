@@ -31,3 +31,9 @@ FP32 allocations and cannot alias input state. Public execution retires each
 workspace after its final consumer. The unit checker retains intermediate
 outputs for comparison. Further fusion and Cube optimization require measured
 hardware evidence, not a simulator latency claim.
+
+The scan/output preweights are computed per FP32 channel row in private UB.
+This preserves the sum order while removing repeated broadcast exponentials.
+`benchmark.py` compares against the accepted GD2-01 source with CPU goldens and
+a same-process NPU sandwich. Commands, source digests and scoped measurements
+are in `docs/research/gdn2_chunk_fwd_gate_range.md` at the repository root.
