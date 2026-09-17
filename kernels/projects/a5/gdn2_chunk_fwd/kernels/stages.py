@@ -264,9 +264,7 @@ def scan_vf(state: Tensor, k: Tensor, g: Tensor, u: Tensor,
     tmp = RegList(DT.float, 2)
     weight = Reg(DT.float)
     last = Reg(DT.float)
-    current = Reg(DT.float)
     decay = Reg(DT.float)
-    key = Reg(DT.float)
     zero = RegList(DT.float, 2)
     zero <<= 0.0
     for i in range(C):
@@ -282,17 +280,24 @@ def scan_vf(state: Tensor, k: Tensor, g: Tensor, u: Tensor,
             acc <<= acc - tmp
         delta[i:i+1, 0:D] <<= acc
     vf_barrier(VfPipe.STORE, VfPipe.LOAD)
+    # Raw keys have no later consumer. Preweight the complete channel row
+    # once, avoiding an exponential broadcast for every (row, channel).
+    acc <<= g[C-1:C, 0:D]
+    for i in range(count):
+        row <<= g[i:i+1, 0:D]
+        row <<= acc - row
+        row <<= row.exp()
+        tmp <<= k[i:i+1, 0:D]
+        tmp <<= tmp * row
+        k[i:i+1, 0:D] <<= tmp
+    vf_barrier(VfPipe.STORE, VfPipe.LOAD)
     for d in range(D):
         last <<= g[C-1:C, d:d+1].single()
         decay <<= last.exp()
         row <<= state[d:d+1, 0:D]
         row <<= row * decay
         for i in range(count):
-            current <<= g[i:i+1, d:d+1].single()
-            decay <<= last - current
-            decay <<= decay.exp()
-            key <<= k[i:i+1, d:d+1].single()
-            weight <<= key * decay
+            weight <<= k[i:i+1, d:d+1].single()
             tmp <<= delta[i:i+1, 0:D]
             tmp <<= tmp * weight
             row <<= row + tmp
@@ -341,15 +346,19 @@ def output_vf(q: Tensor, g: Tensor, score: Tensor, state: Tensor,
     acc = RegList(DT.float, 2)
     row = RegList(DT.float, 2)
     weight = Reg(DT.float)
-    query = Reg(DT.float)
-    decay = Reg(DT.float)
+    # q is private UB storage; retire the raw query role before its weighted
+    # scalar consumers. FP32 products and subsequent sum order are unchanged.
+    for i in range(count):
+        acc <<= q[i:i+1, 0:D]
+        row <<= g[i:i+1, 0:D]
+        row <<= row.exp()
+        acc <<= acc * row
+        q[i:i+1, 0:D] <<= acc
+    vf_barrier(VfPipe.STORE, VfPipe.LOAD)
     for i in range(count):
         acc <<= 0.0
         for d in range(D):
-            query <<= q[i:i+1, d:d+1].single()
-            decay <<= g[i:i+1, d:d+1].single()
-            decay <<= decay.exp()
-            weight <<= query * decay
+            weight <<= q[i:i+1, d:d+1].single()
             row <<= state[d:d+1, 0:D]
             row <<= row * weight
             acc <<= acc + row
