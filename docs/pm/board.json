@@ -88,6 +88,13 @@
       "by": "pm",
       "decision": "agent 一律按 ascriptor `agent/compatibility.json` 的 pin 选定 library/kernels 修订（AGENTS.md §3 本来就这么写），并在 DONE 里报出三个 checkout 的确切修订。`docs/matrix/ops.json` 的 `ascriptor_pin` 眼下取不到，暂按“历史记录”看待，不作为动手依据",
       "risk": "ops.json 记的 library_commit 77619116（version 0.1.0.dev1）在 ascriptor 远端不存在：joshjms 带凭据 fetch 后远端只公布 refs/heads/main（5287adc）与 refs/tags/v0.1.0（073a6c8），按哈希取对象被拒；PM 侧也访问不到该仓（404）。该 pin 自 346cd8a 建仓起就写死，推测上游历史已重建（0.1.0.dev1 → 0.1.0）。后果：本仓所有“在 pin X 上测得”的精度结论目前无法复现，AGENTS.md §8“每一格都能指向一次真实运行”这条对 ascriptor 版本这一维暂时不成立。需要仓库所有者给出权威修订（归档或 wheel），再重新钉 pin 并复核回归"
+    },
+    {
+      "id": "D-PM-14",
+      "date": "2026-09-17",
+      "by": "user",
+      "decision": "ascriptor 权威来源是 gitcode 上的三个仓（ascriptor / ascriptor-kernels / ascriptor-agent），已写进 AGENTS.md §3 与 ops.json 的 ascriptor_pin.sources。PM 据此建起 workspace，独立复算了 A2-04 的结论",
+      "risk": "在此之前 AGENTS.md 只给了一个取不到的 GitHub 链接，两个外部 agent 各自去 fetch 镜像、拿到互不相同的修订（rodi-314 报 5287adc、joshjms 报 627f55f），其中一个据此报了风险。ops.json 记的 77619116 在权威来源上同样不存在 —— D-PM-13 的判断成立"
     }
   ],
   "gated_epics": [
@@ -325,6 +332,10 @@
         {
           "at": "2026-09-17T03:38",
           "summary": "joshjms 开 PR #60（只加 benchmarks/diag_c1_multihead.py）。PM 已读全量 diff、临时 clone 跑通主机侧三项（170 passed / 6 skipped）、核对 gaps.json 里的真机数吻合；pipesim 结论因本机无 ascriptor workspace 无法独立复算。DONE 未到，REVIEW verdict 待定"
+        },
+        {
+          "at": "2026-09-17T08:05",
+          "summary": "用户给出 gitcode 权威来源，PM 建起 workspace 独立复算：真机失效表逐格复现（bd1/HV2→仅头1、bd1/HV4→仅头3、bd2/HV2→全对、bd2/HV4→头1,3），补丁 12 格冒险归零、负对照缺陷保留。**并查出暴露面是奇数 C 不是只有 C=1**（C=1..6 冒险 2/0/2/0/2/0），已记进 gaps.json；闸是否收紧待所有者决定"
         }
       ],
       "result": null

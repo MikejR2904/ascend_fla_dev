@@ -37,6 +37,10 @@ ascriptor A5 定尺 ABI：`[B, H, C, L, D]`，L=64，D=128，q/k/v `bfloat16`，
 
 ascriptor pin：`0.1.0.dev1` · library `77619116f9b3` · 支持硬件 a5 · deferred a2, a3
 
+> ⚠️ 这个 library 修订 **unreachable** —— 2026-09-17 在权威来源上核过：该对象不存在（git cat-file 取不到）。本条自建仓 346cd8a 起未改动过，且从未被验证。推测上游历史重建过（版本号 0.1.0.dev1 → 0.1.0）。后果：第一、二期在 A5 上的精度数字目前无法按此 pin 复现 —— 数字本身有效，但『在哪个编译器修订上测的』这一维已经断了。重新钉 pin 需要所有者指认与之对应的修订，或接受在新 pin 上重跑回归。
+
+> 动手用 `agent/compatibility.json` 的 pin（2026-09-17 读取）：release `0.1.0` · library `90cfcdc720bb` · kernels `b3b3f9c16df7`。来源 https://gitcode.com/ddddwe/ascriptor.git / https://gitcode.com/ddddwe/ascriptor-kernels.git / https://gitcode.com/ddddwe/ascriptor-agent.git
+
 | 算子 | 族 | 方向 | reference | sim | pipesim | emit | **compile** | board(cce) | 本仓接线 |
 |---|---|---|---|---|---|---|---|---|---|
 | `a5.gdn_fwd` | gated_delta_rule | forward | ✅ | ✅ | ✅ | ✅ | ⬜ | ✅ | ⬜ 未开始 |
@@ -244,7 +248,7 @@ P0 1 项 · P1 17 项 · P2 9 项 · 已解决 11 项 · 共 38 项
 
 | 缺口 | 级别 | 要在 kernel 侧改什么 |
 |---|---|---|
-| `c1-multihead-o-corrupt` | P0 | kda_fwd/kernels/recurrent.py 的手写同步：pair 循环跨头时缺一次 L0C/L1 的同步，C≥2 时被 chunk 循环第二遍掩盖。**只掌握症状规律（每核最后一个头对），还没定位到确切缺哪一次 DEvent/Mutex 配对** —— 修之前必须先找出来。 |
+| `c1-multihead-o-corrupt` | P0 | **根因已定位**（A2-04 / PR #60，joshjms 诊断，PM 独立复算）：`kda_fwd/kernels/recurrent.py` 的 `Aqk` L1 交接是**两信用配固定槽** —— `aqk_l1_valid = DEvent(Pipe.MTE1, Pipe.MTE2, preset=True)`（:130）给两个信用，而槽是 `aqk_slot = Var(c_idx % 2)`（:243 写、:373 读），按 chunk 取。一个头最后一个 chunk 的槽是 `(C-1)%2`，下一个头第一个 chunk 的槽是 `0` —— **当且仅当 C 为奇数时两者相撞**，写方领先一周期踩进还没被读走的槽（:245 的 MTE2 写 与 :398 的 MTE1 读无序）。每核最后一个头后面没有写，所以恰好是对的。**不是漏了某次 DEvent/Mutex 调用**，是信用数与实际轮转的槽数不匹配 —— 与 ascriptor `library/docs/defects/M10-076-mutex-credits-and-handoff-slots.md` 同型（那一条在 autosync 里已修成『depth <= j 才算有序』，但本 kernel 是手写同步，不过 autosync）。**修法**：让槽按每核周期序号轮转 `((pair_idx - pair_begin) * C + c_idx) % 2`，两信用配两槽；或把两个 DEvent 降成 SEvent（少一周期 run-ahead）。 |
 | `block-dim-ceiling` | P1 | kda_fwd/kda_bwd 的 contract domain.block_dim 上限由 4 抬高并补 case。物理 28 cube / 56 vec，实测到 4 仍是线性扩展，所以这是当前最大的单点性能头寸。 |
 | `d-initial-state-absent` | P1 | gdn / delta_rule 的 backward 产出 dh0。 |
 | `decode-call-overhead` | P1 | 若要消掉 host 侧 15.4µs 的布局转换：kda_fused_recurrent 改成直接吃 token-major [B,T,H/HV,128] 并在 kernel 内按 hv//groups 取 q/k 的头。桥侧那 25µs 不用改 kernel。 |
@@ -271,7 +275,7 @@ P0 1 项 · P1 17 项 · P2 9 项 · 已解决 11 项 · 共 38 项
 
 ### P0
 
-#### `c1-multihead-o-corrupt` — 【P0·静默错误】C=1 且一个 cube 核要处理多个头时，kda_sub45_fused_kernel 写出内容错误的 o
+#### `c1-multihead-o-corrupt` — 【P0·静默错误】**奇数 C** 且一个 cube 核要处理多个头时，kda_sub45_fused_kernel 写出内容错误的 o（闸目前只拦 C=1）
 
 - **类别** correctness · **适用于** KDA · **阻塞** —
 - **依据** **这是真实形状精度验收的第一个产出，而且是最坏的一类缺陷：没有 NaN、没有报错、范数还正常。** 发现路径：按 models.json 的 kimi 形状扫 C=1…16，C=1 那档 `o` 的相对 L2 是 **1.06**（其余档 3.2e-03），而同一次运行的 `final_state` 正常（2.46e-03）。
@@ -285,11 +289,22 @@ P0 1 项 · P1 17 项 · P2 9 项 · 已解决 11 项 · 共 38 项
 **只在 C=1 出现**：C=2/3/16/64 下全对（HV 到 32 都试过）。chunk 循环跑第二遍时补上了缺的那次同步。kernel 源码里 `recurrent.py:176` 写着 `auto sync is not used here because the nested for loops interfere with it` —— 同步是手写的，而手写的那份假设了 C≥2。
 **范围已逐条核实**：① `upstream` 与 `stable` 的错误值**逐位相同**（都 2.721e-01）→ 是共享的 `kda_sub45_fused_kernel`，不是本仓的 stable 派生引入的；② `final_state` 不受影响；③ **反向不受影响** —— C=1/HV=8 的六项梯度 dq 2.48e-02 / dk 3.94e-02 / dv 3.22e-03 / dbeta 3.35e-03 / dg 7.16e-02 / dh0 2.40e-03，与 C=2 同量级，因为反向不消费 `o`，只消费 `do` 与九个检查点。
 **为什么契约的 case 测不到**：`kda_fwd` 四个 case 里 C=1 的三个都是 HV=1，唯一 HV=2 的那个是 C=2 —— **`C=1 且 HV≥2` 一个 case 都没覆盖**。这正是 toy-case-shapes 说的那件事。
+
+**2026-09-17 补：模型定位 + 逐格复算（a5 pipesim，library 90cfcdc / kernels b3b3f9c）。**
+PM 在权威 workspace 上独立跑了 `benchmarks/diag_c1_multihead.py`，**上表被逐格复现**：bd=1/HV=2→仅头 1、bd=1/HV=4→仅头 3、bd=2/HV=2→全对、bd=2/HV=4→头 1,3。
+**并且暴露面比上表宽：是奇数 C，不是只有 C=1。** B=1/HV=2/bd=1 扫 C=1…6，冒险条数 2 / 0 / 2 / 0 / 2 / 0，错头恒为头 0：
+| C | 1 | 2 | 3 | 4 | 5 | 6 |
+|---|---|---|---|---|---|---|
+| pipesim 冒险 | 2 | 0 | 2 | 0 | 2 | 0 |
+| 回放错头 | 头 0 | 无 | 头 0 | 无 | 头 0 | 无 |
+候选补丁（槽按周期轮转）在 bd∈{1,2}×HV∈{2,4}×C∈{1,3,5} 共 12 格上冒险归零、全头逐位正确；负对照（只轮转 q/qg）缺陷原样保留。
+**与真机记录的冲突要并排看**：真机 2026-09-11 测过 C=3 且『全对』。两者不矛盾 —— 无序 ≠ 必然发生，那一次时序没踩到。但**结构上 C=3/5/7… 同样暴露**，而闸只拦 C=1。对 kimi（C = T/64）来说 T=192、320 都是奇数 C。
 - **影响** ① **T=64 的前向输出是错的**（HV>block_dim 时），错得没有任何信号：有限值、量级正常、`final_state` 还对。短 prompt 的 prefill 正好落在这里 —— kimi 形状 HV=32、bd=4 时 32 个头里只有 4 个对。
 ② 训练同样中招：梯度本身没问题，但**前向输出错 → loss 错**，所以 T=64 的训练步是垃圾。
 ③ 之前所有精度结论都不受影响 —— 它们用的形状要么 HV=1（安全），要么 C≥2（安全）。这也是它藏了两期没被发现的原因。
 ④ **实测到的一个具体后果（decode 接线时撞上）**：64 token 粒度的 prefill 用不了 —— T=64 就是 C=1，HV=2 且 bd=1 时就已经越界。prefill 要么一次 ≥128 个 token，要么按头分批。写 prefill→decode 的测试时被闸拦下，只能把 prefill 从 64 改成 128。
 - **建议** **已做**：`ops/kda/chunk.py` 的 `_check` 里加了 `_check_single_chunk_heads`，`C==1 and B*HV > block_dim` 直接报错并给出两条绕法（AGENTS.md §7：绝不静默降级）。闸的边界照实测表逐个钉在 tests/test_kda_gating.py 里 —— 这类缺陷一旦闸被改松，没有别的东西会报警。
+**闸目前是漏的（2026-09-17 发现，待所有者决定）**：`_check_single_chunk_heads` 只拦 `C==1 and B*HV > block_dim`，而模型显示奇数 C 全都暴露。收紧成 `C % 2 == 1 and B*HV > block_dim` 会拒掉一些现在能跑、真机上也确实跑过的形状（C=3 测过且过了），属于收紧可用面 —— 按 AGENTS.md §1「改变范围要显式决策」，等所有者放行再改。在那之前**这条缺口的影响面按奇数 C 记**，不要按 C=1。
 **要做（按代价排序）**：
 ① 按头分批调用：C=1 时把 `B*HV` 切成每批 ≤ block_dim 个头，多发几次 kernel。数学完全不变（头之间独立，已由头独立性检查证明），代价是多几次发射。**这是可用性修复，但会悄悄改变性能特征，要显式声明而不是默默做掉。**
 ② 建本仓派生单元修手写同步（照 kda_fwd_stable / kda_bwd_stable 的先例，AGENTS.md §3 不改 ascriptor 仓）。要先读懂 `recurrent.py` 的 DEvent/Mutex 配对 —— 目前只掌握了**症状规律**（每核最后一个头对）而不是确切缺哪一次同步，动手前必须先把那个找出来，否则改了也不知道为什么好。

@@ -91,6 +91,14 @@ def ops_section(ops: dict) -> list[str]:
         f"支持硬件 {', '.join(scope['supported_hardware'])} · "
         f"deferred {', '.join(scope['deferred_hardware'])}",
         "",
+        *([f"> ⚠️ 这个 library 修订 **{pin['library_commit_status']}** —— {pin['library_commit_note']}", ""]
+          if pin.get("library_commit_status") == "unreachable" else []),
+        *([f"> 动手用 `agent/compatibility.json` 的 pin（{pin['current_compatibility_pin']['read_at']} 读取）："
+           f"release `{pin['current_compatibility_pin']['release']}` · "
+           f"library `{pin['current_compatibility_pin']['library'][:12]}` · "
+           f"kernels `{pin['current_compatibility_pin']['kernels'][:12]}`。"
+           f"来源 {pin['sources']['library']} / {pin['sources']['kernels']} / {pin['sources']['agent']}", ""]
+          if pin.get("current_compatibility_pin") else []),
         "| 算子 | 族 | 方向 | reference | sim | pipesim | emit | **compile** | board(cce) | 本仓接线 |",
         "|---|---|---|---|---|---|---|---|---|---|",
     ]

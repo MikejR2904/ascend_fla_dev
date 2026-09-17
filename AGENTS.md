@@ -64,6 +64,18 @@ ascriptor 是 `library/` + `kernels/` + `agent/` 三个同级 checkout 组成的
 进入那边工作前先读它自己的 `AGENTS.md`，
 并按 `agent/compatibility.json` 选定 library/kernels 修订。
 
+**权威来源在 gitcode，不在 GitHub**（2026-09-17 由仓库所有者给出）。三个 checkout 分别来自：
+
+```bash
+git clone https://gitcode.com/ddddwe/ascriptor.git         "$ASCRIPTOR_WORKSPACE/library"
+git clone https://gitcode.com/ddddwe/ascriptor-kernels.git "$ASCRIPTOR_WORKSPACE/kernels"
+git clone https://gitcode.com/ddddwe/ascriptor-agent.git   "$ASCRIPTOR_WORKSPACE/agent"
+```
+
+本文件开头那个 `github.com/ddddwee1/ascriptor` 链接**取不到**（匿名与登录都 404）。
+两个外部 agent 因此各自去 fetch 了别处的镜像、拿到互不相同的修订，其中一个还据此报了风险。
+**别再走 GitHub。**
+
 - 我们**复用**它的算子单元（`kernels/projects/a5/{gdn,kda,delta_rule}_{fwd,bwd}`）
   和算法单元（`chunk_row_scan`、`matrix_normalization`、`gated_approximations`）。
 - 我们**不修改** ascriptor 仓。需要改 kernel 时，在本仓 `kernels/` 下按它的

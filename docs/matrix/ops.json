@@ -5,7 +5,24 @@
   "note": "算子资产与支持状态。ascriptor 侧的事实（ABI、定尺域、验证状态）以 contract.json 为所有者，这里只存决策所需的摘要并指向来源。our_status 是本仓的接线进度，由我们自己维护。",
   "ascriptor_pin": {
     "workspace": "$ASCRIPTOR_WORKSPACE (默认 ../ascriptor)",
+    "sources": {
+      "library": "https://gitcode.com/ddddwe/ascriptor.git",
+      "kernels": "https://gitcode.com/ddddwe/ascriptor-kernels.git",
+      "agent": "https://gitcode.com/ddddwe/ascriptor-agent.git",
+      "recorded_at": "2026-09-17",
+      "note": "权威来源在 gitcode，由仓库所有者给出。AGENTS.md 开头引的 github.com/ddddwee1/ascriptor 取不到（404），不要走那条。"
+    },
     "library_commit": "77619116f9b3b2a91e7fa01d6161c257a883ae68",
+    "library_commit_status": "unreachable",
+    "library_commit_note": "2026-09-17 在权威来源上核过：该对象不存在（git cat-file 取不到）。本条自建仓 346cd8a 起未改动过，且从未被验证。推测上游历史重建过（版本号 0.1.0.dev1 → 0.1.0）。后果：第一、二期在 A5 上的精度数字目前无法按此 pin 复现 —— 数字本身有效，但『在哪个编译器修订上测的』这一维已经断了。重新钉 pin 需要所有者指认与之对应的修订，或接受在新 pin 上重跑回归。",
+    "current_compatibility_pin": {
+      "read_at": "2026-09-17",
+      "from": "agent/compatibility.json",
+      "release": "0.1.0",
+      "library": "90cfcdc720bbcd66e8bd4361c4dd4fbc1a2a57b5",
+      "kernels": "b3b3f9c16df7c4626ed3c081032a1be5a753d0b1",
+      "note": "D-PM-13：agent 动手一律按这里，不按上面那个 library_commit。这**不是**在声称本仓的 A5 结论是在这个修订上取得的。"
+    },
     "wheel_sha256": "475d3bc3eea2a2c69e1eb9de5cce73e7936a3fbd4edcc6a7f306f61943cc5205",
     "version": "0.1.0.dev1",
     "qualified_host": {
