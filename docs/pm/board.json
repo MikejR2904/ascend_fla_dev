@@ -95,6 +95,12 @@
       "by": "user",
       "decision": "ascriptor 权威来源是 gitcode 上的三个仓（ascriptor / ascriptor-kernels / ascriptor-agent），已写进 AGENTS.md §3 与 ops.json 的 ascriptor_pin.sources。PM 据此建起 workspace，独立复算了 A2-04 的结论",
       "risk": "在此之前 AGENTS.md 只给了一个取不到的 GitHub 链接，两个外部 agent 各自去 fetch 镜像、拿到互不相同的修订（rodi-314 报 5287adc、joshjms 报 627f55f），其中一个据此报了风险。ops.json 记的 77619116 在权威来源上同样不存在 —— D-PM-13 的判断成立"
+    },
+    {
+      "id": "D-PM-15",
+      "date": "2026-09-17",
+      "by": "user",
+      "decision": "批准 joshjms（新账号）的首次合入（PROTOCOL §5.5）。PR #60 已合入 8ac32e5"
     }
   ],
   "gated_epics": [
@@ -280,7 +286,7 @@
       "wave": "W0",
       "soc": "any",
       "priority": "P0",
-      "status": "review",
+      "status": "done",
       "model": [],
       "kernel": [
         "kda_fwd_stable"
@@ -336,9 +342,25 @@
         {
           "at": "2026-09-17T08:05",
           "summary": "用户给出 gitcode 权威来源，PM 建起 workspace 独立复算：真机失效表逐格复现（bd1/HV2→仅头1、bd1/HV4→仅头3、bd2/HV2→全对、bd2/HV4→头1,3），补丁 12 格冒险归零、负对照缺陷保留。**并查出暴露面是奇数 C 不是只有 C=1**（C=1..6 冒险 2/0/2/0/2/0），已记进 gaps.json；闸是否收紧待所有者决定"
+        },
+        {
+          "at": "2026-09-17T08:15",
+          "summary": "用户批准首次合入；PR #60 合入 8ac32e5。新 head ad02c73 重审通过（写集 + docs/pm/deltas/A2-04.json，§5.2 允许），主机侧 170 passed / 6 skipped，--grid --full 12 格逐头复现真机失效表，无 DIAGNOSTIC PROBLEMS。delta 已并入 gaps.json；AGENTS.md §6「C≥2 全对因 chunk 第二遍补同步」一句被推翻并更正"
         }
       ],
-      "result": null
+      "result": {
+        "commits": [
+          "ad02c73",
+          "8ac32e5"
+        ],
+        "evidence": [
+          "PR #60",
+          "docs/pm/deltas/A2-04.json",
+          "benchmarks/diag_c1_multihead.py"
+        ],
+        "numbers": "a5 管线模型值：真机失效表 12/12 格逐头复现；kimi H32/HV32/C1/bd4 o 相对 L2 1.060（真机记录 1.06）、H1/HV8/C1/bd1 2.721e-01（记录 2.721e-01）、final_state 2.458e-03（记录 2.46e-03）；错头 |o|/|ref| 0.9254~1.1319 且全部有限；补丁 aqk-only 在奇数 C 12 格与全网格 43 格上冒险 0、全头逐位正确，偶数 C 与上游逐位相同；负对照 qg-only 缺陷保留。PM 独立复算（library 90cfcdc / kernels b3b3f9c）结果一致",
+        "note": "纯主机侧模型值，不是真机数。奇数 C 的闸是否收紧待所有者决定"
+      }
     },
     {
       "id": "A2-02",

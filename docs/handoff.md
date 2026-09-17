@@ -24,9 +24,32 @@
 工作改成多 agent 推进：PM 维护 `docs/pm/board.json`，agent 按 `docs/pm/PROTOCOL.md` 申领任务并汇报，
 看进度跑 `python tools/pm_board.py --render`。
 
-现在能派的是 W0 的主机侧任务，A2 机器还没到位。最靠前的两项是 A2-01（split-K FP32 cube 缺陷定性，A2 的总闸）
-和 A2-04（C=1 多头那个 P0 的确切根因）。A2-06（矩阵按 SoC 分维）已改成 gated：它要重构的
+现在能派的是 W0 的主机侧任务，A2 机器还没到位。最靠前的是 A2-01（split-K FP32 cube 缺陷定性，A2 的总闸）。
+A2-06（矩阵按 SoC 分维）已改成 gated：它要重构的
 `docs/matrix/*.json` 与 `tools/gen_matrix.py` 正是仓主轨道在高频改的文件，等协调好再开。
+
+### A2-04 已完成（2026-09-17，PR #60 合入 8ac32e5）—— 两条要记住的
+
+**① `c1-multihead-o-corrupt` 的根因找到了，而且暴露面比我们记的宽。**
+不是漏了某次 DEvent/Mutex 配对，是 `Aqk` 的 L1 交接**两信用配固定槽**：
+`aqk_l1_valid = DEvent(..., preset=True)` 给两个信用，槽却是 `aqk_slot = Var(c_idx % 2)`（按 chunk 号取）。
+一个头最后一个 chunk 的槽是 `(C-1)%2`、下一个头第一个是 `0` —— **当且仅当 C 为奇数时相撞**。
+与 ascriptor `library/docs/defects/M10-076-mutex-credits-and-handoff-slots.md` 同型，
+但那条的修复在 `autosync` 里，而本 kernel 是手写同步、不过 autosync，**拦不住**。
+
+**闸现在是漏的**：`_check_single_chunk_heads` 只拦 `C==1 and B*HV > block_dim`，
+而奇数 C≥3 结构上同样暴露（kimi 的 `C = T/64`，T=192、320 都在里面）。
+收紧成 `C % 2 == 1` 会拒掉真机上跑过的形状，按 §1 要显式决策 —— **待所有者放行，先别改代码**。
+细节与证据在 `gaps.json` 的该条目，`docs/pm/deltas/A2-04.json` 是原始提案。
+
+**② "C≥2 全对是因为 chunk 循环第二遍补上了同步"是错的，已从 `AGENTS.md` §6 更正。**
+那句话是从"C=1 坏、C=2 好"的**症状规律**倒推出来的，写进文档两期没人怀疑，
+既把根因指错方向（去找"缺的那次同步"），又把安全域说宽了。
+**症状规律不只会误导修法，还会伪装成结论写进文档。**
+
+证据等级：全部是 a5 管线模型值（pipesim + 调度回放），**不是真机数**。
+但 `gaps.json` 里 2026-09-11 那张真机失效表被 **12/12 格逐头复现**（PM 在权威 workspace 上独立复算过），
+且预测的 kimi `o` 相对 L2 1.060 / `final_state` 2.458e-03 与真机记录的 1.06 / 2.46e-03 吻合。
 
 协作机制已经合入（PR #1，2026-09-15，merge commit a1361d8）。
 

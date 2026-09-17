@@ -248,7 +248,7 @@ P0 1 项 · P1 17 项 · P2 9 项 · 已解决 11 项 · 共 38 项
 
 | 缺口 | 级别 | 要在 kernel 侧改什么 |
 |---|---|---|
-| `c1-multihead-o-corrupt` | P0 | **根因已定位**（A2-04 / PR #60，joshjms 诊断，PM 独立复算）：`kda_fwd/kernels/recurrent.py` 的 `Aqk` L1 交接是**两信用配固定槽** —— `aqk_l1_valid = DEvent(Pipe.MTE1, Pipe.MTE2, preset=True)`（:130）给两个信用，而槽是 `aqk_slot = Var(c_idx % 2)`（:243 写、:373 读），按 chunk 取。一个头最后一个 chunk 的槽是 `(C-1)%2`，下一个头第一个 chunk 的槽是 `0` —— **当且仅当 C 为奇数时两者相撞**，写方领先一周期踩进还没被读走的槽（:245 的 MTE2 写 与 :398 的 MTE1 读无序）。每核最后一个头后面没有写，所以恰好是对的。**不是漏了某次 DEvent/Mutex 调用**，是信用数与实际轮转的槽数不匹配 —— 与 ascriptor `library/docs/defects/M10-076-mutex-credits-and-handoff-slots.md` 同型（那一条在 autosync 里已修成『depth <= j 才算有序』，但本 kernel 是手写同步，不过 autosync）。**修法**：让槽按每核周期序号轮转 `((pair_idx - pair_begin) * C + c_idx) % 2`，两信用配两槽；或把两个 DEvent 降成 SEvent（少一周期 run-ahead）。 |
+| `c1-multihead-o-corrupt` | P0 | **根因已定位**（A2-04 / PR #60，joshjms 诊断，PM 独立复算）：`kda_fwd/kernels/recurrent.py` 的 `Aqk` L1 交接是**两信用配固定槽** —— `aqk_l1_valid = DEvent(Pipe.MTE1, Pipe.MTE2, preset=True)`（:130）给两个信用，而槽是 `aqk_slot = Var(c_idx % 2)`（:243 写、:373 读），按 chunk 取。一个头最后一个 chunk 的槽是 `(C-1)%2`，下一个头第一个 chunk 的槽是 `0` —— **当且仅当 C 为奇数时两者相撞**，写方领先一周期踩进还没被读走的槽（:245 的 MTE2 写 与 :398 的 MTE1 读无序）。每核最后一个头后面没有写，所以恰好是对的。**不是漏了某次 DEvent/Mutex 调用**，是信用数与实际轮转的槽数不匹配 —— 与 ascriptor `library/docs/defects/M10-076-mutex-credits-and-handoff-slots.md` 同型（那一条在 autosync 里已修成『depth <= j 才算有序』，但本 kernel 是手写同步，不过 autosync）。**修法**：让槽按每核周期序号轮转 `((pair_idx - pair_begin) * C + c_idx) % 2`，两信用配两槽；或把两个 DEvent 降成 SEvent（少一周期 run-ahead）。 **补充（来自 A2-04 的 delta）**：`l1_Aqk` 是两槽 `DBuff`（:146）。备选修法是把 `aqk_l1_valid`/`aqk_l1_ready` 改 `SEvent`（去掉一拍 run-ahead，**性能未测**）。落地按 AGENTS.md §3 走本仓派生单元、进 kernel 批次。A5 上的硬判据：失效表 12 格全对、偶数 C 与未修版逐位相同、bd=1 与 bd=4 逐位相同。 |
 | `block-dim-ceiling` | P1 | kda_fwd/kda_bwd 的 contract domain.block_dim 上限由 4 抬高并补 case。物理 28 cube / 56 vec，实测到 4 仍是线性扩展，所以这是当前最大的单点性能头寸。 |
 | `d-initial-state-absent` | P1 | gdn / delta_rule 的 backward 产出 dh0。 |
 | `decode-call-overhead` | P1 | 若要消掉 host 侧 15.4µs 的布局转换：kda_fused_recurrent 改成直接吃 token-major [B,T,H/HV,128] 并在 kernel 内按 hv//groups 取 q/k 的头。桥侧那 25µs 不用改 kernel。 |
@@ -275,7 +275,7 @@ P0 1 项 · P1 17 项 · P2 9 项 · 已解决 11 项 · 共 38 项
 
 ### P0
 
-#### `c1-multihead-o-corrupt` — 【P0·静默错误】**奇数 C** 且一个 cube 核要处理多个头时，kda_sub45_fused_kernel 写出内容错误的 o（闸目前只拦 C=1）
+#### `c1-multihead-o-corrupt` — 【P0·静默错误】C 为奇数且一个 cube 核要处理多个头时，kda_sub45_fused_kernel 的 Aqk L1 交接竞争，写出内容错误的 o
 
 - **类别** correctness · **适用于** KDA · **阻塞** —
 - **依据** **这是真实形状精度验收的第一个产出，而且是最坏的一类缺陷：没有 NaN、没有报错、范数还正常。** 发现路径：按 models.json 的 kimi 形状扫 C=1…16，C=1 那档 `o` 的相对 L2 是 **1.06**（其余档 3.2e-03），而同一次运行的 `final_state` 正常（2.46e-03）。
@@ -299,6 +299,9 @@ PM 在权威 workspace 上独立跑了 `benchmarks/diag_c1_multihead.py`，**上
 | 回放错头 | 头 0 | 无 | 头 0 | 无 | 头 0 | 无 |
 候选补丁（槽按周期轮转）在 bd∈{1,2}×HV∈{2,4}×C∈{1,3,5} 共 12 格上冒险归零、全头逐位正确；负对照（只轮转 q/qg）缺陷原样保留。
 **与真机记录的冲突要并排看**：真机 2026-09-11 测过 C=3 且『全对』。两者不矛盾 —— 无序 ≠ 必然发生，那一次时序没踩到。但**结构上 C=3/5/7… 同样暴露**，而闸只拦 C=1。对 kimi（C = T/64）来说 T=192、320 都是奇数 C。
+
+**根因定位（A2-04，#30 / PR #60，library 627f55f / kernels c89f69b，a5 管线模型值）**：pipesim 报出的冒险全部是"本头的 Aqk L1 读（:398）↔ 同核下一头的 Aqk L1 写（:245）"无序，条数与归因逐格相等、无其它冒险。按调度回放 o：真机失效表 12/12 格逐头吻合（逐位正确的头 = 表中对的头）。用 verify_real_shapes.py 同款输入（跨度 46）预测：kimi H32/HV32/C1/bd4 整体 o 相对 L2 1.060（本条记录 1.06），H1/HV8/C1/bd1 为 2.721e-01（本条记录 2.721e-01），kimi final_state 2.458e-03（本条记录 2.46e-03）；错头 |o|/|ref| 0.9254~1.1319、全部有限。**C≥2 全对的原因不是"chunk 循环第二遍补上了同步"**：C 为偶数时相邻两次写的槽交替，信用数与槽数匹配；C 为奇数时每次换头相撞一次。L0C 输出握手各头一致，与缺陷无关。修补（aqk-only 槽轮转）在模型中 43/43 格与奇数 C 12/12 格冒险 0、全头正确，偶数 C 格与上游逐位相同；负对照（只改 q/qg 槽）不起作用。
+**一条被推翻的旧解释**：本条原来写着 C≥2 全对是因为『chunk 循环跑第二遍时补上了缺的那次同步』。两半都错 —— 根因不是漏同步（是信用数与槽数不匹配），C≥2 也不全对（奇数 C 照样撞）。那句话是从『C=1 坏、C=2 好』这个症状规律倒推的。AGENTS.md §6 已同步更正。
 - **影响** ① **T=64 的前向输出是错的**（HV>block_dim 时），错得没有任何信号：有限值、量级正常、`final_state` 还对。短 prompt 的 prefill 正好落在这里 —— kimi 形状 HV=32、bd=4 时 32 个头里只有 4 个对。
 ② 训练同样中招：梯度本身没问题，但**前向输出错 → loss 错**，所以 T=64 的训练步是垃圾。
 ③ 之前所有精度结论都不受影响 —— 它们用的形状要么 HV=1（安全），要么 C≥2（安全）。这也是它藏了两期没被发现的原因。
@@ -309,6 +312,8 @@ PM 在权威 workspace 上独立跑了 `benchmarks/diag_c1_multihead.py`，**上
 ① 按头分批调用：C=1 时把 `B*HV` 切成每批 ≤ block_dim 个头，多发几次 kernel。数学完全不变（头之间独立，已由头独立性检查证明），代价是多几次发射。**这是可用性修复，但会悄悄改变性能特征，要显式声明而不是默默做掉。**
 ② 建本仓派生单元修手写同步（照 kda_fwd_stable / kda_bwd_stable 的先例，AGENTS.md §3 不改 ascriptor 仓）。要先读懂 `recurrent.py` 的 DEvent/Mutex 配对 —— 目前只掌握了**症状规律**（每核最后一个头对）而不是确切缺哪一次同步，动手前必须先把那个找出来，否则改了也不知道为什么好。
 ③ 上游补 case：`C=1 且 HV≥2`。这条不管我们怎么修都该做，否则上游下次改这个 kernel 还会踩。
+⑤ **上游补 case**（A2-04 建议）：`kda_fwd` 契约要加 `C=1 且 HV≥2`，以及 `奇数 C≥3 且 B*HV > block_dim`。现有四个 case 一个都盖不到。
+⑥ **真机侧要补的**：本条记的『C=3 全对』在仓里**没有对应的运行日志**。闸的范围要按奇数 C 定的话，得先在 A5 上补 C=3 / C=5 且 `B*HV > block_dim` 的逐 chunk 比对。
 
 ### P1
 
