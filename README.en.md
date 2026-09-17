@@ -178,7 +178,7 @@ _Owner's parallel track; see docs/handoff.md §1. **Exception** (D-PM-16, 2026-0
 | GD2-01 | [#62](https://github.com/ddddwee1/ascend_fla_dev/issues/62) | `a5` | bf16、fp32 | ✅ done | ★ start |
 | GD2-02 | [#63](https://github.com/ddddwee1/ascend_fla_dev/issues/63) | `a5` | bf16、fp32 | ⬜ open |  |
 | GD2-03 | [#66](https://github.com/ddddwee1/ascend_fla_dev/issues/66) | `a5` | bf16、fp32 | ✅ done |  |
-| GD2-04 | — | `a5` | bf16、fp32 | 🔒 gated (user-decision) |  |
+| GD2-04 | [#72](https://github.com/ddddwee1/ascend_fla_dev/issues/72) | `a5` | bf16、fp32 | 🔒 gated (user-decision) |  |
 
 </details>
 
