@@ -117,3 +117,32 @@ solves; no universal gate-domain qualification follows from the sign proof.
 The chosen baseline has 64-token chunks, with no anchored 16-token fast path.
 The five-size survey will compare reset intervals {4,8,16,32,64} before any
 measured gate-range claim or later blocked Cube implementation is accepted.
+
+## Synthetic five-size observation (not checkpoint evidence)
+
+CPU Torch 2.14.0, seed 20260914, B=1/T=4096/H=16/K=V=128, FP32;
+each 64-token gate block is calibrated to cumulative decay 1461.214.
+All outputs and states are finite. No performance timing is inferred.
+
+| Prefix reset size | Maximum block decay | Output relative L2 | State relative L2 | Output max abs | State max abs |
+| --- | --- | --- | --- | --- | --- |
+| 4 | 207.451 | 2.304e-7 | 2.522e-7 | 5.122e-8 | 1.013e-6 |
+| 8 | 354.658 | 4.076e-7 | 8.151e-7 | 1.378e-7 | 5.156e-6 |
+| 16 | 604.186 | 7.970e-7 | 1.430e-6 | 2.086e-7 | 4.858e-6 |
+| 32 | 970.827 | 1.620e-6 | 3.413e-6 | 5.178e-7 | 1.550e-5 |
+| 64 | 1461.214 | 3.284e-6 | 5.908e-6 | 1.068e-6 | 1.562e-5 |
+
+This supports continuing with the 64-token FP32 baseline on synthetic inputs.
+It does not establish the real-checkpoint gate-domain limit or satisfy the
+required random-token and natural-text replay. Reproduce with:
+
+```sh
+python kernels/projects/a5/gdn2_chunk_fwd/ref/survey.py --synthetic --output tmp/GD2-01/synthetic-survey.json
+```
+
+For actual model evidence, use the same script with `--checkpoint` and
+`--tokenizer` pointing to local assets. It verifies the recorded checkpoint
+SHA-256, uses CPU Torch only, and reports each layer and both sample types.
+The tokenizer must be the recorded local revision; vocabulary size alone is
+not proof of tokenizer provenance. The natural-text sample is repeated to
+4096 tokens, and that construction is identified in the report.
