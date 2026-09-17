@@ -53,6 +53,8 @@ AQK_WRITE = "l1_Aqk[aqk_slot][0:L, 0:L] <<= Aqk[b_aqk, hv_aqk, c_idx, 0:L, 0:L]"
 AQK_READ = "l0a_delta[slot][0:L, 0:L] <<= l1_Aqk[aqk_slot][0:L, 0:L]"
 
 _SLOT = "Var(((pair_idx - pair_begin) * C + c_idx) % 2)"
+# CPU float reproducibility floor (BLAS thread count changes bits); anything larger is a real discrepancy.
+REPRO_TOL = 2.5e-7
 VARIANTS = {
     "upstream": [],
     # Recommended repair: rotate the Aqk hand-off slot every cycle on a core, so two credits meet two slots.
@@ -324,20 +326,28 @@ def run_case(kernel, anchors, *, B, HV, C, bd, pipesim, seed, timeout):
         if len(reads) != 2 * B * HV * C or n_writes != B * HV * C:
             raise RuntimeError(f"attribution found {len(reads)} Aqk reads / {n_writes} writes, "
                                f"expected {2 * B * HV * C} / {B * HV * C}")
-        # Model-timed replay. Self-check first: own Aqk must rebuild the reference o bit for bit.
+        # Model-timed replay. Self-check first: own Aqk must rebuild the reference o. Bitwise is not attainable in
+        # general: the CPU reference is not bit-reproducible across BLAS thread counts (measured: 3 of 131072
+        # elements differ by 1.192e-07 at B1 HV4 C4 between 1 and 11 threads), so allow one such step and report it.
         terms = chunk_terms(inputs)
         aqk = exp["score.Aqk"]
+        self_check = 0.0
         for b, hv, c in itertools.product(range(B), range(HV), range(C)):
-            if not torch.equal(o_with_aqk(terms, b, hv, c, aqk[b, hv, c]), ref_o[b, hv, c]):
-                raise RuntimeError(f"replay self-check failed at (b,hv,c)=({b},{hv},{c}): reference not reproduced")
+            dev = float((o_with_aqk(terms, b, hv, c, aqk[b, hv, c]).float() - ref_o[b, hv, c].float()).abs().max())
+            self_check = max(self_check, dev)
+            if dev > REPRO_TOL:
+                raise RuntimeError(f"replay self-check failed at (b,hv,c)=({b},{hv},{c}): max_abs {dev:.3e} > {REPRO_TOL:.1e}")
         replay = ref_o.clone()
         for r in reads:
             src = r["model_source"]
             if src is None:
                 raise RuntimeError(f"no Aqk write landed before read {r}; replay undefined")
             b, hv, c, tile = r["b"], r["hv"], r["c"], r["tile"]
+            if src == (b, hv, c):
+                continue  # read its own Aqk: this tile is exactly the reference value
             v0, v1 = tile * 64, (tile + 1) * 64
             replay[b, hv, c, :, v0:v1] = o_with_aqk(terms, b, hv, c, aqk[src])[:, v0:v1]
+        result.update(replay_self_check=self_check)
         result.update(o=o, final_state=fs, replay=replay, reads=reads, hazards=res.hazards,
                       deadlock=res.report.get("deadlock"), events=observe_events(res.scheduler, B=B, HV=HV, C=C, bd=bd))
     result["secs"] = round(time.time() - t0, 1)
@@ -409,7 +419,7 @@ def main(argv=None) -> int:
     ap.add_argument("--unit", help="path to kernels/projects/a5/kda_fwd")
     ap.add_argument("--variant", choices=sorted(VARIANTS), default="upstream")
     ap.add_argument("--grid", action="store_true", help="bd in {1,2} x HV in {1,2,4} x C in {1,2,3}, B=1")
-    ap.add_argument("--full", action="store_true", help="with --grid: every cell of the hardware table (bd in {1,2} x HV in {8,16}, bd=4 x HV in {4,8,16}) at C in {1,2}, and B=2")
+    ap.add_argument("--full", action="store_true", help="with --grid: all 12 cells of the hardware table (bd in {1,2,4} x HV in {2,4,8,16}) at C in {1,2}, and B=2")
     ap.add_argument("--bd", type=int, nargs="*", default=[1])
     ap.add_argument("--hv", type=int, nargs="*", default=[2])
     ap.add_argument("--c", type=int, nargs="*", default=[1])
@@ -438,12 +448,13 @@ def main(argv=None) -> int:
         shapes = [(1, bd, hv, c) for bd, hv, c in itertools.product([1, 2], [1, 2, 4], [1, 2, 3])]
         if args.full:
             shapes += [(1, bd, hv, c) for bd, hv, c in itertools.product([1, 2], [8, 16], [1, 2])]
-            shapes += [(1, 4, hv, c) for hv, c in itertools.product([4, 8, 16], [1, 2])]
+            shapes += [(1, 4, hv, c) for hv, c in itertools.product([2, 4, 8, 16], [1, 2])]
             shapes += [(2, bd, 2, c) for bd, c in itertools.product([1, 2, 4], [1, 2, 3])]
     else:
         shapes = [(args.b, bd, hv, c) for bd, hv, c in itertools.product(args.bd, args.hv, args.c)]
 
-    print(f"profile=a5 variant={args.variant} H=1 seed={args.seed}; correct = per-head rel-L2 < {args.good:g}; "
+    print(f"profile=a5 variant={args.variant} H=1 seed={args.seed} torch_threads={torch.get_num_threads()}; "
+          f"correct = replay bitwise equal to the reference (rel-L2 < {args.good:g} also shown); "
           f"Aqk L1 write at recurrent.py:{anchors['write']}, read at recurrent.py:{anchors['read']}", flush=True)
     rows, by_shape, problems = [], {}, []
     for B, bd, hv, c in shapes:
@@ -490,8 +501,12 @@ def main(argv=None) -> int:
                 print("    OTHER HAZARD:", re.sub(r'loc\("[^"]*/', 'loc("', h), flush=True)
         if len(on_pair) != len(racy):
             problems.append(f"{tag}: {len(on_pair)} pipesim hazards but {len(racy)} attributed unordered reads")
-        if max(h["o_rel_l2"] for h in r["heads"]) != 0.0:
-            problems.append(f"{tag}: functional o differs from the reference")
+        ref_dev = max((float((r["o"][h["b"], h["hv"]].float() - r["replay"][h["b"], h["hv"]].float()).abs().max())
+                       for h in r["heads"] if h["replay_bitwise"]), default=0.0)
+        print(f"    functional o vs reference on race-free heads: max_abs {ref_dev:.3e} (tolerance {REPRO_TOL:.1e}); "
+              f"replay self-check max_abs {r['replay_self_check']:.3e}", flush=True)
+        if ref_dev > REPRO_TOL:
+            problems.append(f"{tag}: functional o differs from the reference by {ref_dev:.3e}")
         if other is not None:
             r2 = run_case(other[0], other[1], B=B, HV=hv, C=c, bd=bd, pipesim=True, seed=args.seed, timeout=args.timeout)
             eq_o, eq_s = torch.equal(r["replay"], r2["replay"]), torch.equal(r["final_state"], r2["final_state"])
