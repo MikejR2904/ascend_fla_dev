@@ -364,13 +364,17 @@ def classify_pr(pr: dict, board: dict) -> dict:
 
 # ---------------------------------------------------------------- gh 调用
 
-def _gh(*args: str, as_login: str | None = None) -> str:
+def _gh(*args: str, as_login: str | None = None, ok_if_absent: bool = False) -> str:
     """跑一条 gh 命令。
 
     ``as_login`` 用来临时换账号执行：取该账号的 token 塞进 ``GH_TOKEN``，不动 ``gh auth switch``
     的全局状态。这是为了应付一种分工 —— issue 正文与协议评论必须由公开可见的账号发
     （见 ``board.json`` 的 ``pm_github_login``），而打标签、关 issue 这类操作要 write 权限，
     由 ``label_github_login`` 指定的账号做。
+
+    ``ok_if_absent``：目标本来就不存在也算成功（幂等删除）。GitHub 对已经不存在的标签/资源
+    返回 404，`gh` 因此非零退出；调用方明确知道"删一个可能已经不在的东西"时传这个，
+    不要在外面另写一层 try/except 去吞所有错误——那会把真正的失败也吞掉。
     """
     env = None
     if as_login:
@@ -383,6 +387,8 @@ def _gh(*args: str, as_login: str | None = None) -> str:
     except FileNotFoundError:
         raise SystemExit("找不到 gh；安装后用 PM 账号 `gh auth login`（见 docs/pm/START.md）")
     if res.returncode != 0:
+        if ok_if_absent and "HTTP 404" in res.stderr:
+            return res.stdout
         who = f"（以 {as_login} 身份）" if as_login else ""
         raise SystemExit(f"gh {' '.join(args[:3])} …{who} 失败：{res.stderr.strip()}")
     return res.stdout
@@ -618,13 +624,24 @@ def cmd_label(board: dict, number: int, labels: list[str]) -> int:
     打标签要 write/triage 权限，发 issue 正文的账号（``pm_github_login``）未必有 ——
     实测 `limjiunnbin` 只有 `pull`，`label_github_login` 的账号才有 `triage`。
     跟 `sync` 里建标签一样，走 `labeler`，不要直接用当前账号。
+
+    `triage:*` 是单选：一条需求同时挂 `needs-info` 又挂 `accepted` 会自相矛盾。
+    实测踩到：先打了 `needs-info`，用户批准后再打 `accepted`，GitHub 的"加标签"接口
+    只会加不会替换，两个标签就一起留在了 issue 上。所以这里先摘掉这条 issue 上其它的
+    `triage:*`（`REQUEST_LABEL` 之类不属于分诊结论的标签不动），再加新的。
     """
     _require_pm(board)
     unknown = [n for n in labels if n not in TRIAGE_LABELS and n != REQUEST_LABEL]
     if unknown:
         raise SystemExit(f"只允许分诊标签 {TRIAGE_LABELS} 与 {REQUEST_LABEL}，收到 {unknown}")
     labeler = board.get("label_github_login")
-    _gh("api", f"repos/{_repo(board)}/issues/{number}/labels",
+    repo = _repo(board)
+    if any(n in TRIAGE_LABELS for n in labels):
+        current = json.loads(_gh("api", f"repos/{repo}/issues/{number}", "--jq", "[.labels[].name]"))
+        for stale in sorted(set(current) & set(TRIAGE_LABELS) - set(labels)):
+            _gh("api", "-X", "DELETE", f"repos/{repo}/issues/{number}/labels/{stale.replace(':', '%3A')}",
+                as_login=labeler, ok_if_absent=True)
+    _gh("api", f"repos/{repo}/issues/{number}/labels",
         *[x for n in labels for x in ("-f", f"labels[]={n}")], as_login=labeler)
     print(f"已给 #{number} 打上 {', '.join(labels)}")
     return 0

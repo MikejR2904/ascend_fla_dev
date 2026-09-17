@@ -359,16 +359,16 @@ def test_label_routes_through_labeler_not_current_account(monkeypatch):
     monkeypatch.setattr(pm_github, "current_login", lambda: "pm")
     calls = []
 
-    def fake_gh(*args, as_login=None):
+    def fake_gh(*args, as_login=None, ok_if_absent=False):
         calls.append((args, as_login))
+        if args[1] == "repos/o/r/issues/61":
+            return json.dumps([])  # 没有旧 triage 标签
         return ""
 
     monkeypatch.setattr(pm_github, "_gh", fake_gh)
     assert pm_github.cmd_label(board, 61, ["triage:needs-info"]) == 0
-    assert len(calls) == 1
-    args, as_login = calls[0]
-    assert as_login == "labeler-bot", "打标签必须以 label_github_login 的身份执行"
-    assert "labels[]=triage:needs-info" in args
+    post = next(c for c in calls if "labels[]=triage:needs-info" in c[0][-1])
+    assert post[1] == "labeler-bot", "打标签必须以 label_github_login 的身份执行"
 
 
 def test_label_rejects_unknown_label(monkeypatch):
@@ -377,3 +377,62 @@ def test_label_rejects_unknown_label(monkeypatch):
     monkeypatch.setattr(pm_github, "_gh", lambda *a, **k: (_ for _ in ()).throw(AssertionError("不该调用 gh")))
     with pytest.raises(SystemExit, match="只允许分诊标签"):
         pm_github.cmd_label(board, 61, ["not-a-real-label"])
+
+
+# --- cmd_label 打 triage:* 是单选，替换而不是叠加 -------------------------------
+
+
+def test_label_replaces_stale_triage_label(monkeypatch):
+    """needs-info 之后再打 accepted：旧的 needs-info 要被摘掉，不是两个一起留着。"""
+    board = {"repo": "o/r", "pm_github_login": "pm", "label_github_login": "labeler-bot", "tasks": []}
+    monkeypatch.setattr(pm_github, "current_login", lambda: "pm")
+    calls = []
+
+    def fake_gh(*args, as_login=None, ok_if_absent=False):
+        calls.append((args, as_login, ok_if_absent))
+        if args[:2] == ("api", f"repos/o/r/issues/61") or (len(args) > 1 and args[1] == "repos/o/r/issues/61"):
+            return json.dumps(["fla-pm:request", "triage:needs-info"])
+        return ""
+
+    monkeypatch.setattr(pm_github, "_gh", fake_gh)
+    assert pm_github.cmd_label(board, 61, ["triage:accepted"]) == 0
+
+    deletes = [c for c in calls if "-X" in c[0] and "DELETE" in c[0]]
+    assert len(deletes) == 1, calls
+    assert deletes[0][0][-1].endswith("labels/triage%3Aneeds-info")
+    assert deletes[0][1] == "labeler-bot"
+    assert deletes[0][2] is True, "删除要容忍标签已经不在（幂等）"
+    adds = [c for c in calls if c[0][:1] == ("api",) and "labels[]=triage:accepted" in c[0][-1]]
+    assert len(adds) == 1
+
+
+def test_label_does_not_touch_request_label(monkeypatch):
+    """fla-pm:request 不是 triage:* 的一部分，重新分诊不该动它。"""
+    board = {"repo": "o/r", "pm_github_login": "pm", "label_github_login": "labeler-bot", "tasks": []}
+    monkeypatch.setattr(pm_github, "current_login", lambda: "pm")
+    calls = []
+
+    def fake_gh(*args, as_login=None, ok_if_absent=False):
+        calls.append(args)
+        if args[1] == "repos/o/r/issues/61":
+            return json.dumps(["fla-pm:request"])
+        return ""
+
+    monkeypatch.setattr(pm_github, "_gh", fake_gh)
+    pm_github.cmd_label(board, 61, ["triage:accepted"])
+    deletes = [c for c in calls if "-X" in c and "DELETE" in c]
+    assert deletes == [], "没有旧 triage 标签就不该发任何删除请求"
+
+
+def test_label_first_time_skips_the_lookup(monkeypatch):
+    """第一次打标签（没有 GET 调用返回旧标签的必要）也不该报错——只是不会有可摘的。"""
+    board = {"repo": "o/r", "pm_github_login": "pm", "label_github_login": "labeler-bot", "tasks": []}
+    monkeypatch.setattr(pm_github, "current_login", lambda: "pm")
+
+    def fake_gh(*args, as_login=None, ok_if_absent=False):
+        if args[1] == "repos/o/r/issues/61":
+            return json.dumps([])
+        return ""
+
+    monkeypatch.setattr(pm_github, "_gh", fake_gh)
+    assert pm_github.cmd_label(board, 61, ["triage:accepted"]) == 0
