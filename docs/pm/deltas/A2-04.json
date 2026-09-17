@@ -1,0 +1,28 @@
+{
+  "task": "A2-04",
+  "kind": "matrix_delta_proposal",
+  "applies_to": "docs/matrix/gaps.json",
+  "evidence_revisions": {
+    "library": "627f55f6be0a2611a4dbdf65537d721adb85cbaa",
+    "kernels": "c89f69b10287c165c81b3ad79c98c22468c1b443",
+    "agent": "a260cb7cc25949a46a9bc56a79af78aebdbfb058",
+    "decision": "D-PM-13",
+    "note": "docs/matrix/ops.json ascriptor_pin (library 77619116, 0.1.0.dev1) is not obtainable; these conclusions belong to library 627f55f / kernels c89f69b."
+  },
+  "evidence_nature": "Host-side a5 pipe-model values (pipesim + schedule replay), not hardware measurements. Hardware comparisons cite existing Ascend950PR records already in gaps.json.",
+  "gaps": {
+    "c1-multihead-o-corrupt": {
+      "set": {
+        "title": "【P0·静默错误】C 为奇数且一个 cube 核要处理多个头时，kda_sub45_fused_kernel 的 Aqk L1 交接竞争，写出内容错误的 o",
+        "kernel_change_note": "根因已定位（A2-04，#30）：kda_fwd/kernels/recurrent.py 的 Aqk L1 交接。写 = MTE2 gm_to_l1（:245），读 = MTE1 l1_to_l0（:398），同步 = aqk_l1_valid/aqk_l1_ready 为 DEvent(preset=True)（:130–131），两信用；槽 = aqk_slot = Var(c_idx % 2)（:243、:373），l1_Aqk 为两槽 DBuff（:146）。没有漏掉某一次 DEvent/Mutex 调用：两信用只在相邻两次写落不同槽时安全，而槽按 chunk 号取、不随头推进；当且仅当 C 为奇数时，一个头最后一个 chunk 的槽 (C-1)%2 与下一个头第一个 chunk 的槽 0 相撞。推荐修法：两处 aqk_slot 改为 Var(((pair_idx - pair_begin) * C + c_idx) % 2)；备选：aqk_l1_valid/ready 改 SEvent（去掉一拍 run-ahead，性能未测）。按 §3 以本仓派生单元落地，进 kernel 批次。",
+        "proposed_action": "**已做**：ops/kda/chunk.py 的 _check_single_chunk_heads 在 C==1 且 B*HV > block_dim 时报错，边界钉在 tests/test_kda_gating.py。**要做**：① 闸的覆盖面需要用户/PM 决定——模型显示奇数 C≥3 同样暴露（C=3、C=5 多头格有无序对、回放出错，C=2、C=4 无），而现有闸只拦 C==1；gaps 记录里真机 C=3 曾测过全对但仓里没有对应日志，需在 A5 上补 C=3/C=5、B*HV > block_dim 的逐 chunk 比对。② kernel 批次按 kernel_change_note 修；A5 上的硬判据：失效表 12 格全对、C 为偶数时与未修版逐位相同、bd=1 与 bd=4 逐位相同。③ A2-03 派生 a2 单元时直接采用修补版槽轮转。④ 上游补 case：C=1 且 HV≥2，以及奇数 C≥3 且 B*HV > block_dim。"
+      },
+      "append": {
+        "evidence": "**根因定位（A2-04，#30 / PR #60，library 627f55f / kernels c89f69b，a5 管线模型值）**：pipesim 报出的冒险全部是\"本头的 Aqk L1 读（:398）↔ 同核下一头的 Aqk L1 写（:245）\"无序，条数与归因逐格相等、无其它冒险。按调度回放 o：真机失效表 12/12 格逐头吻合（逐位正确的头 = 表中对的头）。用 verify_real_shapes.py 同款输入（跨度 46）预测：kimi H32/HV32/C1/bd4 整体 o 相对 L2 1.060（本条记录 1.06），H1/HV8/C1/bd1 为 2.721e-01（本条记录 2.721e-01），kimi final_state 2.458e-03（本条记录 2.46e-03）；错头 |o|/|ref| 0.9254~1.1319、全部有限。**C≥2 全对的原因不是\"chunk 循环第二遍补上了同步\"**：C 为偶数时相邻两次写的槽交替，信用数与槽数匹配；C 为奇数时每次换头相撞一次。L0C 输出握手各头一致，与缺陷无关。修补（aqk-only 槽轮转）在模型中 43/43 格与奇数 C 12/12 格冒险 0、全头正确，偶数 C 格与上游逐位相同；负对照（只改 q/qg 槽）不起作用。"
+      },
+      "keep": ["requires_kernel_change"]
+    }
+  },
+  "summary_kernel_fix_queue": "no change (c1-multihead-o-corrupt stays queued; requires_kernel_change stays true)",
+  "not_proposed": "No change to ops/kda/chunk.py, tests/test_kda_gating.py or docs/matrix/*.json from this task (PROTOCOL §4). Whether to widen the gate to odd C is a PM/owner decision."
+}
