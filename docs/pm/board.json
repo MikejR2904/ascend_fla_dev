@@ -1650,7 +1650,7 @@
       "wave": "W0",
       "soc": "a5",
       "priority": "P2",
-      "status": "in_progress",
+      "status": "done",
       "model": [
         "gdn2-1.3b-fineweb-edu-100b"
       ],
@@ -1709,9 +1709,24 @@
         {
           "at": "2026-09-17T13:21",
           "summary": "PR #67 打开（非 draft），273+/21-。声称 T1024/T4096 各约 8.4%/8.8-10.2% 提速，12 契约 case bd1/8 全过且与 GD2-01 逐位相同，223 host tests 过。尚无 DONE 评论，暂不启动完整审查"
+        },
+        {
+          "at": "2026-09-17T13:25",
+          "summary": "合入 d44df9e。PM 独立复算：pytest 223/5 与 DONE 逐字一致；run.py reference 12/12、check --launcher sim 缩小诊断点全过；写集/reserved_paths 无误。数学等价性由 PM 独立推导确认（同一 exp(last-current) 只是改变计算顺序，被覆写的 k/q 缓冲此后不再被读取，故安全）。真机数字未独立复算"
         }
       ],
-      "result": null
+      "result": {
+        "commits": [
+          "690f420",
+          "d44df9e"
+        ],
+        "evidence": [
+          "PR #67",
+          "docs/research/gdn2_chunk_fwd_gate_range.md"
+        ],
+        "numbers": "主机侧：223 passed/5 skipped，12/12 契约 case reference 过；真机（950PR_9589 V100, CANN 9.2.0）T1024 -8.4%~8.6%、T4096 -8.8%~10.2%（对 GD2-01 baseline，同轮 baseline-candidate-baseline 三轮）；全部 stage tensor 跨 bd1/8 与对 GD2-01 baseline 逐位相同",
+        "note": "真机计时由 assignee 报告，PM 未独立复算；正确性数字（reference/sim）PM 已独立复算"
+      }
     },
     {
       "id": "PK-02",
