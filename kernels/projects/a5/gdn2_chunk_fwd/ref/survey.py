@@ -68,6 +68,7 @@ def survey(tensors, oracle, *, label, layer=None, scale=128**-0.5,
         prefix=blocks.cumsum(2)
         row=dict(sample=label,layer=layer,shape=list(q.shape),chunk_size=size,
                  max_token_decay=float((-g).max()),
+                 max_full_decay=float((-g.sum(1)).max()),
                  max_chunk_decay=float((-blocks.sum(2)).max()),
                  max_prefix_span=float((prefix.amax(2)-prefix.amin(2)).max()),
                  output=metric(actual[0],expected[0]),state=metric(actual[1],expected[1]))

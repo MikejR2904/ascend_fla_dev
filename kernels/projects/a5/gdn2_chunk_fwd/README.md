@@ -2,8 +2,8 @@
 
 A five-launch FP32 CCE implementation: normalization/cumulative gates, causal
 scores, exact triangular solve, cross-chunk state scan, and output composition.
-This is a correctness baseline; Cube acceleration and hardware qualification
-remain open. It is not the short-sequence recurrent kernel under another name.
+This is a vector baseline; Cube acceleration remains open. Native correctness
+is qualified for the cases and block counts recorded in `contract.json`.
 
 The unit is portable: copy this directory alone, install the accepted Ascriptor
 and CPU Torch dependencies, then run `run.py reference` or `run.py check`.

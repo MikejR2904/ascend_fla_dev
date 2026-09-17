@@ -135,14 +135,77 @@ four cases is 5.8482e-5, maximum state relative L2 is 1.1214e-7; every case pass
 both allclose(atol=rtol=1e-4) and relative L2<=1e-4. This is synthetic operator
 handoff evidence, not real-model logit/cache qualification.
 
-### Remaining checkpoint gate
+### Real-checkpoint CPU gate survey
 
-This derivation predates the arithmetic port into the scoped task branch.
-The requested real-95B random-token replay and natural-text run are **pending**:
-the fixed checkpoint has been downloaded and SHA-256 verified, and transfer to
-the isolated CPU replay environment is in progress. The historical 1461.214
-number is provenance from `gdn2-chunk-gate-range`, not a reproduced measurement.
-Synthetic gate sweeps must be labeled synthetic; they cannot close this gate.
+CPU Torch 2.12.0+cpu, Python 3.12.13, four threads; B=1/T=4096/H=16/K=V=128.
+The model uses BF16 canonical projections, with activated core tensors converted
+to FP32 for both mathematical oracles. Read-only repository model/reference code
+is from `e110b6ef27b955ecaf26be06b06a302b87142ad2`. Checkpoint SHA-256 is
+`4ac729c627febc431bf4b2011a9cb7ad9c30cc1d017ff74aeca15f76efb2df6d`; both transfer endpoints verified it.
+Tokenizer: TinyLlama v1.1 revision `ff3c701f2424c7625fdefb9dd470f45ef18b02d6`,
+vocab 32000. Random IDs use a dedicated CPU generator, seed 20260914. Natural
+text repeats "The capital of France is Paris. Linear attention processes a sequence by updating a recurrent state." to 4096 tokens.
+
+Both sample types cover all 18 layers and five sizes: 180 rows, all finite and
+passing both CPU oracles at relative L2<=1e-4. Each table value is the maximum
+across layers, so different columns can reach their maxima in different layers.
+
+**legal-random-token-ids**
+
+| Size | Max block decay | Repo o L2 | Repo state L2 | FLA o L2 | FLA state L2 |
+| --- | --- | --- | --- | --- | --- |
+| 4 | 169.671 | 1.7800e-6 | 4.4876e-6 | 1.7736e-6 | 4.4859e-6 |
+| 8 | 235.316 | 1.7071e-6 | 4.4579e-6 | 1.7008e-6 | 4.4565e-6 |
+| 16 | 440.371 | 1.7190e-6 | 4.4430e-6 | 1.7130e-6 | 4.4411e-6 |
+| 32 | 772.990 | 1.7170e-6 | 4.4382e-6 | 1.7103e-6 | 4.4367e-6 |
+| 64 | 1520.915 | 1.7111e-6 | 4.4467e-6 | 1.7051e-6 | 4.4454e-6 |
+
+| Size | Repo o max abs | Repo state max abs | FLA o max abs | FLA state max abs |
+| --- | --- | --- | --- | --- |
+| 4 | 4.7684e-7 | 2.3603e-5 | 5.0664e-7 | 2.3603e-5 |
+| 8 | 4.7684e-7 | 2.3365e-5 | 4.7684e-7 | 2.3127e-5 |
+| 16 | 4.4703e-7 | 2.2888e-5 | 4.3958e-7 | 2.2888e-5 |
+| 32 | 4.3213e-7 | 2.2411e-5 | 4.1723e-7 | 2.2411e-5 |
+| 64 | 4.4703e-7 | 2.3127e-5 | 4.4703e-7 | 2.3127e-5 |
+
+Max per-token decay: 61.463203; max full-sequence decay:
+83964.062500.
+
+**natural-text-repeated**
+
+| Size | Max block decay | Repo o L2 | Repo state L2 | FLA o L2 | FLA state L2 |
+| --- | --- | --- | --- | --- | --- |
+| 4 | 138.732 | 2.5364e-6 | 3.5710e-6 | 2.5356e-6 | 3.5912e-6 |
+| 8 | 247.264 | 2.0182e-6 | 2.9143e-6 | 2.0167e-6 | 2.9355e-6 |
+| 16 | 408.172 | 2.5417e-6 | 3.1563e-6 | 2.5403e-6 | 3.1775e-6 |
+| 32 | 776.791 | 2.6020e-6 | 3.1699e-6 | 2.6005e-6 | 3.1900e-6 |
+| 64 | 1423.758 | 2.6005e-6 | 3.0829e-6 | 2.5994e-6 | 3.1041e-6 |
+
+| Size | Repo o max abs | Repo state max abs | FLA o max abs | FLA state max abs |
+| --- | --- | --- | --- | --- |
+| 4 | 1.0878e-6 | 4.4346e-5 | 1.0878e-6 | 4.4823e-5 |
+| 8 | 8.6427e-7 | 3.7432e-5 | 8.6427e-7 | 3.7909e-5 |
+| 16 | 1.0729e-6 | 3.9101e-5 | 1.0431e-6 | 4.0054e-5 |
+| 32 | 1.1474e-6 | 3.8624e-5 | 1.1325e-6 | 3.9577e-5 |
+| 64 | 1.1176e-6 | 3.7670e-5 | 1.0878e-6 | 3.8624e-5 |
+
+Max per-token decay: 66.358490; max full-sequence decay:
+88852.812500.
+
+The historical numerical value 1461.214 is **not reproduced exactly**: the
+random replay observes 1520.914551, a delta of +59.700551. It reproduces the
+large-span counterexample with a larger observed span; historical raw inputs
+are unavailable to attribute the difference. No exact numerical identity to
+that earlier run is claimed.
+
+Select 64-token chunks with FP32 logarithmic prefixes and direct nonpositive
+causal differences: all five sizes pass, and smaller resets show no acceptance
+advantage on these samples. This qualifies the measured sample domain, not all
+possible weights or inputs. Native whole-model logit/cache qualification remains
+separate. Raw 180-row receipt SHA-256:
+`2be57fcfed201a5a8f58e0b83af398d6d63bfb05324e1d26f84c5574ccebd5f6`.
+Reproduce using the checkpoint command described below; raw receipts remain in
+ignored task output rather than recorded golden tensors.
 
 All exponential sites of the selected forward chain:
 
@@ -161,8 +224,8 @@ Consequently exp(1461/2) is never evaluated. Precision, independently of
 finiteness, must still be measured for prefix subtraction and triangular
 solves; no universal gate-domain qualification follows from the sign proof.
 The chosen baseline has 64-token chunks, with no anchored 16-token fast path.
-The five-size survey will compare reset intervals {4,8,16,32,64} before any
-measured gate-range claim or later blocked Cube implementation is accepted.
+The completed survey compares reset intervals {4,8,16,32,64}. A future blocked
+Cube implementation must renew these numerical checks on its own arithmetic.
 
 ## Synthetic five-size observation (not checkpoint evidence)
 
