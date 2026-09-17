@@ -1,7 +1,8 @@
 # GDN-2 chunk forward
 
-Status: FP32 implementation, CPU references and reduced simulator diagnostics pass;
-no hardware or performance qualification yet.
+Status: FP32 implementation, CPU references, reduced diagnostics and the full
+T=4096/H=16/block_dim=8 native check pass. Remaining hardware scopes and
+performance qualification are pending.
 Task: GD2-01 (#62), originating from #61. Only the standalone forward unit and
 opt-in sibling API are in scope. Existing model/operator files and PM-owned
 board/matrix files remain unchanged in this task branch.
@@ -68,12 +69,13 @@ FP32 recurrence, including nonzero state, odd chunk counts, tails, strong decay,
 and split-prefill/decode. Output and state relative L2 must be <=1e-4; report
 maximum absolute error too. Real-model budgets remain 1e-3 FP32 and 1e-2 BF16.
 
-The user requires Torch CPU mode. CPU references and CPU-tensor aclnn/board
-harness execution are supported separately from the in-process NPU bridge.
+The user requires CPU Torch for golden references and permits Torch NPU for
+performance comparisons. CPU-tensor aclnn/board harness execution is supported
+separately from the in-process NPU bridge.
 CPU timings are not NPU performance. SSH authentication initially failed, so reduced simulator checks were used only
 to diagnose the newly authored stages. The assigned directory and device health
-are now confirmed; native full-workload validation is in progress. NPU model
-and torch_npu baseline qualification remain untested under the CPU-only request.
+are now confirmed. The full T=4096/H=16 native workload passes; remaining case
+and torch_npu performance qualification are in progress.
 
 ## Host observations
 
@@ -174,8 +176,17 @@ order. This establishes a failing native dependent-bound form, not whether the
 vendor compiler or hardware implements it incorrectly. Artifact controls alone
 are not source-kernel qualification. The source change passes 44 targeted host
 tests, T=2/H=1 pipesim at block_dim=1, and static checking with zero errors and
-warnings. Full native source regression remains pending. Redacted failure and
-control receipts are retained in ignored `tmp/GD2-02/`.
+warnings; the full host suite passes 223 tests with 5 skips. Full native source
+regression passes B=1/T=4096/H=16/K=V=128/FP32/block_dim=8, including every
+stage and a separate composition run against the CPU recurrent oracle:
+
+| Output | Relative L2 | Maximum absolute error |
+| --- | --- | --- |
+| o | 2.400727462e-6 | 1.345761120e-7 |
+| final_state | 4.140812156e-6 | 4.950910807e-6 |
+
+Redacted failure, control and full-workload receipts are retained in ignored
+`tmp/GD2-02/`. No timing conclusion follows from the CPU/native harness.
 The tokenizer must be the recorded local revision; vocabulary size alone is
 not proof of tokenizer provenance. The natural-text sample is repeated to
 4096 tokens, and that construction is identified in the report.

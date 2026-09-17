@@ -143,9 +143,9 @@
         "B": 1,
         "T": 1,
         "H": 1,
-        "state_scale": 0.0,
-        "gate_scale": 3.0,
-        "erase_scale": 2.0,
+        "state_scale": 0,
+        "gate_scale": 3,
+        "erase_scale": 2,
         "N": 1
       }
     },
@@ -158,8 +158,8 @@
         "T": 2,
         "H": 1,
         "state_scale": 0.1,
-        "gate_scale": 60.0,
-        "erase_scale": 2.0,
+        "gate_scale": 60,
+        "erase_scale": 2,
         "N": 1
       }
     },
@@ -173,7 +173,7 @@
         "H": 1,
         "state_scale": 0.1,
         "gate_scale": 0.1,
-        "erase_scale": 2.0,
+        "erase_scale": 2,
         "N": 1
       }
     },
@@ -186,8 +186,8 @@
         "T": 64,
         "H": 16,
         "state_scale": 0.1,
-        "gate_scale": 60.0,
-        "erase_scale": 2.0,
+        "gate_scale": 60,
+        "erase_scale": 2,
         "N": 1
       }
     },
@@ -200,8 +200,8 @@
         "T": 65,
         "H": 16,
         "state_scale": 0.1,
-        "gate_scale": 60.0,
-        "erase_scale": 2.0,
+        "gate_scale": 60,
+        "erase_scale": 2,
         "N": 2
       }
     },
@@ -215,7 +215,7 @@
         "H": 16,
         "state_scale": 0.1,
         "gate_scale": 0.1,
-        "erase_scale": 2.0,
+        "erase_scale": 2,
         "N": 2
       }
     },
@@ -228,8 +228,8 @@
         "T": 192,
         "H": 16,
         "state_scale": 0.1,
-        "gate_scale": 60.0,
-        "erase_scale": 2.0,
+        "gate_scale": 60,
+        "erase_scale": 2,
         "N": 3
       }
     },
@@ -243,7 +243,7 @@
         "H": 16,
         "state_scale": 0.1,
         "gate_scale": 0.1,
-        "erase_scale": 2.0,
+        "erase_scale": 2,
         "N": 5
       }
     },
@@ -256,8 +256,8 @@
         "T": 1024,
         "H": 16,
         "state_scale": 0.1,
-        "gate_scale": 60.0,
-        "erase_scale": 2.0,
+        "gate_scale": 60,
+        "erase_scale": 2,
         "N": 16
       }
     },
@@ -270,8 +270,8 @@
         "T": 4096,
         "H": 16,
         "state_scale": 0.1,
-        "gate_scale": 60.0,
-        "erase_scale": 2.0,
+        "gate_scale": 60,
+        "erase_scale": 2,
         "N": 64
       }
     },
@@ -285,8 +285,8 @@
         "H": 1,
         "N": 2,
         "state_scale": 0.1,
-        "gate_scale": 60.0,
-        "erase_scale": 2.0
+        "gate_scale": 60,
+        "erase_scale": 2
       }
     },
     {
@@ -299,8 +299,8 @@
         "H": 16,
         "N": 1,
         "state_scale": 0.1,
-        "gate_scale": 60.0,
-        "erase_scale": 2.0
+        "gate_scale": 60,
+        "erase_scale": 2
       }
     }
   ],
@@ -321,7 +321,30 @@
       "device": "a5",
       "backend": "cce",
       "stage": "compile",
-      "status": "untested"
+      "status": "passed",
+      "cases": [
+        "t4096_h16_prefill"
+      ],
+      "note": "Native source check at block_dim=8 on 950PR_9589 V100 / CANN 9.2.0; other block counts unqualified."
+    },
+    {
+      "device": "a5",
+      "backend": "cce",
+      "stage": "compile",
+      "status": "untested",
+      "cases": [
+        "t1_h1_small",
+        "t2_h1_strong",
+        "t63_h1_tail",
+        "t64_h16_real",
+        "t65_h16_tail",
+        "t128_h16_even",
+        "t192_h16_odd",
+        "t320_h16_odd",
+        "t1024_h16_prefill",
+        "t65_h1_diagnostic_tail",
+        "t2_h16_diagnostic_heads"
+      ]
     },
     {
       "device": "a5",
@@ -345,7 +368,30 @@
       "device": "a5",
       "backend": "cce",
       "stage": "board",
-      "status": "untested"
+      "status": "passed",
+      "cases": [
+        "t4096_h16_prefill"
+      ],
+      "note": "Native source check at block_dim=8 on 950PR_9589 V100 / CANN 9.2.0; other block counts unqualified."
+    },
+    {
+      "device": "a5",
+      "backend": "cce",
+      "stage": "board",
+      "status": "untested",
+      "cases": [
+        "t1_h1_small",
+        "t2_h1_strong",
+        "t63_h1_tail",
+        "t64_h16_real",
+        "t65_h16_tail",
+        "t128_h16_even",
+        "t192_h16_odd",
+        "t320_h16_odd",
+        "t1024_h16_prefill",
+        "t65_h1_diagnostic_tail",
+        "t2_h16_diagnostic_heads"
+      ]
     },
     {
       "device": "a5",
@@ -389,7 +435,7 @@
   "measured": {
     "static": "All five stages emitted; zero static errors/warnings. The WY dependent-loop workaround has 128 surface operations.",
     "simulation": "After the WY source workaround, pipesim passes T=2/H=1/block_dim=1; earlier multihead/tail diagnostics belong to revision 9ba48cd and require renewal.",
-    "board_cce": "Revision 9ba48cd failed the full T=4096/H=16/block_dim=8 WY comparison on 950PR/CANN 9.2.0. Full source-workaround regression is pending.",
+    "board_cce": "Source workaround 858e380 passes T=4096/H=16/FP32/block_dim=8 on 950PR_9589 V100/CANN 9.2.0, against CPU Torch 2.12.0 references: output relative L2 2.400727462e-6/max abs 1.345761120e-7; state relative L2 4.140812156e-6/max abs 4.950910807e-6. The original 9ba48cd WY failure is retained. Remaining shapes and block counts are unqualified.",
     "latency": "Untested for this chunk unit; recurrent-kernel latency is not chunk evidence.",
     "whole_model": "Real-checkpoint replay and chunk whole-model qualification are pending.",
     "reproduce": "run.py check --launcher board --board a5 --case t4096_h16_prefill --block-dim 8; see docs/research/gdn2_chunk_fwd_gate_range.md"
