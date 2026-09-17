@@ -8,8 +8,10 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import importlib.util
 import json
 import math
+import os
 from pathlib import Path
 import sys
 import types
@@ -20,6 +22,22 @@ from chunk import gdn2_chunk_reference
 
 SIZES = (4, 8, 16, 32, 64)
 CHECKPOINT_SHA256 = '4ac729c627febc431bf4b2011a9cb7ad9c30cc1d017ff74aeca15f76efb2df6d'
+FLA_REVISION = 'e52dbc0ea19d3a40d7ab7f9eed855d2b473994d2'
+FLA_NAIVE_SHA256 = '6a65805401eb300df85b6297611a0dd158dd183423cf2bcd5e0f0ecdde3e9e7a'
+
+
+def load_fla_oracle(path):
+    if hashlib.sha256(path.read_bytes()).hexdigest() != FLA_NAIVE_SHA256:
+        raise ValueError('FLA naive source differs from the pinned revision')
+    spec=importlib.util.spec_from_file_location('_gdn2_survey_fla_naive',path)
+    module=importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    def oracle(q,k,v,g,b,w,state,*,scale,use_qk_l2norm,qk_norm_eps):
+        if use_qk_l2norm:
+            q,k=(x*torch.rsqrt(x.square().sum(-1,keepdim=True)+qk_norm_eps) for x in (q,k))
+        return module.naive_recurrent_gdn2(q,k,v,g,b,w,scale=scale,
+                                          initial_state=state,output_final_state=True)
+    return oracle
 
 
 def metric(got, expected):
@@ -32,9 +50,13 @@ def metric(got, expected):
 
 
 def survey(tensors, oracle, *, label, layer=None, scale=128**-0.5,
-           normalize=True, eps=1e-6):
+           normalize=True, eps=1e-6, fla_oracle=None):
+    if any(t.device.type!='cpu' for t in tensors):
+        raise ValueError('gate survey goldens must run on CPU')
     q,k,v,g,b,w,state=tensors
     expected=oracle(*tensors, scale=scale, use_qk_l2norm=normalize, qk_norm_eps=eps)
+    authoritative=None if fla_oracle is None else fla_oracle(
+        *tensors,scale=scale,use_qk_l2norm=normalize,qk_norm_eps=eps)
     rows=[]
     for size in SIZES:
         actual=gdn2_chunk_reference(*tensors,scale=scale,use_qk_l2norm=normalize,
@@ -49,6 +71,9 @@ def survey(tensors, oracle, *, label, layer=None, scale=128**-0.5,
                  max_chunk_decay=float((-blocks.sum(2)).max()),
                  max_prefix_span=float((prefix.amax(2)-prefix.amin(2)).max()),
                  output=metric(actual[0],expected[0]),state=metric(actual[1],expected[1]))
+        if authoritative is not None:
+            row['fla_naive_output']=metric(actual[0],authoritative[0])
+            row['fla_naive_state']=metric(actual[1],authoritative[1])
         rows.append(row)
         print(json.dumps(row,allow_nan=False),flush=True)
     return rows
@@ -60,19 +85,30 @@ def main():
     source.add_argument('--synthetic',action='store_true')
     source.add_argument('--checkpoint',type=Path)
     parser.add_argument('--tokenizer',type=Path)
+    parser.add_argument('--fla-naive',type=Path,default=os.environ.get('FLA_GDN2_NAIVE'))
     parser.add_argument('--text',default='The capital of France is Paris. Linear attention processes a sequence by updating a recurrent state. ')
     parser.add_argument('--length',type=int,default=4096)
+    parser.add_argument('--threads',type=int,default=1)
     parser.add_argument('--output',type=Path,required=True)
     args=parser.parse_args()
     if not 1<=args.length<=4096:
         parser.error('length must be 1..4096')
+    if not 1<=args.threads<=8:
+        parser.error('threads must be 1..8')
+    if args.checkpoint and not args.fla_naive:
+        parser.error('checkpoint survey requires --fla-naive from the pinned FLA revision')
+    fla_oracle=None if args.fla_naive is None else load_fla_oracle(args.fla_naive)
     # Only checkpoint mode needs the repository model. Synthetic mode can run
     # with this standalone unit alone, using its independent recurrence.
-    torch.set_num_threads(1)
+    torch.set_num_threads(args.threads)
     record=dict(source='synthetic' if args.synthetic else 'real-95B-checkpoint',
-                device='cpu',torch=str(torch.__version__),seed=20260914,
+                device='cpu',threads=args.threads,torch=str(torch.__version__),seed=20260914,
                 chunk_sizes=list(SIZES),rows=[],passed=False,
                 historical_replay_complete=False)
+    record['dual_oracle_complete']=fla_oracle is not None
+    if fla_oracle is not None:
+        record['fla_revision']=FLA_REVISION
+        record['fla_naive_sha256']=FLA_NAIVE_SHA256
     try:
         with torch.inference_mode():
             if args.synthetic:
@@ -92,7 +128,8 @@ def main():
                 for start in range(0,args.length,64):
                     window=g[:,start:start+64]
                     window.mul_(1461.214 / (-window.sum(1,keepdim=True)))
-                record['rows']=survey((q,k,v,g,b,w,state),oracle,label='synthetic-calibrated-1461.214')
+                record['rows']=survey((q,k,v,g,b,w,state),oracle,label='synthetic-calibrated-1461.214',
+                                      fla_oracle=fla_oracle)
             else:
                 if args.tokenizer is None:
                     parser.error('checkpoint mode requires a local tokenizer')
@@ -134,7 +171,7 @@ def main():
                             state=torch.zeros(q.shape[0],q.shape[2],q.shape[3],v.shape[3])
                         record['rows'].extend(survey((*tensors,state.float()),gdn2_recurrent_reference,
                             label=sample['label'],layer=_index,scale=self.attention_scale,
-                            normalize=self.use_qk_l2norm,eps=self.qk_norm_eps))
+                            normalize=self.use_qk_l2norm,eps=self.qk_norm_eps,fla_oracle=fla_oracle))
                         return _original(q,k,v,g,b,w,state)
                     mixer._run_core=types.MethodType(capture,mixer)
                 try:
@@ -152,6 +189,9 @@ def main():
                 record['historical_max_64']=1461.214
                 record['historical_delta']=record['observed_random_max_64']-1461.214
             record['passed']=all(row['output']['passed'] and row['state']['passed'] for row in record['rows'])
+            if fla_oracle is not None:
+                record['passed'] &= all(row['fla_naive_output']['passed'] and row['fla_naive_state']['passed']
+                                        for row in record['rows'])
     finally:
         args.output.parent.mkdir(parents=True,exist_ok=True)
         args.output.write_text(json.dumps(record,indent=2,allow_nan=False)+'\n')

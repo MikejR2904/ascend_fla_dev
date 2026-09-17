@@ -52,6 +52,17 @@ must not be inferred from its name. Later Cube work may use 16-token diagonal
 blocks with direct differences and boundary-anchored off-diagonal blocks.
 Any conversion or changed reduction tree must pass the original error gate.
 
+At the pinned FLA revision, `chunk_fwd.py` computes chunk-local base-2 log
+prefixes: fused activation uses `kda_gate_chunk_cumsum`, while already activated
+gates use `chunk_local_cumsum`, both scaled by `1/ln(2)`. Its safe intra path
+uses 16-token blocks with midpoint factors `exp2(G-Gmid)` and
+`exp2(-(G-Gmid))`; the token-parallel path evaluates causal differences directly.
+`wy_fast.py` materializes the gated keys/query and end-of-chunk scaled key.
+This implementation receives already activated natural-log gates, keeps local
+prefixes in FP32 and evaluates causal differences without the opposing
+midpoint exponentials. Shared chunk-local representation does not transfer a
+Triton precision or range qualification to the CCE backend.
+
 ## Ownership and synchronization
 
 Prepare, score, WY and output assign complete (batch, chunk, head) work items to
@@ -74,16 +85,17 @@ performance comparisons. CPU-tensor aclnn/board harness execution is supported
 separately from the in-process NPU bridge.
 CPU timings are not NPU performance. SSH authentication initially failed, so reduced simulator checks were used only
 to diagnose the newly authored stages. The assigned directory and device health
-are now confirmed. The full T=4096/H=16 native workload passes; remaining case
-and torch_npu performance qualification are in progress.
+are now confirmed. The full T=4096/H=16 canonical board workload passes.
+All 12 contract cases also pass the native in-process NPU bridge at block_dim=1
+and 8, with every one of the 13 stage outputs byte-identical between them.
+This does not qualify block_dim=2/4 or every canonical board-launcher case.
 
 ## Host observations
 
 Five CCE stages emit successfully at the accepted library pin. After the native
-WY workaround, functional sim passes T=1/H=1 and pipesim passes T=2/H=1 at
-block_dim=1. Revision `9ba48cd` also passed T=65/H=1, T=2/H=16 and T=65/H=16
-pipesim diagnostics; those larger diagnostic claims require renewal after the
-source change. CPU tests cover both zero and strong decay through T=4096/H=16;
+WY workaround, functional sim passes T=1/H=1 and pipesim passes T=2/H=1 and
+T=65/H=16 at block_dim=1. The latter renews the combined multihead/tail diagnostic
+on the changed source. CPU tests cover both zero and strong decay through T=4096/H=16;
 FLA recurrent is loaded explicitly by file path in the optional oracle test.
 
 The public graph retires each workspace after its last consumer launch. The
@@ -94,10 +106,41 @@ stored in the tracked contract.
 
 ## GD2-01 gate-range survey status
 
+### Supplemental native timing and state handoff
+
+On 950PR_9589 V100, CANN compiler/OPP 9.2.0, Torch 2.12.0+cpu with
+torch_npu 2.12.0 explicitly loaded for execution, both timing participants use
+NPU tensors. Goldens run only on CPU. FP32, H=16, block_dim=8, HF32 disabled;
+each of three rounds measures baseline-before, candidate, baseline-after with
+10 warmups and 50 synchronized wall-time samples per phase. Compilation and
+input transfer are outside the measured calls; the public candidate includes
+validation and workspace allocation. Baseline is the repository's composed
+Torch NPU per-token recurrence, not an optimized FLA Triton kernel.
+
+| T | Candidate median range (ms) | Speedup versus faster flanking baseline | Peak incremental Torch allocation |
+| --- | --- | --- | --- |
+| 1024 | 4.261–4.371 | 113.08–117.51x | 72,351,744 bytes |
+| 4096 | 15.932–16.021 | 218.71–224.53x | 286,261,248 bytes |
+
+Both participants pass the CPU golden before timing. Raw sample receipt SHA-256:
+`06a9f5983fb25eb14d747c73ef350f95a8143e3499d9c1b9bfe69ca64645ebeb`.
+These preliminary measurements do not claim GD2-02 completion or whole-model speedup.
+
+Native prefill (T=65 or 4096, FP32 or BF16 q/k/v) followed by one token of the
+existing recurrent decode also passes CPU golden checks. State is handed off
+directly in FP32. Since the owner decode API requires q/k/v/b/w to share one
+dtype, decode widens the already-quantized q/k/v to FP32 and casts its output
+back to the input dtype for comparison. Maximum output relative L2 across the
+four cases is 5.8482e-5, maximum state relative L2 is 1.1214e-7; every case passes
+both allclose(atol=rtol=1e-4) and relative L2<=1e-4. This is synthetic operator
+handoff evidence, not real-model logit/cache qualification.
+
+### Remaining checkpoint gate
+
 This derivation predates the arithmetic port into the scoped task branch.
 The requested real-95B random-token replay and natural-text run are **pending**:
-no checkpoint or tokenizer is available in the inspected checkout or assigned
-remote user directory. Asset locations have been requested. The historical 1461.214
+the fixed checkpoint has been downloaded and SHA-256 verified, and transfer to
+the isolated CPU replay environment is in progress. The historical 1461.214
 number is provenance from `gdn2-chunk-gate-range`, not a reproduced measurement.
 Synthetic gate sweeps must be labeled synthetic; they cannot close this gate.
 
@@ -135,6 +178,16 @@ All outputs and states are finite. No performance timing is inferred.
 | 32 | 970.827 | 1.620e-6 | 3.413e-6 | 5.178e-7 | 1.550e-5 |
 | 64 | 1461.214 | 3.284e-6 | 5.908e-6 | 1.068e-6 | 1.562e-5 |
 
+The same generated inputs also pass the pinned FLA naive CPU oracle:
+
+| Prefix reset size | FLA output relative L2 | FLA state relative L2 |
+| --- | --- | --- |
+| 4 | 2.247e-7 | 2.522e-7 |
+| 8 | 4.044e-7 | 8.151e-7 |
+| 16 | 7.954e-7 | 1.430e-6 |
+| 32 | 1.619e-6 | 3.413e-6 |
+| 64 | 3.284e-6 | 5.908e-6 |
+
 This supports continuing with the 64-token FP32 baseline on synthetic inputs.
 It does not establish the real-checkpoint gate-domain limit or satisfy the
 required random-token and natural-text replay. Reproduce with:
@@ -146,6 +199,9 @@ python kernels/projects/a5/gdn2_chunk_fwd/ref/survey.py --synthetic --output tmp
 For actual model evidence, use the same script with `--checkpoint` and
 `--tokenizer` pointing to local assets. It verifies the recorded checkpoint
 SHA-256, uses CPU Torch only, and reports each layer and both sample types.
+Checkpoint mode additionally requires `--fla-naive` (or `FLA_GDN2_NAIVE`)
+pointing to the pinned `naive.py`. Its source digest is verified before import;
+every reset size reports errors against both the repository and FLA recurrences.
 
 ## Native WY dependent-loop diagnosis
 
