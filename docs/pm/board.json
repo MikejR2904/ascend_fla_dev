@@ -1806,6 +1806,53 @@
       "timebox_h": 24,
       "reports": [],
       "result": null
+    },
+    {
+      "id": "GD2-04",
+      "title": "GDN-2 chunk 前向：性能优化第二轮（WY 行对复用）",
+      "wave": "W0",
+      "soc": "a5",
+      "priority": "P2",
+      "status": "gated",
+      "gate": "user-decision",
+      "model": [
+        "gdn2-1.3b-fineweb-edu-100b"
+      ],
+      "kernel": [
+        "gdn2_chunk_fwd"
+      ],
+      "dtype": [
+        "bf16",
+        "fp32"
+      ],
+      "deps": [
+        "GD2-03"
+      ],
+      "write_set": [
+        "kernels/projects/a5/gdn2_chunk_fwd/**",
+        "tests/test_gdn2_chunk_fwd.py",
+        "docs/research/gdn2_chunk_fwd_gate_range.md"
+      ],
+      "needs": {
+        "npu": true,
+        "ascriptor": true,
+        "fla": false
+      },
+      "spec": "docs/pm/tasks/GD2-04.md",
+      "issue": null,
+      "pr": null,
+      "assignee": null,
+      "assignee_caps": null,
+      "branch": null,
+      "timebox_h": 12,
+      "origin": {
+        "kind": "request",
+        "issue": 71,
+        "by": "limjiunnbin",
+        "approved_by_user": false
+      },
+      "reports": [],
+      "result": null
     }
   ],
   "label_github_login": "ascend-fla-pm-bot",
