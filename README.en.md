@@ -30,7 +30,7 @@ serves only as the semantic authority during testing (`naive.py` as a CPU fp32 o
 | KDA (Kimi Delta Attention) | `kda` | open to agents | 5 | 1/14 |
 | GDN (Gated DeltaNet) | `gated_delta_rule` | open to agents | 4 | 0/4 |
 | DeltaNet | `delta_rule` | no task yet | 2 | 2/2 units with validation records |
-| GDN-2 (Gated DeltaNet 2) | `gdn2` | owner track | 6 | 2/4 |
+| GDN-2 (Gated DeltaNet 2) | `gdn2` | owner track | 6 | 3/4 |
 | Whole-network fusion ops (module / layer) | `fusion` | open to agents | 4 | 0/4 |
 | Mamba-1/2/3 | `mamba` | not scheduled (G4) | — | — |
 | GLA (Gated Linear Attention) | `gla` | not scheduled (G4) | — | — |
@@ -160,7 +160,7 @@ _Upstream units exist; no task scheduled here yet_
 
 </details>
 
-<details><summary><b>GDN-2 (Gated DeltaNet 2) —— 6 kernel(s)，2/4 done</b></summary>
+<details><summary><b>GDN-2 (Gated DeltaNet 2) —— 6 kernel(s)，3/4 done</b></summary>
 
 _Owner's parallel track; see docs/handoff.md §1. **Exception** (D-PM-16, 2026-09-17): chunk forward is opened to the agent track (GD2-01 forward, merged; GD2-02 device+full-network validation, unassigned; GD2-03 perf, merged), scoped to new files only, reserved_paths untouched_
 
@@ -170,17 +170,17 @@ _Owner's parallel track; see docs/handoff.md §1. **Exception** (D-PM-16, 2026-0
 | `gdn2_fused_decode` | owner track | 6/6 passed | _Owner track: model-specific fused decode_ |
 | `gdn2_short_conv_decode` | owner track | 6/6 passed | _Owner track: packed short-conv decode_ |
 | `gdn2_norm2_w12_swiglu` | owner track | 4/6 passed | _Owner track: fused RMSNorm + SwiGLU_ |
-| `gdn2_chunk_fwd` | open to agents | 2/4 | [#62](https://github.com/ddddwee1/ascend_fla_dev/issues/62) GD2-01 |
+| `gdn2_chunk_fwd` | open to agents | 3/4 | [#62](https://github.com/ddddwee1/ascend_fla_dev/issues/62) GD2-01 |
 | `gdn2_chunk_fwd_bwd` | owner track | — | _Backward not yet scheduled; forward is done via the agent track, see gdn2_chunk_fwd_ |
 
-<details><summary>gdn2_chunk_fwd —— 2/4 done，start GD2-01</summary>
+<details><summary>gdn2_chunk_fwd —— 3/4 done，start GD2-01</summary>
 
 | task | issue | SoC | dtype | status | note |
 |---|---|---|---|---|---|
 | GD2-01 | [#62](https://github.com/ddddwee1/ascend_fla_dev/issues/62) | `a5` | bf16、fp32 | ✅ done | ★ start |
 | GD2-02 | [#63](https://github.com/ddddwee1/ascend_fla_dev/issues/63) | `a5` | bf16、fp32 | ⬜ open |  |
 | GD2-03 | [#66](https://github.com/ddddwee1/ascend_fla_dev/issues/66) | `a5` | bf16、fp32 | ✅ done |  |
-| GD2-04 | [#72](https://github.com/ddddwee1/ascend_fla_dev/issues/72) | `a5` | bf16、fp32 | 🔵 assigned |  |
+| GD2-04 | [#72](https://github.com/ddddwee1/ascend_fla_dev/issues/72) | `a5` | bf16、fp32 | ✅ done |  |
 
 </details>
 

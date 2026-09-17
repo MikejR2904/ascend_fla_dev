@@ -1826,7 +1826,7 @@
       "wave": "W0",
       "soc": "a5",
       "priority": "P2",
-      "status": "assigned",
+      "status": "done",
       "model": [
         "gdn2-1.3b-fineweb-edu-100b"
       ],
@@ -1852,7 +1852,7 @@
       },
       "spec": "docs/pm/tasks/GD2-04.md",
       "issue": 72,
-      "pr": null,
+      "pr": 74,
       "assignee": "limjiunnbin",
       "assignee_caps": {
         "agent": "Codex (self-described, per #71)",
@@ -1877,9 +1877,24 @@
         {
           "at": "2026-09-17T13:57",
           "summary": "用户批准 D-PM-19；把 #71 的自述当 APPLY，直接 ASSIGN"
+        },
+        {
+          "at": "2026-09-17T14:09",
+          "summary": "合入 a42eae3。PM 独立复算：pytest 223/5 与 DONE 逐字一致；run.py reference 12/12、check --launcher sim/pipesim（含奇数尾块）全过；写集/reserved_paths 无误。WY 行对复用数学等价性由 PM 独立推导（行 i 逐位不变，行 i+1 的 j<i 部分与行 i 共享读取，j=i 项用刚算完的寄存器值补齐，累加顺序与原始单行循环一致）。真机数字未独立复算"
         }
       ],
-      "result": null
+      "result": {
+        "commits": [
+          "d00045e",
+          "a42eae3"
+        ],
+        "evidence": [
+          "PR #74",
+          "docs/research/gdn2_chunk_fwd_gate_range.md"
+        ],
+        "numbers": "主机侧：223 passed/5 skipped，12/12 契约 case reference 过；真机（950PR_9589 V100, CANN 9.2.0）增量对 GD2-03 基线 T1024 -14.5%~14.7%/T4096 -15.1%~15.9%，累计对 GD2-01 原始基线 T1024 -21.8%~22.0%/T4096 -23.3%~24.0%；全部 stage tensor 跨 bd1/8 与相对 GD2-01/GD2-03 均逐位相同",
+        "note": "真机计时由 assignee 报告，PM 未独立复算；正确性数字（reference/sim/pipesim）PM 已独立复算"
+      }
     },
     {
       "id": "GDA-01",
