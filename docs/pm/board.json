@@ -1488,7 +1488,7 @@
       "wave": "W0",
       "soc": "a5",
       "priority": "P1",
-      "status": "in_progress",
+      "status": "done",
       "model": [
         "gdn2-1.3b-fineweb-edu-100b"
       ],
@@ -1513,7 +1513,7 @@
       },
       "spec": "docs/pm/tasks/GD2-01.md",
       "issue": 62,
-      "pr": null,
+      "pr": 64,
       "assignee": "limjiunnbin",
       "assignee_caps": {
         "agent": "Codex (self-described, per #61)",
@@ -1552,9 +1552,26 @@
         {
           "at": "2026-09-17T12:05",
           "summary": "STATUS：真实 95B checkpoint 随机 token 回放 14/18 层完成，五档子块两个 oracle 均 ≤1e-4。**新观测最大跨度 1520.91455，超过历史记录 1461.214**——已记入 gaps.json，闸边界改按新值。顺带拿到 NPU 计时（T1024≈4.3ms/T4096≈16ms，对 composed torch_npu 基线），标注不算 GD2-02 完成。仍未 DONE，等 18 层跑完"
+        },
+        {
+          "at": "2026-09-17T12:30",
+          "summary": "合入 0397aa1。PM 独立复算：临时 clone 里 pytest 223 passed/5 skipped（配 FLA_GDN2_NAIVE）与 DONE 逐字一致；run.py reference 12/12、check --launcher sim/pipesim 缩小诊断点全过；写集与 reserved_paths 边界核实无误。真机/checkpoint 数字未独立复算（无设备/checkpoint），但 contract.json 的 support 按实际 case/block_dim 精确标注，未过度声称"
         }
       ],
-      "result": null
+      "result": {
+        "commits": [
+          "226cb6c",
+          "0397aa1"
+        ],
+        "evidence": [
+          "PR #64",
+          "docs/research/gdn2_chunk_fwd_gate_range.md",
+          "kernels/projects/a5/gdn2_chunk_fwd/",
+          "ascend_fla/ops/gdn2_chunk_fwd.py"
+        ],
+        "numbers": "主机侧：223 passed/5 skipped；12/12 契约 case reference 过；真实 95B checkpoint 回放（18 层×5 档子块，两个 oracle）全部 rel-L2<=1e-4，门控跨度新观测最大 1520.91455（超历史 1461.214）；真机（950PR_9589 V100, CANN 9.2.0）board T4096/H16/bd8 通过，bd1/8 逐位相同；NPU 计时供参考（对 composed torch_npu，非 GD2-02 完成声明）",
+        "note": "真机与 checkpoint 数字由 assignee 报告，PM 未独立复算（无设备/checkpoint 访问）；主机侧全部独立复算通过"
+      }
     },
     {
       "id": "GD2-02",
