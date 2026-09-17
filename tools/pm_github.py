@@ -9,8 +9,12 @@ agent 可以是任何账号、任何模型，所以协作走本仓的 GitHub iss
     python tools/pm_github.py sync --offline         # 不连 GitHub，按"远端为空"预览要建的标签与 issue
     python tools/pm_github.py sync                   # 连 GitHub 的 dry-run：打印要建/改/关的内容
     python tools/pm_github.py sync --apply           # 执行，并把 issue 编号写回看板
-    python tools/pm_github.py poll                   # 打印游标之后的新评论、需求 issue 与 PR（JSON 行）
-    python tools/pm_github.py poll --advance         # 处理完之后推进游标
+    python tools/pm_github.py poll                   # 打印游标之后的新评论、需求 issue 与 PR（JSON 行），并暂存进度
+    python tools/pm_github.py poll --advance         # 处理完之后提交暂存的进度（不再拉取、不再打印）
+
+**别把 poll 的输出接进 head / tail。** 事件是逐行 JSON，截断就等于丢消息；
+而且 --advance 只提交上一次 poll 暂存的那一批，所以"打印被截断、游标照样前移"这件事
+会让事件永久跳过。要看少一点就自己 grep，不要截行数。
     python tools/pm_github.py post A2-01 reply.md    # 在任务 issue 下发评论（也接受 '#12' 或 'intake'）
     python tools/pm_github.py label 42 triage:accepted   # 给需求 issue 打分诊标签
 
@@ -536,9 +540,28 @@ def cmd_sync(board: dict, apply: bool, offline: bool, pace_s: float = 15.0) -> i
 
 
 def cmd_poll(board: dict, advance: bool) -> int:
+    """``poll`` 打印并暂存，``poll --advance`` 只提交暂存的那一批 —— 两步是分开的。
+
+    合成一步会让游标在"事件已打印、但还没被处理"的窗口里前移：输出丢了（管道截断、
+    中断、崩到一半），事件就永久跳过了，而且毫无信号。实测踩过一次：把 ``poll --advance``
+    的输出接进 ``head -1``，agent 贴的四条日志被截掉，游标照常前移，只能手工去 issue 里捞。
+    所以 ``--advance`` **不再自己拉取**，只提交上一次 ``poll`` 暂存的进度 —— 没暂存就拒绝前移。
+    """
+    state = json.loads(STATE.read_text(encoding="utf-8")) if STATE.exists() else {}
+    if advance:
+        pending = state.get("pending")
+        if not pending:
+            print("没有待提交的进度：先跑 python tools/pm_github.py poll，处理完再 --advance",
+                  file=sys.stderr)
+            return 1
+        STATE.parent.mkdir(parents=True, exist_ok=True)
+        STATE.write_text(json.dumps({**{k: v for k, v in pending.items()},
+                                     "polled_at": datetime.now(timezone.utc).isoformat()},
+                                    indent=2), encoding="utf-8")
+        print(f"游标推进到 {pending['since']}", file=sys.stderr)
+        return 0
     repo = _repo(board)
     pm_login = board.get("pm_github_login")
-    state = json.loads(STATE.read_text(encoding="utf-8")) if STATE.exists() else {}
     since = state.get("since", "1970-01-01T00:00:00Z")
     seen: dict[str, str] = state.get("seen_comments", {})
     comments = _gh_lines("api", "--paginate",
@@ -578,13 +601,14 @@ def cmd_poll(board: dict, advance: bool) -> int:
         if prs_seen.get(str(p["number"])) != p["updated_at"]:
             prs_seen[str(p["number"])] = p["updated_at"]
             print(json.dumps(classify_pr(p, board), ensure_ascii=False))
-    if advance:
-        STATE.parent.mkdir(parents=True, exist_ok=True)
-        keep = dict(sorted(seen.items(), key=lambda kv: kv[1])[-500:])
-        STATE.write_text(json.dumps({"since": latest, "seen_comments": keep, "issues": issues_seen,
-                                     "prs": prs_seen,
-                                     "polled_at": datetime.now(timezone.utc).isoformat()}, indent=2), encoding="utf-8")
-        print(f"游标推进到 {latest}", file=sys.stderr)
+    STATE.parent.mkdir(parents=True, exist_ok=True)
+    keep = dict(sorted(seen.items(), key=lambda kv: kv[1])[-500:])
+    STATE.write_text(json.dumps({**{k: v for k, v in state.items() if k != "pending"},
+                                 "pending": {"since": latest, "seen_comments": keep,
+                                             "issues": issues_seen, "prs": prs_seen},
+                                 "staged_at": datetime.now(timezone.utc).isoformat()},
+                                indent=2), encoding="utf-8")
+    print(f"已暂存到 {latest}；处理完跑 poll --advance 提交", file=sys.stderr)
     return 0
 
 

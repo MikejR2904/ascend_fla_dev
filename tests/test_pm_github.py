@@ -8,6 +8,7 @@ agent 来自任何账号，所以这里重点测两件事：协议消息能被�
 """
 from __future__ import annotations
 
+import json
 import pathlib
 import sys
 import tempfile
@@ -287,3 +288,60 @@ class TestPlanSync(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+# --- poll 的暂存/提交两步（游标不能跑在处理前面） ---------------------------------
+
+
+def _poll_state(tmp_path, monkeypatch, comments, board):
+    """把 poll 需要的两个外部依赖钉死：状态文件位置与 gh 的返回。"""
+    monkeypatch.setattr(pm_github, "STATE", tmp_path / "github_state.json")
+    monkeypatch.setattr(pm_github, "_gh_lines",
+                        lambda *a, **k: comments if "issues/comments" in a[2] else [])
+    return pm_github.STATE
+
+
+def test_poll_stages_without_moving_the_cursor(tmp_path, monkeypatch, capsys):
+    """poll 只暂存。游标停在原地，所以同一批事件再跑一次还会打印出来。"""
+    board = {"repo": "o/r", "pm_github_login": "pm", "tasks": [], "intake_issue": 1}
+    c = [{"id": 7, "issue_url": "https://api.github.com/repos/o/r/issues/30", "user": "dev",
+          "updated_at": "2026-01-02T00:00:00Z", "body": "hi", "html_url": "u"}]
+    state = _poll_state(tmp_path, monkeypatch, c, board)
+
+    assert pm_github.cmd_poll(board, advance=False) == 0
+    assert '"comment_id": 7' in capsys.readouterr().out
+    saved = json.loads(state.read_text())
+    assert saved.get("since") is None, "poll 不该动 since"
+    assert saved["pending"]["since"] == "2026-01-02T00:00:00Z"
+
+    assert pm_github.cmd_poll(board, advance=False) == 0
+    assert '"comment_id": 7' in capsys.readouterr().out, "没提交之前，同一条必须还能再看到"
+
+
+def test_advance_commits_only_what_poll_staged(tmp_path, monkeypatch, capsys):
+    board = {"repo": "o/r", "pm_github_login": "pm", "tasks": [], "intake_issue": 1}
+    c = [{"id": 7, "issue_url": "https://api.github.com/repos/o/r/issues/30", "user": "dev",
+          "updated_at": "2026-01-02T00:00:00Z", "body": "hi", "html_url": "u"}]
+    state = _poll_state(tmp_path, monkeypatch, c, board)
+
+    pm_github.cmd_poll(board, advance=False)
+    capsys.readouterr()
+    assert pm_github.cmd_poll(board, advance=True) == 0
+    saved = json.loads(state.read_text())
+    assert saved["since"] == "2026-01-02T00:00:00Z"
+    assert "pending" not in saved
+    assert capsys.readouterr().out == "", "--advance 不该再打印事件"
+
+    pm_github.cmd_poll(board, advance=False)
+    assert capsys.readouterr().out == "", "提交之后同一条不该再出现"
+
+
+def test_advance_without_staging_refuses(tmp_path, monkeypatch, capsys):
+    """没跑过 poll 就 --advance，必须拒绝而不是把游标推到现在 —— 那会跳过没看过的事件。"""
+    board = {"repo": "o/r", "pm_github_login": "pm", "tasks": [], "intake_issue": 1}
+    state = _poll_state(tmp_path, monkeypatch, [], board)
+    state.write_text(json.dumps({"since": "2026-01-01T00:00:00Z"}))
+
+    assert pm_github.cmd_poll(board, advance=True) == 1
+    assert json.loads(state.read_text())["since"] == "2026-01-01T00:00:00Z"
+    assert "先跑" in capsys.readouterr().err
