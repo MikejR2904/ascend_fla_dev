@@ -1548,6 +1548,10 @@
         {
           "at": "2026-09-17T10:35",
           "summary": "STATUS：真机（Ascend950PR_9589 V100, CANN 9.2.0）跑了一次完整原生 workload (T=4096,H=16,FP32,bd=8)——五个 stage 都编译/执行了，但 WY stage 的 u 在 stage 比对上不过，max_abs=0.0511。CPU 用同一份输入回放复现了同样的 max_abs；\"漏看前一行的递推\"能对上真机值到 6e-8，明确标注只是定位假设，不是已确认根因。no DONE"
+        },
+        {
+          "at": "2026-09-17T11:06",
+          "summary": "RISK contradicts-handoff：spec 的\"全程主机侧、不许报真机数字\"太绝对，assignee 已用另配的 A5 访问跑通全形状真机回归（bd=1/8 逐位相同）并修了一个WY 原生依赖循环缺陷（858e380，仅动写集内文件，已核对文件列表）。PM 核实后更正 GD2-01.md：真机证据允许且鼓励如实报，但不能替代主机侧验收项"
         }
       ],
       "result": null
