@@ -108,6 +108,12 @@
       "by": "user",
       "decision": "批准 issue #61 的 REQUEST：agent 轨道做 GDN-2 chunk 前向（forward-only，含 prefill→decode state 交接），作为 D-PM-12（GDN-2 不在看板造任务）的一次显式例外。范围收紧为只加新文件：新 ascriptor 单元 kernels/projects/a5/gdn2_chunk_fwd/**、新 sibling 模块 ascend_fla/ops/gdn2_chunk_fwd.py（不是 ops/gdn2/** 包内文件）。reserved_paths 原样保留、一个字节不碰；把新前向接进现成 layer/model 选择逻辑不在批准范围内，留给仓主轨道",
       "risk": "GDN-2 门控跨度（真实 95B 权重 64-token 局部跨度 1461.214，见 gaps.json 的 gdn2-chunk-gate-range）比 KDA 已验证域（前向 155）大一个数量级，KDA 的量程方法论（改锚点到中点）不够用，必须做分段/归一化表示 —— 已写进 GD2-01 的步骤，不是简单移植"
+    },
+    {
+      "id": "D-PM-17",
+      "date": "2026-09-17",
+      "by": "user",
+      "decision": "批准 issue #65：在 D-PM-16 已批的同一边界内（写集不变、不碰 reserved path、不改公开 API/数学/精度闸），继续做 GD2-01 kernel 的性能优化（GD2-03）"
     }
   ],
   "gated_epics": [
@@ -1628,7 +1634,7 @@
       "wave": "W0",
       "soc": "a5",
       "priority": "P2",
-      "status": "gated",
+      "status": "assigned",
       "model": [
         "gdn2-1.3b-fineweb-edu-100b"
       ],
@@ -1655,19 +1661,33 @@
       "spec": "docs/pm/tasks/GD2-03.md",
       "issue": 66,
       "pr": null,
-      "assignee": null,
-      "assignee_caps": null,
-      "branch": null,
+      "assignee": "limjiunnbin",
+      "assignee_caps": {
+        "agent": "Codex (self-described, per #65)",
+        "socs": [
+          "a5"
+        ],
+        "soc_details": "沿用 GD2-01/GD2-02 已配置的 A5 访问",
+        "ascriptor": "library 90cfcdc720bb / kernels b3b3f9c16df7（同 GD2-01）",
+        "fla": false,
+        "fork": null,
+        "note": "GD2-01 的原 assignee 延续；assignee 账号与本看板 pm_github_login 相同"
+      },
+      "branch": "task/GD2-03",
       "timebox_h": 16,
       "origin": {
         "kind": "request",
         "issue": 65,
         "by": "limjiunnbin",
-        "approved_by_user": false
+        "approved_by_user": true
       },
-      "reports": [],
-      "result": null,
-      "gate": "user-decision"
+      "reports": [
+        {
+          "at": "2026-09-17T12:55",
+          "summary": "用户批准 D-PM-17；把 #65 的自述当 APPLY，直接 ASSIGN"
+        }
+      ],
+      "result": null
     }
   ],
   "label_github_login": "ascend-fla-pm-bot",
