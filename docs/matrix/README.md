@@ -451,6 +451,7 @@ PM 在权威 workspace 上独立跑了 `benchmarks/diag_c1_multihead.py`，**上
 - **影响** 现有 a5.gdn_fwd/bwd 仍不能用于这个 checkpoint；强接会在形状层面丢掉 128 倍门控信息并无法表达独立 write gate，是确定性的语义错误。独立 recurrent kernel 已解除短 prompt/decode 的阻塞；剩余影响收窄为 T>16 的长 prefill 与训练反向，它们仍缺 gdn2_chunk_fwd_bwd。
 - **建议** recurrent 已完成，不再改。下一步只做独立 gdn2 chunk fwd+bwd：L=64、K=V=128、直接吃 token-major；数值表示先解决 gdn2-chunk-gate-range 的 1461 跨度反例。g 变换与 b/w sigmoid 是否继续融合，等整层 profile 后决定；不能因名字相近复用 a5.gdn_*。
 **2026-09-17**：forward-only 部分已排上看板 GD2-01（主机侧：量程设计 + kernel 单元）/ GD2-02（gated，A5 真机数 + 整网验证），D-PM-16 批准。backward 仍未排期。
+**2026-09-17 补充（GD2-01 assignee 的 RISK，PM 已核实）**：fla 0.5.2 的 fla.ops.gdn2 下不只有 naive.py，还有完整的 Triton chunk 前向/反向（chunk.py/chunk_fwd.py/chunk_bwd.py/chunk_intra.py/wy_fast.py），门控数值稳定复用 fla.ops.kda.gate.kda_gate_chunk_cumsum。此前记录里没提这个，容易让人以为 GDN-2 chunk 完全没有可参考的实现——有，是设计参考（AGENTS.md §1 的语义权威），但 Triton 在 CCE 上不能假设直接成立，量程仍需在本仓执行栈上重测。
 
 #### `gdn2-chunk-gate-range` — GDN-2 的真实 chunk 衰减跨度远超 KDA stable 已验证域，chunk 算法必须单独做量程设计
 

@@ -1479,7 +1479,7 @@
       "wave": "W0",
       "soc": "a5",
       "priority": "P1",
-      "status": "assigned",
+      "status": "in_progress",
       "model": [
         "gdn2-1.3b-fineweb-edu-100b"
       ],
@@ -1500,7 +1500,7 @@
       "needs": {
         "npu": false,
         "ascriptor": true,
-        "fla": false
+        "fla": true
       },
       "spec": "docs/pm/tasks/GD2-01.md",
       "issue": 62,
@@ -1527,6 +1527,10 @@
         {
           "at": "2026-09-17T09:19",
           "summary": "用户批准 D-PM-16；ASSIGN 已发（#62），24h ACK 窗口"
+        },
+        {
+          "at": "2026-09-17T09:55",
+          "summary": "ACK 收到（eta 12h）+ RISK contradicts-handoff 三条，PM 逐条核实全部成立：(1) fla 0.5.2 其实有 gdn2 的完整 naive+chunk 参考（本仓 ASSIGN 说没有是错的）；(2) run.py 的正确 CLI 是 check --launcher sim，不是独立的 sim 子命令（A2-03.md 也有这个错，一并改了）；(3) ascriptor agent/AGENTS.md 规定 sim/pipesim 用缩小形状做定点诊断，全形状验证留给真机——GD2-01 原来要求 sim 跑全形状网格是错的。已更正 GD2-01.md/A2-03.md/gaps.json，needs.fla 改 true"
         }
       ],
       "result": null
