@@ -1968,11 +1968,18 @@
         "note_en": "Owner track: fused RMSNorm + SwiGLU"
       },
       {
+        "id": "gdn2_chunk_fwd",
+        "family": "gdn2",
+        "track": "agent",
+        "note_zh": "agent 轨道例外（D-PM-16）：GD2-01 建单元+双 oracle 已合入，GD2-03 性能优化已合入，GD2-02 真机数+真实整网验证待派",
+        "note_en": "Agent-track exception (D-PM-16): GD2-01 unit + dual-oracle merged, GD2-03 perf merged, GD2-02 (device numbers + full-network validation) unassigned"
+      },
+      {
         "id": "gdn2_chunk_fwd_bwd",
         "family": "gdn2",
         "track": "owner",
-        "note_zh": "仓主轨道：尚未实现，量程需单独设计",
-        "note_en": "Owner track: not built; needs its own range design"
+        "note_zh": "反向仍未排期；前向已由 agent 轨道完成，见 gdn2_chunk_fwd",
+        "note_en": "Backward not yet scheduled; forward is done via the agent track, see gdn2_chunk_fwd"
       },
       {
         "id": "causal_conv1d",
@@ -2001,6 +2008,20 @@
         "track": "agent",
         "note_zh": "合投影与图捕获，decode 整层的 67% 在这里",
         "note_en": "Packed projections + graph capture; 67% of decode layer time"
+      },
+      {
+        "id": "pkda_chunk_fwd",
+        "family": "pkda",
+        "track": "agent",
+        "note_zh": "KDA 派生单元 + ATK 预条件，见 PK-02（open）",
+        "note_en": "KDA-derived unit + ATK preconditioning, see PK-02 (open)"
+      },
+      {
+        "id": "pgdn_chunk_fwd",
+        "family": "pkda",
+        "track": "agent",
+        "note_zh": "GDN 派生单元 + ATK 预条件，排在 GDN 自身 GQA 缺口之后，见 PK-03（gated）",
+        "note_en": "GDN-derived unit + ATK preconditioning, sequenced after GDN's own GQA gap, see PK-03 (gated)"
       }
     ]
   },
@@ -2036,8 +2057,8 @@
         "label_zh": "GDN-2（Gated DeltaNet 2）",
         "label_en": "GDN-2 (Gated DeltaNet 2)",
         "track": "owner",
-        "note_zh": "仓主并行轨道，见 docs/handoff.md §1。**例外**（D-PM-16，2026-09-17）：chunk 前向单独开放给 agent 轨道，见 GD2-01/GD2-02，写集限定新文件、不碰 reserved_paths",
-        "note_en": "Owner's parallel track; see docs/handoff.md §1. **Exception** (D-PM-16, 2026-09-17): chunk forward is opened to the agent track (GD2-01/GD2-02), scoped to new files only, reserved_paths untouched"
+        "note_zh": "仓主并行轨道，见 docs/handoff.md §1。**例外**（D-PM-16，2026-09-17）：chunk 前向单独开放给 agent 轨道，见 GD2-01（前向，已合入）/GD2-02（真机+整网验证，待派）/GD2-03（性能优化，已合入），写集限定新文件、不碰 reserved_paths",
+        "note_en": "Owner's parallel track; see docs/handoff.md §1. **Exception** (D-PM-16, 2026-09-17): chunk forward is opened to the agent track (GD2-01 forward, merged; GD2-02 device+full-network validation, unassigned; GD2-03 perf, merged), scoped to new files only, reserved_paths untouched"
       },
       {
         "id": "fusion",

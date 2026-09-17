@@ -29,11 +29,11 @@ fla 系列线性注意力算子在昇腾 NPU 上的高效实现库。后端用
 | KDA（Kimi Delta Attention） | `kda` | 可申领 | 5 | 1/14 |
 | GDN（Gated DeltaNet） | `gated_delta_rule` | 可申领 | 3 | 0/3 |
 | DeltaNet | `delta_rule` | 尚未排任务 | 2 | 2/2 单元有验证记录 |
-| GDN-2（Gated DeltaNet 2） | `gdn2` | 仓主轨道 | 5 | 4/5 单元有验证记录 |
+| GDN-2（Gated DeltaNet 2） | `gdn2` | 仓主轨道 | 6 | 2/3 |
 | 整网融合算子（模块 / 层级） | `fusion` | 可申领 | 4 | 0/4 |
 | Mamba-1/2/3 | `mamba` | 未排期 (G4) | — | — |
 | GLA（Gated Linear Attention） | `gla` | 未排期 (G4) | — | — |
-| PKDA / PGDN（预条件） | `pkda` | 可申领 | — | — |
+| PKDA / PGDN（预条件） | `pkda` | 可申领 | 2 | 0/2 |
 | Log-Linear Attention | `log_linear` | 未排期 (G4) | — | — |
 | DLA（动态线性注意力） | `dla` | 未排期 (G4) | — | — |
 | StateX（宽状态） | `statex` | 未排期 (G4) | — | — |
@@ -157,9 +157,9 @@ _上游单元已存在，本仓尚未排任务_
 
 </details>
 
-<details><summary><b>GDN-2（Gated DeltaNet 2） —— 5 个 kernel</b></summary>
+<details><summary><b>GDN-2（Gated DeltaNet 2） —— 6 个 kernel，2/3 完成</b></summary>
 
-_仓主并行轨道，见 docs/handoff.md §1。**例外**（D-PM-16，2026-09-17）：chunk 前向单独开放给 agent 轨道，见 GD2-01/GD2-02，写集限定新文件、不碰 reserved_paths_
+_仓主并行轨道，见 docs/handoff.md §1。**例外**（D-PM-16，2026-09-17）：chunk 前向单独开放给 agent 轨道，见 GD2-01（前向，已合入）/GD2-02（真机+整网验证，待派）/GD2-03（性能优化，已合入），写集限定新文件、不碰 reserved_paths_
 
 | kernel | 归属 | 进度 | 下一步 |
 |---|---|---|---|
@@ -167,7 +167,18 @@ _仓主并行轨道，见 docs/handoff.md §1。**例外**（D-PM-16，2026-09-1
 | `gdn2_fused_decode` | 仓主轨道 | 6/6 passed | _仓主轨道：模型专用融合 decode_ |
 | `gdn2_short_conv_decode` | 仓主轨道 | 6/6 passed | _仓主轨道：打包短卷积 decode_ |
 | `gdn2_norm2_w12_swiglu` | 仓主轨道 | 4/6 passed | _仓主轨道：融合 RMSNorm + SwiGLU_ |
-| `gdn2_chunk_fwd_bwd` | 仓主轨道 | — | _仓主轨道：尚未实现，量程需单独设计_ |
+| `gdn2_chunk_fwd` | 可申领 | 2/3 | [#62](https://github.com/ddddwee1/ascend_fla_dev/issues/62) GD2-01 |
+| `gdn2_chunk_fwd_bwd` | 仓主轨道 | — | _反向仍未排期；前向已由 agent 轨道完成，见 gdn2_chunk_fwd_ |
+
+<details><summary>gdn2_chunk_fwd —— 2/3 完成，起点 GD2-01</summary>
+
+| 任务 | issue | SoC | dtype | 状态 | 说明 |
+|---|---|---|---|---|---|
+| GD2-01 | [#62](https://github.com/ddddwee1/ascend_fla_dev/issues/62) | `a5` | bf16、fp32 | ✅ done | ★ 起点 |
+| GD2-02 | [#63](https://github.com/ddddwee1/ascend_fla_dev/issues/63) | `a5` | bf16、fp32 | ⬜ open |  |
+| GD2-03 | [#66](https://github.com/ddddwee1/ascend_fla_dev/issues/66) | `a5` | bf16、fp32 | ✅ done |  |
+
+</details>
 
 </details>
 
@@ -232,9 +243,30 @@ _未排期：属 gated epic G4（窄切片原则 —— 没有目标模型就不
 
 </details>
 
-<details><summary><b>PKDA / PGDN（预条件） —— 本仓暂无 kernel</b></summary>
+<details><summary><b>PKDA / PGDN（预条件） —— 2 个 kernel，0/2 完成</b></summary>
 
 _权威来源已确立（2026-09-17，见 docs/research/pkda_semantics.md）：论文《Preconditioned DeltaNet》(arXiv:2604.21100, ICML 2026)，已合入上游 fla（PR fla-org/flash-linear-attention#950，0.6.0）。PKDA 是 KDA 加一层 ATK预条件，可复用 kda_fwd_stable/kda_bwd_stable，见 PK-02。PGDN 是 GDN 加同一层预条件，但 GDN 自身缺 GQA 分组（gdn-no-gqa），PGDN 排在其后，见 PK-03（gated）。两者都没有已发布的预训练权重，端到端验证到不了真实 logits 一级_
+
+| kernel | 归属 | 进度 | 下一步 |
+|---|---|---|---|
+| `pkda_chunk_fwd` | 可申领 | 0/1 | [#68](https://github.com/ddddwee1/ascend_fla_dev/issues/68) PK-02 |
+| `pgdn_chunk_fwd` | 可申领 | 0/1 | [#69](https://github.com/ddddwee1/ascend_fla_dev/issues/69) PK-03 |
+
+<details><summary>pkda_chunk_fwd —— 0/1 完成，起点 PK-02</summary>
+
+| 任务 | issue | SoC | dtype | 状态 | 说明 |
+|---|---|---|---|---|---|
+| PK-02 | [#68](https://github.com/ddddwee1/ascend_fla_dev/issues/68) | `a5` | bf16、fp32 | ⬜ open | ★ 起点 |
+
+</details>
+
+<details><summary>pgdn_chunk_fwd —— 0/1 完成，起点 PK-03</summary>
+
+| 任务 | issue | SoC | dtype | 状态 | 说明 |
+|---|---|---|---|---|---|
+| PK-03 | [#69](https://github.com/ddddwee1/ascend_fla_dev/issues/69) | `a5` | bf16、fp32 | 🔒 gated (prereq-gdn-abi) | ★ 起点 |
+
+</details>
 
 </details>
 
