@@ -298,8 +298,8 @@ _Not scheduled: gated epic G4 (narrow-slice rule — no target model, no work). 
 
 | dtype | track | tasks | note |
 |---|---|---|---|
-| `bf16` | open to agents | 19 | Current ABI: q/k/v/o and most intermediates |
-| `fp32` | open to agents | 26 | Current ABI: state, gate accumulation, all correctness judged in fp32 |
+| `bf16` | open to agents | 20 | Current ABI: q/k/v/o and most intermediates |
+| `fp32` | open to agents | 27 | Current ABI: state, gate accumulation, all correctness judged in fp32 |
 | `fp16` | not scheduled (G3) | — | Explicitly rejected by the contract |
 | `int8` | not scheduled (G3) | 1 | Not scheduled; state drift needs a design first |
 | `mxfp8` | not scheduled (G3) | 1 | Not scheduled; native 950 decode unverified |
