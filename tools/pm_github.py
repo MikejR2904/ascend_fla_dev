@@ -613,13 +613,19 @@ def cmd_poll(board: dict, advance: bool) -> int:
 
 
 def cmd_label(board: dict, number: int, labels: list[str]) -> int:
-    """给需求 issue 打分诊标签（`triage:*`）。"""
+    """给需求 issue 打分诊标签（`triage:*`）。
+
+    打标签要 write/triage 权限，发 issue 正文的账号（``pm_github_login``）未必有 ——
+    实测 `limjiunnbin` 只有 `pull`，`label_github_login` 的账号才有 `triage`。
+    跟 `sync` 里建标签一样，走 `labeler`，不要直接用当前账号。
+    """
     _require_pm(board)
     unknown = [n for n in labels if n not in TRIAGE_LABELS and n != REQUEST_LABEL]
     if unknown:
         raise SystemExit(f"只允许分诊标签 {TRIAGE_LABELS} 与 {REQUEST_LABEL}，收到 {unknown}")
+    labeler = board.get("label_github_login")
     _gh("api", f"repos/{_repo(board)}/issues/{number}/labels",
-        *[x for n in labels for x in ("-f", f"labels[]={n}")])
+        *[x for n in labels for x in ("-f", f"labels[]={n}")], as_login=labeler)
     print(f"已给 #{number} 打上 {', '.join(labels)}")
     return 0
 

@@ -14,6 +14,8 @@ import sys
 import tempfile
 import unittest
 
+import pytest
+
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent / "tools"))
 
 import pm_github  # noqa: E402
@@ -345,3 +347,33 @@ def test_advance_without_staging_refuses(tmp_path, monkeypatch, capsys):
     assert pm_github.cmd_poll(board, advance=True) == 1
     assert json.loads(state.read_text())["since"] == "2026-01-01T00:00:00Z"
     assert "先跑" in capsys.readouterr().err
+
+
+# --- cmd_label 必须走 labeler 账号，不能直接用当前账号 ----------------------------
+
+
+def test_label_routes_through_labeler_not_current_account(monkeypatch):
+    """实测：pm_github_login 只有 pull 权限，label_github_login 才有 triage 权限。
+    cmd_label 曾经直接用当前账号打标签，403（Must have admin rights）。"""
+    board = {"repo": "o/r", "pm_github_login": "pm", "label_github_login": "labeler-bot", "tasks": []}
+    monkeypatch.setattr(pm_github, "current_login", lambda: "pm")
+    calls = []
+
+    def fake_gh(*args, as_login=None):
+        calls.append((args, as_login))
+        return ""
+
+    monkeypatch.setattr(pm_github, "_gh", fake_gh)
+    assert pm_github.cmd_label(board, 61, ["triage:needs-info"]) == 0
+    assert len(calls) == 1
+    args, as_login = calls[0]
+    assert as_login == "labeler-bot", "打标签必须以 label_github_login 的身份执行"
+    assert "labels[]=triage:needs-info" in args
+
+
+def test_label_rejects_unknown_label(monkeypatch):
+    board = {"repo": "o/r", "pm_github_login": "pm", "label_github_login": "labeler-bot", "tasks": []}
+    monkeypatch.setattr(pm_github, "current_login", lambda: "pm")
+    monkeypatch.setattr(pm_github, "_gh", lambda *a, **k: (_ for _ in ()).throw(AssertionError("不该调用 gh")))
+    with pytest.raises(SystemExit, match="只允许分诊标签"):
+        pm_github.cmd_label(board, 61, ["not-a-real-label"])
