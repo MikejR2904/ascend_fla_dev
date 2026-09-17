@@ -67,7 +67,33 @@ A2-06（矩阵按 SoC 分维）已改成 gated：它要重构的
 边界如果直接绑定外层归纳变量会漏掉最后一次贡献；改成固定 64 次迭代 + 显式 `j < i` 判断绕过。
 **compiler-versus-silicon 的归因没有做**，只确认了这个具体写法在这台机器上不安全。
 
-**GD2-02（真机数 + 真实整网验证 + 性能三明治）现在可派**（deps 已满足）。
+**GD2-02（真机数 + 真实整网验证 + 性能三明治）现在可派**（deps 已满足）。GD2-01 的原
+assignee 后续又申请并做了 GD2-03（性能优化，用户批准 D-PM-17，正在进行）。
+
+### PKDA / PGDN 权威来源确立（2026-09-17，PK-01 完成）—— 见 `docs/research/pkda_semantics.md`
+
+用户提供本地 fla checkout（`/Users/limjiunnbin/work/flash-linear-attention`，0.6.0，
+HEAD `e52dbc0e`——**与 GD2-01 用的 FLA pin 是同一个 commit**）。之前 PK-01.md 写的
+"fla 0.5.2 没有 pkda/pgdn，本仓无 oracle"**只在 0.5.2 成立**，本仓 `.venv` 装的正是 0.5.2，
+但上游 0.6.0（2026-06 合入，PR fla-org/flash-linear-attention#950）已经有完整实现。
+
+**两条要记住的**：
+
+① **PKDA 是 KDA 加一层 ATK 预条件，不是新算子族**——ABI 除三个 ATK 专属张量外，与本仓
+`ascend_fla/ops/kda/chunk.py` 逐项对应，可直接复用 `kda_fwd_stable`/`kda_bwd_stable`。
+PGDN 同理是 GDN 加同一层预条件，但需要的 GQA/GVA 分组正是 GDN 自己缺的 `gdn-no-gqa`——
+**排在 GDN 自身 ABI 之后**，不是并列关系。
+
+② **Gemini 文档"`k̃=k/(p+eps)` 会下溢"那条担心，看了真实算法后不成立。** ATK 的预条件乘子
+是 `M = exp(-log(x)·s)`，`s = r/(1+|r|)` 恒落在 `(-1,1)`——这是这个函数形式本身的硬数学界，
+不依赖状态 `A` 的大小，所以不存在"除法下溢/溢出"这回事。仍要测的是 `log(A+eps)` 在本仓真实
+量级下的精度，以及 `k_precond` 替代 `k` 之后 KDA 已有的门控跨度判定要不要重新过一遍。
+
+排上 **PK-02**（PKDA，open，主机侧，`kda_fwd_stable`/`bwd_stable` 派生单元）与
+**PK-03**（PGDN，gated: prereq-gdn-abi）。两者都**没有已发布的预训练权重**——训练仓
+（<https://github.com/ntumm120/preconditioned-deltanet>）只有从零训练的配置（340M/1B），
+端到端验证到不了真实 checkpoint 的 logits/cache 一级，只能到双 oracle（fla naive + fla
+自己已验证过的 Triton chunk）加真实规模形状。
 
 任务 issue 发过两轮。第一轮用新建的 bot 账号 `ascend-fla-pm-bot` 建了 26 个（#2~#27），两分钟内建完，
 触发 GitHub 反滥用过滤：匿名访问这些 issue 和该账号主页全是 404，登录态却一切正常 —— 所以看着像发成功了。
