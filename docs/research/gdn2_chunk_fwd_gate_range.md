@@ -318,7 +318,11 @@ report zero errors and warnings. The combined T=65/H=16/block_dim=1 pipesim
 case compares every intermediate and both final outputs, with no hazard or
 deadlock reported. This covers head reuse together with a cross-chunk tail.
 
-## Vector preweight optimization (GD2-03)
+## Vector preweight candidate (GD2-03, 690f420)
+
+This subsection records the first candidate at revision `690f420`. Run its
+reproduction command from that revision to reproduce this intermediate result;
+the subsequent WY candidate and current-source measurements are below.
 
 The accepted `0397aa1` source was profiled before editing. One candidate then
 changed the scan and output preweights: compute `k_i * exp(G_last-G_i)` and
@@ -423,3 +427,129 @@ Use the assigned device environment and hardware lock. Timing compares native
 chunk implementations; it is separate from the earlier Torch NPU recurrence
 comparison. WY remains the largest stage. This round tests one candidate and
 makes no Cube, reduced-precision or whole-model performance claim.
+
+## WY row-pair reuse (GD2-04)
+
+The next candidate starts from the qualified preweight source `690f420` and
+changes only WY. A fresh full-workload profile was completed before editing.
+Two adjacent solve rows retain independent FP32 accumulators but share loads
+of each previously solved U/W row. After the ordered `j<i` contributions, the
+second row consumes completed row i directly from registers. Each row keeps
+the same sequence of FP32 products and subtractions; the fixed C64 inner loop
+and explicit guard retain the native dependent-bound workaround.
+
+For a full C64/D128 tile, previous U/W row loads fall from 2,064,384 to
+1,015,808 requested UB bytes, a saving of 1 MiB. Coefficient loads and ordered
+arithmetic contributions are unchanged. Row-publication STORE-to-LOAD barriers
+fall from 64 to 32, plus the unchanged initialization barrier. WY UB remains
+176 KiB, one slot per allocation. The emitted VF declares 18 FP32 registers
+and separate `vmul`/`vsub` instructions; physical register allocation and HBM
+traffic were not measured. GM layout, workspace, core ownership and launches
+are unchanged. This is intra-VF reuse, with no mixed pipeline or new lookahead.
+
+The loop visits even rows, so its partner always fits in the C64 allocation.
+For odd valid counts, the partner is a zero-padded row: b/v/lower were already
+initialized to zero. Both rows are published before the next pair reads them;
+existing auto_sync still orders the enclosing DMA and repeated-tile UB reuse.
+All padded stage values remain observable to the verification harness.
+
+Discovery measurements use the same 950PR_9589 V100, CANN compiler/OPP 9.2.0,
+Torch CPU goldens and synchronized Torch NPU timing described above, with
+FP32 B1/H16/K=V128/bd8, warmup10/repeat50. Every stage and final composition
+passes CPU goldens before timing. Isolated stage times are not additive.
+
+| Stage | T1024 preweight us | T1024 row-pair us | T4096 preweight us | T4096 row-pair us |
+| --- | --- | --- | --- | --- |
+| prepare | 854.920 | 976.199 | 2936.543 | 2659.515 |
+| scores | 893.042 | 895.911 | 3211.199 | 3210.159 |
+| WY | 1361.942 | 799.822 | 5094.977 | 2837.223 |
+| scan | 641.859 | 647.291 | 2172.654 | 2165.914 |
+| output | 459.198 | 463.292 | 1488.119 | 1491.655 |
+| public call | 3862.470 | 3314.700 | 14657.458 | 11968.898 |
+
+Unchanged-stage variation is retained and is not attributed to WY reuse.
+The current scores stage is the largest isolated stage in this profile.
+
+The row-pair kernel source SHA-256 is
+`803c45093dd21b7d5af196ae76e1df207fde7d7261e3fa574934b8cb90519bb4`.
+The current benchmark accepts the identified `0397aa1` and `690f420` sources.
+It compares complete VF/kernel source blocks, shares identical stage artifacts
+and gives each changed baseline kernel a distinct operator name. The incremental
+comparison changes only WY; the cumulative comparison changes WY/scan/output.
+The benchmark checks final tensor bytes, including signed-zero bits, before
+timing. All precompile work and input transfers remain outside timed samples.
+
+All 12 contract cases at bd1/bd8 pass all 13 CPU-golden stage comparisons.
+Every stage tensor is byte-identical across those block counts and versus
+`690f420`, including zero padding in odd tails. Output/state relative L2 maxima
+remain 3.348794618e-6/5.677315394e-6. Static checks report zero errors/warnings
+for all five entries (WY: 199 surface operations). Fresh sim T1/H1 and pipesim
+T2/H1 plus T65/H16 at bd1 pass; the host suite passes 223 tests with 5 skips.
+The fresh canonical board source check also passes T4096/H16/FP32/bd8:
+all 13 stage comparisons and separate composition pass. Composition output/state
+relative L2 are 2.400727462e-6/4.140812156e-6; maximum absolute errors are
+1.345761120e-7/4.950910807e-6. The redacted source-bound board receipt SHA-256 is
+`b9360522b23b69405ff804a0faacb9bfb6af9bbf3d4b1abe3f34008d1e8e6fa0`.
+
+Incremental same-process sandwich against `690f420`, with three rounds,
+warmup10/repeat50 and the same FP32 shape/device/software above:
+
+| T | Round | Preweight before us | Row-pair us | Preweight after us | Latency reduction |
+| --- | --- | --- | --- | --- | --- |
+| 1024 | 1 | 3866.532 | 3299.593 | 3867.014 | 14.663% |
+| 1024 | 2 | 3864.672 | 3297.731 | 3862.171 | 14.615% |
+| 1024 | 3 | 3859.590 | 3299.446 | 3860.119 | 14.513% |
+| 4096 | 1 | 14473.173 | 12108.251 | 14389.744 | 15.855% |
+| 4096 | 2 | 14401.214 | 12116.276 | 14388.028 | 15.789% |
+| 4096 | 3 | 14373.337 | 12201.671 | 14535.752 | 15.109% |
+
+Each reduction uses the faster same-round baseline. Both final tensors have
+identical bytes before timing. Peak Torch allocated-byte deltas match the
+preweight candidate: 72,351,744 at T1024 and 286,261,248 at T4096.
+The incremental receipt SHA-256 is
+`5cc541d699c84ef2cb86d2baadd5ff369e8da1d1ffacf279299bf399676497ba`.
+Candidate WY artifact signature is `5e29506610a2ccf7`; the renamed preweight
+WY baseline signature is `baa1ad7bed3e9a45`. The other four artifacts are shared.
+
+An independent cumulative sandwich directly compares the final candidate with
+accepted GD2-01 `0397aa1`, under the same shape/software/timing conditions:
+
+| T | Round | GD2-01 before us | Final candidate us | GD2-01 after us | Latency reduction |
+| --- | --- | --- | --- | --- | --- |
+| 1024 | 1 | 4215.212 | 3294.670 | 4260.013 | 21.839% |
+| 1024 | 2 | 4220.965 | 3293.888 | 4225.445 | 21.964% |
+| 1024 | 3 | 4234.540 | 3288.779 | 4210.145 | 21.884% |
+| 4096 | 1 | 15780.261 | 12022.261 | 15854.296 | 23.815% |
+| 4096 | 2 | 15803.773 | 11995.092 | 15786.295 | 24.016% |
+| 4096 | 3 | 15850.708 | 12134.457 | 15810.924 | 23.253% |
+
+These are direct measurements, not a sum or product of earlier speedups.
+Final output/state bytes and peak Torch allocated-byte deltas match GD2-01
+as well. Raw receipts retained in ignored `tmp/gdn2-opt/`:
+
+| Receipt | SHA-256 |
+| --- | --- |
+| `wy-baseline.json` | `5f51921fcd02d218254e93a2d6ab3820429f7693cde089ecd2fd6faa586cd81d` |
+| `wy-pair-v1.json` | `eb3281b3fd630b08d3fce5dac14643bfcc98a20b23b4158dbed1a1a455f55b37` |
+| `wy-pair-grid/bd1.json` | `a4ad747902abadde699fe67e12a15f5d19a005ffaf393ded95db10cab5a43874` |
+| `wy-pair-grid/bd8.json` | `272923c81eea1292e2bf2192cad0ca675056e26eb6977514a7e36776e90aff3d` |
+| `wy-sandwich.json` | `5cc541d699c84ef2cb86d2baadd5ff369e8da1d1ffacf279299bf399676497ba` |
+| `combined-sandwich.json` | `595c2c24d85a6d99d8b13772f5f56d4d40b4b33140093b023ab51409cceb4e4d` |
+
+The cumulative baseline's benchmark-only WY/scan/output entry renaming yields
+source digest `b6e8a895dbe2e9e5a5858bbc5f97afff1ac41ecfade10b33a3f5b0658623f314`.
+Its artifact signatures are `fe0956b2edcc7bb8`, `5971b10c525db587` and
+`ae5cdbc1f6a7baaf`; prepare/scores are shared. Reports retain all raw samples.
+
+Reproduce the incremental comparison from the final source checkout, with the
+assigned environment and hardware lock:
+
+```sh
+mkdir -p tmp/gdn2-wy
+git show 690f420:kernels/projects/a5/gdn2_chunk_fwd/kernels/stages.py > tmp/gdn2-wy/stages-preweight.py
+python kernels/projects/a5/gdn2_chunk_fwd/benchmark.py --baseline tmp/gdn2-wy/stages-preweight.py --output tmp/gdn2-wy/wy-sandwich.json
+```
+
+For the cumulative comparison, export the same path from `0397aa1` instead and
+use a separate output receipt. The WY round tested one candidate and retained
+every result; no precision or native loop-workaround relaxation was needed.

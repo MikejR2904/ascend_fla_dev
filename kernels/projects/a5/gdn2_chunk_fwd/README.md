@@ -34,6 +34,8 @@ hardware evidence, not a simulator latency claim.
 
 The scan/output preweights are computed per FP32 channel row in private UB.
 This preserves the sum order while removing repeated broadcast exponentials.
-`benchmark.py` compares against the accepted GD2-01 source with CPU goldens and
-a same-process NPU sandwich. Commands, source digests and scoped measurements
+WY solves adjacent rows together to reuse previous U/W row loads, retaining
+each row's FP32 product/subtraction order and the native loop workaround.
+`benchmark.py` compares against GD2-01 or the qualified preweight source with
+CPU goldens and a same-process NPU sandwich. Commands, source digests and measurements
 are in `docs/research/gdn2_chunk_fwd_gate_range.md` at the repository root.
