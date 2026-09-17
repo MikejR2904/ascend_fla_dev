@@ -134,6 +134,12 @@
       "by": "user",
       "decision": "批准 issue #70：agent 轨道在 A5 上开一条窄范围例外任务（GDA-01），做 GDN（gated_delta_rule，非 GDN-2）chunk 前向的真机开发与优化，显式跳过 gdn-no-gqa（不解决它）。不改变 KDA 首位、Qwen3-Next 卡在六项 ABI 缺口的排序，也不改变 agent 轨道 A2→A3→A5 的波次顺序——仅这一条任务例外，理由是有人已经配好 A5 真机访问",
       "risk": "本任务的正确性/性能结论只对 A5、非 GQA 场景成立，不能外推到 A2/A3 或 GQA 场景；已在 AGENTS.md §2 与任务 spec 里写明边界"
+    },
+    {
+      "id": "D-PM-21",
+      "date": "2026-09-17",
+      "by": "user",
+      "decision": "批准 issue #75：agent 轨道开一条窄范围波次例外任务（A5K-01），把 A2-04 已诊断/pipesim 验证过的 Aqk 交接修法落到 kda_fwd_stable 派生单元并在 A5 真机验证。不解除 A5-01..A5-06 的 gated: wave:W-A3——那些等的是完整 A2→A3→A5 证据链，本任务不提供。这是本轮第三个 A5 波次例外（GD2-2x/GDA-01 之后），已提醒用户这是累积的选择，用户确认继续"
     }
   ],
   "gated_epics": [
@@ -1954,6 +1960,55 @@
         {
           "at": "2026-09-17T14:20",
           "summary": "GD2-04 已 done，账号空闲；把 #73 的重申当 APPLY，ASSIGN"
+        }
+      ],
+      "result": null
+    },
+    {
+      "id": "A5K-01",
+      "title": "KDA chunk 前向：Aqk 交接缺陷修复 + A5 真机验证（波次例外）",
+      "wave": "W0",
+      "soc": "a5",
+      "priority": "P1",
+      "status": "open",
+      "model": [
+        "kimi-linear-48b-a3b"
+      ],
+      "kernel": [
+        "kda_fwd_stable"
+      ],
+      "dtype": [
+        "bf16",
+        "fp32"
+      ],
+      "deps": [],
+      "write_set": [
+        "kernels/projects/a5/kda_fwd_stable/**",
+        "tests/test_kda_gating.py",
+        "docs/research/kda_aqk_handoff_repair.md"
+      ],
+      "needs": {
+        "npu": true,
+        "ascriptor": true,
+        "fla": true
+      },
+      "spec": "docs/pm/tasks/A5K-01.md",
+      "issue": null,
+      "pr": null,
+      "assignee": null,
+      "assignee_caps": null,
+      "branch": null,
+      "timebox_h": 24,
+      "origin": {
+        "kind": "request",
+        "issue": 75,
+        "by": "limjiunnbin",
+        "approved_by_user": true
+      },
+      "reports": [
+        {
+          "at": "2026-09-17T14:25",
+          "summary": "用户批准 D-PM-21。assignee 当前持有 GDA-01，按一个 agent 一个任务，转 open 等 APPLY，不直接 ASSIGN"
         }
       ],
       "result": null
