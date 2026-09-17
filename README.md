@@ -33,7 +33,7 @@ fla 系列线性注意力算子在昇腾 NPU 上的高效实现库。后端用
 | 整网融合算子（模块 / 层级） | `fusion` | 可申领 | 4 | 0/4 |
 | Mamba-1/2/3 | `mamba` | 未排期 (G4) | — | — |
 | GLA（Gated Linear Attention） | `gla` | 未排期 (G4) | — | — |
-| PKDA / PGDN（预条件） | `pkda` | 尚未排任务 | — | — |
+| PKDA / PGDN（预条件） | `pkda` | 可申领 | — | — |
 | Log-Linear Attention | `log_linear` | 未排期 (G4) | — | — |
 | DLA（动态线性注意力） | `dla` | 未排期 (G4) | — | — |
 | StateX（宽状态） | `statex` | 未排期 (G4) | — | — |
@@ -234,7 +234,7 @@ _未排期：属 gated epic G4（窄切片原则 —— 没有目标模型就不
 
 <details><summary><b>PKDA / PGDN（预条件） —— 本仓暂无 kernel</b></summary>
 
-_用户 2026-09-16 点名细化排期。**fla 0.5.2 里没有 pkda 实现**，那三份 Gemini 文档也只给了机制描述（测试时回归 / 对角 Hessian 预条件），没有可对照的参考实现 —— 所以第一步是把权威来源找出来，见 PK-01_
+_权威来源已确立（2026-09-17，见 docs/research/pkda_semantics.md）：论文《Preconditioned DeltaNet》(arXiv:2604.21100, ICML 2026)，已合入上游 fla（PR fla-org/flash-linear-attention#950，0.6.0）。PKDA 是 KDA 加一层 ATK预条件，可复用 kda_fwd_stable/kda_bwd_stable，见 PK-02。PGDN 是 GDN 加同一层预条件，但 GDN 自身缺 GQA 分组（gdn-no-gqa），PGDN 排在其后，见 PK-03（gated）。两者都没有已发布的预训练权重，端到端验证到不了真实 logits 一级_
 
 </details>
 
@@ -297,8 +297,8 @@ _未排期：属 gated epic G4（窄切片原则 —— 没有目标模型就不
 
 | dtype | 归属 | 涉及任务 | 说明 |
 |---|---|---|---|
-| `bf16` | 可申领 | 20 | 当前 ABI：q/k/v/o 与多数中间量 |
-| `fp32` | 可申领 | 27 | 当前 ABI：state、门控累加、精度判定一律 fp32 |
+| `bf16` | 可申领 | 22 | 当前 ABI：q/k/v/o 与多数中间量 |
+| `fp32` | 可申领 | 29 | 当前 ABI：state、门控累加、精度判定一律 fp32 |
 | `fp16` | 未排期 (G3) | — | 契约明确拒绝（见 ops.json 的 no-tail-path 一条） |
 | `int8` | 未排期 (G3) | 1 | 未排期；state 累积漂移需先有方案 |
 | `mxfp8` | 未排期 (G3) | 1 | 未排期；950 原生解码待核实 |

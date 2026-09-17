@@ -34,7 +34,7 @@ serves only as the semantic authority during testing (`naive.py` as a CPU fp32 o
 | Whole-network fusion ops (module / layer) | `fusion` | open to agents | 4 | 0/4 |
 | Mamba-1/2/3 | `mamba` | not scheduled (G4) | — | — |
 | GLA (Gated Linear Attention) | `gla` | not scheduled (G4) | — | — |
-| PKDA / PGDN (preconditioned) | `pkda` | no task yet | — | — |
+| PKDA / PGDN (preconditioned) | `pkda` | open to agents | — | — |
 | Log-Linear Attention | `log_linear` | not scheduled (G4) | — | — |
 | DLA (Dynamic Linear Attention) | `dla` | not scheduled (G4) | — | — |
 | StateX (wide state) | `statex` | not scheduled (G4) | — | — |
@@ -235,7 +235,7 @@ _Not scheduled: gated epic G4 (narrow-slice rule — no target model, no work). 
 
 <details><summary><b>PKDA / PGDN (preconditioned) —— no kernel in this repo</b></summary>
 
-_Called out for scheduling on 2026-09-16. **No pkda implementation in fla 0.5.2**; the Gemini docs only describe the mechanism, with no reference implementation to check against — so step one is to establish the source of truth (see PK-01)_
+_Source of truth established (2026-09-17, see docs/research/pkda_semantics.md): paper *Preconditioned DeltaNet* (arXiv:2604.21100, ICML 2026), merged upstream into fla (PR fla-org/flash-linear-attention#950, 0.6.0). PKDA is KDA plus an ATK preconditioning step, reusing kda_fwd_stable/kda_bwd_stable — see PK-02. PGDN is the same preconditioning on GDN, but GDN itself lacks GQA grouping (gdn-no-gqa) — PGDN is sequenced after that, see PK-03 (gated). Neither has a released pretrained checkpoint; end-to-end validation cannot reach real logits_
 
 </details>
 
@@ -298,8 +298,8 @@ _Not scheduled: gated epic G4 (narrow-slice rule — no target model, no work). 
 
 | dtype | track | tasks | note |
 |---|---|---|---|
-| `bf16` | open to agents | 20 | Current ABI: q/k/v/o and most intermediates |
-| `fp32` | open to agents | 27 | Current ABI: state, gate accumulation, all correctness judged in fp32 |
+| `bf16` | open to agents | 22 | Current ABI: q/k/v/o and most intermediates |
+| `fp32` | open to agents | 29 | Current ABI: state, gate accumulation, all correctness judged in fp32 |
 | `fp16` | not scheduled (G3) | — | Explicitly rejected by the contract |
 | `int8` | not scheduled (G3) | 1 | Not scheduled; state drift needs a design first |
 | `mxfp8` | not scheduled (G3) | 1 | Not scheduled; native 950 decode unverified |

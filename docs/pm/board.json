@@ -114,6 +114,13 @@
       "date": "2026-09-17",
       "by": "user",
       "decision": "批准 issue #65：在 D-PM-16 已批的同一边界内（写集不变、不碰 reserved path、不改公开 API/数学/精度闸），继续做 GD2-01 kernel 的性能优化（GD2-03）"
+    },
+    {
+      "id": "D-PM-18",
+      "date": "2026-09-17",
+      "by": "user",
+      "decision": "PKDA/PGDN 的权威来源已确立（用户提供本地 fla checkout，0.6.0，与 GD2-01 同一pin e52dbc0e）：论文 arXiv:2604.21100，已合入上游 fla PR #950。PK-01 完成，写出 docs/research/pkda_semantics.md。排上 PK-02（PKDA chunk 前向，open，KDA 派生单元）与 PK-03（PGDN，gated: prereq-gdn-abi，排在 GDN 自身 GQA 缺口之后）",
+      "risk": "两者都没有已发布的预训练权重，只有训练配置（340M/1B，来自论文训练仓）——端到端验证只能到双 oracle + 真实规模形状，到不了真实 checkpoint 的 logits/cache 一级，这与 KDA/GDN-2 已有真实权重可用的情况不同，已在两份 spec 里显式声明"
     }
   ],
   "gated_epics": [
@@ -1462,7 +1469,7 @@
       "wave": "W0",
       "soc": "any",
       "priority": "P2",
-      "status": "open",
+      "status": "done",
       "model": [],
       "kernel": [],
       "dtype": [
@@ -1486,7 +1493,16 @@
       "branch": null,
       "timebox_h": 10,
       "reports": [],
-      "result": null
+      "result": {
+        "commits": [
+          "bbf4b6d"
+        ],
+        "evidence": [
+          "docs/research/pkda_semantics.md"
+        ],
+        "numbers": "N/A（研究任务，无数值验收）",
+        "note": "权威来源已确立：论文 arXiv:2604.21100，合入上游 fla PR #950。PKDA=KDA+ATK（可复用 kda_fwd_stable/bwd_stable），PGDN=GDN+ATK（排在 GDN GQA 缺口之后）。真实算法已核实：ATK 的 M 恒有界 (1/x, x)，不是 Gemini 文档转述的除法下溢风险"
+      }
     },
     {
       "id": "GD2-01",
@@ -1692,6 +1708,85 @@
         }
       ],
       "result": null
+    },
+    {
+      "id": "PK-02",
+      "title": "PKDA chunk 前向：ATK 预条件 + KDA 派生单元（主机侧）",
+      "wave": "W0",
+      "soc": "a5",
+      "priority": "P2",
+      "status": "open",
+      "model": [],
+      "kernel": [
+        "pkda_chunk_fwd"
+      ],
+      "dtype": [
+        "bf16",
+        "fp32"
+      ],
+      "deps": [
+        "PK-01"
+      ],
+      "write_set": [
+        "kernels/projects/a5/pkda_chunk_fwd/**",
+        "ascend_fla/ops/pkda_chunk_fwd.py",
+        "tests/test_pkda_chunk_fwd.py",
+        "docs/research/pkda_chunk_fwd_gate_range.md"
+      ],
+      "needs": {
+        "npu": false,
+        "ascriptor": true,
+        "fla": true
+      },
+      "spec": "docs/pm/tasks/PK-02.md",
+      "issue": null,
+      "pr": null,
+      "assignee": null,
+      "assignee_caps": null,
+      "branch": null,
+      "timebox_h": 24,
+      "reports": [],
+      "result": null
+    },
+    {
+      "id": "PK-03",
+      "title": "PGDN chunk 前向：GDN 加 ATK 预条件（排在 GDN 自身 ABI 之后）",
+      "wave": "W0",
+      "soc": "a5",
+      "priority": "-",
+      "status": "gated",
+      "gate": "prereq-gdn-abi",
+      "model": [],
+      "kernel": [
+        "pgdn_chunk_fwd"
+      ],
+      "dtype": [
+        "bf16",
+        "fp32"
+      ],
+      "deps": [
+        "PK-01"
+      ],
+      "write_set": [
+        "kernels/projects/a5/pgdn_chunk_fwd/**",
+        "ascend_fla/ops/pgdn_chunk_fwd.py",
+        "tests/test_pgdn_chunk_fwd.py",
+        "docs/research/pgdn_chunk_fwd_gate_range.md"
+      ],
+      "needs": {
+        "npu": false,
+        "ascriptor": true,
+        "fla": true
+      },
+      "spec": "docs/pm/tasks/PK-03.md",
+      "issue": null,
+      "pr": null,
+      "assignee": null,
+      "assignee_caps": null,
+      "branch": null,
+      "timebox_h": 24,
+      "reports": [],
+      "result": null
     }
   ],
   "label_github_login": "ascend-fla-pm-bot",
@@ -1713,7 +1808,9 @@
       "fused_rms_norm_gated",
       "qk_l2norm_gate",
       "packed_projection",
-      "gdn2_chunk_fwd"
+      "gdn2_chunk_fwd",
+      "pkda_chunk_fwd",
+      "pgdn_chunk_fwd"
     ],
     "dtype": [
       "bf16",
@@ -1953,9 +2050,9 @@
         "id": "pkda",
         "label_zh": "PKDA / PGDN（预条件）",
         "label_en": "PKDA / PGDN (preconditioned)",
-        "track": "none",
-        "note_zh": "用户 2026-09-16 点名细化排期。**fla 0.5.2 里没有 pkda 实现**，那三份 Gemini 文档也只给了机制描述（测试时回归 / 对角 Hessian 预条件），没有可对照的参考实现 —— 所以第一步是把权威来源找出来，见 PK-01",
-        "note_en": "Called out for scheduling on 2026-09-16. **No pkda implementation in fla 0.5.2**; the Gemini docs only describe the mechanism, with no reference implementation to check against — so step one is to establish the source of truth (see PK-01)"
+        "track": "agent",
+        "note_zh": "权威来源已确立（2026-09-17，见 docs/research/pkda_semantics.md）：论文《Preconditioned DeltaNet》(arXiv:2604.21100, ICML 2026)，已合入上游 fla（PR fla-org/flash-linear-attention#950，0.6.0）。PKDA 是 KDA 加一层 ATK预条件，可复用 kda_fwd_stable/kda_bwd_stable，见 PK-02。PGDN 是 GDN 加同一层预条件，但 GDN 自身缺 GQA 分组（gdn-no-gqa），PGDN 排在其后，见 PK-03（gated）。两者都没有已发布的预训练权重，端到端验证到不了真实 logits 一级",
+        "note_en": "Source of truth established (2026-09-17, see docs/research/pkda_semantics.md): paper *Preconditioned DeltaNet* (arXiv:2604.21100, ICML 2026), merged upstream into fla (PR fla-org/flash-linear-attention#950, 0.6.0). PKDA is KDA plus an ATK preconditioning step, reusing kda_fwd_stable/kda_bwd_stable — see PK-02. PGDN is the same preconditioning on GDN, but GDN itself lacks GQA grouping (gdn-no-gqa) — PGDN is sequenced after that, see PK-03 (gated). Neither has a released pretrained checkpoint; end-to-end validation cannot reach real logits"
       },
       {
         "id": "log_linear",
