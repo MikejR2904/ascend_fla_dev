@@ -81,6 +81,13 @@
       "by": "user",
       "decision": "GDN-2 的进展在首页跟踪（数据取自 docs/matrix/ops.json 的 validation 阶段，不在看板造任务）；PKDA 细化排期，先做 PK-01 确立权威来源",
       "risk": "PKDA 在 fla 0.5.2 里没有实现，Gemini 文档只有机制描述 —— 没有 oracle 就没有验收判据，所以先做来源调研而不是直接排实现任务。用户提到的 QDelta 在 fla 与本仓文档里都查不到，未排期，待澄清"
+    },
+    {
+      "id": "D-PM-13",
+      "date": "2026-09-17",
+      "by": "pm",
+      "decision": "agent 一律按 ascriptor `agent/compatibility.json` 的 pin 选定 library/kernels 修订（AGENTS.md §3 本来就这么写），并在 DONE 里报出三个 checkout 的确切修订。`docs/matrix/ops.json` 的 `ascriptor_pin` 眼下取不到，暂按“历史记录”看待，不作为动手依据",
+      "risk": "ops.json 记的 library_commit 77619116（version 0.1.0.dev1）在 ascriptor 远端不存在：joshjms 带凭据 fetch 后远端只公布 refs/heads/main（5287adc）与 refs/tags/v0.1.0（073a6c8），按哈希取对象被拒；PM 侧也访问不到该仓（404）。该 pin 自 346cd8a 建仓起就写死，推测上游历史已重建（0.1.0.dev1 → 0.1.0）。后果：本仓所有“在 pin X 上测得”的精度结论目前无法复现，AGENTS.md §8“每一格都能指向一次真实运行”这条对 ascriptor 版本这一维暂时不成立。需要仓库所有者给出权威修订（归档或 wheel），再重新钉 pin 并复核回归"
     }
   ],
   "gated_epics": [
@@ -266,7 +273,7 @@
       "wave": "W0",
       "soc": "any",
       "priority": "P0",
-      "status": "assigned",
+      "status": "in_progress",
       "model": [],
       "kernel": [
         "kda_fwd_stable"
@@ -310,6 +317,10 @@
         {
           "at": "2026-09-17T02:21",
           "summary": "APPLY from joshjms（#30），身份与能力校验通过；派单 A2-04"
+        },
+        {
+          "at": "2026-09-17T02:51",
+          "summary": "joshjms ACK（eta 3h）+ RISK contradicts-handoff：ops.json 的 ascriptor_pin 取不到。PM 核实属实，按 D-PM-13 放行：以 compatibility.json 的 pin 出结论，报告里写明差异"
         }
       ],
       "result": null
