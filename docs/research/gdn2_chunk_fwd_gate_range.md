@@ -468,7 +468,7 @@ passes CPU goldens before timing. Isolated stage times are not additive.
 | public call | 3862.470 | 3314.700 | 14657.458 | 11968.898 |
 
 Unchanged-stage variation is retained and is not attributed to WY reuse.
-The current scores stage is the largest isolated stage in this profile.
+At T4096, scores is the largest isolated stage in this profile.
 
 The row-pair kernel source SHA-256 is
 `803c45093dd21b7d5af196ae76e1df207fde7d7261e3fa574934b8cb90519bb4`.
