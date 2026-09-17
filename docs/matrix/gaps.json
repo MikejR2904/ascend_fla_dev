@@ -595,7 +595,7 @@
       "blocks": [
         "gdn2_chunk_fwd_bwd"
       ],
-      "proposed_action": "recurrent 已完成，不再改。下一步只做独立 gdn2 chunk fwd+bwd：L=64、K=V=128、直接吃 token-major；数值表示先解决 gdn2-chunk-gate-range 的 1461 跨度反例。g 变换与 b/w sigmoid 是否继续融合，等整层 profile 后决定；不能因名字相近复用 a5.gdn_*。",
+      "proposed_action": "recurrent 已完成，不再改。下一步只做独立 gdn2 chunk fwd+bwd：L=64、K=V=128、直接吃 token-major；数值表示先解决 gdn2-chunk-gate-range 的 1461 跨度反例。g 变换与 b/w sigmoid 是否继续融合，等整层 profile 后决定；不能因名字相近复用 a5.gdn_*。\n**2026-09-17**：forward-only 部分已排上看板 GD2-01（主机侧：量程设计 + kernel 单元）/ GD2-02（gated，A5 真机数 + 整网验证），D-PM-16 批准。backward 仍未排期。",
       "requires_kernel_change": true,
       "kernel_change_note": "recurrent 已由本仓 a5.gdn2_fused_recurrent 解决；队列中只剩独立 gdn2 chunk fwd/bwd，正式 ABI 需要 channel-wise g[B,T,H,K]、b[B,T,H,K]、w[B,T,H,V]。"
     },

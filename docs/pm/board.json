@@ -101,6 +101,13 @@
       "date": "2026-09-17",
       "by": "user",
       "decision": "批准 joshjms（新账号）的首次合入（PROTOCOL §5.5）。PR #60 已合入 8ac32e5"
+    },
+    {
+      "id": "D-PM-16",
+      "date": "2026-09-17",
+      "by": "user",
+      "decision": "批准 issue #61 的 REQUEST：agent 轨道做 GDN-2 chunk 前向（forward-only，含 prefill→decode state 交接），作为 D-PM-12（GDN-2 不在看板造任务）的一次显式例外。范围收紧为只加新文件：新 ascriptor 单元 kernels/projects/a5/gdn2_chunk_fwd/**、新 sibling 模块 ascend_fla/ops/gdn2_chunk_fwd.py（不是 ops/gdn2/** 包内文件）。reserved_paths 原样保留、一个字节不碰；把新前向接进现成 layer/model 选择逻辑不在批准范围内，留给仓主轨道",
+      "risk": "GDN-2 门控跨度（真实 95B 权重 64-token 局部跨度 1461.214，见 gaps.json 的 gdn2-chunk-gate-range）比 KDA 已验证域（前向 155）大一个数量级，KDA 的量程方法论（改锚点到中点）不够用，必须做分段/归一化表示 —— 已写进 GD2-01 的步骤，不是简单移植"
     }
   ],
   "gated_epics": [
@@ -1465,6 +1472,96 @@
       "timebox_h": 10,
       "reports": [],
       "result": null
+    },
+    {
+      "id": "GD2-01",
+      "title": "GDN-2 chunk 前向：量程设计 + 独立 kernel 单元（主机侧）",
+      "wave": "W0",
+      "soc": "a5",
+      "priority": "P1",
+      "status": "open",
+      "model": [
+        "gdn2-1.3b-fineweb-edu-100b"
+      ],
+      "kernel": [
+        "gdn2_chunk_fwd"
+      ],
+      "dtype": [
+        "bf16",
+        "fp32"
+      ],
+      "deps": [],
+      "write_set": [
+        "kernels/projects/a5/gdn2_chunk_fwd/**",
+        "ascend_fla/ops/gdn2_chunk_fwd.py",
+        "tests/test_gdn2_chunk_fwd.py",
+        "docs/research/gdn2_chunk_fwd_gate_range.md"
+      ],
+      "needs": {
+        "npu": false,
+        "ascriptor": true,
+        "fla": false
+      },
+      "spec": "docs/pm/tasks/GD2-01.md",
+      "issue": null,
+      "pr": null,
+      "assignee": null,
+      "assignee_caps": null,
+      "branch": null,
+      "timebox_h": 24,
+      "origin": {
+        "kind": "request",
+        "issue": 61,
+        "by": "limjiunnbin",
+        "approved_by_user": true
+      },
+      "reports": [],
+      "result": null
+    },
+    {
+      "id": "GD2-02",
+      "title": "GDN-2 chunk 前向：A5 真机数 + 真实 95B 整网验证 + 性能三明治",
+      "wave": "W0",
+      "soc": "a5",
+      "priority": "P1",
+      "status": "gated",
+      "gate": "agent-a5-access",
+      "model": [
+        "gdn2-1.3b-fineweb-edu-100b"
+      ],
+      "kernel": [
+        "gdn2_chunk_fwd"
+      ],
+      "dtype": [
+        "bf16",
+        "fp32"
+      ],
+      "deps": [
+        "GD2-01"
+      ],
+      "write_set": [
+        "benchmarks/bench_gdn2_chunk_fwd_a5.py"
+      ],
+      "needs": {
+        "npu": true,
+        "ascriptor": true,
+        "fla": false
+      },
+      "spec": "docs/pm/tasks/GD2-02.md",
+      "issue": null,
+      "pr": null,
+      "assignee": null,
+      "assignee_caps": null,
+      "branch": null,
+      "timebox_h": 16,
+      "origin": {
+        "kind": "request",
+        "issue": 61,
+        "by": "limjiunnbin",
+        "approved_by_user": true
+      },
+      "reports": [],
+      "result": null
     }
   ],
   "label_github_login": "ascend-fla-pm-bot",
@@ -1472,7 +1569,8 @@
     "note": "任务按四个轴归类：模型 → kernel → 数据类型 → 机器（soc）。kernel 名不带 SoC 前缀，SoC 是独立一轴。空列表表示这条任务不属于该轴（例如纯基础设施任务没有 model / kernel）。",
     "model": [
       "kimi-linear-48b-a3b",
-      "qwen3-next-80b-a3b"
+      "qwen3-next-80b-a3b",
+      "gdn2-1.3b-fineweb-edu-100b"
     ],
     "kernel": [
       "kda_fwd_stable",
@@ -1484,7 +1582,8 @@
       "causal_conv1d",
       "fused_rms_norm_gated",
       "qk_l2norm_gate",
-      "packed_projection"
+      "packed_projection",
+      "gdn2_chunk_fwd"
     ],
     "dtype": [
       "bf16",
@@ -1691,8 +1790,8 @@
         "label_zh": "GDN-2（Gated DeltaNet 2）",
         "label_en": "GDN-2 (Gated DeltaNet 2)",
         "track": "owner",
-        "note_zh": "仓主并行轨道，见 docs/handoff.md §1",
-        "note_en": "Owner's parallel track; see docs/handoff.md §1"
+        "note_zh": "仓主并行轨道，见 docs/handoff.md §1。**例外**（D-PM-16，2026-09-17）：chunk 前向单独开放给 agent 轨道，见 GD2-01/GD2-02，写集限定新文件、不碰 reserved_paths",
+        "note_en": "Owner's parallel track; see docs/handoff.md §1. **Exception** (D-PM-16, 2026-09-17): chunk forward is opened to the agent track (GD2-01/GD2-02), scoped to new files only, reserved_paths untouched"
       },
       {
         "id": "fusion",

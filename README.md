@@ -159,7 +159,7 @@ _上游单元已存在，本仓尚未排任务_
 
 <details><summary><b>GDN-2（Gated DeltaNet 2） —— 5 个 kernel</b></summary>
 
-_仓主并行轨道，见 docs/handoff.md §1_
+_仓主并行轨道，见 docs/handoff.md §1。**例外**（D-PM-16，2026-09-17）：chunk 前向单独开放给 agent 轨道，见 GD2-01/GD2-02，写集限定新文件、不碰 reserved_paths_
 
 | kernel | 归属 | 进度 | 下一步 |
 |---|---|---|---|
@@ -297,8 +297,8 @@ _未排期：属 gated epic G4（窄切片原则 —— 没有目标模型就不
 
 | dtype | 归属 | 涉及任务 | 说明 |
 |---|---|---|---|
-| `bf16` | 可申领 | 17 | 当前 ABI：q/k/v/o 与多数中间量 |
-| `fp32` | 可申领 | 24 | 当前 ABI：state、门控累加、精度判定一律 fp32 |
+| `bf16` | 可申领 | 19 | 当前 ABI：q/k/v/o 与多数中间量 |
+| `fp32` | 可申领 | 26 | 当前 ABI：state、门控累加、精度判定一律 fp32 |
 | `fp16` | 未排期 (G3) | — | 契约明确拒绝（见 ops.json 的 no-tail-path 一条） |
 | `int8` | 未排期 (G3) | 1 | 未排期；state 累积漂移需先有方案 |
 | `mxfp8` | 未排期 (G3) | 1 | 未排期；950 原生解码待核实 |

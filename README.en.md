@@ -160,7 +160,7 @@ _Upstream units exist; no task scheduled here yet_
 
 <details><summary><b>GDN-2 (Gated DeltaNet 2) —— 5 kernel(s)</b></summary>
 
-_Owner's parallel track; see docs/handoff.md §1_
+_Owner's parallel track; see docs/handoff.md §1. **Exception** (D-PM-16, 2026-09-17): chunk forward is opened to the agent track (GD2-01/GD2-02), scoped to new files only, reserved_paths untouched_
 
 | kernel | track | progress | next |
 |---|---|---|---|
@@ -298,8 +298,8 @@ _Not scheduled: gated epic G4 (narrow-slice rule — no target model, no work). 
 
 | dtype | track | tasks | note |
 |---|---|---|---|
-| `bf16` | open to agents | 17 | Current ABI: q/k/v/o and most intermediates |
-| `fp32` | open to agents | 24 | Current ABI: state, gate accumulation, all correctness judged in fp32 |
+| `bf16` | open to agents | 19 | Current ABI: q/k/v/o and most intermediates |
+| `fp32` | open to agents | 26 | Current ABI: state, gate accumulation, all correctness judged in fp32 |
 | `fp16` | not scheduled (G3) | — | Explicitly rejected by the contract |
 | `int8` | not scheduled (G3) | 1 | Not scheduled; state drift needs a design first |
 | `mxfp8` | not scheduled (G3) | 1 | Not scheduled; native 950 decode unverified |
