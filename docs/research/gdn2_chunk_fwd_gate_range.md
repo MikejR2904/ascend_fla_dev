@@ -71,16 +71,17 @@ maximum absolute error too. Real-model budgets remain 1e-3 FP32 and 1e-2 BF16.
 The user requires Torch CPU mode. CPU references and CPU-tensor aclnn/board
 harness execution are supported separately from the in-process NPU bridge.
 CPU timings are not NPU performance. SSH authentication initially failed, so reduced simulator checks were used only
-to diagnose the newly authored stages. Full workload device execution remains
-required after the assigned directory and device status are confirmed. NPU model
+to diagnose the newly authored stages. The assigned directory and device health
+are now confirmed; native full-workload validation is in progress. NPU model
 and torch_npu baseline qualification remain untested under the CPU-only request.
 
 ## Host observations
 
-Five CCE stages emit successfully at the accepted library pin. Functional sim
-passes T=1/H=1; lowered pipesim passes T=2/H=1, T=65/H=1, T=2/H=16 and T=65/H=16
-with block_dim=1, including complete stage comparisons and hazard/deadlock
-checks. CPU tests cover both zero and strong decay through T=4096/H=16;
+Five CCE stages emit successfully at the accepted library pin. After the native
+WY workaround, functional sim passes T=1/H=1 and pipesim passes T=2/H=1 at
+block_dim=1. Revision `9ba48cd` also passed T=65/H=1, T=2/H=16 and T=65/H=16
+pipesim diagnostics; those larger diagnostic claims require renewal after the
+source change. CPU tests cover both zero and strong decay through T=4096/H=16;
 FLA recurrent is loaded explicitly by file path in the optional oracle test.
 
 The public graph retires each workspace after its last consumer launch. The
@@ -93,8 +94,8 @@ stored in the tracked contract.
 
 This derivation predates the arithmetic port into the scoped task branch.
 The requested real-95B random-token replay and natural-text run are **pending**:
-no checkpoint or tokenizer is available in the inspected local checkout, and
-remote workspace selection is awaiting confirmation. The historical 1461.214
+no checkpoint or tokenizer is available in the inspected checkout or assigned
+remote user directory. Asset locations have been requested. The historical 1461.214
 number is provenance from `gdn2-chunk-gate-range`, not a reproduced measurement.
 Synthetic gate sweeps must be labeled synthetic; they cannot close this gate.
 
@@ -143,6 +144,38 @@ python kernels/projects/a5/gdn2_chunk_fwd/ref/survey.py --synthetic --output tmp
 For actual model evidence, use the same script with `--checkpoint` and
 `--tokenizer` pointing to local assets. It verifies the recorded checkpoint
 SHA-256, uses CPU Torch only, and reports each layer and both sample types.
+
+## Native WY dependent-loop diagnosis
+
+The first full native run of revision `9ba48cd`, B=1/T=4096/H=16,
+FP32/block_dim=8, failed at stage `u` (max absolute error 0.05106529966).
+All five stages compiled and executed; successful native exits did not establish
+numerical correctness. Environment: Ascend 950PR_9589 V100, CANN compiler and OPP
+9.2.0, Python 3.12.13, Torch 2.12.0+cpu. The OPP inventory contains ascend950,
+ascend910b and ascend910_93. These observations do not apply to other devices.
+
+Re-solving WY from its actual input blobs gave max absolute error 0.05105925724
+and relative L2 0.009164325893. A diagnostic recurrence dropping the immediately
+preceding row matched native output within 5.960464478e-8, locating the missing
+contribution without accepting that altered recurrence as the reference.
+
+A B=1/T=4/H=1/block_dim=1 control uses a generated strictly lower matrix with
+only its first subdiagonal set to 0.25. Native artifact controls:
+
+| WY VF form | U max absolute error | W max absolute error |
+| --- | --- | --- |
+| original dependent inner bound | 0.2538757324 | 0.25 |
+| native float load/store overloads | 0.2538757324 | 0.25 |
+| VV_ALL barriers | 0.2538757324 | 0.25 |
+| fixed 64 iterations, explicit `j < i` guard | 0 | 0 |
+
+The scoped source workaround uses the last form, preserving all terms and their
+order. This establishes a failing native dependent-bound form, not whether the
+vendor compiler or hardware implements it incorrectly. Artifact controls alone
+are not source-kernel qualification. The source change passes 44 targeted host
+tests, T=2/H=1 pipesim at block_dim=1, and static checking with zero errors and
+warnings. Full native source regression remains pending. Redacted failure and
+control receipts are retained in ignored `tmp/GD2-02/`.
 The tokenizer must be the recorded local revision; vocabulary size alone is
 not proof of tokenizer provenance. The natural-text sample is repeated to
 4096 tokens, and that construction is identified in the report.

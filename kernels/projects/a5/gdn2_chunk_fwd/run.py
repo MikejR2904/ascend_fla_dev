@@ -1,4 +1,4 @@
-"""Run the complete GDN-2 recurrent unit with the canonical unit helper."""
+"""Run the complete GDN-2 chunk unit with the canonical unit helper."""
 from pathlib import Path
 
 from _unit_runner import main

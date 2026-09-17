@@ -205,14 +205,20 @@ def wy_vf(lower: Tensor, g: Tensor, b: Tensor, v: Tensor,
         decay <<= g[i:i+1, 0:D]
         decay <<= decay.exp()
         wr <<= wr * decay
-        for j in range(i):
-            weight <<= lower[i:i+1, j:j+1].single()
-            prev <<= u[j:j+1, 0:D]
-            prev <<= prev * weight
-            ur <<= ur - prev
-            prev <<= wy[j:j+1, 0:D]
-            prev <<= prev * weight
-            wr <<= wr - prev
+        # CANN 9.2 / 950PR native control: a VF loop bounded directly by
+        # the enclosing VF induction variable omitted the last contribution.
+        # A constant trip count with an explicit guard preserves the complete
+        # ordered solve. Stronger barriers and native float loads did not fix
+        # the dependent-bound form; this is a scoped source workaround.
+        for j in range(C):
+            if j < i:
+                weight <<= lower[i:i+1, j:j+1].single()
+                prev <<= u[j:j+1, 0:D]
+                prev <<= prev * weight
+                ur <<= ur - prev
+                prev <<= wy[j:j+1, 0:D]
+                prev <<= prev * weight
+                wr <<= wr - prev
         u[i:i+1, 0:D] <<= ur
         wy[i:i+1, 0:D] <<= wr
         vf_barrier(VfPipe.STORE, VfPipe.LOAD)

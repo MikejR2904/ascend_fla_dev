@@ -338,10 +338,7 @@
       "stage": "pipesim",
       "status": "passed",
       "cases": [
-        "t2_h1_strong",
-        "t65_h1_diagnostic_tail",
-        "t2_h16_diagnostic_heads",
-        "t65_h16_tail"
+        "t2_h1_strong"
       ]
     },
     {
@@ -382,19 +379,20 @@
         "t192_h16_odd",
         "t320_h16_odd",
         "t1024_h16_prefill",
-        "t4096_h16_prefill"
+        "t4096_h16_prefill",
+        "t65_h1_diagnostic_tail",
+        "t2_h16_diagnostic_heads",
+        "t65_h16_tail"
       ]
     }
   ],
   "measured": {
-    "at": "2026-09-14, Ascend950PR / CANN 9.1.0",
-    "static": "ascriptor check: 0 errors, 0 warnings, 220 surface operations; CCE emit produced 266 lowered operations.",
-    "simulation": "Functional sim passed three scoped cases; pipesim passed the single-token and state-chain cases without a hazard or deadlock.",
-    "board_cce": "All five contract cases passed through the Ascriptor aclnn launcher. Output relative-L2 was 1.240e-7 to 4.169e-6 for H=1 and 1.669e-7 for the H=16 decode/prompt cases; maximum final-state relative-L2 was 9.108e-8.",
-    "public_wrapper": "BF16 real-prompt inputs passed with output relative-L2 0 and final-state relative-L2 6.167e-8. A T=4 launch and four chained T=1 launches produced identical output and state.",
-    "latency": "B1/T1/H16 BF16 public call, including casts and aclnn bridge: 88.165 us versus 148.400 us for the torch_npu composition (warmup 10, iterations 100, synchronized), speedup 1.683x.",
-    "whole_model": "The real 95B checkpoint passed packed-inference whole-model comparisons. BF16 prompt/step logits relative-L2 were 3.260e-3/3.186e-3 and maximum recurrent-cache relative-L2 was 9.154e-3 under a 1e-2 budget. FP32 logits were 1.391e-5/2.065e-5 and maximum recurrent-cache relative-L2 was 1.785e-4 under a 1e-3 budget. Argmax and cache offsets matched; bitwise equality was not required.",
-    "reproduce": "benchmarks/verify_gdn2_recurrent.py and benchmarks/verify_gdn2_backends.py"
+    "static": "All five stages emitted; zero static errors/warnings. The WY dependent-loop workaround has 128 surface operations.",
+    "simulation": "After the WY source workaround, pipesim passes T=2/H=1/block_dim=1; earlier multihead/tail diagnostics belong to revision 9ba48cd and require renewal.",
+    "board_cce": "Revision 9ba48cd failed the full T=4096/H=16/block_dim=8 WY comparison on 950PR/CANN 9.2.0. Full source-workaround regression is pending.",
+    "latency": "Untested for this chunk unit; recurrent-kernel latency is not chunk evidence.",
+    "whole_model": "Real-checkpoint replay and chunk whole-model qualification are pending.",
+    "reproduce": "run.py check --launcher board --board a5 --case t4096_h16_prefill --block-dim 8; see docs/research/gdn2_chunk_fwd_gate_range.md"
   },
   "provenance": [
     {
