@@ -607,7 +607,7 @@
       "applies_to": [
         "gdn2"
       ],
-      "evidence": "2026-09-14 用真实 95B checkpoint、B=1/T=4096、合法 vocab token id 的确定性随机输入（seed=20260914）逐层抓取 g=-exp(A_log)*softplus(f+dt_bias)。18 层合计观测：单 token 的 -g 最大 60.926；64-token 局部累计跨度最大 1461.214，各层 chunk-span 均值再平均为 69.041；完整 4096-token 累计跨度最大 83768.180。logits 仍全有限，说明逐 token recurrence 本身可用；证据在 tmp/gdn2-95b/gate-domains-t4096.json 与原始日志（git-ignored）。该输入不是自然语料分布，不能拿均值外推任务分布，但它是模型公开 token 域内的有效反例，足以否定“照搬 KDA 155 的量程即可”。",
+      "evidence": "2026-09-14 用真实 95B checkpoint、B=1/T=4096、合法 vocab token id 的确定性随机输入（seed=20260914）逐层抓取 g=-exp(A_log)*softplus(f+dt_bias)。18 层合计观测：单 token 的 -g 最大 60.926；64-token 局部累计跨度最大 1461.214，各层 chunk-span 均值再平均为 69.041；完整 4096-token 累计跨度最大 83768.180。logits 仍全有限，说明逐 token recurrence 本身可用；证据在 tmp/gdn2-95b/gate-domains-t4096.json 与原始日志（git-ignored）。该输入不是自然语料分布，不能拿均值外推任务分布，但它是模型公开 token 域内的有效反例，足以否定“照搬 KDA 155 的量程即可”。\n**2026-09-17 补充（GD2-01，PR #64）**：assignee 用真实 95B checkpoint 重跑随机 token 回放（截至本次汇报 18 层中 14 层完成），观测到的 64-token 局部累计跨度最大到**1520.91455**，超过 2026-09-14 记的 1461.214——按要求如实报了这个差异，没有为了对齐旧数而裁剪。五档子块（4/8/16/32/64）在已测的层上相对 L2 均 ≤1e-4，对两个 oracle（fla naive 与本仓 CPU 实现）都过。全部 18 层跑完后以最终数字为准，**闸的边界要按新的最大观测值定，不是 1461**。",
       "impact": "现有 KDA stable chunk 的前向已验证跨度约 155、反向约 105，不能直接作为 GDN-2 的设计上限。任何在 64-token 区间端点或中点形成 exp(±span) / exp(±span/2) 的实现，在观测到的 1461 跨度下都可能出现 0、inf 或 inf×0；有限输出也不能替代梯度精度验证。decode recurrence 每步只使用 exp(g_t)，g_t≤0，向 0 下溢与数学极限一致，不受这个跨 token 配对量程问题影响。",
       "blocks": [
         "gdn2_chunk_fwd_bwd"
