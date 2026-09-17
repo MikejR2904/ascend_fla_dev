@@ -190,21 +190,32 @@ def wy_vf(lower: Tensor, g: Tensor, b: Tensor, v: Tensor,
           u: Tensor, wy: Tensor, count: Var):
     ur = RegList(DT.float, 2)
     wr = RegList(DT.float, 2)
+    un = RegList(DT.float, 2)
+    wn = RegList(DT.float, 2)
     decay = RegList(DT.float, 2)
     prev = RegList(DT.float, 2)
+    tmp = RegList(DT.float, 2)
     weight = Reg(DT.float)
+    next_weight = Reg(DT.float)
     zero = RegList(DT.float, 2)
     zero <<= 0.0
     for i in range(C):
         u[i:i+1, 0:D] <<= zero
         wy[i:i+1, 0:D] <<= zero
     vf_barrier(VfPipe.STORE, VfPipe.LOAD)
-    for i in range(count):
+    # Two rows share every earlier U/W load. Even i keeps i+1 inside C;
+    # an odd-count partner is initialized zero padding in b/v/lower.
+    for i in range(0, count, 2):
         ur <<= v[i:i+1, 0:D]
         wr <<= b[i:i+1, 0:D]
         decay <<= g[i:i+1, 0:D]
         decay <<= decay.exp()
         wr <<= wr * decay
+        un <<= v[i+1:i+2, 0:D]
+        wn <<= b[i+1:i+2, 0:D]
+        decay <<= g[i+1:i+2, 0:D]
+        decay <<= decay.exp()
+        wn <<= wn * decay
         # CANN 9.2 / 950PR native control: a VF loop bounded directly by
         # the enclosing VF induction variable omitted the last contribution.
         # A constant trip count with an explicit guard preserves the complete
@@ -213,14 +224,28 @@ def wy_vf(lower: Tensor, g: Tensor, b: Tensor, v: Tensor,
         for j in range(C):
             if j < i:
                 weight <<= lower[i:i+1, j:j+1].single()
+                next_weight <<= lower[i+1:i+2, j:j+1].single()
                 prev <<= u[j:j+1, 0:D]
-                prev <<= prev * weight
-                ur <<= ur - prev
+                tmp <<= prev * weight
+                ur <<= ur - tmp
+                tmp <<= prev * next_weight
+                un <<= un - tmp
                 prev <<= wy[j:j+1, 0:D]
-                prev <<= prev * weight
-                wr <<= wr - prev
+                tmp <<= prev * weight
+                wr <<= wr - tmp
+                tmp <<= prev * next_weight
+                wn <<= wn - tmp
+        # The last contribution of row i+1 uses completed FP32 row i.
+        # All per-row products/subtractions retain their original order.
+        next_weight <<= lower[i+1:i+2, i:i+1].single()
+        tmp <<= ur * next_weight
+        un <<= un - tmp
+        tmp <<= wr * next_weight
+        wn <<= wn - tmp
         u[i:i+1, 0:D] <<= ur
         wy[i:i+1, 0:D] <<= wr
+        u[i+1:i+2, 0:D] <<= un
+        wy[i+1:i+2, 0:D] <<= wn
         vf_barrier(VfPipe.STORE, VfPipe.LOAD)
 
 

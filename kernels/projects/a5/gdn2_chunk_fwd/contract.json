@@ -425,24 +425,78 @@
     }
   ],
   "measured": {
-    "static": "All five optimized stages emitted; zero static errors/warnings. Surface operations: prepare 174, scores 128, WY 128, scan 153, output 122.",
-    "simulation": "Optimized source passes sim T=1/H=1 and pipesim T=2/H=1 plus T=65/H=16 at block_dim=1, checking all 13 stage outputs and synchronization diagnostics.",
-    "board_cce": "Optimized kernel SHA256 a1f305eb5209420e026a1a6c82d7147f00a00c0588ea7f7f331805993d1cce5b passes a fresh canonical source check at T=4096/H=16/FP32/block_dim=8 on 950PR_9589 V100/CANN compiler+OPP 9.2.0, against CPU Torch 2.12.0 references: output relative L2 2.400727462e-6/max abs 1.345761120e-7; state relative L2 4.140812156e-6/max abs 4.950910807e-6. All 13 intermediate comparisons also pass. The original 9ba48cd WY failure is retained. Remaining canonical board-launcher cases are untested; see native_inprocess for separate bridge evidence.",
-    "latency": "Same-process Torch NPU synchronized baseline-candidate-baseline, 3 rounds, warmup=10/repeat=50, FP32/B=1/H=16/K=V=128/block_dim=8, 950PR_9589 V100/CANN compiler+OPP 9.2.0: T=1024 candidate medians 3876.824..3882.246 us (8.422..8.581% lower latency); T=4096 candidate medians 14178.686..14308.423 us (8.845..10.162% lower latency). Each reduction uses the faster of the two same-round accepted GD2-01 chunk baselines. CPU goldens pass before timing; public validation/allocation/launches are included. Raw report SHA256 b2d4a6f88f1ea499b66ec52bf1a6ef100dc5be3e76ba048da10f530f4fd75fce. This comparison is separate from GD2-01's Torch NPU recurrence baseline.",
+    "static": "All five optimized stages emitted; zero static errors/warnings. Surface operations: prepare 174, scores 128, WY 199, scan 153, output 122.",
+    "simulation": "Paired-row WY source passes fresh sim T=1/H=1 and pipesim T=2/H=1 plus T=65/H=16 at block_dim=1, checking all 13 stage outputs and synchronization diagnostics.",
+    "board_cce": "Paired-row WY kernel SHA256 803c45093dd21b7d5af196ae76e1df207fde7d7261e3fa574934b8cb90519bb4 passes a fresh canonical source check at T=4096/H=16/FP32/block_dim=8 on 950PR_9589 V100/CANN compiler+OPP 9.2.0, against CPU Torch 2.12.0 references: output relative L2 2.400727462e-6/max abs 1.345761120e-7; state relative L2 4.140812156e-6/max abs 4.950910807e-6. All 13 intermediate comparisons also pass. The original 9ba48cd WY failure is retained. Remaining canonical board-launcher cases are untested; see native_inprocess for separate bridge evidence.",
+    "latency": "Same-process Torch NPU synchronized baseline-candidate-baseline, 3 rounds, warmup=10/repeat=50, FP32/B=1/H=16/K=V=128/block_dim=8, 950PR_9589 V100/CANN compiler+OPP 9.2.0. Against accepted GD2-01: T1024 candidate medians 3288.7785..3294.6695 us, latency reduction 21.839..21.964%; T4096 medians 11995.0925..12134.4565 us, reduction 23.253..24.016%. Separate incremental comparison against 690f420: T1024 reduction 14.513..14.663%, T4096 15.109..15.855%. Each reduction uses the faster same-round baseline. CPU goldens and final byte equality pass before timing; public validation/allocation/launches are included. Cumulative receipt SHA256 595c2c24d85a6d99d8b13772f5f56d4d40b4b33140093b023ab51409cceb4e4d.",
     "whole_model": "CPU real-checkpoint gate replay passes both random and natural-text samples at T=4096, all 18 layers and reset sizes 4/8/16/32/64 (180 rows), against both CPU oracles. Native whole-model logit/cache qualification remains pending.",
     "reproduce": "run.py check --launcher board --board a5 --case t4096_h16_prefill --block-dim 8; see docs/research/gdn2_chunk_fwd_gate_range.md",
-    "native_inprocess": "All 12 contract cases pass all 13 CPU-golden stage comparisons at block_dim=1 and 8; every stage output is byte-identical between these block counts and versus accepted GD2-01. Kernel SHA256 a1f305eb5209420e026a1a6c82d7147f00a00c0588ea7f7f331805993d1cce5b. Maximum final output/state relative L2 across cases: 3.348794618e-6/5.677315394e-6. This NPU in-process bridge evidence is separate from the canonical board launcher above. Other block counts remain unqualified.",
+    "native_inprocess": "All 12 contract cases pass all 13 CPU-golden stage comparisons at block_dim=1 and 8; every stage output is byte-identical between these block counts and versus both preweight 690f420 and accepted GD2-01. Kernel SHA256 803c45093dd21b7d5af196ae76e1df207fde7d7261e3fa574934b8cb90519bb4. Maximum final output/state relative L2 across cases: 3.348794618e-6/5.677315394e-6. This NPU in-process bridge evidence is separate from the canonical board launcher above. Other block counts remain unqualified.",
     "optimization": {
       "baseline_kernel_sha256": "82dd3fec13edee5c358a336721bd8d45ef7238fb1a62a05eca668b5fbae47e66",
-      "candidate_kernel_sha256": "a1f305eb5209420e026a1a6c82d7147f00a00c0588ea7f7f331805993d1cce5b",
-      "change": "FP32 vector row preweights in existing scan key/output query UB allocations; unchanged sum order, workspace, launches and public ABI.",
-      "native_grid_bd1_sha256": "f5abfee687b618a72a901325fad51ae4c8eb236262a1bde211bbfd4fd887dc44",
-      "native_grid_bd8_sha256": "28ec977be0c10ec475b16291668450414549dd4c31044ad3fc2992b9e235f7ad",
+      "candidate_kernel_sha256": "803c45093dd21b7d5af196ae76e1df207fde7d7261e3fa574934b8cb90519bb4",
+      "change": "FP32 vector scan/output preweights plus paired-row WY reuse; unchanged per-row arithmetic order, GM workspace, five launches and public ABI.",
+      "native_grid_bd1_sha256": "a4ad747902abadde699fe67e12a15f5d19a005ffaf393ded95db10cab5a43874",
+      "native_grid_bd8_sha256": "272923c81eea1292e2bf2192cad0ca675056e26eb6977514a7e36776e90aff3d",
       "peak_torch_allocated_bytes": {
         "t1024_baseline_and_candidate": 72351744,
         "t4096_baseline_and_candidate": 286261248
       },
-      "reproduce": "benchmark.py --baseline <accepted-GD2-01-stages.py> --output tmp/GD2-03/sandwich.json; see research document for same-process identity and raw receipt hashes."
+      "reproduce": "benchmark.py --baseline <0397aa1-or-690f420-stages.py> --output tmp/gdn2-wy/sandwich.json; see research document for exact commands and retained candidate receipts.",
+      "incremental_baseline_kernel_sha256": "a1f305eb5209420e026a1a6c82d7147f00a00c0588ea7f7f331805993d1cce5b",
+      "board_redacted_receipt_sha256": "b9360522b23b69405ff804a0faacb9bfb6af9bbf3d4b1abe3f34008d1e8e6fa0",
+      "incremental": {
+        "baseline": "690f420",
+        "receipt_sha256": "5cc541d699c84ef2cb86d2baadd5ff369e8da1d1ffacf279299bf399676497ba",
+        "cases": {
+          "4096": {
+            "candidate_median_us_range": [
+              12108.2505,
+              12201.6705
+            ],
+            "latency_reduction_percent_range": [
+              15.108990177750314,
+              15.8549971424092
+            ]
+          },
+          "1024": {
+            "candidate_median_us_range": [
+              3297.7309999999998,
+              3299.593
+            ],
+            "latency_reduction_percent_range": [
+              14.51304413163057,
+              14.662726184601615
+            ]
+          }
+        }
+      },
+      "cumulative": {
+        "baseline": "0397aa1",
+        "receipt_sha256": "595c2c24d85a6d99d8b13772f5f56d4d40b4b33140093b023ab51409cceb4e4d",
+        "cases": {
+          "4096": {
+            "candidate_median_us_range": [
+              11995.092499999999,
+              12134.4565
+            ],
+            "latency_reduction_percent_range": [
+              23.252704902003185,
+              24.0157815375863
+            ]
+          },
+          "1024": {
+            "candidate_median_us_range": [
+              3288.7785,
+              3294.6695
+            ],
+            "latency_reduction_percent_range": [
+              21.838581309789397,
+              21.96362940271116
+            ]
+          }
+        }
+      }
     },
     "gate_range": {
       "source": "Real 95B checkpoint; CPU Torch 2.12.0, BF16 model, FP32 captured core tensors; sample qualification only",
@@ -619,7 +673,7 @@
     "host": "Python 3.11.16, Torch 2.14.0 CPU.",
     "numerics": "Independent FP32 chunk-vs-recurrent tests cover T=1,16,63,64,65,127,128,192,320,1024,4096 at H=16 for zero/strong decay, budget 1e-4. FLA naive recurrence is separately checked. These host tests do not promote unexecuted CCE cases.",
     "synchronization": "Reduced block_dim=1 pipesim diagnostics compare all 13 stage outputs; event balance, hazards and deadlock checks pass for the explicitly scoped cases.",
-    "hardware": "950PR_9589 V100, CANN compiler and OPP 9.2.0; OPP contains ascend950, ascend910b and ascend910_93. CPU Torch goldens, Torch NPU performance. Canonical board T4096/bd8 and in-process all 12 cases/bd1+8 pass; other block counts and native whole-model qualification remain untested.",
+    "hardware": "Paired-row WY source: fresh canonical board T4096/H16/FP32/bd8 and in-process all 12 cases/bd1+8 pass on 950PR_9589 V100, CANN compiler and OPP 9.2.0; OPP contains ascend950, ascend910b and ascend910_93. CPU Torch goldens, Torch NPU performance. Every stage is byte-identical across bd1/bd8 and versus 690f420. Other block counts and native whole-model qualification remain untested.",
     "reproduce": "run.py reference/check with the scoped case IDs; tests/test_gdn2_chunk_fwd.py; ref/survey.py."
   }
 }
