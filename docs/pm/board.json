@@ -121,6 +121,19 @@
       "by": "user",
       "decision": "PKDA/PGDN 的权威来源已确立（用户提供本地 fla checkout，0.6.0，与 GD2-01 同一pin e52dbc0e）：论文 arXiv:2604.21100，已合入上游 fla PR #950。PK-01 完成，写出 docs/research/pkda_semantics.md。排上 PK-02（PKDA chunk 前向，open，KDA 派生单元）与 PK-03（PGDN，gated: prereq-gdn-abi，排在 GDN 自身 GQA 缺口之后）",
       "risk": "两者都没有已发布的预训练权重，只有训练配置（340M/1B，来自论文训练仓）——端到端验证只能到双 oracle + 真实规模形状，到不了真实 checkpoint 的 logits/cache 一级，这与 KDA/GDN-2 已有真实权重可用的情况不同，已在两份 spec 里显式声明"
+    },
+    {
+      "id": "D-PM-19",
+      "date": "2026-09-17",
+      "by": "user",
+      "decision": "批准 issue #71：GD2-03 之后的第二轮性能优化（GD2-04，WY 行对复用），同一写集、同一 D-PM-16 边界，不是新的范围决策"
+    },
+    {
+      "id": "D-PM-20",
+      "date": "2026-09-17",
+      "by": "user",
+      "decision": "批准 issue #70：agent 轨道在 A5 上开一条窄范围例外任务（GDA-01），做 GDN（gated_delta_rule，非 GDN-2）chunk 前向的真机开发与优化，显式跳过 gdn-no-gqa（不解决它）。不改变 KDA 首位、Qwen3-Next 卡在六项 ABI 缺口的排序，也不改变 agent 轨道 A2→A3→A5 的波次顺序——仅这一条任务例外，理由是有人已经配好 A5 真机访问",
+      "risk": "本任务的正确性/性能结论只对 A5、非 GQA 场景成立，不能外推到 A2/A3 或 GQA 场景；已在 AGENTS.md §2 与任务 spec 里写明边界"
     }
   ],
   "gated_epics": [
@@ -1813,8 +1826,7 @@
       "wave": "W0",
       "soc": "a5",
       "priority": "P2",
-      "status": "gated",
-      "gate": "user-decision",
+      "status": "assigned",
       "model": [
         "gdn2-1.3b-fineweb-edu-100b"
       ],
@@ -1841,17 +1853,80 @@
       "spec": "docs/pm/tasks/GD2-04.md",
       "issue": 72,
       "pr": null,
-      "assignee": null,
-      "assignee_caps": null,
-      "branch": null,
+      "assignee": "limjiunnbin",
+      "assignee_caps": {
+        "agent": "Codex (self-described, per #71)",
+        "socs": [
+          "a5"
+        ],
+        "soc_details": "沿用 GD2-01/02/03 已配置的 A5 访问",
+        "ascriptor": "library 90cfcdc720bb（同前）",
+        "fla": false,
+        "fork": null,
+        "note": "GD2-01/03 的原 assignee 延续"
+      },
+      "branch": "task/GD2-04",
       "timebox_h": 12,
       "origin": {
         "kind": "request",
         "issue": 71,
         "by": "limjiunnbin",
-        "approved_by_user": false
+        "approved_by_user": true
       },
-      "reports": [],
+      "reports": [
+        {
+          "at": "2026-09-17T13:57",
+          "summary": "用户批准 D-PM-19；把 #71 的自述当 APPLY，直接 ASSIGN"
+        }
+      ],
+      "result": null
+    },
+    {
+      "id": "GDA-01",
+      "title": "GDN chunk 前向：A5 真机开发 + 优化（非 GQA）",
+      "wave": "W0",
+      "soc": "a5",
+      "priority": "P2",
+      "status": "open",
+      "model": [],
+      "kernel": [
+        "gdn_fwd"
+      ],
+      "dtype": [
+        "bf16",
+        "fp32"
+      ],
+      "deps": [],
+      "write_set": [
+        "kernels/projects/a5/gdn_chunk_fwd/**",
+        "ascend_fla/ops/gdn_chunk_fwd.py",
+        "tests/test_gdn_chunk_fwd.py",
+        "docs/research/gdn_chunk_fwd_gate_range.md"
+      ],
+      "needs": {
+        "npu": true,
+        "ascriptor": true,
+        "fla": true
+      },
+      "spec": "docs/pm/tasks/GDA-01.md",
+      "issue": null,
+      "pr": null,
+      "assignee": null,
+      "assignee_caps": null,
+      "branch": null,
+      "timebox_h": 24,
+      "origin": {
+        "kind": "request",
+        "issue": 70,
+        "by": "limjiunnbin",
+        "approved_by_user": true
+      },
+      "reports": [
+        {
+          "at": "2026-09-17T13:59",
+          "summary": "用户批准 D-PM-20，转 open。assignee 同时申领了 GD2-04，一个 agent 只能同时持一个任务——先派 GD2-04（已有真实进展），GDA-01 留 open 等 APPLY"
+        }
+      ],
       "result": null
     }
   ],
@@ -2069,6 +2144,13 @@
         "track": "agent",
         "note_zh": "GDN 派生单元 + ATK 预条件，排在 GDN 自身 GQA 缺口之后，见 PK-03（gated）",
         "note_en": "GDN-derived unit + ATK preconditioning, sequenced after GDN's own GQA gap, see PK-03 (gated)"
+      },
+      {
+        "id": "gdn_chunk_fwd_a5",
+        "family": "gated_delta_rule",
+        "track": "agent",
+        "note_zh": "窄范围例外（D-PM-20）：非 GQA 的 A5 chunk 前向，见 GDA-01",
+        "note_en": "Narrow exception (D-PM-20): non-GQA A5 chunk forward, see GDA-01"
       }
     ]
   },
@@ -2088,8 +2170,8 @@
         "label_zh": "GDN（Gated DeltaNet）",
         "label_en": "GDN (Gated DeltaNet)",
         "track": "agent",
-        "note_zh": "Qwen3-Next 用它，六项 ABI 缺口待补",
-        "note_en": "Used by Qwen3-Next; six ABI gaps to close"
+        "note_zh": "Qwen3-Next 用它，六项 ABI 缺口待补（第四期）。**窄范围例外**（D-PM-20，2026-09-17）：GDA-01 在 A5 上做非 GQA 的 chunk 前向，显式跳过 gdn-no-gqa，不解决它",
+        "note_en": "Used by Qwen3-Next; six ABI gaps to close (phase 4). **Narrow exception** (D-PM-20, 2026-09-17): GDA-01 does non-GQA chunk forward on A5, explicitly gating away gdn-no-gqa rather than closing it"
       },
       {
         "id": "delta_rule",
