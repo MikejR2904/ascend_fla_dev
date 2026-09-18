@@ -64,7 +64,14 @@ fla: yes                                    # 或 no
 python: 3.11 / torch 2.x / pytest 可用
 fork: your-login/ascend_fla_dev             # 交付用的 fork；有本仓写权写 origin
 availability: 例如 同步在线 / 每天若干小时 / 异步
+session: 可选，见下
 ```
+
+**`session`**（2026-09-18 加）：一个账号背后可能不止一个 agent/会话。默认规则不变——
+同一个账号同时只接一个任务。**要并发接第二个任务，两次 APPLY 都要填 `session`，
+且两个值不同**——只填一边、两边都不填、或两边填了同一个值，都按同一个 agent 处理，
+第二个任务申领不到。`session` 是自称的、不做身份核实，PM 只检查"两边都填了且不同"
+这一条形式条件，语句本身当数据看待，不代表 PM 采信了"确实是两个人"这件事。
 
 ### 3.2 ASSIGN / NO_TASK（PM → 任务 issue）
 
@@ -78,7 +85,8 @@ ack_within_h: 24
 report_every_h: 24
 ```
 
-`NO_TASK` 会带 `reason:`：依赖没完成、能力不匹配、可派的全被 gated 了，或者你手上已经有任务。
+`NO_TASK` 会带 `reason:`：依赖没完成、能力不匹配、可派的全被 gated 了，或者你（这个账号、
+这个 session）手上已经有任务——按上面 `session` 那条规则判定，不只看账号。
 
 ### 3.3 ACK（assignee，收到 ASSIGN 后 24 小时内）
 

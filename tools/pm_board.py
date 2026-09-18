@@ -252,13 +252,26 @@ def check(board: dict, root: Path = ROOT) -> list[str]:
         for other in write_conflicts(t, flying[i + 1:]):
             problems.append(f"写集冲突: {t['id']} 与 {other} 同时在进行中")
 
-    holders: dict[str, str] = {}
+    # 一个 agent 同时只接一个任务，但账号不是 agent 的唯一标识——2026-09-18 用户决定：
+    # 申领人只要自称不同的会话/agent，同一个 GitHub 账号也可以并发持有多个任务。
+    # 判定办法：两个任务都要在 assignee_caps.session 里填一个非空标识，且两个标识不同，
+    # 才算"不同 agent"；只要有一边没填或者两边相同，就按老规矩当成同一个 agent 处理。
+    # 默认（没人声明 session）因此和改动前完全一样严格，不会因为这条新规则悄悄放松。
+    by_assignee: dict[str, list[dict]] = {}
     for t in flying:
         who = t.get("assignee")
-        if who in holders:
-            problems.append(f"{who} 同时持有 {holders[who]} 与 {t['id']} —— 一个 agent 同时只接一个任务")
-        elif who:
-            holders[who] = t["id"]
+        if who:
+            by_assignee.setdefault(who, []).append(t)
+    for who, held in by_assignee.items():
+        for i, t in enumerate(held):
+            for other in held[i + 1:]:
+                s1 = str((t.get("assignee_caps") or {}).get("session") or "").strip()
+                s2 = str((other.get("assignee_caps") or {}).get("session") or "").strip()
+                if s1 and s2 and s1 != s2:
+                    continue  # 两边都声明了不同的 session，按不同 agent 放行
+                problems.append(
+                    f"{who} 同时持有 {t['id']} 与 {other['id']} —— 一个 agent 同时只接一个任务"
+                    "（要按不同 agent 处理，两个任务的 assignee_caps.session 都要填且不同）")
 
     numbers = [t["issue"] for t in valid if isinstance(t.get("issue"), int)]
     problems += [f"issue #{n} 被多个任务引用" for n in sorted({n for n in numbers if numbers.count(n) > 1})]
