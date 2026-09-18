@@ -315,6 +315,8 @@ PM 在权威 workspace 上独立跑了 `benchmarks/diag_c1_multihead.py`，**上
 ③ 上游补 case：`C=1 且 HV≥2`。这条不管我们怎么修都该做，否则上游下次改这个 kernel 还会踩。
 ⑤ **上游补 case**（A2-04 建议）：`kda_fwd` 契约要加 `C=1 且 HV≥2`，以及 `奇数 C≥3 且 B*HV > block_dim`。现有四个 case 一个都盖不到。
 ⑥ **真机侧要补的**：本条记的『C=3 全对』在仓里**没有对应的运行日志**。闸的范围要按奇数 C 定的话，得先在 A5 上补 C=3 / C=5 且 `B*HV > block_dim` 的逐 chunk 比对。
+2026-09-18 修复已落地（A5K-01，#78）：kernels/projects/a5/kda_fwd_stable/kernels/recurrent.py 把槽表达式改成 Var(((pair_idx - pair_begin) * C + c_idx) % 2)（写读两处都改），与 A2-04 pipesim 验证过的方案一致。真机确认：336/336 case（C=1..6 x 7 组 H/HV x 零/随机 state x bd=1..4，含 Kimi 真实形状 H=HV=32）全过，负对照（原始/qg-only）保留、真机上仍复现奇数 C 冒险；偶数 C 与未修改基线逐位相同，跨 bd=1..4 也逐位相同。PM 独立复算了不依赖真机的部分：repair_diagnostics.py 的 12 格缩小 pipesim 回归——负对照在奇数 C=1,3,5 冒险数=2、回放错误，修复版全部 C 冒险数=0、回放正确，与报告逐字一致。
+**重要边界（未解决）**：修复只落在这个独立单元里，`ascend_fla/ops/kda/chunk.py` 的公开调度仍然选择原始（有缺陷的）recurrent——那个文件不在 A5K-01 的写集内，接线是一个需要仓库所有者另外决定的独立步骤。**在接线完成之前，公开 API 的用户仍然会撞上这个缺陷**，本条修复目前只是证明了可行，没有改变任何用户能感知到的行为。
 
 #### `ascriptor-gm-transfer-two-slice-row-gap` — 【P0·静默错误·ascriptor 库缺陷】gm_transfer 的双切片分支漏算夹在中间的标量索引维，行间距算成 0
 

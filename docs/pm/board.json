@@ -2015,7 +2015,7 @@
       "wave": "W0",
       "soc": "a5",
       "priority": "P1",
-      "status": "in_progress",
+      "status": "done",
       "model": [
         "kimi-linear-48b-a3b"
       ],
@@ -2039,7 +2039,7 @@
       },
       "spec": "docs/pm/tasks/A5K-01.md",
       "issue": 76,
-      "pr": null,
+      "pr": 78,
       "assignee": "limjiunnbin",
       "assignee_caps": {
         "agent": "Codex (self-described, per #75)",
@@ -2081,9 +2081,25 @@
         {
           "at": "2026-09-18T03:20",
           "summary": "STATUS：槽轮转修复已落地（只改两处 Aqk 槽表达式与 entry 名，原版留作负对照）。真实 Kimi 全量 T4096/H=HV=32/bd=4：o relL2=0.0033、state relL2=0.0025，对独立 CPU 递推与 fla naive 均过，每个 stage 与偶数 C 基线逐位相同。缩小形状 pipesim 回归 C=1,2,3,5：负对照仍有冒险与错头，修复版零冒险、回放正确，偶数 C 逐位不变。84-case 网格 bd=4/1 过，bd=2/3 进行中。229 passed/5 skipped"
+        },
+        {
+          "at": "2026-09-18T06:31",
+          "summary": "合入 abb1acf。PM 独立复算：临时 clone 里 pytest 229 passed/5 skipped（需同时配 FLA_GDN_NAIVE/FLA_GDN2_NAIVE/FLA_KDA_NAIVE 三个 oracle）与 DONE 逐字一致；run.py reference 8/8 过。**独立重跑了repair_diagnostics.py 的 12 格缩小 pipesim 回归**（不依赖真机）：负对照在奇数 C=1,3,5 冒险数=2/回放错误，修复版全部 C 冒险数=0/回放正确，与报告逐字一致，脚本自身 passed=true。写集/reserved_paths 无误，test_kda_gating.py 只新增用例。**记下一条重要边界**：修复只在独立单元里，公开调度 ops/kda/chunk.py 仍选原始 recurrent，接线是仓库所有者的独立决定，已写进 gaps.json"
         }
       ],
-      "result": null
+      "result": {
+        "commits": [
+          "0db90a9",
+          "abb1acf"
+        ],
+        "evidence": [
+          "PR #78",
+          "docs/research/kda_aqk_handoff_repair.md",
+          "kernels/projects/a5/kda_fwd_stable/validation.json"
+        ],
+        "numbers": "主机侧：229 passed/5 skipped，8/8 契约 case reference 过，12/12 缩小 pipesim 回归 PM 独立复算通过；真机 336/336 case（C=1..6 x 7 组 H/HV x state x bd=1..4，含 Kimi 真实形状）通过，负对照仍复现奇数 C 冒险，偶数 C 与跨 bd 均逐位相同；性能未见一致提速（非本任务目标，纯修复）",
+        "note": "真机网格与性能数字由 assignee 报告，PM 未独立复算；正确性核心逻辑（pipesim 回归）PM 已独立复算。公开 API 尚未接线到修复版，需另外决定"
+      }
     }
   ],
   "label_github_login": "ascend-fla-pm-bot",
@@ -2151,8 +2167,8 @@
         "id": "kda_fwd_stable",
         "family": "kda",
         "track": "agent",
-        "note_zh": "本仓派生单元，门控跨度稳定化改写",
-        "note_en": "Fork of upstream, gate-span stabilised"
+        "note_zh": "本仓派生单元，门控跨度稳定化改写；2026-09-18 补上 recurrent 派生单元（A5K-01 Aqk 交接修复，槽轮转），公开调度尚未接线到这个修复版",
+        "note_en": "Fork of upstream, gate-span stabilised; 2026-09-18 added a derived recurrent unit (A5K-01 Aqk handoff repair, slot rotation) — public dispatch is not yet wired to this repaired version"
       },
       {
         "id": "kda_bwd_stable",
