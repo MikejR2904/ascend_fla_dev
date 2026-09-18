@@ -2149,7 +2149,8 @@
         "docs/research/kda_aqk_handoff_repair.md",
         "benchmarks/verify_kda_aqk_public.py",
         "kernels/projects/a5/kda_bwd_stable/kernels/inverse_mm.py",
-        "ascend_fla/ops/kda/chunk_bwd.py"
+        "ascend_fla/ops/kda/chunk_bwd.py",
+        "kernels/projects/a5/kda_bwd_stable/contract.json"
       ],
       "needs": {
         "npu": true,
@@ -2196,6 +2197,10 @@
         {
           "at": "2026-09-18T08:03",
           "summary": "草稿 PR #83 已开（337 passed/5 skipped，正向+原始对照在 bd1-4 分别原生编译过，仅编译未执行）。BLOCKED 等 inverse_mm 写集扩展批准——这条已经在同一轮批了（D-PM-24），回复已发；另外还在等设备空闲窗口（同机另一个任务在跑）。两栏都不是撤回或完成，是真实阻塞"
+        },
+        {
+          "at": "2026-09-18T09:21",
+          "summary": "PM 核实：test_bwd_stable_overrides_exactly_the_kernels_it_declares 要求 chunk_bwd.py 的覆盖表与 contract.json 的 own_kernels 一字不差，D-PM-24 批的 inverse_mm 派生 kernel 必然要求这条元数据同步更新——这是已批准改动的机械性后果，不是新范围。PM 直接批准把 kda_bwd_stable/contract.json 加进写集，不再单独找用户确认"
         }
       ],
       "result": null
