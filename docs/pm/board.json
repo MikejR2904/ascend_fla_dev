@@ -140,6 +140,13 @@
       "date": "2026-09-17",
       "by": "user",
       "decision": "批准 issue #75：agent 轨道开一条窄范围波次例外任务（A5K-01），把 A2-04 已诊断/pipesim 验证过的 Aqk 交接修法落到 kda_fwd_stable 派生单元并在 A5 真机验证。不解除 A5-01..A5-06 的 gated: wave:W-A3——那些等的是完整 A2→A3→A5 证据链，本任务不提供。这是本轮第三个 A5 波次例外（GD2-2x/GDA-01 之后），已提醒用户这是累积的选择，用户确认继续"
+    },
+    {
+      "id": "D-PM-22",
+      "date": "2026-09-18",
+      "by": "user",
+      "decision": "GDN/PGDN 的排期顺序直接给出（不是 agent 推断的延续）：GDN 前向（已完成，GDA-01）→ 给 GDN 补 GQA/GVA 分组（GDA-02）→ PGDN 前向（PK-03，此时解锁）→ backward → decode → 性能。用户在回答 PM 的澄清问题时明确选择'GQA 要先于 PGDN 前向'，解决了字面顺序里的技术矛盾（PGDN 的 ABI 本身需要 GQA 分组，不能反过来）。",
+      "risk": "这条排期只覆盖 GDN/PGDN 这一条线，不改变 KDA 首位或 A2→A3→A5 波次顺序——同一时期一个更宽泛的'GDN 全族推进'提案（issue #80）被用户明确否决，只批准了这条具体顺序。backward/decode/性能三个后续阶段还没有具体任务号，会在 GDA-02/PK-03 完成后再逐个排。"
     }
   ],
   "gated_epics": [
@@ -1803,7 +1810,7 @@
         "fp32"
       ],
       "deps": [
-        "PK-01"
+        "GDA-02"
       ],
       "write_set": [
         "kernels/projects/a5/pgdn_chunk_fwd/**",
@@ -2150,6 +2157,45 @@
       },
       "reports": [],
       "result": null
+    },
+    {
+      "id": "GDA-02",
+      "title": "GDN chunk 前向：GQA/GVA 分组支持（PGDN 的前置）",
+      "wave": "W0",
+      "soc": "a5",
+      "priority": "P1",
+      "status": "open",
+      "model": [],
+      "kernel": [
+        "gdn_fwd"
+      ],
+      "dtype": [
+        "bf16",
+        "fp32"
+      ],
+      "deps": [
+        "GDA-01"
+      ],
+      "write_set": [
+        "kernels/projects/a5/gdn_chunk_fwd/**",
+        "ascend_fla/ops/gdn_chunk_fwd.py",
+        "tests/test_gdn_chunk_fwd.py",
+        "docs/research/gdn_chunk_fwd_gate_range.md"
+      ],
+      "needs": {
+        "npu": true,
+        "ascriptor": true,
+        "fla": true
+      },
+      "spec": "docs/pm/tasks/GDA-02.md",
+      "issue": null,
+      "pr": null,
+      "assignee": null,
+      "assignee_caps": null,
+      "branch": null,
+      "timebox_h": 20,
+      "reports": [],
+      "result": null
     }
   ],
   "label_github_login": "ascend-fla-pm-bot",
@@ -2392,8 +2438,8 @@
         "label_zh": "GDN（Gated DeltaNet）",
         "label_en": "GDN (Gated DeltaNet)",
         "track": "agent",
-        "note_zh": "Qwen3-Next 用它，六项 ABI 缺口待补（第四期）。**窄范围例外**（D-PM-20，2026-09-17）：GDA-01 已合入——非 GQA 的 A5 chunk 前向，显式跳过 gdn-no-gqa，不解决它",
-        "note_en": "Used by Qwen3-Next; six ABI gaps to close (phase 4). **Narrow exception** (D-PM-20, 2026-09-17): GDA-01 merged — non-GQA A5 chunk forward, explicitly gating away gdn-no-gqa rather than closing it"
+        "note_zh": "Qwen3-Next 用它，六项 ABI 缺口待补（第四期，与本条无关）。**GDN/PGDN 例外线**（D-PM-20/22，2026-09-18）：GDA-01（非 GQA 前向）已合入，排期GDA-02（GQA）→ PK-03（PGDN 前向）→ backward → decode → 性能，用户直接给出，不改变 KDA 首位或 A2→A3→A5 波次",
+        "note_en": "Used by Qwen3-Next; six ABI gaps to close (phase 4, unrelated to this). **GDN/PGDN exception track** (D-PM-20/22, 2026-09-18): GDA-01 (non-GQA forward) merged; scheduled next: GDA-02 (GQA) → PK-03 (PGDN forward) → backward → decode → perf, given directly by the owner, doesn't change KDA priority or the A2→A3→A5 wave order"
       },
       {
         "id": "delta_rule",

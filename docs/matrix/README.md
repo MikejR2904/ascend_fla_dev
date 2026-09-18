@@ -369,6 +369,7 @@ PM 在权威 workspace 上独立跑了 `benchmarks/diag_c1_multihead.py`，**上
 - **依据** gdn_fwd contract.json domain.shape："B,H,C are positive runtime dimensions" —— 没有 HV。对比 kda_fwd domain 有 "H_HV": "positive; HV % H == 0"，kda_bwd 亦然。
 - **影响** 阻塞 Qwen3-Next（16 key heads / 32 value heads）。
 - **建议** 第四期做 GDN 扩族时一并解决，实现可借鉴 kda 已有的 HV%H==0 分区方式。严重度因第一期改走 KDA 而由 P0 降至 P1。
+2026-09-18：GDA-02（排上看板，D-PM-22）会给本仓派生单元 kernels/projects/a5/gdn_chunk_fwd 加上 GQA/GVA 分组，目的是解锁 PK-03（PGDN 前向），**不是解决这条缺口本身**——这条缺口记的是上游 ascriptor 单元 a5.gdn_fwd/bwd 缺独立 value-head 维度，阻塞的是 Qwen3-Next（第四期）。GDA-02 完成后不要误以为这条缺口已关闭；两者是不同的单元、不同的下游目标，只是解决方式（借鉴 KDA 的 HV%H==0）可能相通。
 
 #### `layout-not-token-major` — gdn 与 delta_rule 的公开布局是 [B,H,C,L,D]，与 fla 的 token-major 不一致
 
