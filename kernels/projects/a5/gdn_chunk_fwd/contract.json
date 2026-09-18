@@ -451,7 +451,7 @@
         "max_abs": 2.9802322387695312e-08,
         "relative_l2": 9.675853834655711e-07
       },
-      "scope": "Native CCE/aclnn against CPU block solve; first complete workload, before optimization. Five native stages and composition passed. Public in-process bridge and FLA comparison pending."
+      "scope": "Historical original-device native CCE/aclnn against CPU block solve, before optimization. This first full-workload receipt is not the replacement-device qualification; see measured.native_inprocess and validation.json."
     },
     "native_inprocess": {
       "status": "passed",
@@ -462,14 +462,14 @@
         2
       ],
       "independent_leaves": true,
-      "nan_poisoned_checkpoints": "pending: postflight health 2 blocked additional grid",
+      "nan_poisoned_checkpoints": true,
       "public_dtype": [
         "float32",
         "bfloat16"
       ],
       "evidence": "validation.json",
       "cross_build_stage_bytes": "all 13 checkpoints equal to baseline and across block_dim1/2",
-      "acceptance": "pending device recovery and rerun; postflight health=2, error=0x80f78009"
+      "acceptance": "passed on replacement device; all 45 pre/postflight checks healthy with no error codes"
     },
     "performance": {
       "evidence": "validation.json",
@@ -479,17 +479,17 @@
       "timing": "synchronized host-inclusive public FP32 latency including allocations",
       "conservative_speedup": {
         "1024": [
-          1.1987996264557919,
-          1.203883800493373,
-          1.1897900041094038
+          1.0771842183322506,
+          1.0759944391024614,
+          1.0705316618516099
         ],
         "4096": [
-          1.2061024540510898,
-          1.2335765394090659,
-          1.1155239646783153
+          1.0800620110845351,
+          1.0796224858157137,
+          1.0790164907492992
         ]
       },
-      "acceptance": "observations only; postflight device fault blocks clean final acceptance"
+      "acceptance": "passed on replacement device; original device numbers are historical only"
     }
   }
 }

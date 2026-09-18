@@ -98,7 +98,7 @@ warmup/repeat, and exact source/toolchain identities. In-process CCE/aclnn
 must be validated separately from the SSH board harness. The following
 measurements qualify only the recorded generated inputs and device.
 
-## Measured baseline and selected optimization
+## Original-device baseline and selected optimization
 
 The initial per-token prepare baseline (`fb1e0de`, stage-source SHA256
 `1c022aa953e77c37661c4283bb470741c4aa8ece1a3b6ff2641b9ce16c2ddfe8`)
@@ -152,9 +152,12 @@ are empty and no deadlock is reported. This is specifically a repeated-buffer
 and strided-copy model check, not silicon qualification. The failure and
 located workaround were reported in GDA-01's RISK thread.
 
-## Completed native measurements and pending device recovery
+## Replacement-device native qualification
 
-The measured explicit-gap candidate has stage SHA256
+After the original-device fault described below, the user authorized a
+device change. The following complete grid and six paired comparisons
+were rerun on the healthy replacement; no original-device performance
+sample is used in this qualification. The explicit-gap candidate has stage SHA256
 `a5d0c7a7b7f62001936d64f06538444afc90f4d2100362f9ceacef4142fbd72d`.
 `kernels/projects/a5/gdn_chunk_fwd/validation.json` is the retained numerical
 receipt, including source identities, generated-input hashes, both oracle
@@ -167,10 +170,9 @@ FLA reference revision is `e52dbc0ea19d3a40d7ab7f9eed855d2b473994d2`.
 All ten cases pass at block_dim1 and block_dim2, including repeated heads,
 chunks, batches, normalized keys and zero/weak/strong gates. All 13 stage
 outputs are byte-identical across both block dimensions and the baseline.
-Every independent leaf and the composed graph are checked numerically;
-public BF16/FP32 calls are checked separately. An additional NaN-poisoned
-grid is pending because its preflight detected health 2 before any launch.
-Shape and input seeds are recorded per case. FP32 elementwise
+Every independent leaf and the composed graph pass with NaN-poisoned
+outputs; public BF16/FP32 calls pass both relative-L2 and explicit elementwise
+checks. Shape and input seeds are recorded per case. FP32 elementwise
 atol/rtol=2e-5/2e-4 and relative-L2
 1e-4 are unchanged; BF16 output uses atol/rtol=2e-5/1e-2 and relative-L2 5e-3.
 
@@ -193,12 +195,12 @@ candidate median. These measurements are not device-only kernel timings.
 
 | T | Round | Baseline before (us) | Candidate (us) | Baseline after (us) | Conservative speedup |
 | --- | --- | --- | --- | --- | --- |
-| 1024 | 1 | 12044.986 | 10047.539 | 12371.662 | 1.1988x |
-| 4096 | 1 | 52380.346 | 38149.980 | 46012.784 | 1.2061x |
-| 1024 | 2 | 12344.751 | 10254.105 | 12505.389 | 1.2039x |
-| 4096 | 2 | 47221.958 | 38082.519 | 46977.702 | 1.2336x |
-| 1024 | 3 | 12118.220 | 10185.176 | 12319.253 | 1.1898x |
-| 4096 | 3 | 48037.881 | 43063.065 | 50513.738 | 1.1155x |
+| 1024 | 1 | 163980.472 | 152230.666 | 164150.194 | 1.0772x |
+| 4096 | 1 | 652253.193 | 603352.131 | 651657.716 | 1.0801x |
+| 1024 | 2 | 164143.023 | 152390.867 | 163971.726 | 1.0760x |
+| 4096 | 2 | 651921.704 | 603404.083 | 651448.616 | 1.0796x |
+| 1024 | 3 | 163218.400 | 152464.804 | 164594.333 | 1.0705x |
+| 4096 | 3 | 654349.508 | 603469.789 | 651153.854 | 1.0790x |
 
 All six paired comparisons improve. All 13 checkpoint hashes remain equal
 in every baseline/candidate/baseline triplet. T4096 retained-stage workspace
@@ -206,26 +208,31 @@ is 369098752 bytes and measured public peak allocation increment is
 287309824 bytes, unchanged between candidates. The receipt also retains
 per-stage profile medians to distinguish prepare gains from runtime drift.
 
-The native in-process CCE bridge completed these numerical checks; clean
-hardware acceptance remains pending the postflight fault investigation.
+The native in-process CCE bridge passes on the replacement device. All 45
+health checks (before/after each of 22 benchmark processes, plus completion)
+return health=0 and no error codes. The full T4096 workload ran first. The
+replacement has much higher absolute latency than the original device; the
+cause is not established, and neither latency nor speedup is transferred
+between devices.
 The initial baseline additionally passed the standalone native aclnn harness; the final
 revision does not claim a separate SSH board-harness or full-unit simulator
 qualification. The prepare-only pipesim regression remains a diagnostic.
 GQA, nonzero initial state, arbitrary finite input magnitudes, backward and
 A2/A3 remain outside this qualification.
 
-### Postflight health failure
+### Retained original-device postflight failure
 
-After all six paired comparisons completed, the additional strict-grid
+On the original device, after all six paired comparisons completed, the additional strict-grid
 preflight returned DSMI health rc=0, health=2, error_count=1 and code
 `0x80f78009`. The driver describes it as "node type=HWTS/Stars-TS, sensor
 type=RAS State, event state=bus error, probably caused by software". Repeated
 read-only queries returned the same status. No remaining GDN benchmark or
 compiler process, or device-node owner, was found. No reset or process kill
 was attempted. The onset and cause are not established by the completed
-numerical receipts. The final NaN-poisoned grid never launched.
+numerical receipts. The original-device NaN-poisoned grid never launched.
 
-These performance samples and numerical passes are retained observations,
-not a clean final hardware acceptance. Recover the assigned device under
-owner authorization, verify health and exclusive ownership, then rerun the
-strict grid and paired benchmark. This task is blocked at that final gate.
+Original-device receipts remain in Git history at `40b5d9d`. That device
+was not reset and its fault is not declared resolved. User-authorized
+replacement-device verification completed the strict grid and paired
+benchmarks above, with healthy pre/postflight checks throughout. The final
+qualification is limited to the replacement device and recorded workloads.
