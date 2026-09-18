@@ -1942,7 +1942,8 @@
         "ascriptor": "library 90cfcdc720bb",
         "fla": "e52dbc0ea19d3a40d7ab7f9eed855d2b473994d2",
         "fork": "limjiunnbin/ascend_fla_dev",
-        "note": "GD2-04 已 done，账号空闲；GD2-01/03/04 的原 assignee"
+        "session": "GDN-forward-only session associated with REQUEST #70",
+        "note": "GD2-04 已 done；GD2-01/03/04 的原 assignee"
       },
       "branch": "task/GDA-01",
       "timebox_h": 24,
@@ -1976,6 +1977,10 @@
         {
           "at": "2026-09-18T01:53",
           "summary": "STATUS：基线在 10 个 case 上对独立 block-solve 与 FLA naive 全过；被拒的候选在真机 T4096/H16 上确认复现同一错误（8240529/8388608 元素不匹配），与 pipesim 结论互相印证。已加显式 gap 的修正候选缩小形状 pipesim 过、真机完整验证进行中。基线 T4096/bd2 public≈54970us/prepare≈9902us（未配对，非加速声明）。250 passed/5 skipped"
+        },
+        {
+          "at": "2026-09-18T02:20",
+          "summary": "STATUS：显式 gap 修正版在 bd1/bd2 全部 10 case 过，13 个 stage hash 与优化前基线逐格一致；首轮配对性能 T1024 1.20x/T4096 1.21x（保守值，三轮最终数字待定）。253 passed/5 skipped。**主动审计**：AST 扫了本仓已合入 kernel，找到 19 处同类双切片+夹中标量索引的隐式 GM 读，全部只搬一行（不会踩中缺陷的多行分支），扫描范围声明了局限性（不保证别名/其它搬运形式）。已回填 session 字段以配合新规则"
         }
       ],
       "result": null
@@ -1986,7 +1991,7 @@
       "wave": "W0",
       "soc": "a5",
       "priority": "P1",
-      "status": "open",
+      "status": "assigned",
       "model": [
         "kimi-linear-48b-a3b"
       ],
@@ -2011,9 +2016,20 @@
       "spec": "docs/pm/tasks/A5K-01.md",
       "issue": 76,
       "pr": null,
-      "assignee": null,
-      "assignee_caps": null,
-      "branch": null,
+      "assignee": "limjiunnbin",
+      "assignee_caps": {
+        "agent": "Codex (self-described, per #75)",
+        "socs": [
+          "a5"
+        ],
+        "soc_details": "a5: 950PR_9589 V100; CANN/OPP 9.2.0; opp_pkgs ascend950/910b/910_93",
+        "ascriptor": "library 90cfcdc720bb / kernels b3b3f9c16df7",
+        "fla": "e52dbc0ea19d3a40d7ab7f9eed855d2b473994d2",
+        "fork": "limjiunnbin/ascend_fla_dev",
+        "session": "01a0ae7a-d1c0-7f02-b040-be977ec47393",
+        "note": "与 GDA-01 同账号、不同 session 并发；GDA-01 保持不动，隔离 checkout/build 根，共享设备访问按需串行"
+      },
+      "branch": "task/A5K-01",
       "timebox_h": 24,
       "origin": {
         "kind": "request",
@@ -2025,6 +2041,10 @@
         {
           "at": "2026-09-17T14:25",
           "summary": "用户批准 D-PM-21。assignee 当前持有 GDA-01，按一个 agent 一个任务，转 open 等 APPLY，不直接 ASSIGN"
+        },
+        {
+          "at": "2026-09-18T02:20",
+          "summary": "同账号并发 APPLY，session 与 GDA-01 不同（UUID vs 描述性字符串），按新规则直接 ASSIGN"
         }
       ],
       "result": null

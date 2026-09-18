@@ -644,7 +644,7 @@
       "impact": "任何 kernel 里出现『4 维（或更高维）GM 张量、切两个维、且有标量索引维夹在这两个切片维中间』这个具体模式，都会静默算错行间距——不报错、不崩溃，产出有限但内容错误的值，和本仓已经踩过的 `c1-multihead-o-corrupt` 是同一类（有限值、量级看着正常、只有逐元素比值乱）。GDA-01 的 bulk-prepare 候选没有被采纳，已知的其它本仓 kernel 暂未复查是否命中这个模式——这条要单独扫一遍。",
       "blocks": [],
       "proposed_action": "本仓侧（AGENTS.md §3：不改 ascriptor 仓）：在自己的派生单元里，遇到这个 4 维双切片模式一律换成显式的 `gm_to_ub_pad(..., 正确的 gap)`，不依赖库的隐式推断。GDA-01 已经验证这条绕法：`qn/kn/bk/wv` 换成显式 gap 后与 CPU 参考完全一致，event balance/hazards 均空、无死锁。\n仓库所有者侧：这是 ascriptor 库本身的缺陷，不是本仓能修的范围，建议原样报给 ascriptor 的维护方。\n待办：扫一遍本仓现有 kernel（kda_fwd_stable、gdn2_chunk_fwd 等）里有没有已经踩中这个模式但还没被测出来的地方——形状够小或凑巧连续时（比如 H=1）这个 bug 不会触发，容易被现有测试漏过。",
-      "status_note": "2026-09-18 发现，GDA-01 找到的、PM 读 ascriptor 源码独立核实过的真实缺陷。未采纳的候选没有被合入，不影响任何已交付代码。",
+      "status_note": "2026-09-18 发现，GDA-01 找到的、PM 读 ascriptor 源码独立核实过的真实缺陷。未采纳的候选没有被合入，不影响任何已交付代码。\n2026-09-18 待办已完成：GDA-01 对本仓已合入 kernel 做了只读 AST 扫描（main 2315969），找到 19 处同类隐式 GM 读（两切片轴中间夹一个标量索引轴）：gdn2_chunk_fwd/kernels/stages.py:101-106、gdn2_fused_decode/kernels/step.py:332-338、gdn2_fused_recurrent/kernels/step.py:161-165,168。全部 19 处在第一个切片轴上只搬一行，缺陷只在多行搬运时才会触发行间距算错，所以这些已合入代码不受影响。扫描范围有声明的局限性：只覆盖直接 GM 参数加 <<= 这种形式，不保证覆盖别名或其它搬运写法——不是证明了整仓没有别处踩中，只是这一种扫描方式没找到。",
       "requires_kernel_change": false,
       "kernel_change_note": ""
     }
