@@ -28,7 +28,7 @@ serves only as the semantic authority during testing (`naive.py` as a CPU fp32 o
 | family | id | track | kernels | task progress |
 |---|---|---|---|---|
 | KDA (Kimi Delta Attention) | `kda` | open to agents | 5 | 2/16 |
-| GDN (Gated DeltaNet) | `gated_delta_rule` | open to agents | 4 | 1/5 |
+| GDN (Gated DeltaNet) | `gated_delta_rule` | open to agents | 4 | 2/5 |
 | DeltaNet | `delta_rule` | no task yet | 2 | 2/2 units with validation records |
 | GDN-2 (Gated DeltaNet 2) | `gdn2` | owner track | 6 | 3/4 |
 | Whole-network fusion ops (module / layer) | `fusion` | open to agents | 4 | 0/4 |
@@ -109,25 +109,25 @@ _First target family; used by Kimi-Linear_
 
 </details>
 
-<details><summary><b>GDN (Gated DeltaNet) —— 4 kernel(s)，1/5 done</b></summary>
+<details><summary><b>GDN (Gated DeltaNet) —— 4 kernel(s)，2/5 done</b></summary>
 
-_Used by Qwen3-Next; six ABI gaps to close (phase 4, unrelated to this). **GDN/PGDN exception track** (D-PM-20/22, 2026-09-18): GDA-01 (non-GQA forward) merged; scheduled next: GDA-02 (GQA) → PK-03 (PGDN forward) → backward → decode → perf, given directly by the owner, doesn't change KDA priority or the A2→A3→A5 wave order_
+_Used by Qwen3-Next; six ABI gaps to close (phase 4, unrelated to this). **GDN/PGDN exception track** (D-PM-20/22): GDA-01 (non-GQA forward) and GDA-02 (GQA/GVA grouping) both merged; PK-03 (PGDN forward) unlocked; sequence continues to backward → decode → perf_
 
 | kernel | track | progress | next |
 |---|---|---|---|
-| `gdn_fwd` | open to agents | 1/5 | [#35](https://github.com/ddddwee1/ascend_fla_dev/issues/35) A2-07 |
+| `gdn_fwd` | open to agents | 2/5 | [#35](https://github.com/ddddwee1/ascend_fla_dev/issues/35) A2-07 |
 | `gdn_bwd` | open to agents | 0/3 | [#35](https://github.com/ddddwee1/ascend_fla_dev/issues/35) A2-07 |
 | `gdn_fused_recurrent` | open to agents | 0/1 | [#45](https://github.com/ddddwee1/ascend_fla_dev/issues/45) A2-20 |
-| `gdn_chunk_fwd_a5` | open to agents | — | _Narrow exception (D-PM-20): non-GQA A5 chunk forward, merged (#77)_ |
+| `gdn_chunk_fwd_a5` | open to agents | — | _Narrow exception (D-PM-20/22): non-GQA forward and GQA/GVA grouping both merged (GDA-01/02)_ |
 
-<details><summary>gdn_fwd —— 1/5 done，start A2-07、GDA-01</summary>
+<details><summary>gdn_fwd —— 2/5 done，start A2-07、GDA-01</summary>
 
 | task | issue | SoC | dtype | status | note |
 |---|---|---|---|---|---|
 | A2-07 | [#35](https://github.com/ddddwee1/ascend_fla_dev/issues/35) | `a2` | bf16、fp32 | ⬜ open | ★ start |
 | GDA-01 | [#73](https://github.com/ddddwee1/ascend_fla_dev/issues/73) | `a5` | bf16、fp32 | ✅ done | ★ start |
 | A2-K1 | [#44](https://github.com/ddddwee1/ascend_fla_dev/issues/44) | `a2` | bf16、fp32 | 🔒 gated (kernel-batch-approval) |  |
-| GDA-02 | [#82](https://github.com/ddddwee1/ascend_fla_dev/issues/82) | `a5` | bf16、fp32 | 🔵 in_progress |  |
+| GDA-02 | [#82](https://github.com/ddddwee1/ascend_fla_dev/issues/82) | `a5` | bf16、fp32 | ✅ done |  |
 | A2-20 | [#45](https://github.com/ddddwee1/ascend_fla_dev/issues/45) | `a2` | bf16、fp32 | 🔒 gated (kernel-batch-approval) |  |
 
 </details>
@@ -271,7 +271,7 @@ _Source of truth established (2026-09-17, see docs/research/pkda_semantics.md): 
 
 | task | issue | SoC | dtype | status | note |
 |---|---|---|---|---|---|
-| PK-03 | [#69](https://github.com/ddddwee1/ascend_fla_dev/issues/69) | `a5` | bf16、fp32 | 🔒 gated (prereq-gdn-abi) | ★ start |
+| PK-03 | [#69](https://github.com/ddddwee1/ascend_fla_dev/issues/69) | `a5` | bf16、fp32 | ⬜ open | ★ start |
 
 </details>
 

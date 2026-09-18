@@ -1812,8 +1812,7 @@
       "wave": "W0",
       "soc": "a5",
       "priority": "-",
-      "status": "gated",
-      "gate": "prereq-gdn-abi",
+      "status": "open",
       "model": [],
       "kernel": [
         "pgdn_chunk_fwd"
@@ -1843,7 +1842,12 @@
       "assignee_caps": null,
       "branch": null,
       "timebox_h": 24,
-      "reports": [],
+      "reports": [
+        {
+          "at": "2026-09-18T09:25",
+          "summary": "GDA-02 已合入（PR #84），前置解除，转 open"
+        }
+      ],
       "result": null
     },
     {
@@ -2211,7 +2215,7 @@
       "wave": "W0",
       "soc": "a5",
       "priority": "P1",
-      "status": "in_progress",
+      "status": "done",
       "model": [],
       "kernel": [
         "gdn_fwd"
@@ -2236,7 +2240,7 @@
       },
       "spec": "docs/pm/tasks/GDA-02.md",
       "issue": 82,
-      "pr": null,
+      "pr": 84,
       "assignee": "limjiunnbin",
       "assignee_caps": {
         "agent": "Codex; same GDN forward session that completed GDA-01/PR #77",
@@ -2260,9 +2264,25 @@
         {
           "at": "2026-09-18T08:20",
           "summary": "STATUS：分组 ABI 落地，五个 CCE kernel 未改，只改共享 launch graph 里的 q/k 复制。HV==H 在 T4096/H16/bd2 上对 block-solve/state 过（1e-7~1e-9 量级，远在预算内）。278 passed/7 skipped。下一步做完整分组网格"
+        },
+        {
+          "at": "2026-09-18T09:25",
+          "summary": "合入 8303167。PM 独立复算：pytest 284/5 与 DONE 逐字一致；run.py reference 22/22 过。确认五个 CCE kernel 文件本次一字未改，HV==H 路径在 Python 层是可证明的 no-op（expand_inputs 直接返回原对象）；独立参考 grouped_recurrent 是结构完全不同的逐 token 循环，语义与 PGDN naive 一致，测试覆盖负对照与输入不可变性。真机数字未独立复算，但代码层面的no-op 保证降低了这条回归声明的风险"
         }
       ],
-      "result": null
+      "result": {
+        "commits": [
+          "bdce667",
+          "8303167"
+        ],
+        "evidence": [
+          "PR #84",
+          "docs/research/gdn_chunk_fwd_gate_range.md",
+          "kernels/projects/a5/gdn_chunk_fwd/validation.json"
+        ],
+        "numbers": "主机侧：284 passed/5 skipped，22/22 契约 case reference 过；真机：HV==H 与 GDA-01 逐位一致（10 case，13 checkpoint，bd1/2），ratio∈{1,2,4,8}×C∈{1,2,3} 网格通过双 oracle，FP32 最大 relL2 1.78e-6/BF16 output 0.0017；三轮三明治为回归测量，非加速声明",
+        "note": "真机数字由 assignee 报告，PM 未独立复算；HV==H 的 no-op 保证已在代码层面独立确认"
+      }
     }
   ],
   "label_github_login": "ascend-fla-pm-bot",
@@ -2477,15 +2497,15 @@
         "id": "pgdn_chunk_fwd",
         "family": "pkda",
         "track": "agent",
-        "note_zh": "GDN 派生单元 + ATK 预条件，排在 GDN 自身 GQA 缺口之后，见 PK-03（gated）",
-        "note_en": "GDN-derived unit + ATK preconditioning, sequenced after GDN's own GQA gap, see PK-03 (gated)"
+        "note_zh": "GDN 派生单元 + ATK 预条件，前置（GDA-02 的 GQA 支持）已满足，见 PK-03（open）",
+        "note_en": "GDN-derived unit + ATK preconditioning, prerequisite (GDA-02's GQA support) now satisfied, see PK-03 (open)"
       },
       {
         "id": "gdn_chunk_fwd_a5",
         "family": "gated_delta_rule",
         "track": "agent",
-        "note_zh": "窄范围例外（D-PM-20）：非 GQA 的 A5 chunk 前向，已合入（#77）",
-        "note_en": "Narrow exception (D-PM-20): non-GQA A5 chunk forward, merged (#77)"
+        "note_zh": "窄范围例外（D-PM-20/22）：非 GQA 前向 + GQA/GVA 分组均已合入（GDA-01/02）",
+        "note_en": "Narrow exception (D-PM-20/22): non-GQA forward and GQA/GVA grouping both merged (GDA-01/02)"
       }
     ]
   },
@@ -2505,8 +2525,8 @@
         "label_zh": "GDN（Gated DeltaNet）",
         "label_en": "GDN (Gated DeltaNet)",
         "track": "agent",
-        "note_zh": "Qwen3-Next 用它，六项 ABI 缺口待补（第四期，与本条无关）。**GDN/PGDN 例外线**（D-PM-20/22，2026-09-18）：GDA-01（非 GQA 前向）已合入，排期GDA-02（GQA）→ PK-03（PGDN 前向）→ backward → decode → 性能，用户直接给出，不改变 KDA 首位或 A2→A3→A5 波次",
-        "note_en": "Used by Qwen3-Next; six ABI gaps to close (phase 4, unrelated to this). **GDN/PGDN exception track** (D-PM-20/22, 2026-09-18): GDA-01 (non-GQA forward) merged; scheduled next: GDA-02 (GQA) → PK-03 (PGDN forward) → backward → decode → perf, given directly by the owner, doesn't change KDA priority or the A2→A3→A5 wave order"
+        "note_zh": "Qwen3-Next 用它，六项 ABI 缺口待补（第四期，与本条无关）。**GDN/PGDN 例外线**（D-PM-20/22）：GDA-01（非 GQA 前向）与 GDA-02（GQA/GVA 分组）均已合入，PK-03（PGDN 前向）已解锁，排期继续走 backward → decode → 性能",
+        "note_en": "Used by Qwen3-Next; six ABI gaps to close (phase 4, unrelated to this). **GDN/PGDN exception track** (D-PM-20/22): GDA-01 (non-GQA forward) and GDA-02 (GQA/GVA grouping) both merged; PK-03 (PGDN forward) unlocked; sequence continues to backward → decode → perf"
       },
       {
         "id": "delta_rule",
