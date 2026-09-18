@@ -631,13 +631,29 @@
       "proposed_action": "精度、同卡stateful Graph A/B和profile均已完成。现在先决定：①保持vendor低内存默认；②用1.030GB派生布局换2.6%吞吐；③设计prompt/decode共用布局去掉重复权重。若继续追求大步收益，再决策weight-only低精度及真实生成/任务质量预算。明确不选：单独W1/W2 kernel、N=64小tile、减小block_dim、增加冗余工作，或已证伪的细粒度DMA双缓冲。W3融合不减少约85.8MB/layer的BF16 W12+W3权重字节，只是ceiling候选。",
       "requires_kernel_change": true,
       "kernel_change_note": "BF16 raw-gate recurrent+output-norm、qkv short-conv+cache、RMSNorm2+paired W1/W2+SiLU×Mul三个模型专用CCE单元均已通过整网/profile。后续大步优化需新建weight-only低精度GEMV及质量验证链。"
+    },
+    {
+      "id": "ascriptor-gm-transfer-two-slice-row-gap",
+      "title": "【P0·静默错误·ascriptor 库缺陷】gm_transfer 的双切片分支漏算夹在中间的标量索引维，行间距算成 0",
+      "category": "correctness",
+      "severity": "P0",
+      "applies_to": [
+        "all"
+      ],
+      "evidence": "GDA-01（#73）第一轮 bulk-prepare 优化候选，源表达式 `qu[:,:] <<= q[bb, tt:tt+64, hh, :]`（4 维 GM 张量 [B,T,H,D]，B/H 是标量索引，T/D 是切片）。缩小形状 T64/H3/block_dim1 的 pipesim 报告有限但错误的 qn：24135/24576 个元素不匹配，max_abs=0.0234730169。生成的搬运调用是 `gm_to_ub_pad(...,64,512,0,0)`，行间距（第 3 个参数之后那个 gap）算成了 0，而正确值应为 `(H-1)*512` 字节。\n**PM 已独立核实**：`ascriptor/passes/device_lower.py` 的 `gm_transfer` 函数，`len(sliced) == 2` 分支（对应本例：T 与 D 两个维度被切片，B 与 H 是标量索引，H 恰好夹在两个切片维之间）算 `burst = prod(extents[second:])`、`gap = prod(shape[second:]) - burst`——这两个式子只看第二个切片维（D）之后的形状，**没有把夹在第一个切片维（T）和第二个切片维（D）之间的标量索引维（H）的形状乘进去**。对比同文件 `len(sliced) == 1` 分支（101-102 行）用的是 `shape[d+1:]`，正确地把 d 之后所有维度（含标量索引维）都算了进去——`len(sliced)==2` 分支的这个不对称就是漏算的根源。",
+      "impact": "任何 kernel 里出现『4 维（或更高维）GM 张量、切两个维、且有标量索引维夹在这两个切片维中间』这个具体模式，都会静默算错行间距——不报错、不崩溃，产出有限但内容错误的值，和本仓已经踩过的 `c1-multihead-o-corrupt` 是同一类（有限值、量级看着正常、只有逐元素比值乱）。GDA-01 的 bulk-prepare 候选没有被采纳，已知的其它本仓 kernel 暂未复查是否命中这个模式——这条要单独扫一遍。",
+      "blocks": [],
+      "proposed_action": "本仓侧（AGENTS.md §3：不改 ascriptor 仓）：在自己的派生单元里，遇到这个 4 维双切片模式一律换成显式的 `gm_to_ub_pad(..., 正确的 gap)`，不依赖库的隐式推断。GDA-01 已经验证这条绕法：`qn/kn/bk/wv` 换成显式 gap 后与 CPU 参考完全一致，event balance/hazards 均空、无死锁。\n仓库所有者侧：这是 ascriptor 库本身的缺陷，不是本仓能修的范围，建议原样报给 ascriptor 的维护方。\n待办：扫一遍本仓现有 kernel（kda_fwd_stable、gdn2_chunk_fwd 等）里有没有已经踩中这个模式但还没被测出来的地方——形状够小或凑巧连续时（比如 H=1）这个 bug 不会触发，容易被现有测试漏过。",
+      "status_note": "2026-09-18 发现，GDA-01 找到的、PM 读 ascriptor 源码独立核实过的真实缺陷。未采纳的候选没有被合入，不影响任何已交付代码。",
+      "requires_kernel_change": false,
+      "kernel_change_note": ""
     }
   ],
   "summary": {
-    "P0": 1,
+    "P0": 2,
     "P1": 17,
     "P2": 9,
-    "total": 38,
+    "total": 39,
     "first_milestone": "第一期五项已全部有结论，并补齐了同机性能对比：aclnn 编译、runtime 桥、kda_fwd 接线、KDA 本地基线均实测通过；自编译算子在 block_dim=4 下比 torch_npu 组合快 4.43x（kimi_linear_layer）/ 2.38x（long_context T=4096）/ 19.7x（smoke）。过程中修掉两个自己的 bug（bridge-per-call-overhead、op-name-collision-in-process），它们先后让 block_dim 的效果被完全掩盖。当前最大的性能项是 block-dim-ceiling（已升 P1）：扩展性一路线性到契约上限 4，而硬件有 28 cube。第二期的前置障碍 kda-fwd-bwd-dtype-mismatch 已量化（降 P2）。",
     "second_milestone": "第二期已完成：kda_bwd 九 kernel 链 + 九个前向检查点 + autograd + KDA layer（含 2 modules），训练步在 bd=4 下比 torch_npu 组合版快 4.83x~5.67x。\n过程中发现并根治了第二期最关键的一个缺口：**按 fla 的默认初始化（chunk 内门控跨度 ~94），上游 kernel 在前向与反向各有一处量程失效，方向相反** —— 前向在 87.3 下溢、反向在 88.72 上溢。两处都在本仓建了派生单元（kda_fwd_stable / kda_bwd_stable），把成对衰减分解的锚点从区间端点改到中点，数学同义。\n门控闸因此做成二维 `{impl: {forward, backward}}`：前向 155（受有限性约束，到 155.97 精度完全不退化）、反向 100（受**精度**约束，它先于有限性到来 —— 梯度到 169.8 都有限但 dq 在 130 处超预算）。**「不吐 NaN」不等于「能用」，两者要分别测、闸按更严的定。**\n剩一项端到端确认（默认初始化下整层反向的精度）卡在机器可用性上 —— 算子层面的同一件事已由 test_kda_bwd_deep_npu.py 在跨度 94 测过，六项梯度全在契约预算内。\n当前最大的性能项仍是 block-dim-ceiling（P1）。",
     "recommended_first_target": "KDA（Kimi-Linear / fla-kda-default 形状）。其 ABI 已是 token-major BTHK、GQA 原生支持、initial_state 与 final_state 均为 FP32、backward 产出 dh0 —— 上述多数 ABI 缺口对它都不适用。唯一需要前置补齐的是本地验证证据（kda-no-local-evidence）。",

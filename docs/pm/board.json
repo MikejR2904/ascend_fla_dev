@@ -1968,6 +1968,10 @@
         {
           "at": "2026-09-18T01:32",
           "summary": "STATUS：T4096/H16/bd2 全流程原生 CCE/aclnn 通过五个 stage 与最终输出；10 个 CPU 参考 case + 26 项新 host 测试过；对独立 CPU block-solve 参考 relL2 6.1e-7/9.7e-7，预算未变；246 passed/8 skipped。仍无性能声明"
+        },
+        {
+          "at": "2026-09-18T01:52",
+          "summary": "RISK silent-wrong-result：第一轮 bulk-prepare 优化候选踩到 ascriptor 库本身的缺陷（device_lower.py 的 gm_transfer 双切片分支漏算夹在中间的标量索引维，行间距算成 0）。PM 读源码独立核实属实，已记入 gaps.json (ascriptor-gm-transfer-two-slice-row-gap)。候选未被采纳，未合入任何代码；已知绕法（显式 gm_to_ub_pad 传正确 gap）验证通过"
         }
       ],
       "result": null

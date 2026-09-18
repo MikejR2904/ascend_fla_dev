@@ -208,7 +208,7 @@ kimi_linear_layer / bd=4 的拆分（ms）：fwd_kernels 1.314 · caches_host_si
 
 ## 缺口
 
-P0 1 项 · P1 17 项 · P2 9 项 · 已解决 11 项 · 共 38 项
+P0 2 项 · P1 17 项 · P2 9 项 · 已解决 11 项 · 共 39 项
 
 **第一期里程碑**：第一期五项已全部有结论，并补齐了同机性能对比：aclnn 编译、runtime 桥、kda_fwd 接线、KDA 本地基线均实测通过；自编译算子在 block_dim=4 下比 torch_npu 组合快 4.43x（kimi_linear_layer）/ 2.38x（long_context T=4096）/ 19.7x（smoke）。过程中修掉两个自己的 bug（bridge-per-call-overhead、op-name-collision-in-process），它们先后让 block_dim 的效果被完全掩盖。当前最大的性能项是 block-dim-ceiling（已升 P1）：扩展性一路线性到契约上限 4，而硬件有 28 cube。第二期的前置障碍 kda-fwd-bwd-dtype-mismatch 已量化（降 P2）。
 
@@ -237,10 +237,10 @@ P0 1 项 · P1 17 项 · P2 9 项 · 已解决 11 项 · 共 38 项
 
 | 算子族 | P0 | P1 | P2 |
 |---|---|---|---|
-| KDA | `c1-multihead-o-corrupt` | `decode-call-overhead`<br>`decode-layer-overhead`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`no-tail-path`<br>`block-dim-ceiling`<br>`qk-l2norm-not-in-kernel`<br>`state-layout-k-first` | `kda-fwd-bwd-dtype-mismatch`<br>`npu-builtin-ops-missing`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`kernel-nd2nz-suboptimal`<br>`fwd-caches-not-emitted`<br>`modules-are-torch-not-kernels`<br>`stable-unit-no-harness`<br>`gate-span-still-bounded` |
-| GDN | — | `gdn-no-gqa`<br>`layout-not-token-major`<br>`nonzero-initial-state`<br>`d-initial-state-absent`<br>`state-dtype-bf16`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`scale-param-no-slot`<br>`no-tail-path`<br>`block-dim-ceiling` | `npu-builtin-ops-missing`<br>`fixed-kv-128`<br>`asymmetric-kv-dim` |
-| GDN-2 | — | `no-varlen`<br>`no-tail-path`<br>`gdn2-abi-not-gdn`<br>`gdn2-chunk-gate-range`<br>`gdn2-decode-fragmentation` | `npu-builtin-ops-missing`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`modules-are-torch-not-kernels` |
-| DeltaNet | — | `layout-not-token-major`<br>`nonzero-initial-state`<br>`d-initial-state-absent`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`scale-param-no-slot`<br>`no-tail-path` | `npu-builtin-ops-missing`<br>`fixed-kv-128`<br>`asymmetric-kv-dim` |
+| KDA | `c1-multihead-o-corrupt`<br>`ascriptor-gm-transfer-two-slice-row-gap` | `decode-call-overhead`<br>`decode-layer-overhead`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`no-tail-path`<br>`block-dim-ceiling`<br>`qk-l2norm-not-in-kernel`<br>`state-layout-k-first` | `kda-fwd-bwd-dtype-mismatch`<br>`npu-builtin-ops-missing`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`kernel-nd2nz-suboptimal`<br>`fwd-caches-not-emitted`<br>`modules-are-torch-not-kernels`<br>`stable-unit-no-harness`<br>`gate-span-still-bounded` |
+| GDN | `ascriptor-gm-transfer-two-slice-row-gap` | `gdn-no-gqa`<br>`layout-not-token-major`<br>`nonzero-initial-state`<br>`d-initial-state-absent`<br>`state-dtype-bf16`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`scale-param-no-slot`<br>`no-tail-path`<br>`block-dim-ceiling` | `npu-builtin-ops-missing`<br>`fixed-kv-128`<br>`asymmetric-kv-dim` |
+| GDN-2 | `ascriptor-gm-transfer-two-slice-row-gap` | `no-varlen`<br>`no-tail-path`<br>`gdn2-abi-not-gdn`<br>`gdn2-chunk-gate-range`<br>`gdn2-decode-fragmentation` | `npu-builtin-ops-missing`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`modules-are-torch-not-kernels` |
+| DeltaNet | `ascriptor-gm-transfer-two-slice-row-gap` | `layout-not-token-major`<br>`nonzero-initial-state`<br>`d-initial-state-absent`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`scale-param-no-slot`<br>`no-tail-path` | `npu-builtin-ops-missing`<br>`fixed-kv-128`<br>`asymmetric-kv-dim` |
 
 ### 待统一修复的 kernel 问题
 
@@ -314,6 +314,16 @@ PM 在权威 workspace 上独立跑了 `benchmarks/diag_c1_multihead.py`，**上
 ③ 上游补 case：`C=1 且 HV≥2`。这条不管我们怎么修都该做，否则上游下次改这个 kernel 还会踩。
 ⑤ **上游补 case**（A2-04 建议）：`kda_fwd` 契约要加 `C=1 且 HV≥2`，以及 `奇数 C≥3 且 B*HV > block_dim`。现有四个 case 一个都盖不到。
 ⑥ **真机侧要补的**：本条记的『C=3 全对』在仓里**没有对应的运行日志**。闸的范围要按奇数 C 定的话，得先在 A5 上补 C=3 / C=5 且 `B*HV > block_dim` 的逐 chunk 比对。
+
+#### `ascriptor-gm-transfer-two-slice-row-gap` — 【P0·静默错误·ascriptor 库缺陷】gm_transfer 的双切片分支漏算夹在中间的标量索引维，行间距算成 0
+
+- **类别** correctness · **适用于** 全部 · **阻塞** —
+- **依据** GDA-01（#73）第一轮 bulk-prepare 优化候选，源表达式 `qu[:,:] <<= q[bb, tt:tt+64, hh, :]`（4 维 GM 张量 [B,T,H,D]，B/H 是标量索引，T/D 是切片）。缩小形状 T64/H3/block_dim1 的 pipesim 报告有限但错误的 qn：24135/24576 个元素不匹配，max_abs=0.0234730169。生成的搬运调用是 `gm_to_ub_pad(...,64,512,0,0)`，行间距（第 3 个参数之后那个 gap）算成了 0，而正确值应为 `(H-1)*512` 字节。
+**PM 已独立核实**：`ascriptor/passes/device_lower.py` 的 `gm_transfer` 函数，`len(sliced) == 2` 分支（对应本例：T 与 D 两个维度被切片，B 与 H 是标量索引，H 恰好夹在两个切片维之间）算 `burst = prod(extents[second:])`、`gap = prod(shape[second:]) - burst`——这两个式子只看第二个切片维（D）之后的形状，**没有把夹在第一个切片维（T）和第二个切片维（D）之间的标量索引维（H）的形状乘进去**。对比同文件 `len(sliced) == 1` 分支（101-102 行）用的是 `shape[d+1:]`，正确地把 d 之后所有维度（含标量索引维）都算了进去——`len(sliced)==2` 分支的这个不对称就是漏算的根源。
+- **影响** 任何 kernel 里出现『4 维（或更高维）GM 张量、切两个维、且有标量索引维夹在这两个切片维中间』这个具体模式，都会静默算错行间距——不报错、不崩溃，产出有限但内容错误的值，和本仓已经踩过的 `c1-multihead-o-corrupt` 是同一类（有限值、量级看着正常、只有逐元素比值乱）。GDA-01 的 bulk-prepare 候选没有被采纳，已知的其它本仓 kernel 暂未复查是否命中这个模式——这条要单独扫一遍。
+- **建议** 本仓侧（AGENTS.md §3：不改 ascriptor 仓）：在自己的派生单元里，遇到这个 4 维双切片模式一律换成显式的 `gm_to_ub_pad(..., 正确的 gap)`，不依赖库的隐式推断。GDA-01 已经验证这条绕法：`qn/kn/bk/wv` 换成显式 gap 后与 CPU 参考完全一致，event balance/hazards 均空、无死锁。
+仓库所有者侧：这是 ascriptor 库本身的缺陷，不是本仓能修的范围，建议原样报给 ascriptor 的维护方。
+待办：扫一遍本仓现有 kernel（kda_fwd_stable、gdn2_chunk_fwd 等）里有没有已经踩中这个模式但还没被测出来的地方——形状够小或凑巧连续时（比如 H=1）这个 bug 不会触发，容易被现有测试漏过。
 
 ### P1
 
