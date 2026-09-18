@@ -1,7 +1,8 @@
 """A5K-01 native verification and same-device timing. Outputs go to scratch.
 
 One invocation owns one block_dim. Correctness always uses CPU references;
-timed calls always use NPU tensors. Existing public dispatch/gates are untouched.
+timed calls always use NPU tensors. This runner uses explicit original/repaired
+unit controls; it does not validate public API dispatch or gates.
 """
 from __future__ import annotations
 

@@ -58,8 +58,9 @@ locally to repair the independent Aqk handoff defect described below.
 
 ## 怎么跑
 
-The public runtime API below still selects the original recurrent kernel and
-retains its existing guards. A5K-01 does not change that dispatch:
+The public stable runtime API selects the repaired recurrent kernel. The original
+upstream path rejects odd C when B*HV exceeds block_dim. A5K-02 public-path native
+qualification is pending; A5K-01 evidence below belongs to its standalone unit.
 
 ```python
 from ascend_fla.ops.kda import chunk_kda_fwd
@@ -108,6 +109,28 @@ python "$unit/verify_repair.py" grid --block-dim 1 --output tmp/A5K-01/grid-bd1
 python "$unit/compare_repair.py" --root tmp/A5K-01 --output tmp/A5K-01/cross-bd.json
 python "$unit/verify_repair.py" profile --block-dim 4 --warmup 10 --repeat 50 --output tmp/A5K-01/profile
 ```
+
+## A5K-02 public integration validation
+
+`benchmarks/verify_kda_aqk_public.py` calls both public forward entries with gate
+checks enabled and NPU layout. The original recurrent control changes only the
+compiled recurrent selection inside the verification driver; candidate calls
+use public dispatch unmodified. It checks all nine cache tensors, final and
+prefix states, both CPU FP32 oracles, and rejection of unsafe upstream calls.
+
+```sh
+python benchmarks/verify_kda_aqk_public.py grid --case kimi_t4096 --block-dim 4 --output tmp/A5K-02/full-bd4
+python benchmarks/verify_kda_aqk_public.py grid --block-dim 1 --output tmp/A5K-02/grid-bd1
+# Run block_dim 2, 3 and 4 in separate processes and matching output directories.
+python benchmarks/verify_kda_aqk_public.py compare --root tmp/A5K-02 --output tmp/A5K-02/cross-bd.json
+python benchmarks/verify_kda_aqk_public.py profile --block-dim 4 --output tmp/A5K-02/profile
+```
+
+The cached-forward entry must precompile all backward vendors before the first
+custom launch. Current preflight at the pinned sources finds a resource refusal
+in upstream `kda_bwd/kernels/inverse_mm.py`: its cube side needs 34 local mutex
+IDs, exceeding 32. This dependency currently blocks the cached public run; the
+driver does not skip it or treat host checks as native qualification.
 
 `repair_diagnostics.py` preserves the original and qg-only negative controls;
 only reduced shapes run in the pipe model. Complete workloads run on hardware

@@ -9,10 +9,25 @@ the timing experiment does not establish a consistent speed gain over baseline.
 This report covers [A5K-01](https://github.com/ddddwee1/ascend_fla_dev/issues/76),
 the narrow D-PM-21 exception derived from
 [A2-04 / PR #60](https://github.com/ddddwee1/ascend_fla_dev/pull/60).
-The standalone unit and native verification composition select the repaired
-kernel. Public `chunk_kda_fwd` dispatch still selects the original recurrent
-kernel and retains its existing C=1 guard. Integrating that dispatch requires a
-separate write-set decision. A5-01 through A5-06 remain gated on W-A3.
+A5K-01 qualified the standalone unit without changing public dispatch.
+The integration candidate proposed in [request #79](https://github.com/ddddwee1/ascend_fla_dev/issues/79)
+selects that same repaired source for public stable forward and cached-forward.
+The original upstream path rejects odd C with B*HV > block_dim; the old
+claim that all C>=2 are safe was disproved by the C=3 silicon result below.
+The stable first four stages plus original recurrent remain an explicitly
+pinned negative control. Public integration validation is pending; the
+A5K-01 numbers below qualify the earlier standalone composition only.
+A5-01 through A5-06 remain gated on W-A3.
+
+The integration draft passes 337 host tests (5 skipped), including 109 scoped
+gate/dispatch checks, and 8 canonical CPU reference cases. Source emission passes
+all five forward kernels, the original recurrent control and eight of nine
+backward dependencies. The unchanged upstream `inverse_mm_kernel` is refused:
+its cube side needs 34 local mutex IDs while the accepted limit is 32. Because
+the real cached-forward API precompiles backward vendors before its first launch,
+this is a cached-path blocker at the accepted pins. Neither precompilation nor
+synchronization checks have been bypassed. Public native grid and timing remain
+unqualified; the measurements below still describe A5K-01 only.
 
 ## Source and hardware scope
 

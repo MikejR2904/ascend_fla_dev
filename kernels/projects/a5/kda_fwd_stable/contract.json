@@ -2,7 +2,7 @@
   "schema": "ascriptor.kernel-unit/1",
   "id": "a5.kda_fwd_stable",
   "kind": "project",
-  "description": "Fixed-length stable KDA forward with continuous Aqk slot rotation across heads. The public ops dispatch remains unchanged.",
+  "description": "Fixed-length stable KDA forward with continuous Aqk slot rotation across heads, selected by the public stable forward API.",
   "inputs": {
     "q": {
       "dtype": "bfloat16",
@@ -111,7 +111,7 @@
     },
     "tails": "T=C*64；与上游一致，partial chunk / K-V tail / fp16 / L=32 均不支持。",
     "layout": "公开张量 token-major；内部显式重排到 BHCLK / BHVCLK。",
-    "single_chunk_multihead": "The standalone repaired unit handles repeated-head ownership for odd C. The public chunk_kda_fwd dispatch still uses the original recurrent source and retains its C=1 guard; integrating this repair is outside A5K-01."
+    "single_chunk_multihead": "The repaired stable public forward and cached-forward entries support repeated-head ownership for odd C. The original upstream public path rejects odd C with B*HV > block_dim. A5K-01 measured C=3 corruption on silicon and disproved the former C>=2 safety claim; all other public domain and precision gates remain unchanged."
   },
   "dependencies": {
     "derived_from": "a5.kda_fwd",
@@ -124,7 +124,7 @@
       "kda_sub3_wy_stable_kernel",
       "kda_sub45_aqk_repaired_kernel"
     ],
-    "note": "The standalone unit uses its derived recurrent kernel. verify_repair.py retains the upstream recurrent kernel as the unchanged negative-control baseline. Public dispatch selection is not modified.",
+    "note": "The standalone unit and public stable forward select the derived recurrent kernel. verify_repair.py explicitly pins its negative-control baseline to the upstream recurrent while keeping the stable first four stages.",
     "python": ">=3.10",
     "ascriptor": "==0.1.0",
     "host": [
