@@ -119,6 +119,7 @@ use public dispatch unmodified. It checks all nine cache tensors, final and
 prefix states, both CPU FP32 oracles, and rejection of unsafe upstream calls.
 
 ```sh
+python benchmarks/verify_kda_aqk_public.py inverse --block-dim 4 --output tmp/A5K-02/inverse-bd4
 python benchmarks/verify_kda_aqk_public.py grid --case kimi_t4096 --block-dim 4 --output tmp/A5K-02/full-bd4
 python benchmarks/verify_kda_aqk_public.py grid --block-dim 1 --output tmp/A5K-02/grid-bd1
 # Run block_dim 2, 3 and 4 in separate processes and matching output directories.
@@ -127,10 +128,12 @@ python benchmarks/verify_kda_aqk_public.py profile --block-dim 4 --output tmp/A5
 ```
 
 The cached-forward entry must precompile all backward vendors before the first
-custom launch. Current preflight at the pinned sources finds a resource refusal
-in upstream `kda_bwd/kernels/inverse_mm.py`: its cube side needs 34 local mutex
-IDs, exceeding 32. This dependency currently blocks the cached public run; the
-driver does not skip it or treat host checks as native qualification.
+custom launch. The original `kda_bwd/kernels/inverse_mm.py` needs 34 local cube
+mutex IDs, exceeding 32. Under D-PM-24, stable dispatch selects the local
+`inverse_mm_bounded_kernel`: only two L0C output buffers change to single slots,
+preserving arithmetic, event credits and loop structure. Its emitted counts are
+cube=32 and vector=15. Native leaf/backward and synchronization qualification are
+pending; the driver does not skip precompilation or treat emission as execution.
 
 `repair_diagnostics.py` preserves the original and qg-only negative controls;
 only reduced shapes run in the pipe model. Complete workloads run on hardware

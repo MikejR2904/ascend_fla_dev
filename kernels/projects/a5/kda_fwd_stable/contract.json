@@ -125,6 +125,13 @@
       "kda_sub45_aqk_repaired_kernel"
     ],
     "note": "The standalone unit and public stable forward select the derived recurrent kernel. verify_repair.py explicitly pins its negative-control baseline to the upstream recurrent while keeping the stable first four stages.",
+    "cached_forward_prerequisite": {
+      "task": "A5K-02 / D-PM-24",
+      "kernel": "a5.kda_bwd_stable/inverse_mm_bounded_kernel",
+      "reason": "Cached public forward precompiles backward. The accepted original inverse_mm exceeds the A5 local mutex budget (34 > 32).",
+      "change": "Use one L0C slot each for l0c_dvh and l0c_dvbeta, with corresponding direct views. Preserve arithmetic, output ABI, event credits, loop structure, two-work lookahead and all other buffers. The last FIX read must retire before the next M overwrite under the existing mode-zero ownership contract.",
+      "qualification": "Native leaf/backward regression and public cached-forward verification are pending; emission alone does not qualify the dependency."
+    },
     "python": ">=3.10",
     "ascriptor": "==0.1.0",
     "host": [

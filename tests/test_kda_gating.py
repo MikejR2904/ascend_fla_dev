@@ -206,7 +206,7 @@ def test_bwd_stable_overrides_exactly_the_kernels_it_declares():
 
 @pytest.mark.parametrize("unit,stems", [
     ("kda_fwd_stable", ("gate", "intra", "wy", "recurrent")),
-    ("kda_bwd_stable", ("finalize_pre", "finalize_post")),
+    ("kda_bwd_stable", ("inverse_mm", "finalize_pre", "finalize_post")),
 ])
 def test_stable_units_define_the_functions_they_claim(unit, stems):
     """单元里 contract 声明的 kernel 函数必须真的定义在对应文件里。

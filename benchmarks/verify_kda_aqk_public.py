@@ -79,6 +79,55 @@ def cpu_oracles(x):
     return ref, fla, agreement
 
 
+def inverse_inputs(b, hv, c, seed=2026):
+    """Generate leaf inputs and a CPU FP32 matrix reference at the frozen ABI."""
+    gen = torch.Generator(device="cpu").manual_seed(seed)
+
+    def random(shape):
+        return (torch.randn(shape, generator=gen) * .125).to(torch.bfloat16)
+
+    x = {name: random((b, c * 64, hv, 128))
+         for name in ("do_bf16", "vnew_bf16", "dv_bf16")}
+    x.update({name: random((b, c, hv, 128, 128)) for name in ("h_bf16", "dh_bf16")})
+    akk = torch.eye(64) + torch.tril(random((b, hv, c, 64, 64)).float(), diagonal=-1)
+    x["Akk_bf16"] = akk.to(torch.bfloat16).permute(0, 2, 3, 1, 4).reshape(b, c * 64, hv, 64).contiguous()
+
+    def packed(name):
+        return x[name].reshape(b, c, 64, hv, -1).permute(0, 3, 1, 2, 4).float()
+
+    do, new, dv = (packed(name) for name in ("do_bf16", "vnew_bf16", "dv_bf16"))
+    h, dh = (x[name].permute(0, 2, 1, 3, 4).float() for name in ("h_bf16", "dh_bf16"))
+    akk = packed("Akk_bf16")
+    dvh = dv @ h.transpose(-1, -2)
+    # The VF negates and materializes dw in BF16 before the delayed matmul.
+    dw = (-dvh).to(torch.bfloat16).float()
+    ref = dict(d_qg=do @ h.transpose(-1, -2), d_kg=new @ dh.transpose(-1, -2),
+               d_vh=dvh, d_v_beta=akk.transpose(-1, -2) @ dv,
+               d_k_beta_g=akk.transpose(-1, -2) @ dw)
+    return x, ref
+
+
+def verify_inverse(bd, out):
+    """Full native leaf workload first, then reuse/drain/idle-core cases."""
+    kernel = backward._compiled_chain("a5", bd, "stable")["inverse_mm"]
+    rows = []
+    for b, hv, c in ((1, 32, 64), (1, 1, 1), (1, 1, 5), (2, 3, 3)):
+        x, ref = inverse_inputs(b, hv, c)
+        inputs = {name: value.to("npu") for name, value in x.items()}
+        outputs = {name: torch.full_like(value, float("nan"), dtype=torch.bfloat16).to("npu")
+                   for name, value in ref.items()}
+        kernel(inputs, {"B": b, "HV": hv, "C": c, "T": c * 64}, outputs)
+        torch.npu.synchronize()
+        checks = {name: metrics(outputs[name], expected) for name, expected in ref.items()}
+        row = dict(B=b, HV=hv, C=c, block_dim=bd, checks=checks,
+                   passed=all(m["passed"] for m in checks.values()),
+                   output_sha256={name: digest(value) for name, value in outputs.items()})
+        rows.append(row)
+        write(out / "inverse-mm.json", rows)
+        print(json.dumps(row), flush=True)
+        assert row["passed"], "Derived inverse_mm leaf exceeds the unchanged .02/.02/.05 budget"
+
+
 def verify(case, bd, out, *, with_caches=True):
     x = make_inputs(case)
     ref, fla, agreement = cpu_oracles(x)
@@ -246,7 +295,7 @@ def compare(root, output):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("mode", choices=("grid", "profile", "compare", "forward"),
+    parser.add_argument("mode", choices=("grid", "profile", "compare", "forward", "inverse"),
                         help="forward is a partial diagnostic only; grid/profile require cached-forward")
     parser.add_argument("--block-dim", type=int, choices=(1, 2, 3, 4), default=4)
     parser.add_argument("--case", default="all")
@@ -285,6 +334,9 @@ def main():
         backward._compiled_chain("a5", args.block_dim, "stable")
     if args.mode == "profile":
         profile(args.block_dim, args.output, args.warmup, args.repeat)
+        return
+    if args.mode == "inverse":
+        verify_inverse(args.block_dim, args.output)
         return
     cases = grid_cases()
     if args.case in ("kimi_t1024", "kimi_t4096"):

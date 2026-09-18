@@ -19,7 +19,7 @@ pinned negative control. Public integration validation is pending; the
 A5K-01 numbers below qualify the earlier standalone composition only.
 A5-01 through A5-06 remain gated on W-A3.
 
-The integration draft passes 337 host tests (5 skipped), including 109 scoped
+The initial integration draft passed 337 host tests (5 skipped), including 109 scoped
 gate/dispatch checks, and 8 canonical CPU reference cases. Source emission passes
 all five forward kernels, the original recurrent control and eight of nine
 backward dependencies. The unchanged upstream `inverse_mm_kernel` is refused:
@@ -28,6 +28,23 @@ the real cached-forward API precompiles backward vendors before its first launch
 this is a cached-path blocker at the accepted pins. Neither precompilation nor
 synchronization checks have been bypassed. Public native grid and timing remain
 unqualified; the measurements below still describe A5K-01 only.
+
+D-PM-24 approves a narrow local `inverse_mm` derivative and stable selector
+update. The derivative changes only `l0c_dvh` and `l0c_dvbeta` from double buffers
+to single-slot L0C tensors, with corresponding direct views. Emitted local mutex
+counts become cube=32 and vector=15. M writes and every FIX read retain mode-zero
+ownership; the final FIX release must retire before the next iteration's M write.
+The three-slot cross-side buffers, event credits, two-work lookahead, drain and
+all arithmetic remain unchanged. Upstream source and the 32-ID limit stay intact.
+This is an emission result, with native leaf/backward and synchronization regression
+still pending. `verify_kda_aqk_public.py inverse` first tests the full B1/T4096/HV32
+leaf against a CPU FP32 reference, then single-item, repeated-slot and uneven-work
+cases; public cache/grid verification remains a separate required check.
+With this dependency change, the host suite has 337 passes, 5 skips and one
+failure: the existing backward contract inventory still declares the original
+shared `inverse_mm`. The required metadata amendment is pending the corresponding
+write-set confirmation. The inventory test is retained unchanged; the 20 focused
+source-selection, safety and compiler-budget regressions pass.
 
 ## Source and hardware scope
 

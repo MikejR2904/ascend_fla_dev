@@ -44,6 +44,31 @@ def test_actual_sources_keep_repaired_dispatch_and_original_negative_control():
         runtime.selected_kernels("typo")
 
 
+def test_cached_forward_dependency_fits_mutex_budget_and_keeps_upstream_control():
+    pytest.importorskip("ascriptor")
+    from ascriptor.passes.manager import PassError
+    from ascriptor.runtime.opexec import lower_kernel
+
+    try:
+        root = backward._bwd_kernels_root()
+    except FileNotFoundError:
+        pytest.skip("The accepted upstream kernel checkout is required")
+    stable = backward.kda_bwd_kernels("stable")
+    original = backward.kda_bwd_kernels("upstream")
+    assert stable["inverse_mm"].name == "inverse_mm_bounded_kernel"
+    assert original["inverse_mm"].name == "inverse_mm_kernel"
+    assert Path(inspect.getsourcefile(stable["inverse_mm"].fn)).resolve() == (
+        backward._stable_bwd_root() / "kernels/inverse_mm.py").resolve()
+    assert Path(inspect.getsourcefile(original["inverse_mm"].fn)).resolve() == (
+        root / "kernels/inverse_mm.py").resolve()
+    lowered = lower_kernel(stable["inverse_mm"])
+    counts = {fn.attrs["side"].name: fn.attrs["local_mutex_count"]
+              for fn in lowered.functions if "side" in fn.attrs}
+    assert counts == {"cube": 32, "vec": 15}
+    with pytest.raises(PassError, match=r"cube needs 34 mutex IDs \(maximum 32\)"):
+        lower_kernel(original["inverse_mm"])
+
+
 class _NpuMetadata:
     """Only enough metadata to reach the public safety/dispatch boundary."""
 
