@@ -147,6 +147,12 @@
       "by": "user",
       "decision": "GDN/PGDN 的排期顺序直接给出（不是 agent 推断的延续）：GDN 前向（已完成，GDA-01）→ 给 GDN 补 GQA/GVA 分组（GDA-02）→ PGDN 前向（PK-03，此时解锁）→ backward → decode → 性能。用户在回答 PM 的澄清问题时明确选择'GQA 要先于 PGDN 前向'，解决了字面顺序里的技术矛盾（PGDN 的 ABI 本身需要 GQA 分组，不能反过来）。",
       "risk": "这条排期只覆盖 GDN/PGDN 这一条线，不改变 KDA 首位或 A2→A3→A5 波次顺序——同一时期一个更宽泛的'GDN 全族推进'提案（issue #80）被用户明确否决，只批准了这条具体顺序。backward/decode/性能三个后续阶段还没有具体任务号，会在 GDA-02/PK-03 完成后再逐个排。"
+    },
+    {
+      "id": "D-PM-23",
+      "date": "2026-09-18",
+      "by": "user",
+      "decision": "批准 issue #79：把 A5K-01 验证过的 Aqk 交接修复接入公开调度 ops/kda/chunk.py（A5K-02）"
     }
   ],
   "gated_epics": [
@@ -2114,8 +2120,7 @@
       "wave": "W0",
       "soc": "a5",
       "priority": "P1",
-      "status": "gated",
-      "gate": "user-decision",
+      "status": "assigned",
       "model": [
         "kimi-linear-48b-a3b"
       ],
@@ -2145,20 +2150,35 @@
       "spec": "docs/pm/tasks/A5K-02.md",
       "issue": 81,
       "pr": null,
-      "assignee": null,
-      "assignee_caps": null,
-      "branch": null,
+      "assignee": "limjiunnbin",
+      "assignee_caps": {
+        "agent": "Codex (self-described, per #79/#81)",
+        "socs": [
+          "a5"
+        ],
+        "soc_details": "a5: 950PR_9589 V100, CANN/OPP 9.2.0, packages ascend950/ascend910b/ascend910_93",
+        "ascriptor": "library 90cfcdc720bb / kernels b3b3f9c16df",
+        "fla": "e52dbc0ea19d3a40d7ab7f9eed855d2b473994d2",
+        "fork": "limjiunnbin/ascend_fla_dev",
+        "session": "01a0ae7a-d1c0-7f02-b040-be977ec47393",
+        "note": "A5K-01 的原 assignee/session 延续"
+      },
+      "branch": "task/A5K-02",
       "timebox_h": 16,
       "origin": {
         "kind": "request",
         "issue": 79,
         "by": "limjiunnbin",
-        "approved_by_user": false
+        "approved_by_user": true
       },
       "reports": [
         {
           "at": "2026-09-18T07:07",
           "summary": "APPLY 收到（session 与 A5K-01 相同的 KDA session）。仍 gated：#79 本身还没拿到这个会话里的用户批准（issue 里的\"用户指示\"是另一个会话，不是这里的确认）。申请方顺带报了自己跑的主机侧检查：109/109 与 337 passed/5 skipped，均为主机侧，未做新的真机验证"
+        },
+        {
+          "at": "2026-09-18T07:15",
+          "summary": "用户批准 D-PM-23；把 #79/#81 的自述当 APPLY，直接 ASSIGN"
         }
       ],
       "result": null
