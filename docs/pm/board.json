@@ -1972,6 +1972,10 @@
         {
           "at": "2026-09-18T01:52",
           "summary": "RISK silent-wrong-result：第一轮 bulk-prepare 优化候选踩到 ascriptor 库本身的缺陷（device_lower.py 的 gm_transfer 双切片分支漏算夹在中间的标量索引维，行间距算成 0）。PM 读源码独立核实属实，已记入 gaps.json (ascriptor-gm-transfer-two-slice-row-gap)。候选未被采纳，未合入任何代码；已知绕法（显式 gm_to_ub_pad 传正确 gap）验证通过"
+        },
+        {
+          "at": "2026-09-18T01:53",
+          "summary": "STATUS：基线在 10 个 case 上对独立 block-solve 与 FLA naive 全过；被拒的候选在真机 T4096/H16 上确认复现同一错误（8240529/8388608 元素不匹配），与 pipesim 结论互相印证。已加显式 gap 的修正候选缩小形状 pipesim 过、真机完整验证进行中。基线 T4096/bd2 public≈54970us/prepare≈9902us（未配对，非加速声明）。250 passed/5 skipped"
         }
       ],
       "result": null
