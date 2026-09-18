@@ -40,11 +40,13 @@ This is an emission result, with native leaf/backward and synchronization regres
 still pending. `verify_kda_aqk_public.py inverse` first tests the full B1/T4096/HV32
 leaf against a CPU FP32 reference, then single-item, repeated-slot and uneven-work
 cases; public cache/grid verification remains a separate required check.
-With this dependency change, the host suite has 337 passes, 5 skips and one
-failure: the existing backward contract inventory still declares the original
-shared `inverse_mm`. The required metadata amendment is pending the corresponding
-write-set confirmation. The inventory test is retained unchanged; the 20 focused
-source-selection, safety and compiler-budget regressions pass.
+The existing backward inventory test caught the required contract amendment:
+the derived `inverse_mm` must be listed as owned rather than shared. PM confirmed
+that metadata write set, and the inventory now matches the selector. The gate is
+retained unchanged. The full host suite now passes 338 tests with 5 skips, including
+the 20 focused source-selection, safety and compiler-budget regressions. The
+complete selected forward/backward chain also vendor-compiles
+at block_dim=4; builds for the remaining block counts are in progress.
 
 ## Source and hardware scope
 
