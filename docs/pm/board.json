@@ -2049,6 +2049,10 @@
         {
           "at": "2026-09-18T02:20",
           "summary": "同账号并发 APPLY，session 与 GDA-01 不同（UUID vs 描述性字符串），按新规则直接 ASSIGN"
+        },
+        {
+          "at": "2026-09-18T02:50",
+          "summary": "RISK shared-machine 确认：这台机器的 device 0（GDA-01 也在用的那张）同样在这边的 preflight 上报 health=2，先于任何 kernel 启动就被挡住，未做复位/kill。随后找到同机 device 1 健康（health=0）、无占用进程，切过去，device 0 与 GDA-01 的东西未动。符合 AGENTS.md §5\"换一张 Health=OK 的卡\"的处置方式"
         }
       ],
       "result": null
