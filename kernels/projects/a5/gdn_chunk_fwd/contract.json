@@ -2,7 +2,7 @@
   "schema": "ascriptor.kernel-unit/1",
   "id": "a5.gdn_chunk_fwd",
   "kind": "project",
-  "description": "Non-GQA scalar-gated GDN chunk forward, zero state, five FP32 CCE stages.",
+  "description": "Grouped-head scalar-gated GDN chunk forward, zero state, five FP32 CCE stages.",
   "inputs": {
     "q": {
       "dtype": "float32",
@@ -27,7 +27,7 @@
       "shape": [
         "B",
         "T",
-        "H",
+        "HV",
         128
       ]
     },
@@ -36,7 +36,7 @@
       "shape": [
         "B",
         "T",
-        "H"
+        "HV"
       ],
       "note": "Nonpositive scalar log decay."
     },
@@ -44,7 +44,7 @@
       "dtype": "float32",
       "shape": [
         "B",
-        "H",
+        "HV",
         128,
         128
       ],
@@ -55,7 +55,7 @@
       "shape": [
         "B",
         "T",
-        "H"
+        "HV"
       ],
       "note": "Scalar update gate in [0,1]."
     }
@@ -66,7 +66,7 @@
       "shape": [
         "B",
         "T",
-        "H",
+        "HV",
         128
       ],
       "initialization": "NaN poison; every element must be overwritten."
@@ -75,7 +75,7 @@
       "dtype": "float32",
       "shape": [
         "B",
-        "H",
+        "HV",
         128,
         128
       ],
@@ -109,7 +109,8 @@
         "H": 1,
         "gate_scale": 0.03,
         "bf16_inputs": true,
-        "N": 1
+        "N": 1,
+        "HV": 1
       },
       "block_dim": 1
     },
@@ -122,7 +123,8 @@
         "H": 3,
         "gate_scale": 0.03,
         "bf16_inputs": true,
-        "N": 1
+        "N": 1,
+        "HV": 3
       },
       "block_dim": 1
     },
@@ -135,7 +137,8 @@
         "H": 3,
         "gate_scale": 0.03,
         "bf16_inputs": true,
-        "N": 2
+        "N": 2,
+        "HV": 3
       },
       "block_dim": 1
     },
@@ -148,7 +151,8 @@
         "H": 3,
         "gate_scale": 1.0,
         "bf16_inputs": true,
-        "N": 3
+        "N": 3,
+        "HV": 3
       },
       "block_dim": 1
     },
@@ -161,7 +165,8 @@
         "H": 3,
         "gate_scale": 1.0,
         "bf16_inputs": true,
-        "N": 3
+        "N": 3,
+        "HV": 3
       },
       "block_dim": 1
     },
@@ -174,7 +179,8 @@
         "H": 16,
         "gate_scale": 0.03,
         "bf16_inputs": true,
-        "N": 16
+        "N": 16,
+        "HV": 16
       },
       "block_dim": 1
     },
@@ -187,7 +193,8 @@
         "H": 16,
         "gate_scale": 1.0,
         "bf16_inputs": true,
-        "N": 64
+        "N": 64,
+        "HV": 16
       },
       "block_dim": 1
     },
@@ -200,7 +207,8 @@
         "H": 2,
         "gate_scale": 30.0,
         "bf16_inputs": true,
-        "N": 2
+        "N": 2,
+        "HV": 2
       },
       "block_dim": 1
     },
@@ -213,7 +221,8 @@
         "H": 2,
         "gate_scale": 0.0,
         "bf16_inputs": true,
-        "N": 2
+        "N": 2,
+        "HV": 2
       },
       "block_dim": 1
     },
@@ -226,7 +235,176 @@
         "H": 3,
         "gate_scale": 0.03,
         "normalized_keys": true,
+        "N": 3,
+        "HV": 3
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "b1_t64_h3_hv6_g1",
+      "seed": 8221,
+      "parameters": {
+        "B": 1,
+        "T": 64,
+        "H": 3,
+        "HV": 6,
+        "gate_scale": 1.0,
+        "bf16_inputs": true,
+        "N": 1
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "b1_t128_h3_hv6_g1",
+      "seed": 8222,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 3,
+        "HV": 6,
+        "gate_scale": 1.0,
+        "bf16_inputs": true,
+        "N": 2
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "b1_t192_h3_hv6_g1",
+      "seed": 8223,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 3,
+        "HV": 6,
+        "gate_scale": 1.0,
+        "bf16_inputs": true,
         "N": 3
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "b1_t64_h3_hv12_g1",
+      "seed": 8241,
+      "parameters": {
+        "B": 1,
+        "T": 64,
+        "H": 3,
+        "HV": 12,
+        "gate_scale": 1.0,
+        "bf16_inputs": true,
+        "N": 1
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "b1_t128_h3_hv12_g1",
+      "seed": 8242,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 3,
+        "HV": 12,
+        "gate_scale": 1.0,
+        "bf16_inputs": true,
+        "N": 2
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "b1_t192_h3_hv12_g1",
+      "seed": 8243,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 3,
+        "HV": 12,
+        "gate_scale": 1.0,
+        "bf16_inputs": true,
+        "N": 3
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "b1_t64_h3_hv24_g1",
+      "seed": 8281,
+      "parameters": {
+        "B": 1,
+        "T": 64,
+        "H": 3,
+        "HV": 24,
+        "gate_scale": 1.0,
+        "bf16_inputs": true,
+        "N": 1
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "b1_t128_h3_hv24_g1",
+      "seed": 8282,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 3,
+        "HV": 24,
+        "gate_scale": 1.0,
+        "bf16_inputs": true,
+        "N": 2
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "b1_t192_h3_hv24_g1",
+      "seed": 8283,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 3,
+        "HV": 24,
+        "gate_scale": 1.0,
+        "bf16_inputs": true,
+        "N": 3
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "b2_t192_h3_hv24_g1",
+      "seed": 8295,
+      "parameters": {
+        "B": 2,
+        "T": 192,
+        "H": 3,
+        "HV": 24,
+        "gate_scale": 1.0,
+        "bf16_inputs": true,
+        "N": 3
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "b1_t4096_h4_hv16_g1",
+      "seed": 8295,
+      "parameters": {
+        "B": 1,
+        "T": 4096,
+        "H": 4,
+        "HV": 16,
+        "gate_scale": 1.0,
+        "bf16_inputs": true,
+        "N": 64
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "b1_t1024_h2_hv16_g1",
+      "seed": 8293,
+      "parameters": {
+        "B": 1,
+        "T": 1024,
+        "H": 2,
+        "HV": 16,
+        "gate_scale": 1.0,
+        "bf16_inputs": true,
+        "N": 16
       },
       "block_dim": 2
     }
@@ -237,7 +415,7 @@
       "backend": "cce",
       "stage": "reference",
       "status": "passed",
-      "reason": "All 10 declared CPU reference cases; no device qualification implied."
+      "reason": "All 22 CPU reference cases passed; no device qualification implied."
     },
     {
       "device": "a5",
@@ -284,7 +462,7 @@
       "shape": [
         "B",
         "N",
-        "H",
+        "HV",
         64,
         128
       ]
@@ -294,7 +472,7 @@
       "shape": [
         "B",
         "N",
-        "H",
+        "HV",
         64,
         128
       ]
@@ -304,7 +482,7 @@
       "shape": [
         "B",
         "N",
-        "H",
+        "HV",
         64,
         128
       ]
@@ -314,7 +492,7 @@
       "shape": [
         "B",
         "N",
-        "H",
+        "HV",
         64,
         128
       ]
@@ -324,7 +502,7 @@
       "shape": [
         "B",
         "N",
-        "H",
+        "HV",
         64,
         128
       ]
@@ -334,7 +512,7 @@
       "shape": [
         "B",
         "N",
-        "H",
+        "HV",
         64,
         128
       ]
@@ -344,7 +522,7 @@
       "shape": [
         "B",
         "N",
-        "H",
+        "HV",
         64,
         128
       ]
@@ -354,7 +532,7 @@
       "shape": [
         "B",
         "N",
-        "H",
+        "HV",
         64,
         128
       ]
@@ -364,7 +542,7 @@
       "shape": [
         "B",
         "N",
-        "H",
+        "HV",
         64,
         64
       ]
@@ -374,7 +552,7 @@
       "shape": [
         "B",
         "N",
-        "H",
+        "HV",
         64,
         64
       ]
@@ -384,7 +562,7 @@
       "shape": [
         "B",
         "N",
-        "H",
+        "HV",
         128,
         128
       ]
@@ -394,7 +572,7 @@
       "shape": [
         "B",
         "T",
-        "H",
+        "HV",
         128
       ],
       "initialization": "NaN poison; every element must be overwritten."
@@ -403,7 +581,7 @@
       "dtype": "float32",
       "shape": [
         "B",
-        "H",
+        "HV",
         128,
         128
       ],
@@ -412,14 +590,15 @@
   },
   "workspace": {
     "N": "T/64",
-    "lifetime": "One public call; each stage output has a unique producer, separate storage and launch-ordered consumers."
+    "lifetime": "One public call; each stage output has a unique producer, separate storage and launch-ordered consumers.",
+    "group_replication": "When HV>H, two device-local FP32 q/k buffers, each B*T*HV*128 elements; no copies when HV==H."
   },
   "provenance": {
     "baseline": "Generic causal-score/WY/scan/output mechanics adapted from repository GDN-2 unit at 8786683, with new scalar-gated input preparation and independent GDN references. No runtime sibling dependency."
   },
   "domain": {
-    "layout": "token-major, contiguous; internal chunks B,N,H,64,128",
-    "GQA": "HV must equal H",
+    "layout": "token-major, contiguous; internal chunks B,N,HV,64,128",
+    "GQA": "HV is a positive multiple of H; value head j uses q/k head floor(j/(HV/H))",
     "initial_state": "zero only",
     "T": "positive multiple of 64, <=4096",
     "K": 128,
@@ -439,57 +618,22 @@
     "states": "FP32 incoming state per chunk, retained for output stage"
   },
   "measured": {
-    "initial_native": {
-      "kernel_sha256": "1c022aa953e77c37661c4283bb470741c4aa8ece1a3b6ff2641b9ce16c2ddfe8",
-      "case": "b1_t4096_h16_g1",
-      "block_dim": 2,
-      "o": {
-        "max_abs": 2.153683453798294e-09,
-        "relative_l2": 6.135232774450759e-07
-      },
-      "final_state": {
-        "max_abs": 2.9802322387695312e-08,
-        "relative_l2": 9.675853834655711e-07
-      },
-      "scope": "Historical original-device native CCE/aclnn against CPU block solve, before optimization. This first full-workload receipt is not the replacement-device qualification; see measured.native_inprocess and validation.json."
-    },
     "native_inprocess": {
       "status": "passed",
-      "kernel_sha256": "a5d0c7a7b7f62001936d64f06538444afc90f4d2100362f9ceacef4142fbd72d",
-      "cases": 10,
+      "cases": 22,
       "block_dim": [
         1,
         2
       ],
-      "independent_leaves": true,
-      "nan_poisoned_checkpoints": true,
-      "public_dtype": [
-        "float32",
-        "bfloat16"
-      ],
       "evidence": "validation.json",
-      "cross_build_stage_bytes": "all 13 checkpoints equal to baseline and across block_dim1/2",
-      "acceptance": "passed on replacement device; all 45 pre/postflight checks healthy with no error codes"
+      "cross_build_stage_bytes": "All 13 checkpoints match between block dimensions; equal-head cases also match immutable GDA-01."
     },
     "performance": {
       "evidence": "validation.json",
       "rounds": 3,
       "warmup": 10,
       "repeat": 50,
-      "timing": "synchronized host-inclusive public FP32 latency including allocations",
-      "conservative_speedup": {
-        "1024": [
-          1.0771842183322506,
-          1.0759944391024614,
-          1.0705316618516099
-        ],
-        "4096": [
-          1.0800620110845351,
-          1.0796224858157137,
-          1.0790164907492992
-        ]
-      },
-      "acceptance": "passed on replacement device; original device numbers are historical only"
+      "claim": "No speedup claim: equal-head ABI regression only. Grouped profile includes replication; no grouped speedup baseline."
     }
   }
 }
