@@ -1908,7 +1908,7 @@
       "wave": "W0",
       "soc": "a5",
       "priority": "P2",
-      "status": "blocked",
+      "status": "in_progress",
       "model": [],
       "kernel": [
         "gdn_fwd"
@@ -1985,6 +1985,10 @@
         {
           "at": "2026-09-18T02:35",
           "summary": "RISK shared-machine + BLOCKED：三轮配对性能跑完后，额外诊断网格的 preflight 报device health=2（error_code=0x80f78009，RAS bus error，\"probably caused by software\"）。未再发起任何 kernel、未复位/kill 任何进程，只读诊断确认无残留进程。草稿 PR #77 已开（253 host passed，10/10 native case bd1/2 通过、13 stage hash 与基线一致，首轮性能 T1024 1.19-1.20x/T4096 1.12-1.23x，明确标注\"待故障排查与干净重跑，非最终声明\"）。等设备恢复健康后补最终验证与三明治重跑再 DONE。**同一台设备也在被 A5K-01 用（共享设备锁串行）——那边可能同样受影响，需要关注**"
+        },
+        {
+          "at": "2026-09-18T03:35",
+          "summary": "STATUS：找到同机另一块健康设备（health=0，无错误码，无占用），用独立设备锁开始干净重跑，故障设备未动、旧结果按历史数据单独保留不混入最终性能声明。每次 benchmark 前后都做只读健康检查，不健康就停。草稿 PR #77 仍 draft，等新设备跑完"
         }
       ],
       "result": null
