@@ -123,6 +123,7 @@ def kda_sub3_wy_stable_kernel(
 ):
     vcmutex = VcMutex(
         0,
+        depth=2,  # Preserve the former default for the two rotating L1 slots.
         src_start_pipe=Pipe.MTE3,
         src_end_pipe=Pipe.MTE3,
         dst_start_pipe=Pipe.MTE1,
