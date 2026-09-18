@@ -1,6 +1,6 @@
 # 交接：下一个会话从哪里接
 
-> 写于 2026-09-11，会话状态更新至 2026-09-15。**本文件只记"接手需要知道的"**；权威状态在
+> 写于 2026-09-11，会话状态更新至 2026-09-18。**本文件只记"接手需要知道的"**；权威状态在
 > `docs/matrix/*.json`（`gen_matrix.py` 校验），纪律在 `AGENTS.md`，分期在 `docs/plan.md`。
 > 三者冲突时以 json 为准，并顺手修本文件。
 
@@ -94,6 +94,46 @@ PGDN 同理是 GDN 加同一层预条件，但需要的 GQA/GVA 分组正是 GDN
 （<https://github.com/ntumm120/preconditioned-deltanet>）只有从零训练的配置（340M/1B），
 端到端验证到不了真实 checkpoint 的 logits/cache 一级，只能到双 oracle（fla naive + fla
 自己已验证过的 Triton chunk）加真实规模形状。
+
+### 2026-09-17/18：GD2-02~04、ascriptor 库缺陷、并发规则、GDA-01、A5K-01
+
+**GD2-01 之后又做了两轮性能优化**：GD2-03（scan/output 逐 channel 重复算的标量指数改成
+逐行向量化，D-PM-17）、GD2-04（WY 行对复用，D-PM-19）都已合入。两轮都遵守"先 profile
+再改、精度判据不放松"，性能数字见各自的 PR（#67、#74）与 `contract.json`。**GD2-02**
+（真机数 + 真实整网验证 + 性能三明治）还没人接，deps 已满足，随时可派。
+
+**发现一个 ascriptor 库本身的缺陷**（`gaps.json` 的 `ascriptor-gm-transfer-two-slice-row-gap`，
+P0）：`passes/device_lower.py` 的 `gm_transfer` 函数，双切片分支（`len(sliced)==2`）算行间距
+时只看第二个切片维之后的形状，**漏了夹在两个切片维中间的标量索引维**——4 维 GM 张量
+`[B,T,H,D]` 里 B/H 标量索引、T/D 切片这种模式会静默算错行间距，产出有限但错误的值。
+这是库层面的问题，不是本仓能改的范围（`AGENTS.md` §3）；本仓侧的绕法是显式传
+`gm_to_ub_pad(..., 正确的 gap)`，GDA-01 已经这么做并验证过。**扫过已合入的 kernel**，
+找到 19 处同类模式，全部只搬一行、不受影响——但扫描范围有限（只覆盖直接 GM 参数 +
+`<<=` 形式），不代表证明了整仓没有别处踩中。
+
+**多 agent 并发规则改了**（`tools/pm_board.py` 的 `check()`）：原来"一个 agent 同时只接
+一个任务"是按 GitHub 账号判定的，现在改成按 `(账号, assignee_caps.session)` 判定——
+两个任务都填 `session` 且不同，同一个账号可以并发持有多个任务；只填一边、都不填、或
+两边相同，仍按老规矩当同一个 agent。见 `docs/pm/PROTOCOL.md` §3.1。这条规则被
+GDA-01 与 A5K-01 实际用上了——同一个 `limjiunnbin` 账号靠不同 `session` 同时接了两个任务。
+
+**GDA-01 已合入**（非 GQA 的 GDN `gated_delta_rule` chunk 前向，A5，D-PM-20 窄范围例外，
+PR #77）：真机 10/10 case 通过、三轮同步三明治 T1024 1.07x/T4096 1.08x。过程中原设备
+出了真的硬件故障（RAS bus error `0x80f78009`），处置完全正确——不复位不 kill、只读诊断、
+切到同机健康设备重跑、旧结果不混入最终声明。
+
+**A5K-01 已合入**（KDA `Aqk` L1 交接缺陷修复，PR #78）：把 A2-04 诊断、pipesim 验证过的
+槽轮转修法（`Var(((pair_idx - pair_begin) * C + c_idx) % 2)`）落到 `kda_fwd_stable` 的
+派生 `recurrent.py` 里。真机 336/336 case（C=1..6 × 7 组 H/HV × 零/随机 state × bd=1..4，
+含 Kimi 真实形状 H=HV=32）通过，PM 独立复算了不依赖真机的 12 格 pipesim 回归，逐字一致。
+**没解决的边界，写进了 `gaps.json`**：修复只在这个独立单元里，`ascend_fla/ops/kda/chunk.py`
+的公开调度**仍然选择原始（有缺陷的）recurrent**——那个文件不在 A5K-01 写集内，接线是
+一个需要显式决定的独立步骤。**在接线完成之前，公开 API 的用户仍然会撞上这个缺陷。**
+
+**当前可派（`tools/pm_board.py --next`）**：A2-01（P0，split-K 缺陷定性）、A2-02、A2-08、
+**GD2-02**（真机验证 GD2-01~04 的累积成果）、**PK-02**（PKDA，KDA 派生单元）。
+`GDA-01`/`A5K-01` 都是波次例外，做完之后想再申领同类工作要走"新 REQUEST → 用户批准 →
+新任务号"，不能假设已批准的例外自动延伸到下一轮（GD2-03/04 就是这么一路批下来的先例）。
 
 任务 issue 发过两轮。第一轮用新建的 bot 账号 `ascend-fla-pm-bot` 建了 26 个（#2~#27），两分钟内建完，
 触发 GitHub 反滥用过滤：匿名访问这些 issue 和该账号主页全是 404，登录态却一切正常 —— 所以看着像发成功了。
