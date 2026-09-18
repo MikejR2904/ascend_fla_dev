@@ -1812,7 +1812,7 @@
       "wave": "W0",
       "soc": "a5",
       "priority": "-",
-      "status": "open",
+      "status": "assigned",
       "model": [],
       "kernel": [
         "pgdn_chunk_fwd"
@@ -1838,14 +1838,29 @@
       "spec": "docs/pm/tasks/PK-03.md",
       "issue": 69,
       "pr": null,
-      "assignee": null,
-      "assignee_caps": null,
-      "branch": null,
+      "assignee": "limjiunnbin",
+      "assignee_caps": {
+        "agent": "Codex; continuing the GDA-01/GDA-02 GDN forward session",
+        "socs": [
+          "a5"
+        ],
+        "soc_details": "a5: 950PR_9589 V100, CANN/OPP 9.2.0, packages ascend950/ascend910b/ascend910_93",
+        "ascriptor": "library 90cfcdc720bb / kernels b3b3f9c16df7",
+        "fla": "e52dbc0ea19d3a40d7ab7f9eed855d2b473994d2",
+        "fork": "limjiunnbin/ascend_fla_dev",
+        "session": "gdn-pgdn-forward",
+        "note": "与 A5K-02（session 01a0ae7a-...）为同账号不同 session，按并发规则放行"
+      },
+      "branch": "task/PK-03",
       "timebox_h": 24,
       "reports": [
         {
           "at": "2026-09-18T09:25",
           "summary": "GDA-02 已合入（PR #84），前置解除，转 open"
+        },
+        {
+          "at": "2026-09-18T09:52",
+          "summary": "ASSIGN：申领人声明与 A5K-02 为不同 session（并发规则放行）。前置（GDA-02）已满足，写集与 PK-03.md 一致，未与其它在飞任务写集重叠。priority 字段保持 \"-\"（看板词表只有 P0/P1/P2/-，P3 不在词表内，未做无效修改）"
         }
       ],
       "result": null
