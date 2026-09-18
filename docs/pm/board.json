@@ -2127,7 +2127,7 @@
       "wave": "W0",
       "soc": "a5",
       "priority": "P1",
-      "status": "assigned",
+      "status": "blocked",
       "model": [
         "kimi-linear-48b-a3b"
       ],
@@ -2158,7 +2158,7 @@
       },
       "spec": "docs/pm/tasks/A5K-02.md",
       "issue": 81,
-      "pr": null,
+      "pr": 83,
       "assignee": "limjiunnbin",
       "assignee_caps": {
         "agent": "Codex (self-described, per #79/#81)",
@@ -2192,6 +2192,10 @@
         {
           "at": "2026-09-18T08:01",
           "summary": "RISK write-set-expansion：带 cache 前向路径需要预编译 backward，未改的上游 inverse_mm.py 在当前 pin 下超出硬件互斥锁上限（34>32）。PM 独立复现（ascriptor compile 报同一 PassError，同一行号、同一计数）。用户批准窄范围写集扩展——只做 l0c_dvh/l0c_dvbeta 单槽化，不改算式，不碰 A5-01..A5-06"
+        },
+        {
+          "at": "2026-09-18T08:03",
+          "summary": "草稿 PR #83 已开（337 passed/5 skipped，正向+原始对照在 bd1-4 分别原生编译过，仅编译未执行）。BLOCKED 等 inverse_mm 写集扩展批准——这条已经在同一轮批了（D-PM-24），回复已发；另外还在等设备空闲窗口（同机另一个任务在跑）。两栏都不是撤回或完成，是真实阻塞"
         }
       ],
       "result": null
