@@ -21,7 +21,8 @@ def _launch(inputs, options):
 def execute_stages(inputs, options):
     from kernels.pipeline import run
     launch = _launch(inputs, options)
-    upstream = dict(inputs, **reference_stages(inputs))
+    upstream = {name: value.contiguous() for name, value in
+                dict(inputs, **reference_stages(inputs)).items()}
     def independent(entry, sources, outputs, scalars):
         return launch(entry, {name: upstream[name] for name in sources}, outputs, scalars)
     return run(inputs, independent)

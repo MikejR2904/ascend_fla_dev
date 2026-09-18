@@ -60,6 +60,7 @@ def main():
     p.add_argument('--output', type=Path, required=True)
     args = p.parse_args()
     import torch_npu
+    import ascriptor
     from ascend_fla.ops.gdn_chunk_fwd import _compiled, _pipeline, chunk_gdn, prepare
     refs=load('gdn_bench_ref',ROOT/'ref/reference.py')
     sr=load('gdn_bench_stage_ref',ROOT/'ref/stages.py')
@@ -82,6 +83,14 @@ def main():
     opp=os.environ.get('ASCEND_OPP_PATH')
     inventory=Path(opp)/'built-in/op_impl/ai_core/tbe/kernel' if opp else None
     checkpoint['device']['opp_packages']=sorted(x.name for x in inventory.iterdir()) if inventory and inventory.exists() else []
+    checkpoint['source_sha256']={str(p.relative_to(ROOT)):hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(ROOT.rglob('*.py')) if '__pycache__' not in str(p)}
+    wrapper=ROOT.parents[3]/'ascend_fla/ops/gdn_chunk_fwd.py'
+    checkpoint['public_wrapper_sha256']=hashlib.sha256(wrapper.read_bytes()).hexdigest()
+    lib_root=Path(ascriptor.__file__).parent
+    library_hash=hashlib.sha256()
+    for p in sorted(lib_root.rglob('*.py')):
+        library_hash.update(str(p.relative_to(lib_root)).encode()+b'\0'+p.read_bytes())
+    checkpoint['library_python_tree_sha256']=library_hash.hexdigest()
     args.output.parent.mkdir(parents=True,exist_ok=True)
     for case in cases:
         cpu=refs.make_inputs(case)
@@ -98,11 +107,27 @@ def main():
             return outputs
         got=_pipeline().run(npu,launch)
         torch.npu.synchronize()
-        row={'case':case['id'],'parameters':case['parameters'],'stages':{},'oracles':{}}
+        row={'case':case['id'],'seed':case['seed'],'parameters':case['parameters'],'stages':{},'oracles':{},
+             'input_sha256':{n:hashlib.sha256(x.numpy().tobytes()).hexdigest() for n,x in cpu.items()}}
         for n,ref in stage_expected.items():
             row['stages'][n]=metric(got[n],ref)
             torch.testing.assert_close(got[n].cpu(),ref,atol=2e-5,rtol=2e-4)
             assert row['stages'][n]['relative_l2']<=1e-4,(case['id'],n,row['stages'][n])
+        # Check every leaf with independently generated CPU upstreams as well
+        # as checking the actual composition above.
+        upstream=dict(cpu,**stage_expected)
+        row['independent_leaves']={}
+        for name,op,sources,outputs,scalars in calls:
+            leaf_inputs={n:upstream[n].contiguous().to('npu') for n in sources}
+            leaf_outputs={n:torch.empty_like(x) for n,x in outputs.items()}
+            op(leaf_inputs,scalars,leaf_outputs)
+            torch.npu.synchronize()
+            for n,x in leaf_outputs.items():
+                rr=stage_expected[n]
+                row['independent_leaves'][n]=metric(x,rr)
+                torch.testing.assert_close(x.cpu(),rr,atol=2e-5,rtol=2e-4)
+                assert row['independent_leaves'][n]['relative_l2']<=1e-4
+            del leaf_inputs,leaf_outputs
         for label, oracle in (('block_solve',expected),('fla_naive',{'o':fo,'final_state':fs})):
             row['oracles'][label]={n:metric(got[n],r) for n,r in oracle.items()}
             assert all(m['relative_l2']<=1e-4 for m in row['oracles'][label].values())

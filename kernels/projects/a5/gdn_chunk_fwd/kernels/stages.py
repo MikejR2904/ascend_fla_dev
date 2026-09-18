@@ -22,28 +22,31 @@ def zero_row(x: Tensor):
 
 
 @vf()
-def prepare_row(q: Tensor, k: Tensor, v: Tensor, g: Tensor, beta: Tensor,
-                bk: Tensor, prefix: Tensor):
+def prepare_tile(q: Tensor, k: Tensor, v: Tensor, g: Tensor, beta: Tensor,
+                 bk: Tensor, prefix: Tensor):
     qr = RegList(DT.float, 2)
     kr = RegList(DT.float, 2)
     vr = RegList(DT.float, 2)
     pr = RegList(DT.float, 2)
     gv = Reg(DT.float)
     bv = Reg(DT.float)
-    qr <<= q[0:1, 0:D]
-    kr <<= k[0:1, 0:D]
-    vr <<= v[0:1, 0:D]
-    gv <<= g[0:1, 0:1].single()
-    bv <<= beta[0:1, 0:1].single()
-    pr <<= prefix[0:1, 0:D]
-    pr <<= pr + gv
-    qr <<= qr * SCALE
-    kr <<= kr * bv
-    vr <<= vr * bv
-    q[0:1, 0:D] <<= qr
-    bk[0:1, 0:D] <<= kr
-    v[0:1, 0:D] <<= vr
-    prefix[0:1, 0:D] <<= pr
+    pr <<= 0.0
+    # The FP32 prefix still advances in token order. Keeping it in registers
+    # removes materialize/reload only; no sum reassociation is introduced.
+    for i in range(C):
+        qr <<= q[i:i+1, 0:D]
+        kr <<= k[i:i+1, 0:D]
+        vr <<= v[i:i+1, 0:D]
+        gv <<= g[i:i+1, 0:1].single()
+        bv <<= beta[i:i+1, 0:1].single()
+        pr <<= pr + gv
+        qr <<= qr * SCALE
+        kr <<= kr * bv
+        vr <<= vr * bv
+        q[i:i+1, 0:D] <<= qr
+        bk[i:i+1, 0:D] <<= kr
+        v[i:i+1, 0:D] <<= vr
+        prefix[i:i+1, 0:D] <<= pr
     vf_barrier(VfPipe.STORE, VfPipe.LOAD)
 
 
@@ -56,13 +59,15 @@ def gdn_chunk_prepare(
     gc: GM[f32, ("B", "N", "H", 64, 128)], bk: GM[f32, ("B", "N", "H", 64, 128)],
     wv: GM[f32, ("B", "N", "H", 64, 128)], B: i32, T: i32, H: i32, N: i32,
 ):
-    qu = Tensor(DT.float, [1, D], Position.UB)
-    ku = Tensor(DT.float, [1, D], Position.UB)
-    vu = Tensor(DT.float, [1, D], Position.UB)
-    gu = Tensor(DT.float, [1, 8], Position.UB)
-    bu = Tensor(DT.float, [1, 8], Position.UB)
-    bku = Tensor(DT.float, [1, D], Position.UB)
-    pu = Tensor(DT.float, [1, D], Position.UB)
+    # 164 KiB total UB. Two complete slots would exceed the 256 KiB profile;
+    # use one item in flight and retire all MTE3 readers before the next load.
+    qu = Tensor(DT.float, [C, D], Position.UB)
+    ku = Tensor(DT.float, [C, D], Position.UB)
+    vu = Tensor(DT.float, [C, D], Position.UB)
+    gu = Tensor(DT.float, [C, 8], Position.UB)
+    bu = Tensor(DT.float, [C, 8], Position.UB)
+    bku = Tensor(DT.float, [C, D], Position.UB)
+    pu = Tensor(DT.float, [C, D], Position.UB)
     per = CeilDiv(B * N * H, GetVecNum())
     begin = Var(per * GetVecIdx())
     end = Min(begin + per, B * N * H)
@@ -71,20 +76,19 @@ def gdn_chunk_prepare(
             hh = Var(item % H)
             cc = Var((item // H) % N)
             bb = Var(item // (N * H))
-            zero_row(pu)
-            for ii in range(C):
-                tt = Var(cc * C + ii)
-                qu[:, :] <<= q[bb, tt:tt+1, hh, :]
-                ku[:, :] <<= k[bb, tt:tt+1, hh, :]
-                vu[:, :] <<= v[bb, tt:tt+1, hh, :]
-                gu[0:1, 0:1] <<= g[bb, tt:tt+1, hh:hh+1]
-                bu[0:1, 0:1] <<= beta[bb, tt:tt+1, hh:hh+1]
-                prepare_row(qu, ku, vu, gu, bu, bku, pu)
-                qn[bb, cc, hh, ii:ii+1, :] <<= qu[:, :]
-                kn[bb, cc, hh, ii:ii+1, :] <<= ku[:, :]
-                gc[bb, cc, hh, ii:ii+1, :] <<= pu[:, :]
-                bk[bb, cc, hh, ii:ii+1, :] <<= bku[:, :]
-                wv[bb, cc, hh, ii:ii+1, :] <<= vu[:, :]
+            tt = Var(cc * C)
+            # Explicit row gaps preserve the skipped head axis in BTHD.
+            gm_to_ub_pad(qu, q[bb, tt:tt+C, hh, :], C, D, (H - 1) * D, 0)
+            gm_to_ub_pad(ku, k[bb, tt:tt+C, hh, :], C, D, (H - 1) * D, 0)
+            gm_to_ub_pad(vu, v[bb, tt:tt+C, hh, :], C, D, (H - 1) * D, 0)
+            gu[:, 0:1] <<= g[bb, tt:tt+C, hh:hh+1]
+            bu[:, 0:1] <<= beta[bb, tt:tt+C, hh:hh+1]
+            prepare_tile(qu, ku, vu, gu, bu, bku, pu)
+            qn[bb, cc, hh, :, :] <<= qu[:, :]
+            kn[bb, cc, hh, :, :] <<= ku[:, :]
+            gc[bb, cc, hh, :, :] <<= pu[:, :]
+            bk[bb, cc, hh, :, :] <<= bku[:, :]
+            wv[bb, cc, hh, :, :] <<= vu[:, :]
     return qn, kn, gc, bk, wv
 
 

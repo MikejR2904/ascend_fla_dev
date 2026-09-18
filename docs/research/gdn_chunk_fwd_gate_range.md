@@ -97,3 +97,57 @@ baseline/candidate/baseline, separate processes for different builds, fixed
 warmup/repeat, and exact source/toolchain identities. In-process CCE/aclnn
 must be validated separately from the SSH board harness. Hardware, latency,
 workspace and optimization conclusions are pending; no speedup is claimed.
+
+## Measured baseline and selected optimization
+
+The initial per-token prepare baseline (`fb1e0de`, stage-source SHA256
+`1c022aa953e77c37661c4283bb470741c4aa8ece1a3b6ff2641b9ce16c2ddfe8`)
+passed native CCE/aclnn T4096/H16/block_dim2. Output max_abs was 2.153684e-9,
+relative L2 6.135233e-7; FP32 state max_abs 2.980232e-8, relative L2
+9.675854e-7 against the independent block solve. The separate in-process
+bridge passed all ten cases against both CPU references and public BF16/FP32
+entry checks. The fixed runtime is Python 3.12.13, Torch 2.12.0+cpu with
+Torch NPU 2.12.0; the device reports Ascend950PR_9589, compiler/OPP 9.2.0,
+OPP kernel directories ascend950, ascend910b and ascend910_93.
+
+The first synchronized T4096 baseline profile (warmup10/repeat50, block_dim2)
+measured public median 54969.98 us and prepare median 9901.86 us. Scores,
+WY, scan and output were respectively 12768.92, 11244.81, 8524.70 and
+5871.34 us. A subsequent grid run measured 46464.14 us public latency;
+this observed drift is why acceptance uses paired sandwiches rather than
+comparing isolated historical medians.
+
+The selected candidate batches prepare's transfers into complete 64-row
+head tiles. At T4096/H16 the source-level DMA invocation count falls from
+655360 to 10240, and VF invocations from 65536 to 1024. Requested logical
+input/output bytes are unchanged (101187584 / 167772160); these are analytic
+requested bytes, not measured HBM traffic or a bandwidth utilization claim.
+The same four vector participants are active at block_dim2; no cube pipeline
+is introduced. The sequential FP32 prefix and per-row multiply order remain.
+
+Single-slot ownership uses five 64x128 FP32 matrices (160 KiB) and two
+64x8 scalar staging matrices (4 KiB). Every MTE2 writer precedes its VF
+reader, and all MTE3 readers retire before the next item reuses the slot.
+The explicit q/k/v row gap is `(H-1)*128` elements. Two full slots would
+require 328 KiB, exceeding the 256 KiB profile, so this candidate deliberately
+keeps one item in flight; it makes no overlap or lookahead claim.
+
+### Rejected implicit-stride candidate
+
+An initial candidate used `qu[:,:] <<= q[bb, tt:tt+64, hh, :]`. At the
+accepted library revision, `passes/device_lower.py:81` (`gm_transfer`) and
+its two-sliced-dimension branch infer a zero row gap from the contiguous
+suffix, omitting the indexed-away H axis. The emitted transfer was
+`gm_to_ub_pad(...,64,512,0,0)`; its correct byte gap is `(H-1)*512`.
+A reduced T64/H3/block_dim1 pipe-model diagnostic failed 24135/24576 qn
+values (max_abs 0.0234730), despite finite results. Native T4096/H16 also
+failed: 8240529/8388608 qn values, max_abs 0.0334046. This candidate is rejected;
+no threshold was relaxed. The original per-token baseline is unaffected.
+
+The unit uses the supported explicit `gm_to_ub_pad` source-gap argument,
+without modifying the upstream library. The corrected reduced diagnostic
+passes: qn/kn/bk/wv match the CPU reference exactly; prefix max_abs=1.78814e-7
+and relative L2=1.17071e-7 versus torch cumsum. Event balance and hazard lists
+are empty and no deadlock is reported. This is specifically a repeated-buffer
+and strided-copy model check, not silicon qualification. The failure and
+located workaround were reported in GDA-01's RISK thread.

@@ -111,3 +111,20 @@ def test_invalid_inputs(mutation,match):
 def test_no_backward():
     inp=data(); inp['q'].requires_grad_(True)
     with pytest.raises(RuntimeError,match='inference-only'): call(inp)
+
+
+def test_bulk_prepare_strides_and_repeated_buffer_ownership(tmp_path):
+    """Regression for skipped-head GM row gaps; reduced pipesim, not hardware."""
+    pytest.importorskip('ascriptor.runtime')
+    from ascend_fla.ops.gdn_chunk_fwd import _pipeline
+    runner=load('gdn_test_unit_runner',ROOT/'_unit_runner.py')
+    inp=data(64,3,.03)
+    expected=stages.reference_stages(inp)
+    names=('qn','kn','gc','bk','wv')
+    outputs=[torch.full_like(expected[n],float('nan')) for n in names]
+    options=dict(device='a5',backend='cce',block_dim=1,launcher='pipesim',out_dir=tmp_path,timeout=60)
+    args=tuple(inp[n] for n in ('q','k','v','g','beta'))+tuple(outputs)+(1,64,3,1)
+    got=runner.launch_kernel(_pipeline().entries()[0],args,options)
+    for n,x in zip(names,got): compare(x,expected[n])
+    evidence=options['_execution_evidence'][0]
+    assert not evidence['hazards'] and not evidence['deadlock'] and not evidence['event_balance']
