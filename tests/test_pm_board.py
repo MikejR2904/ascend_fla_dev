@@ -92,6 +92,31 @@ class TestCheck(_Tmp):
                               _task("B", "assigned", write_set=["b.py"], assignee="bob"))
         self.assertTrue(any("同时只接一个任务" in p for p in found), found)
 
+    def test_same_account_blocked_without_declared_session(self):
+        """2026-09-18 之前的默认行为原样保留：不声明 session 就还是同一个 agent。"""
+        found = self.problems(
+            _task("A", "in_progress", write_set=["a.py"], assignee="bob",
+                  assignee_caps={"session": "only-one-side"}),
+            _task("B", "assigned", write_set=["b.py"], assignee="bob"))
+        self.assertTrue(any("同时只接一个任务" in p for p in found), found)
+
+    def test_same_account_allowed_with_two_different_declared_sessions(self):
+        """2026-09-18 用户决定：账号相同但自称不同 agent/会话，两边都声明且不同就放行。"""
+        found = self.problems(
+            _task("A", "in_progress", write_set=["a.py"], assignee="bob",
+                  assignee_caps={"session": "gdn2-forward"}),
+            _task("B", "assigned", write_set=["b.py"], assignee="bob",
+                  assignee_caps={"session": "kda-repair"}))
+        self.assertFalse(any("同时只接一个任务" in p for p in found), found)
+
+    def test_same_account_blocked_when_declared_sessions_match(self):
+        found = self.problems(
+            _task("A", "in_progress", write_set=["a.py"], assignee="bob",
+                  assignee_caps={"session": "same"}),
+            _task("B", "assigned", write_set=["b.py"], assignee="bob",
+                  assignee_caps={"session": "same"}))
+        self.assertTrue(any("同时只接一个任务" in p for p in found), found)
+
     def test_duplicate_issue_number(self):
         found = self.problems(_task("A", issue=7, write_set=["a.py"]), _task("B", issue=7, write_set=["b.py"]))
         self.assertTrue(any("#7" in p for p in found), found)

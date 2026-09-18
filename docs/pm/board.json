@@ -134,6 +134,12 @@
       "by": "user",
       "decision": "批准 issue #70：agent 轨道在 A5 上开一条窄范围例外任务（GDA-01），做 GDN（gated_delta_rule，非 GDN-2）chunk 前向的真机开发与优化，显式跳过 gdn-no-gqa（不解决它）。不改变 KDA 首位、Qwen3-Next 卡在六项 ABI 缺口的排序，也不改变 agent 轨道 A2→A3→A5 的波次顺序——仅这一条任务例外，理由是有人已经配好 A5 真机访问",
       "risk": "本任务的正确性/性能结论只对 A5、非 GQA 场景成立，不能外推到 A2/A3 或 GQA 场景；已在 AGENTS.md §2 与任务 spec 里写明边界"
+    },
+    {
+      "id": "D-PM-21",
+      "date": "2026-09-17",
+      "by": "user",
+      "decision": "批准 issue #75：agent 轨道开一条窄范围波次例外任务（A5K-01），把 A2-04 已诊断/pipesim 验证过的 Aqk 交接修法落到 kda_fwd_stable 派生单元并在 A5 真机验证。不解除 A5-01..A5-06 的 gated: wave:W-A3——那些等的是完整 A2→A3→A5 证据链，本任务不提供。这是本轮第三个 A5 波次例外（GD2-2x/GDA-01 之后），已提醒用户这是累积的选择，用户确认继续"
     }
   ],
   "gated_epics": [
@@ -1902,7 +1908,7 @@
       "wave": "W0",
       "soc": "a5",
       "priority": "P2",
-      "status": "open",
+      "status": "in_progress",
       "model": [],
       "kernel": [
         "gdn_fwd"
@@ -1926,9 +1932,19 @@
       "spec": "docs/pm/tasks/GDA-01.md",
       "issue": 73,
       "pr": null,
-      "assignee": null,
-      "assignee_caps": null,
-      "branch": null,
+      "assignee": "limjiunnbin",
+      "assignee_caps": {
+        "agent": "Codex (self-described, per #73)",
+        "socs": [
+          "a5"
+        ],
+        "soc_details": "A5 device access confirmed, driver health rc=0/health=0, opp ascend950/910b/910_93",
+        "ascriptor": "library 90cfcdc720bb",
+        "fla": "e52dbc0ea19d3a40d7ab7f9eed855d2b473994d2",
+        "fork": "limjiunnbin/ascend_fla_dev",
+        "note": "GD2-04 已 done，账号空闲；GD2-01/03/04 的原 assignee"
+      },
+      "branch": "task/GDA-01",
       "timebox_h": 24,
       "origin": {
         "kind": "request",
@@ -1940,6 +1956,75 @@
         {
           "at": "2026-09-17T13:59",
           "summary": "用户批准 D-PM-20，转 open。assignee 同时申领了 GD2-04，一个 agent 只能同时持一个任务——先派 GD2-04（已有真实进展），GDA-01 留 open 等 APPLY"
+        },
+        {
+          "at": "2026-09-17T14:20",
+          "summary": "GD2-04 已 done，账号空闲；把 #73 的重申当 APPLY，ASSIGN"
+        },
+        {
+          "at": "2026-09-17T14:27",
+          "summary": "ACK 收到（eta 16h）。10 个 CPU 参考 case 已过，完整 workload 的原生 CCE/aclnn 检查在共享设备锁下运行中，尚无真机通过或性能声明"
+        },
+        {
+          "at": "2026-09-18T01:32",
+          "summary": "STATUS：T4096/H16/bd2 全流程原生 CCE/aclnn 通过五个 stage 与最终输出；10 个 CPU 参考 case + 26 项新 host 测试过；对独立 CPU block-solve 参考 relL2 6.1e-7/9.7e-7，预算未变；246 passed/8 skipped。仍无性能声明"
+        },
+        {
+          "at": "2026-09-18T01:52",
+          "summary": "RISK silent-wrong-result：第一轮 bulk-prepare 优化候选踩到 ascriptor 库本身的缺陷（device_lower.py 的 gm_transfer 双切片分支漏算夹在中间的标量索引维，行间距算成 0）。PM 读源码独立核实属实，已记入 gaps.json (ascriptor-gm-transfer-two-slice-row-gap)。候选未被采纳，未合入任何代码；已知绕法（显式 gm_to_ub_pad 传正确 gap）验证通过"
+        },
+        {
+          "at": "2026-09-18T01:53",
+          "summary": "STATUS：基线在 10 个 case 上对独立 block-solve 与 FLA naive 全过；被拒的候选在真机 T4096/H16 上确认复现同一错误（8240529/8388608 元素不匹配），与 pipesim 结论互相印证。已加显式 gap 的修正候选缩小形状 pipesim 过、真机完整验证进行中。基线 T4096/bd2 public≈54970us/prepare≈9902us（未配对，非加速声明）。250 passed/5 skipped"
+        }
+      ],
+      "result": null
+    },
+    {
+      "id": "A5K-01",
+      "title": "KDA chunk 前向：Aqk 交接缺陷修复 + A5 真机验证（波次例外）",
+      "wave": "W0",
+      "soc": "a5",
+      "priority": "P1",
+      "status": "open",
+      "model": [
+        "kimi-linear-48b-a3b"
+      ],
+      "kernel": [
+        "kda_fwd_stable"
+      ],
+      "dtype": [
+        "bf16",
+        "fp32"
+      ],
+      "deps": [],
+      "write_set": [
+        "kernels/projects/a5/kda_fwd_stable/**",
+        "tests/test_kda_gating.py",
+        "docs/research/kda_aqk_handoff_repair.md"
+      ],
+      "needs": {
+        "npu": true,
+        "ascriptor": true,
+        "fla": true
+      },
+      "spec": "docs/pm/tasks/A5K-01.md",
+      "issue": 76,
+      "pr": null,
+      "assignee": null,
+      "assignee_caps": null,
+      "branch": null,
+      "timebox_h": 24,
+      "origin": {
+        "kind": "request",
+        "issue": 75,
+        "by": "limjiunnbin",
+        "approved_by_user": true
+      },
+      "reports": [
+        {
+          "at": "2026-09-17T14:25",
+          "summary": "用户批准 D-PM-21。assignee 当前持有 GDA-01，按一个 agent 一个任务，转 open 等 APPLY，不直接 ASSIGN"
         }
       ],
       "result": null
