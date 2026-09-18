@@ -1305,7 +1305,7 @@
       "wave": "W0",
       "soc": "any",
       "priority": "P1",
-      "status": "in_progress",
+      "status": "done",
       "model": [
         "kimi-linear-48b-a3b"
       ],
@@ -1330,7 +1330,7 @@
       },
       "spec": "docs/pm/tasks/A2-40.md",
       "issue": 54,
-      "pr": null,
+      "pr": 85,
       "assignee": "joshjms",
       "assignee_caps": {
         "agent": "Claude Opus 5（Claude Code）",
@@ -1351,9 +1351,24 @@
         {
           "at": "2026-09-18T10:20",
           "summary": "ACK（晚于 24h 窗口约 13 分钟，joshjms 已自报并致歉）：计划列四个融合算子对象（causal_conv1d/fused_rms_norm_gated/qk_l2norm_gate/packed_projection）对 fla 0.5.2 的现状与静默错误面，标注 ascriptor 可复用单元与缺口，写 ABI 草案+fp32 验收判据，量程表覆盖全部 exp/除法/规约，拆分建议落到 A2-41/42/43，只写 docs/research/a2_fusion_ops.md，性能话术标待测，ETA 8h。轻微迟到不影响接受——远未触及 48h PING / 72h 收回的心跳阈值"
+        },
+        {
+          "at": "2026-09-18T11:54",
+          "summary": "合入 1c1abe3。PM 独立复核：diff 只有 docs/research/a2_fusion_ops.md（写集内），不改任何 kernel/模块代码；gen_matrix.py --check 独立复算通过。四个对象（causal_conv1d/fused_rms_norm_gated/qk_l2norm_gate/packed_projection）的现状/差异/ABI/验收判据完整，量程表 17 处逐条给结论，A2-41/42/43 拆分建议清楚，另提A2-44（纯主机侧，无 gate）。新发现两处静默分叉（D1 l2norm eps 公式、D3 use_short_conv=False 缺 silu）与 qk-l2norm-not-in-kernel 静默面收窄已记入 gaps.json。有一条留给用户/PM 拍板未处理：纯向量单元是否从 A2-11 总闸放宽——本文默认不放宽，PM 暂不单方面决定，待用户表态"
         }
       ],
-      "result": null
+      "result": {
+        "commits": [
+          "4fd8baf",
+          "1c1abe3"
+        ],
+        "evidence": [
+          "PR #85",
+          "docs/research/a2_fusion_ops.md"
+        ],
+        "numbers": "无真机数字（纯主机调研）；唯一算例是解析计算（D1：‖x‖=1e-4 时 fla 输出范数 0.0995，本仓 F.normalize 给 1.0）",
+        "note": "新增 gaps.json 两条（kda-layer-l2norm-eps-formula-diverges P2、kda-layer-missing-silu-when-no-short-conv P3），qk-l2norm-not-in-kernel 与 decode-layer-overhead 补充了 A2-40 的复核/更正说明"
+      }
     },
     {
       "id": "A2-41",
@@ -2306,6 +2321,51 @@
         "numbers": "主机侧：284 passed/5 skipped，22/22 契约 case reference 过；真机：HV==H 与 GDA-01 逐位一致（10 case，13 checkpoint，bd1/2），ratio∈{1,2,4,8}×C∈{1,2,3} 网格通过双 oracle，FP32 最大 relL2 1.78e-6/BF16 output 0.0017；三轮三明治为回归测量，非加速声明",
         "note": "真机数字由 assignee 报告，PM 未独立复算；HV==H 的 no-op 保证已在代码层面独立确认"
       }
+    },
+    {
+      "id": "A2-44",
+      "title": "KDA 层语义修正（D1 l2norm 公式、D3 缺 silu）+ fla 式原始输入 API（不动 kernel）",
+      "wave": "W0",
+      "soc": "any",
+      "priority": "P2",
+      "status": "open",
+      "model": [
+        "kimi-linear-48b-a3b"
+      ],
+      "kernel": [],
+      "dtype": [
+        "bf16",
+        "fp32"
+      ],
+      "deps": [
+        "A2-40"
+      ],
+      "write_set": [
+        "ascend_fla/ops/kda/chunk.py",
+        "ascend_fla/ops/kda/fused_recurrent.py",
+        "ascend_fla/layers/kda.py",
+        "tests/test_kda_layer_semantics.py",
+        "tests/test_kda_domain_checks.py"
+      ],
+      "needs": {
+        "npu": false,
+        "ascriptor": false,
+        "fla": true
+      },
+      "spec": "docs/pm/tasks/A2-44.md",
+      "issue": null,
+      "pr": null,
+      "assignee": null,
+      "assignee_caps": null,
+      "branch": null,
+      "timebox_h": 16,
+      "reports": [
+        {
+          "at": "2026-09-18T11:54",
+          "summary": "A2-40（PR #85）提出的拆分任务，PM 落地：纯主机侧 + CPU 测试，不需要真机，无 gate"
+        }
+      ],
+      "result": null
     }
   ],
   "label_github_login": "ascend-fla-pm-bot",

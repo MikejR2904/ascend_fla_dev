@@ -30,7 +30,7 @@ fla 系列线性注意力算子在昇腾 NPU 上的高效实现库。后端用
 | GDN（Gated DeltaNet） | `gated_delta_rule` | 可申领 | 4 | 2/5 |
 | DeltaNet | `delta_rule` | 尚未排任务 | 2 | 2/2 单元有验证记录 |
 | GDN-2（Gated DeltaNet 2） | `gdn2` | 仓主轨道 | 6 | 3/4 |
-| 整网融合算子（模块 / 层级） | `fusion` | 可申领 | 4 | 0/4 |
+| 整网融合算子（模块 / 层级） | `fusion` | 可申领 | 4 | 1/4 |
 | Mamba-1/2/3 | `mamba` | 未排期 (G4) | — | — |
 | GLA（Gated Linear Attention） | `gla` | 未排期 (G4) | — | — |
 | PKDA / PGDN（预条件） | `pkda` | 可申领 | 2 | 0/2 |
@@ -188,49 +188,49 @@ _仓主并行轨道，见 docs/handoff.md §1。**例外**（D-PM-16，2026-09-1
 
 </details>
 
-<details><summary><b>整网融合算子（模块 / 层级） —— 4 个 kernel，0/4 完成</b></summary>
+<details><summary><b>整网融合算子（模块 / 层级） —— 4 个 kernel，1/4 完成</b></summary>
 
 _算子本身之外，整网跑起来还要的那些：短卷积、门控 RMSNorm、q/k l2norm 与门控变换、合投影。现在全是 torch 原生算子（gaps: modules-are-torch-not-kernels / qk-l2norm-not-in-kernel / decode-layer-overhead）_
 
 | kernel | 归属 | 进度 | 下一步 |
 |---|---|---|---|
-| `causal_conv1d` | 可申领 | 0/2 | [#54](https://github.com/ddddwee1/ascend_fla_dev/issues/54) A2-40 |
-| `fused_rms_norm_gated` | 可申领 | 0/2 | [#54](https://github.com/ddddwee1/ascend_fla_dev/issues/54) A2-40 |
-| `qk_l2norm_gate` | 可申领 | 0/2 | [#54](https://github.com/ddddwee1/ascend_fla_dev/issues/54) A2-40 |
-| `packed_projection` | 可申领 | 0/2 | [#54](https://github.com/ddddwee1/ascend_fla_dev/issues/54) A2-40 |
+| `causal_conv1d` | 可申领 | 1/2 | [#54](https://github.com/ddddwee1/ascend_fla_dev/issues/54) A2-40 |
+| `fused_rms_norm_gated` | 可申领 | 1/2 | [#54](https://github.com/ddddwee1/ascend_fla_dev/issues/54) A2-40 |
+| `qk_l2norm_gate` | 可申领 | 1/2 | [#54](https://github.com/ddddwee1/ascend_fla_dev/issues/54) A2-40 |
+| `packed_projection` | 可申领 | 1/2 | [#54](https://github.com/ddddwee1/ascend_fla_dev/issues/54) A2-40 |
 
-<details><summary>causal_conv1d —— 0/2 完成，起点 A2-40</summary>
+<details><summary>causal_conv1d —— 1/2 完成，起点 A2-40</summary>
 
 | 任务 | issue | SoC | dtype | 状态 | 说明 |
 |---|---|---|---|---|---|
-| A2-40 | [#54](https://github.com/ddddwee1/ascend_fla_dev/issues/54) | `any` | bf16、fp32 | 🔵 in_progress | ★ 起点 |
+| A2-40 | [#54](https://github.com/ddddwee1/ascend_fla_dev/issues/54) | `any` | bf16、fp32 | ✅ done | ★ 起点 |
 | A2-41 | [#55](https://github.com/ddddwee1/ascend_fla_dev/issues/55) | `a2` | bf16、fp32 | 🔒 gated (machines:a2) |  |
 
 </details>
 
-<details><summary>fused_rms_norm_gated —— 0/2 完成，起点 A2-40</summary>
+<details><summary>fused_rms_norm_gated —— 1/2 完成，起点 A2-40</summary>
 
 | 任务 | issue | SoC | dtype | 状态 | 说明 |
 |---|---|---|---|---|---|
-| A2-40 | [#54](https://github.com/ddddwee1/ascend_fla_dev/issues/54) | `any` | bf16、fp32 | 🔵 in_progress | ★ 起点 |
+| A2-40 | [#54](https://github.com/ddddwee1/ascend_fla_dev/issues/54) | `any` | bf16、fp32 | ✅ done | ★ 起点 |
 | A2-41 | [#55](https://github.com/ddddwee1/ascend_fla_dev/issues/55) | `a2` | bf16、fp32 | 🔒 gated (machines:a2) |  |
 
 </details>
 
-<details><summary>qk_l2norm_gate —— 0/2 完成，起点 A2-40</summary>
+<details><summary>qk_l2norm_gate —— 1/2 完成，起点 A2-40</summary>
 
 | 任务 | issue | SoC | dtype | 状态 | 说明 |
 |---|---|---|---|---|---|
-| A2-40 | [#54](https://github.com/ddddwee1/ascend_fla_dev/issues/54) | `any` | bf16、fp32 | 🔵 in_progress | ★ 起点 |
+| A2-40 | [#54](https://github.com/ddddwee1/ascend_fla_dev/issues/54) | `any` | bf16、fp32 | ✅ done | ★ 起点 |
 | A2-42 | [#56](https://github.com/ddddwee1/ascend_fla_dev/issues/56) | `a2` | bf16、fp32 | 🔒 gated (kernel-batch-approval) |  |
 
 </details>
 
-<details><summary>packed_projection —— 0/2 完成，起点 A2-40</summary>
+<details><summary>packed_projection —— 1/2 完成，起点 A2-40</summary>
 
 | 任务 | issue | SoC | dtype | 状态 | 说明 |
 |---|---|---|---|---|---|
-| A2-40 | [#54](https://github.com/ddddwee1/ascend_fla_dev/issues/54) | `any` | bf16、fp32 | 🔵 in_progress | ★ 起点 |
+| A2-40 | [#54](https://github.com/ddddwee1/ascend_fla_dev/issues/54) | `any` | bf16、fp32 | ✅ done | ★ 起点 |
 | A2-43 | [#57](https://github.com/ddddwee1/ascend_fla_dev/issues/57) | `a2` | bf16、fp32 | 🔒 gated (machines:a2) |  |
 
 </details>
@@ -335,8 +335,8 @@ _未排期：属 gated epic G4（窄切片原则 —— 没有目标模型就不
 
 | dtype | 归属 | 涉及任务 | 说明 |
 |---|---|---|---|
-| `bf16` | 可申领 | 27 | 当前 ABI：q/k/v/o 与多数中间量 |
-| `fp32` | 可申领 | 34 | 当前 ABI：state、门控累加、精度判定一律 fp32 |
+| `bf16` | 可申领 | 28 | 当前 ABI：q/k/v/o 与多数中间量 |
+| `fp32` | 可申领 | 35 | 当前 ABI：state、门控累加、精度判定一律 fp32 |
 | `fp16` | 未排期 (G3) | — | 契约明确拒绝（见 ops.json 的 no-tail-path 一条） |
 | `int8` | 未排期 (G3) | 1 | 未排期；state 累积漂移需先有方案 |
 | `mxfp8` | 未排期 (G3) | 1 | 未排期；950 原生解码待核实 |

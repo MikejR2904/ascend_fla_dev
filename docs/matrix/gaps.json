@@ -53,7 +53,7 @@
       "applies_to": [
         "kda"
       ],
-      "evidence": "`benchmarks/bench_kda_decode_layer.py`，hidden=2048 / H16 / HV32 / bd1 / prefill 128，warmup 10 / iters 50 / 同步（2026-09-11，CANN 9.2.0）：\n| 项 | 耗时 | 占比 |\n|---|---|---|\n| 整层一步 | 458.0 µs | 100% |\n| 其中 KDA 算子 | 83.1 µs | 18% |\n| 其中层里其余部分 | 305.1 µs | 67% |\n**48 层外推 22 ms/token。**\n层里 T=1 时要走的调用：7 个投影（q/k/v/f/b/g/o）、3 个短卷积、softplus、sigmoid、两次 fp32 l2norm（含 bf16↔fp32 往返）、FusedRMSNormGated —— 每个都几乎没有计算量却各要一次 launch。所以这 305µs 基本是**启动开销之和**，不是算力。\n拆法是逐段替换而不是推断（AGENTS.md §6 铁律一）：`without_op` 那条跑完层里除 KDA 算子以外的全部步骤，`t_op` 只跑算子。",
+      "evidence": "`benchmarks/bench_kda_decode_layer.py`，hidden=2048 / H16 / HV32 / bd1 / prefill 128，warmup 10 / iters 50 / 同步（2026-09-11，CANN 9.2.0）：\n| 项 | 耗时 | 占比 |\n|---|---|---|\n| 整层一步 | 458.0 µs | 100% |\n| 其中 KDA 算子 | 83.1 µs | 18% |\n| 其中层里其余部分 | 305.1 µs | 67% |\n**48 层外推 22 ms/token。**\n层里 T=1 时要走的调用：7 个投影（q/k/v/f/b/g/o）、3 个短卷积、softplus、sigmoid、两次 fp32 l2norm（含 bf16↔fp32 往返）、FusedRMSNormGated —— 每个都几乎没有计算量却各要一次 launch。所以这 305µs 基本是**启动开销之和**，不是算力。\n拆法是逐段替换而不是推断（AGENTS.md §6 铁律一）：`without_op` 那条跑完层里除 KDA 算子以外的全部步骤，`t_op` 只跑算子。\n\n**A2-40 更正（issue #54 / PR #85，2026-09-18）**：上面的测量形状是 `hidden=2048/H16/HV32`，**不是** Kimi-Linear 的真实形状（`hidden=2304/H=HV=32`，见 models.json）；引用这组数只用来说明\"为什么要做\"，不用来预测 A2 上的收益。另外层里实际是 **9 个** `nn.Linear`（f_proj/g_proj 各拆两段），不是 7 个——`packed_projection` 的打包方案要按 9 个算。",
       "impact": "decode 现在**功能可用但性能不可用**：22 ms/token 意味着 45 token/s，而同级别模型的目标是几十到上百倍于此。\n注意优化的着力点：算子侧只占 18%，且其中设备时间只有几 µs —— **把 kernel 再优化一倍，整层只快 9%**。该动的是层这一侧。",
       "blocks": [
         "phase 3"
@@ -478,10 +478,10 @@
       "applies_to": [
         "kda"
       ],
-      "evidence": "fla 的 KimiDeltaAttention 调 chunk_kda 时传 use_qk_l2norm_in_kernel=True、use_gate_in_kernel=True、use_beta_sigmoid_in_kernel=True，即三步都在它的 kernel 里：g 的变换是 -exp(A_log) * softplus(g + dt_bias.view(HV,K))，beta 过 sigmoid，q/k 沿头维 L2 归一化。ascriptor 的 kda_fwd/kda_bwd 的 inlet 只收已经变换好的 q/k/g/beta，contract 里没有 A_log / dt_bias 这两个入口。",
+      "evidence": "fla 的 KimiDeltaAttention 调 chunk_kda 时传 use_qk_l2norm_in_kernel=True、use_gate_in_kernel=True、use_beta_sigmoid_in_kernel=True，即三步都在它的 kernel 里：g 的变换是 -exp(A_log) * softplus(g + dt_bias.view(HV,K))，beta 过 sigmoid，q/k 沿头维 L2 归一化。ascriptor 的 kda_fwd/kda_bwd 的 inlet 只收已经变换好的 q/k/g/beta，contract 里没有 A_log / dt_bias 这两个入口。\n\n**A2-40 复核收窄（issue #54 / PR #85，2026-09-18）**：照抄 fla 的调用方式（传 `use_qk_l2norm_in_kernel=True` 等 flags）在本仓会直接 `TypeError`，不是静默——`chunk_kda`/`fused_recurrent_kda` 签名没有 `**kwargs`。真正的静默面是调用方为了消掉这个报错、把不认识的 kwargs 删掉后传入未归一化/未激活的原始值：这在数值上完全合法，门控闸也未必拦得住（原始值尺度小时跨度也小）。",
       "impact": "**门控挡不住这一条** —— 没做归一化的 q/k 在数值上完全合法，算子会照算并给出一个静静地错的结果。这是本仓目前唯一\"错了不报错\"的语义缺口，因此列 P1。另外这三步的梯度也落在调用方这边，autograd 链要从层级算起。",
       "blocks": [],
-      "proposed_action": "当前处置：ascend_fla/layers/kda.py 显式做这三步并在 fp32 下做，ops/kda 的 docstring 与 __init__ 写明\"调用方需已做\"。直接调算子的人要自己负责。若要彻底消除风险，得在 ascriptor 侧给 kernel 加 A_log/dt_bias 入口与 l2norm —— 那是第四期的事，收益还包括省掉几趟 elementwise 的访存。",
+      "proposed_action": "当前处置：ascend_fla/layers/kda.py 显式做这三步并在 fp32 下做，ops/kda 的 docstring 与 __init__ 写明\"调用方需已做\"。直接调算子的人要自己负责。若要彻底消除风险，得在 ascriptor 侧给 kernel 加 A_log/dt_bias 入口与 l2norm —— 那是第四期的事，收益还包括省掉几趟 elementwise 的访存。\n\n**A2-40 补充**：语义修正（加 fla 式原始输入 API + 定义域检查，`g≤0`/`beta∈(0,1)`/`‖q‖,‖k‖≤1+tol` 的启发式校验，不动 kernel）可以先做、不必等 kernel 融合——建议新任务 A2-44。真正的 kernel 融合仍是 A2-42（`kernel-batch-approval`）。",
       "requires_kernel_change": true,
       "kernel_change_note": "把 q/k 的 L2 归一化、门控变换、beta sigmoid 融进 kernel（fla 的 KDA 在 kernel 内做）。"
     },
@@ -647,13 +647,41 @@
       "status_note": "2026-09-18 发现，GDA-01 找到的、PM 读 ascriptor 源码独立核实过的真实缺陷。未采纳的候选没有被合入，不影响任何已交付代码。\n2026-09-18 待办已完成：GDA-01 对本仓已合入 kernel 做了只读 AST 扫描（main 2315969），找到 19 处同类隐式 GM 读（两切片轴中间夹一个标量索引轴）：gdn2_chunk_fwd/kernels/stages.py:101-106、gdn2_fused_decode/kernels/step.py:332-338、gdn2_fused_recurrent/kernels/step.py:161-165,168。全部 19 处在第一个切片轴上只搬一行，缺陷只在多行搬运时才会触发行间距算错，所以这些已合入代码不受影响。扫描范围有声明的局限性：只覆盖直接 GM 参数加 <<= 这种形式，不保证覆盖别名或其它搬运写法——不是证明了整仓没有别处踩中，只是这一种扫描方式没找到。",
       "requires_kernel_change": false,
       "kernel_change_note": ""
+    },
+    {
+      "id": "kda-layer-l2norm-eps-formula-diverges",
+      "title": "本仓层里的 l2norm 用 F.normalize 的 eps 语义，和 fla 的公式在近零行上静默分叉（D1）",
+      "category": "correctness",
+      "severity": "P2",
+      "applies_to": [
+        "kda"
+      ],
+      "evidence": "fla v0.5.2：`x / sqrt(Σx² + 1e-6)`（`modules/l2norm.py:43,105`、`ops/kda/fused_recurrent.py:155`）。本仓 `ascend_fla/layers/kda.py` 用 `F.normalize(x, eps=1e-6)` = `x / max(‖x‖, 1e-6)`。‖x‖ 大时两者相对差 ≈ 1e-6/(2‖x‖²)，在 bf16 分辨率以下。**‖x‖ 小时分叉**：‖x‖=1e-4 时 fla 输出范数 0.0995，本仓输出 1.0（算例：1/sqrt(1e-8+1e-6)=995，乘 1e-4 得 0.0995）。全零行两边都给 0。发现于 A2-40（issue #54 / PR #85 `docs/research/a2_fusion_ops.md` §2.1 D1）。",
+      "impact": "只在近零行上分叉（padding token、刚初始化的卷积输出），主训练路径大概率不触发，但会让\"数值对齐 fla\"这句话在边界上不成立，且分叉是静默的（不报错、不 NaN、形状不变）。",
+      "blocks": [],
+      "proposed_action": "改用 fla 的公式（分母整体加 eps 再开方，不是对范数取 max），划入 A2-44（纯主机侧，不动 kernel）。",
+      "requires_kernel_change": false
+    },
+    {
+      "id": "kda-layer-missing-silu-when-no-short-conv",
+      "title": "use_short_conv=False 时本仓不对 q/k/v 做 silu，fla 会做（D3）",
+      "category": "correctness",
+      "severity": "P3",
+      "applies_to": [
+        "kda"
+      ],
+      "evidence": "fla v0.5.2 `layers/kda.py` 的 `use_short_conv=False` 分支对 q/k/v 各过一次 `F.silu`；本仓 `ascend_fla/layers/kda.py` 该分支不做 silu，直接进 l2norm。整个开关的语义因此不同。发现于 A2-40（issue #54 / PR #85 §2.1 D3）。",
+      "impact": "Kimi-Linear 用短卷积，构造参数不会走到这个分支，实际不触发；但层的构造参数接受 `use_short_conv=False`，一旦被别的调用方用到就是静默的语义错误。",
+      "blocks": [],
+      "proposed_action": "该分支补上 `F.silu`，对齐 fla；划入 A2-44（纯主机侧，不动 kernel）。",
+      "requires_kernel_change": false
     }
   ],
   "summary": {
     "P0": 2,
     "P1": 17,
-    "P2": 9,
-    "total": 39,
+    "P2": 10,
+    "total": 41,
     "first_milestone": "第一期五项已全部有结论，并补齐了同机性能对比：aclnn 编译、runtime 桥、kda_fwd 接线、KDA 本地基线均实测通过；自编译算子在 block_dim=4 下比 torch_npu 组合快 4.43x（kimi_linear_layer）/ 2.38x（long_context T=4096）/ 19.7x（smoke）。过程中修掉两个自己的 bug（bridge-per-call-overhead、op-name-collision-in-process），它们先后让 block_dim 的效果被完全掩盖。当前最大的性能项是 block-dim-ceiling（已升 P1）：扩展性一路线性到契约上限 4，而硬件有 28 cube。第二期的前置障碍 kda-fwd-bwd-dtype-mismatch 已量化（降 P2）。",
     "second_milestone": "第二期已完成：kda_bwd 九 kernel 链 + 九个前向检查点 + autograd + KDA layer（含 2 modules），训练步在 bd=4 下比 torch_npu 组合版快 4.83x~5.67x。\n过程中发现并根治了第二期最关键的一个缺口：**按 fla 的默认初始化（chunk 内门控跨度 ~94），上游 kernel 在前向与反向各有一处量程失效，方向相反** —— 前向在 87.3 下溢、反向在 88.72 上溢。两处都在本仓建了派生单元（kda_fwd_stable / kda_bwd_stable），把成对衰减分解的锚点从区间端点改到中点，数学同义。\n门控闸因此做成二维 `{impl: {forward, backward}}`：前向 155（受有限性约束，到 155.97 精度完全不退化）、反向 100（受**精度**约束，它先于有限性到来 —— 梯度到 169.8 都有限但 dq 在 130 处超预算）。**「不吐 NaN」不等于「能用」，两者要分别测、闸按更严的定。**\n剩一项端到端确认（默认初始化下整层反向的精度）卡在机器可用性上 —— 算子层面的同一件事已由 test_kda_bwd_deep_npu.py 在跨度 94 测过，六项梯度全在契约预算内。\n当前最大的性能项仍是 block-dim-ceiling（P1）。",
     "recommended_first_target": "KDA（Kimi-Linear / fla-kda-default 形状）。其 ABI 已是 token-major BTHK、GQA 原生支持、initial_state 与 final_state 均为 FP32、backward 产出 dh0 —— 上述多数 ABI 缺口对它都不适用。唯一需要前置补齐的是本地验证证据（kda-no-local-evidence）。",

@@ -31,7 +31,7 @@ serves only as the semantic authority during testing (`naive.py` as a CPU fp32 o
 | GDN (Gated DeltaNet) | `gated_delta_rule` | open to agents | 4 | 2/5 |
 | DeltaNet | `delta_rule` | no task yet | 2 | 2/2 units with validation records |
 | GDN-2 (Gated DeltaNet 2) | `gdn2` | owner track | 6 | 3/4 |
-| Whole-network fusion ops (module / layer) | `fusion` | open to agents | 4 | 0/4 |
+| Whole-network fusion ops (module / layer) | `fusion` | open to agents | 4 | 1/4 |
 | Mamba-1/2/3 | `mamba` | not scheduled (G4) | — | — |
 | GLA (Gated Linear Attention) | `gla` | not scheduled (G4) | — | — |
 | PKDA / PGDN (preconditioned) | `pkda` | open to agents | 2 | 0/2 |
@@ -189,49 +189,49 @@ _Owner's parallel track; see docs/handoff.md §1. **Exception** (D-PM-16, 2026-0
 
 </details>
 
-<details><summary><b>Whole-network fusion ops (module / layer) —— 4 kernel(s)，0/4 done</b></summary>
+<details><summary><b>Whole-network fusion ops (module / layer) —— 4 kernel(s)，1/4 done</b></summary>
 
 _Beyond the operators themselves: short conv, gated RMSNorm, q/k l2norm and gate transform, packed projections. All torch-native today (see the three gaps above)._
 
 | kernel | track | progress | next |
 |---|---|---|---|
-| `causal_conv1d` | open to agents | 0/2 | [#54](https://github.com/ddddwee1/ascend_fla_dev/issues/54) A2-40 |
-| `fused_rms_norm_gated` | open to agents | 0/2 | [#54](https://github.com/ddddwee1/ascend_fla_dev/issues/54) A2-40 |
-| `qk_l2norm_gate` | open to agents | 0/2 | [#54](https://github.com/ddddwee1/ascend_fla_dev/issues/54) A2-40 |
-| `packed_projection` | open to agents | 0/2 | [#54](https://github.com/ddddwee1/ascend_fla_dev/issues/54) A2-40 |
+| `causal_conv1d` | open to agents | 1/2 | [#54](https://github.com/ddddwee1/ascend_fla_dev/issues/54) A2-40 |
+| `fused_rms_norm_gated` | open to agents | 1/2 | [#54](https://github.com/ddddwee1/ascend_fla_dev/issues/54) A2-40 |
+| `qk_l2norm_gate` | open to agents | 1/2 | [#54](https://github.com/ddddwee1/ascend_fla_dev/issues/54) A2-40 |
+| `packed_projection` | open to agents | 1/2 | [#54](https://github.com/ddddwee1/ascend_fla_dev/issues/54) A2-40 |
 
-<details><summary>causal_conv1d —— 0/2 done，start A2-40</summary>
+<details><summary>causal_conv1d —— 1/2 done，start A2-40</summary>
 
 | task | issue | SoC | dtype | status | note |
 |---|---|---|---|---|---|
-| A2-40 | [#54](https://github.com/ddddwee1/ascend_fla_dev/issues/54) | `any` | bf16、fp32 | 🔵 in_progress | ★ start |
+| A2-40 | [#54](https://github.com/ddddwee1/ascend_fla_dev/issues/54) | `any` | bf16、fp32 | ✅ done | ★ start |
 | A2-41 | [#55](https://github.com/ddddwee1/ascend_fla_dev/issues/55) | `a2` | bf16、fp32 | 🔒 gated (machines:a2) |  |
 
 </details>
 
-<details><summary>fused_rms_norm_gated —— 0/2 done，start A2-40</summary>
+<details><summary>fused_rms_norm_gated —— 1/2 done，start A2-40</summary>
 
 | task | issue | SoC | dtype | status | note |
 |---|---|---|---|---|---|
-| A2-40 | [#54](https://github.com/ddddwee1/ascend_fla_dev/issues/54) | `any` | bf16、fp32 | 🔵 in_progress | ★ start |
+| A2-40 | [#54](https://github.com/ddddwee1/ascend_fla_dev/issues/54) | `any` | bf16、fp32 | ✅ done | ★ start |
 | A2-41 | [#55](https://github.com/ddddwee1/ascend_fla_dev/issues/55) | `a2` | bf16、fp32 | 🔒 gated (machines:a2) |  |
 
 </details>
 
-<details><summary>qk_l2norm_gate —— 0/2 done，start A2-40</summary>
+<details><summary>qk_l2norm_gate —— 1/2 done，start A2-40</summary>
 
 | task | issue | SoC | dtype | status | note |
 |---|---|---|---|---|---|
-| A2-40 | [#54](https://github.com/ddddwee1/ascend_fla_dev/issues/54) | `any` | bf16、fp32 | 🔵 in_progress | ★ start |
+| A2-40 | [#54](https://github.com/ddddwee1/ascend_fla_dev/issues/54) | `any` | bf16、fp32 | ✅ done | ★ start |
 | A2-42 | [#56](https://github.com/ddddwee1/ascend_fla_dev/issues/56) | `a2` | bf16、fp32 | 🔒 gated (kernel-batch-approval) |  |
 
 </details>
 
-<details><summary>packed_projection —— 0/2 done，start A2-40</summary>
+<details><summary>packed_projection —— 1/2 done，start A2-40</summary>
 
 | task | issue | SoC | dtype | status | note |
 |---|---|---|---|---|---|
-| A2-40 | [#54](https://github.com/ddddwee1/ascend_fla_dev/issues/54) | `any` | bf16、fp32 | 🔵 in_progress | ★ start |
+| A2-40 | [#54](https://github.com/ddddwee1/ascend_fla_dev/issues/54) | `any` | bf16、fp32 | ✅ done | ★ start |
 | A2-43 | [#57](https://github.com/ddddwee1/ascend_fla_dev/issues/57) | `a2` | bf16、fp32 | 🔒 gated (machines:a2) |  |
 
 </details>
@@ -336,8 +336,8 @@ _Not scheduled: gated epic G4 (narrow-slice rule — no target model, no work). 
 
 | dtype | track | tasks | note |
 |---|---|---|---|
-| `bf16` | open to agents | 27 | Current ABI: q/k/v/o and most intermediates |
-| `fp32` | open to agents | 34 | Current ABI: state, gate accumulation, all correctness judged in fp32 |
+| `bf16` | open to agents | 28 | Current ABI: q/k/v/o and most intermediates |
+| `fp32` | open to agents | 35 | Current ABI: state, gate accumulation, all correctness judged in fp32 |
 | `fp16` | not scheduled (G3) | — | Explicitly rejected by the contract |
 | `int8` | not scheduled (G3) | 1 | Not scheduled; state drift needs a design first |
 | `mxfp8` | not scheduled (G3) | 1 | Not scheduled; native 950 decode unverified |
