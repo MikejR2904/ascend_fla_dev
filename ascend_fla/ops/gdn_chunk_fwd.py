@@ -1,4 +1,4 @@
-"""Non-GQA GDN chunk forward through repository-owned FP32 CCE stages."""
+"""Grouped-head GDN chunk forward through repository-owned FP32 CCE stages."""
 from __future__ import annotations
 
 import functools
@@ -54,11 +54,16 @@ def _validate(q, k, v, g, beta, initial_state, scale, head_first, device, block_
         raise ValueError(f'scale must be 128**-0.5; got {scale}')
     if q.ndim != 4 or min(q.shape[:3]) < 1 or q.shape[-1] != 128 or q.shape[1] % 64 or q.shape[1] > 4096:
         raise ValueError(f'requires positive B/H, T multiple of 64 up to 4096, D=128; got {tuple(q.shape)}')
+    if v.ndim != 4 or v.shape[:2] != q.shape[:2] or v.shape[-1] != 128:
+        raise ValueError(f'v requires [B,T,HV,128] with B/T={tuple(q.shape[:2])}; got {tuple(v.shape)}')
+    h, hv = q.shape[2], v.shape[2]
+    if hv < 1 or hv % h:
+        raise ValueError(f'HV must be a positive multiple of H; got H={h}, HV={hv}')
     expected_device = 'npu' if launcher == 'inprocess' else 'cpu'
     for name, x in dict(q=q, k=k, v=v, g=g, beta=beta).items():
-        shape = q.shape[:3] if name in ('g', 'beta') else q.shape
+        shape = v.shape[:3] if name in ('g', 'beta') else (v.shape if name == 'v' else q.shape)
         if x.shape != shape:
-            raise ValueError(f'{name} requires shape {tuple(shape)} (no GQA); got {tuple(x.shape)}')
+            raise ValueError(f'{name} requires shape {tuple(shape)} for H={h}, HV={hv}; got {tuple(x.shape)}')
         if name in ('g', 'beta'):
             if x.dtype != torch.float32:
                 raise ValueError(f'{name} requires float32; got {x.dtype}')
@@ -81,13 +86,14 @@ def chunk_gdn(q, k, v, g, beta, *, initial_state=None, output_final_state=False,
               launcher='inprocess', board=None, out_dir=None, timeout=600):
     """Return token-major output and optional fresh FP32 K-major state.
 
+    Each consecutive group of HV/H value heads shares one q/k head.
     No q/k normalization or reference fallback. Finite g<=0, beta in [0,1]
     and finite q/k/v are caller preconditions on NPU, checked on CPU. CPU
     launchers explicitly transfer inputs and are not in-process timing paths.
     """
     _validate(q, k, v, g, beta, initial_state, scale, head_first, device, block_dim, launcher)
     inputs = dict(q=q.float(), k=k.float(), v=v.float(), g=g, beta=beta,
-                  initial_state=torch.zeros(q.shape[0], q.shape[2], 128, 128, dtype=torch.float32).to(q.device))
+                  initial_state=torch.zeros(q.shape[0], v.shape[2], 128, 128, dtype=torch.float32).to(q.device))
     if launcher == 'inprocess':
         compiled = dict(zip((e.name for e in _pipeline().entries()), _compiled(block_dim)))
         def launch(entry, sources, outputs, scalars):

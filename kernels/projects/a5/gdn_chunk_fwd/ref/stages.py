@@ -4,10 +4,14 @@ import torch
 
 def reference_stages(inputs):
     q = inputs['q'].float()
+    hv = inputs['v'].shape[2]
+    key_indices = torch.arange(hv) // (hv // q.shape[2])
+    k = inputs['k'].float()
+    if hv != q.shape[2]:
+        q, k = q.index_select(2, key_indices), k.index_select(2, key_indices)
     batch, time, heads, _ = q.shape
     chunks = (time + 63) // 64
     qn = q * 128**-0.5
-    k = inputs['k'].float()
     kn = k
     def pack(x):
         padding = torch.zeros(batch, chunks * 64 - time, heads, 128)

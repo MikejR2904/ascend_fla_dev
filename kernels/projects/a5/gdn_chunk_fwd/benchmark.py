@@ -96,7 +96,9 @@ def main():
         cpu=refs.make_inputs(case)
         expected=refs.reference(cpu)
         stage_expected=sr.reference_stages(cpu)
-        fo,fs=fla.naive_recurrent_gated_delta_rule(*(cpu[n] for n in ('q','k','v','beta','g')),output_final_state=True)
+        expanded=_pipeline().expand_inputs(cpu)
+        fo,fs=fla.naive_recurrent_gated_delta_rule(*(expanded[n] for n in ('q','k','v','beta','g')),output_final_state=True)
+        recurrent=refs.grouped_recurrent(cpu)
         npu={n:x.to('npu') for n,x in cpu.items()}
         calls=[]
         def launch(entry,sources,outputs,scalars):
@@ -116,7 +118,7 @@ def main():
             assert row['stages'][n]['relative_l2']<=1e-4,(case['id'],n,row['stages'][n])
         # Check every leaf with independently generated CPU upstreams as well
         # as checking the actual composition above.
-        upstream=dict(cpu,**stage_expected)
+        upstream=dict(expanded,**stage_expected)
         row['independent_leaves']={}
         for name,op,sources,outputs,scalars in calls:
             leaf_inputs={n:upstream[n].contiguous().to('npu') for n in sources}
@@ -129,7 +131,7 @@ def main():
                 torch.testing.assert_close(x.cpu(),rr,atol=2e-5,rtol=2e-4)
                 assert row['independent_leaves'][n]['relative_l2']<=1e-4
             del leaf_inputs,leaf_outputs
-        for label, oracle in (('block_solve',expected),('fla_naive',{'o':fo,'final_state':fs})):
+        for label, oracle in (('block_solve',expected),('grouped_recurrent',recurrent),('fla_naive_expanded' if cpu['v'].shape[2]!=cpu['q'].shape[2] else 'fla_naive',{'o':fo,'final_state':fs})):
             row['oracles'][label]={n:metric(got[n],r) for n,r in oracle.items()}
             for n,r in oracle.items():
                 torch.testing.assert_close(got[n].cpu(),r,atol=2e-5,rtol=2e-4)
@@ -142,11 +144,13 @@ def main():
             rr=refs.reference(inp)
             key=str(dtype)
             row[key]={n:metric(x,rr[n]) for n,x in zip(('o','final_state'),pub)}
+            row[key+'_sha256']={n:hashlib.sha256(x.cpu().contiguous().view(torch.uint8).numpy().tobytes()).hexdigest() for n,x in zip(('o','final_state'),pub)}
             torch.testing.assert_close(pub[0].cpu().float(),rr['o'],atol=2e-5,
                                        rtol=1e-2 if dtype==torch.bfloat16 else 2e-4)
             torch.testing.assert_close(pub[1].cpu(),rr['final_state'],atol=2e-5,rtol=2e-4)
             assert row[key]['o']['relative_l2'] <= (5e-3 if dtype==torch.bfloat16 else 1e-4)
             assert row[key]['final_state']['relative_l2']<=1e-4
+        row['group_replication_bytes']=sum(expanded[n].numel()*expanded[n].element_size() for n in ('q','k') if expanded[n] is not cpu[n])
         row['retained_stage_workspace_bytes']=sum(x.numel()*x.element_size() for n,x in got.items() if n not in ('o','final_state'))
         if args.profile:
             torch.npu.synchronize()

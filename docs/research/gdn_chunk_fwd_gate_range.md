@@ -1,15 +1,17 @@
 # GDN chunk forward: ABI, range and validation contract
 
 This unit implements scalar-gated DeltaNet (`gated_delta_rule`), not GDN-2.
-Scope is inference-only A5 CCE, non-GQA, zero initial state. It does not
+Scope is inference-only A5 CCE, grouped heads, zero initial state. It does not
 establish Qwen3-Next compatibility or A2/A3 support.
 
 ## Frozen public ABI
 
-Inputs q/k/v are contiguous token-major `[B,T,H,128]`, all BF16 or all FP32.
-The activated scalar beta and log-decay g are contiguous FP32 `[B,T,H]`.
+Inputs q/k are contiguous token-major `[B,T,H,128]`; v is `[B,T,HV,128]`,
+all BF16 or all FP32. Activated scalar beta and log-decay g are contiguous
+FP32 `[B,T,HV]`.
 B and H are positive, T is a positive multiple of 64 up to 4096. Value heads
-must equal key/query heads. The only scale is `128**-0.5`; q/k normalization
+must be a positive multiple of key/query heads. Value head j uses key/query
+head `floor(j/(HV/H))`; the groups are consecutive. The only scale is `128**-0.5`; q/k normalization
 is not part of this operator. Input values must be finite, beta in [0,1],
 and g<=0. Inputs requiring autograd are rejected.
 
@@ -17,8 +19,8 @@ Only `initial_state=None` is accepted as the zero-state representation;
 explicit initial-state tensors, including zero tensors, are rejected. This
 keeps the unsupported nonzero-state case explicit without a device-to-host
 read in the timed path. Output has the input q dtype. Optional final state
-is fresh FP32 `[B,H,128,128]`, K-major. Noncontiguous/head-first inputs,
-GQA, tails, unsupported scale, backend or block dimension raise errors.
+is fresh FP32 `[B,HV,128,128]`, K-major. Noncontiguous/head-first inputs,
+invalid head ratios, tails, unsupported scale, backend or block dimension raise errors.
 Initial core scope is block_dim in {1,2}.
 
 The upstream `a5.gdn_fwd` unit is an ABI comparison source, not a runtime
@@ -27,6 +29,29 @@ from this new public ABI. Those differences are intentional and observable:
 the new unit scales q in FP32 and keeps all intermediate edges/state FP32.
 BF16 input conversion to FP32 is exact; only final output is rounded back.
 No upstream numerical or hardware receipt certifies this new unit.
+
+## GDA-02 implementation and qualification scope
+
+The shared launch graph replicates q/k with device-local `repeat_interleave`
+only for HV>H, after exact BF16-to-FP32 conversion. The existing five CCE
+kernels receive HV equal-sized heads; their arithmetic, synchronization and
+local storage are unchanged. Each value head retains its own g, beta and
+state. Replication uses two FP32 buffers of B*T*HV*128 elements each, in
+addition to existing stage storage. This depends on the target OPP tensor
+replication operator. HV==H returns the original input dictionary and does
+not allocate replication buffers. It must remain byte-identical to GDA-01.
+This is an ABI extension, with no performance optimization claim.
+
+The pinned FLA GDN naive at e52dbc0ea19d3a40d7ab7f9eed855d2b473994d2
+accepts equal heads only. PM clarified this in the GDA-02 assignment:
+PGDN naive defines the grouping convention. Grouped CPU correctness is
+therefore checked against an independently indexed, head-local recurrence
+and a block solve. FLA GDN naive is an explicitly expanded-input comparison,
+not a claim that upstream GDN naive natively supports GVA. The public
+zero-state-only restriction is unchanged; internal zero state uses HV.
+
+GDA-02 native qualification and same-device regression measurements are
+recorded below and in the current unit validation.json.
 
 ## Equations and independent references
 
@@ -38,8 +63,8 @@ For each head, with zero S initially:
 
 `S_t = D_t + k_t r_t^T`, `o_t = (q_t / sqrt(128))^T S_t`.
 
-The authoritative reference is FLA's CPU FP32
-`naive_recurrent_gated_delta_rule`. A separately authored CPU block reference
+For equal heads, FLA's CPU FP32 `naive_recurrent_gated_delta_rule`
+provides the semantic reference; grouped authority is described above. A separately authored CPU block reference
 solves a unit-lower triangular system for r within each 64-token chunk;
 it does not call FLA or repeat FLA's row-wise inverse expansion.
 
@@ -98,24 +123,11 @@ warmup/repeat, and exact source/toolchain identities. In-process CCE/aclnn
 must be validated separately from the SSH board harness. The following
 measurements qualify only the recorded generated inputs and device.
 
-## Original-device baseline and selected optimization
+## Inherited GDA-01 preparation and synchronization
 
-The initial per-token prepare baseline (`fb1e0de`, stage-source SHA256
-`1c022aa953e77c37661c4283bb470741c4aa8ece1a3b6ff2641b9ce16c2ddfe8`)
-passed native CCE/aclnn T4096/H16/block_dim2. Output max_abs was 2.153684e-9,
-relative L2 6.135233e-7; FP32 state max_abs 2.980232e-8, relative L2
-9.675854e-7 against the independent block solve. The separate in-process
-bridge passed all ten cases against both CPU references and public BF16/FP32
-entry checks. The fixed runtime is Python 3.12.13, Torch 2.12.0+cpu with
-Torch NPU 2.12.0; the device reports Ascend950PR_9589, compiler/OPP 9.2.0,
-OPP kernel directories ascend950, ascend910b and ascend910_93.
-
-The first synchronized T4096 baseline profile (warmup10/repeat50, block_dim2)
-measured public median 54969.98 us and prepare median 9901.86 us. Scores,
-WY, scan and output were respectively 12768.92, 11244.81, 8524.70 and
-5871.34 us. A subsequent grid run measured 46464.14 us public latency;
-this observed drift is why acceptance uses paired sandwiches rather than
-comparing isolated historical medians.
+The unchanged GDA-01 CCE implementation retains the following ownership
+analysis and explicit-stride workaround. Historical baseline and performance
+receipts remain at commit `6b6048592bd1fa2a49de203c40346a21b0343f9f`.
 
 The selected candidate batches prepare's transfers into complete 64-row
 head tiles. At T4096/H16 the source-level DMA invocation count falls from
@@ -152,87 +164,66 @@ are empty and no deadlock is reported. This is specifically a repeated-buffer
 and strided-copy model check, not silicon qualification. The failure and
 located workaround were reported in GDA-01's RISK thread.
 
-## Replacement-device native qualification
+## GDA-02 native qualification
 
-After the original-device fault described below, the user authorized a
-device change. The following complete grid and six paired comparisons
-were rerun on the healthy replacement; no original-device performance
-sample is used in this qualification. The explicit-gap candidate has stage SHA256
+The same healthy replacement device used for GDA-01 reports Ascend950PR_9589,
+CANN compiler/OPP 9.2.0, kernel packages ascend950/ascend910b/ascend910_93.
+Python is 3.12.13, Torch 2.12.0+cpu, Torch NPU 2.12.0; library revision is
+`90cfcdc720bbcd66e8bd4361c4dd4fbc1a2a57b5`. The five-stage source remains
 `a5d0c7a7b7f62001936d64f06538444afc90f4d2100362f9ceacef4142fbd72d`.
-`kernels/projects/a5/gdn_chunk_fwd/validation.json` is the retained numerical
-receipt, including source identities, generated-input hashes, both oracle
-comparisons, independent leaf checks and all paired samples. The environment
-is Ascend950PR_9589, CANN compiler/OPP 9.2.0, kernel packages ascend950,
-ascend910b and ascend910_93; Python 3.12.13, Torch 2.12.0+cpu, Torch NPU 2.12.0.
-The accepted library revision is `90cfcdc720bbcd66e8bd4361c4dd4fbc1a2a57b5`;
-FLA reference revision is `e52dbc0ea19d3a40d7ab7f9eed855d2b473994d2`.
+The current unit `validation.json` retains exact source identities, seeds,
+shapes, numerical maxima and paired samples. Baseline is the final GDA-01
+revision `6b6048592bd1fa2a49de203c40346a21b0343f9f`, not its older per-token
+implementation. Machine details and full raw logs stay in ignored scratch.
 
-All ten cases pass at block_dim1 and block_dim2, including repeated heads,
-chunks, batches, normalized keys and zero/weak/strong gates. All 13 stage
-outputs are byte-identical across both block dimensions and the baseline.
-Every independent leaf and the composed graph pass with NaN-poisoned
-outputs; public BF16/FP32 calls pass both relative-L2 and explicit elementwise
-checks. Shape and input seeds are recorded per case. FP32 elementwise
-atol/rtol=2e-5/2e-4 and relative-L2
-1e-4 are unchanged; BF16 output uses atol/rtol=2e-5/1e-2 and relative-L2 5e-3.
+Baseline T4096/H16 profile preceded candidate execution. The first candidate
+run was the full B1/T4096/H4/HV16/block_dim2 grouped workload. Against the
+independent head-local recurrence, output relative L2 was 4.891699e-7 and
+state 8.529894e-7. This was followed by all 22 cases at both block dimensions:
+ratios 1/2/4/8 crossed with chunks 1/2/3, repeated batches/heads, long T1024
+and T4096, plus inherited normalized-key and zero/weak/strong-gate cases.
+All 13 composed checkpoints and independently supplied leaf outputs passed
+with NaN-poisoned allocations. Checkpoints are byte-identical between
+block dimensions; all ten equal-head cases also match GDA-01 exactly. A separate four-process
+check additionally confirms public FP32/BF16 output and state bytes are
+identical between GDA-01/GDA-02 at both block dimensions.
 
-Across the complete grid, maxima (max_abs / relative-L2; maxima may arise
-from different cases) are:
+Public FP32 maximum relative L2 is 1.779822e-6 for output and 1.379258e-6
+for state; BF16 output maximum is 0.001696268, with FP32 state using the
+same unchanged 1e-4 budget. Elementwise tolerances remain unchanged.
+Canonical CPU reference: 22 cases passed. Host tests: 284 passed, 5 skipped
+(the five NPU-only KDA modules); no GDN oracle check was skipped.
 
-| Comparison | Output | FP32 state |
-| --- | --- | --- |
-| Independent CPU block solve | 5.84987e-09 / 1.779822e-06 | 3.352761e-08 / 9.675616e-07 |
-| FLA CPU recurrence | 2.779416e-09 / 9.826487e-07 | 4.097819e-08 / 7.502357e-07 |
-| Public BF16 vs CPU block solve | 7.605646e-06 / 0.001696268 | 3.72529e-08 / 9.675616e-07 |
+### Same-device performance regression
 
-### Three-round paired performance
+FP32 public latency is synchronized and host-inclusive, warmup10/repeat50,
+block_dim2, B1/H=HV=16. Three fresh-process baseline/candidate/baseline
+rounds preserve every stage hash. No speedup is claimed for this ABI change.
 
-Same reserved device, fresh process per sample, block_dim2, B1/H16/K128/V128,
-FP32 inputs, warmup10/repeat50. Every timed public call is synchronized;
-latency includes host launch and allocation overhead. The conservative
-speedup divides the faster of the surrounding baseline medians by the
-candidate median. These measurements are not device-only kernel timings.
-
-| T | Round | Baseline before (us) | Candidate (us) | Baseline after (us) | Conservative speedup |
+| T | Round | Baseline before (us) | Candidate (us) | Baseline after (us) | Ratio |
 | --- | --- | --- | --- | --- | --- |
-| 1024 | 1 | 163980.472 | 152230.666 | 164150.194 | 1.0772x |
-| 4096 | 1 | 652253.193 | 603352.131 | 651657.716 | 1.0801x |
-| 1024 | 2 | 164143.023 | 152390.867 | 163971.726 | 1.0760x |
-| 4096 | 2 | 651921.704 | 603404.083 | 651448.616 | 1.0796x |
-| 1024 | 3 | 163218.400 | 152464.804 | 164594.333 | 1.0705x |
-| 4096 | 3 | 654349.508 | 603469.789 | 651153.854 | 1.0790x |
+| 1024 | 1 | 152300.446 | 152065.442 | 152282.791 | 1.001429x |
+| 4096 | 1 | 603322.731 | 603376.514 | 603477.619 | 0.999911x |
+| 1024 | 2 | 152185.945 | 152556.232 | 152257.815 | 0.997573x |
+| 4096 | 2 | 603369.926 | 603403.910 | 603561.410 | 0.999944x |
+| 1024 | 3 | 152302.413 | 152242.034 | 152303.066 | 1.000397x |
+| 4096 | 3 | 603536.311 | 603409.512 | 603588.433 | 1.000210x |
 
-All six paired comparisons improve. All 13 checkpoint hashes remain equal
-in every baseline/candidate/baseline triplet. T4096 retained-stage workspace
-is 369098752 bytes and measured public peak allocation increment is
-287309824 bytes, unchanged between candidates. The receipt also retains
-per-stage profile medians to distinguish prepare gains from runtime drift.
+Grouped B1/T4096/H4/HV16 public median is 604216.626 us including q/k
+replication. Its extra FP32 replication buffers occupy 67108864 bytes;
+measured public peak allocation increment is 354418688 bytes. This is a
+grouped profile, not a grouped speedup comparison. The equal-head path
+retains its no-copy behavior. No cross-device performance inference is made.
 
-The native in-process CCE bridge passes on the replacement device. All 45
-health checks (before/after each of 22 benchmark processes, plus completion)
-return health=0 and no error codes. The full T4096 workload ran first. The
-replacement has much higher absolute latency than the original device; the
-cause is not established, and neither latency nor speedup is transferred
-between devices.
-The initial baseline additionally passed the standalone native aclnn harness; the final
-revision does not claim a separate SSH board-harness or full-unit simulator
-qualification. The prepare-only pipesim regression remains a diagnostic.
-GQA, nonzero initial state, arbitrary finite input magnitudes, backward and
-A2/A3 remain outside this qualification.
+The baseline pre/postflight and six candidate orchestration phases all
+returned health=0 without errors (14 checks). The four public-byte
+comparison processes add eight healthy pre/postflight checks (22 total). The sandwich holds the same
+exclusive device lock across all 18 child processes; health checks bracket
+that whole phase, not each timing child. No full-unit simulator or SSH
+board-harness qualification is claimed. Public nonzero state, backward,
+decode, arbitrary finite magnitudes and A2/A3 remain outside this task.
 
-### Retained original-device postflight failure
-
-On the original device, after all six paired comparisons completed, the additional strict-grid
-preflight returned DSMI health rc=0, health=2, error_count=1 and code
-`0x80f78009`. The driver describes it as "node type=HWTS/Stars-TS, sensor
-type=RAS State, event state=bus error, probably caused by software". Repeated
-read-only queries returned the same status. No remaining GDN benchmark or
-compiler process, or device-node owner, was found. No reset or process kill
-was attempted. The onset and cause are not established by the completed
-numerical receipts. The original-device NaN-poisoned grid never launched.
-
-Original-device receipts remain in Git history at `40b5d9d`. That device
-was not reset and its fault is not declared resolved. User-authorized
-replacement-device verification completed the strict grid and paired
-benchmarks above, with healthy pre/postflight checks throughout. The final
-qualification is limited to the replacement device and recorded workloads.
+The original GDA-01 device fault (health=2, code 0x80f78009, driver-described
+HWTS/Stars-TS RAS bus error) remains unresolved and that device was not used
+or reset. Its onset/cause were not established; historical evidence is at
+`40b5d9d`. This qualification belongs only to the healthy replacement.

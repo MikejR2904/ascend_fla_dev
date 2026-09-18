@@ -93,11 +93,11 @@ def test_options_reject_before_launch(option,value,match):
 
 
 @pytest.mark.parametrize('mutation,match',[
-    ('gqa','no GQA'),('tail','multiple of 64'),('strided','contiguous'),
+    ('gqa','positive multiple'),('tail','multiple of 64'),('strided','contiguous'),
     ('dtype','matching'),('positive_gate','g<=0'),('beta','beta'),('nan','finite')])
 def test_invalid_inputs(mutation,match):
     inp=data()
-    if mutation=='gqa': inp['v']=torch.zeros(1,64,6,128)
+    if mutation=='gqa': inp['v']=torch.zeros(1,64,5,128)
     if mutation=='tail':
         for n in ('q','k','v','g','beta'): inp[n]=inp[n][:,:63].contiguous()
     if mutation=='strided': inp['q']=torch.zeros(1,64,3,256)[...,::2]
@@ -128,3 +128,66 @@ def test_bulk_prepare_strides_and_repeated_buffer_ownership(tmp_path):
     for n,x in zip(names,got): compare(x,expected[n])
     evidence=options['_execution_evidence'][0]
     assert not evidence['hazards'] and not evidence['deadlock'] and not evidence['event_balance']
+
+
+@pytest.mark.parametrize('ratio',[1,2,3,4,8])
+@pytest.mark.parametrize('chunks',[1,2,3])
+def test_grouped_mapping_and_independent_oracles(ratio,chunks):
+    from ascend_fla.ops.gdn_chunk_fwd import _pipeline, _validate, SCALE
+    inp=ref.make_inputs({'seed':8200+ratio*10+chunks,'parameters':dict(B=2,T=chunks*64,H=3,HV=3*ratio,gate_scale=1.)})
+    _validate(*(inp[n] for n in ('q','k','v','g','beta')),None,SCALE,False,'a5',1,'board')
+    before={n:x.clone() for n,x in inp.items()}
+    expanded=_pipeline().expand_inputs(inp)
+    if ratio==1:
+        assert expanded is inp
+    for n in ('q','k'):
+        for j in range(3*ratio):
+            assert torch.equal(expanded[n][:,:,j],inp[n][:,:,j//ratio])
+        if ratio>1: assert expanded[n].data_ptr()!=inp[n].data_ptr()
+    expected=ref.grouped_recurrent(inp)
+    for got in (ref.reference(inp),stages.reference_stages(inp)):
+        for n in expected:compare(got[n],expected[n])
+    path=os.environ.get('FLA_GDN_NAIVE')
+    if path:
+        fla=load('fla_gdn_grouped_test',Path(path))
+        o,s=fla.naive_recurrent_gated_delta_rule(*(expanded[n] for n in ('q','k','v','beta','g')),output_final_state=True)
+        compare(o,expected['o']);compare(s,expected['final_state'])
+    for n in inp: assert torch.equal(inp[n],before[n])
+    # A cyclic mapping has the right shapes but must fail semantic checks.
+    if ratio>1:
+        wrong=dict(inp,q=inp['q'].roll(1,2),k=inp['k'].roll(1,2))
+        assert not torch.allclose(ref.reference(wrong)['o'],expected['o'],atol=2e-5,rtol=2e-4)
+
+
+@pytest.mark.parametrize('hv',[0,1,2,4,5])
+def test_invalid_group_ratio_rejected_before_pipeline(monkeypatch,hv):
+    import ascend_fla.ops.gdn_chunk_fwd as api
+    inp=data();inp['v']=torch.zeros(1,64,hv,128)
+    def forbidden():raise AssertionError('pipeline accessed before validation')
+    monkeypatch.setattr(api,'_pipeline',forbidden)
+    with pytest.raises(ValueError,match=f'H=3, HV={hv}'):
+        call(inp)
+
+
+@pytest.mark.parametrize('name',['k','g','beta','initial_state'])
+def test_grouped_reference_rejects_wrong_head_axis(name):
+    inp=ref.make_inputs({'seed':82,'parameters':dict(B=1,T=64,H=3,HV=6)})
+    inp[name]=torch.zeros(1,3,128,128) if name=='initial_state' else (torch.zeros(1,64,6,128) if name=='k' else torch.zeros(1,64,3))
+    with pytest.raises(ValueError,match=name):ref.validate_inputs(inp)
+
+
+@pytest.mark.parametrize('name',['k','g','beta'])
+def test_grouped_public_shape_gates(name):
+    inp=ref.make_inputs({'seed':82,'parameters':dict(B=1,T=64,H=3,HV=6)})
+    inp[name]=torch.zeros(1,64,6,128) if name=='k' else torch.zeros(1,64,3)
+    with pytest.raises(ValueError,match=name+' requires shape'):call(inp)
+
+
+def test_bf16_group_replication_is_exact():
+    from ascend_fla.ops.gdn_chunk_fwd import _pipeline
+    inp=ref.make_inputs({'seed':82,'parameters':dict(B=1,T=64,H=3,HV=24)})
+    inp={n:x.bfloat16().float() if n in ('q','k','v') else x for n,x in inp.items()}
+    expanded=_pipeline().expand_inputs(inp)
+    for n in ('q','k'):
+        assert expanded[n].is_contiguous()
+        assert torch.equal(expanded[n].view(1,64,3,8,128),inp[n].unsqueeze(3).expand(1,64,3,8,128))

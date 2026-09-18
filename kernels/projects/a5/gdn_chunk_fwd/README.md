@@ -1,12 +1,19 @@
 # Scalar-gated GDN chunk forward
 
-This standalone A5 CCE unit implements non-GQA Gated DeltaNet, with scalar
+This standalone A5 CCE unit implements grouped-head Gated DeltaNet, with scalar
 beta/log-decay, zero initial state and no q/k normalization. The fixed chunk
 length is 64 and K=V=128. Inputs to the kernel unit are FP32, including exact
 widenings of BF16 values. The public `ascend_fla.ops.gdn_chunk_fwd.chunk_gdn`
 entry accepts BF16 or FP32 q/k/v and returns matching output dtype plus
-optional FP32 state. It rejects unsupported layouts, GQA, tails, scale and
+optional FP32 state. It rejects unsupported layouts, invalid head ratios, tails, scale and
 initial state explicitly. There is no reference fallback or backward.
+
+q/k use H heads; v/g/beta/state use HV heads, with HV a positive multiple
+of H. Consecutive groups of HV/H value heads share one q/k head. Exact
+device-local q/k replication precedes the unchanged CCE graph; equal heads
+use the original path without copying. FLA naive comparisons explicitly
+expand grouped inputs; a head-local CPU recurrence independently checks
+the mapping. GDA-02 native validation covers 22 cases at block_dim1/2; see validation.json.
 
 The five-stage graph uses launch-ordered GM edges. CPU references use a
 unit-lower triangular solve independently of the device's WY substitution.

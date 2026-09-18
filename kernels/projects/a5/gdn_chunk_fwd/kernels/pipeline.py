@@ -16,6 +16,18 @@ def entries():
     return STAGES
 
 
+def expand_inputs(inputs):
+    """Materialize shared q/k on their current device; equal heads are a no-op.
+
+    The CCE graph retains its equal-head ABI. Its internal H scalar denotes
+    value heads after this exact, contiguous replication, with no CPU fallback.
+    """
+    ratio = inputs['v'].shape[2] // inputs['q'].shape[2]
+    if ratio == 1:
+        return inputs
+    return dict(inputs, **{n: inputs[n].repeat_interleave(ratio, dim=2) for n in ('q', 'k')})
+
+
 def run(inputs, launch, *, retain_stages=True):
     """Allocate fresh FP32 outputs and invoke each stage via launch(entry,...).
 
@@ -24,6 +36,7 @@ def run(inputs, launch, *, retain_stages=True):
     in-process NPU bridge use this graph; neither computes reference math.
     """
     import torch
+    inputs = expand_inputs(inputs)
     batch, time, heads, _ = inputs['q'].shape
     chunks = (time + 63) // 64
     scalars = dict(B=batch, T=time, H=heads, N=chunks)
