@@ -2100,6 +2100,56 @@
         "numbers": "主机侧：229 passed/5 skipped，8/8 契约 case reference 过，12/12 缩小 pipesim 回归 PM 独立复算通过；真机 336/336 case（C=1..6 x 7 组 H/HV x state x bd=1..4，含 Kimi 真实形状）通过，负对照仍复现奇数 C 冒险，偶数 C 与跨 bd 均逐位相同；性能未见一致提速（非本任务目标，纯修复）",
         "note": "真机网格与性能数字由 assignee 报告，PM 未独立复算；正确性核心逻辑（pipesim 回归）PM 已独立复算。公开 API 尚未接线到修复版，需另外决定"
       }
+    },
+    {
+      "id": "A5K-02",
+      "title": "KDA Aqk 修复接入公开调度（ops/kda/chunk.py）",
+      "wave": "W0",
+      "soc": "a5",
+      "priority": "P1",
+      "status": "gated",
+      "gate": "user-decision",
+      "model": [
+        "kimi-linear-48b-a3b"
+      ],
+      "kernel": [
+        "kda_fwd_stable"
+      ],
+      "dtype": [
+        "bf16",
+        "fp32"
+      ],
+      "deps": [
+        "A5K-01"
+      ],
+      "write_set": [
+        "ascend_fla/ops/kda/chunk.py",
+        "tests/test_kda_gating.py",
+        "tests/test_kda_aqk_dispatch.py",
+        "kernels/projects/a5/kda_fwd_stable/**",
+        "docs/research/kda_aqk_handoff_repair.md",
+        "benchmarks/verify_kda_aqk_public.py"
+      ],
+      "needs": {
+        "npu": true,
+        "ascriptor": true,
+        "fla": true
+      },
+      "spec": "docs/pm/tasks/A5K-02.md",
+      "issue": null,
+      "pr": null,
+      "assignee": null,
+      "assignee_caps": null,
+      "branch": null,
+      "timebox_h": 16,
+      "origin": {
+        "kind": "request",
+        "issue": 79,
+        "by": "limjiunnbin",
+        "approved_by_user": false
+      },
+      "reports": [],
+      "result": null
     }
   ],
   "label_github_login": "ascend-fla-pm-bot",
