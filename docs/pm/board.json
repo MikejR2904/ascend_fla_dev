@@ -2205,6 +2205,10 @@
         {
           "at": "2026-09-18T09:21",
           "summary": "PM 核实：test_bwd_stable_overrides_exactly_the_kernels_it_declares 要求 chunk_bwd.py 的覆盖表与 contract.json 的 own_kernels 一字不差，D-PM-24 批的 inverse_mm 派生 kernel 必然要求这条元数据同步更新——这是已批准改动的机械性后果，不是新范围。PM 直接批准把 kda_bwd_stable/contract.json 加进写集，不再单独找用户确认"
+        },
+        {
+          "at": "2026-09-18T09:31",
+          "summary": "STATUS：D-PM-24 的派生 kernel 实现已推到草稿 PR #83（e5c7314）；元数据同步确认已收到并应用，正重跑完整主机套件。公开前向选择、原始 recurrent 对照、全部 9 个 backward kernel 在 bd=4 下 vendor-compile 通过，bd1-3 编译中。inverse_mm 的资源拒绝在派生源里已解决，硬件预算与预编译策略未改。独立 CPU leaf-reference 布局检查通过且拒绝零输出对照。缩小规模模型 runner 已就绪，等完整 leaf 接收。阻塞未变：已分配的健康设备仍有其他任务在跑，另一张卡不健康，未声称新的真机执行。写集问题均已解决"
         }
       ],
       "result": null
