@@ -2,7 +2,7 @@
   "schema": "ascriptor.kernel-unit/1",
   "id": "a5.kda_fwd_stable",
   "kind": "project",
-  "description": "KDA 定长前向，门控算术改成对深衰减数值稳定的形式。与 a5.kda_fwd 数学同义，可用门控跨度从 ~87 扩到 ~156（实测）。",
+  "description": "Fixed-length stable KDA forward with continuous Aqk slot rotation across heads. The public ops dispatch remains unchanged.",
   "inputs": {
     "q": {
       "dtype": "bfloat16",
@@ -111,20 +111,26 @@
     },
     "tails": "T=C*64；与上游一致，partial chunk / K-V tail / fp16 / L=32 均不支持。",
     "layout": "公开张量 token-major；内部显式重排到 BHCLK / BHVCLK。",
-    "single_chunk_multihead": "**C=1 且 B*HV > block_dim 时 o 是静默错误的**（上游 kda_sub45_fused_kernel 的手写同步假设了 C≥2）：有限值、量级正常、内容错，只有每个 cube 核的最后一个头对；final_state 与反向梯度不受影响。安全条件 B*HV ≤ block_dim（pair 按 GetCubeIdx()/GetCubeNum() 切 B*HV，而 GetCubeNum()==block_dim）。已在 ops/kda/chunk.py 的 _check 里报错拦掉。详见 gaps.json 的 c1-multihead-o-corrupt。"
+    "single_chunk_multihead": "The standalone repaired unit handles repeated-head ownership for odd C. The public chunk_kda_fwd dispatch still uses the original recurrent source and retains its C=1 guard; integrating this repair is outside A5K-01."
   },
   "dependencies": {
     "derived_from": "a5.kda_fwd",
     "shared_kernels": [
-      "tril_inverse64_v2_strict_bf16_kernel",
-      "kda_sub45_fused_kernel"
+      "tril_inverse64_v2_strict_bf16_kernel"
     ],
     "own_kernels": [
       "kda_sub1_gate_stable_kernel",
       "kda_sub2_score_stable_kernel",
-      "kda_sub3_wy_stable_kernel"
+      "kda_sub3_wy_stable_kernel",
+      "kda_sub45_aqk_repaired_kernel"
     ],
-    "note": "inverse 与 recurrent 直接复用上游 —— 它们只用绝对量，下溢到 0 本身就是正确结果（完全衰减），不存在 0/0。 ⚠️ 共享的 kda_sub45_fused_kernel 有一处独立缺陷：C=1 且 B*HV > block_dim 时 o 内容错（见 domain.single_chunk_multihead）。它与门控跨度无关，upstream 与本单元表现逐位相同。"
+    "note": "The standalone unit uses its derived recurrent kernel. verify_repair.py retains the upstream recurrent kernel as the unchanged negative-control baseline. Public dispatch selection is not modified.",
+    "python": ">=3.10",
+    "ascriptor": "==0.1.0",
+    "host": [
+      "torch>=2.9.0",
+      "numpy"
+    ]
   },
   "comparison": {
     "default": {
@@ -133,6 +139,11 @@
       "atol": 0.02,
       "max_relative_l2": 0.05,
       "reason": "沿用 a5.kda_fwd 的预算。实测在跨度 1.11~155.97 的全范围内 o 的相对 L2 稳定在 2.85e-03~3.19e-03，没有随跨度退化。"
+    },
+    "outputs": {
+      "o": {
+        "reference_dtype": "float32"
+      }
     }
   },
   "cases": [
@@ -202,16 +213,132 @@
         "gate_multiplier": 80,
         "initial_state": "random"
       }
+    },
+    {
+      "id": "aqk_c1_gqa",
+      "seed": 2026,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "H": 1,
+        "HV": 2,
+        "C": 1,
+        "L": 64,
+        "K": 128,
+        "V": 128,
+        "span": 46.0,
+        "initial_state": "random"
+      }
+    },
+    {
+      "id": "aqk_c2_gqa",
+      "seed": 2026,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "H": 1,
+        "HV": 2,
+        "C": 2,
+        "L": 64,
+        "K": 128,
+        "V": 128,
+        "span": 46.0,
+        "initial_state": "random"
+      }
+    },
+    {
+      "id": "aqk_c3_gqa",
+      "seed": 2026,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "H": 1,
+        "HV": 2,
+        "C": 3,
+        "L": 64,
+        "K": 128,
+        "V": 128,
+        "span": 46.0,
+        "initial_state": "random"
+      }
+    },
+    {
+      "id": "aqk_c5_gqa",
+      "seed": 2026,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "H": 1,
+        "HV": 2,
+        "C": 5,
+        "L": 64,
+        "K": 128,
+        "V": 128,
+        "span": 46.0,
+        "initial_state": "random"
+      }
     }
   ],
-  "support": {
-    "reference": "passed",
-    "sim": "untested",
-    "emit": "passed",
-    "compile": "passed",
-    "board_cce": "passed",
-    "note": "emit/compile/board 的证据来自本仓 runtime 桥（aclnn 本地编译 + 进程内零拷贝调用），不是 ascriptor harness。harness 集成（unit.py + run.py 对接 _unit_runner）尚未做 —— 见 README.md。"
-  },
+  "support": [
+    {
+      "device": "a5",
+      "backend": "cce",
+      "stage": "reference",
+      "status": "passed"
+    },
+    {
+      "device": "a5",
+      "backend": "cce",
+      "stage": "sim",
+      "status": "passed",
+      "cases": [
+        "aqk_c1_gqa"
+      ],
+      "note": "Complete five-stage canonical runner, reduced H=1/HV=2/C=1/bd=1; no broader model qualification."
+    },
+    {
+      "device": "a5",
+      "backend": "cce",
+      "stage": "pipesim",
+      "status": "passed",
+      "cases": [
+        "aqk_c1_gqa"
+      ],
+      "note": "Complete five-stage canonical runner, reduced H=1/HV=2/C=1/bd=1; no broader model qualification."
+    },
+    {
+      "device": "a5",
+      "backend": "cce",
+      "stage": "emit",
+      "status": "passed"
+    },
+    {
+      "device": "a5",
+      "backend": "cce",
+      "stage": "compile",
+      "status": "passed",
+      "cases": [
+        "aqk_c1_gqa",
+        "aqk_c2_gqa",
+        "aqk_c3_gqa",
+        "aqk_c5_gqa"
+      ],
+      "note": "Native five-stage composition on 950PR_9589 V100 / CANN 9.2.0, OPP ascend950/ascend910b/ascend910_93. Matching generated-input grid cells pass bd=1..4; public dispatch remains unchanged. See validation.json for the complete 336-cell grid and full workload."
+    },
+    {
+      "device": "a5",
+      "backend": "cce",
+      "stage": "board",
+      "status": "passed",
+      "cases": [
+        "aqk_c1_gqa",
+        "aqk_c2_gqa",
+        "aqk_c3_gqa",
+        "aqk_c5_gqa"
+      ],
+      "note": "Native five-stage composition on 950PR_9589 V100 / CANN 9.2.0, OPP ascend950/ascend910b/ascend910_93. Matching generated-input grid cells pass bd=1..4; public dispatch remains unchanged. See validation.json for the complete 336-cell grid and full workload."
+    }
+  ],
   "provenance": {
     "derived_from": {
       "unit": "a5.kda_fwd",
@@ -223,7 +350,22 @@
       "intra(scores)：收 g_cumsum 而不是 eg；按逐通道中点 m[d] = gc[L-1,d]/2 构造 exp(gc-m) 与 exp(m-gc)，把原来的 k/eg 除法换成乘法。乘积与原版逐位同义（m 抵消）。",
       "wy：收 g_cumsum；kg 由 eg_last/eg 改为 exp(gc_last - gc)，先减后指数。qg/kexp 仍是绝对量，下溢到 0 即正确。"
     ],
-    "measured_at": "2026-09-11, Ascend950PR / CANN 9.2.0"
+    "measured_at": "2026-09-11, Ascend950PR / CANN 9.2.0",
+    "aqk_repair": {
+      "task": "A5K-01",
+      "baseline_project_revision": "d0ae60f",
+      "library_revision": "90cfcdc720bbcd66e8bd4361c4dd4fbc1a2a57b5",
+      "kernels_revision": "b3b3f9c16df7c4626ed3c081032a1be5a753d0b1",
+      "fla_revision": "e52dbc0ea19d3a40d7ab7f9eed855d2b473994d2",
+      "source": "projects/a5/kda_fwd/kernels/recurrent.py",
+      "changes": [
+        "Rename the derived recurrent entry and change only the two Aqk slot expressions.",
+        "Declare WY VcMutex depth=2 explicitly, matching its DBuff storage and the previous default. Both native variants share this compatibility prerequisite."
+      ],
+      "evidence": "docs/research/kda_aqk_handoff_repair.md",
+      "scope": "A5K-01 is an A5 exception; it does not unlock A5-01 through A5-06 or change public dispatch.",
+      "receipt": "validation.json"
+    }
   },
   "release_scope": {
     "version": "0.1.0",
@@ -231,5 +373,104 @@
       "a5"
     ],
     "note": "只支持 A5，与上游一致。"
+  },
+  "stages": {
+    "eg": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "HV",
+        "C",
+        64,
+        128
+      ]
+    },
+    "g_cumsum": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "HV",
+        "C",
+        64,
+        128
+      ]
+    },
+    "Aqk": {
+      "dtype": "bfloat16",
+      "shape": [
+        "B",
+        "HV",
+        "C",
+        64,
+        64
+      ]
+    },
+    "strict": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "HV",
+        "C",
+        64,
+        64
+      ]
+    },
+    "Akk": {
+      "dtype": "bfloat16",
+      "shape": [
+        "B",
+        "HV",
+        "C",
+        64,
+        64
+      ]
+    },
+    "w": {
+      "dtype": "bfloat16",
+      "shape": [
+        "B",
+        "HV",
+        "C",
+        64,
+        128
+      ]
+    },
+    "u": {
+      "dtype": "bfloat16",
+      "shape": [
+        "B",
+        "HV",
+        "C",
+        64,
+        128
+      ]
+    },
+    "qg": {
+      "dtype": "bfloat16",
+      "shape": [
+        "B",
+        "HV",
+        "C",
+        64,
+        128
+      ]
+    },
+    "kg": {
+      "dtype": "bfloat16",
+      "shape": [
+        "B",
+        "HV",
+        "C",
+        64,
+        128
+      ]
+    }
+  },
+  "workspace": {
+    "lifetime": "Per invocation; distinct stage outputs ordered by the five kernel launches.",
+    "recurrent_Aqk": "Two BF16 64x64 L1 slots and two event credits; slot index is ((pair_idx-pair_begin)*C+c_idx)%2 on producer and consumer."
+  },
+  "saved_state": {
+    "final_state": "FP32 key-major state; no new backward checkpoint or public ABI."
   }
 }

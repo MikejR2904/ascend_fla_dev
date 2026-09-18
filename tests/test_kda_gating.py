@@ -21,6 +21,47 @@ from ascend_fla.ops.kda.chunk import SUPPORTED_BLOCK_DIM, _check  # noqa: E402
 REPO = pathlib.Path(__file__).resolve().parent.parent
 
 
+def _aqk_reference_module():
+    import importlib.util
+
+    path = REPO / "kernels/projects/a5/kda_fwd_stable/repair_reference.py"
+    spec = importlib.util.spec_from_file_location("aqk_cpu_reference", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+@pytest.mark.parametrize("b,h,hv,c,state", [(1, 1, 2, 1, "zero"),
+                                           (2, 2, 4, 3, "random")])
+def test_aqk_independent_reference_matches_fla_at_every_chunk(b, h, hv, c, state):
+    import os
+
+    if not os.environ.get("FLA_KDA_NAIVE"):
+        pytest.skip("Set FLA_KDA_NAIVE to enable the independent FLA CPU oracle")
+    reference = _aqk_reference_module()
+    x = reference.make_inputs(dict(B=b, H=h, HV=hv, C=c, initial_state=state))
+    independent, fla = reference.independent_reference(x), reference.fla_reference(x)
+    for name in independent:
+        comparison = reference.metrics(independent[name], fla[name])
+        assert comparison["passed"]
+        assert comparison["relative_l2"] < 1e-5
+
+
+def test_aqk_error_gate_rejects_wrong_head_with_normal_finite_scale():
+    import torch
+
+    reference = _aqk_reference_module()
+    x = reference.make_inputs(dict(B=1, H=1, HV=2, C=1))
+    expected = reference.independent_reference(x)["o"]
+    wrong = expected.flip(2)
+    # The P0 signature is finite, ordinary-sized output; L2 must still reject it.
+    assert torch.isfinite(wrong).all()
+    assert torch.allclose(wrong.norm(), expected.norm())
+    comparison = reference.metrics(wrong, expected)
+    assert not comparison["passed"]
+    assert comparison["relative_l2"] > .05
+
+
 @pytest.mark.parametrize("bad", [0, -1, 5, 8, 28, 32])
 def test_block_dim_outside_contract_is_rejected(bad):
     """block_dim 门控在碰任何张量之前就报错。"""
@@ -164,7 +205,7 @@ def test_bwd_stable_overrides_exactly_the_kernels_it_declares():
 
 
 @pytest.mark.parametrize("unit,stems", [
-    ("kda_fwd_stable", ("gate", "intra", "wy")),
+    ("kda_fwd_stable", ("gate", "intra", "wy", "recurrent")),
     ("kda_bwd_stable", ("finalize_pre", "finalize_post")),
 ])
 def test_stable_units_define_the_functions_they_claim(unit, stems):
