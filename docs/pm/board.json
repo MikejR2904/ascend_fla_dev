@@ -1908,7 +1908,7 @@
       "wave": "W0",
       "soc": "a5",
       "priority": "P2",
-      "status": "in_progress",
+      "status": "done",
       "model": [],
       "kernel": [
         "gdn_fwd"
@@ -1989,9 +1989,25 @@
         {
           "at": "2026-09-18T03:35",
           "summary": "STATUS：找到同机另一块健康设备（health=0，无错误码，无占用），用独立设备锁开始干净重跑，故障设备未动、旧结果按历史数据单独保留不混入最终性能声明。每次 benchmark 前后都做只读健康检查，不健康就停。草稿 PR #77 仍 draft，等新设备跑完"
+        },
+        {
+          "at": "2026-09-18T06:25",
+          "summary": "合入 281ba84。PM 独立复算：临时 clone 里 pytest 253 passed/5 skipped（需同时配 FLA_GDN_NAIVE 与 FLA_GDN2_NAIVE）与 DONE 逐字一致；run.py reference 10/10、check --launcher sim/pipesim 缩小诊断点全过；写集/reserved_paths 无误。核实 gm_transfer 绕法确实用了显式 gap，与之前报的 RISK 记录一致。真机数字（切到健康设备后 T1024 1.07x/T4096 1.08x）未独立复算，但故障设备处置方式（不复位/kill、旧结果不混入）符合 §5"
         }
       ],
-      "result": null
+      "result": {
+        "commits": [
+          "6b60485",
+          "281ba84"
+        ],
+        "evidence": [
+          "PR #77",
+          "docs/research/gdn_chunk_fwd_gate_range.md",
+          "kernels/projects/a5/gdn_chunk_fwd/validation.json"
+        ],
+        "numbers": "主机侧：253 passed/5 skipped，10/10 契约 case reference 过；真机（950PR_9589，替换设备）10 case 在 bd1/2 通过、13 stage hash 逐位一致，三轮同步三明治 T1024 1.0705-1.0772x/T4096 1.0790-1.0801x；原设备 RAS bus error（0x80f78009）未解决，未混入最终数据",
+        "note": "真机数字由 assignee 报告，PM 未独立复算；主机侧全部独立复算通过"
+      }
     },
     {
       "id": "A5K-01",
@@ -2289,8 +2305,8 @@
         "id": "gdn_chunk_fwd_a5",
         "family": "gated_delta_rule",
         "track": "agent",
-        "note_zh": "窄范围例外（D-PM-20）：非 GQA 的 A5 chunk 前向，见 GDA-01",
-        "note_en": "Narrow exception (D-PM-20): non-GQA A5 chunk forward, see GDA-01"
+        "note_zh": "窄范围例外（D-PM-20）：非 GQA 的 A5 chunk 前向，已合入（#77）",
+        "note_en": "Narrow exception (D-PM-20): non-GQA A5 chunk forward, merged (#77)"
       }
     ]
   },
@@ -2310,8 +2326,8 @@
         "label_zh": "GDN（Gated DeltaNet）",
         "label_en": "GDN (Gated DeltaNet)",
         "track": "agent",
-        "note_zh": "Qwen3-Next 用它，六项 ABI 缺口待补（第四期）。**窄范围例外**（D-PM-20，2026-09-17）：GDA-01 在 A5 上做非 GQA 的 chunk 前向，显式跳过 gdn-no-gqa，不解决它",
-        "note_en": "Used by Qwen3-Next; six ABI gaps to close (phase 4). **Narrow exception** (D-PM-20, 2026-09-17): GDA-01 does non-GQA chunk forward on A5, explicitly gating away gdn-no-gqa rather than closing it"
+        "note_zh": "Qwen3-Next 用它，六项 ABI 缺口待补（第四期）。**窄范围例外**（D-PM-20，2026-09-17）：GDA-01 已合入——非 GQA 的 A5 chunk 前向，显式跳过 gdn-no-gqa，不解决它",
+        "note_en": "Used by Qwen3-Next; six ABI gaps to close (phase 4). **Narrow exception** (D-PM-20, 2026-09-17): GDA-01 merged — non-GQA A5 chunk forward, explicitly gating away gdn-no-gqa rather than closing it"
       },
       {
         "id": "delta_rule",

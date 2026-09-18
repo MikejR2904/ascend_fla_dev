@@ -28,7 +28,7 @@ serves only as the semantic authority during testing (`naive.py` as a CPU fp32 o
 | family | id | track | kernels | task progress |
 |---|---|---|---|---|
 | KDA (Kimi Delta Attention) | `kda` | open to agents | 5 | 1/15 |
-| GDN (Gated DeltaNet) | `gated_delta_rule` | open to agents | 4 | 0/4 |
+| GDN (Gated DeltaNet) | `gated_delta_rule` | open to agents | 4 | 1/4 |
 | DeltaNet | `delta_rule` | no task yet | 2 | 2/2 units with validation records |
 | GDN-2 (Gated DeltaNet 2) | `gdn2` | owner track | 6 | 3/4 |
 | Whole-network fusion ops (module / layer) | `fusion` | open to agents | 4 | 0/4 |
@@ -108,23 +108,23 @@ _First target family; used by Kimi-Linear_
 
 </details>
 
-<details><summary><b>GDN (Gated DeltaNet) —— 4 kernel(s)，0/4 done</b></summary>
+<details><summary><b>GDN (Gated DeltaNet) —— 4 kernel(s)，1/4 done</b></summary>
 
-_Used by Qwen3-Next; six ABI gaps to close (phase 4). **Narrow exception** (D-PM-20, 2026-09-17): GDA-01 does non-GQA chunk forward on A5, explicitly gating away gdn-no-gqa rather than closing it_
+_Used by Qwen3-Next; six ABI gaps to close (phase 4). **Narrow exception** (D-PM-20, 2026-09-17): GDA-01 merged — non-GQA A5 chunk forward, explicitly gating away gdn-no-gqa rather than closing it_
 
 | kernel | track | progress | next |
 |---|---|---|---|
-| `gdn_fwd` | open to agents | 0/4 | [#35](https://github.com/ddddwee1/ascend_fla_dev/issues/35) A2-07 |
+| `gdn_fwd` | open to agents | 1/4 | [#35](https://github.com/ddddwee1/ascend_fla_dev/issues/35) A2-07 |
 | `gdn_bwd` | open to agents | 0/3 | [#35](https://github.com/ddddwee1/ascend_fla_dev/issues/35) A2-07 |
 | `gdn_fused_recurrent` | open to agents | 0/1 | [#45](https://github.com/ddddwee1/ascend_fla_dev/issues/45) A2-20 |
-| `gdn_chunk_fwd_a5` | open to agents | — | _Narrow exception (D-PM-20): non-GQA A5 chunk forward, see GDA-01_ |
+| `gdn_chunk_fwd_a5` | open to agents | — | _Narrow exception (D-PM-20): non-GQA A5 chunk forward, merged (#77)_ |
 
-<details><summary>gdn_fwd —— 0/4 done，start A2-07、GDA-01</summary>
+<details><summary>gdn_fwd —— 1/4 done，start A2-07、GDA-01</summary>
 
 | task | issue | SoC | dtype | status | note |
 |---|---|---|---|---|---|
 | A2-07 | [#35](https://github.com/ddddwee1/ascend_fla_dev/issues/35) | `a2` | bf16、fp32 | ⬜ open | ★ start |
-| GDA-01 | [#73](https://github.com/ddddwee1/ascend_fla_dev/issues/73) | `a5` | bf16、fp32 | 🔵 in_progress | ★ start |
+| GDA-01 | [#73](https://github.com/ddddwee1/ascend_fla_dev/issues/73) | `a5` | bf16、fp32 | ✅ done | ★ start |
 | A2-K1 | [#44](https://github.com/ddddwee1/ascend_fla_dev/issues/44) | `a2` | bf16、fp32 | 🔒 gated (kernel-batch-approval) |  |
 | A2-20 | [#45](https://github.com/ddddwee1/ascend_fla_dev/issues/45) | `a2` | bf16、fp32 | 🔒 gated (kernel-batch-approval) |  |
 
