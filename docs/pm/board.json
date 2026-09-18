@@ -1995,7 +1995,7 @@
       "wave": "W0",
       "soc": "a5",
       "priority": "P1",
-      "status": "assigned",
+      "status": "in_progress",
       "model": [
         "kimi-linear-48b-a3b"
       ],
@@ -2057,6 +2057,10 @@
         {
           "at": "2026-09-18T03:06",
           "summary": "RISK contradicts-handoff：kda_fwd_stable 的 wy.py 在当前 library pin 下编译失败，VcMutex 现在要求显式 depth 声明（之前隐式默认 2 信用）。提议加 depth=2 兼容声明，不改算式/buffer/闸，基线与修复版同等适用。\nSTATUS：真机确认真正的里程碑——在健康的 device 1 上，完整五阶段基线复现了诊断出的奇数 C 缺陷，**首次在真机上验证 C=3 也错**（T192/C3 relL2=0.69），T64/C1 relL2=1.06 与历史记录吻合，偶数 C=64 在预算内。已记入 gaps.json"
+        },
+        {
+          "at": "2026-09-18T03:20",
+          "summary": "STATUS：槽轮转修复已落地（只改两处 Aqk 槽表达式与 entry 名，原版留作负对照）。真实 Kimi 全量 T4096/H=HV=32/bd=4：o relL2=0.0033、state relL2=0.0025，对独立 CPU 递推与 fla naive 均过，每个 stage 与偶数 C 基线逐位相同。缩小形状 pipesim 回归 C=1,2,3,5：负对照仍有冒险与错头，修复版零冒险、回放正确，偶数 C 逐位不变。84-case 网格 bd=4/1 过，bd=2/3 进行中。229 passed/5 skipped"
         }
       ],
       "result": null
