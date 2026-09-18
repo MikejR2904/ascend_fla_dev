@@ -70,8 +70,8 @@ This is a CPU result, not a kernel execution result.
 | scale | Fixed positive constant 128**-0.5, applied in FP32 |
 | final BF16 output cast | Sole lossy storage boundary for BF16 callers |
 
-The initial generated validation domain uses q/k/v normal draws scaled by
-0.05, with additional normalized-key and zero/strong-gate cases planned.
+The generated validation domain uses q/k/v normal draws scaled by
+0.05, with additional normalized-key and zero/strong-gate cases.
 Device comparison budgets must be fixed before the first candidate run;
 initial FP32 output/state relative-L2 budget is 1e-4 and BF16 output budget
 is 5e-3, together with elementwise atol=2e-5/rtol=2e-4 for FP32 and
@@ -95,8 +95,8 @@ controls, and record cross-block-dimension equality independently.
 Profile the baseline before choosing changes. Use synchronized same-device
 baseline/candidate/baseline, separate processes for different builds, fixed
 warmup/repeat, and exact source/toolchain identities. In-process CCE/aclnn
-must be validated separately from the SSH board harness. Hardware, latency,
-workspace and optimization conclusions are pending; no speedup is claimed.
+must be validated separately from the SSH board harness. The following
+measurements qualify only the recorded generated inputs and device.
 
 ## Measured baseline and selected optimization
 
@@ -151,3 +151,81 @@ and relative L2=1.17071e-7 versus torch cumsum. Event balance and hazard lists
 are empty and no deadlock is reported. This is specifically a repeated-buffer
 and strided-copy model check, not silicon qualification. The failure and
 located workaround were reported in GDA-01's RISK thread.
+
+## Completed native measurements and pending device recovery
+
+The measured explicit-gap candidate has stage SHA256
+`a5d0c7a7b7f62001936d64f06538444afc90f4d2100362f9ceacef4142fbd72d`.
+`kernels/projects/a5/gdn_chunk_fwd/validation.json` is the retained numerical
+receipt, including source identities, generated-input hashes, both oracle
+comparisons, independent leaf checks and all paired samples. The environment
+is Ascend950PR_9589, CANN compiler/OPP 9.2.0, kernel packages ascend950,
+ascend910b and ascend910_93; Python 3.12.13, Torch 2.12.0+cpu, Torch NPU 2.12.0.
+The accepted library revision is `90cfcdc720bbcd66e8bd4361c4dd4fbc1a2a57b5`;
+FLA reference revision is `e52dbc0ea19d3a40d7ab7f9eed855d2b473994d2`.
+
+All ten cases pass at block_dim1 and block_dim2, including repeated heads,
+chunks, batches, normalized keys and zero/weak/strong gates. All 13 stage
+outputs are byte-identical across both block dimensions and the baseline.
+Every independent leaf and the composed graph are checked numerically;
+public BF16/FP32 calls are checked separately. An additional NaN-poisoned
+grid is pending because its preflight detected health 2 before any launch.
+Shape and input seeds are recorded per case. FP32 elementwise
+atol/rtol=2e-5/2e-4 and relative-L2
+1e-4 are unchanged; BF16 output uses atol/rtol=2e-5/1e-2 and relative-L2 5e-3.
+
+Across the complete grid, maxima (max_abs / relative-L2; maxima may arise
+from different cases) are:
+
+| Comparison | Output | FP32 state |
+| --- | --- | --- |
+| Independent CPU block solve | 5.84987e-09 / 1.779822e-06 | 3.352761e-08 / 9.675616e-07 |
+| FLA CPU recurrence | 2.779416e-09 / 9.826487e-07 | 4.097819e-08 / 7.502357e-07 |
+| Public BF16 vs CPU block solve | 7.605646e-06 / 0.001696268 | 3.72529e-08 / 9.675616e-07 |
+
+### Three-round paired performance
+
+Same reserved device, fresh process per sample, block_dim2, B1/H16/K128/V128,
+FP32 inputs, warmup10/repeat50. Every timed public call is synchronized;
+latency includes host launch and allocation overhead. The conservative
+speedup divides the faster of the surrounding baseline medians by the
+candidate median. These measurements are not device-only kernel timings.
+
+| T | Round | Baseline before (us) | Candidate (us) | Baseline after (us) | Conservative speedup |
+| --- | --- | --- | --- | --- | --- |
+| 1024 | 1 | 12044.986 | 10047.539 | 12371.662 | 1.1988x |
+| 4096 | 1 | 52380.346 | 38149.980 | 46012.784 | 1.2061x |
+| 1024 | 2 | 12344.751 | 10254.105 | 12505.389 | 1.2039x |
+| 4096 | 2 | 47221.958 | 38082.519 | 46977.702 | 1.2336x |
+| 1024 | 3 | 12118.220 | 10185.176 | 12319.253 | 1.1898x |
+| 4096 | 3 | 48037.881 | 43063.065 | 50513.738 | 1.1155x |
+
+All six paired comparisons improve. All 13 checkpoint hashes remain equal
+in every baseline/candidate/baseline triplet. T4096 retained-stage workspace
+is 369098752 bytes and measured public peak allocation increment is
+287309824 bytes, unchanged between candidates. The receipt also retains
+per-stage profile medians to distinguish prepare gains from runtime drift.
+
+The native in-process CCE bridge completed these numerical checks; clean
+hardware acceptance remains pending the postflight fault investigation.
+The initial baseline additionally passed the standalone native aclnn harness; the final
+revision does not claim a separate SSH board-harness or full-unit simulator
+qualification. The prepare-only pipesim regression remains a diagnostic.
+GQA, nonzero initial state, arbitrary finite input magnitudes, backward and
+A2/A3 remain outside this qualification.
+
+### Postflight health failure
+
+After all six paired comparisons completed, the additional strict-grid
+preflight returned DSMI health rc=0, health=2, error_count=1 and code
+`0x80f78009`. The driver describes it as "node type=HWTS/Stars-TS, sensor
+type=RAS State, event state=bus error, probably caused by software". Repeated
+read-only queries returned the same status. No remaining GDN benchmark or
+compiler process, or device-node owner, was found. No reset or process kill
+was attempted. The onset and cause are not established by the completed
+numerical receipts. The final NaN-poisoned grid never launched.
+
+These performance samples and numerical passes are retained observations,
+not a clean final hardware acceptance. Recover the assigned device under
+owner authorization, verify health and exclusive ownership, then rerun the
+strict grid and paired benchmark. This task is blocked at that final gate.

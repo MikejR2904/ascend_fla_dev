@@ -27,9 +27,20 @@ compares all checkpoints, both CPU references and the public BF16/FP32
 entry before recording synchronized host-inclusive NPU timings. The full
 shape runs precede any reduced simulator diagnostic.
 
-All hardware and optimization support is untested until recorded in the
-contract. The sibling GDN-2 unit supplied generic WY/scan/output mechanics
+Hardware scope and numerical/performance receipts are recorded in the
+contract and `validation.json`. The sibling GDN-2 unit supplied generic WY/scan/output mechanics
 (adaptation provenance in `stages.py`); it is not a runtime dependency or
 source of GDN qualification. The upstream a5.gdn_fwd unit is only an ABI
 comparison source. See the assigned research document for equations,
 range analysis and the distinct state/layout/scale/rounding choices.
+
+To reproduce paired performance on one reserved device, keep separate
+immutable baseline/candidate checkouts and run:
+
+```sh
+python sandwich.py --baseline <baseline-repo> --candidate <candidate-repo> --fla-naive <local-naive.py> --output <sandwich.json>
+```
+
+The baseline revision and exact stage hashes are in `validation.json`.
+The caller supplies the device environment and exclusive lock. No machine
+configuration, saved golden tensors or network dependency is shipped.

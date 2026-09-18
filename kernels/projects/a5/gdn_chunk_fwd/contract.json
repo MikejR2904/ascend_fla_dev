@@ -249,25 +249,29 @@
       "device": "a5",
       "backend": "cce",
       "stage": "pipesim",
-      "status": "untested"
+      "status": "untested",
+      "reason": "Only reduced prepare T64/H3/block_dim1 strided-copy/ownership diagnostic passed; not full-unit pipesim qualification."
     },
     {
       "device": "a5",
       "backend": "cce",
       "stage": "emit",
-      "status": "untested"
+      "status": "passed",
+      "reason": "Five CCE stages compiled and executed natively at block_dim1/2; see validation.json."
     },
     {
       "device": "a5",
       "backend": "cce",
       "stage": "compile",
-      "status": "untested"
+      "status": "passed",
+      "reason": "Five CCE stages compiled and executed natively at block_dim1/2; see validation.json."
     },
     {
       "device": "a5",
       "backend": "cce",
       "stage": "board",
-      "status": "untested"
+      "status": "untested",
+      "reason": "SSH board harness not qualified for this revision; native in-process CCE qualification is recorded separately in measured.native_inprocess."
     }
   ],
   "profile": {
@@ -448,6 +452,44 @@
         "relative_l2": 9.675853834655711e-07
       },
       "scope": "Native CCE/aclnn against CPU block solve; first complete workload, before optimization. Five native stages and composition passed. Public in-process bridge and FLA comparison pending."
+    },
+    "native_inprocess": {
+      "status": "passed",
+      "kernel_sha256": "a5d0c7a7b7f62001936d64f06538444afc90f4d2100362f9ceacef4142fbd72d",
+      "cases": 10,
+      "block_dim": [
+        1,
+        2
+      ],
+      "independent_leaves": true,
+      "nan_poisoned_checkpoints": "pending: postflight health 2 blocked additional grid",
+      "public_dtype": [
+        "float32",
+        "bfloat16"
+      ],
+      "evidence": "validation.json",
+      "cross_build_stage_bytes": "all 13 checkpoints equal to baseline and across block_dim1/2",
+      "acceptance": "pending device recovery and rerun; postflight health=2, error=0x80f78009"
+    },
+    "performance": {
+      "evidence": "validation.json",
+      "rounds": 3,
+      "warmup": 10,
+      "repeat": 50,
+      "timing": "synchronized host-inclusive public FP32 latency including allocations",
+      "conservative_speedup": {
+        "1024": [
+          1.1987996264557919,
+          1.203883800493373,
+          1.1897900041094038
+        ],
+        "4096": [
+          1.2061024540510898,
+          1.2335765394090659,
+          1.1155239646783153
+        ]
+      },
+      "acceptance": "observations only; postflight device fault blocks clean final acceptance"
     }
   }
 }
