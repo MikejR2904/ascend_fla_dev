@@ -1908,7 +1908,7 @@
       "wave": "W0",
       "soc": "a5",
       "priority": "P2",
-      "status": "in_progress",
+      "status": "blocked",
       "model": [],
       "kernel": [
         "gdn_fwd"
@@ -1931,7 +1931,7 @@
       },
       "spec": "docs/pm/tasks/GDA-01.md",
       "issue": 73,
-      "pr": null,
+      "pr": 77,
       "assignee": "limjiunnbin",
       "assignee_caps": {
         "agent": "Codex (self-described, per #73)",
@@ -1981,6 +1981,10 @@
         {
           "at": "2026-09-18T02:20",
           "summary": "STATUS：显式 gap 修正版在 bd1/bd2 全部 10 case 过，13 个 stage hash 与优化前基线逐格一致；首轮配对性能 T1024 1.20x/T4096 1.21x（保守值，三轮最终数字待定）。253 passed/5 skipped。**主动审计**：AST 扫了本仓已合入 kernel，找到 19 处同类双切片+夹中标量索引的隐式 GM 读，全部只搬一行（不会踩中缺陷的多行分支），扫描范围声明了局限性（不保证别名/其它搬运形式）。已回填 session 字段以配合新规则"
+        },
+        {
+          "at": "2026-09-18T02:35",
+          "summary": "RISK shared-machine + BLOCKED：三轮配对性能跑完后，额外诊断网格的 preflight 报device health=2（error_code=0x80f78009，RAS bus error，\"probably caused by software\"）。未再发起任何 kernel、未复位/kill 任何进程，只读诊断确认无残留进程。草稿 PR #77 已开（253 host passed，10/10 native case bd1/2 通过、13 stage hash 与基线一致，首轮性能 T1024 1.19-1.20x/T4096 1.12-1.23x，明确标注\"待故障排查与干净重跑，非最终声明\"）。等设备恢复健康后补最终验证与三明治重跑再 DONE。**同一台设备也在被 A5K-01 用（共享设备锁串行）——那边可能同样受影响，需要关注**"
         }
       ],
       "result": null
