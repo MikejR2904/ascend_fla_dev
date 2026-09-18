@@ -2053,6 +2053,10 @@
         {
           "at": "2026-09-18T02:50",
           "summary": "RISK shared-machine 确认：这台机器的 device 0（GDA-01 也在用的那张）同样在这边的 preflight 上报 health=2，先于任何 kernel 启动就被挡住，未做复位/kill。随后找到同机 device 1 健康（health=0）、无占用进程，切过去，device 0 与 GDA-01 的东西未动。符合 AGENTS.md §5\"换一张 Health=OK 的卡\"的处置方式"
+        },
+        {
+          "at": "2026-09-18T03:06",
+          "summary": "RISK contradicts-handoff：kda_fwd_stable 的 wy.py 在当前 library pin 下编译失败，VcMutex 现在要求显式 depth 声明（之前隐式默认 2 信用）。提议加 depth=2 兼容声明，不改算式/buffer/闸，基线与修复版同等适用。\nSTATUS：真机确认真正的里程碑——在健康的 device 1 上，完整五阶段基线复现了诊断出的奇数 C 缺陷，**首次在真机上验证 C=3 也错**（T192/C3 relL2=0.69），T64/C1 relL2=1.06 与历史记录吻合，偶数 C=64 在预算内。已记入 gaps.json"
         }
       ],
       "result": null
