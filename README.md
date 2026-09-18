@@ -203,7 +203,7 @@ _算子本身之外，整网跑起来还要的那些：短卷积、门控 RMSNor
 
 | 任务 | issue | SoC | dtype | 状态 | 说明 |
 |---|---|---|---|---|---|
-| A2-40 | [#54](https://github.com/ddddwee1/ascend_fla_dev/issues/54) | `any` | bf16、fp32 | 🔵 assigned | ★ 起点 |
+| A2-40 | [#54](https://github.com/ddddwee1/ascend_fla_dev/issues/54) | `any` | bf16、fp32 | 🔵 in_progress | ★ 起点 |
 | A2-41 | [#55](https://github.com/ddddwee1/ascend_fla_dev/issues/55) | `a2` | bf16、fp32 | 🔒 gated (machines:a2) |  |
 
 </details>
@@ -212,7 +212,7 @@ _算子本身之外，整网跑起来还要的那些：短卷积、门控 RMSNor
 
 | 任务 | issue | SoC | dtype | 状态 | 说明 |
 |---|---|---|---|---|---|
-| A2-40 | [#54](https://github.com/ddddwee1/ascend_fla_dev/issues/54) | `any` | bf16、fp32 | 🔵 assigned | ★ 起点 |
+| A2-40 | [#54](https://github.com/ddddwee1/ascend_fla_dev/issues/54) | `any` | bf16、fp32 | 🔵 in_progress | ★ 起点 |
 | A2-41 | [#55](https://github.com/ddddwee1/ascend_fla_dev/issues/55) | `a2` | bf16、fp32 | 🔒 gated (machines:a2) |  |
 
 </details>
@@ -221,7 +221,7 @@ _算子本身之外，整网跑起来还要的那些：短卷积、门控 RMSNor
 
 | 任务 | issue | SoC | dtype | 状态 | 说明 |
 |---|---|---|---|---|---|
-| A2-40 | [#54](https://github.com/ddddwee1/ascend_fla_dev/issues/54) | `any` | bf16、fp32 | 🔵 assigned | ★ 起点 |
+| A2-40 | [#54](https://github.com/ddddwee1/ascend_fla_dev/issues/54) | `any` | bf16、fp32 | 🔵 in_progress | ★ 起点 |
 | A2-42 | [#56](https://github.com/ddddwee1/ascend_fla_dev/issues/56) | `a2` | bf16、fp32 | 🔒 gated (kernel-batch-approval) |  |
 
 </details>
@@ -230,7 +230,7 @@ _算子本身之外，整网跑起来还要的那些：短卷积、门控 RMSNor
 
 | 任务 | issue | SoC | dtype | 状态 | 说明 |
 |---|---|---|---|---|---|
-| A2-40 | [#54](https://github.com/ddddwee1/ascend_fla_dev/issues/54) | `any` | bf16、fp32 | 🔵 assigned | ★ 起点 |
+| A2-40 | [#54](https://github.com/ddddwee1/ascend_fla_dev/issues/54) | `any` | bf16、fp32 | 🔵 in_progress | ★ 起点 |
 | A2-43 | [#57](https://github.com/ddddwee1/ascend_fla_dev/issues/57) | `a2` | bf16、fp32 | 🔒 gated (machines:a2) |  |
 
 </details>

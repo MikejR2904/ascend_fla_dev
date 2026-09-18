@@ -204,7 +204,7 @@ _Beyond the operators themselves: short conv, gated RMSNorm, q/k l2norm and gate
 
 | task | issue | SoC | dtype | status | note |
 |---|---|---|---|---|---|
-| A2-40 | [#54](https://github.com/ddddwee1/ascend_fla_dev/issues/54) | `any` | bf16、fp32 | 🔵 assigned | ★ start |
+| A2-40 | [#54](https://github.com/ddddwee1/ascend_fla_dev/issues/54) | `any` | bf16、fp32 | 🔵 in_progress | ★ start |
 | A2-41 | [#55](https://github.com/ddddwee1/ascend_fla_dev/issues/55) | `a2` | bf16、fp32 | 🔒 gated (machines:a2) |  |
 
 </details>
@@ -213,7 +213,7 @@ _Beyond the operators themselves: short conv, gated RMSNorm, q/k l2norm and gate
 
 | task | issue | SoC | dtype | status | note |
 |---|---|---|---|---|---|
-| A2-40 | [#54](https://github.com/ddddwee1/ascend_fla_dev/issues/54) | `any` | bf16、fp32 | 🔵 assigned | ★ start |
+| A2-40 | [#54](https://github.com/ddddwee1/ascend_fla_dev/issues/54) | `any` | bf16、fp32 | 🔵 in_progress | ★ start |
 | A2-41 | [#55](https://github.com/ddddwee1/ascend_fla_dev/issues/55) | `a2` | bf16、fp32 | 🔒 gated (machines:a2) |  |
 
 </details>
@@ -222,7 +222,7 @@ _Beyond the operators themselves: short conv, gated RMSNorm, q/k l2norm and gate
 
 | task | issue | SoC | dtype | status | note |
 |---|---|---|---|---|---|
-| A2-40 | [#54](https://github.com/ddddwee1/ascend_fla_dev/issues/54) | `any` | bf16、fp32 | 🔵 assigned | ★ start |
+| A2-40 | [#54](https://github.com/ddddwee1/ascend_fla_dev/issues/54) | `any` | bf16、fp32 | 🔵 in_progress | ★ start |
 | A2-42 | [#56](https://github.com/ddddwee1/ascend_fla_dev/issues/56) | `a2` | bf16、fp32 | 🔒 gated (kernel-batch-approval) |  |
 
 </details>
@@ -231,7 +231,7 @@ _Beyond the operators themselves: short conv, gated RMSNorm, q/k l2norm and gate
 
 | task | issue | SoC | dtype | status | note |
 |---|---|---|---|---|---|
-| A2-40 | [#54](https://github.com/ddddwee1/ascend_fla_dev/issues/54) | `any` | bf16、fp32 | 🔵 assigned | ★ start |
+| A2-40 | [#54](https://github.com/ddddwee1/ascend_fla_dev/issues/54) | `any` | bf16、fp32 | 🔵 in_progress | ★ start |
 | A2-43 | [#57](https://github.com/ddddwee1/ascend_fla_dev/issues/57) | `a2` | bf16、fp32 | 🔒 gated (machines:a2) |  |
 
 </details>
