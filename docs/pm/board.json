@@ -2328,7 +2328,7 @@
       "wave": "W0",
       "soc": "any",
       "priority": "P2",
-      "status": "open",
+      "status": "gated",
       "model": [
         "kimi-linear-48b-a3b"
       ],
@@ -2338,7 +2338,8 @@
         "fp32"
       ],
       "deps": [
-        "A2-40"
+        "A2-40",
+        "A5K-02"
       ],
       "write_set": [
         "ascend_fla/ops/kda/chunk.py",
@@ -2363,9 +2364,14 @@
         {
           "at": "2026-09-18T11:54",
           "summary": "A2-40（PR #85）提出的拆分任务，PM 落地：纯主机侧 + CPU 测试，不需要真机，无 gate"
+        },
+        {
+          "at": "2026-09-18T12:20",
+          "summary": "APPLY from joshjms（#86）身份/能力校验通过，但写集与在飞的 A5K-02（blocked，限 limjiunnbin，草稿 PR #83）在 ascend_fla/ops/kda/chunk.py 上重叠——A5K-02 正在改这个文件里的 recurrent 选择逻辑（把公开调度切到修复版 kernel），A2-44 要在同一个文件给 chunk_kda 加 fla 式关键字参数。两边并发改同一个函数所在文件风险真实存在（合并冲突或互相覆盖对方的改动），不是排期便利问题。转 gated，补 A5K-02 为依赖，NO_TASK 回复已发，建议 A5K-02 合入后重新 APPLY"
         }
       ],
-      "result": null
+      "result": null,
+      "gate": "write-set-overlap:A5K-02"
     }
   ],
   "label_github_login": "ascend-fla-pm-bot",
