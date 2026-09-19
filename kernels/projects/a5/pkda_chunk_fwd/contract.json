@@ -1,0 +1,701 @@
+{
+  "schema": "ascriptor.kernel-unit/1",
+  "id": "a5.pkda_chunk_fwd",
+  "kind": "project",
+  "description": "FP32 PKDA five-launch forward with independent ATK state and asymmetric keys.",
+  "inputs": {
+    "q": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "T",
+        "H",
+        128
+      ]
+    },
+    "k": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "T",
+        "H",
+        128
+      ]
+    },
+    "v": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "T",
+        "H",
+        128
+      ]
+    },
+    "g": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "T",
+        "H",
+        128
+      ],
+      "note": "Already-activated non-positive per-key-channel log decay."
+    },
+    "initial_state": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "H",
+        128,
+        128
+      ],
+      "note": "K-major, read-only and never aliased with final_state."
+    },
+    "g_atk": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "T",
+        "H"
+      ]
+    },
+    "beta_atk": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "T",
+        "H"
+      ]
+    },
+    "beta": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "T",
+        "H"
+      ]
+    },
+    "initial_A_state": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "H",
+        128
+      ],
+      "note": "Independent non-negative ATK state, read-only."
+    },
+    "log_atk_scale": {
+      "dtype": "float32",
+      "shape": [
+        "H"
+      ]
+    }
+  },
+  "outputs": {
+    "o": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "T",
+        "H",
+        128
+      ],
+      "initialization": "NaN poison; every element must be overwritten."
+    },
+    "final_state": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "H",
+        128,
+        128
+      ],
+      "initialization": "NaN poison; every element must be overwritten."
+    },
+    "final_A_state": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "H",
+        128
+      ],
+      "initialization": "NaN poison; full overwrite."
+    }
+  },
+  "domain": {
+    "B": [
+      1,
+      2
+    ],
+    "T": "1..4096",
+    "H": "1..32",
+    "K": 128,
+    "V": 128,
+    "block_dim": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "layout": "Token-major BTHD inputs/output; K-major BHKV state; all tensors contiguous.",
+    "gate_domain": "Finite g/g_atk<=0, beta/beta_atk in[0,1], initial_A_state>=0; per-chunk |sum(g)|<=155; key row L2<=1+1e-5.",
+    "normalization": "None: pinned naive consumes q/k as supplied. Cases explicitly generate normalized input; runtime never normalizes.",
+    "ownership": "Prepare and scan own complete heads across chunks; other stages own chunk/head tiles.",
+    "aliasing": "All inputs read-only; all three outputs fresh and disjoint."
+  },
+  "dependencies": {
+    "python": ">=3.10",
+    "ascriptor": "==0.1.0",
+    "host": [
+      "torch>=2.9.0",
+      "numpy"
+    ]
+  },
+  "comparison": {
+    "default": {
+      "mode": "allclose",
+      "atol": 0.0001,
+      "rtol": 0.0001,
+      "max_relative_l2": 0.0001,
+      "reason": "All arithmetic/state are FP32, but CCE register reductions may differ from the CPU reduction tree; bitwise equality is not required."
+    }
+  },
+  "cases": [
+    {
+      "id": "t1_h1",
+      "seed": 4101,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "T": 1,
+        "H": 1,
+        "N": 1,
+        "state_scale": 0.05,
+        "A_scale": 0.03,
+        "gate_scale": 0.1
+      }
+    },
+    {
+      "id": "t2_h1",
+      "seed": 4102,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "T": 2,
+        "H": 1,
+        "N": 1,
+        "state_scale": 0.05,
+        "A_scale": 0.03,
+        "gate_scale": 0.1
+      }
+    },
+    {
+      "id": "t63_h8",
+      "seed": 4163,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "T": 63,
+        "H": 8,
+        "N": 1,
+        "state_scale": 0.05,
+        "A_scale": 0.03,
+        "gate_scale": 0.1
+      }
+    },
+    {
+      "id": "t64_h8",
+      "seed": 4164,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "T": 64,
+        "H": 8,
+        "N": 1,
+        "state_scale": 0.05,
+        "A_scale": 0.03,
+        "gate_scale": 0.1
+      }
+    },
+    {
+      "id": "t65_h8",
+      "seed": 4165,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "T": 65,
+        "H": 8,
+        "N": 2,
+        "state_scale": 0.05,
+        "A_scale": 0.03,
+        "gate_scale": 0.1
+      }
+    },
+    {
+      "id": "t128_h8",
+      "seed": 4228,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 8,
+        "N": 2,
+        "state_scale": 0.05,
+        "A_scale": 0.03,
+        "gate_scale": 0.1
+      }
+    },
+    {
+      "id": "t192_h8",
+      "seed": 4292,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 8,
+        "N": 3,
+        "state_scale": 0.05,
+        "A_scale": 0.03,
+        "gate_scale": 0.1
+      }
+    },
+    {
+      "id": "t1024_h8",
+      "seed": 5124,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "T": 1024,
+        "H": 8,
+        "N": 16,
+        "state_scale": 0.05,
+        "A_scale": 0.03,
+        "gate_scale": 0.1
+      }
+    },
+    {
+      "id": "t4096_h8",
+      "seed": 8196,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "T": 4096,
+        "H": 8,
+        "N": 64,
+        "state_scale": 0.05,
+        "A_scale": 0.03,
+        "gate_scale": 0.1
+      }
+    },
+    {
+      "id": "t65_h1",
+      "seed": 4165,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "T": 65,
+        "H": 1,
+        "N": 2,
+        "state_scale": 0.05,
+        "A_scale": 0.03,
+        "gate_scale": 0.1
+      }
+    },
+    {
+      "id": "zero_A",
+      "seed": 6163,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "T": 2,
+        "H": 1,
+        "state_scale": 0.05,
+        "A_scale": 0.0,
+        "gate_scale": 0.1,
+        "zero_atk": true,
+        "N": 1
+      }
+    },
+    {
+      "id": "zero_S",
+      "seed": 6163,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "T": 2,
+        "H": 1,
+        "state_scale": 0.0,
+        "A_scale": 0.03,
+        "gate_scale": 0.1,
+        "N": 1
+      }
+    },
+    {
+      "id": "span105",
+      "seed": 6163,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "T": 64,
+        "H": 1,
+        "state_scale": 0.05,
+        "A_scale": 0.03,
+        "gate_scale": 0.1,
+        "gate_span": 105.0,
+        "N": 1
+      }
+    },
+    {
+      "id": "span155",
+      "seed": 6163,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "T": 64,
+        "H": 1,
+        "state_scale": 0.05,
+        "A_scale": 0.03,
+        "gate_scale": 0.1,
+        "gate_span": 155.0,
+        "N": 1
+      }
+    },
+    {
+      "id": "nearzero",
+      "seed": 6163,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "T": 2,
+        "H": 1,
+        "state_scale": 0.05,
+        "A_scale": 0.03,
+        "gate_scale": 0.1,
+        "row_norm": 1e-06,
+        "N": 1
+      }
+    },
+    {
+      "id": "b2_t2_h3",
+      "seed": 4323,
+      "block_dim": 1,
+      "parameters": {
+        "B": 2,
+        "T": 2,
+        "H": 3,
+        "N": 1
+      }
+    }
+  ],
+  "support": [
+    {
+      "device": "a5",
+      "backend": "cce",
+      "stage": "reference",
+      "status": "passed",
+      "cases": [
+        "t1_h1",
+        "t2_h1",
+        "t63_h8",
+        "t64_h8",
+        "t65_h8",
+        "t128_h8",
+        "t192_h8",
+        "t1024_h8",
+        "t4096_h8",
+        "t65_h1",
+        "zero_A",
+        "zero_S",
+        "span105",
+        "span155",
+        "nearzero",
+        "b2_t2_h3"
+      ]
+    },
+    {
+      "device": "a5",
+      "backend": "cce",
+      "stage": "emit",
+      "status": "passed",
+      "note": "All five stages; source emission only."
+    },
+    {
+      "device": "a5",
+      "backend": "cce",
+      "stage": "sim",
+      "status": "passed",
+      "cases": [
+        "t1_h1",
+        "zero_A",
+        "zero_S",
+        "nearzero"
+      ],
+      "note": "All14stage outputs; block_dim1 only."
+    },
+    {
+      "device": "a5",
+      "backend": "cce",
+      "stage": "pipesim",
+      "status": "passed",
+      "cases": [
+        "t2_h1",
+        "t65_h1",
+        "b2_t2_h3"
+      ],
+      "note": "T2H1 andT65H1 atbd1; B2T2H3 atbd1/2/3/4. All14stage outputs checked."
+    },
+    {
+      "device": "a5",
+      "backend": "cce",
+      "stage": "compile",
+      "status": "untested"
+    },
+    {
+      "device": "a5",
+      "backend": "cce",
+      "stage": "board",
+      "status": "untested",
+      "note": "Includes aclnn and in-process native launchers; no hardware execution."
+    },
+    {
+      "device": "a5",
+      "backend": "cce",
+      "stage": "sim",
+      "status": "untested",
+      "cases": [
+        "t2_h1",
+        "t63_h8",
+        "t64_h8",
+        "t65_h8",
+        "t128_h8",
+        "t192_h8",
+        "t1024_h8",
+        "t4096_h8",
+        "t65_h1",
+        "span105",
+        "span155",
+        "b2_t2_h3"
+      ],
+      "note": "Full reference grid is not a full model grid."
+    },
+    {
+      "device": "a5",
+      "backend": "cce",
+      "stage": "pipesim",
+      "status": "untested",
+      "cases": [
+        "t1_h1",
+        "t63_h8",
+        "t64_h8",
+        "t65_h8",
+        "t128_h8",
+        "t192_h8",
+        "t1024_h8",
+        "t4096_h8",
+        "zero_A",
+        "zero_S",
+        "span105",
+        "span155",
+        "nearzero"
+      ],
+      "note": "Full reference grid is not a full model grid."
+    }
+  ],
+  "measured": {
+    "host_tests": "416 passed,5 skipped; PKDA-specific50passed.",
+    "cpu_dual_oracle_max_relative_l2": {
+      "o": 3.6156794096232463e-07,
+      "final_state": 2.1239055941840614e-07,
+      "final_A_state": 0.0
+    },
+    "model_vs_fla_max_relative_l2": {
+      "o": 4.374360900022148e-07,
+      "final_state": 4.419741958028195e-07,
+      "final_A_state": 0.0
+    },
+    "cross_block_dim": "B2/T2/H3: all14stage outputs byte-identical atbd1/2/3/4 in separate processes.",
+    "synchronization": "Executed pipe diagnostics have no hazards/deadlock and balanced events.",
+    "scope": "Host-only. No BF16/native/backward/performance/Triton/checkpoint qualification."
+  },
+  "provenance": [
+    {
+      "source": "FLA precond_kda/naive.py at e52dbc0ea19d3a40d7ab7f9eed855d2b473994d2",
+      "disposition": "Authoritative recurrence, independent CPU oracle; no Triton execution."
+    },
+    {
+      "source": "kda_fwd_stable and gdn2_chunk_fwd at upstream375d8f9",
+      "disposition": "KDA stable decomposition; locally derived FP32 vector stages preserve asymmetric keys. Prior results do not qualify PKDA."
+    }
+  ],
+  "profile": {
+    "warmup": 10,
+    "repeat": 50
+  },
+  "release_scope": {
+    "version": "0.0.1.dev0",
+    "hardware": [
+      "a5"
+    ],
+    "note": "Experimental host-qualified FP32 forward only. Native board/aclnn and backward untested."
+  },
+  "stages": {
+    "qn": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "N",
+        "H",
+        64,
+        128
+      ]
+    },
+    "kn": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "N",
+        "H",
+        64,
+        128
+      ]
+    },
+    "gc": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "N",
+        "H",
+        64,
+        128
+      ]
+    },
+    "bk": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "N",
+        "H",
+        64,
+        128
+      ]
+    },
+    "wv": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "N",
+        "H",
+        64,
+        128
+      ]
+    },
+    "u": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "N",
+        "H",
+        64,
+        128
+      ]
+    },
+    "wy": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "N",
+        "H",
+        64,
+        128
+      ]
+    },
+    "delta": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "N",
+        "H",
+        64,
+        128
+      ]
+    },
+    "lower": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "N",
+        "H",
+        64,
+        64
+      ]
+    },
+    "score": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "N",
+        "H",
+        64,
+        64
+      ]
+    },
+    "states": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "N",
+        "H",
+        128,
+        128
+      ]
+    },
+    "o": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "T",
+        "H",
+        128
+      ],
+      "initialization": "NaN poison; every element must be overwritten."
+    },
+    "final_state": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "H",
+        128,
+        128
+      ],
+      "initialization": "NaN poison; every element must be overwritten."
+    },
+    "final_A_state": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "H",
+        128
+      ],
+      "initialization": "NaN poison; full overwrite."
+    }
+  },
+  "workspace": {
+    "N": "ceil(T/64)",
+    "lifetime": "One public call; each stage output has a unique producer, separate storage and launch-ordered consumers."
+  },
+  "saved_state": {
+    "training": "No backward/autograd; independent initial/final main S and ATK A.",
+    "states": "Incoming K-major FP32 state per chunk, consumed by output stage."
+  },
+  "validation": {
+    "source_identity": "library90cfcdc720bbcd66e8bd4361c4dd4fbc1a2a57b5; kernels runnerb3b3f9c16df7c4626ed3c081032a1be5a753d0b1; FLAe52dbc0ea19d3a40d7ab7f9eed855d2b473994d2.",
+    "hardware": "board/aclnn untested; no native or performance claim.",
+    "reproduce": "run.py reference; run.py check --launcher sim/pipesim --case t1_h1; ref/survey.py",
+    "host": "Python3.11.15, Torch2.10.0+cpu, NumPy1.26.4.",
+    "native_launchers": {
+      "board": "untested",
+      "aclnn": "untested",
+      "inprocess": "untested"
+    }
+  }
+}
