@@ -17,6 +17,8 @@ inprocess bridge. No SSH board/aclnn launcher result is implied.
 | `tails-bd4-*`, `tails-bd4.log` | Fresh fullT4096 case plus all64 possible dynamic VF tail counts; same comparisons and output poison |
 | `vendor-diagnostics.json` | All20 build-log identities, generated VF hashes and compiler warnings with original line numbers |
 | `perf-t{1024,4096}.json`, `performance.log` | All synchronized samples from three baseline/candidate/baseline rounds; baseline is Torch NPU eager FLA naive |
+| `closeout-bd4-*`, `closeout-bd4.log` | Final delivered verifier bytes, fresh fullT4096 actual run, unchanged14stage hashes |
+| `original-failure-preservation.json` | Preserved original tensor sample SHA256, actual input/stage hashes and recomputed original failure |
 | `original-native-failure.json` | Original prepare's in-domain gate failure, preserved as a failure |
 | `diagnose-{old,repaired}-{sim,pipesim}.json` | First incorrect prefix boundary and repaired bounded diagnostic; models are not native receipts |
 | `canonical-repaired-*.json`, `repaired-*.json` | Fresh16case CPU reference and bounded sim/pipesim checks on repaired source |
@@ -51,7 +53,7 @@ private raw build logs and described in the public precision report.
 `../validation.json` records delivered runtime/verifier/test hashes. The original
 native controller snapshot had base075c95a plus the prepare repair; later base
 updates and qualification metadata do not alter the executed kernel/API sources.
-The portable rerun and tail audit independently exercise the delivered harness.
+The portable rerun and tail audit exercise the delivered harness; a final full-workload closeout records its exact delivered bytes after an EOF whitespace cleanup.
 The main112/40 counts exclude repetitions and the additional65-case tail audit.
 
 For recovery, keep these text receipts with the source files at the hashes in

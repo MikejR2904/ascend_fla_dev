@@ -86,4 +86,3 @@ try:
  print('NATIVE_PASS',len(rows),'bd',a.block_dim,flush=True)
 except BaseException as e:
  write('failure',dict(type=type(e).__name__,error=str(e),traceback=traceback.format_exc(),completed=[r['case']['id'] for r in rows]));raise
-
