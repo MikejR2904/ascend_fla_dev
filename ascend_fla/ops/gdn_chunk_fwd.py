@@ -1,4 +1,4 @@
-"""Grouped-head GDN chunk forward through repository-owned FP32 CCE stages."""
+"""Grouped GDN with native BF16/FP32 inputs and kernel-side head indexing."""
 from __future__ import annotations
 
 import functools
@@ -14,8 +14,21 @@ SCALE = 128**-0.5
 
 @functools.lru_cache(maxsize=1)
 def _pipeline():
+    """Read-only legacy unit access for existing diagnostic callers/tests."""
     path = Path(__file__).resolve().parents[2] / 'kernels/projects/a5/gdn_chunk_fwd/kernels'
     name = '_afla_gdn_chunk_kernels'
+    spec = importlib.util.spec_from_file_location(name, path / '__init__.py', submodule_search_locations=[str(path)])
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[name] = module
+    spec.loader.exec_module(module)
+    from importlib import import_module
+    return import_module(name + '.pipeline')
+
+
+@functools.lru_cache(maxsize=1)
+def _native_pipeline():
+    path = Path(__file__).resolve().parents[2] / 'kernels/projects/a5/gdn_chunk_fwd_bf16/kernels'
+    name = '_afla_gdn_bf16_kernels'
     spec = importlib.util.spec_from_file_location(name, path / '__init__.py', submodule_search_locations=[str(path)])
     module = importlib.util.module_from_spec(spec)
     sys.modules[name] = module
@@ -28,7 +41,7 @@ def _pipeline():
 def _compiled(block_dim):
     from ..runtime.compile import compile_kernel
     return tuple(compile_kernel(entry, device='a5', block_dim=block_dim, backend='cce')
-                 for entry in _pipeline().entries())
+                 for entry in _native_pipeline().all_entries())
 
 
 def _options(device, block_dim):
@@ -89,13 +102,14 @@ def chunk_gdn(q, k, v, g, beta, *, initial_state=None, output_final_state=False,
     Each consecutive group of HV/H value heads shares one q/k head.
     No q/k normalization or reference fallback. Finite g<=0, beta in [0,1]
     and finite q/k/v are caller preconditions on NPU, checked on CPU. CPU
-    launchers explicitly transfer inputs and are not in-process timing paths.
+    launchers retain diagnostic value checks and explicitly transfer inputs;
+    they are not in-process timing paths. NPU dtype/layout conversion and
+    grouped head selection occur only in the compiled kernels.
     """
     _validate(q, k, v, g, beta, initial_state, scale, head_first, device, block_dim, launcher)
-    inputs = dict(q=q.float(), k=k.float(), v=v.float(), g=g, beta=beta,
-                  initial_state=torch.zeros(q.shape[0], v.shape[2], 128, 128, dtype=torch.float32).to(q.device))
+    inputs = dict(q=q, k=k, v=v, g=g, beta=beta)
     if launcher == 'inprocess':
-        compiled = dict(zip((e.name for e in _pipeline().entries()), _compiled(block_dim)))
+        compiled = dict(zip((e.name for e in _native_pipeline().all_entries()), _compiled(block_dim)))
         def launch(entry, sources, outputs, scalars):
             op = compiled[entry.name]
             op(sources, {name: scalars[name] for name in op.scalar_names}, outputs)
@@ -108,5 +122,5 @@ def chunk_gdn(q, k, v, g, beta, *, initial_state=None, output_final_state=False,
                         block_dim=block_dim, board=board, out_dir=root, timeout=timeout)
             result = op(*(tuple(sources.values()) + tuple(outputs.values()) + tuple(scalars.values())))
             return dict(zip(outputs, (result,) if len(outputs) == 1 else result))
-    outputs = _pipeline().run(inputs, launch, retain_stages=False)
-    return outputs['o'].to(q.dtype), outputs['final_state'] if output_final_state else None
+    outputs = _native_pipeline().run(inputs, launch, retain_stages=False)
+    return outputs['o'], outputs['final_state'] if output_final_state else None
