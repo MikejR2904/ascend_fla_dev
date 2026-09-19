@@ -1855,7 +1855,7 @@
       "wave": "W0",
       "soc": "a5",
       "priority": "P2",
-      "status": "in_progress",
+      "status": "review",
       "model": [],
       "kernel": [
         "pkda_chunk_fwd"
@@ -1880,7 +1880,7 @@
       },
       "spec": "docs/pm/tasks/PK-02.md",
       "issue": 68,
-      "pr": null,
+      "pr": 88,
       "assignee": "limjiunnbin",
       "assignee_caps": {
         "agent": "Codex; A5K-02 之后的续接 session（自述）",
@@ -1912,6 +1912,10 @@
         {
           "at": "2026-09-19T10:17",
           "summary": "STATUS：FP32 五阶段前向与公共门控在四条写集路径内实现——q/k 原样消费、预测用原始 k、ATK 写入用 k_precond、A/S 状态独立；已收到 PM 归一化更正评论，分支快进到 53fdbf4。五个 kernel 通过源码发射与静态检查 0 error/0 warning；规范 CPU 参考 16/16；缩小规范 sim T1H1 与 pipesim T2H1 的 14 个阶段比较全过；实际双 oracle pipesim T65H1/bd1 与 B2T2H3/bd1..4 通过，14 个阶段输出在 bd1..4 上逐字节相同（分进程），无 hazard/死锁。主机全量 415 passed/5 skipped（87.85s），矩阵与看板检查通过；原生 board/aclnn 保持 untested，与发布的任务范围一致。CPU 16 case 独立 chunk 对 FLA-naive 最大相对 L2：o 3.62e-7、S 2.12e-7、A 0（含 340M 几何 H8/K=V128 到 T4096）；实际 pipesim T65H1 对 naive：o 4.37e-7、S 4.42e-7、A 0；预算 1e-4 不变。保留的不支持域：跨度 4096 的抵消误差 S 1.34e-4（超预算）；公开跨度 155 不变，域内对抗性跨度 155 最坏 S 6.63e-6。下一步：收尾独立恢复/边界诊断、冻结脱敏回执与范围、评审并推 PR，全部发布检查完成后才交 DONE"
+        },
+        {
+          "at": "2026-09-19T10:26",
+          "summary": "DONE 收到（PR #88，头 d7c29d9，非草稿；含逐条验收、原始日志行、脱敏归档哈希）。PM 审查完成，结论接受：写集 21/21、无红旗、隐私扫描无命中；chunk_precond_kda 原样消费 q/k（未归一化的 k 显式报错）、FP32 only、未支持选项全部拒绝、两个状态独立、仅前向；读/写 key 不对称与 ATK 递推与 pin 住的 naive 一致，oracle 加载器执行前校验 sha256（我取的文件哈希一致）。PM 独立重算（自造 5 个 case：尾块 T130、整块 T64、B2 T200 H3、k 范数 1e-3、ATK 关闭）：仓内独立参考对 pinned naive 相对 L2 最坏 o 3.2e-7/S 2.1e-7/A 0（预算 1e-4）；读写对称的负控制 7.9e-2。PM 复跑（pin 版 library、torch_npu 排除）：契约 reference 16/16、PKDA 测试 50 passed（oracle A 真跑）、全量 406 passed/15 skipped 与 DONE 的 416/5 精确对账（多出的 10 个是需 FLA_*_NAIVE 的用例）。文档：ABI 对照、精度与整链量程（log(A+eps) 跨度 [-13.8155,-1.5611]，FP32 对 FP64 最大绝对误差 7.5e-7/1.5e-7）、归一化分叉；对门控跨度的结论是保持 155 不收紧，并如实写明 FP32 前缀差抵消未被证明消除、跨度 4096 失败保留在域外。限制：PM 未独立复现 ascriptor check 与 sim/pipesim（模拟器检查在本机 400s 内未跑完）；'A 相对 L2 为 0' 只对 CPU 模型成立；无真机声称，符合主机侧验收范围。合入待用户确认，PR 仍 open，头 d7c29d9。状态 in_progress→review"
         }
       ],
       "result": null
