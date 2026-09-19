@@ -2572,7 +2572,7 @@
       "wave": "W0",
       "soc": "any",
       "priority": "P2",
-      "status": "assigned",
+      "status": "in_progress",
       "model": [
         "kimi-linear-48b-a3b"
       ],
@@ -2590,7 +2590,10 @@
         "ascend_fla/ops/kda/fused_recurrent.py",
         "ascend_fla/layers/kda.py",
         "tests/test_kda_layer_semantics.py",
-        "tests/test_kda_domain_checks.py"
+        "tests/test_kda_domain_checks.py",
+        "ascend_fla/ops/kda/autograd.py",
+        "ascend_fla/ops/kda/__init__.py",
+        "tests/test_kda_layer_npu.py"
       ],
       "needs": {
         "npu": false,
@@ -2635,6 +2638,14 @@
         {
           "at": "2026-09-19T13:45",
           "summary": "按 #86 的 APPLY 派给 limjiunnbin（session 01a0b7ce-…），16h，分支 task/A2-44，原五条写集。申领人的 PK-04 已合入，同 session 无在飞任务。写集与 A2-02 重叠（ops/kda/chunk.py、layers/kda.py）：本任务在飞期间 A2-02 若有人申领会被 gate。纯主机侧、没有真机验证，所以这个 PR 合入前 PM 仍要问用户（D-PM-33 只覆盖有真机验证的 PR）"
+        },
+        {
+          "at": "2026-09-19T14:23",
+          "summary": "ACK（session 01a0b7ce-…，eta 16h）：计划含 D-PM-34 的真机验收——在 A5 上跑实际 chunk / decode / 层调用回归（近零输入、默认路径逐位一致、原始 flags 组合、状态与 GQA），每个 bd 独立进程，首次自定义执行前预编完 15 个 vendor（5 前向 + 9 反向 + decode），只对 A5 声称，CPU 与真机都过才发 DONE。状态 assigned→in_progress。另发一条非协议类型的 PROGRESS（35%，自述）：D1/D3 回归改前 4 失败/3 通过、改后 7 通过，相关 CPU 测试 39 通过；BF16 标定 1,048,704 行最大范数 1.0027，tol 取标准舍入界 2^-8；FLA 语义按 v0.5.2 精确提交核对；设备窗口被他人占用，未抢占（机器归 agent 管，PM 不介入）。已告知 PROGRESS 不是协议类型、心跳只认 STATUS"
+        },
+        {
+          "at": "2026-09-19T14:23",
+          "summary": "RISK write-set-expansion 批准：PM 现场核实——公开 chunk_kda 定义在 ascend_fla/ops/kda/autograd.py、__init__.py 从它导出，原规格把它当成在 chunk.py 里是规格的错。追加三处写集：autograd.py（只补公开可选参数，预处理放在 Function 外以保留 raw 参数梯度链；不改 Function 数值与默认路径）、__init__.py（只更新 API 说明，不改导出身份）、tests/test_kda_layer_npu.py（只改 CPU 参考 mock 识别新 flags，预算与用例不放宽）。与在飞任务（GDA-03）无写集冲突，不碰 reserved_paths；与 A2-02（open）、A2-15（gated）重叠，本任务在飞期间它们不可派。不允许重导出/运行时替换绕行。合入仍按 D-PM-33/34：真机验证 + PM 审查 + 无争议才自行合入；这次追加是 PM 事先批准的，PR 落在更新后的写集内不算「写集扩大」争议"
         }
       ],
       "result": null,
@@ -2671,7 +2682,7 @@
       },
       "spec": "docs/pm/tasks/GDA-03.md",
       "issue": 91,
-      "pr": null,
+      "pr": 98,
       "assignee": "limjiunnbin",
       "assignee_caps": {
         "agent": "Codex; PK-03 之后的续接 session（GDN 系列，自述）",
@@ -2707,6 +2718,10 @@
         {
           "at": "2026-09-19T14:03",
           "summary": "三条 STATUS（13:17–13:39Z，自述，PM 未独立核实）：先做完 CPU 校准再写 kernel——58 个 A/B 校准 case（分组比 1/2/4/8 × C1/2/3 × do-only/dht-only/both、多 batch、门控端点、下溢、尖峰、零 qk）每梯度最大相对 L2 ≤ 4.9e-7（≤1e-5 校准闸），FP64 有限差分 gradcheck 与 B 的负控制（零/取反/×1.25）通过；A 的 FP64 抬升只在内存里改两处 torch.float32 AST 属性，pin 住的文件不动。三个原生 stage 与独立反向公共包装已实现，静态检查 0 error/0 warning；第一次真机构建栽在内部形参名 do 是 C++ 保留字，改内部名 dout、公共 ABI 不变（已在写集内）；第二次完整 B1/T4096/H=HV8（do+dht，bd2，FP32 与 BF16 公共调用）真机先跑并通过：FP32 对 A 的相对 L2 dq/dk/dv/dg/dbeta = 1.26e-7/1.15e-7/2.27e-7/2.02e-7/2.45e-7，对 B 同量级（预算每项 1e-4）；BF16 公共 dq/dk/dv 对 A 约 1.6e-3（<5e-3 质量界）。全量 138 case 网格、bd1/bd2 字节比较、同卡计时在跑；无阻塞。仍 in_progress"
+        },
+        {
+          "at": "2026-09-19T14:23",
+          "summary": "草稿 PR #98 已开（task/GDA-03，36 个文件、+85059 行，绝大部分是证据 JSON/日志）。PM 对草稿做了早期扫描：全部文件在写集内，无禁改/保留路径，无 IP/绝对路径/令牌/主机名线索；一处待 DONE 审查时细看：测试里对 pin 版 FLA naive 做 FP64 抬升用了 exec(compile(ast…))——要核对只改两处 torch.float32 属性、且执行前校验了 pin 源码哈希。两条 STATUS（自述，PM 未核实）：69 个校准 case（含完整 T4096 四种分组比 × 三种 cotangent）A/B 最大相对 L2 ≤ 4.9e-7；bd2 全网格通过——69 case × FP32/BF16 公共 dtype = 138 条记录，FP32 核心梯度对 A 最大相对 L2 dq/dk/dv/dg/dbeta = 4.86e-7/6.74e-7/6.88e-7/8.83e-7/7.04e-7（对 B 同量级；预算每项 1e-4），BF16 公共 dq/dk/dv 约 1.7e-3–1.8e-3（<5e-3 质量界）；原始日志 693 行、逐 case 数字、源码清单、环境回执与 case→日志行索引已在 PR。较大的 C2 分组 pipesim 撞解释器 walltime，保留为失败，改用缩小模型（B1T128H=HV1、B1T64H1HV3）通过。bd1 网格在跑，随后 138 case 字节比较、同卡三轮计时、终审。无阻塞，仍 in_progress，未发 DONE"
         }
       ],
       "result": null,
