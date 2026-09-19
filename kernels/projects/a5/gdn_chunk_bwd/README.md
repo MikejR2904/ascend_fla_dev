@@ -6,10 +6,11 @@ own chunk checkpoints and returns five FP32 mathematical gradients. The public
 input/cotangent and returns five FP32 gradients. BF16 q/k/v/do reject before
 preparation or dispatch with an error pointing to BF-02 (D-PM-35).
 
-The accepted FP32 grid has 138 records across block_dim1/2 and 1035 byte-identical
+The accepted FP32 grid has 138 records across block_dim 1/2 and 1035 byte-identical
 returned-array pairs. Historical BF16 rows remain raw history and are excluded
-from current delivery claims. Final-source closeout/timing refresh is in progress;
-see the gate-range document for source identity and measured scope.
+from current delivery claims. Final-source T4096 closeout matches 75 old/new array hashes; refreshed FP32
+same-device timing passed 900 samples. See the gate-range document for exact
+source identity, saved-checkpoint baseline identity and measured scope.
 
 Three ordered launches generate chunk-start states, replay and reverse each
 64-token chunk, then sum grouped q/k contributions deterministically. No inverse

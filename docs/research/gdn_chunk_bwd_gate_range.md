@@ -1,6 +1,7 @@
 # GDA-03 grouped GDN backward ABI and range contract
 
-Status: D-PM-35 narrows delivery to FP32 only. Existing FP32 grid passed; final-source closeout and measurement refresh are in progress.
+Status: FP32-only delivery per D-PM-35. Full native grid, final-source byte
+closeout and refreshed same-device FP32 measurements passed.
 This task is standalone backward. The accepted grouped forward and GDN-2 are
 unchanged. The authority is FLA pin `e52dbc0ea19d3a40d7ab7f9eed855d2b473994d2`,
 `fla/ops/gated_delta_rule/naive.py::naive_recurrent_gated_delta_rule`.
@@ -130,8 +131,12 @@ adapters). It used `--noconftest` and excluded the five KDA NPU test modules:
 `test_kda_fwd_npu`, `test_kda_bwd_npu`, `test_kda_bwd_deep_npu`,
 `test_kda_caches_npu`, and `test_kda_layer_npu`. After four additional shape
 rejection cases, the dedicated backward test file passed all 55 tests. These
-counts are separate runs; they are not a claim that the entire repository's
-NPU suite ran.
+counts are separate historical runs. The final FP32-only wrapper test file
+passed **67 tests** in 8.88s, including 15 BF16 rejection cases (q/k/v/do individually
+and together, across all three launchers). A TorchDispatchMode rejects any tensor
+operation before the BF-02 error, and kernel imports are blocked in these cases.
+See [host-test receipt](../../kernels/projects/a5/gdn_chunk_bwd/evidence/host-test-receipt.json).
+These counts are not a claim that the entire repository's NPU suite ran.
 
 The reduced B1/T128/H=HV1/bd1 pipe diagnostic has now passed all three stages:
 empty event balance, no hazards/deadlock, all 10 arrays <=2.46e-7. This case retains
@@ -161,7 +166,7 @@ passed, with inputs unchanged. The following maxima use only FP32 rows:
 
 There are **138 accepted FP32 records** and **69 case pairs ×15 arrays =1035
 byte-identical array pairs**. Every FP32 per-case numerical record is also
-identical between block_dim1/2. Both jobs began with the full T4096 workload
+identical between block_dim 1/2. Both jobs began with the full T4096 workload
 and finished Healthy. The [FP32-only summary](../../kernels/projects/a5/gdn_chunk_bwd/evidence/fp32-grid-summary.json)
 can be recomputed by selecting exactly `dtype == "torch.float32"` from the
 original [bd1 numbers](../../kernels/projects/a5/gdn_chunk_bwd/evidence/grid-bd1.json)
@@ -175,8 +180,24 @@ not a performance measurement.
 Core kernel and pipeline bytes are unchanged. The prior bd2 snapshot used three
 earlier validation files; the current revision additionally changes the public
 wrapper and FP32-only runners. The source identity review records these exact
-revisions. Final-source T4096 closeout must match the earlier FP32 stage and
-public array hashes; it does not relabel old wrapper hashes as current.
+revisions. Final-source T4096 closeout passed five records: three cotangent modes
+at bd2, then the exact final Python snapshot at bd2 and bd1 for both cotangents.
+All 75 old/new stage/public array hashes and every per-gradient numerical record
+match the earlier FP32 grid; final bd1/bd2 also match all 15 arrays. The earlier
+three-mode closeout differs only in the subsequently updated comparison utility;
+its public wrapper/kernel bytes are final. Both final closeouts and refreshed
+timing match all 190 Python files in the delivered snapshot. See
+[closeout records](../../kernels/projects/a5/gdn_chunk_bwd/evidence/fp32-final-closeout.json)
+and [source identity review](../../kernels/projects/a5/gdn_chunk_bwd/evidence/source-identity-review.json).
+Old manifests remain historical; they are not relabeled as current. The older
+bd1 snapshot predates the comparison utility, and bd2 predates both comparison
+and timing utilities; the source review explicitly lists those absent files.
+
+The first closeout launch failed before kernel compilation/execution because its
+source manifest upload had not finished. The full
+[failure log](../../kernels/projects/a5/gdn_chunk_bwd/evidence/failures/closeout-manifest-race.log)
+is retained. A transfer marker now blocks launch during upload; the completed
+snapshot was verified before retrying with a fresh run label.
 
 ## Build and runtime diagnostics
 
@@ -201,7 +222,7 @@ unidentified, and no TensorFlow backend support is claimed. The qualified path
 uses task CCE and Torch NPU operations, whose actual outputs are checked above.
 
 The [runtime review](../../kernels/projects/a5/gdn_chunk_bwd/evidence/runtime/runtime-review.json)
-retains all 2438 lines from 39 logs: 20 startup warnings and
+retains all 3410 lines from 56 logs: 28 startup warnings and
 0 ERROR/FATAL/CRITICAL. Machine identifiers are redacted without removing lines.
 This includes the completed device validation, controls and accepted timing run.
 
@@ -214,17 +235,30 @@ checkpoints; it excludes checkpoint generation. It is a cost baseline, not a
 separate complete backward implementation. Neither timing path runs a host
 recurrence. Inputs and independent B references are generated during the run.
 
-The required FP32 scope is B1/H=HV8/K=V128, block_dim2, T1024/4096. Each
-workload uses three baseline/candidate/baseline rounds, with 10 warmups and
-50 synchronized samples per segment (900 total). A final-source refresh is
-pending. Earlier FP32 timing remains historical evidence; earlier BF16 timing
-is excluded from GDA-03 delivery. No speed threshold or CUDA/Triton comparison.
+The final FP32 scope is B1/H=HV8/K=V128, block_dim 2, T1024/4096. Each
+workload used three baseline/candidate/baseline rounds, with 10 warmups and
+50 samples per segment, synchronized before/after every call (900 total).
+Independent B checks and baseline/candidate byte identity passed before/after.
+The table reports ranges of segment medians; no speed threshold was imposed.
 
-The shared device lock is held in Docker through context cleanup. The installed
-driver's read-only SVM/TRS registries are checked before, during and after the
-job, matching contexts to the exact child process. The
-[positive control](../../kernels/projects/a5/gdn_chunk_bwd/evidence/occupancy-positive-control.json)
-qualifies this occupancy method; raw machine identities remain private.
+| T | Saved-checkpoint baseline median (ms) | Complete FP32 API median (ms) |
+|---:|---:|---:|
+| 1024 | 136.499–136.564 | 160.342–160.386 |
+| 4096 | 545.793–546.337 | 645.316–645.520 |
+
+[Raw samples](../../kernels/projects/a5/gdn_chunk_bwd/evidence/fp32-final-sandwich-bd2.json),
+[unfiltered log](../../kernels/projects/a5/gdn_chunk_bwd/evidence/fp32-final-sandwich-bd2.log),
+[round-to-log index and identity](../../kernels/projects/a5/gdn_chunk_bwd/evidence/timing-index.json),
+and [summary](../../kernels/projects/a5/gdn_chunk_bwd/evidence/timing-summary.json)
+record every number. Earlier BF16 timing is retained history and excluded from
+GDA-03 delivery. No CUDA/Triton or pretrained-weight comparison is claimed.
+
+The shared lock was held through context cleanup, with fresh environment/source
+checks and Healthy status before/after. Read-only SVM/TRS registries were
+sampled before/during/after the job and matched to the exact compute child.
+The [occupancy receipt](../../kernels/projects/a5/gdn_chunk_bwd/evidence/timing-occupancy.json)
+reports zero foreign contexts; the [positive control](../../kernels/projects/a5/gdn_chunk_bwd/evidence/occupancy-positive-control.json)
+qualifies this method. Raw machine identities remain private.
 
 An earlier complete measurement is [retained as unqualified](../../kernels/projects/a5/gdn_chunk_bwd/evidence/failures/timing-first-unqualified.json):
 its per-device FD sampler missed a known live process. It is not used for the

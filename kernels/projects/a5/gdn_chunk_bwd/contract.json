@@ -2530,24 +2530,25 @@
         "evidence/grid-bd2.json",
         "evidence/grid-bd1-receipt.json",
         "evidence/grid-bd2-receipt.json",
-        "evidence/fp32-grid-summary.json"
+        "evidence/fp32-grid-summary.json",
+        "evidence/fp32-final-closeout.json"
       ],
       "byte_identity": {
         "case_dtype_pairs": 69,
         "array_pairs": 1035,
         "evidence": "evidence/fp32-bd-comparison.json"
       },
-      "acceptance_scope": "Only torch.float32 rows in historical raw grids. BF16 rows are retained history excluded by D-PM-35. Final FP32-only wrapper closeout pending."
+      "acceptance_scope": "FP32 only:138 historical grid records; final-source T4096 closeout preserves every stage/public byte hash and per-gradient metric; historical BF16 rows excluded by D-PM-35"
     },
     "performance": {
       "status": "passed",
-      "scope": "B1/H=HV8/K=V128, T1024/4096, FP32 public dtype, block_dim2; three sandwiches; only FP32 historical rows accepted; final-source refresh pending",
+      "scope": "Final FP32-only public API B1/H=HV8/K=V128, T1024/4096, block_dim2; three baseline/candidate/baseline rounds,10warmups/50samples, synchronized before/after each call",
       "baseline": "Task-owned saved-boundary-checkpoint adjoint cost baseline; excludes boundary generation, not a separate complete backward implementation",
       "raw_samples": 900,
       "evidence": [
         "evidence/timing-summary.json",
         "evidence/timing-index.json",
-        "evidence/sandwich-context-bd2.json",
+        "evidence/fp32-final-sandwich-bd2.json",
         "evidence/timing-occupancy.json"
       ]
     },
@@ -2573,6 +2574,14 @@
       "status": "passed",
       "scope": "Basic Torch NPU transfer/multiply/add/synchronize without task kernel imports reproduced both initialization warnings; exact output and scheduler initialization passed. Full log review includes completed timing. No TensorFlow backend support claim.",
       "evidence": "evidence/runtime/runtime-review.json"
+    },
+    "fp32_final_closeout": {
+      "status": "passed",
+      "records": 5,
+      "old_new_array_pairs": 75,
+      "final_bd1_bd2_array_pairs": 15,
+      "full_workload": "B1/T4096/H=HV8/K=V128",
+      "evidence": "evidence/fp32-final-closeout.json"
     }
   }
 }
