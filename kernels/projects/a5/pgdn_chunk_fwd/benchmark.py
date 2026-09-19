@@ -66,10 +66,12 @@ def timing(fn, warmup, repeat):
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--block-dim', type=int, choices=(1,2), default=2)
-    p.add_argument('--case', default='all')
+    p.add_argument('--case', action='append', help='Repeat to select cases; default: all cases for this block dimension.')
     p.add_argument('--warmup', type=int, default=10)
     p.add_argument('--repeat', type=int, default=50)
     p.add_argument('--profile', action='store_true')
+    p.add_argument('--torch-oracle', action='store_true',
+                   help='Verify the pinned recurrence on the selected NPU without timing it.')
     p.add_argument('--profile-torch-oracle', action='store_true')
     p.add_argument('--fla-naive', type=Path, required=True)
     p.add_argument('--output', type=Path, required=True)
@@ -79,11 +81,20 @@ def main():
     assert hashlib.sha256(args.fla_naive.read_bytes()).hexdigest() == NAIVE_SHA256, 'FLA naive pin mismatch'
     import torch_npu
     import ascriptor
+    # The optional native composition oracle uses FP32 matmul, without HF32.
+    # These are process-local torch_npu settings; no machine configuration.
+    torch.npu.matmul.allow_hf32 = False
+    torch.npu.conv.allow_hf32 = False
     from ascend_fla.ops.pgdn_chunk_fwd import _compiled, _pipeline, chunk_pgdn, prepare
     refs = load('pgdn_native_ref', ROOT/'ref/reference.py')
     oracle = load('pgdn_native_naive', args.fla_naive).naive_recurrent_precond_gated_delta_rule
     contract = json.loads((ROOT/'contract.json').read_text())
-    cases = [c for c in contract['cases'] if c['block_dim'] == args.block_dim and (args.case == 'all' or c['id'] == args.case)]
+    selected = set(args.case or ('all',))
+    eligible = [c for c in contract['cases'] if c['block_dim'] == args.block_dim]
+    unknown = selected - {'all'} - {c['id'] for c in eligible}
+    if unknown:
+        raise ValueError(f'cases do not match the selected block dimension: {sorted(unknown)}')
+    cases = [c for c in eligible if 'all' in selected or c['id'] in selected]
     if not cases:
         raise ValueError('no matching case for selected block dimension')
     torch.set_num_threads(1)
@@ -92,6 +103,8 @@ def main():
     report = dict(schema='pgdn-forward-validation/1', scope='A5 native in-process CCE, FP32 internals, no CUDA/Triton or checkpoint execution',
                   block_dim=args.block_dim, versions=dict(torch=torch.__version__, torch_npu=torch_npu.__version__, ascriptor=ascriptor.__version__),
                   warmup=args.warmup, repeat=args.repeat,
+                  precision=dict(matmul_allow_hf32=torch.npu.matmul.allow_hf32,
+                                 conv_allow_hf32=torch.npu.conv.allow_hf32),
                   source_sha256={str(f.relative_to(ROOT)):hashlib.sha256(f.read_bytes()).hexdigest() for f in sorted(ROOT.rglob('*.py'))},
                   wrapper_sha256=hashlib.sha256((ROOT.parents[3]/'ascend_fla/ops/pgdn_chunk_fwd.py').read_bytes()).hexdigest(),
                   oracle_sha256=NAIVE_SHA256, cases=[])
@@ -108,6 +121,7 @@ def main():
         report['cases'].append(row)
         calls = []
         def launch(entry, sources, outputs, scalars):
+            print(json.dumps(dict(event='launch', case=case['id'], kernel=entry.name)), flush=True)
             op = compiled[entry.name]
             scalars = {n:scalars[n] for n in op.scalar_names}
             for x in outputs.values():
@@ -144,16 +158,16 @@ def main():
                 row[str(dtype)+'_sha256'] = {n:digest(x) for n,x in zip(refs.OUTPUTS,result)}
             for name in cpu:
                 assert digest(npu[name]) == row['input_sha256'][name], f'input mutated: {name}'
-            if args.profile or args.profile_torch_oracle:
-                if args.profile:
-                    row['stage_timing'] = {name:timing(lambda op=op,s=sources,o=outputs,a=scalars:op(s,a,o),args.warmup,args.repeat)
-                                           for name,op,sources,outputs,scalars in calls}
-                    row['public_timing'] = timing(lambda:chunk_pgdn(*(npu[n] for n in NAMES),block_dim=args.block_dim,output_final_state=True),args.warmup,args.repeat)
+            if args.profile:
+                row['stage_timing'] = {name:timing(lambda op=op,s=sources,o=outputs,a=scalars:op(s,a,o),args.warmup,args.repeat)
+                                       for name,op,sources,outputs,scalars in calls}
+                row['public_timing'] = timing(lambda:chunk_pgdn(*(npu[n] for n in NAMES),block_dim=args.block_dim,output_final_state=True),args.warmup,args.repeat)
+            if args.torch_oracle or args.profile_torch_oracle:
+                # Same tensor inputs and selected device, actual PyTorch NPU
+                # composition; this is not CUDA/Triton or a fused baseline.
+                npu_oracle = oracle(*(npu[n] for n in NAMES), output_final_state=True)
+                row['torch_npu_composition'] = {n:check(x,authority[n]) for n,x in zip(refs.OUTPUTS,npu_oracle)}
                 if args.profile_torch_oracle:
-                    # Same tensor inputs and selected device, actual PyTorch NPU
-                    # composition; this is not CUDA/Triton or a fused baseline.
-                    npu_oracle = oracle(*(npu[n] for n in NAMES), output_final_state=True)
-                    row['torch_npu_composition'] = {n:check(x,authority[n]) for n,x in zip(refs.OUTPUTS,npu_oracle)}
                     row['torch_npu_composition_timing'] = timing(lambda:oracle(*(npu[n] for n in NAMES),output_final_state=True),args.warmup,args.repeat)
             row['passed'] = True
             save()

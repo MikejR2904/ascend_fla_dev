@@ -11,7 +11,7 @@
   "tested_contract_sha256": "f5b2b18d8839f9b7fcf8f00648bf40f03d8fc44171ca8168fe9e3f11f1fdd5b7",
   "source_sha256": {
     "_unit_runner.py": "8e91d95ed0294ddbfc204957b8bf77606a79123655fc096963b94658b633566b",
-    "benchmark.py": "9f9014878776c7e73bf53029da41b07a0451fe524de412aff8d3582863994a26",
+    "benchmark.py": "cc61cb65ae37c478593335f16ab3af9f8495773cf617f07c0154db27acd77b80",
     "kernels/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "kernels/atk.py": "e5643c7806c76ccb724e5744730066004c4a0f801b0308c96377a24256fe5279",
     "kernels/pipeline.py": "e078814af9b40a0474f2ee73a16321938200f17d01891fdde3df7025cae1e398",
@@ -4825,7 +4825,7 @@
   },
   "native_inprocess": {
     "status": "blocked",
-    "reason": "Current target occupancy not verified; no device kernel executed."
+    "reason": "No device kernel executed. Required container runtime or verified occupancy unavailable on configured targets."
   },
   "performance": {
     "status": "untested"
@@ -4841,5 +4841,21 @@
   },
   "checkpoint": {
     "status": "untested"
+  },
+  "native_runner_revision": {
+    "previous_sha256": "9f9014878776c7e73bf53029da41b07a0451fe524de412aff8d3582863994a26",
+    "sha256": "cc61cb65ae37c478593335f16ab3af9f8495773cf617f07c0154db27acd77b80",
+    "scope": "Repeatable case selection, launch progress, explicit FP32 oracle precision and verification-only Torch NPU oracle option; no kernel or ABI changes.",
+    "validation": "CLI --help passed; device execution untested. Historical model and compilation receipts cover unchanged kernel, pipeline, reference and wrapper sources."
+  },
+  "container_host": {
+    "stage": "host CPU only",
+    "python": "3.12.13",
+    "torch": "2.12.0+cpu",
+    "torch_npu": "2.12.0",
+    "ascriptor": "0.1.0",
+    "source_bytes_verified": true,
+    "command": "python -m pytest tests/test_pgdn_chunk_fwd.py -q -rs --noconftest -p no:cacheprovider",
+    "result": "104 passed in 25.02s"
   }
 }

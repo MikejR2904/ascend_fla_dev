@@ -30,6 +30,10 @@ for the actual returned model outputs. Both generate inputs/references at run ti
 `benchmark.py` verifies actual native CCE and optionally measures synchronized
 latency; it requires current device health/occupancy checks and an externally
 held shared lock. Keep each block dimension in a fresh process/build environment.
+Repeat `--case` to select several cases for that block dimension; the default
+still runs its full grid. `--torch-oracle` checks the pinned recurrence on the
+selected NPU; `--profile-torch-oracle` also times it. Native FP32 matmul/conv HF32
+settings are disabled and recorded. Match inputs and device for timing comparisons.
 A full chosen hardware workload must precede reduced diagnostic simulations when
 hardware is available. A model check is never hardware acceptance.
 
@@ -40,3 +44,5 @@ All machine bindings belong to ignored external configuration.
 [validation.json](validation.json) binds the submitted sources to 60 reference
 cases, seven bounded model cases, dual-reference metrics and both six-kernel
 CANN builds. Native execution and performance remain unverified.
+The native runner revision has a CLI smoke check only. Container CPU validation
+also passes all 104 PGDN tests with the selected library sources.
