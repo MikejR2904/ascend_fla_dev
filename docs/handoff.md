@@ -25,7 +25,7 @@
 - **`PK-03`**（issue #69）：2026-09-19T02:41Z 撤回，04:16Z 由新 session 重新申领，**用户确认（D-PM-25）后
   已重新 ASSIGN**（session `pgdn-forward-20260919T041214Z-7b59b3a6`，与 A5K-02 同账号不同 session，并发规则放行）。
   `PK-03.md` 已重写为"主机侧、窄范围"的可派状态：ABI 与现有 GDN 门控逐项一致；oracle A=fla naive.py +
-  B=独立 CPU 参考；真机可选、不阻塞验收。原 session `gdn-pgdn-forward` 的申领作废。截至 ASSIGN 还没有 ACK。
+  B=独立 CPU 参考；**真机验收是必须项**（用户 2026-09-19，D-PM-26），通过后可合入，占用证据待用户/管理员提供。原 session `gdn-pgdn-forward` 的申领作废。已 ACK，草稿 PR #87 已开、主机侧验收就绪，等真机。
   （PGDN chunk 前向 + ATK 预条件，D-PM-22 排期解锁。）
 
 ### 这次会话新合入的两个 PR（供快速对账，细节见 §0.x 各节和 gaps.json）

@@ -167,6 +167,13 @@
       "by": "user",
       "decision": "确认 PK-03 撤回后的重新申领：PM 问'是否确实授权了这次重新申领（与 02:41Z 的撤回相反）'，用户答'是'。PK-03 重新 ASSIGN 给同账号的新 session。",
       "risk": "撤回与重新申领只隔约 1.5 小时，申领评论里'用户已授权'是自述，PM 无法从 issue 内容核实，所以专门问了用户。用户只确认了'重新申领'这一件事；规格口径（窄 ABI 与现有 GDN 门控逐项一致、oracle A=fla naive.py + B=独立 CPU 参考、真机可选、主机侧验收）是 PM 依 AGENTS.md §1/§6/§7 与 PK-02 先例定的，不是用户逐条批的。"
+    },
+    {
+      "id": "D-PM-26",
+      "date": "2026-09-19",
+      "by": "user",
+      "decision": "PK-03 的真机测试是必须项，不是可选项：DONE 之前必须在 A5 真机上完成测试，通过后可合入。（用户在 PM 会话里回答'真机是否可选'的问题，原话：'真机非可选项，必须在真机完成测试。通过后就能合入'。）",
+      "risk": "用户只明说了'真机必须、通过后可合入'两件事。真机测试的具体内容（完整选定 workload、对两个 CPU oracle 的 FP32 1e-4 / BF16 5e-3 预算、bd1 与 bd2 逐位相同、同卡三明治不设速度门槛）是 PM 依 AGENTS.md §5/§6 与 GDA-01/02 先例定的，用户可调整。'通过后可合入'指 PM 审查通过后，仍走 pm.md 的审查流程，不跳过。当前设备占用无法核实（监视工具缺失、驱动进程查询 NOT_SUPPORT），真机部分要等用户/管理员提供占用证据；PM 不代为提供，assignee 不得自行推断空闲。这条只针对 PK-03，不代表 PR #83（A5K-02）的合入已获批准——后者的真机证据已在 DONE 里，是否合入仍待用户确认。"
     }
   ],
   "gated_epics": [
@@ -1842,7 +1849,7 @@
     },
     {
       "id": "PK-03",
-      "title": "PGDN chunk 前向：GDN 加 ATK 预条件（主机侧，窄范围）",
+      "title": "PGDN chunk 前向：GDN 加 ATK 预条件（窄范围，含真机验收）",
       "wave": "W0",
       "soc": "a5",
       "priority": "-",
@@ -1865,7 +1872,7 @@
         "docs/research/pgdn_chunk_fwd_gate_range.md"
       ],
       "needs": {
-        "npu": false,
+        "npu": true,
         "ascriptor": true,
         "fla": true
       },
@@ -1919,6 +1926,10 @@
         {
           "at": "2026-09-19T06:06",
           "summary": "STATUS：草稿 PR #87（头 66831c0，18 文件 +8509，写集早核 18/18 在内；未声称 DONE，草稿不审）。主机侧验收就绪待审：独立 H 头 ATK launch + 5 个 PGDN 本地 chunk 阶段，k_read/k_write 分开，两个状态独立、范围外组合全部有拒绝门；60 个契约参考 case 全过；CPU 独立 B 对 pinned 递推 A（30 组输入）FP32 相对 L2 最大 o=1.89e-6、S=1.20e-6、A=3.19e-7（预算 1e-4）；340M 形状 B1/T4096/H=HV8 o=5.19e-7、S=6.03e-7、A=2.90e-7（无 checkpoint）；4 个有界 pipesim + 3 个 sim 过，无 hazard/事件失衡/死锁，bd1/bd2 的 17 个实际数组逐位一致（B1/T64/H=HV2）；6 项静态检查 0 error/0 warning；两份六 kernel CANN 9.2.0 构建成功（仅编译，未执行）；主机 CPU 选集 384 passed/4 skipped（PGDN 104 个，4 个需完整 FLA 包）。未 DONE 的原因（自述）：用户直接指示在 DONE 前追加原生验收与同卡测量，但设备占用仍核实不了（监视可执行文件缺失，驱动进程查询返回 NOT_SUPPORT，系统 advisor 显示健康/零利用率但无进程归属，仍有外部设备管理句柄），不视为空闲证据；未 reset/kill，未动他人负载。按规格真机是可选项，主机侧验收本可交 DONE；是否等真机由用户与 assignee 定"
+        },
+        {
+          "at": "2026-09-19T07:35",
+          "summary": "用户决定（D-PM-26）：真机测试是必须项，DONE 之前必须在 A5 真机完成，通过后可合入。PM 更新 PK-03.md：新增'真机验收（必须）'一节（完整选定 workload 先跑；对 A/B 两个 CPU oracle 报 FP32 相对 L2 ≤1e-4 与 BF16 ≤5e-3；bd1/bd2 逐位相同；同卡三明治不设速度门槛），needs.npu 改为 true；占用证据仍是前提（现有占用查询不可用），由用户/管理员提供，PM 不代为提供、assignee 不得自行推断空闲；真机部分等待证据的时间不计入时限"
         }
       ],
       "result": null
