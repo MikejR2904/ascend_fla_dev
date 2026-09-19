@@ -42,15 +42,15 @@ Maximum per-stage relative L2 against independent FP32 stage results:
 
 ATK-state BF16 storage fails 23/24 cases; gate-prefix BF16 storage fails 13/24. These are rejected precision variants, not failures of a deployed kernel. They motivate retaining FP32 internal state/prefix as explicitly permitted by D-PM-35. Every tested matrix-product variant passed, but only output-stage products are selected for this implementation: they yield actual BF16 cube work with ample accuracy headroom and leave sensitive recurrence unchanged.
 
-## Native design and acceptance pending
+## Native design and acceptance
 
-The new unit has a device-side numeric guard/default initializer followed by five mathematical stages. Host performs metadata checks, allocation, pointer/launch operations and scalar control-status readback only. It performs no tensor arithmetic or dtype conversion. Native TorchDispatchMode traces are required before qualification.
+The new unit has a device-side numeric guard/default initializer followed by five mathematical stages. Host performs metadata checks, allocation, pointer/launch operations and scalar control-status readback only. It performs no tensor arithmetic or dtype conversion. Native TorchDispatchMode traces confirm this scope; details are recorded below.
 
 Output tiles are 64 query rows by 128 value channels; each cube owns a complete batch/chunk/head tile, its two vector participants own 32 query rows each. Four independent single-slot L1 operands (64x128,128x128,64x64,64x128 BF16: 72 KiB total), one 64x128 FP32 L0C (32 KiB), and five guarded mutexes. VC ownership persists through last cube/FIX consumption; CV ownership persists through last VF read. Each iteration balances one lock/ready/wait/free per handoff; depth one, no lookahead, no speculative drain. L0C transfers FP32 via SPLITM; VF performs BF16 output conversion. No direct mixed-dtype SPLITM.
 
 Full native workload must precede reduced simulator diagnostics. All required vendors compile before any custom launch, with independent processes for bd1/2/3/4. Required native evidence: original16 cases, tails, H32/B2, independent optional states and continuation, gate endpoints and adversaries, invalid-domain guards, poisoned output coverage, input immutability, cross-bd byte equality, host operator audit, and pre/post FP32 byte equality. Performance is three same-card rounds of existing FP32 / BF16 candidate / existing FP32 at T1024 and T4096, without a speed threshold.
 
-Current qualification is in progress: the selected candidate passed CPU precision research, source emission, bd4 vendor compilation and the bd4 native cases below. Remaining block dimensions and performance are not yet qualified. Historical PK-04 results confer no BF-04 qualification.
+The selected candidate passed CPU precision research, source emission, vendor compilation, all declared native block dimensions and performance measurement as recorded below. Historical PK-04 results confer no BF-04 qualification.
 
 ## D-PM-37: both dtype paths audited
 
@@ -60,8 +60,19 @@ The CPU operand experiment is reproducible with `python ref/precision_study.py -
 
 Initial source emission succeeds for all six BF16 kernels. Output ND-to-NZ transfers carry a performance advisory: four BF16 operand publications use multiple MTE3 bursts, with bounded legal footprints and explicit ownership. The first candidate keeps this sanctioned transfer; no speed claim is made before measurements. The emitted output cube uses local mutex IDs0..9, below the fixed32 limit, and explicit logical cross-side IDs0..4. UB usage is148KiB, L1 is72KiB and L0C is32KiB.
 
-## Preliminary native evidence
+## Native qualification
 
-The original T4096/H8 workload ran before reduced models. bd4 passed89 full-chain cases: original16, all64 tails T65..128, B2/T130/H32, five uniform spans0/1e-4/50/105/155, and three strong/weak adversaries. Another43 API/before-after checks passed. Maximum relative L2 against pinned naive: o0.003426211886, main state6.61480999e-6, ATK state1.052942977e-7; independent reference and case-calibrated3F also passed. Inputs were unchanged and all19 allocated stage/status buffers fully overwrote NaN poison. Public/staged outputs matched bytes. These are BF-04 executions, not inherited PK-04 claims.
+The original T4096/H8 workload ran before reduced models. Each of bd1/2/3/4 passed89 full-chain cases (356 total): original16, all64 tails T65..128, B2/T130/H32, five uniform spans0/1e-4/50/105/155, and three strong/weak adversaries. Another43 API/before-after checks per block dimension passed (172 total). Inputs, all19 stage/status buffers and public outputs are byte-identical across all four independent processes. Maximum relative L2 against pinned naive: o0.003426211886, main state6.61480999e-6, ATK state1.052942977e-7; independent reference and case-calibrated3F also passed. Inputs were unchanged and all19 allocated stage/status buffers fully overwrote NaN poison. Public/staged outputs matched bytes. These are BF-04 executions, not inherited PK-04 claims.
 
-After the full native run, the output-only T129/H1/bd1 diagnostic passed functional and pipe models: three ownership iterations including a tail, balanced events, no hazards/deadlock. Model cycles are not hardware performance. PKDA-related CPU tests passed83 cases on both accepted CPU and native-host Python environments. Final audit categorization after the PM clarification, remaining block dimensions, cross-bd bytes, performance, final reports and archive restoration are pending.
+After the full native run, the output-only T129/H1/bd1 diagnostic passed functional and pipe models: three ownership iterations including a tail, balanced events, no hazards/deadlock. Model cycles are not hardware performance. PKDA-related CPU tests passed83 cases on both accepted CPU and native-host Python environments. Final audit categorization, all block dimensions and cross-bd comparisons passed. The final full host suite passed708 tests with5 skips in139.96s. Those five NPU test modules require torch_npu on the CPU host; the task-specific native suite above ran separately on hardware. Source/evidence archive restoration passed: every archived file hash was checked, the full native aggregate was recomputed, and isolated restored sources passed83 PKDA tests plus standalone t1_h1 reference and functional simulation. Final delivery-source T4096/H8/bd4 native and FP32 byte/audit closeout passed, with83 native-host tests and healthy device release.
+
+## Synchronized native performance
+
+Same-card API wall times, excluding generation/transfers/CPU goldens/compile. Three original-FP32/BF16/original-FP32 rounds: three warmup calls per dtype before all rounds, then five measured repeats per segment. FP32 baseline is the recorded unchanged pre-BF04 wrapper; BF16 inputs are widened only in the benchmark to supply that baseline. Separate three-round Torch NPU naive sandwiches use one baseline validation/warmup call, two baseline repeats per side and three candidate repeats; the candidate is already warmed by the preceding measurements. All samples, including transient slower observations, remain in `evidence/performance.json`. There is no speed threshold.
+
+| Workload B1/H8/K=V128, bd4 | BF16 medians (ms), rounds1/2/3 | Speedup over original FP32 | Speedup over Torch NPU eager |
+|---|---|---|---|
+| T1024 | 40.544, 40.333, 39.960 | 1.312x, 1.295x, 1.249x | 29.660x, 23.985x, 26.212x |
+| T4096 | 152.223, 151.669, 151.730 | 1.237x, 1.210x, 1.215x | 32.976x, 31.140x, 30.910x |
+
+All measured BF16 segment medians beat the original FP32 baseline midpoints on these two workloads. This is an end-to-end result, not a universal shape or cube-instruction speedup. BF16 adds one initialization/validation launch (six versus five FP32); public timings include it. Gate span0 through155 and the strong/weak adversaries passed without narrowing the existing domain. Native environment: Ascend950PR_9589, CANN9.2.0/V100R001C12B056, OPP ascend950/ascend910b/ascend910_93, Python3.12.13, Torch2.12.0+cpu, torch_npu2.12.0. Other SoCs, public SSH/aclnn launchers and backward remain unqualified.

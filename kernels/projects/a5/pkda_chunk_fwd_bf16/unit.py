@@ -14,7 +14,7 @@ def execute_stages(inputs, options):
         result=launch_kernel(entry,tuple(sources.values())+tuple(outputs.values())+tuple(scalars.values()),options)
         return dict(zip(outputs,(result,) if len(outputs)==1 else result,strict=True))
     got=run(inputs,launch)
-    return {n:got[n] for n in reference_stages(inputs)}
+    return {n:t for n,t in got.items() if n not in ('state','astate','center','status','status_out')}
 
 
 def execute(inputs, options):
