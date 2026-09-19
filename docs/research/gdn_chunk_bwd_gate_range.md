@@ -184,7 +184,7 @@ make this qualification reproducible with `compare_runs.py`.
 
 ## Build and runtime diagnostics
 
-[Six selected build receipts](../../kernels/projects/a5/gdn_chunk_bwd/evidence/build/build-artifact-manifest.json)
+[Six selected build receipts](../../kernels/projects/a5/gdn_chunk_bwd/evidence/compiler/build-artifact-manifest.json)
 retain hashes for264emitted/compiled files and every vendor build-log line.
 Build directories are selected from the current kernel source signature, not
 from stale directory timestamps. SDK header deprecations, an unused CMake
