@@ -11,6 +11,14 @@
 
 ### 正在飞的任务（现在没有；A5K-02、PK-02、PK-03 都已于 2026-09-19 合入）
 
+> **2026-09-19T18:50Z 更新：BF-04 DONE，PM 评审 accept，但合入被自动模式分类器拦下（[Merge Without Review]），不绕过，等用户授权。**
+> - **BF-04（PR #110，头 `a25ba5e3`，A5 真机）**：PM 从解包后的原始回执自己复算——4 个 bd × 89 = 356 个完整链 case 全过，vsA 最大相对 L2 o 3.426e-3 / S 6.61e-6 / A 1.05e-7 与自述完全一致，最紧的误差/预算 = 0.68；172 个边界全过；跨 bd 801 个哈希字段全相同；host 审计并集只有 `aten.empty` / `aten.view`（PM 的代理审计——桩掉 launch 跑 `TorchDispatchMode`——得到相同算子与个数）；三轮三明治的加速比从原始样本重算逐位一致（T1024 1.25–1.31、T4096 1.21–1.24，基线是 base 的 FP32 入口，源码哈希等于 base）；
+>   无 NPU 环境复跑新增 32 个测试全过、换回 base 入口后 32 个全失败，全量 701 passed / 12 skipped；隐私扫描 485 个文本文件 0 命中。原 FP32 单元零改动，38 个文件全在写集内，BF16 门控域没收窄（155，与 FP32 同）。**REVIEW accept 已发在 #110。**
+> - **合入前要用户定的两件事**：① 授权合入（回复「#110授权」，我用 `--match-head-commit a25ba5e3` 经 bot 账号合入；合入要用 bot 账号，`limjiunnbin` 无权限）；② **协议偏差**：证据是 1.26MB 的 `tar.gz`，PROTOCOL §4.9 把二进制文件列为整体拒绝项。PM 已解包核对全部 448 个成员（SHA 与索引一致），建议这次放行、以后要求解成文本；或让申领人现在改成文本再合。
+> - **观察（非阻塞，未收窄域）**：BF16 的 k 范数闸沿用 FP32 的 1+1e-5，比 BF16 的分辨率（约 1e-4）还紧，常规「先 FP32 归一化再转 BF16」的 k 约一半会被拒（测试用 `k*0.99` 避开），报错里「normalize explicitly」对 BF16 误导。放宽闸要用户批准并重测数值影响。合入还依赖暂定的「校验」类裁定（控制字经 `aclrtMemcpy` 回读、FP32 只读校验器沿用）。
+> - **合入后 PM 要做**：BF-04 → done（result 填 commits）；`kernel_inventory` 里 `pkda_chunk_fwd` 的 BF16 格从 reject 改成原生（A5）；main 上复跑全量（预期 701 passed / 12 skipped）；发 CLOSE。
+> - **BF-01（PR #111 draft）**：两个 block_dim 的完整网格自述通过（112 条记录，跨 bd 728 对阶段数组逐字节相同，每次调用只有 13 次 `aten.empty`），FP32 与原入口逐字节相同；同卡 900 样本三明治在跑。**BF-02 排队 APPLY**（#101）已回 NO_TASK：BF-01 合入后直接派。**A2-03**：已在 #34 重发修订 ASSIGN（72h，范围拆分），首批两个 kernel（fwd gate、decode step）自述在 910B3 上过了，只是观测。
+>
 > **2026-09-19T17:50Z 更新：A2-03 拆成 A2-03（前向 + decode）与 A2-09（反向）——申领人的估计合计约 123h，原时限 20h；BF-04 原生 BF16 的 bd4 全网格自述通过，draft PR #110 开了；BF-01 改前校准完成。**
 > - **A2-03（D-PM-38）**：申领人的第一个 STATUS 给了按 kernel 的估计——纯向量 6 个共 33h、纯 cube 1 个 2h、混合 8 个共 72h，另加骨架 6h 与网格 / 真机 / 证据 10h，**合计约 123h**（自述，PM 只核了静态事实：a2 上没有 `@vf`、14/15 个 kernel 用 `@vf`、`dma.l0c_to_ub` 与 `dma.ub_to_l1.nd2nz` 不可用）。
 >   PM 采纳它建议的拆分：**A2-03 = 前向 + decode**（gate、decode、前向四 kernel，`kda_fwd_stable` / `kda_fused_recurrent` 两个单元，72h），**A2-09 = 反向**（九个 kernel + bwd 单元，56h，依赖 A2-03，写集 `kernels/projects/a2/kda_bwd_stable/**`）；A2-13 增加对 A2-09 的依赖。

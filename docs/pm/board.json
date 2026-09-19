@@ -514,6 +514,14 @@
         {
           "at": "2026-09-19T17:58",
           "summary": "STATUS（17:58Z，自述）：第一个完整原生候选 B1/T4096/H=HV8/bd2 对 BF16 与 FP32 都通过：7 个类型化条目在任何自定义算子调用前编完；运行期 A/B、NaN 预填的组合与独立叶子、实际公共输出、输入不变、host 分派检查全过；FP32 公共 o / state 与未改动的原入口基线逐字节相同。BF16 公共入口 vs A：o 相对 L2 1.660e-3（固定预算 4.979e-3）、state 7.98e-7；vs B：o 1.660e-3、state 9.47e-7；FP32 vs A/B 输出最大 6.41e-7、state 9.49e-7（预算 1e-4）。实际公共入口 host 分派两个 dtype 各只有 aten.empty.memory_format ×13、零禁用算子。全 28 case × 2 dtype × 每个 bd 的网格、bd 间字节比较、同卡三轮计时与最终证据还没做；PR 保持 draft、未 DONE。PM 早期扫描（非评审）：40 个文件全在写集内、无保留路径改动、新增行无 IP / 用户目录 / 令牌 / UUID。blockers: none"
+        },
+        {
+          "at": "2026-09-19T18:07",
+          "summary": "STATUS（18:07Z，自述）：block_dim2 完整网格通过——28 case × BF16 / FP32 = 56 条记录，完整 workload 先跑；含 GQA 比 1/2/4/8 × C1/2/3/64、B2、不均匀 3 头、门控 / beta 端点、下溢、零与尖峰输入；NaN 预填的组合与独立叶子、实际公共输出对独立参考、输入不变；28 个 FP32 case 与原公共入口输出 / 状态哈希逐字节相同；每次公共调用只有 13 个 aten.empty、零禁用算子。BF16 各 A/B 最大 o 相对 L2 1.676e-3、state 2.27e-6，逐 case min(1e-2, 3F) 预算全过；FP32 最大 o 2.17e-6 / state 2.27e-6。bd1 完整网格在独立进程里跑；已完成的 bd2 构建日志里有 12 条 uint16 向量循环条件警告（5 个条目），已定位到生成源码位置，循环次数在冻结 ABI 内恒为 64、i+1 落在 1..64、无负数 / 回绕，处置将带源码证明与两个 bd 的独立叶子覆盖；不压制警告、不改数值预算。收到 PM 的 BF-02 NO_TASK（BF-01 CLOSE 后直接派，再 BF-03）。PR #111 保持 draft。blockers: none"
+        },
+        {
+          "at": "2026-09-19T18:10",
+          "summary": "STATUS（18:10Z，自述）：两个 block_dim 全部完成——112 条原生记录（28 case × 2 dtype × bd1/2）；重算 56 个 case / dtype 的跨 bd 匹配，728 对阶段数组逐字节相同，112 对实际公共输出 / 状态也相同；112 对 FP32 原 / 新公共数组在两个 bd 任务里都匹配。每次公共调用只有 13 次 empty 分配，共 1456 次 aten.empty、零禁用算子；每个 case 输入不变，13 个组合数组与 13 个独立叶子数组满足固定的逐输出预算。BF16 各 A/B/bd 最大 o 1.676e-3、state 2.27e-6，FP32 最大 o 2.17e-6、state 2.27e-6（≤ 1e-4，加上新旧字节相同）。下一步：同卡 900 样本 BF16 vs 未改动原 FP32 三明治在跑（私有驱动先复核整个不可变原始源清单与候选 / 库 / 参考的身份）；源码仍是 c67f50e，之后只改证据 / 文档 / 契约状态。运行日志里有两条 vendor 启动提示（插件策略回退、TensorFlow 预加载），计时后用无任务的 Torch NPU 对照定位范围；24 处有界循环警告会带源码 / 边界证明保留。PR 保持 draft，未 DONE。blockers: none"
         }
       ],
       "result": null,
@@ -628,7 +636,7 @@
       "wave": "W0",
       "soc": "a5",
       "priority": "P0",
-      "status": "in_progress",
+      "status": "review",
       "model": [],
       "kernel": [
         "pkda_chunk_fwd"
@@ -688,6 +696,14 @@
         {
           "at": "2026-09-19T17:32",
           "summary": "STATUS（17:32Z，自述）+ draft PR #110（17:34Z 开，未 DONE）：原生 BF16 的 bd4 完整 T4096 已上板，随后 89 个完整链 case（16 契约 + 64 尾块 + B2/H32 + 5 个跨度端点 + 3 个一大后小）与 43 项 API / FP32 字节回归全过；相对 CPU 参考 A 的最大相对 L2：o 3.426e-3、S 6.615e-6、A 1.053e-7，也满足独立 B 与每 case 3F。BF16 入口 host 审计只有 empty / view，输入不变、输出 NaN 预填全覆盖；FP32 原 / 新入口三个输出逐位相同；已按 PM 裁定把原 FP32 只读 validator 归入独立「校验」类并去掉多余的 FP32 guard launch（BF16 数学 kernel 未变，最终入口重新审计并逐位对照）。sim / pipesim（T129/H1/bd1）event 平衡、hazards=[]、无 deadlock；两端 PKDA 相关 CPU 测试均 83 passed。bd1/2/3 各独立进程构建中，之后同网格并逐位比较，再做同卡三轮 FP32/BF16/FP32 性能与脱敏回执。PM 早期扫描（非评审）：27 个文件全在写集内、无保留路径改动、新增行无 IP / 用户目录 / 令牌 / UUID；DONE 前不审。blockers: none"
+        },
+        {
+          "at": "2026-09-19T18:04",
+          "summary": "DONE（18:04Z，自述）：PR #110 转正式，头 a25ba5e3；5 个提交。自述验收：BF16 公共入口真机 host 审计只有 aten.empty / view；bd1..4 各 89 个完整链 case + 43 项 API 检查（356 + 172）全过，含 16 契约 + 64 尾块 + B2/H32 + 独立双状态与续接 + 5 个跨度端点 + 3 个一大后小；bd 间输入 / 19 阶段 / 公开输出逐位相同；FP32 前后逐位不变；两个 CPU FP32 参考各 o / state ≤ 1e-2 且 ≤ 3F、ATK ≤ 1e-4，未收窄 155 的域；同卡三轮 FP32 / BF16 / FP32 三明治 T1024 1.25–1.31、T4096 1.21–1.24（无速度门槛）；另有 Torch NPU naive 三轮。真机：Ascend950PR_9589、CANN 9.2.0（自述）、算子包含 ascend950。主机测试 708 passed / 5 skipped。matrix_delta: none"
+        },
+        {
+          "at": "2026-09-19T18:45",
+          "summary": "PM 评审 accept（REVIEW 已发在 #110；PM 从解包后的原始回执自己复算）：356 case 全过，vsA 最大相对 L2 o 3.426e-3 / S 6.61e-6 / A 1.05e-7 与自述完全一致，最紧的 误差/预算 = 0.68（各 oracle 用自己的地板核 min(1e-2, 3F)）；172 个边界全过；跨 bd 801 个哈希字段全相同；归档 447 个成员 SHA 与索引一致，申领人的 compare_runs.py 复跑与 PM 的数一致；host 审计 356 条并集只有 empty / view（每次 19 + 1），PM 代理审计（桩掉 launch 跑 TorchDispatchMode）得到相同算子与个数，静态无转换 / 重排；性能三轮中位数与加速比从原始样本重算逐位一致，基线源码哈希等于 base 入口；fp32-entry-before.py 与 base 入口逐字节相同，原 FP32 单元零改动，38 个文件全在写集内；无 NPU 环境复跑：新增 32 个测试全过、换回 base 入口后 32 个全失败，全量 701 passed / 12 skipped（申领人 708 / 5，总数同为 713，差 7 个本机环境相关的既有跳过）；隐私扫描 485 个文本文件 0 命中。合入被自动模式分类器拦下（[Merge Without Review]），按 D-PM-33 不绕过，等用户授权。需用户裁定的偏差：证据是 1.26MB tar.gz（PROTOCOL §4.9 列二进制为整体拒绝项，PM 已解包核对全部内容）。非阻塞意见：入口 q 形状报错文案还写 FP32；BF16 的 k 范数闸沿用 1+1e-5 比 BF16 分辨率还紧（常规归一化后转 BF16 约一半被拒，测试用 k×0.99 避开），不是域收窄但报错指引对 BF16 误导，放宽要用户批准；CANN / opp 标识只在 validation.json，不在每次运行的原始回执里。合入依赖暂定的「校验」类裁定（控制字回读走 aclrtMemcpy、FP32 只读校验器沿用）。"
         }
       ],
       "result": null,
