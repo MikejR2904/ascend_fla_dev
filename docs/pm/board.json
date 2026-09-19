@@ -417,6 +417,10 @@
         {
           "at": "2026-09-19T15:49",
           "summary": "用户 D-PM-35 建：GDN 前向现在的 BF16 入口是 host 侧 q.float() 加宽再转回，不合规。origin=user，open"
+        },
+        {
+          "at": "2026-09-19T16:32",
+          "summary": "GDN 系列 session 在 #100 申请 BF-01（条件：GDA-03 返工与审查关闭后；PK-05 的条件申请顺延）。同 session 单任务，回 NO_TASK；GDA-03 CLOSE 后按这条 APPLY 直接派"
         }
       ],
       "result": null,
@@ -733,7 +737,7 @@
       "wave": "W0",
       "soc": "a2",
       "priority": "P0",
-      "status": "in_progress",
+      "status": "rework",
       "model": [],
       "kernel": [],
       "dtype": [
@@ -752,7 +756,7 @@
       },
       "spec": "docs/pm/tasks/A2-01.md",
       "issue": 29,
-      "pr": null,
+      "pr": 107,
       "assignee": "limjiunnbin",
       "assignee_caps": {
         "agent": "Claude Opus 5（Claude Code）（自述）",
@@ -792,6 +796,10 @@
         {
           "at": "2026-09-19T16:17",
           "summary": "用户同意（D-PM-36）：AGENTS.md §2 已按 A2-01 的调查改写（FP32 split-K 在 pin 里已有修复；没解决的是 BF16/FP16 split-K 与 FP32 手写累加链；A2 总闸不变），gaps.json 记了 a2-splitk-fp32-cube 与 a2-splitk-bf16-fp16-unsettled（P1，requires_kernel_change=false），ops.json 的 A2/A3 说明同步。证据等级：静态部分 PM 核实、真机部分申领人自述——A2-01 的 DONE（脱敏原始回执 + docs/pm/deltas/A2-01.json）到了再核并更新这两条"
+        },
+        {
+          "at": "2026-09-19T16:32",
+          "summary": "DONE（16:13Z，PR #107，头 7104ae1，48 个文件 +43814 行）+ RISK kernel-change-needed（16:12Z）。PM 审查：写集（benchmarks/a2/** + deltas）无越界、无红旗；定性对着 pin 库源码核实（desugar.py:411、sha256、命中表抽查 8 处源码行）；PM 在 CPU 上独立复跑 reference / sim（5 个 case，sim 全逐位，reference 哈希与设备日志里逐位正确的 case 一致、与错误的 BF16 M16 输出不同）；从原始回执逐项复算真机数字（FP32 split-K 4 例 5/5、BF16 M16 全 0/5 且 5 次哈希相同、M64 全 5/5、M32 全失败且日志明写 L0C read/write conflict、sham 0/5 / settle 5/5、手写链 45 例 5/5）；全量 515 passed/15 skipped 对账 472/58。REVIEW rework 一条：device_props.log 含 NPU 芯片 UUID，要脱敏；其余认可。这是 A2 结论，合入前必须问用户（D-PM-33），改完后请示。gaps.json 两条已按证据更新，a2-splitk-fp32-cube 记 requires_kernel_change（属 A2-K1，要用户批），队列 25→26。状态 in_progress→rework"
         }
       ],
       "result": null
@@ -923,6 +931,10 @@
         {
           "at": "2026-09-19T10:05",
           "summary": "用户决定解门（D-PM-29）：A5K-02 已合入（PR #83，2589942），转 open。两个任务（A2-02/A2-44）写集彼此重叠，先 APPLY 者先做，后者大概率再 gate 一轮；PM 已在 issue 下通知此前被 NO_TASK 的申领人重新 APPLY"
+        },
+        {
+          "at": "2026-09-19T16:32",
+          "summary": "session 01a0b7ce-… 在 #31 再次 APPLY（16:08Z），称当前无在飞任务——但 15:55Z 已被派 BF-04（#103，未见 ACK，它似乎只盯 #31）。回 NO_TASK 指向 #103；A2-02 顺延，仍 open"
         }
       ],
       "result": null,

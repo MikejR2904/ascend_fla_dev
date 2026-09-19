@@ -244,11 +244,12 @@ P0 2 项 · P1 20 项 · P2 9 项 · 已解决 13 项 · 共 44 项
 
 ### 待统一修复的 kernel 问题
 
-> **kernel 源码层面的问题统一修一轮，不零散改。** 这是 2026-09-11 定的：发现一条就去改一条，会在 ascriptor 侧留下一串互相干扰的小改动，而且每改一次都要重跑全部 case。做法：发现时把它记进本表并打 `requires_kernel_change`，本仓侧先按 AGENTS.md §7 **装闸报错或记为声明限制**，保证不静默出错；等攒够一批再统一进 ascriptor 侧（§3：本仓不改那个仓，要改走那一侧的流程或建本仓派生单元）。当前队列 25 项，见下表。
+> **kernel 源码层面的问题统一修一轮，不零散改。** 这是 2026-09-11 定的：发现一条就去改一条，会在 ascriptor 侧留下一串互相干扰的小改动，而且每改一次都要重跑全部 case。做法：发现时把它记进本表并打 `requires_kernel_change`，本仓侧先按 AGENTS.md §7 **装闸报错或记为声明限制**，保证不静默出错；等攒够一批再统一进 ascriptor 侧（§3：本仓不改那个仓，要改走那一侧的流程或建本仓派生单元）。当前队列 26 项，见下表。
 
 | 缺口 | 级别 | 要在 kernel 侧改什么 |
 |---|---|---|
 | `c1-multihead-o-corrupt` | P0 | **根因已定位**（A2-04 / PR #60，joshjms 诊断，PM 独立复算）：`kda_fwd/kernels/recurrent.py` 的 `Aqk` L1 交接是**两信用配固定槽** —— `aqk_l1_valid = DEvent(Pipe.MTE1, Pipe.MTE2, preset=True)`（:130）给两个信用，而槽是 `aqk_slot = Var(c_idx % 2)`（:243 写、:373 读），按 chunk 取。一个头最后一个 chunk 的槽是 `(C-1)%2`，下一个头第一个 chunk 的槽是 `0` —— **当且仅当 C 为奇数时两者相撞**，写方领先一周期踩进还没被读走的槽（:245 的 MTE2 写 与 :398 的 MTE1 读无序）。每核最后一个头后面没有写，所以恰好是对的。**不是漏了某次 DEvent/Mutex 调用**，是信用数与实际轮转的槽数不匹配 —— 与 ascriptor `library/docs/defects/M10-076-mutex-credits-and-handoff-slots.md` 同型（那一条在 autosync 里已修成『depth <= j 才算有序』，但本 kernel 是手写同步，不过 autosync）。**修法**：让槽按每核周期序号轮转 `((pair_idx - pair_begin) * C + c_idx) % 2`，两信用配两槽；或把两个 DEvent 降成 SEvent（少一周期 run-ahead）。 **补充（来自 A2-04 的 delta）**：`l1_Aqk` 是两槽 `DBuff`（:146）。备选修法是把 `aqk_l1_valid`/`aqk_l1_ready` 改 `SEvent`（去掉一拍 run-ahead，**性能未测**）。落地按 AGENTS.md §3 走本仓派生单元、进 kernel 批次。A5 上的硬判据：失效表 12 格全对、偶数 C 与未修版逐位相同、bd=1 与 bd=4 逐位相同。 **2026-09-19**：本仓派生单元已落地并接入公开调度（见 proposed_action）；上游 ascriptor 的 `kda_fwd/kernels/recurrent.py` 源码仍未改，`requires_kernel_change` 因此保持 true（指上游）。 |
+| `a2-splitk-fp32-cube` | P1 | 只改 A2 派生单元（A2-03 的 `kernels/projects/a2/**`），A5 源码不动：`kda_fwd/kernels/triangular_inverse.py:273/279/284-285`、`gdn_fwd/kernels/inverse.py:306/312/317-318`、`gdn_bwd/kernels/finalize.py:205/217/226/235/244` 的 FP32 `is_init=False` matmul 之前补 `barrier(Pipe.M)`；`kda_fwd_stable/kernels/recurrent.py:401`、`gdn_bwd/kernels/wu.py:206` 的 BF16 累加链同样补（不分 dtype，A2-01 的 W4）。以 a2 lint 0 trap 作闸，验证按 `benchmarks/a2/README.md` §8 的 W2。属 kernel 批次 A2-K1，要用户批准。 |
 | `block-dim-ceiling` | P1 | kda_fwd/kda_bwd 的 contract domain.block_dim 上限由 4 抬高并补 case。物理 28 cube / 56 vec，实测到 4 仍是线性扩展，所以这是当前最大的单点性能头寸。 |
 | `d-initial-state-absent` | P1 | gdn / delta_rule 的 backward 产出 dh0。 |
 | `decode-call-overhead` | P1 | 若要消掉 host 侧 15.4µs 的布局转换：kda_fused_recurrent 改成直接吃 token-major [B,T,H/HV,128] 并在 kernel 内按 hv//groups 取 q/k 的头。桥侧那 25µs 不用改 kernel。 |
@@ -509,24 +510,26 @@ PM 在权威 workspace 上独立跑了 `benchmarks/diag_c1_multihead.py`，**上
 #### `a2-splitk-fp32-cube` — A2 系 FP32 cube 累加（M10-081）：split-K 在 pin 里已有修复，FP32 手写累加链仍未 settle
 
 - **类别** numerics · **适用于** KDA / GDN · **阻塞** `A2 波次：A2-03 / A2-11，以及 A2 上的任何算子结论`
-- **依据** **来源：A2-01（#29）的 STATUS 与 RISK，申领人自述；PM 只核了静态部分（pin 版库源码）。原始证据随 A2-01 的 DONE（`benchmarks/a2/evidence/`）到了再核，届时更新本条。结论只对 910B3 / CANN 9.0.0 成立，A2-11 之前只作观测，不构成算子结论。**
+- **依据** **来源：A2-01（#29，PR #107，DONE 于 2026-09-19T16:13Z）。原始回执（8 份 JSON、15 份日志）随 PR，合入后在 `benchmarks/a2/evidence/`；PM 从原始回执逐项复算了真机数字、抽查了命中表的源码行、并在 CPU 上独立复跑了 reference / sim 与设备日志的输出哈希对得上；A2 真机部分 PM 无 A2 真机、未复现，按证据审。结论只对 910B3 / CANN 9.0.0 成立，A2-11 之前只作观测，不构成算子结论。**
 - 库里的记录：ascriptor `docs/defects/M10-081-a2-family-fp32-mmad-settle.md`（A2 系两次短 FP32 MMAD 写同一块 L0C，硬件不互锁，第二次 `is_init=False` 读到未落定的累加器）。
 - pin 版修复（PM 读源码核实）：`ascriptor/passes/desugar.py:411`——`family == "a2"` 且 A/B 均为 `f32` 时，split-K 展开在两次 MMAD 之间插 `PIPE_M` barrier；`desugar.py` 的 sha256 前缀 900610ea92dc，与申领人所报一致。手写 MMAD 链只有 lint trap，不自动修。
 - 真机（申领人自述；a2 / 910B3 / CANN 9.0.0 / block_dim=1 / 每 case 5 次，逐位对 CPU float64 参考）：FP32 split-K 的 M16 原 case、`splitk_f32_m16_n64_k32_s16`、KDA intra 形状 `splitk_f32_m64_n64_k128_s64` 均 5/5 逐位；手写 FP32 链 `chain_f32_m16_n16_k16_t2/t3_nobar`（inverse 形状，无 barrier）目前 5/5 逐位，**但时序没踩到不等于安全**。
 - 命中表初版（25 个在用 kernel，自述）：FP32 split-K 1 个（KDA scores/intra，pin 已自动 settle）；**FP32 手写累加链未 settle 3 个：KDA triangular inverse、GDN triangular inverse、GDN bwd finalize，正是 M16 失效形状**；BF16 累加链 2 个见 `a2-splitk-bf16-fp16-unsettled`；其余 19 个未命中。
 - 模型看不出：sim / pipesim 在 a2、a5 两个 profile 下全部逐位、0 hazard——模型不表达这个同管线 L0C RAW，复现只能靠真机。
+- 手写 FP32 链（M16/32/64，2~3 项；M16/N64 的 8 项孪生）共 45 个独立 case 在卡 A/B 上全部 5/5 逐位：发射节奏没有背靠背，不是安全证据（BF16 的 split-K 孪生就错，同样写法的手写 BF16 链不错）。
 - **影响** A2 上凡是写同一块 L0C 的 FP32 累加链（KDA / GDN 的三角求逆、GDN 反向 finalize）在 M=16 形状下可能读到未落定的累加器，输出有限、量级正常但内容错（真机尚未复现出错，时序没踩到不等于安全）。A5 现有路径不受影响（这是 A2 系的硬件行为）。A2 派生单元（A2-03）要逐个核对，A2-11 才是真机复现与绕行验证。**AGENTS.md §2 原先写的「没解决的 split-K FP32 cube 缺陷」太窄**：FP32 split-K 在 pin 里已有修复，没解决的是 FP32 手写链与 BF16/FP16 split-K，已于 2026-09-19 改写（用户同意）。
 - **建议** 1. 转给 ascriptor 所有者（本仓不改 ascriptor）：把 M10-081 的 settle 扩到手写累加链，或提供自动检测。2. 本仓侧：a2 派生单元对所有写同一块 L0C 的累加链显式 `barrier(Pipe.M)`，不分 dtype 与写法（A2-03 起；属 kernel 批次 A2-K1 的「split-K 绕行」）；ascriptor 修好前，对不能证明安全的形状入口按 `AGENTS.md` §7 显式报错。3. A2-11 在真机上做复现与绕行验证（含手写链的时序压力）。
 
 #### `a2-splitk-bf16-fp16-unsettled` — A2 系 BF16/FP16 split-K matmul 在 910B3 上输出有限但全错（M16），M32 触发 AI Core 异常：M10-081 的 settle 规则按 dtype 排除了它们（静默错误类）
 
 - **类别** numerics · **适用于** KDA / GDN · **阻塞** `A2 波次：A2-03 / A2-11，以及 A2 上的任何算子结论`
-- **依据** **来源：A2-01（#29）的 STATUS 与 RISK，申领人自述；PM 只核了静态部分（pin 版库源码）。原始证据随 A2-01 的 DONE（`benchmarks/a2/evidence/`）到了再核，届时更新本条。结论只对 910B3 / CANN 9.0.0 成立，A2-11 之前只作观测，不构成算子结论。**
+- **依据** **来源：A2-01（#29，PR #107，DONE 于 2026-09-19T16:13Z）。原始回执（8 份 JSON、15 份日志）随 PR，合入后在 `benchmarks/a2/evidence/`；PM 从原始回执逐项复算了真机数字、抽查了命中表的源码行、并在 CPU 上独立复跑了 reference / sim 与设备日志的输出哈希对得上；A2 真机部分 PM 无 A2 真机、未复现，按证据审。结论只对 910B3 / CANN 9.0.0 成立，A2-11 之前只作观测，不构成算子结论。**
 - 静态（PM 核实）：`desugar.py:411` 的条件是 `dta.name == dtb.name == "f32"`，其上注释写明其他 dtype 不在这次「board-proven workaround」范围内——BF16/FP16 split-K 不插 barrier。
 - 真机（自述；a2 / 910B3 / CANN 9.0.0 / block_dim=1，逐位对 CPU float64 参考，输入为有界二进分数、FP32 下精确）：M16：K32/48/64/128 的 BF16/FP16 split-K 全部错，输出有限、无报错，1022~1024/1024 个元素不对（例：`splitk_bf16_m16_n64_k128_s16` max_abs 15.67 / rel_l2 1.35，`splitk_f16_m16_n64_k128_s16` 15.88 / 1.17），5 次输出哈希相同，三张卡上复现；M32：每次触发 AI Core 异常（`aclrtSynchronizeStream` 507015，retCode 0x26），两张卡复现；M64：K32~128 全部逐位。
 - 对照：只在该次运行的生成 CCE 里、MMAD 分支后补一行 `PipeBarrier<PIPE_M>()`（位置与 FP32 规则生成的相同），M16 5/5、M32 2/2 的 BF16/FP16 全部逐位；只插注释的 sham 版照样错。
 - 手写孪生（8 次 K16 matmul 写同一 L0C，不加 barrier）真机 5/5 逐位：split-K 循环里 MMAD **背靠背发出**才踩到。
 - 功能模拟与 pipesim 在 a2/a5 两个 profile 下全部逐位、0 hazard，模型看不出。
+- 运行时日志（`m32_bf16_k32_cann_runtime_errors.log`）明写 `L0C read/write conflict` 与 `retCode=0x26 [aicore exception]`，与 M10-081 的机理一致；错误输出不是任何 K 分片或交叉分片乘积的组合（最小二乘残差约 0.97~0.99），输出范数约为参考的 5 倍，5 次输出哈希相同（确定性错误）。
 - **影响** **静默错误类**（输出有限、无报错）。本仓现有 25 个在用 kernel 都不用 BF16/FP16 split-K，A5 现有路径不受影响；KDA recurrent 与 GDN bwd wu 有 BF16 累加链（是否满足踩踏条件未定，手写孪生没踩到）；A2 派生单元（A2-03）若因 L0 容量改用 BF16/FP16 `splitk` 就会中招。D-PM-35 的 BF16 优先叠加 A2 优先，BF16 的 KDA 在 910B 上要先过这一关。
 - **建议** 1. 转给 ascriptor 所有者：M10-081 的 settle 规则按 dtype 收窄在 910B3 上不成立，应扩到 BF16/FP16，并修 M32 的异常。2. 本仓侧（A2-03 起）：a2 路径不用 M<64 的 BF16/FP16 `splitk`，入口按 `AGENTS.md` §7 显式报错；a2 派生单元对所有 L0C 累加链显式 barrier，不分 dtype。3. A2-11 真机复现（含 M32 异常）。
 
