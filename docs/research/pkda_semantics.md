@@ -148,3 +148,10 @@ num_heads=16, head_dim=128, num_hidden_layers=24`），是 HF config 的占位�
   `ascend_fla/ops/kda/chunk.py` 里对应参数的现有实现，不要凭参数名猜测。
 - 别把 PGDN 和 PKDA 的 `g`/`beta` 混着看——PGDN 是标量门控 `[B,T,HV]`，PKDA 是 channel-wise
   `[B,T,H,K]`，两者的门控跨度分析不能共用一份结论。
+- **PGDN 与 PKDA 的 `naive.py` 对 q/k 的归一化不同**（2026-09-19，PM 对 pin 住的源码核实，PK-02 的 RISK
+  `contradicts-handoff` 触发）：`precond_kda/naive.py` **不做**任何 q/k 归一化（只把 q 乘 scale）；
+  `precond_gated_delta_rule/naive.py` **做** `F.normalize`（torch 默认 eps=1e-12）。两者的公开 chunk 路径都归一化
+  （PKDA 在 `chunk.py:785` 以字面 True 强制，PGDN 的 `use_qk_l2norm_in_kernel` 默认 True），用 `l2norm_fwd`，
+  即 `x/sqrt(Σx²+1e-6)` 并以输入 dtype 物化。所以 naive 与 chunk 的差别对 PKDA 是"是否归一化"，对 PGDN 是"eps 公式
+  与物化 dtype"，别把一个的结论套给另一个。§4 里"`k` 经过 `use_qk_l2norm_in_kernel` 归一化之后的量级"指的是训练规模的
+  工况，不代表 naive 会替调用方归一化。
