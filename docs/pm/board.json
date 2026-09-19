@@ -1915,6 +1915,10 @@
         {
           "at": "2026-09-19T05:17",
           "summary": "RISK shared-machine：一张健康候选卡（health=0，错误码空），另一张故障卡已排除；占用查询 dsmi_get_resource_info 返回 8=DRV_ERROR_PARA_ERROR，不是'无进程'结果；存在外部设备管理句柄。assignee 提议：主机侧验收与隔离编译继续；真机执行等占用查询成功或新的管理员证据，再取共享锁并再查一次健康/占用；不 reset、不 kill、不动他人负载。PM 已上报用户，同意该处置，不批准任何没有占用证据的真机启动；真机是可选项，不阻塞验收"
+        },
+        {
+          "at": "2026-09-19T06:06",
+          "summary": "STATUS：草稿 PR #87（头 66831c0，18 文件 +8509，写集早核 18/18 在内；未声称 DONE，草稿不审）。主机侧验收就绪待审：独立 H 头 ATK launch + 5 个 PGDN 本地 chunk 阶段，k_read/k_write 分开，两个状态独立、范围外组合全部有拒绝门；60 个契约参考 case 全过；CPU 独立 B 对 pinned 递推 A（30 组输入）FP32 相对 L2 最大 o=1.89e-6、S=1.20e-6、A=3.19e-7（预算 1e-4）；340M 形状 B1/T4096/H=HV8 o=5.19e-7、S=6.03e-7、A=2.90e-7（无 checkpoint）；4 个有界 pipesim + 3 个 sim 过，无 hazard/事件失衡/死锁，bd1/bd2 的 17 个实际数组逐位一致（B1/T64/H=HV2）；6 项静态检查 0 error/0 warning；两份六 kernel CANN 9.2.0 构建成功（仅编译，未执行）；主机 CPU 选集 384 passed/4 skipped（PGDN 104 个，4 个需完整 FLA 包）。未 DONE 的原因（自述）：用户直接指示在 DONE 前追加原生验收与同卡测量，但设备占用仍核实不了（监视可执行文件缺失，驱动进程查询返回 NOT_SUPPORT，系统 advisor 显示健康/零利用率但无进程归属，仍有外部设备管理句柄），不视为空闲证据；未 reset/kill，未动他人负载。按规格真机是可选项，主机侧验收本可交 DONE；是否等真机由用户与 assignee 定"
         }
       ],
       "result": null
