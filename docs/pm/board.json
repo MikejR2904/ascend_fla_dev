@@ -202,6 +202,13 @@
       "by": "user",
       "decision": "A2-11 总闸不对纯向量单元放宽：维持 AGENTS.md §2 原文——A2-11 之前 A2 上任何算子结论都不算数，不分 cube/vector。（用户原话：'A2-11不放宽'。）",
       "risk": "A2-40 提出 A2-41 涉及的四个融合算子是纯向量运算、技术上不受 split-K FP32 cube 缺陷影响，用户仍决定不放宽。A2-41 的 machines:a2 闸与对 A2-11 的依赖保持不变，AGENTS.md 无需改动。"
+    },
+    {
+      "id": "D-PM-31",
+      "date": "2026-09-19",
+      "by": "user",
+      "decision": "批准合入 PR #87（PK-03）与 PR #88（PK-02）。（用户原话：'合入'，回复 PM 的'合入 #87 和 #88 吗？'。）",
+      "risk": "两个 PR 都已由 PM 审查并发 REVIEW accept；合入的是审过的头（54843bb、d7c29d9），合并提交 1f4da05、8b78c09，各自相对第一父的改动与审过的 diff 逐项一致。此前两次合入尝试被自动模式拦下（无对该 PR 的明确授权），现以用户的明确授权为准。合并后的 main 全量测试 510 passed/15 skipped（15 个 skip：5 个 NPU 模块 + 10 个需 pin 版 FLA oracle 的用例），无回归。"
     }
   ],
   "gated_epics": [
@@ -1855,7 +1862,7 @@
       "wave": "W0",
       "soc": "a5",
       "priority": "P2",
-      "status": "review",
+      "status": "done",
       "model": [],
       "kernel": [
         "pkda_chunk_fwd"
@@ -1916,9 +1923,25 @@
         {
           "at": "2026-09-19T10:26",
           "summary": "DONE 收到（PR #88，头 d7c29d9，非草稿；含逐条验收、原始日志行、脱敏归档哈希）。PM 审查完成，结论接受：写集 21/21、无红旗、隐私扫描无命中；chunk_precond_kda 原样消费 q/k（未归一化的 k 显式报错）、FP32 only、未支持选项全部拒绝、两个状态独立、仅前向；读/写 key 不对称与 ATK 递推与 pin 住的 naive 一致，oracle 加载器执行前校验 sha256（我取的文件哈希一致）。PM 独立重算（自造 5 个 case：尾块 T130、整块 T64、B2 T200 H3、k 范数 1e-3、ATK 关闭）：仓内独立参考对 pinned naive 相对 L2 最坏 o 3.2e-7/S 2.1e-7/A 0（预算 1e-4）；读写对称的负控制 7.9e-2。PM 复跑（pin 版 library、torch_npu 排除）：契约 reference 16/16、PKDA 测试 50 passed（oracle A 真跑）、全量 406 passed/15 skipped 与 DONE 的 416/5 精确对账（多出的 10 个是需 FLA_*_NAIVE 的用例）。文档：ABI 对照、精度与整链量程（log(A+eps) 跨度 [-13.8155,-1.5611]，FP32 对 FP64 最大绝对误差 7.5e-7/1.5e-7）、归一化分叉；对门控跨度的结论是保持 155 不收紧，并如实写明 FP32 前缀差抵消未被证明消除、跨度 4096 失败保留在域外。限制：PM 未独立复现 ascriptor check 与 sim/pipesim（模拟器检查在本机 400s 内未跑完）；'A 相对 L2 为 0' 只对 CPU 模型成立；无真机声称，符合主机侧验收范围。合入待用户确认，PR 仍 open，头 d7c29d9。状态 in_progress→review"
+        },
+        {
+          "at": "2026-09-19T11:45",
+          "summary": "合入：PR #88 合并提交 8b78c09（合入的是审过的头 d7c29d9，--match-head-commit）。用户 D-PM-31 授权；PM 先发 REVIEW accept 再合入。相对第一父 21 文件 +7388，与审过的 diff 一致；#87 合入后 #88 仍可干净合并。合入后 board/矩阵校验通过、合并后 main 全量 510 passed/15 skipped。状态 review→done"
         }
       ],
-      "result": null
+      "result": {
+        "commits": [
+          "d7c29d9",
+          "8b78c09"
+        ],
+        "evidence": [
+          "PR #88",
+          "docs/research/pkda_chunk_fwd_gate_range.md",
+          "kernels/projects/a5/pkda_chunk_fwd/validation.json"
+        ],
+        "numbers": "主机侧：契约 reference 16/16（PM 复跑通过）；PKDA 测试 50 passed（oracle A 真跑，不设 FLA_PKDA_NAIVE 时其中 13 个 skip）；全量 406 passed/15 skipped 与 DONE 的 416/5 精确对账。PM 用自造 5 个 case（尾块 T130、整块 T64、B2 T200 H3、k 范数 1e-3、ATK 关闭）独立重算：仓内独立参考对 pinned naive 相对 L2 最坏 o 3.2e-7/S 2.1e-7/A 0（预算 1e-4）；读写对称的负控制 7.9e-2。DONE 报：16 case 独立 chunk 对 naive o 3.62e-7/S 2.12e-7/A 0；实际 pipesim T65H1 对 naive o 4.37e-7/S 4.42e-7/A 0；14 阶段输出在 bd1..4 上逐字节相同；log(A+eps) 跨度 [-13.8155,-1.5611]，FP32 对 FP64 最大绝对误差 7.5e-7/1.5e-7",
+        "note": "主机侧验收，无真机、无 BF16、无性能声称（validation.json 的 untested 明列）。前向跨度门控保持 155，跨度 4096 的 FP32 前缀差抵消误差 S=1.34e-4 超预算，保留在公开域之外。PM 未独立复现 ascriptor check 与 sim/pipesim（模拟器检查在本机 400s 内未跑完）；'A 相对 L2 为 0' 只对 CPU 模型成立。公共算子名 chunk_precond_kda 与 FLA 同名但语义不同（不归一化、FP32 only、T≤4096、常量固定、k 行范数 ≤1+1e-5）。用户 D-PM-31 授权合入"
+      }
     },
     {
       "id": "PK-03",
@@ -1926,7 +1949,7 @@
       "wave": "W0",
       "soc": "a5",
       "priority": "-",
-      "status": "review",
+      "status": "done",
       "model": [],
       "kernel": [
         "pgdn_chunk_fwd"
@@ -2027,9 +2050,26 @@
         {
           "at": "2026-09-19T10:40",
           "summary": "STATUS×1（10:13）+ DONE 收到（PR #87，头 54843bb，非草稿；含逐条验收、SoC/CANN/opp、原始日志行）。PM 审查完成，结论接受：写集 32/32、无红旗、隐私扫描（含 21 份原始日志与结果 JSON）无命中；chunk_pgdn 门控覆盖规格每一行'其余'；ATK kernel 语义与 pin 住的 naive 逐项对得上（PM 对源码核实）；独立参考 B 不复用 A 且自带负控制。PM 复跑（pin 版 library、torch_npu 排除、pin 版 oracle A）：PGDN 测试 104 passed、契约 reference 60 case 通过、全量 378 passed/15 skipped 与 DONE 的 384/4 精确对账（差的 6 个是需 FLA_*_NAIVE 的用例）。真机数字 PM 无法复跑，对 PR 内原始文件逐项核：完整 workload 日志、60 case 摘要（1020 leaf/120 公共调用）、30 对 bd1↔bd2 逐位相同、1800 计时样本重算中位数 0 处不一致，均与 DONE 一致；计算相关源在四个提交间零改动。全网格最大 FP32 相对 L2 对 A：o/S/A=1.53e-6/2.22e-6/5.81e-7，对 B：2.45e-6/3.23e-6/4.75e-7（预算 1e-4）；BF16 输出 .00168。测量基线如实标注为'GDN 方程成本基线，不是 GDA-02 性能'，PGDN 慢 3.4%–4.5%，不声称加速。限制：PM 未独立复现 ascriptor check、sim/pipesim 与真机数字；范围窄（仅前向、A5、bd1/2、T≤4096、初始状态 None、内核内归一化必开）。用户 D-PM-26 表态'真机验证通过后可合入'，但合入动作被自动模式拦下（无人工确认对 #87 的明确授权），PR 仍 open，头 54843bb，等用户确认。状态 in_progress→review"
+        },
+        {
+          "at": "2026-09-19T11:44",
+          "summary": "合入：PR #87 合并提交 1f4da05（合入的是审过的头 54843bb，--match-head-commit）。用户 D-PM-31 授权；PM 先发 REVIEW accept 再合入。相对第一父 32 文件 +33157，与审过的 diff 一致。合入后 board/矩阵校验通过、合并后 main 全量 510 passed/15 skipped。状态 review→done"
         }
       ],
-      "result": null
+      "result": {
+        "commits": [
+          "54843bb",
+          "1f4da05"
+        ],
+        "evidence": [
+          "PR #87",
+          "docs/research/pgdn_chunk_fwd_gate_range.md",
+          "kernels/projects/a5/pgdn_chunk_fwd/validation.json",
+          "kernels/projects/a5/pgdn_chunk_fwd/evidence/native/README.md"
+        ],
+        "numbers": "主机侧：PM 在 pin 版 library+oracle A、纯 CPU 环境复跑 PGDN 测试 104 passed、契约 reference 60 个 case 通过、全量 378 passed/15 skipped 与 DONE 的 384/4 精确对账。真机（A5，Ascend950PR_9589 V100 / CANN 9.2.0）：60 个原生 case、120 次公共调用、1020 个独立 leaf；30 对 bd1↔bd2 的 17 个阶段数组与三个公共输出逐位相同；全网格最大 FP32 相对 L2 对 pinned 递推 A：o/S/A=1.53e-6/2.22e-6/5.81e-7，对独立 block solve B：2.45e-6/3.23e-6/4.75e-7（预算 1e-4）；BF16 输出 .00168（质量检查）。同卡三轮三明治（T1024/T4096，FP32/BF16，1800 个样本，PM 重算中位数 0 处不一致）：PGDN 比'GDN 方程成本基线'慢 3.4%–4.5%，无速度门槛",
+        "note": "真机数字由 assignee 报告，PM 无 A5 真机，对 PR 内原始文件逐项核（完整 workload 日志、60 case 摘要、byte-comparison、1800 个计时样本）；计算相关源在四个提交间零改动。测量基线如实标注为'不是 GDA-02 实现的性能'。PM 未独立复现 ascriptor check 与 sim/pipesim。范围窄：仅前向、A5、block_dim 1/2、T≤4096 且为 64 的倍数、初始状态只支持 None、内核内归一化必开。用户 D-PM-31 授权合入"
+      }
     },
     {
       "id": "GD2-04",

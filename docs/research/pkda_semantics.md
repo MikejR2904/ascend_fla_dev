@@ -64,6 +64,7 @@ chunk_precond_kda(q, k, v, g, g_atk, beta_atk, beta, ...,
 
 **结论**：PGDN 排在 GDN 自己的 ABI 缺口之后，不是"先做哪个都行"的并列关系——
 在本仓能表达 GQA 分组之前，PGDN 无法落地成本仓能编译执行的单元。这条排 PK-03，标 gated。
+（2026-09-19 更新：GDA-02 补上分组后 PK-03 已解锁并完成，PR #87 已合入，见 §6。）
 
 ## 4. ATK 预条件的真实算法（推翻 Gemini 文档那条"除法会下溢"的担心）
 
@@ -129,12 +130,13 @@ num_heads=16, head_dim=128, num_hidden_layers=24`），是 HF config 的占位�
 
 ## 6. 排期建议
 
-- **PK-02（开放，可派）**：PKDA chunk 前向 —— 复用 `kda_fwd_stable`/`kda_bwd_stable` 的分解，
-  新增 ATK 预条件步骤。验收对 fla naive **与** fla Triton chunk 双 oracle，`k_precond` 之后
-  的门控跨度重新过一遍 §4 说的复核。规格见 `docs/pm/tasks/PK-02.md`。
-- **PK-03（gated，等 GDN 的 GQA 缺口先解决）**：PGDN。规格写在 `docs/pm/tasks/PK-03.md`，
-  但排在 GDN 自己的 ABI 之后——PGDN 的 ABI 需要 GDN 现在没有的 value-head 维度，
-  在那之前无法落地。
+- **PK-02（已完成 2026-09-19，PR #88，合并提交 `8b78c09`）**：PKDA chunk 前向，主机侧验收。FP32 五阶段、q/k 原样
+  消费（调用方负责归一化）、前向跨度门控保持 155；对 fla naive 与独立 CPU 参考的相对 L2 ≤ 1e-4。原计划的"以 GPU 上的
+  Triton chunk 作第二 oracle"改为不要求（无 GPU，且与 naive 归一化不等价）。无真机、无 BF16、无性能声称。
+  规格与实测更正见 `docs/pm/tasks/PK-02.md`。
+- **PK-03（已完成 2026-09-19，PR #87，合并提交 `1f4da05`）**：PGDN chunk 前向，含 A5 真机验收（60 个原生 case、
+  bd1↔bd2 逐位相同）。同卡测量的基线是'GDN 方程成本基线'，不是 GDA-02 实现的性能。规格见 `docs/pm/tasks/PK-03.md`。
+- **两者都没有 backward、decode、性能优化**；这些在 D-PM-22 排期里是后续阶段，还没有任务号。
 - **两者共同的前提**：都没有已发布权重，端到端验证只能到"真实规模形状 + 双 oracle"，
   到不了"真实 logits/cache"那一级——这条要在两个任务的验收里显式声明，不假装有权重。
 
