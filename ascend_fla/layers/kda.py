@@ -3,15 +3,12 @@
 这是"模型 → 模块 → 层 → 算子"全链路里的层级。结构与参数名逐项对齐 fla，以便第三期
 直接把它注入 HF/fla 的 ``KimiLinear*`` 模型定义（AGENTS.md §9 的"窄切片 + 注入"）。
 
-**本层承担了 fla 放在 kernel 里做的三件事。** fla 的 ``KimiDeltaAttention`` 调
-``chunk_kda`` 时传 ``use_qk_l2norm_in_kernel=True`` / ``use_gate_in_kernel=True`` /
-``use_beta_sigmoid_in_kernel=True``，而 ascriptor 的 kda kernel 都不做，所以这里显式做：
-
-1. ``q`` / ``k`` 沿头维 L2 归一化（``qk-l2norm-not-in-kernel``）；
-2. ``g = -exp(A_log) * softplus(g_raw + dt_bias)``；
-3. ``beta = sigmoid(b_proj(x))``。
-
-这三步在 fp32 下做，再按算子 ABI 交给 kernel（q/k/v bf16，g/beta fp32）。
+The layer passes raw q/k/g/beta and all three ``use_*_in_kernel=True`` flags
+into the public operator. The operator performs FP32 PyTorch normalization,
+log-gate activation and beta sigmoid on the input device before the custom
+kernels. Normalized q/k cross the existing BF16 boundary only after FP32
+normalization; v is BF16 and activated g/beta are FP32. No new kernel fusion is
+claimed. Without short convolution, all three projections still pass SiLU.
 
 **本层默认用 ``impl="stable"``。** 按 fla 的初始化，``A_log`` 与 ``dt_bias`` 给出的
 chunk 内门控跨度约 94，而 ascriptor 原版 kernel 在**前向与反向各有一处**撑不住：
@@ -21,7 +18,7 @@ chunk 内门控跨度约 94，而 ascriptor 原版 kernel 在**前向与反向�
   同时下溢到 0，矩阵乘得 ``inf × 0``。方向与前向相反，是独立的一处。
 
 本仓 ``kernels/projects/a5/kda_fwd_stable`` 与 ``kda_bwd_stable`` 分别把两处改成对深衰减
-稳定的形式：前向可用跨度到 155，反向到 100（反向更严是因为它的约束是**精度**而非有限性 ——
+稳定的形式：前向可用跨度到 155，反向到 105（反向更严是因为它的约束是**精度**而非有限性 ——
 到 169.8 都还有限，但 ``dq`` 在 130 处就超出契约预算）。默认初始化的 94 两条都满足。
 ``impl`` 同时选两条链。细节见 ``docs/matrix/gaps.json`` 的 ``gate-range-beyond-declared``
 与 ``bwd-gate-range-overflow``。
@@ -59,7 +56,7 @@ from torch import nn
 from ..modules.convolution import ShortConvolution
 from ..modules.fused_norm_gated import FusedRMSNormGated
 from ..ops.kda.autograd import chunk_kda
-from ..ops.kda.chunk import HEAD_DIM, L_PER_CHUNK, VALUE_DIM, _l2norm
+from ..ops.kda.chunk import HEAD_DIM, L_PER_CHUNK, VALUE_DIM
 from ..ops.kda.fused_recurrent import T_MAX as RECURRENT_T_MAX
 from ..ops.kda.fused_recurrent import fused_recurrent_kda
 
@@ -87,7 +84,7 @@ class KimiDeltaAttention(nn.Module):
         allow_neg_eigval / safe_gate / lower_bound: **不支持**，非默认值即报错。
         block_dim: 传给底层算子的启动核组数。
         impl: 底层算子的实现，**同时作用于前向与反向**。``"stable"``（默认）用本仓的
-            gate/scores/wy 与 finalize_pre/post，可用门控跨度前向 155 / 反向 100；
+            gate/scores/wy 与 finalize_pre/post，可用门控跨度前向 155 / 反向 105；
             ``"upstream"`` 用 ascriptor 原版，两条都 80。**本层按 fla 的默认初始化产生的跨度约 94，所以
             ``upstream`` 前向反向都会吐 NaN、``stable`` 才能用** —— 见
             ``docs/matrix/gaps.json`` 的 ``gate-range-beyond-declared``
@@ -202,7 +199,7 @@ class KimiDeltaAttention(nn.Module):
         self.dt_bias = nn.Parameter(dt + torch.log(-torch.expm1(-dt)))
 
     def _gate(self, hidden_states: torch.Tensor, b: int, t: int) -> torch.Tensor:
-        """``g_raw -> -exp(A_log) * softplus(g_raw + dt_bias)``，fp32。
+        """Diagnostic gate values for range calibration (forward uses op preparation).
 
         ``A_log`` 是 per-head 的 ``[HV]``，要广播到 K 维；``dt_bias`` 是 ``[HV*K]``，
         按 ``[HV, K]`` 看。
@@ -320,26 +317,24 @@ class KimiDeltaAttention(nn.Module):
         q = q.view(b, t, self.num_heads, self.head_k_dim)
         k = k.view(b, t, self.num_heads, self.head_k_dim)
         v = v.view(b, t, self.num_v_heads, self.head_v_dim)
-        # kernel 不做 l2norm（fla 的 use_qk_l2norm_in_kernel=True 在它那边做了），
-        # 所以这里显式做，并在 fp32 下做以免 bf16 的平方和丢位
-        q = _l2norm(q).bfloat16()
-        k = _l2norm(k).bfloat16()
         v = v.bfloat16()
-
-        g = self._gate(hidden_states, b, t)
-        beta = torch.sigmoid(self.b_proj(hidden_states).float())
+        g = self.f_proj(hidden_states).view(b, t, self.num_v_heads, self.head_k_dim)
+        beta = self.b_proj(hidden_states)
+        raw_options = dict(A_log=self.A_log, dt_bias=self.dt_bias,
+                           use_qk_l2norm_in_kernel=True, use_gate_in_kernel=True,
+                           use_beta_sigmoid_in_kernel=True)
 
         if path == "chunk":
             o, final_state = chunk_kda(
                 q, k, v, g, beta,
                 initial_state=state_in, output_final_state=keep_state,
-                block_dim=self.block_dim, impl=self.impl,
+                block_dim=self.block_dim, impl=self.impl, **raw_options,
             )
         else:
             o, final_state = fused_recurrent_kda(
                 q, k, v, g, beta,
                 initial_state=state_in, output_final_state=keep_state,
-                block_dim=self.block_dim,
+                block_dim=self.block_dim, **raw_options,
             )
         if cache is not None:
             cache["recurrent_state"] = final_state

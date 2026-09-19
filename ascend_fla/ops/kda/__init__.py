@@ -1,16 +1,14 @@
-"""KDA 算子族。公开 ABI 与 fla.ops.kda 一致（token-major）。
+"""KDA public token-major APIs (fixed K=V=128).
 
-* :func:`chunk_kda` —— 可求导入口，第一选择。
-* :func:`chunk_kda_fwd` / :func:`chunk_kda_fwd_with_caches` / :func:`chunk_kda_bwd`
-  —— 不建图的底层入口，用于基准测试与精度比对。
-* :func:`fused_recurrent_kda` —— decode 路径（逐 token，T≤16）。精度已真机验过
-  （对 fp32 递推参考 1e-07 量级，state 串接逐位相同），但**每次调用约 48µs 的固定成本**
-  使它暂时不适合真实解码，且**还没接进 layer** —— 见 ``gaps.json`` 的
-  ``decode-call-overhead`` 与 ``fused-recurrent-missing``。
+``chunk_kda`` is the differentiable entrypoint; ``fused_recurrent_kda`` serves
+forward-only decode with T<=16. Both accept explicit raw-input flags for FP32
+PyTorch preparation on the input device. These operations are not fused into the
+custom kernels. Chunk's prepared-input domain checks are heuristic and optional;
+decode omits them to avoid per-step checks. ABI/gate-span guards remain enabled.
 
-注意本族算子**不做** q/k 的 L2 归一化、门控变换、beta 的 sigmoid —— fla 把这三步放在
-kernel 里（``use_*_in_kernel=True``），这里要调用方做。``ascend_fla.layers.kda`` 已按
-约定做好，层级用户不必关心。详见 :mod:`ascend_fla.ops.kda.autograd` 的 docstring。
+``chunk_kda_fwd``, ``chunk_kda_fwd_with_caches`` and ``chunk_kda_bwd`` remain
+lower-level entries requiring already prepared tensors. A process using chunk
+and decode must call ``prepare(decode=True)`` before its first custom kernel.
 """
 
 from .autograd import chunk_kda

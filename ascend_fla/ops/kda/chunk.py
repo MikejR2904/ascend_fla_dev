@@ -90,6 +90,12 @@ def _prepare_inputs(q, k, g, beta, *, A_log=None, dt_bias=None,
 def _check_input_domain(q, k, g, beta, *, use_qk_l2norm_in_kernel=False,
                         use_gate_in_kernel=False, use_beta_sigmoid_in_kernel=False):
     """Chunk-only heuristic: small raw vectors cannot be distinguished."""
+    # Rank errors belong to the existing ABI guard in both execution paths.
+    # Numerical heuristics on malformed tensors would obscure that diagnostic;
+    # returning here never permits them through the lower-level shape checks.
+    if q.dim() != 4 or k.dim() != 4 or g.dim() != 4 or beta.dim() != 3:
+        return
+
     def reject(name, flag, requirement):
         raise ValueError(
             f"{name} must satisfy {requirement}; this looks like a raw, unactivated input. "
