@@ -534,6 +534,10 @@
         {
           "at": "2026-09-19T19:44",
           "summary": "PM 评审 accept（REVIEW 已发在 #111，头 c5ddd293；PM 从 evidence/ 的原始 JSON / 日志自己复算）：bd1/2 × 28 case × 2 dtype = 112 条原生记录 0 失败，BF16 vsA 最大相对 L2 o 1.6758e-3 / state 1.019e-6、vsB o 1.6758e-3 / state 2.2745e-6，FP32 vsA o 1.476e-6 / state 1.035e-6、vsB o 2.175e-6 / state 2.273e-6，与自述逐位一致；BF16 每 case 用实现前校准固定的 min(1e-2, 3F) 核，最紧 误差/预算 = 0.333；跨 bd 1120 个哈希全相同（728 对阶段数组 + 112 对公开数组）；FP32 原 / 新 392 项比较 0 不同；host 审计 112 条记录每条 13 个 aten.empty（共 1456）、无禁用算子，PM 代理审计（桩掉 launch 跑 TorchDispatchMode，两 dtype × 4 形状）每次 13 个 empty，静态无转换 / 重排；900 个原始样本重算的三段中位数与 candidate/mean(baseline) 逐项一致（T1024 0.993、T4096 0.996，BF16 与 FP32 墙钟基本持平，无速度声称）；四份候选回执的源码清单（各 585 文件）对 PR 头 582 个逐字节相同（含全部 .py），3 个不同（docs / README / contract.json，与「c67f50e 之后只改文档与契约状态」一致）；每份回执的 log_sha256 / 行数与原始日志一致，原始回执自带 soc / cann / opp（Ascend950PR_9589V100 / 9.2.0 / ascend950）；保留的失败只有加锁失败、误选测试、采集脚本转义，无数值 / kernel 失败被藏。无 NPU 环境复跑（钉住的 GDN naive SHA 与自述一致）：新增 38 个测试全过，入口换回 base 后 20 个失败（负对照），全量 707 passed / 12 skipped（main 基线 669 / 12）；135 个文件（134 新增、1 修改）全在写集内，无保留路径 / .github / pyproject / 二进制，全部 135 个文件隐私扫描 0 真命中；域与 FP32 共用同一个 _validate，未收窄未设新闸。合入被自动模式分类器拦下（[Merge Without Review]，与 #110 相同），按 D-PM-33 不绕过，等用户授权；授权对象是头 c5ddd293。合入依赖暂定的「校验」类裁定（CPU 诊断 launcher 的只读校验沿用）。BF-01 合入并 CLOSE 后 PM 直接派 BF-02（写集已补 tests/test_gdn_chunk_bwd.py），再 BF-03。"
+        },
+        {
+          "at": "2026-09-19T20:01",
+          "summary": "STATUS（20:01Z，自述）：收到 REVIEW accept；PR #111 仍在 c5ddd293、未改；BF-01 全部原生作业已结束并释放共享锁。等待期间做了 BF-02 的只读 CPU 预检（对未改动的 GDA-03 参考）：138/138 case（23 个形状 / 域 × 3 种 cotangent 模式 × BF16 舍入 / FP32 输入选择）A/B 最大相对 L2 5.6e-7；新鲜的 FP64 gradcheck 在 ratio 1/2 上两个参考都过；6 个非零输出负对照与 36 个零输出破坏对照通过；只是预检观察，不是 BF-02 验收，无 BF-02 生产改动 / 编译 / 设备作业。等 PM 合入 / CLOSE 与 BF-02 正式 ASSIGN。blockers: 无（合入等 PM / 用户授权，申领人不返工、不绕过）"
         }
       ],
       "result": null,
@@ -776,6 +780,10 @@
         {
           "at": "2026-09-19T15:49",
           "summary": "用户 D-PM-35 建：GDN-2 chunk 前向的 BF16 入口是 host 加宽；不得触碰仓主轨道的保留路径"
+        },
+        {
+          "at": "2026-09-19T19:59",
+          "summary": "APPLY（19:59Z，自述，#104）：条件申请，BF-02 与 BF-03 都 CLOSE 之后才派（session gdn-series-…，排队请求，不预占 BF-05）；已读 BF-05 规格与通则。预检发现规格与现有入口矛盾：验收里的「多 batch」与 gdn2_chunk_fwd.py:62 / GD2-01 单元 ref/reference.py 的 B=1 公共域冲突，请 PM 在规格里定。PM 裁定：公共域与 GD2-01 完全相同（B=1、H∈{1,16}），BF16 不扩域不收窄，B≥2 显式报错；「多 batch」验收项删去（规格已加澄清一节），扩域另立项。PM 回 NO_TASK：按 BF-02 → BF-03 → BF-05 的序，BF-03 CLOSE 后直接按这条 APPLY 派单，不需要重新申领。"
         }
       ],
       "result": null,
@@ -1273,7 +1281,7 @@
       "wave": "W0",
       "soc": "a2",
       "priority": "P1",
-      "status": "in_progress",
+      "status": "review",
       "model": [],
       "kernel": [
         "kda_fwd_stable",
@@ -1348,6 +1356,14 @@
         {
           "at": "2026-09-19T19:20",
           "summary": "PM 调时限（依上面的实际耗时数据）：A2-03 时限 72h→24h（剩网格、真机整链、证据整理）；A2-09 时限 56h→16h（同速度下九个 kernel 约 1–2h，但反向 kernel 更重、bwd 单元的 contract / 六项梯度网格另计，给 3 倍以上余量）。估计偏差约 45 倍——A2 波次（KDA 先行）的工作量比 17:50Z 上报用户的 ~123h 小得多，这是好消息；仍不改 A2 总闸（A2-11 之前 A2 数字只作观测），A2 上的 PR 合入前仍问用户。A2-03 的前向 / decode 首批结论只是申领人自述的观测，DONE 到了才复核（无 A2 真机，PM 只能复算原始回执、跑 CPU reference / sim / 静态检查）"
+        },
+        {
+          "at": "2026-09-19T19:59",
+          "summary": "DONE（19:59Z，自述）：PR #113 转正式（头 de893f2e，8 个提交）。自述验收：6 个 a2 kernel 的 ascriptor check 全 0 error / 0 warning（op 数 a2 / a5：gate 61/70、scores 273/276、inverse 447/478、wy 192/212、recurrent 231/547、decode 218/156）；kda_fwd_stable 契约 20 个 case（a5 的 8 个 + (C∈{1,2})×(HV∈{1,2,4})×(bd∈{1,2}) 网格 12 个）与 kda_fused_recurrent 8 个 case 的 run.py reference / check --launcher sim / pipesim / aclnn 全通过；整链真机（每 case 一个进程，bd 取契约值）fwd o 对独立 FP32 参考 rel_l2 2.96e-3~3.45e-3（预算 0.05）、final_state 1.94e-3~2.88e-3，decode o 1.37e-3~1.73e-3（预算 5e-3）、final_state 5.0e-8~1.05e-7；C=1 多头与奇数 C 在 sim 与真机上都正确；契约 board 行 untested，reference / sim / pipesim 写 passed；a5 一字节未改，PR 只含 kernels/projects/a2/** 下的新文件。真机：Ascend910B3、CANN 9.0.0、算子包 ascend910b + ascend910_93（自述），实测 a2 facade 无 vf、b3 上 l0c_to_ub / ub_to_l1 不可用、c220 无 FP32 L0C→L1、dup 无 BF16、910B3 cube / vec 核数 20 / 40。主机测试 610 passed / 71 skipped。实际耗时（墙钟）：6 个 kernel ≈1.2h、单元与证据 ≈1.3h、真机整链 ≈1h。未测：block_dim 只测 1 与 2，A2 门控跨度闸未测（契约标 untested）；性能没测。A2 上的结论 A2-11 之前只作观测，合入前 PM 问用户；PM 评审进行中"
+        },
+        {
+          "at": "2026-09-19T20:32",
+          "summary": "PM 技术评审 accept（REVIEW 已发在 #113，头 de893f2e；PM 无 A2 真机，真机部分只对原始回执复算，不能复现）：64 个文件全是新增、全在 kernels/projects/a2/** 内，a5 与保留路径零改动，无二进制，全部 64 个文件隐私扫描 0 命中，两个单元的 _unit_runner.py 与 canonical runner 逐字节相同。真机回执复算：fwd 20 个 case 全过，o rel_l2 [2.956e-3, 3.448e-3] / final_state [1.937e-3, 2.877e-3] / g_cumsum [9.77e-8, 1.09e-7]（预算 0.05，沿用 a5），网格 12 格与自述逐格一致；decode 8 个 case 全过，o [1.367e-3, 1.725e-3]（预算 5e-3，约 3F）/ final_state [4.96e-8, 1.05e-7]（预算 1e-5）；每个 case 的 execution_evidence 都是 aclnn / board / a2 / backend_executed=true（fwd 200 条、decode 8 条）；逐 kernel 真机日志的范围与自述一致，NaN 为 0，bd1↔bd2 哈希逐项相同。PM 在本机对钉住的库独立复跑（CPU）：reference（fwd 20/20、decode 8/8）与 sim（20/20、8/8）通过且 60 + 16 个数字与申领人 sim.json 逐位相同，pipesim 抽查 C=1 多头 / 奇数 C / grid_c1_hv4_bd1 与 decode 全部 8 个通过，6 个 kernel 的 ascriptor check 全 0 error / 0 warning、op 数 61 / 273 / 447 / 192 / 231 / 218 与自述一致。A2-01 结论：所有 is_init=False 的 matmul（recurrent.py:188，triangular_inverse.py:213 / 224 / 234 / 236）紧邻 barrier(Pipe.M)，无 BF16 / FP16 splitk；契约 board stage untested、门控跨度闸 recommended_limit=null 标 A2-12 重测、block_dim 只声明 1 与 2、不继承 A5 的值；host 只有 NaN 预填分配与不拷贝的 view。全量测试 669 passed / 12 skipped，与 main 基线相同（本 PR 不改测试）。合入是 A2 上的 PR，按 D-PM-33 与 AGENTS §2 等用户授权（授权对象是头 de893f2e）；实际耗时约 3.5h（估计 60h、时限 24h）。非阻塞：SoC / CANN / 算子包只在 evidence/env.json（申领人脚本写的一份），逐次运行的回执里没有；性能没测（已声明）；inverse 日志的哈希字段命名与别处不一致。A2-03 合入后 PM 直接派 A2-09（16h）。"
         }
       ],
       "result": null

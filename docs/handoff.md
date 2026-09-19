@@ -11,6 +11,12 @@
 
 ### 正在飞的任务（现在没有；A5K-02、PK-02、PK-03 都已于 2026-09-19 合入）
 
+> **2026-09-19T20:32Z 更新：A2-03 DONE 已评审（技术 accept，A2 上的 PR 等用户授权）；BF-05 排队 APPLY 回 NO_TASK 并澄清了规格。**
+> - **A2-03（PR #113，头 `de893f2e`）**：前向 5 个 kernel + decode 共 6 个 a2 kernel、两个单元（`kda_fwd_stable` 20 case、`kda_fused_recurrent` 8 case），实际耗时约 3.5h（估计 60h）。**PM 无 A2 真机，真机部分只对原始回执复算**：fwd o rel_l2 [2.96e-3, 3.45e-3]、decode o [1.37e-3, 1.73e-3]，网格 12 格与自述逐格一致，每个 case 的执行证据都是 aclnn / board / a2 / backend_executed；**PM 在本机对钉住的库独立复跑 CPU 的 reference / sim，60 + 16 个数字与申领人的 sim.json 逐位相同**，pipesim 抽查通过，6 个 kernel 的 ascriptor check 与 op 数完全一致；所有 `is_init=False` 的 matmul 紧邻 `barrier(Pipe.M)`、无 BF16 / FP16 splitk（A2-01 结论落实）；契约 board stage untested、门控跨度闸与 block_dim 上限都不继承 A5；全量 669 passed / 12 skipped 与 main 基线相同。**REVIEW accept 已发在 #113，合入等用户（A2 结论 A2-11 之前不算数）。**
+> - **BF-05 排队 APPLY（#104）**：预检发现验收里的「多 batch」与 GDN-2 入口的 B=1 公共域矛盾。PM 裁定：公共域与 GD2-01 相同（B=1、H∈{1,16}），BF16 不扩域不收窄，B≥2 显式报错；「多 batch」验收项已从 BF-05 规格删去并加了澄清一节，扩域另立项。回 NO_TASK：BF-02 → BF-03 → BF-05。
+> - **BF-01 STATUS**：申领人收到 REVIEW accept，PR 未变；做了 BF-02 的只读 CPU 预检（138/138 case，A/B 最大相对 L2 5.6e-7），不是验收。
+> - **待用户**：授权合入 #110（头 `2d9e4068`）、#111（头 `c5ddd293`）、#113（头 `de893f2e`，A2）；其余问题同前（「校验类」暂定裁定、tar.gz 证据放不放行、BF16 的 k 范数闸、FMT-02 做法、BF-07 / A2-K1 批次、A2-10 / A2-11 放行、PK-05 / GDA-04 / PK-06 / GDA-05 放行）。
+>
 > **2026-09-19T19:45Z 更新：BF-01 DONE 已评审 accept（PR #111），BF-04 头移到 2d9e4068（仅证据元数据，已复核），两个合入都在等用户授权；A2-03 的估计偏差约 45 倍。**
 > - **合入被自动模式分类器拦着（不绕过）**：`gh pr merge` 报 `[Merge Without Review]`；这一轮连 `git fetch origin pull/N/head` 和 `poll --advance` 也被报 `[Auto-Mode Bypass]`（复盘：分类器在合入被拒后对「把 PR 头取到本地」「推进游标」变敏感）。**评审改用只读 API**：`gh api repos/…/tarball/<sha>` 取源码快照、`gh api …/pulls/N/files --paginate` 取完整文件列表（**`gh pr view --json files` 最多只给 100 个，135 个文件的 PR 会被截断，别用它做写集核对**）、`gh api …/compare/A...B` 看头之间的差异。`git push origin main`（板子提交）单独跑可以，和 sync / 游标推进拼在一条复合命令里会被拦。
 > - **要用户做的**：授权合入 #110（头 `2d9e4068`，不是原来的 `a25ba5e`）与 #111（头 `c5ddd293`）；用户也可以在设置里加一条允许 `gh pr merge` 的 Bash 权限规则，让 D-PM-33 的常设授权对分类器生效。合入要经 bot 账号（`GH_TOKEN=$(gh auth token -u ascend-fla-pm-bot) gh pr merge N --merge --match-head-commit <sha>`），`limjiunnbin` 无权限。
