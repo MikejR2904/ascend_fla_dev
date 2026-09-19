@@ -435,7 +435,7 @@
       "wave": "W0",
       "soc": "a5",
       "priority": "P0",
-      "status": "assigned",
+      "status": "in_progress",
       "model": [],
       "kernel": [
         "gdn_fwd"
@@ -491,6 +491,10 @@
         {
           "at": "2026-09-19T17:18",
           "summary": "申领人在 #100 问：CPU 显式 launcher（board/aclnn）里 _validate 的 torch.isfinite/范围比较可否作为诊断输入校验例外保留，而两条 NPU 路径严格过审计。PM 暂定（待用户确认）：允许（只读校验 + 诊断 launcher 不属 NPU 生产路径审计范围）"
+        },
+        {
+          "at": "2026-09-19T17:22",
+          "summary": "ACK（17:12Z，eta 24h，自述）：先冻结 ABI、BF16 舍入 / 误差地板约定与 A/B 校准；新单元同时承接 FP32 与 BF16，kernel 内 head 索引做分组、转换在 kernel 里，原 FP32 单元留作逐字节基线；完整 B1/T4096/H=HV8 先跑，两条 dtype 路径都做真机 host 算子审计，同卡 FP32 新旧字节比较与三轮 BF16-vs-原 FP32 三明治；CPU 诊断 launcher 的输入校验问题（PM 已在 #100 暂定允许）相关的包装分支等裁定，不阻塞校准与 kernel 方案。状态 assigned→in_progress"
         }
       ],
       "result": null,

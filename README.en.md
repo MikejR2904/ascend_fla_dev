@@ -132,7 +132,7 @@ _Used by Qwen3-Next; six ABI gaps to close (phase 4, unrelated to this). **GDN/P
 | GDA-01 | [#73](https://github.com/ddddwee1/ascend_fla_dev/issues/73) | `a5` | bf16、fp32 | ✅ done | ★ start |
 | A2-K1 | [#44](https://github.com/ddddwee1/ascend_fla_dev/issues/44) | `a2` | bf16、fp32 | 🔒 gated (kernel-batch-approval) |  |
 | GDA-02 | [#82](https://github.com/ddddwee1/ascend_fla_dev/issues/82) | `a5` | bf16、fp32 | ✅ done |  |
-| BF-01 | [#100](https://github.com/ddddwee1/ascend_fla_dev/issues/100) | `a5` | bf16 | 🔵 assigned |  |
+| BF-01 | [#100](https://github.com/ddddwee1/ascend_fla_dev/issues/100) | `a5` | bf16 | 🔵 in_progress |  |
 | A2-20 | [#45](https://github.com/ddddwee1/ascend_fla_dev/issues/45) | `a2` | bf16、fp32 | 🔒 gated (kernel-batch-approval) |  |
 | GDA-05 | [#96](https://github.com/ddddwee1/ascend_fla_dev/issues/96) | `a5` | bf16、fp32 | 🔒 gated (user-decision) |  |
 
