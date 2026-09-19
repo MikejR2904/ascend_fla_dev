@@ -448,14 +448,33 @@
       "device": "a5",
       "backend": "cce",
       "stage": "compile",
-      "status": "untested"
+      "status": "passed",
+      "note": "All five vendors at block_dim1/2/3/4; selected CANN9.2.0 ascend950 toolchain. See evidence/native-bd*-compile.json."
     },
     {
       "device": "a5",
       "backend": "cce",
       "stage": "board",
-      "status": "untested",
-      "note": "Includes aclnn and in-process native launchers; no hardware execution."
+      "status": "passed",
+      "cases": [
+        "t1_h1",
+        "t2_h1",
+        "t63_h8",
+        "t64_h8",
+        "t65_h8",
+        "t128_h8",
+        "t192_h8",
+        "t1024_h8",
+        "t4096_h8",
+        "t65_h1",
+        "zero_A",
+        "zero_S",
+        "span105",
+        "span155",
+        "nearzero",
+        "b2_t2_h3"
+      ],
+      "note": "Native inprocess launcher only: 28 full-chain cases and10 public API boundaries per block_dim1/2/3/4, exact SoC950PR_9589 V100; SSH board/aclnn launchers untested."
     },
     {
       "device": "a5",
@@ -502,20 +521,94 @@
     }
   ],
   "measured": {
-    "host_tests": "416 passed,5 skipped; PKDA-specific50passed.",
+    "host_tests": "521 passed,5 skipped; PKDA51passed on host and51passed on board CPU.",
     "cpu_dual_oracle_max_relative_l2": {
       "o": 3.6156794096232463e-07,
       "final_state": 2.1239055941840614e-07,
       "final_A_state": 0.0
     },
     "model_vs_fla_max_relative_l2": {
-      "o": 4.374360900022148e-07,
-      "final_state": 4.419741958028195e-07,
+      "o": 4.1915751112895243e-07,
+      "final_state": 4.128723351665148e-07,
       "final_A_state": 0.0
     },
-    "cross_block_dim": "B2/T2/H3: all14stage outputs byte-identical atbd1/2/3/4 in separate processes.",
+    "cross_block_dim": "Native: all14 stage outputs AND generated inputs byte-identical for each of28 cases atbd1/2/3/4. Bounded pipe model B2/T2/H3 also matches all14 stages.",
     "synchronization": "Executed pipe diagnostics have no hazards/deadlock and balanced events.",
-    "scope": "Host-only. No BF16/native/backward/performance/Triton/checkpoint qualification."
+    "scope": "FP32 forward, exact native environment and executed cases recorded in validation.json; no BF16/backward/Triton/checkpoint qualification.",
+    "native_inprocess": {
+      "schema": "pkda-native-acceptance/1",
+      "passed": true,
+      "cases": 112,
+      "public_boundary_checks": 40,
+      "cross_block_dim": [
+        {
+          "block_dim": 1,
+          "cases": 28,
+          "stages_each": 14,
+          "all_stage_bytes_equal_to_bd1": true,
+          "inputs_bytes_equal": true,
+          "public_boundaries": 10
+        },
+        {
+          "block_dim": 2,
+          "cases": 28,
+          "stages_each": 14,
+          "all_stage_bytes_equal_to_bd1": true,
+          "inputs_bytes_equal": true,
+          "public_boundaries": 10
+        },
+        {
+          "block_dim": 3,
+          "cases": 28,
+          "stages_each": 14,
+          "all_stage_bytes_equal_to_bd1": true,
+          "inputs_bytes_equal": true,
+          "public_boundaries": 10
+        },
+        {
+          "block_dim": 4,
+          "cases": 28,
+          "stages_each": 14,
+          "all_stage_bytes_equal_to_bd1": true,
+          "inputs_bytes_equal": true,
+          "public_boundaries": 10
+        }
+      ],
+      "max_relative_l2": {
+        "vs_chunk": {
+          "o": 4.921695726409657e-07,
+          "final_state": 4.949269863997196e-07,
+          "final_A_state": 4.4717419524459254e-07
+        },
+        "vs_fla_naive": {
+          "o": 6.209244083211295e-06,
+          "final_state": 6.617198916201339e-06,
+          "final_A_state": 4.4717419524459254e-07
+        }
+      },
+      "source_manifest_sha256": "f7f588388b0475f7ce9757e9eb73c369f73fac7cad892af65985eced91eb2884",
+      "environment": {
+        "soc": {
+          "chip_type": "Ascend",
+          "chip_name": "950PR_9589",
+          "chip_ver": "V100"
+        },
+        "cann_name": "9.2.0",
+        "python": {
+          "python": "3.12.13 | packaged by Anaconda, Inc. | (main, Jul  9 2026, 14:38:16) [GCC 14.3.0]",
+          "torch": "2.12.0+cpu",
+          "torch_npu": "2.12.0",
+          "numpy": "2.5.1",
+          "ascriptor_version": "0.1.0",
+          "opp_packages": [
+            "ascend910_93",
+            "ascend910b",
+            "ascend950",
+            "config"
+          ]
+        }
+      }
+    }
   },
   "provenance": [
     {
@@ -536,7 +629,7 @@
     "hardware": [
       "a5"
     ],
-    "note": "Experimental host-qualified FP32 forward only. Native board/aclnn and backward untested."
+    "note": "Experimental FP32 forward with native inprocess evidence on950PR_9589 V100; SSH board/aclnn launchers and backward untested."
   },
   "stages": {
     "qn": {
@@ -689,13 +782,13 @@
   },
   "validation": {
     "source_identity": "library90cfcdc720bbcd66e8bd4361c4dd4fbc1a2a57b5; kernels runnerb3b3f9c16df7c4626ed3c081032a1be5a753d0b1; FLAe52dbc0ea19d3a40d7ab7f9eed855d2b473994d2.",
-    "hardware": "board/aclnn untested; no native or performance claim.",
-    "reproduce": "run.py reference; run.py check --launcher sim/pipesim --case t1_h1; ref/survey.py",
+    "hardware": "Native inprocess passed112 full-chain cases +40 API checks; SoC950PR_9589 V100, CANN9.2.0; OPP ascend950/ascend910b/ascend910_93. See validation.json and evidence.",
+    "reproduce": "verify_native.py --block-dim <1..4> --mode suite --output <ignored-output>; separate processes under external device lock; all five vendors precompiled.",
     "host": "Python3.11.15, Torch2.10.0+cpu, NumPy1.26.4.",
     "native_launchers": {
       "board": "untested",
       "aclnn": "untested",
-      "inprocess": "untested"
+      "inprocess": "passed"
     }
   }
 }

@@ -1,0 +1,100 @@
+{
+  "case": {
+    "id": "perf_t1024_h8",
+    "seed": 8196,
+    "parameters": {
+      "B": 1,
+      "T": 1024,
+      "H": 8,
+      "N": 16
+    }
+  },
+  "block_dim": 4,
+  "rounds": [
+    {
+      "round": 1,
+      "torch_npu_before": {
+        "samples_ms": [
+          608.8284479919821,
+          620.0367599958554
+        ],
+        "median_ms": 614.4326039939187
+      },
+      "pkda_public": {
+        "samples_ms": [
+          47.17827506829053,
+          46.83616803959012,
+          46.708925045095384
+        ],
+        "median_ms": 46.83616803959012
+      },
+      "torch_npu_after": {
+        "samples_ms": [
+          607.3773689568043,
+          617.9823139682412
+        ],
+        "median_ms": 612.6798414625227
+      },
+      "ratio_pkda_over_baseline": 0.07633557660181461
+    },
+    {
+      "round": 2,
+      "torch_npu_before": {
+        "samples_ms": [
+          610.9569659456611,
+          608.4528849460185
+        ],
+        "median_ms": 609.7049254458398
+      },
+      "pkda_public": {
+        "samples_ms": [
+          47.13581292890012,
+          47.08017501980066,
+          47.0428999979049
+        ],
+        "median_ms": 47.08017501980066
+      },
+      "torch_npu_after": {
+        "samples_ms": [
+          606.1634119832888,
+          600.7291059941053
+        ],
+        "median_ms": 603.4462589886971
+      },
+      "ratio_pkda_over_baseline": 0.07761633607396633
+    },
+    {
+      "round": 3,
+      "torch_npu_before": {
+        "samples_ms": [
+          608.7657720781863,
+          608.5864650085568
+        ],
+        "median_ms": 608.6761185433716
+      },
+      "pkda_public": {
+        "samples_ms": [
+          47.054655966348946,
+          46.86048091389239,
+          46.701339073479176
+        ],
+        "median_ms": 46.86048091389239
+      },
+      "torch_npu_after": {
+        "samples_ms": [
+          603.1096969963983,
+          598.669497994706
+        ],
+        "median_ms": 600.8895974955522
+      },
+      "ratio_pkda_over_baseline": 0.07748315001412362
+    }
+  ],
+  "complete": true,
+  "warmup": 1,
+  "baseline_repeat": 2,
+  "candidate_repeat": 3,
+  "synchronized": true,
+  "baseline": "pinned FLA naive PKDA recurrence on Torch NPU; Python eager; same FP32 mathematical contract",
+  "scope": "end-to-end public API including validation and allocations, excluding input generation/transfers, CPU goldens and vendor compile; no speed threshold"
+}
