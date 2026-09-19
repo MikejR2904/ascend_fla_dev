@@ -1832,7 +1832,7 @@
       "wave": "W0",
       "soc": "a5",
       "priority": "P2",
-      "status": "open",
+      "status": "assigned",
       "model": [],
       "kernel": [
         "pkda_chunk_fwd"
@@ -1858,11 +1858,27 @@
       "spec": "docs/pm/tasks/PK-02.md",
       "issue": 68,
       "pr": null,
-      "assignee": null,
-      "assignee_caps": null,
-      "branch": null,
+      "assignee": "limjiunnbin",
+      "assignee_caps": {
+        "agent": "Codex; A5K-02 之后的续接 session（自述）",
+        "socs": [
+          "a5"
+        ],
+        "soc_details": "自述：CANN/OPP 9.2.0，算子包 ascend950/ascend910b/ascend910_93，Docker 任务环境与 Torch NPU 可用；PK-02 needs.npu=false，不影响派单",
+        "ascriptor": "library 90cfcdc720bb / kernels b3b3f9c16df7（自述；与 ops.json 的 current_compatibility_pin 一致）",
+        "fla": "e52dbc0ea19d3a40d7ab7f9eed855d2b473994d2（自述，含 precond_kda）",
+        "fork": "limjiunnbin/ascend_fla_dev",
+        "session": "01a0b7ce-3daf-7550-a7bf-31c67eb91ca3",
+        "note": "与 PK-03（session pgdn-forward-…）同账号不同 session，并发规则放行；此 session 此前持有 A5K-02（已 done）。自述撤回了 A2-01 的申领（#29，未派单）"
+      },
+      "branch": "task/PK-02",
       "timebox_h": 24,
-      "reports": [],
+      "reports": [
+        {
+          "at": "2026-09-19T09:55",
+          "summary": "APPLY（session 01a0b7ce-…，socs a5；needs.npu=false，--next 列为候选；写集与 PK-03 无重叠，session 与 PK-03 不同，并发规则放行）→ ASSIGN。PM 先补规格'2026-09-19 口径补充'回答申领人的提问：dtype 与比较边界（正确性一律 FP32 判定，三输出 ≤1e-4，全 FP32 五阶段满足预算不放宽；BF16 仅可选质量检查）、oracle 口径（A=fla naive，B=独立 CPU 参考，Triton chunk 不要求）、归一化语义取 naive 并量化分叉、k 读/写不对称（申领人自述，PM 未核实）、真机非本任务验收项。同时去掉规格里一处含私人路径的句子。申领人自述'用户指示优先 PKDA'，PM 未核实也无需核实：任务本来就是 open 可派"
+        }
+      ],
       "result": null
     },
     {
@@ -1960,6 +1976,10 @@
         {
           "at": "2026-09-19T09:40",
           "summary": "用户澄清（D-PM-28）：机器与卡不归 PM 管理，由 agent 自己管理；PM 只管进度与代码质量。撤销 PM 此前设的占用证据关卡（PK-03.md 相应条款已改，#69 已更正，assignee 不必再等用户的'这张卡空闲'确认）。真机验收仍是必须项（D-PM-26 不变）；真机部分若因机器/卡自身受阻，assignee 在 STATUS 里如实说明，PM 据此调整时限，不当作超时"
+        },
+        {
+          "at": "2026-09-19T09:38",
+          "summary": "STATUS×2：首个完整 A5 原生 workload 在 Docker 内通过——B1/T4096/H=HV8/K=V128、block_dim 2、FP32 与 BF16 公共输入/输出、两个 FP32 状态；17 个实际阶段数组与 17 个独立 leaf 全部在固定预算内；FP32 o/S/A 相对 L2 对 A：5.0916e-7/6.8782e-7/3.4575e-7，对 B：6.5432e-7/8.1185e-7/4.2967e-7；BF16 输出对 A/B：0.0016588（预算 FP32 1e-4、BF16 5e-3 未改）；6 份 Docker 编译日志无 CCE 兼容性警告/编译错误，发射的 CCE 源哈希与此前验证的候选一致。下一步：bd1 完整、其余 58 个 case、跨 bd 逐位比较、必需的同卡三明治；未 DONE。数字为 assignee 自报，PM 无法复跑，DONE 时按原始日志行审"
         }
       ],
       "result": null

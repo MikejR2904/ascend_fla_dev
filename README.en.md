@@ -263,7 +263,7 @@ _Source of truth established (2026-09-17, see docs/research/pkda_semantics.md): 
 
 | task | issue | SoC | dtype | status | note |
 |---|---|---|---|---|---|
-| PK-02 | [#68](https://github.com/ddddwee1/ascend_fla_dev/issues/68) | `a5` | bf16、fp32 | ⬜ open | ★ start |
+| PK-02 | [#68](https://github.com/ddddwee1/ascend_fla_dev/issues/68) | `a5` | bf16、fp32 | 🔵 assigned | ★ start |
 
 </details>
 
