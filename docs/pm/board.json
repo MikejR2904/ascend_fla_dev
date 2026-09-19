@@ -466,7 +466,7 @@
       },
       "spec": "docs/pm/tasks/BF-01.md",
       "issue": 100,
-      "pr": null,
+      "pr": 111,
       "assignee": "limjiunnbin",
       "assignee_caps": {
         "agent": "Codex; PK-03 之后的续接 session（GDN 系列，自述）",
@@ -506,6 +506,14 @@
         {
           "at": "2026-09-19T17:30",
           "summary": "STATUS（17:30Z，自述）：改前校准完成——28 个 case × (BF16 舍入 / FP32) 输入 = 56 条 A/B 记录；A（字面核对哈希的 pin 版 FLA）与 B（独立 FP32 三角求解）之间最大相对 L2：o 2.04e-6、final_state 1.78e-6，均 ≤ 1e-4；BF16 误差地板 o 1.627e-3~1.676e-3、state 1.633e-3~1.673e-3，验收取 min(1e-2, 3F)、零地板按精确判；零 / 符号 / 1.25 倍三个负对照都被拒。任务自有的五 launch 计划有 7 个类型化条目（FP32 / BF16 的 prepare 与 output、三个共享 FP32 阶段），7 项静态检查 0 error 0 warning；kernel 内按组索引替代 host 复制、BF16 在 VF 里转换、state 在 kernel 内初始化；旧 FP32 前向 55 个 host 测试与新 38 个测试通过。尚无原生 BF16 结果；旧 FP32 公共入口的全工作量基线在跑（两个 block_dim 的哈希都保留）。收到 PM 对 CPU 诊断 launcher 输入校验的暂定放行（待用户确认），NPU 两条路径的审计仍严格。blockers: none"
+        },
+        {
+          "at": "2026-09-19T17:44",
+          "summary": "STATUS（17:44Z，自述）+ draft PR #111（c67f50e，17:42Z 开）：源码、改前校准、56 个规范 CPU 参考、7 个静态 / CCE 发射干净的条目、平衡的 lowered event；专用 38 个新测试 / 55 个旧测试，显式 CPU 选择 704 passed 4 skipped；矩阵与 57 任务看板检查通过。全新的原 FP32 公共入口基线完成：28 case × bd1/2 = 56 条记录，56 对公共输出 / 状态数组逐字节相同，原单元源码不动。原生候选因抢不到共享设备锁尚未进入编译（有界排队重试，不干预锁持有者）；一次不带过滤的 host 套件调用误选了 KDA 的 NPU 测试，已中断自己的进程（保留 4 failed / 275 passed / 4 skipped，rc161001 是 workspace 解析），该次不计入验收。blockers: 原生候选等共享锁（D-PM-28：机器归 agent，只记录）"
+        },
+        {
+          "at": "2026-09-19T17:58",
+          "summary": "STATUS（17:58Z，自述）：第一个完整原生候选 B1/T4096/H=HV8/bd2 对 BF16 与 FP32 都通过：7 个类型化条目在任何自定义算子调用前编完；运行期 A/B、NaN 预填的组合与独立叶子、实际公共输出、输入不变、host 分派检查全过；FP32 公共 o / state 与未改动的原入口基线逐字节相同。BF16 公共入口 vs A：o 相对 L2 1.660e-3（固定预算 4.979e-3）、state 7.98e-7；vs B：o 1.660e-3、state 9.47e-7；FP32 vs A/B 输出最大 6.41e-7、state 9.49e-7（预算 1e-4）。实际公共入口 host 分派两个 dtype 各只有 aten.empty.memory_format ×13、零禁用算子。全 28 case × 2 dtype × 每个 bd 的网格、bd 间字节比较、同卡三轮计时与最终证据还没做；PR 保持 draft、未 DONE。PM 早期扫描（非评审）：40 个文件全在写集内、无保留路径改动、新增行无 IP / 用户目录 / 令牌 / UUID。blockers: none"
         }
       ],
       "result": null,
@@ -554,6 +562,10 @@
         {
           "at": "2026-09-19T15:49",
           "summary": "用户 D-PM-35 建：GDA-03 的 FP32 反向不做 BF16 计算（公共入口对 BF16 显式拒绝），BF16 反向归本任务；GDA-03 与 BF-01 完成后才可派"
+        },
+        {
+          "at": "2026-09-19T17:52",
+          "summary": "APPLY（17:52Z，自述，#101）：条件申请，BF-01 验收并 CLOSE 之后才派；同一 session（gdn-series-…），排队请求、不是同时持有第二个任务；已预读 D-PM-37，先冻结误差地板、A/B 与 FP64 gradcheck，再跑完整 workload 与全部 cotangent / grid、真机审计、同卡三轮测量；BF-03 在 BF-02 后继续排。PM 回 NO_TASK：BF-02 依赖 BF-01（in_progress），BF-01 完成并合入后按这条 APPLY 直接派单，不需要重新申领。"
         }
       ],
       "result": null,
@@ -1271,6 +1283,10 @@
         {
           "at": "2026-09-19T17:50",
           "summary": "PM 裁定（D-PM-38）：采纳拆分。A2-03 = A2-03a（gate、decode、前向四 kernel + kda_fwd_stable / kda_fused_recurrent 两个单元），时限 20h→72h（估计约 70h 取整）；反向九个 kernel + bwd 单元拆成新任务 A2-09（56h，依赖 A2-03，写集 kernels/projects/a2/kda_bwd_stable/**），A2-13 增加对 A2-09 的依赖。小时数是自述，PM 只核了静态事实（a2 上没有 @vf、14/15 个 kernel 用 @vf、l0c_to_ub 与 nd2nz 不可用）；总量约 123h 改变 A2 波次（KDA 先行）的工作量预期，已上报用户。规格改了范围、加了拆分裁定一节，在 #34 重发 ASSIGN（修订）；建议早开 draft PR、逐 kernel 增量推送"
+        },
+        {
+          "at": "2026-09-19T17:46",
+          "summary": "STATUS（17:46Z，自述；写于修订派单之前，单元数按新范围是两个）：两个纯向量 kernel 已在 a2 写成并过真机（本地提交 2eda68d，未推）。① fwd gate（kda_fwd_stable/kernels/gate.py）：@vf 逐行 cumsum 改成每行一条 UB add、exp 整块一条；g_raw 按 token-major 读，kernel 把 [B,T,HV,128] 当 2-D 视图取跨步窗口，host 只做 view；ascriptor check 0 error / 0 warning / 61 ops。② decode step（kda_fused_recurrent/kernels/step.py）：state 常驻 UB、两趟行扫描；kernel 直吃 BF16 token-major q/k/v 与 FP32 g/beta，BF16→FP32 转换、scale、GQA 头映射都在 kernel 内，o 直接写 BF16（TO_EVEN）；check 0 error / 0 warning / 218 ops。真机观测（910B3 / CANN 9.0.0，每个 bd 一份 build、一个独立进程；A2-11 之前不构成结论）：gate FP32 四个形状 × bd1/2，g_cumsum 与顺序 FP32 累加逐位相同、eg 对 CPU exp 相对 L2 2.6e-8~2.9e-8、NaN 0、bd1↔bd2 逐位相同；decode BF16 输入 / FP32 状态六个形状 × bd1/2，对 float64 独立递推 o 相对 L2 1.63e-3~1.71e-3（与「参考本身舍入到 BF16」的地板逐项相等）、final_state 4.2e-8~1.0e-7、NaN 0、bd1↔bd2 逐位相同；sim 同批形状一致。另报一个事实：pin 版 a2 sim 对「两个整数下标 + 两个不相邻切片」的 GM 窗口在 dma.copy 里 reshape 失败，改用 2-D 视图正常；申领人后面单独查是不是库缺陷（若是，属 ascriptor 侧，转给所有者要用户做）。下一步前向混合 kernel（scores → inverse → wy → recurrent，GMBuff + CvMutex / VcMutex，L0C 累加链显式 barrier(Pipe.M)）。STATUS 没报实际耗时，已在修订派单里请求每次按 kernel 报。blockers: none"
         }
       ],
       "result": null
