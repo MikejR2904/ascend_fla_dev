@@ -1,0 +1,63 @@
+{
+  "passed": true,
+  "raw_samples": 900,
+  "block_dim": 2,
+  "warmup_per_segment": 10,
+  "samples_per_segment": 50,
+  "rounds": 3,
+  "synchronization": "Before and after every invocation; perf_counter_ns; milliseconds",
+  "baseline": "Unchanged original FP32 public chunk_gdn, including grouped input preparation/allocations, on BF16-rounded FP32 input values",
+  "candidate": "New complete public chunk_gdn on actual BF16 q/k/v storage; FP32 state",
+  "cases": [
+    {
+      "T": 1024,
+      "round": 0,
+      "baseline_before_ms": 76.80691300000001,
+      "bf16_candidate_ms": 76.193974,
+      "baseline_after_ms": 76.63933800000001,
+      "candidate_over_mean_baseline": 0.9931031029229901
+    },
+    {
+      "T": 1024,
+      "round": 1,
+      "baseline_before_ms": 76.776448,
+      "bf16_candidate_ms": 76.25932399999999,
+      "baseline_after_ms": 76.836728,
+      "candidate_over_mean_baseline": 0.9928747778771267
+    },
+    {
+      "T": 1024,
+      "round": 2,
+      "baseline_before_ms": 76.84149500000001,
+      "bf16_candidate_ms": 76.286289,
+      "baseline_after_ms": 76.81114099999999,
+      "candidate_over_mean_baseline": 0.9929707811846455
+    },
+    {
+      "T": 4096,
+      "round": 0,
+      "baseline_before_ms": 302.35873449999997,
+      "bf16_candidate_ms": 301.1417625,
+      "baseline_after_ms": 302.346552,
+      "candidate_over_mean_baseline": 0.9959951375420961
+    },
+    {
+      "T": 4096,
+      "round": 1,
+      "baseline_before_ms": 302.3415765,
+      "bf16_candidate_ms": 301.183394,
+      "baseline_after_ms": 302.32284749999997,
+      "candidate_over_mean_baseline": 0.9962001468768404
+    },
+    {
+      "T": 4096,
+      "round": 2,
+      "baseline_before_ms": 302.42232,
+      "bf16_candidate_ms": 301.3799925,
+      "baseline_after_ms": 302.71301500000004,
+      "candidate_over_mean_baseline": 0.9960746797243297
+    }
+  ],
+  "speed_gate": "none; Vector implementation, no Cube throughput claim",
+  "raw": "sandwich-bd2.json"
+}

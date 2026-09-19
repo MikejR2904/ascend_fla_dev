@@ -1,0 +1,27 @@
+{
+  "native_prelaunch": [
+    {
+      "label": "original-fp32-bd2",
+      "result": "Blocked before Docker/compile: unknown retiring SVM context, no live process; retained privately. Subsequent fresh empty/Healthy query allowed new label."
+    },
+    {
+      "label": "first-full-bd2",
+      "result": "Shared lock unavailable; no Docker/compile/run.json/native log. No device acceptance claim."
+    },
+    {
+      "label": "first-full-v2-bd2",
+      "result": "Lock acquired but unknown retiring SVM context remained; require-empty blocked before Docker/compile. Subsequent fresh empty snapshot allowed v3."
+    }
+  ],
+  "host_suite": {
+    "result": "4 failed,275 passed,4 skipped; interrupted own process after accidental selection of KDA native tests in host suite.",
+    "cause": "Torch NPU explicitly imported by native test modules despite backend-autoload disabled; workspace resolution rc161001.",
+    "resolution": "Only CPU tests selected with --ignore-glob=*_npu.py --ignore=tests/test_kda_decode.py. All remaining files checked for native calls;704passed4skipped. No unrelated KDA repair or omitted failing CPU test.",
+    "log": "host-unfiltered.log",
+    "stage": "Failed test selection; excluded from BF-01 acceptance."
+  },
+  "temporary_evidence_collection": {
+    "result": "Private warning-site collector first exceeded ssh argv size, then hit embedded-string regex escaping SyntaxError; neither launched compute or changed device source.",
+    "resolution": "Pass source via stdin and use a raw outer source string; then12actual generated warning sites collected successfully."
+  }
+}

@@ -273,7 +273,66 @@
       "device": "a5",
       "backend": "cce",
       "stage": "reference",
-      "status": "untested"
+      "status": "passed",
+      "cases": [
+        "r1_c64_bd1",
+        "r1_c1_bd1",
+        "r1_c2_bd1",
+        "r1_c3_bd1",
+        "r2_c64_bd1",
+        "r2_c1_bd1",
+        "r2_c2_bd1",
+        "r2_c3_bd1",
+        "r4_c64_bd1",
+        "r4_c1_bd1",
+        "r4_c2_bd1",
+        "r4_c3_bd1",
+        "r8_c64_bd1",
+        "r8_c1_bd1",
+        "r8_c2_bd1",
+        "r8_c3_bd1",
+        "batch2_c2_bd1",
+        "batch2_c3_bd1",
+        "uneven_c1_bd1",
+        "uneven_c3_bd1",
+        "gate_zero_bd1",
+        "gate_small_bd1",
+        "gate_large_bd1",
+        "gate_underflow_bd1",
+        "beta_zero_bd1",
+        "beta_one_bd1",
+        "zero_qk_bd1",
+        "spike_bd1",
+        "r1_c64_bd2",
+        "r1_c1_bd2",
+        "r1_c2_bd2",
+        "r1_c3_bd2",
+        "r2_c64_bd2",
+        "r2_c1_bd2",
+        "r2_c2_bd2",
+        "r2_c3_bd2",
+        "r4_c64_bd2",
+        "r4_c1_bd2",
+        "r4_c2_bd2",
+        "r4_c3_bd2",
+        "r8_c64_bd2",
+        "r8_c1_bd2",
+        "r8_c2_bd2",
+        "r8_c3_bd2",
+        "batch2_c2_bd2",
+        "batch2_c3_bd2",
+        "uneven_c1_bd2",
+        "uneven_c3_bd2",
+        "gate_zero_bd2",
+        "gate_small_bd2",
+        "gate_large_bd2",
+        "gate_underflow_bd2",
+        "beta_zero_bd2",
+        "beta_one_bd2",
+        "zero_qk_bd2",
+        "spike_bd2"
+      ],
+      "evidence": "evidence/canonical-reference-summary.json"
     },
     {
       "device": "a5",
@@ -1114,5 +1173,121 @@
         "dtype": "bfloat16"
       }
     }
-  ]
+  ],
+  "measured": {
+    "native_inprocess": {
+      "status": "passed",
+      "cases": [
+        "r1_c64_bd1",
+        "r1_c1_bd1",
+        "r1_c2_bd1",
+        "r1_c3_bd1",
+        "r2_c64_bd1",
+        "r2_c1_bd1",
+        "r2_c2_bd1",
+        "r2_c3_bd1",
+        "r4_c64_bd1",
+        "r4_c1_bd1",
+        "r4_c2_bd1",
+        "r4_c3_bd1",
+        "r8_c64_bd1",
+        "r8_c1_bd1",
+        "r8_c2_bd1",
+        "r8_c3_bd1",
+        "batch2_c2_bd1",
+        "batch2_c3_bd1",
+        "uneven_c1_bd1",
+        "uneven_c3_bd1",
+        "gate_zero_bd1",
+        "gate_small_bd1",
+        "gate_large_bd1",
+        "gate_underflow_bd1",
+        "beta_zero_bd1",
+        "beta_one_bd1",
+        "zero_qk_bd1",
+        "spike_bd1",
+        "r1_c64_bd2",
+        "r1_c1_bd2",
+        "r1_c2_bd2",
+        "r1_c3_bd2",
+        "r2_c64_bd2",
+        "r2_c1_bd2",
+        "r2_c2_bd2",
+        "r2_c3_bd2",
+        "r4_c64_bd2",
+        "r4_c1_bd2",
+        "r4_c2_bd2",
+        "r4_c3_bd2",
+        "r8_c64_bd2",
+        "r8_c1_bd2",
+        "r8_c2_bd2",
+        "r8_c3_bd2",
+        "batch2_c2_bd2",
+        "batch2_c3_bd2",
+        "uneven_c1_bd2",
+        "uneven_c3_bd2",
+        "gate_zero_bd2",
+        "gate_small_bd2",
+        "gate_large_bd2",
+        "gate_underflow_bd2",
+        "beta_zero_bd2",
+        "beta_one_bd2",
+        "zero_qk_bd2",
+        "spike_bd2"
+      ],
+      "public_dtypes": [
+        "bfloat16",
+        "float32"
+      ],
+      "records": 112,
+      "evidence": [
+        "evidence/grid-bd1.json",
+        "evidence/grid-bd2.json",
+        "evidence/native-grid-summary.json"
+      ],
+      "byte_identity": {
+        "cross_blockdim_stage_pairs": 728,
+        "cross_blockdim_public_pairs": 112,
+        "original_new_fp32_public_pairs": 112,
+        "note": "Public o/state are already present among the13stage arrays."
+      }
+    },
+    "vendor_build": {
+      "status": "passed",
+      "scope": "Seven typed CCE entries each block_dim1/2; actual inprocess artifacts, not a canonical run.py compile/board claim.",
+      "evidence": "evidence/compiler/build-artifact-manifest.json",
+      "warnings": "evidence/compiler-warning-analysis.json"
+    },
+    "host_dispatch": {
+      "status": "passed",
+      "scope": "112actual native public calls, BF16 and FP32; only13empty allocations each; no forbidden operator.",
+      "evidence": "evidence/native-grid-summary.json"
+    },
+    "source_emission": {
+      "status": "passed",
+      "scope": "All7explicit entry symbols through accepted Ascriptor CCE compile CLI; distinct from vendor compilation.",
+      "evidence": "evidence/static-summary.json"
+    },
+    "performance": {
+      "status": "passed",
+      "scope": "B1/H=HV8/K=V128,T1024/4096,block_dim2;900samples;threebaseline/candidate/baselinesandwiches;10warmups50samplespersegment,syncbefore/aftereverycall",
+      "baseline": "Unchanged original FP32 public API on BF16-rounded FP32 input values",
+      "candidate": "Complete BF16 public API, true BF16 GM inputs/output, FP32 state",
+      "evidence": [
+        "evidence/timing-summary.json",
+        "evidence/sandwich-bd2.json",
+        "evidence/sandwich-bd2-occupancy.json"
+      ],
+      "speed_gate": "none"
+    },
+    "runtime_startup_control": {
+      "status": "passed",
+      "scope": "Fresh task-free Torch NPU transfer/multiply/add/control; exact result. Both startup notice classes reproduced;20fullruntime logs1200lines10knownwarnings and0error/fatal/critical. No TensorFlow backend claim.",
+      "evidence": [
+        "evidence/runtime/runtime-review.json",
+        "evidence/runtime/startup-control-source.txt",
+        "evidence/startup-control-occupancy.json"
+      ]
+    }
+  }
 }

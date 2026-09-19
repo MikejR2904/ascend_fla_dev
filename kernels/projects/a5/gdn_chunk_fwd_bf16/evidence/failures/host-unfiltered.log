@@ -1,0 +1,302 @@
+s......sss.............................................................. [  9%]
+........................................................................ [ 19%]
+........................................................................ [ 29%]
+..............................................................[W919 17:35:06.643691201 ToKernelNpu.cpp:41] Warning: Device do not support double dtype now, dtype cast replace with float. (function operator())
+FFF.F
+=================================== FAILURES ===================================
+__________________ test_bwd_matches_recurrent_reference[46.0] __________________
+
+span = 46.0
+
+    @pytest.mark.parametrize("span", TARGET_SPANS)
+    def test_bwd_matches_recurrent_reference(span):
+        x = _inputs(span)
+        got_span = _gate_span(x["g"], T // 64, on_cpu=True)
+        assert abs(got_span - span) < 1.0, f"造出来的跨度 {got_span:.2f} 与目标 {span} 不符"
+    
+        npu = lambda t: t.to("npu")  # noqa: E731
+>       _, _, caches = chunk_kda_fwd_with_caches(
+            npu(x["q"]), npu(x["k"]), npu(x["v"]), npu(x["g"]), npu(x["beta"]),
+            None, npu(x["h0"]),
+        )
+
+tmp/GDN-series/repo/tests/test_kda_bwd_deep_npu.py:124: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tmp/GDN-series/repo/ascend_fla/ops/kda/chunk.py:700: in chunk_kda_fwd_with_caches
+    chain = _run_chain(q, k, v, g, beta, scale, initial_state, device=device,
+tmp/GDN-series/repo/ascend_fla/ops/kda/chunk.py:485: in _run_chain
+    compiled["gate"]({"g_raw": gc}, gate_scalars,
+tmp/GDN-series/repo/ascend_fla/runtime/compile.py:128: in __call__
+    return self.op(inputs, scalars, outputs)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = AclnnOp(KdaSub1GateStableKernel, inputs=['g_raw'], scalars=['B', 'HV', 'C', 'length_per_chunk', 'head_dim'], outputs=['g_cumsum', 'eg'])
+inputs = {'g_raw': tensor([[[[[-1.1250, -0.5797, -0.5218,  ..., -0.4590, -0.1151, -0.7206],
+           [-1.1924, -0.1928, -1.03...-0.7051, -0.4246],
+           [-0.3968, -0.0744, -0.3862,  ..., -0.0976, -0.5481, -0.3063]]]]],
+       device='npu:0')}
+scalars = {'B': 1, 'C': 2, 'HV': 1, 'head_dim': 128, ...}
+outputs = {'eg': tensor([[[[[ -1.1250,  -0.5797,  -0.5218,  ...,  -0.4590,  -0.1151,
+             -0.7206],
+           [ -2.3174... 0.0000,  0.0000],
+           [ 0.0000,  0.0000,  0.0000,  ...,  0.0000,  0.0000,  0.0000]]]]],
+       device='npu:0')}
+
+    def __call__(
+        self,
+        inputs: dict[str, torch.Tensor],
+        scalars: dict[str, float],
+        outputs: dict[str, torch.Tensor],
+    ) -> dict[str, torch.Tensor]:
+        """在当前 stream 上执行算子。``outputs`` 原地写入并返回。
+    
+        调用方负责分配 ``outputs``（用 ``torch.empty(device="npu")``）。本函数不做
+        同步 —— 取值或计时前自己 ``torch.npu.synchronize()``。
+        """
+        missing = [n for n in self.input_names if n not in inputs]
+        missing += [n for n in self.output_names if n not in outputs]
+        missing += [n for n in self.scalar_names if n not in scalars]
+        if missing:
+            raise AclError(f"{self.op_name}: 缺少参数 {missing}")
+    
+        global _aclnn_called
+        _aclnn_called = True
+    
+        ordered = [inputs[n] for n in self.input_names] + [outputs[n] for n in self.output_names]
+        device = ordered[0].device
+        for t in ordered:
+            if t.device.type != "npu":
+                raise AclError(f"{self.op_name}: 期望 NPU 张量，收到 device={t.device}")
+    
+        with _AclTensors(ordered) as handles:
+            in_handles = [ctypes.c_void_p(h) for h in handles[: len(self.input_names)]]
+            out_handles = [ctypes.c_void_p(h) for h in handles[len(self.input_names):]]
+            scalar_vals = [
+                ct(float(scalars[n]) if ct is ctypes.c_double else int(scalars[n]))
+                for n, ct in zip(self.scalar_names, self._scalar_ctypes)
+            ]
+    
+            ws_size = ctypes.c_uint64(0)
+            executor = ctypes.c_void_p()
+            rc = self._get_ws(*in_handles, *scalar_vals, *out_handles,
+                              ctypes.byref(ws_size), ctypes.byref(executor))
+            if rc != 0:
+>               raise AclError(f"aclnn{self.op_name}GetWorkspaceSize 失败 rc={rc}")
+E               ascend_fla.runtime.binding.AclError: aclnnKdaSub1GateStableKernelGetWorkspaceSize 失败 rc=161001
+
+tmp/GDN-series/repo/ascend_fla/runtime/binding.py:316: AclError
+__________________ test_bwd_matches_recurrent_reference[94.0] __________________
+
+span = 94.0
+
+    @pytest.mark.parametrize("span", TARGET_SPANS)
+    def test_bwd_matches_recurrent_reference(span):
+        x = _inputs(span)
+        got_span = _gate_span(x["g"], T // 64, on_cpu=True)
+        assert abs(got_span - span) < 1.0, f"造出来的跨度 {got_span:.2f} 与目标 {span} 不符"
+    
+        npu = lambda t: t.to("npu")  # noqa: E731
+>       _, _, caches = chunk_kda_fwd_with_caches(
+            npu(x["q"]), npu(x["k"]), npu(x["v"]), npu(x["g"]), npu(x["beta"]),
+            None, npu(x["h0"]),
+        )
+
+tmp/GDN-series/repo/tests/test_kda_bwd_deep_npu.py:124: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tmp/GDN-series/repo/ascend_fla/ops/kda/chunk.py:700: in chunk_kda_fwd_with_caches
+    chain = _run_chain(q, k, v, g, beta, scale, initial_state, device=device,
+tmp/GDN-series/repo/ascend_fla/ops/kda/chunk.py:485: in _run_chain
+    compiled["gate"]({"g_raw": gc}, gate_scalars,
+tmp/GDN-series/repo/ascend_fla/runtime/compile.py:128: in __call__
+    return self.op(inputs, scalars, outputs)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = AclnnOp(KdaSub1GateStableKernel, inputs=['g_raw'], scalars=['B', 'HV', 'C', 'length_per_chunk', 'head_dim'], outputs=['g_cumsum', 'eg'])
+inputs = {'g_raw': tensor([[[[[-2.2989, -1.1847, -1.0663,  ..., -0.9380, -0.2352, -1.4726],
+           [-2.4366, -0.3939, -2.11...-1.4409, -0.8676],
+           [-0.8109, -0.1521, -0.7891,  ..., -0.1994, -1.1199, -0.6258]]]]],
+       device='npu:0')}
+scalars = {'B': 1, 'C': 2, 'HV': 1, 'head_dim': 128, ...}
+outputs = {'eg': tensor([[[[[ -2.2989,  -1.1847,  -1.0663,  ...,  -0.9380,  -0.2352,
+             -1.4726],
+           [ -4.7355... 0.0000,  0.0000],
+           [ 0.0000,  0.0000,  0.0000,  ...,  0.0000,  0.0000,  0.0000]]]]],
+       device='npu:0')}
+
+    def __call__(
+        self,
+        inputs: dict[str, torch.Tensor],
+        scalars: dict[str, float],
+        outputs: dict[str, torch.Tensor],
+    ) -> dict[str, torch.Tensor]:
+        """在当前 stream 上执行算子。``outputs`` 原地写入并返回。
+    
+        调用方负责分配 ``outputs``（用 ``torch.empty(device="npu")``）。本函数不做
+        同步 —— 取值或计时前自己 ``torch.npu.synchronize()``。
+        """
+        missing = [n for n in self.input_names if n not in inputs]
+        missing += [n for n in self.output_names if n not in outputs]
+        missing += [n for n in self.scalar_names if n not in scalars]
+        if missing:
+            raise AclError(f"{self.op_name}: 缺少参数 {missing}")
+    
+        global _aclnn_called
+        _aclnn_called = True
+    
+        ordered = [inputs[n] for n in self.input_names] + [outputs[n] for n in self.output_names]
+        device = ordered[0].device
+        for t in ordered:
+            if t.device.type != "npu":
+                raise AclError(f"{self.op_name}: 期望 NPU 张量，收到 device={t.device}")
+    
+        with _AclTensors(ordered) as handles:
+            in_handles = [ctypes.c_void_p(h) for h in handles[: len(self.input_names)]]
+            out_handles = [ctypes.c_void_p(h) for h in handles[len(self.input_names):]]
+            scalar_vals = [
+                ct(float(scalars[n]) if ct is ctypes.c_double else int(scalars[n]))
+                for n, ct in zip(self.scalar_names, self._scalar_ctypes)
+            ]
+    
+            ws_size = ctypes.c_uint64(0)
+            executor = ctypes.c_void_p()
+            rc = self._get_ws(*in_handles, *scalar_vals, *out_handles,
+                              ctypes.byref(ws_size), ctypes.byref(executor))
+            if rc != 0:
+>               raise AclError(f"aclnn{self.op_name}GetWorkspaceSize 失败 rc={rc}")
+E               ascend_fla.runtime.binding.AclError: aclnnKdaSub1GateStableKernelGetWorkspaceSize 失败 rc=161001
+
+tmp/GDN-series/repo/ascend_fla/runtime/binding.py:316: AclError
+_________________ test_bwd_matches_recurrent_reference[104.0] __________________
+
+span = 104.0
+
+    @pytest.mark.parametrize("span", TARGET_SPANS)
+    def test_bwd_matches_recurrent_reference(span):
+        x = _inputs(span)
+        got_span = _gate_span(x["g"], T // 64, on_cpu=True)
+        assert abs(got_span - span) < 1.0, f"造出来的跨度 {got_span:.2f} 与目标 {span} 不符"
+    
+        npu = lambda t: t.to("npu")  # noqa: E731
+>       _, _, caches = chunk_kda_fwd_with_caches(
+            npu(x["q"]), npu(x["k"]), npu(x["v"]), npu(x["g"]), npu(x["beta"]),
+            None, npu(x["h0"]),
+        )
+
+tmp/GDN-series/repo/tests/test_kda_bwd_deep_npu.py:124: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tmp/GDN-series/repo/ascend_fla/ops/kda/chunk.py:700: in chunk_kda_fwd_with_caches
+    chain = _run_chain(q, k, v, g, beta, scale, initial_state, device=device,
+tmp/GDN-series/repo/ascend_fla/ops/kda/chunk.py:485: in _run_chain
+    compiled["gate"]({"g_raw": gc}, gate_scalars,
+tmp/GDN-series/repo/ascend_fla/runtime/compile.py:128: in __call__
+    return self.op(inputs, scalars, outputs)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = AclnnOp(KdaSub1GateStableKernel, inputs=['g_raw'], scalars=['B', 'HV', 'C', 'length_per_chunk', 'head_dim'], outputs=['g_cumsum', 'eg'])
+inputs = {'g_raw': tensor([[[[[-2.5435, -1.3107, -1.1797,  ..., -1.0378, -0.2603, -1.6292],
+           [-2.6958, -0.4358, -2.34...-1.5941, -0.9600],
+           [-0.8971, -0.1683, -0.8731,  ..., -0.2206, -1.2391, -0.6924]]]]],
+       device='npu:0')}
+scalars = {'B': 1, 'C': 2, 'HV': 1, 'head_dim': 128, ...}
+outputs = {'eg': tensor([[[[[  -2.5435,   -1.3107,   -1.1797,  ...,   -1.0378,   -0.2603,
+              -1.6292],
+           [  ....0000],
+           [  0.0000,   0.0000,   0.0000,  ...,   0.0000,   0.0000,
+              0.0000]]]]], device='npu:0')}
+
+    def __call__(
+        self,
+        inputs: dict[str, torch.Tensor],
+        scalars: dict[str, float],
+        outputs: dict[str, torch.Tensor],
+    ) -> dict[str, torch.Tensor]:
+        """在当前 stream 上执行算子。``outputs`` 原地写入并返回。
+    
+        调用方负责分配 ``outputs``（用 ``torch.empty(device="npu")``）。本函数不做
+        同步 —— 取值或计时前自己 ``torch.npu.synchronize()``。
+        """
+        missing = [n for n in self.input_names if n not in inputs]
+        missing += [n for n in self.output_names if n not in outputs]
+        missing += [n for n in self.scalar_names if n not in scalars]
+        if missing:
+            raise AclError(f"{self.op_name}: 缺少参数 {missing}")
+    
+        global _aclnn_called
+        _aclnn_called = True
+    
+        ordered = [inputs[n] for n in self.input_names] + [outputs[n] for n in self.output_names]
+        device = ordered[0].device
+        for t in ordered:
+            if t.device.type != "npu":
+                raise AclError(f"{self.op_name}: 期望 NPU 张量，收到 device={t.device}")
+    
+        with _AclTensors(ordered) as handles:
+            in_handles = [ctypes.c_void_p(h) for h in handles[: len(self.input_names)]]
+            out_handles = [ctypes.c_void_p(h) for h in handles[len(self.input_names):]]
+            scalar_vals = [
+                ct(float(scalars[n]) if ct is ctypes.c_double else int(scalars[n]))
+                for n, ct in zip(self.scalar_names, self._scalar_ctypes)
+            ]
+    
+            ws_size = ctypes.c_uint64(0)
+            executor = ctypes.c_void_p()
+            rc = self._get_ws(*in_handles, *scalar_vals, *out_handles,
+                              ctypes.byref(ws_size), ctypes.byref(executor))
+            if rc != 0:
+>               raise AclError(f"aclnn{self.op_name}GetWorkspaceSize 失败 rc={rc}")
+E               ascend_fla.runtime.binding.AclError: aclnnKdaSub1GateStableKernelGetWorkspaceSize 失败 rc=161001
+
+tmp/GDN-series/repo/ascend_fla/runtime/binding.py:316: AclError
+__________________ test_bwd_matches_unit_oracle[single_chunk] __________________
+
+case_id = 'single_chunk'
+
+    @pytest.mark.parametrize("case_id", list(CASES))
+    def test_bwd_matches_unit_oracle(case_id):
+        """九 kernel 反向链的梯度对齐单元 oracle。每个 case 一个子进程，理由见模块 docstring。"""
+        r = subprocess.run([sys.executable, str(pathlib.Path(__file__).resolve()), case_id],
+                           capture_output=True, text=True)
+        payload = next((ln for ln in reversed(r.stdout.splitlines()) if ln.startswith("{")), None)
+>       assert r.returncode == 0 and payload, (
+            f"worker 失败 exit={r.returncode}\n--- stdout ---\n{r.stdout[-3000:]}"
+            f"\n--- stderr ---\n{r.stderr[-3000:]}"
+        )
+E       AssertionError: worker 失败 exit=1
+E         --- stdout ---
+E         [ERROR] 2026-09-19-17:35:31 (PID:3351724, Device:0, RankID:-1) ERR99999 UNKNOWN applicaiton exception
+E         
+E         --- stderr ---
+E         EN YOU DO: pad the staging tile by one row so that store's block stride is ODD. The natural stride is the tile's row count, which is 16-aligned by nature and so is the worst rung of the bank ladder (~8.7 cycles a store against ~1.1, D-084) — on the two kernels reworked in D-226 the padding was worth MORE than this move is (-12.3 and -10.8 us of -17.7 and -28.2), and it is worth taking blind: one UB row, and it only ever costs nothing when the store pipe is idle anyway
+E         [perf] @kda_sub45_aqk_repaired_kernel.vec #371 tmp/GDN-series/repo/kernels/projects/a5/kda_fwd_stable/kernels/recurrent.py:314:16: warning: ub_to_l1.nd2nz composes multiple MTE3 bursts (one per NZ fractal column of the ND rows) — not a single instruction, and board-measured 10x slower than the compact-NZ move (D-084); store the tile as compact NZ from the @vf instead (a strided vf.store writes the fractal directly) and move it with the plain ub_to_l1. WHEN YOU DO: pad the staging tile by one row so that store's block stride is ODD. The natural stride is the tile's row count, which is 16-aligned by nature and so is the worst rung of the bank ladder (~8.7 cycles a store against ~1.1, D-084) — on the two kernels reworked in D-226 the padding was worth MORE than this move is (-12.3 and -10.8 us of -17.7 and -28.2), and it is worth taking blind: one UB row, and it only ever costs nothing when the store pipe is idle anyway
+E         Traceback (most recent call last):
+E           File "<WORKSPACE>/tmp/GDN-series/repo/tests/test_kda_bwd_npu.py", line 179, in <module>
+E             print(json.dumps(run_case(sys.argv[1]), ensure_ascii=False))
+E                              ^^^^^^^^^^^^^^^^^^^^^
+E           File "<WORKSPACE>/tmp/GDN-series/repo/tests/test_kda_bwd_npu.py", line 95, in run_case
+E             _, _, caches = chunk_kda_fwd_with_caches(**npu, block_dim=block_dim)
+E                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           File "<WORKSPACE>/tmp/GDN-series/repo/ascend_fla/ops/kda/chunk.py", line 700, in chunk_kda_fwd_with_caches
+E             chain = _run_chain(q, k, v, g, beta, scale, initial_state, device=device,
+E                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           File "<WORKSPACE>/tmp/GDN-series/repo/ascend_fla/ops/kda/chunk.py", line 485, in _run_chain
+E             compiled["gate"]({"g_raw": gc}, gate_scalars,
+E           File "<WORKSPACE>/tmp/GDN-series/repo/ascend_fla/runtime/compile.py", line 128, in __call__
+E             return self.op(inputs, scalars, outputs)
+E                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           File "<WORKSPACE>/tmp/GDN-series/repo/ascend_fla/runtime/binding.py", line 316, in __call__
+E             raise AclError(f"aclnn{self.op_name}GetWorkspaceSize 失败 rc={rc}")
+E         ascend_fla.runtime.binding.AclError: aclnnKdaSub1GateStableKernelGetWorkspaceSize 失败 rc=161001
+E         
+E       assert (1 == 0)
+E        +  where 1 = CompletedProcess(args=['<WORKSPACE>/tmp/PK-03/venv/bin/python', '/data/h...ceSize 失败 rc={rc}")\nascend_fla.runtime.binding.AclError: aclnnKdaSub1GateStableKernelGetWorkspaceSize 失败 rc=161001\n').returncode
+
+tmp/GDN-series/repo/tests/test_kda_bwd_npu.py:123: AssertionError
+=========================== short test summary info ============================
+FAILED tmp/GDN-series/repo/tests/test_kda_bwd_deep_npu.py::test_bwd_matches_recurrent_reference[46.0]
+FAILED tmp/GDN-series/repo/tests/test_kda_bwd_deep_npu.py::test_bwd_matches_recurrent_reference[94.0]
+FAILED tmp/GDN-series/repo/tests/test_kda_bwd_deep_npu.py::test_bwd_matches_recurrent_reference[104.0]
+FAILED tmp/GDN-series/repo/tests/test_kda_bwd_npu.py::test_bwd_matches_unit_oracle[single_chunk]
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! KeyboardInterrupt !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+/usr/local/python3.11.15/lib/python3.11/selectors.py:415: KeyboardInterrupt
+(to show a full traceback on KeyboardInterrupt use --full-trace)
+4 failed, 275 passed, 4 skipped in 146.97s (0:02:26)

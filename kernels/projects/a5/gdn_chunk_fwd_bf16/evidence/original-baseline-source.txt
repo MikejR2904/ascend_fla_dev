@@ -1,0 +1,29 @@
+"""Execute the unchanged pre-BF01 public FP32 forward and retain actual bytes."""
+import argparse,hashlib,json,sys
+from pathlib import Path
+import torch
+import torch_npu
+
+p=argparse.ArgumentParser();p.add_argument('--unit-dir',required=True);p.add_argument('--block-dim',type=int,required=True);p.add_argument('--output',type=Path,required=True);a=p.parse_args()
+sys.path.insert(0,a.unit_dir)
+from ref.reference import cases,make_inputs,reference,metric
+from ascend_fla.ops import gdn_chunk_fwd as op
+
+torch.set_num_threads(1);assert torch.npu.device_count()==1;torch.npu.set_device(0)
+op.prepare(block_dim=a.block_dim)
+def sha(x):return hashlib.sha256(x.detach().cpu().contiguous().view(torch.uint8).numpy().tobytes()).hexdigest()
+report=dict(stage='native_original_fp32_public_baseline',block_dim=a.block_dim,
+            source_sha256=hashlib.sha256(Path(op.__file__).read_bytes()).hexdigest(),
+            auditor_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),cases=[])
+for case in cases():
+    inp=make_inputs(dict(case,dtype='float32'));expected=reference(inp)
+    device={n:x.npu() for n,x in inp.items()};before={n:sha(x) for n,x in device.items()}
+    out=op.chunk_gdn(**device,output_final_state=True,block_dim=a.block_dim)
+    torch.npu.synchronize()
+    got={n:x.cpu() for n,x in zip(('o','final_state'),out)}
+    numbers={n:metric(got[n],expected[n]) for n in got}
+    assert all(x['finite'] and x['relative_l2']<=1e-4 for x in numbers.values()),(case,numbers)
+    assert all(sha(x)==before[n] for n,x in device.items())
+    row=dict(case=case,inputs=before,public_hashes={n:sha(x) for n,x in got.items()},independent_B=numbers,inputs_unchanged=True)
+    report['cases'].append(row);a.output.write_text(json.dumps(report,indent=2)+'\n');print('BASELINE',json.dumps(row),flush=True)
+report['passed']=True;a.output.write_text(json.dumps(report,indent=2)+'\n');print('BASELINE_PASS',len(report['cases']),flush=True)

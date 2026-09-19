@@ -1,0 +1,223 @@
+# cwd <TASK_NATIVE>/build-bd2/gdn_bf01_wy-09c5943b2e2635ff/project
+# set -e
+if [ -f "<CANN>/bin/setenv.bash" ]; then source "<CANN>/bin/setenv.bash"; fi
+export ASCEND_HOME_PATH=<CANN>
+bash build.sh
+cd build_out
+for f in custom_*.run; do bash .<EXTERNAL_PATH> --install-path=<TASK_NATIVE>/build-bd2/gdn_bf01_wy-09c5943b2e2635ff/custom_op; done
+using ASCEND_HOME_PATH: <CANN>
+Preset CMake variables:
+
+  ASCEND_CANN_PACKAGE_PATH:PATH="<CANN>"
+  ASCEND_COMPUTE_UNIT:STRING="ascend950"
+  ASCEND_PACK_SHARED_LIBRARY:BOOL="False"
+  ASCEND_PYTHON_EXECUTABLE:STRING="python3"
+  CMAKE_BUILD_TYPE:STRING="Release"
+  CMAKE_CROSS_PLATFORM_COMPILER:PATH="<EXTERNAL_PATH>"
+  CMAKE_INSTALL_PREFIX:PATH="<TASK_NATIVE>/build-bd2/gdn_bf01_wy-09c5943b2e2635ff/project/build_out"
+  ENABLE_BINARY_PACKAGE:BOOL="True"
+  ENABLE_CROSS_COMPILE:BOOL="False"
+  ENABLE_SOURCE_PACKAGE:BOOL="True"
+  ENABLE_TEST:BOOL="True"
+  vendor_name:STRING="customize"
+
+-- The C compiler identification is GNU 12.3.1
+-- The CXX compiler identification is GNU 12.3.1
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: <EXTERNAL_PATH> - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: <EXTERNAL_PATH> - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Opbuild generating sources
+-- Opbuild generating sources - done
+-- Configuring done (5.0s)
+-- Generating done (0.0s)
+CMake Warning:
+  Manually-specified variables were not used by the project:
+
+    CMAKE_CROSS_PLATFORM_COMPILER
+
+
+-- Build files have been written to: <TASK_NATIVE>/build-bd2/gdn_bf01_wy-09c5943b2e2635ff/project/build_out
+[ 33%] Generating tbe/op_info_cfg/ai_core/ascend950/aic-ascend950-ops-info.json
+
+
+==============check valid for ops info start==============
+==============check valid for ops info end================
+
+
+Compile op info cfg successfully.
+[ 33%] Built target ops_info_gen_ascend950
+[ 66%] Building CXX object op_host/CMakeFiles/cust_optiling.dir/gdn_bf01_wy.cpp.o
+In file included from <CANN>/include/external/ge_common/api_error_codes.h:16,
+                 from <CANN>/include/exe_graph/runtime/continuous_vector.h:20,
+                 from <CANN>/include/exe_graph/runtime/runtime_attrs.h:16,
+                 from <CANN>/include/exe_graph/runtime/infer_shape_context.h:16,
+                 from <CANN>/include/register/op_impl_registry.h:19,
+                 from <CANN>/include/register/op_def.h:19,
+                 from <CANN>/include/register/op_def_registry.h:14,
+                 from <TASK_NATIVE>/build-bd2/gdn_bf01_wy-09c5943b2e2635ff/project/op_host/gdn_bf01_wy.cpp:2:
+<CANN>/include/external/ge_common/ge_error_codes.h:15:122: note: ‘#pragma message: Warning: ge_error_codes.h is deprecated and will be removed after 2027-06. Include "graph/error_codes.h" instead.’
+   15 |     "Warning: ge_error_codes.h is deprecated and will be removed after 2027-06. Include \"graph/error_codes.h\" instead.")
+      |                                                                                                                          ^
+In file included from <CANN>/include/external/ge_common/api_error_codes.h:17:
+<CANN>/include/external/ge_common/ge_api_types.h:15:122: note: ‘#pragma message: Warning: ge_api_types.h is deprecated and will be removed after 2027-06. Include "ge_common_api_types.h" instead.’
+   15 |     "Warning: ge_api_types.h is deprecated and will be removed after 2027-06. Include \"ge_common_api_types.h\" instead.")
+      |                                                                                                                          ^
+[100%] Linking CXX shared library libcust_opmaster_rt2.0.so
+[100%] Built target cust_optiling
+<TASK_NATIVE>/build-bd2/gdn_bf01_wy-09c5943b2e2635ff/project/cmake/util/ascendc_impl_build.py:194: SyntaxWarning: invalid escape sequence '\d'
+  ascendc_api_version = re.findall(r"#define ASCENDC_API_VERSION (\d+)", ascendc_api_version_file.read())
+[ascend950] Generating GdnBf01Wy_04be77cc417e0a571754710345b98b19 ...
+In file included from <TASK_NATIVE>/build-bd2/gdn_bf01_wy-09c5943b2e2635ff/project/build_out/op_kernel/GdnBf01Wy_ascend950/kernel_0/kernel_meta_GdnBf01Wy_04be77cc417e0a571754710345b98b19/kernel_meta/GdnBf01Wy_04be77cc417e0a571754710345b98b19_433230_kernel.cpp:6:
+In file included from <TASK_NATIVE>/build-bd2/gdn_bf01_wy-09c5943b2e2635ff/project/op_kernel/gdn_bf01_wy.cpp:3:
+In file included from <TASK_NATIVE>/build-bd2/gdn_bf01_wy-09c5943b2e2635ff/project/op_kernel/gdn_bf01_wy_cube.h:4:
+<TASK_NATIVE>/build-bd2/gdn_bf01_wy-09c5943b2e2635ff/project/op_kernel/wy_vf.h:38:38: warning: expected type of ops in vector loop cond is uint16_t. unexpected types may cause errors [-Wcce-compat]
+        for (uint16_t i_1 = 0; i_1 < count; i_1 += 2) {  <EXTERNAL_PATH> #72
+                                     ^
+1 warning generated.
+[INFO] ATRACE(<PID>,python3):2026-09-19-17:53:36.727.224 [trace_recorder.c:166](tid:<PID>) get path by env ASCEND_WORK_PATH: <TASK_NATIVE>/work
+[INFO] RUNTIME(<PID>,python3):2026-09-19-17:53:36.738.960 [task_fail_callback_data_manager.cc:89] 433230 TaskFailCallBackManager: Constructor.
+[INFO] RUNTIME(<PID>,python3):2026-09-19-17:53:36.738.976 [xpu_task_fail_callback_data_manager.cc:59] 433230 XpuTaskFailCallBackManager: XpuTaskFailCallBackManager Constructor.
+[INFO] RUNTIME(<PID>,python3):2026-09-19-17:53:36.741.444 [runtime_keeper.cc:213] 433230 CreateRuntimeImpl: Open libruntime_v200.so successfully
+[INFO] RUNTIME(<PID>,python3):2026-09-19-17:53:36.742.596 [runtime.cc:5059] 433230 GetVisibleDevices: real deviceCnt:2 userDeviceCnt:1 isSetVisibleDev:1 ASCEND_RT_VISIBLE_DEVICES:[1] available visible devices:[1]
+[INFO] TDT(<PID>,python3):2026-09-19-17:53:36.743.725 [package_worker_factory.cpp:37][RegisterPackageWorkerCreator][tid:<PID>] Register[2] package worker was created successfully
+[INFO] TDT(<PID>,python3):2026-09-19-17:53:36.743.739 [package_worker_factory.cpp:37][RegisterPackageWorkerCreator][tid:<PID>] Register[3] package worker was created successfully
+Opc tool start working now, please wait for a moment.
+[INFO] RUNTIME(<PID>,python3):2026-09-19-17:53:40.311.410 [runtime.cc:1582] 433230 WaitMonitorExit: wait monitor success, used count=0.
+[INFO] RUNTIME(<PID>,python3):2026-09-19-17:53:40.483.891 [xpu_task_fail_callback_data_manager.cc:64] 433230 ~XpuTaskFailCallBackManager: XpuTaskFailCallBackManager Destructor.
+[INFO] RUNTIME(<PID>,python3):2026-09-19-17:53:40.483.917 [task_fail_callback_data_manager.cc:91] 433230 ~TaskFailCallBackManager: Destructor.
+[INFO] ATRACE(<PID>,python3):2026-09-19-17:53:40.610.188 [stacktrace_signal.c:229](tid:<PID>) unregister all signal handlers, can not capture signal.
+[ascend950] Generating GdnBf01Wy_04be77cc417e0a571754710345b98b19 Done
+[100%] Built target GdnBf01Wy_ascend950
+[100%] Built target ascendc_bin_ascend950_gen_ops_config
+[100%] Built target binary
+[ 10%] Generating scripts/install.sh, scripts/upgrade.sh
+[ 10%] Built target modify_vendor
+[ 10%] Built target gen_version_info
+[ 20%] Building CXX object op_host/CMakeFiles/cust_op_proto.dir/gdn_bf01_wy.cpp.o
+In file included from <CANN>/include/external/ge_common/api_error_codes.h:16,
+                 from <CANN>/include/exe_graph/runtime/continuous_vector.h:20,
+                 from <CANN>/include/exe_graph/runtime/runtime_attrs.h:16,
+                 from <CANN>/include/exe_graph/runtime/infer_shape_context.h:16,
+                 from <CANN>/include/register/op_impl_registry.h:19,
+                 from <CANN>/include/register/op_def.h:19,
+                 from <CANN>/include/register/op_def_registry.h:14,
+                 from <TASK_NATIVE>/build-bd2/gdn_bf01_wy-09c5943b2e2635ff/project/op_host/gdn_bf01_wy.cpp:2:
+<CANN>/include/external/ge_common/ge_error_codes.h:15:122: note: ‘#pragma message: Warning: ge_error_codes.h is deprecated and will be removed after 2027-06. Include "graph/error_codes.h" instead.’
+   15 |     "Warning: ge_error_codes.h is deprecated and will be removed after 2027-06. Include \"graph/error_codes.h\" instead.")
+      |                                                                                                                          ^
+In file included from <CANN>/include/external/ge_common/api_error_codes.h:17:
+<CANN>/include/external/ge_common/ge_api_types.h:15:122: note: ‘#pragma message: Warning: ge_api_types.h is deprecated and will be removed after 2027-06. Include "ge_common_api_types.h" instead.’
+   15 |     "Warning: ge_api_types.h is deprecated and will be removed after 2027-06. Include \"ge_common_api_types.h\" instead.")
+      |                                                                                                                          ^
+[ 30%] Building CXX object op_host/CMakeFiles/cust_op_proto.dir/__/autogen/op_proto.cc.o
+In file included from <CANN>/include/external/ge_common/api_error_codes.h:16,
+                 from <CANN>/include/exe_graph/runtime/continuous_vector.h:20,
+                 from <CANN>/include/exe_graph/runtime/runtime_attrs.h:16,
+                 from <CANN>/include/exe_graph/runtime/infer_shape_context.h:16,
+                 from <CANN>/include/register/op_impl_registry.h:19,
+                 from <TASK_NATIVE>/build-bd2/gdn_bf01_wy-09c5943b2e2635ff/project/build_out/autogen/op_proto.h:5,
+                 from <TASK_NATIVE>/build-bd2/gdn_bf01_wy-09c5943b2e2635ff/project/build_out/autogen/op_proto.cc:1:
+<CANN>/include/external/ge_common/ge_error_codes.h:15:122: note: ‘#pragma message: Warning: ge_error_codes.h is deprecated and will be removed after 2027-06. Include "graph/error_codes.h" instead.’
+   15 |     "Warning: ge_error_codes.h is deprecated and will be removed after 2027-06. Include \"graph/error_codes.h\" instead.")
+      |                                                                                                                          ^
+In file included from <CANN>/include/external/ge_common/api_error_codes.h:17:
+<CANN>/include/external/ge_common/ge_api_types.h:15:122: note: ‘#pragma message: Warning: ge_api_types.h is deprecated and will be removed after 2027-06. Include "ge_common_api_types.h" instead.’
+   15 |     "Warning: ge_api_types.h is deprecated and will be removed after 2027-06. Include \"ge_common_api_types.h\" instead.")
+      |                                                                                                                          ^
+[ 40%] Linking CXX shared library libcust_opsproto_rt2.0.so
+[ 40%] Built target cust_op_proto
+[ 50%] Building CXX object op_host/CMakeFiles/cust_optiling.dir/gdn_bf01_wy.cpp.o
+In file included from <CANN>/include/external/ge_common/api_error_codes.h:16,
+                 from <CANN>/include/exe_graph/runtime/continuous_vector.h:20,
+                 from <CANN>/include/exe_graph/runtime/runtime_attrs.h:16,
+                 from <CANN>/include/exe_graph/runtime/infer_shape_context.h:16,
+                 from <CANN>/include/register/op_impl_registry.h:19,
+                 from <CANN>/include/register/op_def.h:19,
+                 from <CANN>/include/register/op_def_registry.h:14,
+                 from <TASK_NATIVE>/build-bd2/gdn_bf01_wy-09c5943b2e2635ff/project/op_host/gdn_bf01_wy.cpp:2:
+<CANN>/include/external/ge_common/ge_error_codes.h:15:122: note: ‘#pragma message: Warning: ge_error_codes.h is deprecated and will be removed after 2027-06. Include "graph/error_codes.h" instead.’
+   15 |     "Warning: ge_error_codes.h is deprecated and will be removed after 2027-06. Include \"graph/error_codes.h\" instead.")
+      |                                                                                                                          ^
+In file included from <CANN>/include/external/ge_common/api_error_codes.h:17:
+<CANN>/include/external/ge_common/ge_api_types.h:15:122: note: ‘#pragma message: Warning: ge_api_types.h is deprecated and will be removed after 2027-06. Include "ge_common_api_types.h" instead.’
+   15 |     "Warning: ge_api_types.h is deprecated and will be removed after 2027-06. Include \"ge_common_api_types.h\" instead.")
+      |                                                                                                                          ^
+[ 60%] Linking CXX shared library libcust_opmaster_rt2.0.so
+[ 60%] Built target cust_optiling
+[ 70%] Building CXX object op_host/CMakeFiles/cust_opapi.dir/__/autogen/aclnn_gdn_bf01_wy.cpp.o
+[ 80%] Linking CXX shared library libcust_opapi.so
+[ 80%] Built target cust_opapi
+[ 80%] Built target optiling_compat
+[ 90%] Built target ops_info_gen_ascend950
+[100%] Generating tbe/op_info_cfg/ai_core/npu_supported_ops.json
+<TASK_NATIVE>/build-bd2/gdn_bf01_wy-09c5943b2e2635ff/project/build_out/autogen <TASK_NATIVE>/build-bd2/gdn_bf01_wy-09c5943b2e2635ff/project/build_out/op_kernel/tbe/op_info_cfg/ai_core
+[INFO] Succed generated <TASK_NATIVE>/build-bd2/gdn_bf01_wy-09c5943b2e2635ff/project/build_out/op_kernel/tbe/op_info_cfg/ai_core/npu_supported_ops.json
+[100%] Built target npu_supported_ops
+Run CPack packaging tool...
+CPack: Create package using External
+CPack: Install projects
+CPack: - Run preinstall target for: opp
+CPack: - Install project: opp []
+CPack: Create package
+
+About to compress 880 KB of data...
+Adding files to archive named "custom_opp_openEuler_x86_64.run"...
+.<EXTERNAL_PATH>
+.<EXTERNAL_PATH>
+.<EXTERNAL_PATH>
+.<EXTERNAL_PATH>
+.<EXTERNAL_PATH>
+.<EXTERNAL_PATH>
+.<EXTERNAL_PATH>
+.<EXTERNAL_PATH>
+.<EXTERNAL_PATH>
+.<EXTERNAL_PATH>
+.<EXTERNAL_PATH>
+.<EXTERNAL_PATH>
+.<EXTERNAL_PATH>
+.<EXTERNAL_PATH>
+.<EXTERNAL_PATH>
+.<EXTERNAL_PATH>
+.<EXTERNAL_PATH>
+.<EXTERNAL_PATH>
+.<EXTERNAL_PATH>
+.<EXTERNAL_PATH>
+.<EXTERNAL_PATH>
+.<EXTERNAL_PATH>
+.<EXTERNAL_PATH>
+CRC: 3145195652
+SHA256: e6bbfc014b201e3028ea84131de6a580e37a4cf1c5324a3f4571e6bd3a62d00a
+Skipping md5sum at user request
+
+Self-extractable archive "custom_opp_openEuler_x86_64.run" successfully created.
+Copy <TASK_NATIVE>/build-bd2/gdn_bf01_wy-09c5943b2e2635ff/project/build_out/_CPack_Packages/Linux/External/custom_opp_openEuler_x86_64.run/custom_opp_openEuler_x86_64.run to <TASK_NATIVE>/build-bd2/gdn_bf01_wy-09c5943b2e2635ff/project/build_out/
+CPack: - package: <TASK_NATIVE>/build-bd2/gdn_bf01_wy-09c5943b2e2635ff/project/build_out/custom_opp_openEuler_x86_64.run.json generated.
+CPack: - package: <TASK_NATIVE>/build-bd2/gdn_bf01_wy-09c5943b2e2635ff/project/build_out/custom_opp_openEuler_x86_64.run generated.
+Verifying archive integrity...     0%    99%  100%   SHA256 checksums are OK. All good.
+Uncompressing version:1.0     0%    99%  100%
+[ops_custom] [2026-09-19 17:53:59] [INFO] copy uninstall sh success
+[ops_custom] [2026-09-19 17:53:59] [INFO] create <TASK_NATIVE>/build-bd2/gdn_bf01_wy-09c5943b2e2635ff/custom_op/vendors.
+[ops_custom] [2026-09-19 17:53:59] [INFO] upgrade framework
+[ops_custom] [2026-09-19 17:53:59] [INFO] create <TASK_NATIVE>/build-bd2/gdn_bf01_wy-09c5943b2e2635ff/custom_op/vendors/customize/framework.
+[ops_custom] [2026-09-19 17:53:59] [INFO] copy new ops framework files ......
+[ops_custom] [2026-09-19 17:53:59] [INFO] upgrade op proto
+[ops_custom] [2026-09-19 17:53:59] [INFO] create <TASK_NATIVE>/build-bd2/gdn_bf01_wy-09c5943b2e2635ff/custom_op/vendors/customize/op_proto.
+[ops_custom] [2026-09-19 17:53:59] [INFO] copy new ops op_proto files ......
+[ops_custom] [2026-09-19 17:53:59] [INFO] upgrade op impl
+[ops_custom] [2026-09-19 17:53:59] [INFO] create <TASK_NATIVE>/build-bd2/gdn_bf01_wy-09c5943b2e2635ff/custom_op/vendors/customize/op_impl.
+[ops_custom] [2026-09-19 17:53:59] [INFO] copy new ops op_impl files ......
+[ops_custom] [2026-09-19 17:53:59] [INFO] upgrade op api
+[ops_custom] [2026-09-19 17:53:59] [INFO] create <TASK_NATIVE>/build-bd2/gdn_bf01_wy-09c5943b2e2635ff/custom_op/vendors/customize/op_api.
+[ops_custom] [2026-09-19 17:53:59] [INFO] copy new ops op_api files ......
+[ops_custom] [2026-09-19 17:53:59] [INFO] upgrade version.info
+[ops_custom] [2026-09-19 17:53:59] [INFO] copy new version.info files ......
+[ops_custom] [2026-09-19 17:53:59] [INFO] no need to upgrade custom.proto files
+[ops_custom] [2026-09-19 17:53:59] [INFO] using requirements: when custom module install finished or before you run the custom module, execute the command [ source <TASK_NATIVE>/build-bd2/gdn_bf01_wy-09c5943b2e2635ff/custom_op/vendors/customize/bin/set_env.bash ] to set the environment path
+SUCCESS
