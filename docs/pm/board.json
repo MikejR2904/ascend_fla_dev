@@ -244,6 +244,13 @@
       "by": "user",
       "decision": "同意按 A2-01 的调查改写 AGENTS.md §2 并在 gaps.json 记缺口。（用户原话：「同意，改写 AGENTS.md §2 并记缺口」，回复 PM 的上报：A2-01 的 RISK silent-wrong-result——BF16/FP16 split-K 在 910B3 上错、FP32 手写链未 settle。）",
       "risk": "PM 的读法与做法（用户可纠正）：(1) 用户的答复没有说「等 A2-01 的 DONE」，PM 按字面现在就改，但**如实标注证据等级**——静态部分（pin 版库 desugar.py:411 只对 f32/f32 插 barrier、sha256 一致）是 PM 读源码核实的，真机部分是申领人自述、PM 无 A2 真机未复现；两条缺口的 evidence 开头写明「A2-01 的 DONE 证据到了再核、届时更新」。(2) §2 的 A2 总闸不变（用户 D-PM-30：不放宽）：A2-01 定性完成且 A2-11 给出绕行或闸之前，A2 上任何算子结论都不算数。(3) 缺口 requires_kernel_change=false（库侧缺陷，本仓不改 ascriptor；本仓侧的显式 barrier 属 kernel 批次 A2-K1，仍要用户批准）。(4) 转给 ascriptor 所有者要用户做，PM 没有渠道。"
+    },
+    {
+      "id": "D-PM-37",
+      "date": "2026-09-19",
+      "by": "user",
+      "decision": "禁止在 host 侧转数据类型和格式，必须在 kernel 内完成。（用户原话：「禁止在host转数据类型，格式。需要在kernel内完成。」）",
+      "risk": "PM 的读法（用户可纠正）：(1) 这是 D-PM-35 的扩大：从「BF16 计算」扩到**所有 dtype 与格式（布局）转换**，FP32 路径同样。(2) host 侧只允许分配输出、不拷贝的元数据操作、检查并显式报错、取指针、launch；禁止 dtype 转换（.float()/.to/.bfloat16()）、格式转换（permute/transpose+contiguous、token-major↔head-major、q/k 复制/expand 拷贝、cat/stack/pad、npu_format_cast、绕 CPU 重排）与算术。(3)「在 kernel 内完成」读作自编译 kernel 完成——融进主 kernel 首选，独立的自编译布局 kernel 也可，torch 算子不行；多出的 launch 要报数。(4) 范围是算子公共入口及其包装（ascend_fla/ops/**）；模型层/模块（layers、modules，由 torch 算子组成）暂不在内。(5) 静态清单（PM grep）：KDA chunk/autograd/decode 有 host 重排与 dtype 转换（含 layout_device=cpu 旁路），GDN/PGDN/GDN-2 chunk 前向有 BF16 加宽与 GQA 复制，A2-44 的 raw flags 预处理是 FP32 host 算子；PKDA 入口是干净的。(6) 改正：BF-01…BF-06 规格加 D-PM-37 追加段（两条 dtype 路径、格式转换、FP32 逐位相同）；新建 FMT-01（真机审计工具 + 全仓清单）、FMT-02（KDA layout/dtype 进 kernel，新单元，不改已有 kernel 源码，要改先发 RISK）；BF-07 仍 gated。(7) 在飞/待审：GDA-03（PR #98）的公共入口只有 zeros 分配，静态上不违规，审查时按新规则做真机审计核对；BF-04 已 ACK，已通知新规则；A2-01 是 benchmarks，不受影响；已合入的历史 PR 不回滚，标为待改。"
     }
   ],
   "gated_epics": [
@@ -376,6 +383,50 @@
           "PR #1 由仓主 OK 后合入，merge commit a1361d8"
         ],
         "note": "看板、协议、GitHub 通道、需求提案入口与两个校验器均已就位；26 个 issue 已建但被 GitHub 反滥用过滤隐藏，见 gaps 之外的待办"
+      }
+    },
+    {
+      "id": "FMT-01",
+      "title": "host 算子审计：可复用工具 + 全仓公共算子入口清单（A5 真机）",
+      "wave": "W0",
+      "soc": "a5",
+      "priority": "P0",
+      "status": "open",
+      "model": [],
+      "kernel": [],
+      "dtype": [
+        "bf16",
+        "fp32"
+      ],
+      "deps": [],
+      "write_set": [
+        "benchmarks/host_op_audit.py",
+        "tests/test_host_op_audit.py",
+        "docs/research/host_op_audit.md",
+        "benchmarks/evidence/host_op_audit/**"
+      ],
+      "needs": {
+        "npu": true,
+        "ascriptor": true,
+        "fla": true
+      },
+      "spec": "docs/pm/tasks/FMT-01.md",
+      "issue": null,
+      "pr": null,
+      "assignee": null,
+      "assignee_caps": null,
+      "branch": null,
+      "timebox_h": 16,
+      "reports": [
+        {
+          "at": "2026-09-19T16:47",
+          "summary": "用户 D-PM-37 建：把通则的 host 算子审计做成可复用工具，并在真机上给出全仓公共入口的 host 侧转换清单（只读，不改入口源码）；BF/FMT 各任务落地后统一用它"
+        }
+      ],
+      "result": null,
+      "origin": {
+        "kind": "user",
+        "note": "用户 2026-09-19 直接指令（D-PM-37）：host 侧禁止 dtype 与格式转换，必须在 kernel 内完成"
       }
     },
     {
@@ -531,7 +582,7 @@
       "wave": "W0",
       "soc": "a5",
       "priority": "P0",
-      "status": "assigned",
+      "status": "in_progress",
       "model": [],
       "kernel": [
         "pkda_chunk_fwd"
@@ -579,6 +630,10 @@
         {
           "at": "2026-09-19T15:54",
           "summary": "派给 limjiunnbin（session 01a0b7ce-…，PK-02/PK-04 的同一个 session，熟悉 PKDA），24h，分支 task/BF-04。它在 #31 排队申请的是 A2-02；按用户 D-PM-35 的「BF16 优先」与用户直接问过的「PKDA 为何没有 BF16」，按 --next 的优先级改派 BF-04，A2-02 顺延（仍 open）。第一步是 CPU 精度研究，BF16 门控域比 FP32 窄先问用户"
+        },
+        {
+          "at": "2026-09-19T16:47",
+          "summary": "ACK（16:35Z，eta 24h，自述）：按 CPU 精度研究先行、BF16 派生单元、真机全网格 + 门控域重测的计划；此前只盯 #31、没及时发现改派到 #103，看到 NO_TASK 后恢复。已通知 D-PM-37（格式转换也不得在 host）。状态 assigned→in_progress"
         }
       ],
       "result": null,
@@ -682,6 +737,54 @@
       }
     },
     {
+      "id": "FMT-02",
+      "title": "KDA：token-major ↔ head-major 重排与 dtype 转换进自编译 kernel（A5 真机）",
+      "wave": "W0",
+      "soc": "a5",
+      "priority": "P0",
+      "status": "open",
+      "model": [],
+      "kernel": [
+        "kda_fwd_stable",
+        "kda_bwd_stable"
+      ],
+      "dtype": [
+        "bf16"
+      ],
+      "deps": [],
+      "write_set": [
+        "kernels/projects/a5/kda_layout/**",
+        "ascend_fla/ops/kda/chunk.py",
+        "ascend_fla/ops/kda/chunk_bwd.py",
+        "ascend_fla/ops/kda/autograd.py",
+        "tests/test_kda_layout_kernel.py",
+        "docs/research/kda_layout_kernel.md"
+      ],
+      "needs": {
+        "npu": true,
+        "ascriptor": true,
+        "fla": true
+      },
+      "spec": "docs/pm/tasks/FMT-02.md",
+      "issue": null,
+      "pr": null,
+      "assignee": null,
+      "assignee_caps": null,
+      "branch": null,
+      "timebox_h": 24,
+      "reports": [
+        {
+          "at": "2026-09-19T16:47",
+          "summary": "用户 D-PM-37 建：KDA 主路径在 host 侧用 permute().contiguous() 重排（含绕 CPU 旁路）与 dtype 转换，改为自编译 kernel；输出与改前逐位相同；要改已有 kernel 源码先发 RISK kernel-change-needed"
+        }
+      ],
+      "result": null,
+      "origin": {
+        "kind": "user",
+        "note": "用户 2026-09-19 直接指令（D-PM-37）：host 侧禁止 dtype 与格式转换，必须在 kernel 内完成"
+      }
+    },
+    {
       "id": "BF-07",
       "title": "KDA 前向：q/k l2norm、门控变换、beta sigmoid 融进 kernel（BF16 路径；骨架，gated）",
       "wave": "W0",
@@ -737,7 +840,7 @@
       "wave": "W0",
       "soc": "a2",
       "priority": "P0",
-      "status": "rework",
+      "status": "done",
       "model": [],
       "kernel": [],
       "dtype": [
@@ -800,9 +903,26 @@
         {
           "at": "2026-09-19T16:32",
           "summary": "DONE（16:13Z，PR #107，头 7104ae1，48 个文件 +43814 行）+ RISK kernel-change-needed（16:12Z）。PM 审查：写集（benchmarks/a2/** + deltas）无越界、无红旗；定性对着 pin 库源码核实（desugar.py:411、sha256、命中表抽查 8 处源码行）；PM 在 CPU 上独立复跑 reference / sim（5 个 case，sim 全逐位，reference 哈希与设备日志里逐位正确的 case 一致、与错误的 BF16 M16 输出不同）；从原始回执逐项复算真机数字（FP32 split-K 4 例 5/5、BF16 M16 全 0/5 且 5 次哈希相同、M64 全 5/5、M32 全失败且日志明写 L0C read/write conflict、sham 0/5 / settle 5/5、手写链 45 例 5/5）；全量 515 passed/15 skipped 对账 472/58。REVIEW rework 一条：device_props.log 含 NPU 芯片 UUID，要脱敏；其余认可。这是 A2 结论，合入前必须问用户（D-PM-33），改完后请示。gaps.json 两条已按证据更新，a2-splitk-fp32-cube 记 requires_kernel_change（属 A2-K1，要用户批），队列 25→26。状态 in_progress→rework"
+        },
+        {
+          "at": "2026-09-19T16:47",
+          "summary": "合入：PR #107 合并提交 b514de2（合入的是审过的头 7428151，--match-head-commit），用户授权。合入后 main 全量 599 passed/15 skipped。状态 rework→done"
         }
       ],
-      "result": null
+      "result": {
+        "commits": [
+          "7428151",
+          "b514de2"
+        ],
+        "evidence": [
+          "PR #107",
+          "benchmarks/a2/README.md",
+          "benchmarks/a2/evidence/**",
+          "docs/pm/deltas/A2-01.json"
+        ],
+        "numbers": "主机：a2 73 case / a5 72 case 的 sim 与 pipesim 全部逐位；PM 在 CPU 上独立复跑 reference / sim（5 个 case，sim 全逐位，reference 输出哈希与设备日志里逐位正确的 case 一致、与错误的 BF16 M16 输出不同）。真机（a2，Ascend910B3，CANN 9.0.0，算子包 ascend910b+ascend910_93，aclnn launcher，block_dim=1，每 case 5 次；PM 从 8 份原始回执复算）：FP32 split-K 4 例 5/5 逐位；BF16/FP16 split-K M16 全 0/5（max_abs 9~41，5 次输出哈希相同）、M32 全部失败（运行时日志明写 L0C read/write conflict、retCode=0x26）、M64 全 5/5；生成 CCE 补一行 PIPE_M：M16 5/5、M32 2/2 逐位，只插注释的 sham 仍 0/5；手写链 45 例 5/5（发射节奏没踩到，不是安全证据）；cube_core_num=20 / vector_core_num=40 与 ascriptor b3 profile 一致。命中表 25 个在用 kernel：FP32 split-K 1、FP32 手写链未 settle 3、BF16 累加链 2、其余 19（PM 抽查 8 处源码行）。全量 515 passed/15 skipped 对账 472/58；合入后 main 599 passed/15 skipped，无回归。",
+        "note": "A2 上的结论：只对 910B3 / CANN 9.0.0 / pin 90cfcdc 成立，A2-11 之前只作观测，不解除 A2 总闸。审查中退回一处隐私项（device_props.log 含芯片 UUID），申领人已脱敏；合入前按 D-PM-33 问了用户，用户授权（「#107授权」）。gaps.json 已按证据更新两条（P1；a2-splitk-fp32-cube 记 requires_kernel_change、进 kernel 修复队列，属 A2-K1，要用户批准）——申领人的 delta 提议 fp32-cube 记 P0，PM 记 P1（现有出货路径没中招，是 A2 派生单元的潜在风险）。AGENTS.md §2 已改写（D-PM-36）。"
+      }
     },
     {
       "id": "A2-04",
@@ -3160,6 +3280,10 @@
         {
           "at": "2026-09-19T16:10",
           "summary": "DONE（15:37Z，早于 D-PM-35 通知）与两条 STATUS（15:21Z、16:05Z），自述：DONE 声称 276 条原生记录 + 2070 对跨 bd 字节相同数组 + 1800 个计时样本，并修了占用监控（此前的 FD 采样器作为失败诊断保留）；基线是任务自带的「saved-boundary-checkpoint 伴随（不含边界生成）」，候选是完整公共 API（T4096 FP32 基线 545.4ms vs 候选 645.2ms，无速度门槛）。16:05Z 的 STATUS（在 D-PM-35 通知之后）：申领人接受收窄为 FP32-only 交付——q/k/v/do 为 BF16 显式拒绝并指向 BF-02、删除公共入口的加宽与回转，补拒绝路径测试、更新契约/文档/FP32 证据摘要，对交付源码跑完整 T4096 FP32 closeout（对比早先实际输出字节哈希）、刷新清单并重做 FP32 同卡计时。因此 15:37Z 的 DONE 被规格变更取代，PM 等更新后的 DONE 再审（PR #98 仍是草稿）；无阻塞"
+        },
+        {
+          "at": "2026-09-19T16:47",
+          "summary": "更新后的 DONE（16:31Z，PR #98 转正式，头 1d12b94，153 个文件 +153177 行，绝大多数是证据；取代 15:37Z 的 DONE）与 16:22Z 的 STATUS（自述）：FP32-only 交付，q/k/v/do 为 BF16 时在任何张量准备与 kernel 分派之前显式拒绝并指向 BF-02，包装里没有 float/to/bfloat16 转换；67 个主机测试（含 3 个 launcher 下 15 个零操作拒绝用例）；完整 T4096 final-wrapper closeout 三种 cotangent × 两个 bd，5 条记录与 75 个既有实际数组哈希及逐项数值完全一致；FP32 网格 138 条记录 / 69 对 × 15 数组 = 1035 对逐字节相同，每个梯度对 A/B ≤ 1e-4（最大 dq 4.86e-7 … dbeta 7.04e-7）；刷新的 FP32 同卡三明治 900 个原始样本（saved-checkpoint 基线 vs 完整公共 API：T1024 136.5 vs 160.3–160.4 ms，T4096 545.8–546.3 vs 645.3–645.5 ms），历史 BF16 记录保留但不计入验收。PM 静态核对：公共入口 140 行，唯一的数据类操作是缺省 do / dht 的 zeros_like / zeros 分配，无 dtype 转换、无布局搬运（符合 D-PM-35 / D-PM-37）。待审：真机审计、证据复算、oracle 加载器的哈希校验与 exec(compile(ast)) 的 FP64 抬升"
         }
       ],
       "result": null,

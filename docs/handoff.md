@@ -11,6 +11,14 @@
 
 ### 正在飞的任务（现在没有；A5K-02、PK-02、PK-03 都已于 2026-09-19 合入）
 
+> **2026-09-19T16:55Z 更新：用户又定了「禁止在 host 转数据类型、格式，需要在 kernel 内完成」（D-PM-37）——D-PM-35 从 BF16 扩到所有 dtype 与格式，FP32 路径同样。A2-01 已合入（PR #107 → `b514de2`，用户授权）。**
+> - **规则**（`docs/pm/bf16-kernel-side.md` 已整段改写）：host 侧只允许分配输出、不拷贝的元数据操作、检查并显式报错、取指针、launch；禁止 dtype 转换、格式（布局）转换——`permute`/`transpose`+`contiguous`、token-major↔head-major、GQA 的 q/k 复制、`cat`/`stack`/`pad`、`npu_format_cast`、绕 CPU 重排——与算术。
+>   「kernel 内」读作**自编译 kernel**（融进主 kernel 首选，独立的自编译布局 kernel 也行，要报多出的 launch），不是 torch 算子。去掉转换后输出与改前**逐位相同**。范围是 `ascend_fla/ops/**`，layers/modules 暂不在内。
+> - **静态清单（PM grep，正式清单等 FMT-01 的真机审计）**：KDA `chunk.py` 13 处 dtype 转换 + 8 处布局搬运（含 `layout_device='cpu'` 旁路）、`autograd.py` 6+2、`fused_recurrent.py` 3+5、`chunk_bwd.py` 0+2；GDN / PGDN / GDN-2 chunk 前向各 2 处（BF16 加宽，GQA 复制在 device 上做）；**PKDA 入口是干净的**。
+> - **任务**：`FMT-01`（审计工具 + 全仓清单，只读）与 `FMT-02`（KDA layout/dtype 进自编译 kernel，新单元，不改已有 kernel 源码，要改先发 RISK）——都是 P0、open；BF-01…BF-06 规格已加 D-PM-37 追加段（两条 dtype 路径、格式转换、FP32 逐位相同）；BF-07 仍 gated。
+> - **在飞**：BF-04（session `01a0b7ce-…`）已 ACK、in_progress，已通知新规则；GDA-03（PR #98）转正式、更新后的 DONE 待审——静态上公共入口只有缺省 `do`/`dht` 的 zeros 分配，真机审计与证据复算还没做。
+> - **A2-01**：合入后 main 599 passed / 15 skipped；两条缺口按证据更新，`a2-splitk-fp32-cube` 记 requires_kernel_change（属 A2-K1，要用户批准），队列 25→26；申领人的 delta 提议 fp32-cube 记 P0，PM 记 P1（出货路径没中招，是 A2 派生单元的潜在风险）。
+>
 > **2026-09-19T16:20Z 更新：A2-01 的 `RISK silent-wrong-result` 已上报，用户同意（D-PM-36）改写 `AGENTS.md` §2 并记缺口——已做。**
 > - **事实（改写后的 §2）**：FP32 的 split-K 在 pin 里已有修复（`ascriptor/passes/desugar.py:411`，a2 系且 A/B 均为 f32 时插 `PIPE_M`，PM 读源码核实，sha256 前缀 900610ea92dc）；
 >   没解决的是 ① BF16/FP16 的 split-K（同一条规则按 dtype 排除；910B3 / CANN 9.0.0 上 M16 输出有限但全错、M32 触发 AI Core 异常、M64 逐位；sim/pipesim 看不出）与 ② FP32 的手写 MMAD 累加链（只有 lint trap；KDA/GDN 的三角求逆与 GDN 反向 finalize，正是 M16 形状）。
