@@ -2192,7 +2192,7 @@
       "wave": "W0",
       "soc": "a5",
       "priority": "P1",
-      "status": "blocked",
+      "status": "in_progress",
       "model": [
         "kimi-linear-48b-a3b"
       ],
@@ -2278,6 +2278,10 @@
         {
           "at": "2026-09-19T04:45",
           "summary": "STATUS（successor）：设备访问已恢复；bd1/2/3/4 四份 vendor 编译回执都找回，各含完整 9 个 backward 阶段（含 InverseMmBoundedKernel），仅是编译证据。PR 源与 481 个文件 SHA-256 对齐（PR head 仍 888862b，草稿）；主机侧 CPU 338 passed/5 skipped（Python 3.11.15、Torch 2.10.0+cpu），规范 CPU 参考 8/8。阻塞：分配的设备 health=0、AI-core 利用率 0，但仍有其它原生进程持有共享设备管理描述符，驱动进程清单返回 rc=8，不能证明存在空闲独占窗口；未启动任何 kernel、未动他人进程。下一步：确认设备归属、取配置的锁，先跑完整原始 inverse leaf 与公开缓存前向/反向 workload。状态保持 blocked，非 DONE"
+        },
+        {
+          "at": "2026-09-19T05:00",
+          "summary": "STATUS（successor）：阻塞自行解除——设备归属已厘清（此前观察到的外部原生进程均确认属于另一张设备），分配的健康空闲设备每次启动前都在配置的锁下核查，未动他人进程、未 reset。原生 inverse_mm leaf 先跑原始 full B1/HV32/C64/bd4 通过，再 B1/HV1/C1、B1/HV1/C5、B2/HV3/C3，五个输出有限且过未改的 .02/.02/.05 判据，相对 L2 约 .00164–.00168；公开 plain 与 cached 前向在 B1/T4096/H32/HV32/bd4 通过（九个 cache 张量、plain/cached 字节一致、偶数 C 原始对照不变量），输出相对 L2 .0032664、final-state .0025472（对 CPU FP32）；所有 vendor 在首次自定义执行前注册完。下一步完整 T4096 backward，再是既有五个 case、真实形状、span105 边界，均用未改的梯度预算。仅部分原生验收，PR #83 仍草稿，非 DONE。状态 blocked→in_progress"
         }
       ],
       "result": null
