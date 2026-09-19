@@ -209,6 +209,13 @@
       "by": "user",
       "decision": "批准合入 PR #87（PK-03）与 PR #88（PK-02）。（用户原话：'合入'，回复 PM 的'合入 #87 和 #88 吗？'。）",
       "risk": "两个 PR 都已由 PM 审查并发 REVIEW accept；合入的是审过的头（54843bb、d7c29d9），合并提交 1f4da05、8b78c09，各自相对第一父的改动与审过的 diff 逐项一致。此前两次合入尝试被自动模式拦下（无对该 PR 的明确授权），现以用户的明确授权为准。合并后的 main 全量测试 510 passed/15 skipped（15 个 skip：5 个 NPU 模块 + 10 个需 pin 版 FLA oracle 的用例），无回归。"
+    },
+    {
+      "id": "D-PM-32",
+      "date": "2026-09-19",
+      "by": "user",
+      "decision": "放行 GDA-03（#91）与 PK-04（#92）。（用户原话：「两个都放行」，回复 PM 的汇报——PM 建议放行这两个，并说明放行 PK-04 意味着申领人可按规格在 PK-02 那四条已批写集内修 prepare 的门控前缀和。）",
+      "risk": "放行只覆盖这两个任务，且按各自规格：写集、预算、「先定位再修」「写集外先发 RISK write-set-expansion」都不变。PM 在汇报里问过「PK-04 里的 kernel 修复算不算需要用户批准的 kernel 批次」，用户的回复没有单独回答；PM 的读法是放行覆盖 PK-04 规格的全部（含「先定位到确切原因、再在已批写集内修」），并已在汇报里说明这个读法以便用户纠正。申领人提议的补偿累加修法本身没有被批准，在 DONE 的证据里过审。PK-05、GDA-04、PK-06、GDA-05 仍 gated（放行是用户的事）。合入仍需用户对具体 PR 的明确授权。申领人转述的两句用户指示（「继续申请任务，直到所有GDN任务都完成」「需要完成真机测试」）PM 仍无法从评论核实；放行不依赖它们。"
     }
   ],
   "gated_epics": [
@@ -2610,7 +2617,7 @@
       "wave": "W0",
       "soc": "a5",
       "priority": "-",
-      "status": "gated",
+      "status": "assigned",
       "model": [],
       "kernel": [
         "gdn_bwd"
@@ -2636,9 +2643,20 @@
       "spec": "docs/pm/tasks/GDA-03.md",
       "issue": 91,
       "pr": null,
-      "assignee": null,
-      "assignee_caps": null,
-      "branch": null,
+      "assignee": "limjiunnbin",
+      "assignee_caps": {
+        "agent": "Codex; PK-03 之后的续接 session（GDN 系列，自述）",
+        "soc_details": "自述：上次原生验收为 Ascend950PR、CANN 9.2.0、算子包 ascend950；每次新的真机运行重新核对环境与健康（机器与卡归 assignee 管理，D-PM-28）",
+        "socs": [
+          "a5"
+        ],
+        "ascriptor": "library 90cfcdc720bb / kernels b3b3f9c16df7（自述；与 ops.json 的 current_compatibility_pin 一致）",
+        "fla": "e52dbc0ea19d3a40d7ab7f9eed855d2b473994d2（自述）",
+        "fork": "limjiunnbin/ascend_fla_dev",
+        "session": "gdn-series-20260919T115559Z-29cb31d7",
+        "note": "与 PK-04（session 01a0b7ce-…）同账号不同 session，并发规则放行。申领于 #28（2026-09-19T11:56:58Z）。"
+      },
+      "branch": "task/GDA-03",
       "timebox_h": 24,
       "reports": [
         {
@@ -2648,14 +2666,18 @@
         {
           "at": "2026-09-19T12:42",
           "summary": "申领人在 #89 下的 CPU 预研（自述，PM 未核实）已并入规格：上游 a5.gdn_bwd 为 BF16 精度模型/2% 预算/无 dh0，不能直接接、旧预算不能沿用；FP32 反向递推对 pinned naive 自动微分最大相对 L2 3.3292319e-7，A↔B 校准前提在数学层面成立。预算不变（FP32 逐梯度 ≤1e-4，先校准再实现）；补了「对齐 scale」的陷阱与「独立反向、不动前向」的边界说明。仍 gated，等用户放行"
+        },
+        {
+          "at": "2026-09-19T12:55",
+          "summary": "用户放行（D-PM-32，「两个都放行」）。按 #28 上的 APPLY 派给 limjiunnbin（session gdn-series-…），timebox 24h，分支 task/GDA-03。规格不变；预算在实现前定死（FP32 逐梯度 ≤1e-4，先校准 A↔B）。合入仍需用户对具体 PR 的明确授权"
         }
       ],
       "result": null,
-      "gate": "user-decision",
       "origin": {
         "kind": "request",
         "issue": 89,
-        "by": "limjiunnbin"
+        "by": "limjiunnbin",
+        "approved_by_user": true
       }
     },
     {
@@ -2664,7 +2686,7 @@
       "wave": "W0",
       "soc": "a5",
       "priority": "-",
-      "status": "gated",
+      "status": "assigned",
       "model": [],
       "kernel": [
         "pkda_chunk_fwd"
@@ -2690,9 +2712,20 @@
       "spec": "docs/pm/tasks/PK-04.md",
       "issue": 92,
       "pr": null,
-      "assignee": null,
-      "assignee_caps": null,
-      "branch": null,
+      "assignee": "limjiunnbin",
+      "assignee_caps": {
+        "agent": "Codex; PK-02 之后的续接 session（自述）",
+        "soc_details": "自述：CANN 9.2.0，算子包 ascend950/ascend910b/ascend910_93，Docker 任务环境与 Torch NPU 可用；申领时已核对健康与占用（机器与卡归 assignee 管理，D-PM-28）",
+        "socs": [
+          "a5"
+        ],
+        "ascriptor": "library 90cfcdc720bb / kernels b3b3f9c16df7（自述；与 ops.json 的 current_compatibility_pin 一致）",
+        "fla": "e52dbc0ea19d3a40d7ab7f9eed855d2b473994d2（自述）",
+        "fork": "limjiunnbin/ascend_fla_dev",
+        "session": "01a0b7ce-3daf-7550-a7bf-31c67eb91ca3",
+        "note": "与 GDA-03（session gdn-series-…）同账号不同 session，并发规则放行；此 session 此前持有 A5K-02、PK-02（均已 done）。申领于 #92（2026-09-19T12:19:53Z），申领时已在私有工作区开始真机验收，见 reports。"
+      },
+      "branch": "task/PK-04",
       "timebox_h": 16,
       "reports": [
         {
@@ -2706,14 +2739,18 @@
         {
           "at": "2026-09-19T12:50",
           "summary": "申领人在 #92 的纯文字评论（12:36Z，早于 PM 的 hold 回复，poll 不可见，PM 手工读到）自述：已在自己的工作区对 prepare 的 FP32 前缀求和做补偿累加（新增 512B 补偿行，13 个单槽 UB 缓冲 4736B），T64/H1 prepare-only 模型上 gc 误差 3.3569336e-4→0，pipesim 无 hazard/deadlock，PKDA 主机测试 51 passed；回到完整 B1/T4096/H8 真机后 bd4 的 28 个全链案例（含 3 个域内对抗种子，误差约 6e-6）与 10 项公开 API 状态检查通过，其余 bd 与同卡性能仍在跑；称正式交付分支已备为 task/PK-04。均为自述，PM 未见原始证据；没有 PR，任务仍 gated、无 assignee。PM 立场不变：修法未批准，放行后按规格先定位再修；PR 出现时按 gated 任务来源核对，审查与合入都要用户授权"
+        },
+        {
+          "at": "2026-09-19T12:55",
+          "summary": "用户放行（D-PM-32）。按 #92 的 APPLY 派给 limjiunnbin（session 01a0b7ce-…），timebox 16h，分支 task/PK-04。放行不追认放行前的私有进度（上一条 report 里的自述）：DONE 时按规格逐项核对原始证据——原失败样本要保留、修复要有「先定位」的证据、修复后的全部验收要在同一份修复后的版本上重跑。补偿累加修法仍是候选，由 DONE 审查判定。合入仍需用户对具体 PR 的明确授权"
         }
       ],
       "result": null,
-      "gate": "user-decision",
       "origin": {
         "kind": "request",
         "issue": 68,
-        "by": "limjiunnbin"
+        "by": "limjiunnbin",
+        "approved_by_user": true
       }
     },
     {
