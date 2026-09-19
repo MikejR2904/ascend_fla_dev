@@ -63,8 +63,18 @@ KDA"，依据见 `gaps.json` 的 `summary.kda_vs_gdn`。
 
 接 A2 的活之前，先知道这两条风险。
 
-ascriptor 侧 A2/A3 在 2026-09-06 被 deferred（D-250），还带着一个没解决的 split-K FP32 cube 数值缺陷。
-在它被定性（`docs/pm/tasks/A2-01.md`）、并且真机上有了绕行或闸（A2-11）之前，**A2 上任何算子结论都不算数**。
+ascriptor 侧 A2/A3 在 2026-09-06 被 deferred（D-250），并带着一类 cube 累加数值缺陷（库里编号 M10-081：A2 系上两次短 MMAD 写同一块 L0C，硬件不互锁，第二次读到没落定的累加器）。
+**2026-09-19 按 A2-01 的调查改写**（此前这里写的是"一个没解决的 split-K FP32 cube 缺陷"，那个说法太窄；用户同意改写）：
+
+- **FP32 的 split-K 在 pin 里已有修复**：pin 版库（90cfcdc）在 a2 系且 A/B 都是 FP32 时，于 split-K 展开处自动插 `PIPE_M` barrier（`ascriptor/passes/desugar.py:411`，PM 读源码核实）。
+  申领人在 910B3 / CANN 9.0.0 真机上复现，FP32 split-K 逐位（自述，证据随 A2-01 的 DONE）。
+- **没解决的有两类**（申领人自述，PM 只核了静态部分）：① **BF16/FP16 的 split-K**——同一条修复按 dtype 把它们排除在外，910B3 上 M16 输出有限但全错、M32 触发 AI Core 异常、M64 逐位，
+  功能模拟和 pipesim 都看不出（`gaps.json` 的 `a2-splitk-bf16-fp16-unsettled`）；② **FP32 的手写 MMAD 累加链**——库里只有 lint 告警、不自动修，KDA / GDN 的三角求逆与 GDN 反向 finalize 各有一处，正是 M16 形状
+  （`a2-splitk-fp32-cube`）。
+- **A5 不受影响**（现有 25 个在用 kernel 都不用 BF16/FP16 split-K，且这是 A2 系的硬件行为）；**A2 派生单元要逐个核对**，线索见 `docs/pm/tasks/A2-03.md`。
+  D-PM-35 的「BF16 优先」叠加 A2 优先：BF16 的 KDA 在 910B 上要先过②这一关。
+
+在 A2-01 定性完成、并且真机上有了绕行或闸（A2-11）之前，**A2 上任何算子结论都不算数**——这条不变（用户 D-PM-30：不放宽）。
 
 A2 的核数、UB、`block_dim` 上限、门控跨度上限、内置算子包覆盖，眼下一个都不知道，全要重测（见 §6「结论不跨 SoC 继承」）。
 A5 上 profile 声明与物理核数对不上会死锁，A2 同样要先查实这一条。

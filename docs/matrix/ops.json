@@ -42,7 +42,7 @@
         "a5pr"
       ],
       "decision": "D-250",
-      "note": "A2/A3 于 2026-09-06 deferred，另有未解决的 split-K FP32 cube 数值缺陷。"
+      "note": "A2/A3 于 2026-09-06 deferred，另有 cube 累加数值缺陷（M10-081）：FP32 split-K 在 pin 里已有修复；未解决的是 FP32 手写累加链与 BF16/FP16 split-K（gaps.json 的 a2-splitk-*，2026-09-19 按 A2-01 的调查更新，申领人自述、PM 核了静态部分）。"
     },
     "action": "升级 pin 前先看 ascriptor agent/compatibility.json，并重跑本仓全部精度回归。"
   },

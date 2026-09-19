@@ -11,6 +11,14 @@
 
 ### 正在飞的任务（现在没有；A5K-02、PK-02、PK-03 都已于 2026-09-19 合入）
 
+> **2026-09-19T16:20Z 更新：A2-01 的 `RISK silent-wrong-result` 已上报，用户同意（D-PM-36）改写 `AGENTS.md` §2 并记缺口——已做。**
+> - **事实（改写后的 §2）**：FP32 的 split-K 在 pin 里已有修复（`ascriptor/passes/desugar.py:411`，a2 系且 A/B 均为 f32 时插 `PIPE_M`，PM 读源码核实，sha256 前缀 900610ea92dc）；
+>   没解决的是 ① BF16/FP16 的 split-K（同一条规则按 dtype 排除；910B3 / CANN 9.0.0 上 M16 输出有限但全错、M32 触发 AI Core 异常、M64 逐位；sim/pipesim 看不出）与 ② FP32 的手写 MMAD 累加链（只有 lint trap；KDA/GDN 的三角求逆与 GDN 反向 finalize，正是 M16 形状）。
+>   **证据等级**：静态部分 PM 核实；真机部分是 A2-01 申领人自述、PM 无 A2 真机未复现。A2 总闸不变（D-PM-30）。
+> - **缺口**：`a2-splitk-fp32-cube`、`a2-splitk-bf16-fp16-unsettled`（P1，`requires_kernel_change=false`：库侧缺陷，本仓不改 ascriptor）；`ops.json` 的 A2/A3 说明同步。A2-01 的 DONE（脱敏原始回执 + `docs/pm/deltas/A2-01.json`）到了要**核并更新这两条**，别当成已定论。
+> - **待用户做**：把这条转给 ascriptor 所有者（gitcode 上的库，PM 没有渠道）。本仓侧的显式 barrier（A2-03 起、kernel 批次 A2-K1 的「split-K 绕行」）仍要用户批准。
+> - **计划影响**：D-PM-35 的 BF16 优先叠加 A2 优先——BF16 的 KDA 在 910B 上要先过 BF16 累加链这一关；A2-03 规格已加线索。
+>
 > **2026-09-19T15:55Z 更新：用户定了「BF16 计算必须 kernel 侧，不能在 host 侧完成；追加任务改正；后续 BF16 优先」（D-PM-35）。**
 > - **通则**：`docs/pm/bf16-kernel-side.md`——BF16 张量直接进自编译 kernel，转换/算术在 kernel 里，host 侧只允许零算术零转换的布局操作；`q.float()` 加宽再转回不合规；
 >   统一验收里的**硬判据是真机上的 host 算子审计**（`TorchDispatchMode` 记录入口内的 aten 算子，出现算术/转换算子即失败）；BF16 预算先校准（误差地板 F）、实现前写定；BF16 的门控域要重测，比 FP32 窄属域变化，先问用户。

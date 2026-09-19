@@ -208,7 +208,7 @@ kimi_linear_layer / bd=4 的拆分（ms）：fwd_kernels 1.314 · caches_host_si
 
 ## 缺口
 
-P0 2 项 · P1 18 项 · P2 9 项 · 已解决 13 项 · 共 42 项
+P0 2 项 · P1 20 项 · P2 9 项 · 已解决 13 项 · 共 44 项
 
 **第一期里程碑**：第一期五项已全部有结论，并补齐了同机性能对比：aclnn 编译、runtime 桥、kda_fwd 接线、KDA 本地基线均实测通过；自编译算子在 block_dim=4 下比 torch_npu 组合快 4.43x（kimi_linear_layer）/ 2.38x（long_context T=4096）/ 19.7x（smoke）。过程中修掉两个自己的 bug（bridge-per-call-overhead、op-name-collision-in-process），它们先后让 block_dim 的效果被完全掩盖。当前最大的性能项是 block-dim-ceiling（已升 P1）：扩展性一路线性到契约上限 4，而硬件有 28 cube。第二期的前置障碍 kda-fwd-bwd-dtype-mismatch 已量化（降 P2）。
 
@@ -237,8 +237,8 @@ P0 2 项 · P1 18 项 · P2 9 项 · 已解决 13 项 · 共 42 项
 
 | 算子族 | P0 | P1 | P2 |
 |---|---|---|---|
-| KDA | `c1-multihead-o-corrupt`<br>`ascriptor-gm-transfer-two-slice-row-gap` | `decode-call-overhead`<br>`decode-layer-overhead`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`no-tail-path`<br>`block-dim-ceiling`<br>`qk-l2norm-not-in-kernel`<br>`state-layout-k-first`<br>`kda-bwd-inverse-mm-mutex-over-budget` | `kda-fwd-bwd-dtype-mismatch`<br>`npu-builtin-ops-missing`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`kernel-nd2nz-suboptimal`<br>`fwd-caches-not-emitted`<br>`modules-are-torch-not-kernels`<br>`stable-unit-no-harness`<br>`gate-span-still-bounded` |
-| GDN | `ascriptor-gm-transfer-two-slice-row-gap` | `gdn-no-gqa`<br>`layout-not-token-major`<br>`nonzero-initial-state`<br>`d-initial-state-absent`<br>`state-dtype-bf16`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`scale-param-no-slot`<br>`no-tail-path`<br>`block-dim-ceiling` | `npu-builtin-ops-missing`<br>`fixed-kv-128`<br>`asymmetric-kv-dim` |
+| KDA | `c1-multihead-o-corrupt`<br>`ascriptor-gm-transfer-two-slice-row-gap` | `decode-call-overhead`<br>`decode-layer-overhead`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`no-tail-path`<br>`block-dim-ceiling`<br>`qk-l2norm-not-in-kernel`<br>`state-layout-k-first`<br>`kda-bwd-inverse-mm-mutex-over-budget`<br>`a2-splitk-fp32-cube`<br>`a2-splitk-bf16-fp16-unsettled` | `kda-fwd-bwd-dtype-mismatch`<br>`npu-builtin-ops-missing`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`kernel-nd2nz-suboptimal`<br>`fwd-caches-not-emitted`<br>`modules-are-torch-not-kernels`<br>`stable-unit-no-harness`<br>`gate-span-still-bounded` |
+| GDN | `ascriptor-gm-transfer-two-slice-row-gap` | `gdn-no-gqa`<br>`layout-not-token-major`<br>`nonzero-initial-state`<br>`d-initial-state-absent`<br>`state-dtype-bf16`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`scale-param-no-slot`<br>`no-tail-path`<br>`block-dim-ceiling`<br>`a2-splitk-fp32-cube`<br>`a2-splitk-bf16-fp16-unsettled` | `npu-builtin-ops-missing`<br>`fixed-kv-128`<br>`asymmetric-kv-dim` |
 | GDN-2 | `ascriptor-gm-transfer-two-slice-row-gap` | `no-varlen`<br>`no-tail-path`<br>`gdn2-abi-not-gdn`<br>`gdn2-chunk-gate-range`<br>`gdn2-decode-fragmentation` | `npu-builtin-ops-missing`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`modules-are-torch-not-kernels` |
 | DeltaNet | `ascriptor-gm-transfer-two-slice-row-gap` | `layout-not-token-major`<br>`nonzero-initial-state`<br>`d-initial-state-absent`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`scale-param-no-slot`<br>`no-tail-path` | `npu-builtin-ops-missing`<br>`fixed-kv-128`<br>`asymmetric-kv-dim` |
 
@@ -505,6 +505,30 @@ PM 在权威 workspace 上独立跑了 `benchmarks/diag_c1_multihead.py`，**上
 - **依据** pin 版 `a5.kda_bwd/kernels/inverse_mm.py`（kernels b3b3f9c16df7）在 A5 上降级失败：`PassError: cube needs 34 mutex IDs (maximum 32) at kda_bwd/kernels/inverse_mm.py:65:15`。D-PM-24 记录 PM 已独立复现；2026-09-19 PM 在 pin 版 library（90cfcdc720bb）+ pin 版 kernels 上再次复现，并落成 `tests/test_kda_aqk_dispatch.py::test_cached_forward_dependency_fits_mutex_budget_and_keeps_upstream_control`：原版 `lower_kernel` 仍报 34>32，本仓派生版降级后 cube 32 / vec 15。根因（A5K-02 定位，PM 对着上游原文件逐行 diff 核过）：`l0c_dvh`、`l0c_dvbeta` 两块 L0C 是 `DBuff`（双槽），改成单槽 `Tensor` 即由 34 降到 32；互斥锁、事件信用、循环、lookahead、算式一行没动。
 - **影响** A5K-02 的 contract 记录：带 cache 的公开前向（`chunk_kda_fwd_with_caches`，训练前向）会预编译 backward 的全部 9 个 kernel，pin 版上游 `inverse_mm` 在这一步降级失败，所以训练路径编不出来。**现状**：本仓派生单元已绕开（A5K-02，合并提交 2589942），公开 stable 路径不再触发；上游 kernel 本身仍是坏的，任何直接用上游 `inverse_mm` 的路径仍会撞上。
 - **建议** **已做**：A5K-02（#83）在派生单元 `kernels/projects/a5/kda_bwd_stable/kernels/inverse_mm.py` 落地受限版（入口 `inverse_mm_bounded_kernel`），`ops/kda/chunk_bwd.py` 的 stable 覆盖表选它。原生验证：完整 inverse leaf B1/HV32/C64/bd4 + 3 个小 case、13 个完整 backward 回归（含 Kimi T4096、跨度 46/94/104/精确 105）都在未改的预算内，leaf 相对 L2 ≈ .00164–.00168；缩小 sim/pipesim 8/8 无 hazard/死锁。**要做**：上游（ascriptor）应改 `kda_bwd/kernels/inverse_mm.py`，本仓不改（AGENTS.md §3），进上游 kernel 批次；届时可删掉本仓派生，并把 `test_aqk_dispatch` 里『原版 34>32』的对照测试改成『原版通过』。
+
+#### `a2-splitk-fp32-cube` — A2 系 FP32 cube 累加（M10-081）：split-K 在 pin 里已有修复，FP32 手写累加链仍未 settle
+
+- **类别** numerics · **适用于** KDA / GDN · **阻塞** `A2 波次：A2-03 / A2-11，以及 A2 上的任何算子结论`
+- **依据** **来源：A2-01（#29）的 STATUS 与 RISK，申领人自述；PM 只核了静态部分（pin 版库源码）。原始证据随 A2-01 的 DONE（`benchmarks/a2/evidence/`）到了再核，届时更新本条。结论只对 910B3 / CANN 9.0.0 成立，A2-11 之前只作观测，不构成算子结论。**
+- 库里的记录：ascriptor `docs/defects/M10-081-a2-family-fp32-mmad-settle.md`（A2 系两次短 FP32 MMAD 写同一块 L0C，硬件不互锁，第二次 `is_init=False` 读到未落定的累加器）。
+- pin 版修复（PM 读源码核实）：`ascriptor/passes/desugar.py:411`——`family == "a2"` 且 A/B 均为 `f32` 时，split-K 展开在两次 MMAD 之间插 `PIPE_M` barrier；`desugar.py` 的 sha256 前缀 900610ea92dc，与申领人所报一致。手写 MMAD 链只有 lint trap，不自动修。
+- 真机（申领人自述；a2 / 910B3 / CANN 9.0.0 / block_dim=1 / 每 case 5 次，逐位对 CPU float64 参考）：FP32 split-K 的 M16 原 case、`splitk_f32_m16_n64_k32_s16`、KDA intra 形状 `splitk_f32_m64_n64_k128_s64` 均 5/5 逐位；手写 FP32 链 `chain_f32_m16_n16_k16_t2/t3_nobar`（inverse 形状，无 barrier）目前 5/5 逐位，**但时序没踩到不等于安全**。
+- 命中表初版（25 个在用 kernel，自述）：FP32 split-K 1 个（KDA scores/intra，pin 已自动 settle）；**FP32 手写累加链未 settle 3 个：KDA triangular inverse、GDN triangular inverse、GDN bwd finalize，正是 M16 失效形状**；BF16 累加链 2 个见 `a2-splitk-bf16-fp16-unsettled`；其余 19 个未命中。
+- 模型看不出：sim / pipesim 在 a2、a5 两个 profile 下全部逐位、0 hazard——模型不表达这个同管线 L0C RAW，复现只能靠真机。
+- **影响** A2 上凡是写同一块 L0C 的 FP32 累加链（KDA / GDN 的三角求逆、GDN 反向 finalize）在 M=16 形状下可能读到未落定的累加器，输出有限、量级正常但内容错（真机尚未复现出错，时序没踩到不等于安全）。A5 现有路径不受影响（这是 A2 系的硬件行为）。A2 派生单元（A2-03）要逐个核对，A2-11 才是真机复现与绕行验证。**AGENTS.md §2 原先写的「没解决的 split-K FP32 cube 缺陷」太窄**：FP32 split-K 在 pin 里已有修复，没解决的是 FP32 手写链与 BF16/FP16 split-K，已于 2026-09-19 改写（用户同意）。
+- **建议** 1. 转给 ascriptor 所有者（本仓不改 ascriptor）：把 M10-081 的 settle 扩到手写累加链，或提供自动检测。2. 本仓侧：a2 派生单元对所有写同一块 L0C 的累加链显式 `barrier(Pipe.M)`，不分 dtype 与写法（A2-03 起；属 kernel 批次 A2-K1 的「split-K 绕行」）；ascriptor 修好前，对不能证明安全的形状入口按 `AGENTS.md` §7 显式报错。3. A2-11 在真机上做复现与绕行验证（含手写链的时序压力）。
+
+#### `a2-splitk-bf16-fp16-unsettled` — A2 系 BF16/FP16 split-K matmul 在 910B3 上输出有限但全错（M16），M32 触发 AI Core 异常：M10-081 的 settle 规则按 dtype 排除了它们（静默错误类）
+
+- **类别** numerics · **适用于** KDA / GDN · **阻塞** `A2 波次：A2-03 / A2-11，以及 A2 上的任何算子结论`
+- **依据** **来源：A2-01（#29）的 STATUS 与 RISK，申领人自述；PM 只核了静态部分（pin 版库源码）。原始证据随 A2-01 的 DONE（`benchmarks/a2/evidence/`）到了再核，届时更新本条。结论只对 910B3 / CANN 9.0.0 成立，A2-11 之前只作观测，不构成算子结论。**
+- 静态（PM 核实）：`desugar.py:411` 的条件是 `dta.name == dtb.name == "f32"`，其上注释写明其他 dtype 不在这次「board-proven workaround」范围内——BF16/FP16 split-K 不插 barrier。
+- 真机（自述；a2 / 910B3 / CANN 9.0.0 / block_dim=1，逐位对 CPU float64 参考，输入为有界二进分数、FP32 下精确）：M16：K32/48/64/128 的 BF16/FP16 split-K 全部错，输出有限、无报错，1022~1024/1024 个元素不对（例：`splitk_bf16_m16_n64_k128_s16` max_abs 15.67 / rel_l2 1.35，`splitk_f16_m16_n64_k128_s16` 15.88 / 1.17），5 次输出哈希相同，三张卡上复现；M32：每次触发 AI Core 异常（`aclrtSynchronizeStream` 507015，retCode 0x26），两张卡复现；M64：K32~128 全部逐位。
+- 对照：只在该次运行的生成 CCE 里、MMAD 分支后补一行 `PipeBarrier<PIPE_M>()`（位置与 FP32 规则生成的相同），M16 5/5、M32 2/2 的 BF16/FP16 全部逐位；只插注释的 sham 版照样错。
+- 手写孪生（8 次 K16 matmul 写同一 L0C，不加 barrier）真机 5/5 逐位：split-K 循环里 MMAD **背靠背发出**才踩到。
+- 功能模拟与 pipesim 在 a2/a5 两个 profile 下全部逐位、0 hazard，模型看不出。
+- **影响** **静默错误类**（输出有限、无报错）。本仓现有 25 个在用 kernel 都不用 BF16/FP16 split-K，A5 现有路径不受影响；KDA recurrent 与 GDN bwd wu 有 BF16 累加链（是否满足踩踏条件未定，手写孪生没踩到）；A2 派生单元（A2-03）若因 L0 容量改用 BF16/FP16 `splitk` 就会中招。D-PM-35 的 BF16 优先叠加 A2 优先，BF16 的 KDA 在 910B 上要先过这一关。
+- **建议** 1. 转给 ascriptor 所有者：M10-081 的 settle 规则按 dtype 收窄在 910B3 上不成立，应扩到 BF16/FP16，并修 M32 的异常。2. 本仓侧（A2-03 起）：a2 路径不用 M<64 的 BF16/FP16 `splitk`，入口按 `AGENTS.md` §7 显式报错；a2 派生单元对所有 L0C 累加链显式 barrier，不分 dtype。3. A2-11 真机复现（含 M32 异常）。
 
 ### P2
 

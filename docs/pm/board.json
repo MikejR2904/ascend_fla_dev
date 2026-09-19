@@ -237,6 +237,13 @@
       "by": "user",
       "decision": "BF16 计算必须是 kernel 侧的计算，不能在 host 侧完成；追加任务改正；后续 BF16 优先。（用户原话：「bf16计算必须是kernel侧的计算，不能再host侧完成。追加任务把这个改正。 后续bf16优先」）",
       "risk": "PM 的读法（用户可纠正）：(1) 约束对象是 BF16 路径的计算：BF16 张量直接进自编译 kernel，转换/算术在 kernel 里，host 侧只允许零算术零转换的布局操作；FP32 路径不变。(2) 现存不合规项——GDN 前向、PGDN 前向、GDN-2 chunk 前向、KDA decode 的 BF16 入口在 host 侧 `.float()` 加宽再转回；PKDA 直接拒绝 BF16——由 BF-01…BF-06 改正（P0，排在看板最前）；已合入的历史 PR 不回滚，首页表标 `→ BF-xx`。(3) 在飞/待审：GDA-03 的 BF16 公共入口不得再 host 加宽，改为显式拒绝、BF16 反向归 BF-02（已改规格并通知申领人）；PK-05/GDA-04/PK-06 骨架同样显式拒绝 BF16；A2-44 已合入，它的 raw flags 预处理是 FP32 host 算子（不是 BF16 计算），融进 kernel 归 BF-07。(4) BF-07 要改已有派生单元的 kernel 源码，属 kernel 批次，gated `kernel-batch-approval`，只问用户。(5) BF 任务来源是用户直接指令，origin=user，不需要放行；BF-02/BF-03 有依赖（GDA-03、BF-01），BF-06 依赖 A2-44（已完成）。(6) 统一验收（`docs/pm/bf16-kernel-side.md`）：host 算子审计为硬判据；BF16 预算先校准（误差地板 F）、实现前写定、事后不得放宽；BF16 的门控域要重测，比 FP32 窄属域变化，先问用户。(7) 「后续 bf16 优先」按看板顺序与 P0 落实：BF 任务插在看板最前，`--next` 先给它们。"
+    },
+    {
+      "id": "D-PM-36",
+      "date": "2026-09-19",
+      "by": "user",
+      "decision": "同意按 A2-01 的调查改写 AGENTS.md §2 并在 gaps.json 记缺口。（用户原话：「同意，改写 AGENTS.md §2 并记缺口」，回复 PM 的上报：A2-01 的 RISK silent-wrong-result——BF16/FP16 split-K 在 910B3 上错、FP32 手写链未 settle。）",
+      "risk": "PM 的读法与做法（用户可纠正）：(1) 用户的答复没有说「等 A2-01 的 DONE」，PM 按字面现在就改，但**如实标注证据等级**——静态部分（pin 版库 desugar.py:411 只对 f32/f32 插 barrier、sha256 一致）是 PM 读源码核实的，真机部分是申领人自述、PM 无 A2 真机未复现；两条缺口的 evidence 开头写明「A2-01 的 DONE 证据到了再核、届时更新」。(2) §2 的 A2 总闸不变（用户 D-PM-30：不放宽）：A2-01 定性完成且 A2-11 给出绕行或闸之前，A2 上任何算子结论都不算数。(3) 缺口 requires_kernel_change=false（库侧缺陷，本仓不改 ascriptor；本仓侧的显式 barrier 属 kernel 批次 A2-K1，仍要用户批准）。(4) 转给 ascriptor 所有者要用户做，PM 没有渠道。"
     }
   ],
   "gated_epics": [
@@ -781,6 +788,10 @@
         {
           "at": "2026-09-19T16:10",
           "summary": "STATUS（15:24Z，自述）：缺陷原始记录是 ascriptor 库缺陷 M10-081（A2 系两次短 FP32 MMAD 写同一 L0C 时硬件不互锁）；修复在 pin 90cfcdc 里，desugar.py / lint.py 的 sha256 与修复回执逐字相同；真机 a2（910B3，CANN 9.0.0）cube_core_num=20 / vector_core_num=40，与 ascriptor a2→b3 profile 声明一致；FP32 split-K 三个 case 5/5 逐位；命中表初版 25 个在用 kernel：FP32 split-K 1 个、FP32 累加链未 settle 3 个、BF16 累加链 2 个、其余 19 个未命中。RISK silent-wrong-result（15:56Z，自述）：pin 里 M10-081 的修复按 dtype 收窄，BF16/FP16 的 split-K 在 910B3 / CANN 9.0.0 上 M16 输出有限但全错（1022–1024/1024 元素不对）、M32 触发 AI Core 异常（507015）、M64 逐位；只在生成 CCE 的 MMAD 分支后补一行 PipeBarrier<PIPE_M>() 后 M16/M32 的 BF16/FP16 全部逐位，只插注释的 sham 版照样错；手写 8 段 K16 链不加 barrier 真机 5/5 逐位（背靠背发出才踩到）；sim/pipesim 在 a2/a5 两个 profile 都看不出。本仓现有 25 个在用 kernel 都不用 BF16/FP16 split-K，A5 现有路径不受影响；A2 派生单元若用则中招。PM 核对：pin 里 desugar.py:411 确实只在 a2 系且 A/B 均为 f32 时插 barrier，注释写明其他 dtype 不在范围内，sha256 与申领人所报一致（静态部分成立）；真机部分 PM 无 A2 真机、未复现，按原始证据审，A2-11 之前只作观测。已上报用户（需转给 ascriptor 所有者，本仓不改 ascriptor）；A2-03 规格加了线索；gaps.json 两条与 AGENTS.md §2 的措辞改写等 DONE 证据（含 docs/pm/deltas/A2-01.json）到了再做"
+        },
+        {
+          "at": "2026-09-19T16:17",
+          "summary": "用户同意（D-PM-36）：AGENTS.md §2 已按 A2-01 的调查改写（FP32 split-K 在 pin 里已有修复；没解决的是 BF16/FP16 split-K 与 FP32 手写累加链；A2 总闸不变），gaps.json 记了 a2-splitk-fp32-cube 与 a2-splitk-bf16-fp16-unsettled（P1，requires_kernel_change=false），ops.json 的 A2/A3 说明同步。证据等级：静态部分 PM 核实、真机部分申领人自述——A2-01 的 DONE（脱敏原始回执 + docs/pm/deltas/A2-01.json）到了再核并更新这两条"
         }
       ],
       "result": null
