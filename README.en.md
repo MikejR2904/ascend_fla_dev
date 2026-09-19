@@ -83,7 +83,7 @@ _First target family; used by Kimi-Linear_
 | task | issue | SoC | dtype | status | note |
 |---|---|---|---|---|---|
 | FMT-02 | [#109](https://github.com/ddddwee1/ascend_fla_dev/issues/109) | `a5` | bf16 | ⬜ open | ★ start |
-| A2-09 | — | `a2` | bf16、fp32 | ⬜ open | ★ start |
+| A2-09 | [#112](https://github.com/ddddwee1/ascend_fla_dev/issues/112) | `a2` | bf16、fp32 | ⬜ open | ★ start |
 | A2-K1 | [#44](https://github.com/ddddwee1/ascend_fla_dev/issues/44) | `a2` | bf16、fp32 | 🔒 gated (kernel-batch-approval) | ★ start |
 | A5-04 | [#50](https://github.com/ddddwee1/ascend_fla_dev/issues/50) | `a5` | bf16、fp32 | 🔒 gated (wave:W-A3) | ★ start |
 | A5-05 | [#51](https://github.com/ddddwee1/ascend_fla_dev/issues/51) | `a5` | bf16、fp32 | 🔒 gated (wave:W-A3) | ★ start |
