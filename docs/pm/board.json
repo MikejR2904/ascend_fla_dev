@@ -435,7 +435,7 @@
       "wave": "W0",
       "soc": "a5",
       "priority": "P0",
-      "status": "open",
+      "status": "assigned",
       "model": [],
       "kernel": [
         "gdn_fwd"
@@ -460,9 +460,20 @@
       "spec": "docs/pm/tasks/BF-01.md",
       "issue": 100,
       "pr": null,
-      "assignee": null,
-      "assignee_caps": null,
-      "branch": null,
+      "assignee": "limjiunnbin",
+      "assignee_caps": {
+        "agent": "Codex; PK-03 之后的续接 session（GDN 系列，自述）",
+        "soc_details": "自述：上次原生验收为 Ascend950PR、CANN 9.2.0、算子包 ascend950；每次新的真机运行重新核对环境与健康（机器与卡归 assignee 管理，D-PM-28）",
+        "socs": [
+          "a5"
+        ],
+        "ascriptor": "library 90cfcdc720bb / kernels b3b3f9c16df7（自述；与 ops.json 的 current_compatibility_pin 一致）",
+        "fla": "e52dbc0ea19d3a40d7ab7f9eed855d2b473994d2（自述）",
+        "fork": "limjiunnbin/ascend_fla_dev",
+        "session": "gdn-series-20260919T115559Z-29cb31d7",
+        "note": "此前持有 GDA-03（已 done，PR #98 已合入）；与 BF-04（session 01a0b7ce-…）同账号不同 session，并发规则放行。申领于 #100（2026-09-19T16:10:43Z，条件：GDA-03 关闭后），PM 在 #100 回了 NO_TASK 承诺「关闭后直接派，不用重新申领」；PK-05 的条件申请顺延（仍 gated）。"
+      },
+      "branch": "task/BF-01",
       "timebox_h": 24,
       "reports": [
         {
@@ -472,6 +483,10 @@
         {
           "at": "2026-09-19T16:32",
           "summary": "GDN 系列 session 在 #100 申请 BF-01（条件：GDA-03 返工与审查关闭后；PK-05 的条件申请顺延）。同 session 单任务，回 NO_TASK；GDA-03 CLOSE 后按这条 APPLY 直接派"
+        },
+        {
+          "at": "2026-09-19T17:09",
+          "summary": "派给 limjiunnbin（GDN 系列 session gdn-series-…），24h，分支 task/BF-01；按它在 #100 的排队 APPLY 与 GDA-03 关闭后的承诺直接派，不需要重新申领。规格含 D-PM-35 与 D-PM-37 追加段：格式转换（GQA 复制）也在 kernel 内，FP32 路径同样，输出改前逐位相同，两条路径都过 host 算子审计"
         }
       ],
       "result": null,
@@ -3199,7 +3214,7 @@
       "wave": "W0",
       "soc": "a5",
       "priority": "-",
-      "status": "in_progress",
+      "status": "done",
       "model": [],
       "kernel": [
         "gdn_bwd"
@@ -3284,9 +3299,26 @@
         {
           "at": "2026-09-19T16:47",
           "summary": "更新后的 DONE（16:31Z，PR #98 转正式，头 1d12b94，153 个文件 +153177 行，绝大多数是证据；取代 15:37Z 的 DONE）与 16:22Z 的 STATUS（自述）：FP32-only 交付，q/k/v/do 为 BF16 时在任何张量准备与 kernel 分派之前显式拒绝并指向 BF-02，包装里没有 float/to/bfloat16 转换；67 个主机测试（含 3 个 launcher 下 15 个零操作拒绝用例）；完整 T4096 final-wrapper closeout 三种 cotangent × 两个 bd，5 条记录与 75 个既有实际数组哈希及逐项数值完全一致；FP32 网格 138 条记录 / 69 对 × 15 数组 = 1035 对逐字节相同，每个梯度对 A/B ≤ 1e-4（最大 dq 4.86e-7 … dbeta 7.04e-7）；刷新的 FP32 同卡三明治 900 个原始样本（saved-checkpoint 基线 vs 完整公共 API：T1024 136.5 vs 160.3–160.4 ms，T4096 545.8–546.3 vs 645.3–645.5 ms），历史 BF16 记录保留但不计入验收。PM 静态核对：公共入口 140 行，唯一的数据类操作是缺省 do / dht 的 zeros_like / zeros 分配，无 dtype 转换、无布局搬运（符合 D-PM-35 / D-PM-37）。待审：真机审计、证据复算、oracle 加载器的哈希校验与 exec(compile(ast)) 的 FP64 抬升"
+        },
+        {
+          "at": "2026-09-19T17:09",
+          "summary": "合入：PR #98 合并提交 8d16cb7（合入的是审过的头 1d12b94，--match-head-commit）。依 D-PM-33 自行合入：写集内、无红旗/隐私命中，D-PM-35/37 合规（BF16 显式拒绝、无 host 转换），真机原始回执由 PM 复算（FP32 最大 8.3e-7 vs 预算 1e-4，bd1↔bd2 69 case 逐位相同，900 个计时样本重算一致），全量对账。合入后 main 669 passed/12 skipped。状态 in_progress→done"
         }
       ],
-      "result": null,
+      "result": {
+        "commits": [
+          "1d12b94",
+          "8d16cb7"
+        ],
+        "evidence": [
+          "PR #98",
+          "kernels/projects/a5/gdn_chunk_bwd/evidence/",
+          "docs/research/gdn_chunk_bwd_gate_range.md",
+          "kernels/projects/a5/gdn_chunk_bwd/README.md"
+        ],
+        "numbers": "真机（A5，Ascend950PR_9589V100 / CANN 9.2.0 / 算子包 ascend950；原始回执在 PR 里，PM 逐项复算）：FP32 每个 bd 69 个 case（138 条记录）全部 passed、输入未被修改，覆盖 HV/H∈{1,2,4,8} × C∈{1,2,3,64} × do/dht/两者 × B∈{1,2}，含完整 B1/T4096；FP32 逐梯度对 A（pin 版 naive 的 CPU FP32 自动微分）最大相对 L2 dq 4.855e-7 / dk 6.724e-7 / dv 6.877e-7 / dg 8.329e-7 / dbeta 7.043e-7（对独立解析反向 B 同量级，组成数组与 leaf 数组最大 8.3e-7 / 7.7e-7），预算 1e-4 且实现前已定死（A↔B 校准 ≤ 4.9e-7 ≤ 1e-5）；bd1 与 bd2 的公共梯度哈希与阶段哈希对 69 个 FP32 case 逐位相同（1035 对，PM 按 case 自己比）；同卡三明治 900 个原始样本（PM 从样本重算中位数）：saved-checkpoint 基线 T1024 136.5–136.6 ms / T4096 545.8–546.3 ms，候选（完整公共 API）160.3–160.4 / 645.3–645.5 ms（比值 1.17–1.18，基线不含检查点生成，无速度门槛）。PM 复跑：tests/test_gdn_chunk_bwd.py 用真 oracle 67 passed；全量 580 passed/12 skipped 精确对账（510 base + 3 oracle 环境变量放开的 GDN 用例 + 67 新增）；代理式 host 算子审计（kernel 启动桩掉）只有 aten.empty ×10（缺省 cotangent 时多一个 zeros）。合入后 main 全量 669 passed/12 skipped，无回归。",
+        "note": "FP32-only 交付：按 D-PM-35 / D-PM-37，q/k/v/do 为 BF16 在任何张量准备与 kernel 分派之前显式报错并指向 BF-02（原生 BF16 反向另有任务）；公共入口没有 host 转换，分组求和与检查点重算在 kernel 里。历史 BF16 记录保留在 evidence 里但明确不计入验收。基线是任务自带的 saved-checkpoint 伴随（不含边界生成），不是另一套完整反向实现。仅独立反向，无 dh0 / autograd 接线 / 归一化项。canonical board / aclnn launcher 未测。evidence 目录 7.5 MB（比前几个 PR 大得多，文本）。真机数字由申领人报告、PM 无 A5 真机，对 PR 内原始回执逐项复算。按用户常设授权 D-PM-33 由 PM 自行合入（第三个）。"
+      },
       "origin": {
         "kind": "request",
         "issue": 89,
@@ -3751,7 +3783,7 @@
         "note_en": "Upstream unit; backward emits no dh0",
         "dtype_status": {
           "bf16": "native@a5",
-          "fp32": "wip"
+          "fp32": "native@a5"
         },
         "dtype_fix": {
           "bf16": "BF-02"

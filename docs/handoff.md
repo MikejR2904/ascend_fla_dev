@@ -11,6 +11,13 @@
 
 ### 正在飞的任务（现在没有；A5K-02、PK-02、PK-03 都已于 2026-09-19 合入）
 
+> **2026-09-19T17:10Z 更新：GDA-03 已合入（PR #98 → `8d16cb7`，依 D-PM-33 自行合入，第三个）；BF-01 派给 GDN 系列 session。**
+> - **GDA-03**：GDN chunk 反向，A5 真机，**FP32-only**（BF16 的 q/k/v/do 在任何准备与分派之前显式报错并指向 BF-02）。PM 复算：FP32 每 bd 69 case，最大相对 L2 8.3e-7（预算 1e-4），bd1↔bd2 逐位相同，900 个计时样本重算一致；用真 oracle 复跑 67 个测试全过，
+>   全量 580/12 精确对账，合入后 main 669 passed / 12 skipped。**代理式 host 算子审计**（把 kernel 启动桩掉，对公共入口 + pipeline 在 CPU 张量上跑 `TorchDispatchMode`）只有 `aten.empty`（缺省 cotangent 时多一个 `zeros`）——这个办法可以给别的入口做静态复核，
+>   真机 dispatch 追踪等 FMT-01 的工具。计时基线是「saved-checkpoint 伴随」而不是另一套完整反向，候选/基线 1.17–1.18，如实标注。evidence 目录 7.5 MB，比前几个 PR 大得多。
+> - **首页表**：`gdn_bwd` 的 FP32 格从「进行中」改为「✅ 原生 · A5 真机」，BF16 格仍是上游单元 → BF-02。
+> - **BF-01**：按 #100 的排队 APPLY 直接派给 session `gdn-series-…`（24h）。BF-02 现在只差 BF-01（GDA-03 已 done）。PK-05 / GDA-04 / PK-06 / GDA-05 仍 gated。
+>
 > **2026-09-19T16:55Z 更新：用户又定了「禁止在 host 转数据类型、格式，需要在 kernel 内完成」（D-PM-37）——D-PM-35 从 BF16 扩到所有 dtype 与格式，FP32 路径同样。A2-01 已合入（PR #107 → `b514de2`，用户授权）。**
 > - **规则**（`docs/pm/bf16-kernel-side.md` 已整段改写）：host 侧只允许分配输出、不拷贝的元数据操作、检查并显式报错、取指针、launch；禁止 dtype 转换、格式（布局）转换——`permute`/`transpose`+`contiguous`、token-major↔head-major、GQA 的 q/k 复制、`cat`/`stack`/`pad`、`npu_format_cast`、绕 CPU 重排——与算术。
 >   「kernel 内」读作**自编译 kernel**（融进主 kernel 首选，独立的自编译布局 kernel 也行，要报多出的 launch），不是 torch 算子。去掉转换后输出与改前**逐位相同**。范围是 `ascend_fla/ops/**`，layers/modules 暂不在内。
