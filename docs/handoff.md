@@ -11,6 +11,15 @@
 
 ### 正在飞的任务（现在没有；A5K-02、PK-02、PK-03 都已于 2026-09-19 合入）
 
+> **2026-09-19T17:25Z 更新：D-PM-37 的边界被申领人问出来了（校验算不算算术），PM 暂定并更正；GDA-03 补交了仓里第一份真机 dispatch 审计；A2-03 派单，附一个影响 A2 波次估计的事实。**
+> - **更正**：我此前说「PKDA 入口是干净的」只对 dtype / 格式转换成立——PKDA 的 FP32 入口有 host 数值校验（`validate_inputs`：`isfinite` / 范围 / 范数 / 门控前缀求和）和 `torch.full` 的默认 center（BF-04 申领人的 `RISK contradicts-handoff` 指出，我的 grep 只查了转换、漏了算术）。
+>   同类的情况大概率在别的入口也有（KDA 的 `check_gate_range` 就在 device 上做 cumsum + 规约）。**PM 暂定（待用户确认）**：只读数值校验、校验用的 kernel 状态字回读、常数填充分配允许，审计里单列「校验」类；产出进入计算的数据的算术 / 转换 / 重排不允许；CPU 诊断 launcher 的输入校验保留。
+>   通则文档、`pm.md`、D-PM-37 的记录都已更正。不必为 FP32 路径多加一个校验 launch。
+> - **BF-04**：CPU 精度研究结论（自述）——BF16 的 ATK 状态存储 23/24 不过、门控前缀存储 13/24 不过，而「输出阶段用真 BF16 cube operand + FP32 累加」24/24 过；设计是 ATK / Kahan 前缀 / scores / WY / scan 留 kernel 内 FP32（D-PM-35 允许），只有输出阶段吃 BF16 operand、kernel 直接写 BF16。PM 认可，不是域变化，预算不变。
+> - **GDA-03 的补交**：合入后申领人在真机上对公共入口做了 `TorchDispatchMode` 审计（#98 评论）——4 个完整 T4096 FP32 case 只有 `empty` / `zeros` / `zeros_like`，5 个 BF16 拒绝 case 零 aten 算子；PM 解析了原始报告，与 PM 的代理式审计一致。
+> - **A2-03 派给 A2-01 的申领人**（session `a2-01-…`，唯一有 a2 真机的）。**事实（PM 读库源码核实）**：pin 版 `ascriptor.a2` 没有 `@vf` / `@simt`（`a2.py:6,18`），15 个 KDA kernel 里 14 个用 `@vf`——a2 上要用 UB 指令**重写全部向量侧与数据流**，不是「派生 / 换 import」；规格的 20h 是低估，
+>   第一个 STATUS 要给按 kernel 的估计，PM 据此调时限或拆任务。这影响 A2 波次（KDA 先行）的工作量估计，已上报用户。A2-10 / A2-11 仍 gated（`machines:a2`，用户放行）。
+>
 > **2026-09-19T17:10Z 更新：GDA-03 已合入（PR #98 → `8d16cb7`，依 D-PM-33 自行合入，第三个）；BF-01 派给 GDN 系列 session。**
 > - **GDA-03**：GDN chunk 反向，A5 真机，**FP32-only**（BF16 的 q/k/v/do 在任何准备与分派之前显式报错并指向 BF-02）。PM 复算：FP32 每 bd 69 case，最大相对 L2 8.3e-7（预算 1e-4），bd1↔bd2 逐位相同，900 个计时样本重算一致；用真 oracle 复跑 67 个测试全过，
 >   全量 580/12 精确对账，合入后 main 669 passed / 12 skipped。**代理式 host 算子审计**（把 kernel 启动桩掉，对公共入口 + pipeline 在 CPU 张量上跑 `TorchDispatchMode`）只有 `aten.empty`（缺省 cotangent 时多一个 `zeros`）——这个办法可以给别的入口做静态复核，

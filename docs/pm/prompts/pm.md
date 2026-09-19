@@ -91,7 +91,7 @@ DONE 里没有真机验证就 `REVIEW rework`，不进入合入，也不能靠�
 
 用户：「bf16计算必须是kernel侧的计算，不能再host侧完成」「禁止在host转数据类型，格式。需要在kernel内完成」。**dtype 转换与格式（布局）转换一律在自编译 kernel 里，host 侧只允许分配输出、不拷贝的元数据操作、检查并显式报错、取指针、launch**；
 「先加宽成 FP32 再进 FP32 kernel、输出转回」「permute+contiguous 重排」「GQA 的 q/k 复制」「绕 CPU 重排」都不合规，FP32 路径同样。通则与统一验收见 `docs/pm/bf16-kernel-side.md`。
-审查带算子入口的 DONE 时**多核一条**：真机上**每条 dtype 路径**的 host 算子审计（`TorchDispatchMode` 的算子列表）里不得出现 dtype 转换、拷贝 / 重排、算术算子，入口源码里不得有 `.float()` / `.to(dtype)` / `.permute()+.contiguous()` 一类的转换；去掉转换后输出要与改前逐位相同。
+审查带算子入口的 DONE 时**多核一条**：真机上**每条 dtype 路径**的 host 算子审计（`TorchDispatchMode` 的算子列表）里不得出现 dtype 转换、拷贝 / 重排、产出计算数据的算术算子（只读校验与状态字回读单列为「校验」类，不算违规，PM 暂定待用户确认），入口源码里不得有 `.float()` / `.to(dtype)` / `.permute()+.contiguous()` 一类的转换；去掉转换后输出要与改前逐位相同。
 新的 host 加宽 BF16 路径**不得再合入**（该拒绝就显式拒绝）。「后续 BF16 优先」：BF 系列任务是 P0、排在看板最前；`BF-07` 要 kernel 批次批准，gated，只问用户。已合入的历史 PR 不回滚，标为待改（首页表 `→ BF-xx`）。
 
 ### 合入授权（用户 2026-09-19，D-PM-33）

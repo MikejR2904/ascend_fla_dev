@@ -250,7 +250,7 @@
       "date": "2026-09-19",
       "by": "user",
       "decision": "禁止在 host 侧转数据类型和格式，必须在 kernel 内完成。（用户原话：「禁止在host转数据类型，格式。需要在kernel内完成。」）",
-      "risk": "PM 的读法（用户可纠正）：(1) 这是 D-PM-35 的扩大：从「BF16 计算」扩到**所有 dtype 与格式（布局）转换**，FP32 路径同样。(2) host 侧只允许分配输出、不拷贝的元数据操作、检查并显式报错、取指针、launch；禁止 dtype 转换（.float()/.to/.bfloat16()）、格式转换（permute/transpose+contiguous、token-major↔head-major、q/k 复制/expand 拷贝、cat/stack/pad、npu_format_cast、绕 CPU 重排）与算术。(3)「在 kernel 内完成」读作自编译 kernel 完成——融进主 kernel 首选，独立的自编译布局 kernel 也可，torch 算子不行；多出的 launch 要报数。(4) 范围是算子公共入口及其包装（ascend_fla/ops/**）；模型层/模块（layers、modules，由 torch 算子组成）暂不在内。(5) 静态清单（PM grep）：KDA chunk/autograd/decode 有 host 重排与 dtype 转换（含 layout_device=cpu 旁路），GDN/PGDN/GDN-2 chunk 前向有 BF16 加宽与 GQA 复制，A2-44 的 raw flags 预处理是 FP32 host 算子；PKDA 入口是干净的。(6) 改正：BF-01…BF-06 规格加 D-PM-37 追加段（两条 dtype 路径、格式转换、FP32 逐位相同）；新建 FMT-01（真机审计工具 + 全仓清单）、FMT-02（KDA layout/dtype 进 kernel，新单元，不改已有 kernel 源码，要改先发 RISK）；BF-07 仍 gated。(7) 在飞/待审：GDA-03（PR #98）的公共入口只有 zeros 分配，静态上不违规，审查时按新规则做真机审计核对；BF-04 已 ACK，已通知新规则；A2-01 是 benchmarks，不受影响；已合入的历史 PR 不回滚，标为待改。"
+      "risk": "PM 的读法（用户可纠正）：(1) 这是 D-PM-35 的扩大：从「BF16 计算」扩到**所有 dtype 与格式（布局）转换**，FP32 路径同样。(2) host 侧只允许分配输出、不拷贝的元数据操作、检查并显式报错、取指针、launch；禁止 dtype 转换（.float()/.to/.bfloat16()）、格式转换（permute/transpose+contiguous、token-major↔head-major、q/k 复制/expand 拷贝、cat/stack/pad、npu_format_cast、绕 CPU 重排）与算术。(3)「在 kernel 内完成」读作自编译 kernel 完成——融进主 kernel 首选，独立的自编译布局 kernel 也可，torch 算子不行；多出的 launch 要报数。(4) 范围是算子公共入口及其包装（ascend_fla/ops/**）；模型层/模块（layers、modules，由 torch 算子组成）暂不在内。(5) 静态清单（PM grep）：KDA chunk/autograd/decode 有 host 重排与 dtype 转换（含 layout_device=cpu 旁路），GDN/PGDN/GDN-2 chunk 前向有 BF16 加宽与 GQA 复制，A2-44 的 raw flags 预处理是 FP32 host 算子；PKDA 入口是干净的。(6) 改正：BF-01…BF-06 规格加 D-PM-37 追加段（两条 dtype 路径、格式转换、FP32 逐位相同）；新建 FMT-01（真机审计工具 + 全仓清单）、FMT-02（KDA layout/dtype 进 kernel，新单元，不改已有 kernel 源码，要改先发 RISK）；BF-07 仍 gated。(7) 在飞/待审：GDA-03（PR #98）的公共入口只有 zeros 分配，静态上不违规，审查时按新规则做真机审计核对；BF-04 已 ACK，已通知新规则；A2-01 是 benchmarks，不受影响；已合入的历史 PR 不回滚，标为待改。 【2026-09-19 更正】(5) 里「PKDA 入口是干净的」只对 dtype / 格式转换成立：PKDA 的 FP32 入口有 host 数值校验（validate_inputs：isfinite / 范围 / 范数 / 门控前缀求和）与默认 center 的 torch.full——BF-04 申领人的 RISK contradicts-handoff 指出的，PM 的静态 grep 只查了转换、漏了算术。PM 暂定（待用户确认）：只读校验、状态字回读、常数填充分配允许（审计里单列「校验」类）；产出进入计算的数据的算术 / 转换 / 重排不允许。"
     }
   ],
   "gated_epics": [
@@ -487,6 +487,10 @@
         {
           "at": "2026-09-19T17:09",
           "summary": "派给 limjiunnbin（GDN 系列 session gdn-series-…），24h，分支 task/BF-01；按它在 #100 的排队 APPLY 与 GDA-03 关闭后的承诺直接派，不需要重新申领。规格含 D-PM-35 与 D-PM-37 追加段：格式转换（GQA 复制）也在 kernel 内，FP32 路径同样，输出改前逐位相同，两条路径都过 host 算子审计"
+        },
+        {
+          "at": "2026-09-19T17:18",
+          "summary": "申领人在 #100 问：CPU 显式 launcher（board/aclnn）里 _validate 的 torch.isfinite/范围比较可否作为诊断输入校验例外保留，而两条 NPU 路径严格过审计。PM 暂定（待用户确认）：允许（只读校验 + 诊断 launcher 不属 NPU 生产路径审计范围）"
         }
       ],
       "result": null,
@@ -649,6 +653,10 @@
         {
           "at": "2026-09-19T16:47",
           "summary": "ACK（16:35Z，eta 24h，自述）：按 CPU 精度研究先行、BF16 派生单元、真机全网格 + 门控域重测的计划；此前只盯 #31、没及时发现改派到 #103，看到 NO_TASK 后恢复。已通知 D-PM-37（格式转换也不得在 host）。状态 assigned→in_progress"
+        },
+        {
+          "at": "2026-09-19T17:18",
+          "summary": "RISK soc-assumption（16:51Z，自述）：CPU 精度研究——24 个 case（原 16 契约 + 门控跨度 0/1e-4/50/105/155 + 三个「一大后小」对抗），BF16 ATK 状态存储 23/24 不过（final_A_state 相对 L2 最大 3.35e-3，预算 1e-4），BF16 门控前缀存储 13/24 不过（o 3.08e-2），BF16 输出 matmul operand + FP32 累加 24/24 过（o 3.43e-3、final_state 6.63e-6、A 0）；误差地板 F_o 1.53–1.71e-3、F_state 1.64–1.67e-3；预算不变（o/state ≤ 1e-2 且 ≤ 3F，ATK ≤ 1e-4）。设计：prepare 读真 BF16 GM 输入、VF 内加宽，ATK / Kahan 前缀 / scores / WY / scan 留 FP32（D-PM-35 允许的 kernel 内部精度选择），只有输出阶段用真 BF16 cube operand + FP32 累加、kernel 直接写 BF16；保留 span 155，原生端点与对抗尚待跑。PM：认可，不是域变化。RISK contradicts-handoff（17:10Z，自述）：D-PM-37 的两 dtype 审计下，PKDA 的 FP32 入口也有 host 数值校验（validate_inputs 的 isfinite/比较/k.square().sum/g.sum）与 torch.full 的默认 center——PM 说「PKDA 入口是干净的」只对转换成立；申领人提议给新单元加 FP32 的设备校验 + 默认值初始化 kernel（多一次 launch）。PM 暂定（待用户确认）：只读校验、状态字回读、常数填充分配允许，不必为 FP32 路径多加 launch；BF16 优先。已更正 D-PM-37 记录与通则文档。BF16 编码完成、bd4 原生构建中，未声称真机通过"
         }
       ],
       "result": null,
@@ -1189,7 +1197,7 @@
       "wave": "W0",
       "soc": "a2",
       "priority": "P1",
-      "status": "open",
+      "status": "assigned",
       "model": [],
       "kernel": [
         "kda_fwd_stable",
@@ -1207,18 +1215,34 @@
         "kernels/projects/a2/**"
       ],
       "needs": {
-        "npu": false,
+        "npu": true,
         "ascriptor": true,
         "fla": false
       },
       "spec": "docs/pm/tasks/A2-03.md",
       "issue": 34,
       "pr": null,
-      "assignee": null,
-      "assignee_caps": null,
-      "branch": null,
+      "assignee": "limjiunnbin",
+      "assignee_caps": {
+        "agent": "Claude Opus 5（Claude Code）（自述）",
+        "socs": [
+          "a2"
+        ],
+        "soc_details": "自述：SoC 910B3，CANN 9.0.0，内置算子包目录含 ascend910b、ascend910_93（无 ascend950）；机器与卡归 assignee 管理（D-PM-28）",
+        "ascriptor": "library 90cfcdc / kernels b3b3f9c（按 agent/compatibility.json 的 pin；自述）",
+        "fla": "e52dbc0e（自述）",
+        "fork": "limjiunnbin/ascend_fla_dev",
+        "session": "a2-01-20260919T143510Z-35b3db2a",
+        "note": "A2-01 的申领人（已 done）；与 BF-01（session gdn-series-…）、BF-04（session 01a0b7ce-…）同账号，三个 session 互不相同，并发规则放行。申领于 #34（2026-09-19T16:52:58Z）。"
+      },
+      "branch": "task/A2-03",
       "timebox_h": 20,
-      "reports": [],
+      "reports": [
+        {
+          "at": "2026-09-19T17:18",
+          "summary": "派给 limjiunnbin（session a2-01-…，唯一有 a2 真机的申领人），分支 task/A2-03，时限暂 20h。申领人的只读探针（自述）+ PM 读库源码核实：pin 版 ascriptor.a2 没有 @vf / @simt，15 个 KDA kernel 里 14 个用 @vf，a2 上向量侧要用 UB 指令重写，cube↔vector 交接也要改走 GM workspace——「派生」实际是重写全部向量侧与数据流，规格原来的 20h / 换 import 假设是低估。已在规格加更正段：第一个 STATUS 给按 kernel 的工作量估计，PM 据此调时限或拆任务，不按 timebox-slip 扣分；新建的是 a2 新单元（不改上游与 A5 源码，不属 kernel 批次），显式 barrier 落实 A2-01 结论，BF16 kernel 直吃直写、公共 ABI 按 token-major 设计（D-PM-35/37）；真机验证在申领人的 910B3 上，A2-11 之前只作观测。影响 A2 波次的工作量估计，已上报用户"
+        }
+      ],
       "result": null
     },
     {
@@ -3303,6 +3327,10 @@
         {
           "at": "2026-09-19T17:09",
           "summary": "合入：PR #98 合并提交 8d16cb7（合入的是审过的头 1d12b94，--match-head-commit）。依 D-PM-33 自行合入：写集内、无红旗/隐私命中，D-PM-35/37 合规（BF16 显式拒绝、无 host 转换），真机原始回执由 PM 复算（FP32 最大 8.3e-7 vs 预算 1e-4，bd1↔bd2 69 case 逐位相同，900 个计时样本重算一致），全量对账。合入后 main 669 passed/12 skipped。状态 in_progress→done"
+        },
+        {
+          "at": "2026-09-19T17:18",
+          "summary": "合入后补充（申领人，#98 评论 5743778721，不改生产源码）：真机公共入口 host 算子审计——4 个完整 B1/T4096/HV8 FP32 case（H8 的 both / do-only / dht-only，H4 分组 both）里只出现 aten.empty.memory_format（共 43）、zeros ×1、zeros_like ×1，零个禁止算子；5 个真机 BF16 拒绝 case（q/k/v/do/all）零个 aten 算子、错误指向 BF-02；输出对新生成的独立 B 最大相对 L2 4.08e-7、输入未变、H8 的 15 个公共数组哈希与先前一致；源码 190 个 Python 文件哈希与交付一致。PM 解析了评论里的原始报告 JSON，与 PM 的代理式审计一致。这是仓里第一份真机 dispatch 审计"
         }
       ],
       "result": {
