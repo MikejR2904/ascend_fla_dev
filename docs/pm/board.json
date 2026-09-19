@@ -423,11 +423,13 @@
       "wave": "W0",
       "soc": "any",
       "priority": "P1",
-      "status": "open",
+      "status": "gated",
       "model": [],
       "kernel": [],
       "dtype": [],
-      "deps": [],
+      "deps": [
+        "A5K-02"
+      ],
       "write_set": [
         "ascend_fla/platform.py",
         "ascend_fla/runtime/compile.py",
@@ -448,8 +450,14 @@
       "assignee_caps": null,
       "branch": null,
       "timebox_h": 10,
-      "reports": [],
-      "result": null
+      "reports": [
+        {
+          "at": "2026-09-19T01:21",
+          "summary": "APPLY from joshjms（#31）身份/能力校验通过，但写集（ops/kda/** 含 chunk.py、chunk_bwd.py、fused_recurrent.py 的 _kernels_root/_stable_kernels_root/_unit_root）与在飞的 A5K-02（blocked，limjiunnbin，草稿 PR #83）重叠——A5K-02 正在这些文件里加公开调度选择修复版 kernel 的逻辑，A2-02 要把这些文件里写死的 device=\"a5\" 改成走 platform 解析。两边都改同一批调度函数，冲突风险真实存在。转 gated，补 A5K-02 为依赖，NO_TASK 已发"
+        }
+      ],
+      "result": null,
+      "gate": "write-set-overlap:A5K-02"
     },
     {
       "id": "A2-05",
