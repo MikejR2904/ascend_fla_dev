@@ -26,7 +26,7 @@ fla 系列线性注意力算子在昇腾 NPU 上的高效实现库。后端用
 
 | 算子族 | id | 归属 | kernel 数 | 任务进度 |
 |---|---|---|---|---|
-| KDA（Kimi Delta Attention） | `kda` | 可申领 | 5 | 3/19 |
+| KDA（Kimi Delta Attention） | `kda` | 可申领 | 5 | 3/20 |
 | GDN（Gated DeltaNet） | `gated_delta_rule` | 可申领 | 4 | 3/10 |
 | DeltaNet | `delta_rule` | 尚未排任务 | 2 | 2/2 单元有验证记录 |
 | GDN-2（Gated DeltaNet 2） | `gdn2` | 仓主轨道 | 6 | 3/5 |
@@ -46,7 +46,7 @@ fla 系列线性注意力算子在昇腾 NPU 上的高效实现库。后端用
 
 ### 展开看细节（算子族 → kernel → 任务）
 
-<details><summary><b>KDA（Kimi Delta Attention） —— 5 个 kernel，3/19 完成</b></summary>
+<details><summary><b>KDA（Kimi Delta Attention） —— 5 个 kernel，3/20 完成</b></summary>
 
 _首个目标算子族，Kimi-Linear 用它_
 
@@ -64,7 +64,7 @@ _首个目标算子族，Kimi-Linear 用它_
 |---|---|---|---|---|---|
 | FMT-02 | [#109](https://github.com/ddddwee1/ascend_fla_dev/issues/109) | `a5` | bf16 | ⬜ open | ★ 起点 |
 | A2-04 | [#30](https://github.com/ddddwee1/ascend_fla_dev/issues/30) | `any` | bf16 | ✅ done | ★ 起点 |
-| A2-03 | [#34](https://github.com/ddddwee1/ascend_fla_dev/issues/34) | `a2` | bf16、fp32 | 🔵 assigned | ★ 起点 |
+| A2-03 | [#34](https://github.com/ddddwee1/ascend_fla_dev/issues/34) | `a2` | bf16、fp32 | 🔵 in_progress | ★ 起点 |
 | A5-04 | [#50](https://github.com/ddddwee1/ascend_fla_dev/issues/50) | `a5` | bf16、fp32 | 🔒 gated (wave:W-A3) | ★ 起点 |
 | A5K-01 | [#76](https://github.com/ddddwee1/ascend_fla_dev/issues/76) | `a5` | bf16、fp32 | ✅ done | ★ 起点 |
 | A5K-02 | [#81](https://github.com/ddddwee1/ascend_fla_dev/issues/81) | `a5` | bf16、fp32 | ✅ done |  |
@@ -77,12 +77,12 @@ _首个目标算子族，Kimi-Linear 用它_
 
 </details>
 
-<details><summary>kda_bwd_stable —— 0/9 完成，起点 FMT-02、A2-03、A2-K1、A5-04、A5-05</summary>
+<details><summary>kda_bwd_stable —— 0/9 完成，起点 FMT-02、A2-09、A2-K1、A5-04、A5-05</summary>
 
 | 任务 | issue | SoC | dtype | 状态 | 说明 |
 |---|---|---|---|---|---|
 | FMT-02 | [#109](https://github.com/ddddwee1/ascend_fla_dev/issues/109) | `a5` | bf16 | ⬜ open | ★ 起点 |
-| A2-03 | [#34](https://github.com/ddddwee1/ascend_fla_dev/issues/34) | `a2` | bf16、fp32 | 🔵 assigned | ★ 起点 |
+| A2-09 | — | `a2` | bf16、fp32 | ⬜ open | ★ 起点 |
 | A2-K1 | [#44](https://github.com/ddddwee1/ascend_fla_dev/issues/44) | `a2` | bf16、fp32 | 🔒 gated (kernel-batch-approval) | ★ 起点 |
 | A5-04 | [#50](https://github.com/ddddwee1/ascend_fla_dev/issues/50) | `a5` | bf16、fp32 | 🔒 gated (wave:W-A3) | ★ 起点 |
 | A5-05 | [#51](https://github.com/ddddwee1/ascend_fla_dev/issues/51) | `a5` | bf16、fp32 | 🔒 gated (wave:W-A3) | ★ 起点 |
@@ -98,7 +98,7 @@ _首个目标算子族，Kimi-Linear 用它_
 | 任务 | issue | SoC | dtype | 状态 | 说明 |
 |---|---|---|---|---|---|
 | BF-06 | [#105](https://github.com/ddddwee1/ascend_fla_dev/issues/105) | `a5` | bf16 | ⬜ open | ★ 起点 |
-| A2-03 | [#34](https://github.com/ddddwee1/ascend_fla_dev/issues/34) | `a2` | bf16、fp32 | 🔵 assigned | ★ 起点 |
+| A2-03 | [#34](https://github.com/ddddwee1/ascend_fla_dev/issues/34) | `a2` | bf16、fp32 | 🔵 in_progress | ★ 起点 |
 | A2-K1 | [#44](https://github.com/ddddwee1/ascend_fla_dev/issues/44) | `a2` | bf16、fp32 | 🔒 gated (kernel-batch-approval) | ★ 起点 |
 | A5-01 | [#47](https://github.com/ddddwee1/ascend_fla_dev/issues/47) | `a5` | fp32 | 🔒 gated (wave:W-A3) | ★ 起点 |
 | A5-02 | [#48](https://github.com/ddddwee1/ascend_fla_dev/issues/48) | `a5` | fp32 | 🔒 gated (wave:W-A3) | ★ 起点 |
@@ -350,8 +350,8 @@ _未排期：属 gated epic G4（窄切片原则 —— 没有目标模型就不
 
 | dtype | 归属 | 涉及任务 | 说明 |
 |---|---|---|---|
-| `bf16` | 可申领 | 41 | 当前 ABI：q/k/v/o 与多数中间量 |
-| `fp32` | 可申领 | 42 | 当前 ABI：state、门控累加、精度判定一律 fp32 |
+| `bf16` | 可申领 | 42 | 当前 ABI：q/k/v/o 与多数中间量 |
+| `fp32` | 可申领 | 43 | 当前 ABI：state、门控累加、精度判定一律 fp32 |
 | `fp16` | 未排期 (G3) | — | 契约明确拒绝（见 ops.json 的 no-tail-path 一条） |
 | `int8` | 未排期 (G3) | 1 | 未排期；state 累积漂移需先有方案 |
 | `mxfp8` | 未排期 (G3) | 1 | 未排期；950 原生解码待核实 |

@@ -1,6 +1,6 @@
 {
   "schema": "fla-pm-board/2",
-  "updated_at": "2026-09-16",
+  "updated_at": "2026-09-19",
   "repo": "ddddwee1/ascend_fla_dev",
   "pm_github_login": "limjiunnbin",
   "intake_issue": 28,
@@ -251,6 +251,13 @@
       "by": "user",
       "decision": "禁止在 host 侧转数据类型和格式，必须在 kernel 内完成。（用户原话：「禁止在host转数据类型，格式。需要在kernel内完成。」）",
       "risk": "PM 的读法（用户可纠正）：(1) 这是 D-PM-35 的扩大：从「BF16 计算」扩到**所有 dtype 与格式（布局）转换**，FP32 路径同样。(2) host 侧只允许分配输出、不拷贝的元数据操作、检查并显式报错、取指针、launch；禁止 dtype 转换（.float()/.to/.bfloat16()）、格式转换（permute/transpose+contiguous、token-major↔head-major、q/k 复制/expand 拷贝、cat/stack/pad、npu_format_cast、绕 CPU 重排）与算术。(3)「在 kernel 内完成」读作自编译 kernel 完成——融进主 kernel 首选，独立的自编译布局 kernel 也可，torch 算子不行；多出的 launch 要报数。(4) 范围是算子公共入口及其包装（ascend_fla/ops/**）；模型层/模块（layers、modules，由 torch 算子组成）暂不在内。(5) 静态清单（PM grep）：KDA chunk/autograd/decode 有 host 重排与 dtype 转换（含 layout_device=cpu 旁路），GDN/PGDN/GDN-2 chunk 前向有 BF16 加宽与 GQA 复制，A2-44 的 raw flags 预处理是 FP32 host 算子；PKDA 入口是干净的。(6) 改正：BF-01…BF-06 规格加 D-PM-37 追加段（两条 dtype 路径、格式转换、FP32 逐位相同）；新建 FMT-01（真机审计工具 + 全仓清单）、FMT-02（KDA layout/dtype 进 kernel，新单元，不改已有 kernel 源码，要改先发 RISK）；BF-07 仍 gated。(7) 在飞/待审：GDA-03（PR #98）的公共入口只有 zeros 分配，静态上不违规，审查时按新规则做真机审计核对；BF-04 已 ACK，已通知新规则；A2-01 是 benchmarks，不受影响；已合入的历史 PR 不回滚，标为待改。 【2026-09-19 更正】(5) 里「PKDA 入口是干净的」只对 dtype / 格式转换成立：PKDA 的 FP32 入口有 host 数值校验（validate_inputs：isfinite / 范围 / 范数 / 门控前缀求和）与默认 center 的 torch.full——BF-04 申领人的 RISK contradicts-handoff 指出的，PM 的静态 grep 只查了转换、漏了算术。PM 暂定（待用户确认）：只读校验、状态字回读、常数填充分配允许（审计里单列「校验」类）；产出进入计算的数据的算术 / 转换 / 重排不允许。"
+    },
+    {
+      "id": "D-PM-38",
+      "date": "2026-09-19",
+      "by": "pm",
+      "decision": "A2-03 拆成 A2-03（前向 + decode，72h）与新任务 A2-09（反向，56h，依赖 A2-03），采纳申领人第一个 STATUS 的建议；范围与总写集不变，只是分成两个可独立审、独立合入的 PR。A2-13 增加对 A2-09 的依赖。",
+      "risk": "小时数（合计约 123h vs 原 20h）是申领人自述，PM 只核了静态事实（pin 版 ascriptor.a2 没有 @vf / @simt、14/15 个 kernel 用 @vf、a2 上 dma.l0c_to_ub 与 nd2nz 不可用），无法核实工时本身；估计可能偏高也可能偏低，所以要求每个 STATUS 按 kernel 报实际耗时，超估计 25% 走 timebox-slip。A2-09 的 55h 只含九个 kernel 行，bwd 单元的 contract / 网格 / 证据整理另计（骨架与网格的 16h 全算在 A2-03 里），派单时补估计再调时限。这改变 A2 波次（KDA 先行）的工作量预期，已上报用户；A2 上的 PR 合入前仍问用户（D-PM-33：A2-11 之前 A2 结论不算数）。A2-03 与 A2-09 都是新建 a2 单元，不改上游与 A5 源码，不属于 kernel 批次。"
     }
   ],
   "gated_epics": [
@@ -495,6 +502,10 @@
         {
           "at": "2026-09-19T17:22",
           "summary": "ACK（17:12Z，eta 24h，自述）：先冻结 ABI、BF16 舍入 / 误差地板约定与 A/B 校准；新单元同时承接 FP32 与 BF16，kernel 内 head 索引做分组、转换在 kernel 里，原 FP32 单元留作逐字节基线；完整 B1/T4096/H=HV8 先跑，两条 dtype 路径都做真机 host 算子审计，同卡 FP32 新旧字节比较与三轮 BF16-vs-原 FP32 三明治；CPU 诊断 launcher 的输入校验问题（PM 已在 #100 暂定允许）相关的包装分支等裁定，不阻塞校准与 kernel 方案。状态 assigned→in_progress"
+        },
+        {
+          "at": "2026-09-19T17:30",
+          "summary": "STATUS（17:30Z，自述）：改前校准完成——28 个 case × (BF16 舍入 / FP32) 输入 = 56 条 A/B 记录；A（字面核对哈希的 pin 版 FLA）与 B（独立 FP32 三角求解）之间最大相对 L2：o 2.04e-6、final_state 1.78e-6，均 ≤ 1e-4；BF16 误差地板 o 1.627e-3~1.676e-3、state 1.633e-3~1.673e-3，验收取 min(1e-2, 3F)、零地板按精确判；零 / 符号 / 1.25 倍三个负对照都被拒。任务自有的五 launch 计划有 7 个类型化条目（FP32 / BF16 的 prepare 与 output、三个共享 FP32 阶段），7 项静态检查 0 error 0 warning；kernel 内按组索引替代 host 复制、BF16 在 VF 里转换、state 在 kernel 内初始化；旧 FP32 前向 55 个 host 测试与新 38 个测试通过。尚无原生 BF16 结果；旧 FP32 公共入口的全工作量基线在跑（两个 block_dim 的哈希都保留）。收到 PM 对 CPU 诊断 launcher 输入校验的暂定放行（待用户确认），NPU 两条路径的审计仍严格。blockers: none"
         }
       ],
       "result": null,
@@ -629,7 +640,7 @@
       },
       "spec": "docs/pm/tasks/BF-04.md",
       "issue": 103,
-      "pr": null,
+      "pr": 110,
       "assignee": "limjiunnbin",
       "assignee_caps": {
         "agent": "Codex，KDA/PKDA session（自述）",
@@ -661,6 +672,10 @@
         {
           "at": "2026-09-19T17:18",
           "summary": "RISK soc-assumption（16:51Z，自述）：CPU 精度研究——24 个 case（原 16 契约 + 门控跨度 0/1e-4/50/105/155 + 三个「一大后小」对抗），BF16 ATK 状态存储 23/24 不过（final_A_state 相对 L2 最大 3.35e-3，预算 1e-4），BF16 门控前缀存储 13/24 不过（o 3.08e-2），BF16 输出 matmul operand + FP32 累加 24/24 过（o 3.43e-3、final_state 6.63e-6、A 0）；误差地板 F_o 1.53–1.71e-3、F_state 1.64–1.67e-3；预算不变（o/state ≤ 1e-2 且 ≤ 3F，ATK ≤ 1e-4）。设计：prepare 读真 BF16 GM 输入、VF 内加宽，ATK / Kahan 前缀 / scores / WY / scan 留 FP32（D-PM-35 允许的 kernel 内部精度选择），只有输出阶段用真 BF16 cube operand + FP32 累加、kernel 直接写 BF16；保留 span 155，原生端点与对抗尚待跑。PM：认可，不是域变化。RISK contradicts-handoff（17:10Z，自述）：D-PM-37 的两 dtype 审计下，PKDA 的 FP32 入口也有 host 数值校验（validate_inputs 的 isfinite/比较/k.square().sum/g.sum）与 torch.full 的默认 center——PM 说「PKDA 入口是干净的」只对转换成立；申领人提议给新单元加 FP32 的设备校验 + 默认值初始化 kernel（多一次 launch）。PM 暂定（待用户确认）：只读校验、状态字回读、常数填充分配允许，不必为 FP32 路径多加 launch；BF16 优先。已更正 D-PM-37 记录与通则文档。BF16 编码完成、bd4 原生构建中，未声称真机通过"
+        },
+        {
+          "at": "2026-09-19T17:32",
+          "summary": "STATUS（17:32Z，自述）+ draft PR #110（17:34Z 开，未 DONE）：原生 BF16 的 bd4 完整 T4096 已上板，随后 89 个完整链 case（16 契约 + 64 尾块 + B2/H32 + 5 个跨度端点 + 3 个一大后小）与 43 项 API / FP32 字节回归全过；相对 CPU 参考 A 的最大相对 L2：o 3.426e-3、S 6.615e-6、A 1.053e-7，也满足独立 B 与每 case 3F。BF16 入口 host 审计只有 empty / view，输入不变、输出 NaN 预填全覆盖；FP32 原 / 新入口三个输出逐位相同；已按 PM 裁定把原 FP32 只读 validator 归入独立「校验」类并去掉多余的 FP32 guard launch（BF16 数学 kernel 未变，最终入口重新审计并逐位对照）。sim / pipesim（T129/H1/bd1）event 平衡、hazards=[]、无 deadlock；两端 PKDA 相关 CPU 测试均 83 passed。bd1/2/3 各独立进程构建中，之后同网格并逐位比较，再做同卡三轮 FP32/BF16/FP32 性能与脱敏回执。PM 早期扫描（非评审）：27 个文件全在写集内、无保留路径改动、新增行无 IP / 用户目录 / 令牌 / UUID；DONE 前不审。blockers: none"
         }
       ],
       "result": null,
@@ -1197,15 +1212,14 @@
     },
     {
       "id": "A2-03",
-      "title": "KDA 单元派生到 kernels/projects/a2（check/reference/sim）",
+      "title": "KDA 前向 + decode 单元重写到 kernels/projects/a2（A2-03a：gate、decode、前向四 kernel；反向拆到 A2-09）",
       "wave": "W0",
       "soc": "a2",
       "priority": "P1",
-      "status": "assigned",
+      "status": "in_progress",
       "model": [],
       "kernel": [
         "kda_fwd_stable",
-        "kda_bwd_stable",
         "kda_fused_recurrent"
       ],
       "dtype": [
@@ -1240,11 +1254,64 @@
         "note": "A2-01 的申领人（已 done）；与 BF-01（session gdn-series-…）、BF-04（session 01a0b7ce-…）同账号，三个 session 互不相同，并发规则放行。申领于 #34（2026-09-19T16:52:58Z）。"
       },
       "branch": "task/A2-03",
-      "timebox_h": 20,
+      "timebox_h": 72,
       "reports": [
         {
           "at": "2026-09-19T17:18",
           "summary": "派给 limjiunnbin（session a2-01-…，唯一有 a2 真机的申领人），分支 task/A2-03，时限暂 20h。申领人的只读探针（自述）+ PM 读库源码核实：pin 版 ascriptor.a2 没有 @vf / @simt，15 个 KDA kernel 里 14 个用 @vf，a2 上向量侧要用 UB 指令重写，cube↔vector 交接也要改走 GM workspace——「派生」实际是重写全部向量侧与数据流，规格原来的 20h / 换 import 假设是低估。已在规格加更正段：第一个 STATUS 给按 kernel 的工作量估计，PM 据此调时限或拆任务，不按 timebox-slip 扣分；新建的是 a2 新单元（不改上游与 A5 源码，不属 kernel 批次），显式 barrier 落实 A2-01 结论，BF16 kernel 直吃直写、公共 ABI 按 token-major 设计（D-PM-35/37）；真机验证在申领人的 910B3 上，A2-11 之前只作观测。影响 A2 波次的工作量估计，已上报用户"
+        },
+        {
+          "at": "2026-09-19T17:22",
+          "summary": "ACK（17:22Z，eta 60h 暂估，自述）：先盘点 15 个 kernel（a2 上 dma.l0c_to_ub 与 dma.ub_to_l1.nd2nz 不可用、没有 vf，走 GM workspace + CvMutex/VcMutex），先做竖切 decode → 前向五个，再反向九个；所有 L0C 累加链显式 barrier(Pipe.M)，不用 M<64 的 BF16/FP16 splitk；三个单元各有 unit / contract / run，另跑 (C,HV,bd) 网格；契约 board / aclnn 标 untested，真机证据按 D-PM-34 单独附上、只作观测；a5 一字节不改。状态 assigned→in_progress"
+        },
+        {
+          "at": "2026-09-19T17:25",
+          "summary": "STATUS（自述）：盘点完 15 个 kernel（AST 静态扫描 + pin 版 verifier 实测），按 kernel 的工作量估计合计约 123h（原时限 20h）——纯向量 6 个共 33h、纯 cube 1 个 2h、混合 8 个共 72h，另加三个单元骨架 6h 与网格 / 真机 / 证据 10h；最重的是 fwd recurrent 16h（333 行主体、31 个 DEvent、含 Aqk 交接修复）与 fwd inverse 12h。建议拆成 A2-03a（gate + decode + 前向其余四个 + fwd / decode 两个单元，约 70h）与 A2-03b（反向九个 + bwd 单元，约 55h），拆不拆由 PM 定，先按 a 的范围往下做。blockers: none"
+        },
+        {
+          "at": "2026-09-19T17:50",
+          "summary": "PM 裁定（D-PM-38）：采纳拆分。A2-03 = A2-03a（gate、decode、前向四 kernel + kda_fwd_stable / kda_fused_recurrent 两个单元），时限 20h→72h（估计约 70h 取整）；反向九个 kernel + bwd 单元拆成新任务 A2-09（56h，依赖 A2-03，写集 kernels/projects/a2/kda_bwd_stable/**），A2-13 增加对 A2-09 的依赖。小时数是自述，PM 只核了静态事实（a2 上没有 @vf、14/15 个 kernel 用 @vf、l0c_to_ub 与 nd2nz 不可用）；总量约 123h 改变 A2 波次（KDA 先行）的工作量预期，已上报用户。规格改了范围、加了拆分裁定一节，在 #34 重发 ASSIGN（修订）；建议早开 draft PR、逐 kernel 增量推送"
+        }
+      ],
+      "result": null
+    },
+    {
+      "id": "A2-09",
+      "title": "KDA 反向单元重写到 kernels/projects/a2（A2-03b：反向九个 kernel + bwd 单元）",
+      "wave": "W0",
+      "soc": "a2",
+      "priority": "P1",
+      "status": "open",
+      "model": [],
+      "kernel": [
+        "kda_bwd_stable"
+      ],
+      "dtype": [
+        "bf16",
+        "fp32"
+      ],
+      "deps": [
+        "A2-03"
+      ],
+      "write_set": [
+        "kernels/projects/a2/kda_bwd_stable/**"
+      ],
+      "needs": {
+        "npu": true,
+        "ascriptor": true,
+        "fla": false
+      },
+      "spec": "docs/pm/tasks/A2-09.md",
+      "issue": null,
+      "pr": null,
+      "assignee": null,
+      "assignee_caps": null,
+      "branch": null,
+      "timebox_h": 56,
+      "reports": [
+        {
+          "at": "2026-09-19T17:50",
+          "summary": "新建（D-PM-38）：从 A2-03 拆出的反向部分——bwd 九个 kernel + bwd 单元，范围不变，只是分成两个可独立审、独立合入的 PR。依赖 A2-03 合入（沿用它立的 a2 单元骨架、token-major ABI、GM workspace / mutex 写法）；A2-03 完成后 PM 直接派给 A2-03 的申领人，不需要重新申领。申领人估计九个 kernel 约 55h（自述），不含 bwd 单元自己的 contract / 网格 / 证据整理，派单时补估计再调时限"
         }
       ],
       "result": null
@@ -1451,7 +1518,8 @@
         "fp32"
       ],
       "deps": [
-        "A2-12"
+        "A2-12",
+        "A2-09"
       ],
       "write_set": [
         "tests/test_kda_bwd_npu.py",

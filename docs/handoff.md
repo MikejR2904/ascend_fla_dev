@@ -11,6 +11,15 @@
 
 ### 正在飞的任务（现在没有；A5K-02、PK-02、PK-03 都已于 2026-09-19 合入）
 
+> **2026-09-19T17:50Z 更新：A2-03 拆成 A2-03（前向 + decode）与 A2-09（反向）——申领人的估计合计约 123h，原时限 20h；BF-04 原生 BF16 的 bd4 全网格自述通过，draft PR #110 开了；BF-01 改前校准完成。**
+> - **A2-03（D-PM-38）**：申领人的第一个 STATUS 给了按 kernel 的估计——纯向量 6 个共 33h、纯 cube 1 个 2h、混合 8 个共 72h，另加骨架 6h 与网格 / 真机 / 证据 10h，**合计约 123h**（自述，PM 只核了静态事实：a2 上没有 `@vf`、14/15 个 kernel 用 `@vf`、`dma.l0c_to_ub` 与 `dma.ub_to_l1.nd2nz` 不可用）。
+>   PM 采纳它建议的拆分：**A2-03 = 前向 + decode**（gate、decode、前向四 kernel，`kda_fwd_stable` / `kda_fused_recurrent` 两个单元，72h），**A2-09 = 反向**（九个 kernel + bwd 单元，56h，依赖 A2-03，写集 `kernels/projects/a2/kda_bwd_stable/**`）；A2-13 增加对 A2-09 的依赖。
+>   A2-09 的 55h 只含九个 kernel 行，bwd 单元自己的 contract / 网格 / 证据整理另计，派单时补估计再调时限。**这改变 A2 波次（KDA 先行）的工作量预期**，已上报用户；A2 上的 PR 合入前仍问用户，A2-11 之前 A2 结论不算数。
+> - **BF-04**：原生 BF16 的 bd4 完整 T4096 已上板，89 个完整链 case + 43 项 API / FP32 字节回归全过（**自述**）：相对 CPU 参考的最大相对 L2 o 3.426e-3、S 6.61e-6、A 1.05e-7；BF16 入口 host 审计只有 empty / view，FP32 原 / 新入口三个输出逐位相同。
+>   bd1/2/3 各独立进程构建中，再做同卡三轮性能与脱敏回执。draft PR #110 已开、**未 DONE**，我没有评审；早期扫描（非评审）写集内、无机器信息。DONE 时要复算原始回执、跑两条 dtype 路径的 host 算子审计、复核 BF16 门控域没有比 FP32 的 155 窄（窄了要问用户）。
+>   `native_checks.py` 里有三处 `exec(compile(before_path.read_text()…))` 加载「改前」模块做 FP32 逐位对照，DONE 评审时确认 `before_path` 指向仓内基线而不是外部来源。
+> - **BF-01**：改前校准完成（28 case × 56 条 A/B 记录，A↔B 最大相对 L2 o 2.04e-6 / final_state 1.78e-6，BF16 误差地板约 1.63–1.68e-3，负对照全被拒），7 个类型化条目静态检查 0 error；原生 BF16 结果与旧 FP32 全工作量基线还在跑。
+>
 > **2026-09-19T17:25Z 更新：D-PM-37 的边界被申领人问出来了（校验算不算算术），PM 暂定并更正；GDA-03 补交了仓里第一份真机 dispatch 审计；A2-03 派单，附一个影响 A2 波次估计的事实。**
 > - **更正**：我此前说「PKDA 入口是干净的」只对 dtype / 格式转换成立——PKDA 的 FP32 入口有 host 数值校验（`validate_inputs`：`isfinite` / 范围 / 范数 / 门控前缀求和）和 `torch.full` 的默认 center（BF-04 申领人的 `RISK contradicts-handoff` 指出，我的 grep 只查了转换、漏了算术）。
 >   同类的情况大概率在别的入口也有（KDA 的 `check_gate_range` 就在 device 上做 cumsum + 规约）。**PM 暂定（待用户确认）**：只读数值校验、校验用的 kernel 状态字回读、常数填充分配允许，审计里单列「校验」类；产出进入计算的数据的算术 / 转换 / 重排不允许；CPU 诊断 launcher 的输入校验保留。

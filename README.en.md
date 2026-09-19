@@ -27,7 +27,7 @@ serves only as the semantic authority during testing (`naive.py` as a CPU fp32 o
 
 | family | id | track | kernels | task progress |
 |---|---|---|---|---|
-| KDA (Kimi Delta Attention) | `kda` | open to agents | 5 | 3/19 |
+| KDA (Kimi Delta Attention) | `kda` | open to agents | 5 | 3/20 |
 | GDN (Gated DeltaNet) | `gated_delta_rule` | open to agents | 4 | 3/10 |
 | DeltaNet | `delta_rule` | no task yet | 2 | 2/2 units with validation records |
 | GDN-2 (Gated DeltaNet 2) | `gdn2` | owner track | 6 | 3/5 |
@@ -47,7 +47,7 @@ serves only as the semantic authority during testing (`naive.py` as a CPU fp32 o
 
 ### Expand for detail (family → kernel → task)
 
-<details><summary><b>KDA (Kimi Delta Attention) —— 5 kernel(s)，3/19 done</b></summary>
+<details><summary><b>KDA (Kimi Delta Attention) —— 5 kernel(s)，3/20 done</b></summary>
 
 _First target family; used by Kimi-Linear_
 
@@ -65,7 +65,7 @@ _First target family; used by Kimi-Linear_
 |---|---|---|---|---|---|
 | FMT-02 | [#109](https://github.com/ddddwee1/ascend_fla_dev/issues/109) | `a5` | bf16 | ⬜ open | ★ start |
 | A2-04 | [#30](https://github.com/ddddwee1/ascend_fla_dev/issues/30) | `any` | bf16 | ✅ done | ★ start |
-| A2-03 | [#34](https://github.com/ddddwee1/ascend_fla_dev/issues/34) | `a2` | bf16、fp32 | 🔵 assigned | ★ start |
+| A2-03 | [#34](https://github.com/ddddwee1/ascend_fla_dev/issues/34) | `a2` | bf16、fp32 | 🔵 in_progress | ★ start |
 | A5-04 | [#50](https://github.com/ddddwee1/ascend_fla_dev/issues/50) | `a5` | bf16、fp32 | 🔒 gated (wave:W-A3) | ★ start |
 | A5K-01 | [#76](https://github.com/ddddwee1/ascend_fla_dev/issues/76) | `a5` | bf16、fp32 | ✅ done | ★ start |
 | A5K-02 | [#81](https://github.com/ddddwee1/ascend_fla_dev/issues/81) | `a5` | bf16、fp32 | ✅ done |  |
@@ -78,12 +78,12 @@ _First target family; used by Kimi-Linear_
 
 </details>
 
-<details><summary>kda_bwd_stable —— 0/9 done，start FMT-02、A2-03、A2-K1、A5-04、A5-05</summary>
+<details><summary>kda_bwd_stable —— 0/9 done，start FMT-02、A2-09、A2-K1、A5-04、A5-05</summary>
 
 | task | issue | SoC | dtype | status | note |
 |---|---|---|---|---|---|
 | FMT-02 | [#109](https://github.com/ddddwee1/ascend_fla_dev/issues/109) | `a5` | bf16 | ⬜ open | ★ start |
-| A2-03 | [#34](https://github.com/ddddwee1/ascend_fla_dev/issues/34) | `a2` | bf16、fp32 | 🔵 assigned | ★ start |
+| A2-09 | — | `a2` | bf16、fp32 | ⬜ open | ★ start |
 | A2-K1 | [#44](https://github.com/ddddwee1/ascend_fla_dev/issues/44) | `a2` | bf16、fp32 | 🔒 gated (kernel-batch-approval) | ★ start |
 | A5-04 | [#50](https://github.com/ddddwee1/ascend_fla_dev/issues/50) | `a5` | bf16、fp32 | 🔒 gated (wave:W-A3) | ★ start |
 | A5-05 | [#51](https://github.com/ddddwee1/ascend_fla_dev/issues/51) | `a5` | bf16、fp32 | 🔒 gated (wave:W-A3) | ★ start |
@@ -99,7 +99,7 @@ _First target family; used by Kimi-Linear_
 | task | issue | SoC | dtype | status | note |
 |---|---|---|---|---|---|
 | BF-06 | [#105](https://github.com/ddddwee1/ascend_fla_dev/issues/105) | `a5` | bf16 | ⬜ open | ★ start |
-| A2-03 | [#34](https://github.com/ddddwee1/ascend_fla_dev/issues/34) | `a2` | bf16、fp32 | 🔵 assigned | ★ start |
+| A2-03 | [#34](https://github.com/ddddwee1/ascend_fla_dev/issues/34) | `a2` | bf16、fp32 | 🔵 in_progress | ★ start |
 | A2-K1 | [#44](https://github.com/ddddwee1/ascend_fla_dev/issues/44) | `a2` | bf16、fp32 | 🔒 gated (kernel-batch-approval) | ★ start |
 | A5-01 | [#47](https://github.com/ddddwee1/ascend_fla_dev/issues/47) | `a5` | fp32 | 🔒 gated (wave:W-A3) | ★ start |
 | A5-02 | [#48](https://github.com/ddddwee1/ascend_fla_dev/issues/48) | `a5` | fp32 | 🔒 gated (wave:W-A3) | ★ start |
@@ -351,8 +351,8 @@ _Not scheduled: gated epic G4 (narrow-slice rule — no target model, no work). 
 
 | dtype | track | tasks | note |
 |---|---|---|---|
-| `bf16` | open to agents | 41 | Current ABI: q/k/v/o and most intermediates |
-| `fp32` | open to agents | 42 | Current ABI: state, gate accumulation, all correctness judged in fp32 |
+| `bf16` | open to agents | 42 | Current ABI: q/k/v/o and most intermediates |
+| `fp32` | open to agents | 43 | Current ABI: state, gate accumulation, all correctness judged in fp32 |
 | `fp16` | not scheduled (G3) | — | Explicitly rejected by the contract |
 | `int8` | not scheduled (G3) | 1 | Not scheduled; state drift needs a design first |
 | `mxfp8` | not scheduled (G3) | 1 | Not scheduled; native 950 decode unverified |
