@@ -1930,6 +1930,10 @@
         {
           "at": "2026-09-19T07:35",
           "summary": "用户决定（D-PM-26）：真机测试是必须项，DONE 之前必须在 A5 真机完成，通过后可合入。PM 更新 PK-03.md：新增'真机验收（必须）'一节（完整选定 workload 先跑；对 A/B 两个 CPU oracle 报 FP32 相对 L2 ≤1e-4 与 BF16 ≤5e-3；bd1/bd2 逐位相同；同卡三明治不设速度门槛），needs.npu 改为 true；占用证据仍是前提（现有占用查询不可用），由用户/管理员提供，PM 不代为提供、assignee 不得自行推断空闲；真机部分等待证据的时间不计入时限"
+        },
+        {
+          "at": "2026-09-19T07:38",
+          "summary": "STATUS：仍 in_progress，未 DONE（用户要求真机证据先于 DONE，D-PM-26）。容器内 CPU 复验：PGDN 104 passed（25.02s，Python 3.12.13/Torch 2.12.0+cpu/Ascriptor 0.1.0，非 NPU 执行）；原生 harness 更新（可重复选 case、launch 进度、显式记录 FP32 matmul/conv 精度、可选的仅验证用 pinned Torch NPU 递推），kernel/pipeline/wrapper/reference 源字节不变、数值预算与计时默认值不变；草稿 PR #87 头 a380bf7（仍 18 文件，无新增路径）。阻塞（自述）：用户现要求在 Docker 内执行并把任务写入限定在指定 home 目录；一台目标机有运行中的已分配容器但无兼容的进程监视器（私下放入的监视器与该机驱动动态链接失败），另一台设备健康空闲但 Docker 守护进程未启动，等可用的 Docker 上下文/socket 或容器入口。未取设备锁，未在物理硬件上运行任何 PGDN kernel；未改系统守护进程/驱动/他人进程。无新的设备或性能数字"
         }
       ],
       "result": null
