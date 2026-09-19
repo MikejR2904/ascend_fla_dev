@@ -2644,6 +2644,10 @@
         {
           "at": "2026-09-19T12:16",
           "summary": "分诊：采纳需求（issue #89，提案人 limjiunnbin）为 gated 任务，等用户放行；来源是外部需求，用户批准前不能是 open。完整规格已写（预算在实现前定死）。范围在 D-PM-22 的 GDN/PGDN 序列之内，不含 GDN-2、Qwen3-Next、A2 与 #80 被否决的'GDN 全族推进'。"
+        },
+        {
+          "at": "2026-09-19T12:42",
+          "summary": "申领人在 #89 下的 CPU 预研（自述，PM 未核实）已并入规格：上游 a5.gdn_bwd 为 BF16 精度模型/2% 预算/无 dh0，不能直接接、旧预算不能沿用；FP32 反向递推对 pinned naive 自动微分最大相对 L2 3.3292319e-7，A↔B 校准前提在数学层面成立。预算不变（FP32 逐梯度 ≤1e-4，先校准再实现）；补了「对齐 scale」的陷阱与「独立反向、不动前向」的边界说明。仍 gated，等用户放行"
         }
       ],
       "result": null,
@@ -2694,6 +2698,10 @@
         {
           "at": "2026-09-19T12:16",
           "summary": "分诊：采纳需求（issue #68，提案人 limjiunnbin）为 gated 任务，等用户放行；来源是外部需求，用户批准前不能是 open。完整规格已写（预算在实现前定死）。范围在 D-PM-22 的 GDN/PGDN 序列之内，不含 GDN-2、Qwen3-Next、A2 与 #80 被否决的'GDN 全族推进'。"
+        },
+        {
+          "at": "2026-09-19T12:42",
+          "summary": "申领人 APPLY 于 #92（session 01a0b7ce-…）；#90 是 #68 需求的重复，关闭。同一 issue 下出现申领人的 RISK silent-wrong-result（无 assignee，poll 标不采信）：原 PKDA 前向在域内对抗性门控（B1/T192/H8，每 chunk 首项 g=-154.9992、其余 -1e-5，跨度<155）的真机输出有限但超预算，公开 API 对 CPU FP32 naive 的相对 L2 o=1.30e-4、S=1.82e-4，首个偏差在 prepare 的 gc（连续 FP32 累加对 CPU cumsum 最大误差 3.35693359375e-4）——自述，原始日志在其私有工作区，PM 未见。PM 独立复算了机理数字：纯 FP32 顺序累加该 pattern 对高精度累加的最大偏差恰为 0.000335693359375（ulp(155)=1.526e-5，−1e-5 的加数每步被舍成 1 ulp），机理成立；kernel 实际就是这样累加、以及 o/S 超预算，PM 未复现。已把「一大后小」模式写进 PK-04 验收与陷阱；申领人提议的补偿累加修法未批准，放行后先定位再修。矩阵目前没有 PKDA 的真机结论，故没有需要更正的条目；gaps.json 待 DONE 审查见到原始证据后再记。已上报用户。申领人另自述：一台 CANN 9.2.0 机器上 pinned ascriptor 的 tensorutils_cce.h:143 与工具链 sys_macros_impl.h:17 都定义 g_coreType（重定义），已换另一套兼容工具链重跑；DONE 审查时评估是否记 gaps.json（版本字符串相同不代表头文件/编译器相同）。任务仍 gated，等用户放行"
         }
       ],
       "result": null,
@@ -2745,6 +2753,10 @@
         {
           "at": "2026-09-19T12:16",
           "summary": "分诊：采纳需求（issue #89，提案人 limjiunnbin）为 gated 任务，等用户放行；来源是外部需求，用户批准前不能是 open。只写了骨架规格，细化与放行在前置任务完成后由 PM 做（D-PM-22：逐个排）。范围在 D-PM-22 的 GDN/PGDN 序列之内，不含 GDN-2、Qwen3-Next、A2 与 #80 被否决的'GDN 全族推进'。"
+        },
+        {
+          "at": "2026-09-19T12:42",
+          "summary": "预研细节并入骨架（自述，PM 未核实）：七个输入梯度、三路 cotangent，最大相对 L2 1.0479961e-6；组内 value-head 贡献先归约再进共享的 per-H ATK 伴随，final ATK cotangent 每个 H 只播种一次。仍 gated"
         }
       ],
       "result": null,
@@ -2795,6 +2807,10 @@
         {
           "at": "2026-09-19T12:16",
           "summary": "分诊：采纳需求（issue #89，提案人 limjiunnbin）为 gated 任务，等用户放行；来源是外部需求，用户批准前不能是 open。只写了骨架规格，细化与放行在前置任务完成后由 PM 做（D-PM-22：逐个排）。范围在 D-PM-22 的 GDN/PGDN 序列之内，不含 GDN-2、Qwen3-Next、A2 与 #80 被否决的'GDN 全族推进'。"
+        },
+        {
+          "at": "2026-09-19T12:42",
+          "summary": "规格补一条：GDN 的 naive 与前向都不归一化，decode 同样不做，fla fused_recurrent 的可选归一化本任务显式拒绝。仍 gated"
         }
       ],
       "result": null,
@@ -2846,6 +2862,10 @@
         {
           "at": "2026-09-19T12:16",
           "summary": "分诊：采纳需求（issue #89，提案人 limjiunnbin）为 gated 任务，等用户放行；来源是外部需求，用户批准前不能是 open。只写了骨架规格，细化与放行在前置任务完成后由 PM 做（D-PM-22：逐个排）。范围在 D-PM-22 的 GDN/PGDN 序列之内，不含 GDN-2、Qwen3-Next、A2 与 #80 被否决的'GDN 全族推进'。"
+        },
+        {
+          "at": "2026-09-19T12:42",
+          "summary": "PM 已对 pin 住的源码核实：fla 的 PGDN fused_recurrent.py:130-132 用加性 epsilon 归一化 x/sqrt(Σx²+1e-6)，与 naive 的 F.normalize 分叉；已写进规格——decode 必须显式保持已接受的 naive 归一化，否则 prefill→decode 的 state 在近零行不连续。仍 gated"
         }
       ],
       "result": null,

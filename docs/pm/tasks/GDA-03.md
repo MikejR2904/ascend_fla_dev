@@ -52,6 +52,20 @@
 7. **机器与卡归 assignee 自己管理**（D-PM-28），PM 不设关卡；PM 只看进度与代码/证据质量：每个真机数字带 SoC、CANN、
    内置算子包目录和原始日志行，读未过滤的原始日志。
 
+## 预研事实（申领人在 #89 下的 CPU 预研，**自述，PM 未独立核实**；交付物里仍须自己重做，不能直接引用）
+
+- 上游 `projects/a5/gdn_bwd` 的 README 与 `ref/formulas.py` 明确用 **BF16 立方操作数、BF16 state/检查点、对该精度模型 2% 的残差范数预算**；
+  公共输出不含 `d_initial_state`，输入是 head-major、等头的保存态张量。所以它**不是**当前分组 FP32 前向的直接梯度适配器，
+  **旧的 2% 预算不能悄悄变成本任务的 FP32 预算**。
+- 该保留的反向精度模型对 pin 版 naive 自动微分（B1/H1/K=V128、T=64/128/192、BF16 值输入、`do` 与 `dht` 两路 cotangent）的最大逐梯度
+  相对 L2 为 0.0026603 / 0.0031292 / 0.0056363——这是两套精度模型的差异，不是它自己的契约失败。显式取 `scale=1` 才与它「未缩放 query」的约定对得上。
+- 独立推导的 FP32 反向递推对 pin 版 naive 自动微分：T=64/128/192 × `HV/H∈{1,2,4,8}` × `g` 尺度 1/.03/0/30 共四组 case，
+  `dq/dk/dv/dbeta/dg` 五个梯度、`do`+`dht` 两路 cotangent，最大相对 L2 **3.3292319e-7**；组内 `dq/dk` 是连续 value head 贡献之和，
+  普通 GDN 不加归一化项。这说明口径 3 要求的 A↔B 一致性（≤1e-5）在数学层面站得住；**预算不因此收紧或放宽**，kernel 在真机上的误差要另测。
+- 申领人建议先冻结新反向的 FP32 数学目标与每个公共梯度/检查点 dtype，并显式选定「独立反向」还是「前向/autograd 接线」及其写集。
+  本规格的写集已选定**独立反向**（不动 `gdn_chunk_fwd/**`）；接线不在本任务，需要时先发 `RISK write-set-expansion`。优先走任务内的
+  FP32 推导/重算路径，别把不兼容的 BF16 检查点悄悄喂进现有前向合约。
+
 ## 步骤
 
 1. **冻结 ABI（对着 pin 住的源码，不凭参数名猜）**：`chunk_gated_delta_rule_bwd` 的梯度与 cotangent、分组归约、`scale` 因子、
@@ -78,7 +92,8 @@
 ## 已知陷阱
 
 - **分组求和**：`dq/dk` 是组内所有 value head 的求和；漏了会在 `HV>H` 时静默出错，而 `HV==H` 全对。
-- **`dq` 带 `scale`**：naive 有 `q = q * scale`。
+- **`dq` 带 `scale`**：naive 有 `q = q * scale`。拿上游 `a5.gdn_bwd` 的 reference 对比时要**先对齐 `scale`**（它用「未缩放 query」约定，
+  显式取 `scale=1` 或折算），否则 `dq` 会差一个 `128**-0.5` 因子。
 - 上游 `a5.gdn_bwd` 的约束（无 value-head、无 `dh0`）不能照搬；本任务是派生单元。
 - **别把 GDN 的结论套给 PGDN**：PGDN 的 naive 做归一化、有 ATK 与读/写 key 不对称（`docs/research/pkda_semantics.md` §7），
   它的反向是 `PK-05`。

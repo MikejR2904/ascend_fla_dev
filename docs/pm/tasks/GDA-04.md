@@ -18,6 +18,8 @@ D-PM-22 排期里 decode 阶段的第一个切片（GDN）。来自 #89（外部
 - 分组语义与 GDA-02 一致（连续 `HV/H` 个 value head 共享一个 q/k head）；`block_dim` 与核切分的取值由实测定（`AGENTS.md` §6：
   一个 bd 一个进程、`bd` 之间输出逐位相同）。
 - 精度：FP32 ≤ 1e-4 判定，BF16 只作质量检查；oracle 同 GDA-03（A = pinned naive，B = 独立参考）。
+- **归一化**：GDN 的 naive 与我们的前向都不对 q/k 归一化，decode 同样不做；fla 的 fused_recurrent 有可选的 `use_qk_l2norm_in_kernel`，
+  本任务不支持，显式拒绝（`AGENTS.md` §7）。
 - **测量**：单步调用的固定成本单独测（桥的缓存键必须是 O(1)，`AGENTS.md` §6 铁律三）；不设速度门槛，如实标注基线。
 - 机器与卡归 assignee 自己管理（D-PM-28）。
 
