@@ -370,7 +370,7 @@
       "wave": "W0",
       "soc": "a2",
       "priority": "P0",
-      "status": "assigned",
+      "status": "in_progress",
       "model": [],
       "kernel": [],
       "dtype": [
@@ -417,6 +417,10 @@
         {
           "at": "2026-09-19T14:51",
           "summary": "按 #29 的 APPLY 派给 limjiunnbin（session a2-01-…，第一个声明 a2 真机的申领人），12h，分支 task/A2-01。规格随 D-PM-34 改为：sim/pipesim 保留、必须在 a2 真机上把最小复现真跑一遍，写集加 benchmarks/a2/evidence/**（脱敏原始回执，PM 从中复算）；A2 真机数字只作观测、不解除 A2 总闸。A2 上的结论按 D-PM-33 合入前仍先问用户。申领人在 APPLY 里报了一个失败测试 tests/test_pm_board.py::test_npu_task_requires_declared_soc——是 PM 的 D-PM-34 改动（a00951e）把报错文案改了而没跑 pm_board 测试造成的回归，已修（具体 SoC 的任务保留原文案，soc=any 才用新文案）并补 4 个 D-PM-34 测试，47 个 pm_board 测试全过"
+        },
+        {
+          "at": "2026-09-19T15:17",
+          "summary": "ACK（eta 10h，自述）：缺陷原始记录已定位为 ascriptor 库缺陷 M10-081（A2 系 FP32 短 MMAD 累加进同一 L0C 时缺 PIPE_M settle），修复候选已在 pin 90cfcdc 内（desugar 对 a2 系 FP32 split-K 自动插 barrier；手写 MMAD 链只有 lint trap、不自动修）；计划：摘录记录并查实 a2 profile；repro_splitk_fp32.py（原 case + 手写 MMAD 链探针 FP32/BF16/FP16 × M16/32/64 × 有无 barrier，CPU 参考对 sim/pipesim，--profile a2|a5 对照，--launcher aclnn 在 910B3 真机实跑）；25 个 kernel 逐个列 file:line 命中表（初扫：KDA intra 的 FP32 split-K、KDA/GDN triangular inverse 与 GDN bwd finalize 的 FP32 is_init=False 链，后者正是 M16 失效形状且不在自动修复范围内）；绕行方案表 + fp32 验证计划，脱敏回执进 benchmarks/a2/evidence/；不改任何 kernel 源码与 ascriptor 仓。状态 assigned→in_progress"
         }
       ],
       "result": null
@@ -1905,7 +1909,6 @@
         "pkda_chunk_fwd"
       ],
       "dtype": [
-        "bf16",
         "fp32"
       ],
       "deps": [
@@ -2746,6 +2749,10 @@
         {
           "at": "2026-09-19T14:34",
           "summary": "STATUS（14:30Z，自述，PM 未核实）：bd1 与 bd2 两个原生网格都通过——69 个校准 case × 2 个 bd × FP32/BF16 公共 dtype = 276 条记录，每个 block_dim 的 job 结束时设备健康；跨 bd 字节比较 138 个 case/dtype 对 × （10 个保留 stage 数组 + 5 个公共梯度）= 2070 对数组逐字节相同；FP32 各梯度对两个参考最大相对 L2 dq 4.86e-7/dk 6.74e-7/dv 6.88e-7/dg 8.85e-7/dbeta 7.05e-7（预算 1e-4），BF16 公共最大 1.85e-3（<5e-3）；收了 6 份按源码签名选出的原生构建目录、完整构建日志与 264 个产物哈希，构建期告警定位到 SDK 弃用提示、未使用的 CMake 交叉编译参数、SDK Python 模板转义。下一步：隔离启动对照（解释两条 CANN 初始化告警），然后同卡三轮 baseline/candidate/baseline 计时（T1024/4096 × 两种 dtype，1800 个原始样本），PR 保持草稿直到计时与终审完成。无阻塞"
+        },
+        {
+          "at": "2026-09-19T15:17",
+          "summary": "STATUS（15:00Z，自述，PM 未核实）：276 条原生网格记录与 2070 对跨 bd 字节相同数组保持通过，源码、逐 case 原始数字与行号索引、6 份编译回执与已定位的运行时告警已进 PR；独立启动对照复现了两条 CANN 初始化告警。第一轮计时 job 跑完 12 个三明治轮次/1800 个样本，数学检查、baseline/candidate 字节一致与运行后健康都过，但原始样本先私存：申领人发现主机侧 fuser 采样从未观察到自己的计算进程，空的 fuser 记录不能证明独占——有界实测确认它持有的是驱动管理/通信字符 FD，而不是持久的 per-device davinci FD，容器与主机的设备节点 inode 也不同；未杀/未复位任何他人进程。它不接受这批空样本作为同卡测量，正在定位驱动的 owner-header 进程查询 API、用已知活进程验证后带有效占用监控重跑三明治；原样本与失败审计保留，不放宽任何数值预算或必测 case。（占用监控属 agent 自管的机器事务，PM 只记录）。无阻塞，仍 in_progress，未 DONE"
         }
       ],
       "result": null,
@@ -2768,7 +2775,6 @@
         "pkda_chunk_fwd"
       ],
       "dtype": [
-        "bf16",
         "fp32"
       ],
       "deps": [
@@ -3119,168 +3125,260 @@
     ]
   },
   "kernel_inventory": {
-    "note": "全部已知 kernel，来源是 docs/matrix/ops.json 的 linear_attention_ops 与 missing_ops。track：agent = 本看板派单；owner = 仓主并行轨道（见 reserved_paths）；upstream = 上游单元，本仓用派生版取代；none = 已知但还没排任务。首页表由 tools/pm_board.py --readme 按这份清单生成。",
+    "note": "全部已知 kernel，来源是 docs/matrix/ops.json 的 linear_attention_ops 与 missing_ops。track：agent = 本看板派单；owner = 仓主并行轨道（见 reserved_paths）；upstream = 上游单元，本仓用派生版取代；none = 已知但还没排任务。首页表由 tools/pm_board.py --readme 按这份清单生成。 dtype_status（2026-09-19 起）：每个 kernel 的 BF16/FP32 现状，取值见 tools/pm_board.py 的 DTYPE_STATE；首页表按它渲染两列。",
     "kernels": [
       {
         "id": "kda_fwd_stable",
         "family": "kda",
         "track": "agent",
         "note_zh": "本仓派生单元，门控跨度稳定化改写；2026-09-18 补上 recurrent 派生单元（A5K-01 Aqk 交接修复，槽轮转），公开调度尚未接线到这个修复版",
-        "note_en": "Fork of upstream, gate-span stabilised; 2026-09-18 added a derived recurrent unit (A5K-01 Aqk handoff repair, slot rotation) — public dispatch is not yet wired to this repaired version"
+        "note_en": "Fork of upstream, gate-span stabilised; 2026-09-18 added a derived recurrent unit (A5K-01 Aqk handoff repair, slot rotation) — public dispatch is not yet wired to this repaired version",
+        "dtype_status": {
+          "bf16": "native@a5",
+          "fp32": "reject"
+        }
       },
       {
         "id": "kda_bwd_stable",
         "family": "kda",
         "track": "agent",
         "note_zh": "本仓派生单元，成对衰减锚点取中点",
-        "note_en": "Fork of upstream, midpoint decay anchor"
+        "note_en": "Fork of upstream, midpoint decay anchor",
+        "dtype_status": {
+          "bf16": "native@a5",
+          "fp32": "none"
+        }
       },
       {
         "id": "kda_fused_recurrent",
         "family": "kda",
         "track": "agent",
         "note_zh": "本仓自写的 decode kernel",
-        "note_en": "Written in-repo, decode path"
+        "note_en": "Written in-repo, decode path",
+        "dtype_status": {
+          "bf16": "widen@a5",
+          "fp32": "native@a5"
+        }
       },
       {
         "id": "kda_fwd",
         "family": "kda",
         "track": "upstream",
         "note_zh": "上游 ascriptor 单元，本仓用 kda_fwd_stable 取代",
-        "note_en": "Upstream unit; superseded here by kda_fwd_stable"
+        "note_en": "Upstream unit; superseded here by kda_fwd_stable",
+        "dtype_status": {
+          "bf16": "native@a5",
+          "fp32": "none"
+        }
       },
       {
         "id": "kda_bwd",
         "family": "kda",
         "track": "upstream",
         "note_zh": "上游 ascriptor 单元，本仓用 kda_bwd_stable 取代",
-        "note_en": "Upstream unit; superseded here by kda_bwd_stable"
+        "note_en": "Upstream unit; superseded here by kda_bwd_stable",
+        "dtype_status": {
+          "bf16": "native@a5",
+          "fp32": "none"
+        }
       },
       {
         "id": "gdn_fwd",
         "family": "gated_delta_rule",
         "track": "agent",
         "note_zh": "上游单元，六项 ABI 缺口待补",
-        "note_en": "Upstream unit; six ABI gaps to close"
+        "note_en": "Upstream unit; six ABI gaps to close",
+        "dtype_status": {
+          "bf16": "native@a5",
+          "fp32": "none"
+        }
       },
       {
         "id": "gdn_bwd",
         "family": "gated_delta_rule",
         "track": "agent",
         "note_zh": "上游单元，反向不产出 dh0",
-        "note_en": "Upstream unit; backward emits no dh0"
+        "note_en": "Upstream unit; backward emits no dh0",
+        "dtype_status": {
+          "bf16": "native@a5",
+          "fp32": "wip"
+        }
       },
       {
         "id": "gdn_fused_recurrent",
         "family": "gated_delta_rule",
         "track": "agent",
         "note_zh": "整族缺失，照 KDA 那个的结构做",
-        "note_en": "Missing entirely; model on the KDA one"
+        "note_en": "Missing entirely; model on the KDA one",
+        "dtype_status": {
+          "bf16": "none",
+          "fp32": "none"
+        }
       },
       {
         "id": "delta_rule_fwd",
         "family": "delta_rule",
         "track": "none",
         "note_zh": "上游单元已存在，本仓尚未排任务",
-        "note_en": "Upstream unit exists; no task scheduled yet"
+        "note_en": "Upstream unit exists; no task scheduled yet",
+        "dtype_status": {
+          "bf16": "native@a5",
+          "fp32": "none"
+        }
       },
       {
         "id": "delta_rule_bwd",
         "family": "delta_rule",
         "track": "none",
         "note_zh": "上游单元已存在，本仓尚未排任务",
-        "note_en": "Upstream unit exists; no task scheduled yet"
+        "note_en": "Upstream unit exists; no task scheduled yet",
+        "dtype_status": {
+          "bf16": "native@a5",
+          "fp32": "none"
+        }
       },
       {
         "id": "gdn2_fused_recurrent",
         "family": "gdn2",
         "track": "owner",
         "note_zh": "仓主轨道：通用 CCE recurrent",
-        "note_en": "Owner track: generic CCE recurrent"
+        "note_en": "Owner track: generic CCE recurrent",
+        "dtype_status": {
+          "bf16": "unknown",
+          "fp32": "native@a5"
+        }
       },
       {
         "id": "gdn2_fused_decode",
         "family": "gdn2",
         "track": "owner",
         "note_zh": "仓主轨道：模型专用融合 decode",
-        "note_en": "Owner track: model-specific fused decode"
+        "note_en": "Owner track: model-specific fused decode",
+        "dtype_status": {
+          "bf16": "native@a5",
+          "fp32": "unknown"
+        }
       },
       {
         "id": "gdn2_short_conv_decode",
         "family": "gdn2",
         "track": "owner",
         "note_zh": "仓主轨道：打包短卷积 decode",
-        "note_en": "Owner track: packed short-conv decode"
+        "note_en": "Owner track: packed short-conv decode",
+        "dtype_status": {
+          "bf16": "native@a5",
+          "fp32": "unknown"
+        }
       },
       {
         "id": "gdn2_norm2_w12_swiglu",
         "family": "gdn2",
         "track": "owner",
         "note_zh": "仓主轨道：融合 RMSNorm + SwiGLU",
-        "note_en": "Owner track: fused RMSNorm + SwiGLU"
+        "note_en": "Owner track: fused RMSNorm + SwiGLU",
+        "dtype_status": {
+          "bf16": "native@a5",
+          "fp32": "unknown"
+        }
       },
       {
         "id": "gdn2_chunk_fwd",
         "family": "gdn2",
         "track": "agent",
         "note_zh": "agent 轨道例外（D-PM-16）：GD2-01 建单元+双 oracle 已合入，GD2-03 性能优化已合入，GD2-02 真机数+真实整网验证待派",
-        "note_en": "Agent-track exception (D-PM-16): GD2-01 unit + dual-oracle merged, GD2-03 perf merged, GD2-02 (device numbers + full-network validation) unassigned"
+        "note_en": "Agent-track exception (D-PM-16): GD2-01 unit + dual-oracle merged, GD2-03 perf merged, GD2-02 (device numbers + full-network validation) unassigned",
+        "dtype_status": {
+          "bf16": "widen@host",
+          "fp32": "native@a5"
+        }
       },
       {
         "id": "gdn2_chunk_fwd_bwd",
         "family": "gdn2",
         "track": "owner",
         "note_zh": "反向仍未排期；前向已由 agent 轨道完成，见 gdn2_chunk_fwd",
-        "note_en": "Backward not yet scheduled; forward is done via the agent track, see gdn2_chunk_fwd"
+        "note_en": "Backward not yet scheduled; forward is done via the agent track, see gdn2_chunk_fwd",
+        "dtype_status": {
+          "bf16": "unknown",
+          "fp32": "unknown"
+        }
       },
       {
         "id": "causal_conv1d",
         "family": "fusion",
         "track": "agent",
         "note_zh": "ShortConvolution，现为 torch 实现",
-        "note_en": "ShortConvolution, torch today"
+        "note_en": "ShortConvolution, torch today",
+        "dtype_status": {
+          "bf16": "none",
+          "fp32": "none"
+        }
       },
       {
         "id": "fused_rms_norm_gated",
         "family": "fusion",
         "track": "agent",
         "note_zh": "KDA 的 o_norm，sigmoid 门控",
-        "note_en": "KDA o_norm with sigmoid gate"
+        "note_en": "KDA o_norm with sigmoid gate",
+        "dtype_status": {
+          "bf16": "none",
+          "fp32": "none"
+        }
       },
       {
         "id": "qk_l2norm_gate",
         "family": "fusion",
         "track": "agent",
         "note_zh": "q/k l2norm + 门控变换 + beta sigmoid，融进前向 kernel",
-        "note_en": "q/k l2norm + gate transform + beta sigmoid, folded into the fwd kernel"
+        "note_en": "q/k l2norm + gate transform + beta sigmoid, folded into the fwd kernel",
+        "dtype_status": {
+          "bf16": "none",
+          "fp32": "none"
+        }
       },
       {
         "id": "packed_projection",
         "family": "fusion",
         "track": "agent",
         "note_zh": "合投影与图捕获，decode 整层的 67% 在这里",
-        "note_en": "Packed projections + graph capture; 67% of decode layer time"
+        "note_en": "Packed projections + graph capture; 67% of decode layer time",
+        "dtype_status": {
+          "bf16": "none",
+          "fp32": "none"
+        }
       },
       {
         "id": "pkda_chunk_fwd",
         "family": "pkda",
         "track": "agent",
         "note_zh": "KDA 派生单元 + ATK 预条件，见 PK-02（open）",
-        "note_en": "KDA-derived unit + ATK preconditioning, see PK-02 (open)"
+        "note_en": "KDA-derived unit + ATK preconditioning, see PK-02 (open)",
+        "dtype_status": {
+          "bf16": "reject",
+          "fp32": "native@a5"
+        }
       },
       {
         "id": "pgdn_chunk_fwd",
         "family": "pkda",
         "track": "agent",
         "note_zh": "GDN 派生单元 + ATK 预条件，前置（GDA-02 的 GQA 支持）已满足，见 PK-03（open）",
-        "note_en": "GDN-derived unit + ATK preconditioning, prerequisite (GDA-02's GQA support) now satisfied, see PK-03 (open)"
+        "note_en": "GDN-derived unit + ATK preconditioning, prerequisite (GDA-02's GQA support) now satisfied, see PK-03 (open)",
+        "dtype_status": {
+          "bf16": "widen@a5",
+          "fp32": "native@a5"
+        }
       },
       {
         "id": "gdn_chunk_fwd_a5",
         "family": "gated_delta_rule",
         "track": "agent",
         "note_zh": "窄范围例外（D-PM-20/22）：非 GQA 前向 + GQA/GVA 分组均已合入（GDA-01/02）",
-        "note_en": "Narrow exception (D-PM-20/22): non-GQA forward and GQA/GVA grouping both merged (GDA-01/02)"
+        "note_en": "Narrow exception (D-PM-20/22): non-GQA forward and GQA/GVA grouping both merged (GDA-01/02)",
+        "dtype_status": {
+          "bf16": "widen@a5",
+          "fp32": "native@a5"
+        }
       }
     ]
   },

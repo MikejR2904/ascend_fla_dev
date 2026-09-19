@@ -382,5 +382,39 @@ class TestHardwareVerificationRule(_Tmp):
         self.assertEqual(ids({"a2"}), ["any_task", "a2_task"])  # 具体 SoC 的任务要有那个 SoC
 
 
+class TestKernelDtypeStatus(unittest.TestCase):
+    """用户 2026-09-19：首页进展表要按 kernel 列出 BF16 / FP32 现状，不能只有一个「涉及任务」计数。"""
+
+    def test_bad_state_is_rejected(self):
+        board = {"tasks": [], "kernel_inventory": {"kernels": [
+            {"id": "k", "family": "f", "track": "agent", "dtype_status": {"bf16": "native@mars", "fp32": "maybe"}}]}}
+        found = pm_board.check(board)
+        self.assertEqual(len([p for p in found if "dtype_status" in p]), 2, found)
+
+    def test_unknown_dtype_key_is_rejected(self):
+        board = {"tasks": [], "kernel_inventory": {"kernels": [
+            {"id": "k", "family": "f", "track": "agent", "dtype_status": {"fp16": "native"}}]}}
+        self.assertTrue(any("只认 bf16 / fp32" in p for p in pm_board.check(board)))
+
+    def test_every_committed_kernel_has_both_dtypes(self):
+        for k in pm_board.load()["kernel_inventory"]["kernels"]:
+            self.assertEqual(sorted(k.get("dtype_status", {})), ["bf16", "fp32"], k["id"])
+
+    def test_readme_shows_the_dtype_columns_and_pkda_rejects_bf16(self):
+        for lang, head in (("zh", "| kernel | 归属 | BF16 | FP32 | 进度 | 下一步 |"),
+                           ("en", "| kernel | track | BF16 | FP32 | progress | next |")):
+            text = pm_board.render_readme_block(pm_board.load(), lang)
+            self.assertIn(head, text)
+            row = next(line for line in text.splitlines() if line.startswith("| `pkda_chunk_fwd`"))
+            self.assertIn("⛔", row)      # PKDA 公共入口显式拒绝 BF16
+            self.assertIn("✅", row)      # FP32 原生、A5 真机
+
+    def test_dtype_cell_words(self):
+        self.assertEqual(pm_board.dtype_cell("native@a5", "zh"), "✅ 原生 · A5 真机")
+        self.assertEqual(pm_board.dtype_cell("widen@host", "zh"), "🔁 API 加宽 · 仅主机侧")
+        self.assertEqual(pm_board.dtype_cell("reject", "en"), "⛔ rejected")
+        self.assertEqual(pm_board.dtype_cell(None, "zh"), "❓ 未核")
+
+
 if __name__ == "__main__":
     unittest.main()

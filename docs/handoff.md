@@ -11,6 +11,16 @@
 
 ### 正在飞的任务（现在没有；A5K-02、PK-02、PK-03 都已于 2026-09-19 合入）
 
+> **2026-09-19T15:20Z 更新：首页进展表按 kernel 列出 BF16 / FP32 现状（用户指出原表只有「涉及任务」计数，看不出每个 kernel 每种 dtype 的进展）。**
+> - **实况**（对着源码与 contract 核过）：**不是只有 BF16 的 kernel。** 原生 BF16 operand 的只有 KDA 前/反向（Kimi-Linear 主路径，state 为 FP32）、GDN-2 的 decode 侧融合 kernel 与上游单元；
+>   本仓新做的 GDN / PGDN / PKDA / GDN-2 chunk 前向以及 GDN 反向（进行中）的 **kernel 都是 FP32**。GDN / PGDN / GDN-2 chunk 的公共入口收 BF16，但是 host 侧 `q.float()` 加宽后进 FP32 kernel、输出转回
+>   （`API 加宽`，kernel 本身不跑 BF16）；**PKDA 公共入口显式拒绝 BF16**（不静默 cast）。KDA 的 decode 入口收任意浮点 dtype、内部升到 FP32。
+> - **PKDA 为何没有 BF16**：仓内记录的是范围决定而不是不可行证明——PK-02 规格把 BF16 定为非验收项（正确性一律 FP32 判定，首个切片是照 GD2-01 五 launch 结构做的全 FP32 实现，不得拿 BF16 KDA 的证据充数），
+>   上游 ascriptor 也没有 PKDA/PGDN 单元可改成 BF16 cube。技术上的疑点有实测背书的只有 FP32 一侧：门控前缀差抵消（PK-02 的跨度 4096 误差 S=1.34e-4、PK-04 的 3.36e-4）已经逼近/超过 1e-4 预算，
+>   BF16 尾数更短，大概率更糟——但这是推断，没测过。要不要做 BF16 的 PKDA/PGDN 是用户的范围决定，目前没有任务。
+> - **看板改动**：`kernel_inventory.kernels[].dtype_status`（取值见 `tools/pm_board.py` 的 `DTYPE_STATE`，`--check` 校验）；首页各族表新增 BF16 / FP32 两列与图例；PK-02、PK-04 的任务 dtype 标签由 `bf16,fp32` 改为 `fp32`
+>   （旧标签是「FP32 判定 + BF16 可选质量检查」的模糊读法，对 PKDA 是误导）。`gdn2_chunk_fwd` 的 BF16 只标「仅主机侧」（GD2-01 的真机数是 FP32）。仓主轨道与上游单元里没核过的格子标「未核」。
+>
 > **2026-09-19T14:05Z 更新：用户定了「所有任务必须完成真机验证」（D-PM-34），并要一份让 agent 知道怎么申领、开工的提示。**
 > - **规则**：DONE 里没有真机验证就 `REVIEW rework`，不进入合入，也不能靠主机侧/CPU 测试补；`soc: any` 的任务在 assignee 自己的真机上验证、只对那个 SoC 声称；
 >   确实无法真机的任务由用户豁免（PM 不自行豁免）；涉及 a2 的仍受 `AGENTS.md` §2 约束。已 done 的纯主机任务（PM-0、A2-04、A2-05、A2-40、PK-01、GD2-01、PK-02）**不追溯**，除非用户另说。
