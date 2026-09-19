@@ -1907,6 +1907,14 @@
         {
           "at": "2026-09-19T04:42",
           "summary": "ACK（eta_h 20；读了 20b5247 的规格）：计划与规格一致——冻结窄 ABI、naive FP32 归一化、k 读/写路径不对称、独立 CPU chunk 参考对 pinned naive；真机验收与同卡测量作为另行报告的额外证据（与规格'可选、不阻塞'一致）。澄清 beta_atk 输入域取 [0,1]（依据 fla 层 sigmoid，自述），PM 采纳并补进规格。APPLY 评论 04:40Z 被编辑：socs none→a5（SSH 已恢复；一卡健康、一卡故障；占用未核实；未动设备）"
+        },
+        {
+          "at": "2026-09-19T05:16",
+          "summary": "STATUS：实现落在隔离分支 task/PK-03（基于 20b5247），只改四条写集路径；6 个本地 CCE kernel、独立 H 头 ATK 与 HV 头状态、读/写 key 显式拆分，无 GDN 运行时导入、无主机侧头复制；窄 ABI 与整条链量程/归一化复核已写。静态检查 6 个 0 error/0 warning，60 个契约参考 case 全过，主机测试 104 passed，有界六阶段 pipesim（r1/c1/bd1、r8/c1/bd2）过，奇偶 chunk 边界检查在跑；bd1/bd2 vendor 构建完成（仅编译，未执行）。30 组独立输入（含 HV/H=1/2/4/8 与 T4096）：独立 CPU 参考 B 对 pinned naive A，FP32 最大相对 L2 o=1.89e-6、S=1.20e-6、A=3.19e-7（预算 1e-4）；340M 形状 B1/T4096/H=HV8/K=V128 FP32：o=5.19e-7、S=6.03e-7、A=2.90e-7（仅生成形状测试，无权重/logits，未跑 CUDA/Triton）。真机执行未开始：占用无法核实（无进程监视可执行文件，占用 API 返回参数错误，存在外部设备管理句柄），健康不等于空闲，等已验证的占用再取共享锁；主机侧验收独立继续"
+        },
+        {
+          "at": "2026-09-19T05:17",
+          "summary": "RISK shared-machine：一张健康候选卡（health=0，错误码空），另一张故障卡已排除；占用查询 dsmi_get_resource_info 返回 8=DRV_ERROR_PARA_ERROR，不是'无进程'结果；存在外部设备管理句柄。assignee 提议：主机侧验收与隔离编译继续；真机执行等占用查询成功或新的管理员证据，再取共享锁并再查一次健康/占用；不 reset、不 kill、不动他人负载。PM 已上报用户，同意该处置，不批准任何没有占用证据的真机启动；真机是可选项，不阻塞验收"
         }
       ],
       "result": null
@@ -2282,6 +2290,10 @@
         {
           "at": "2026-09-19T05:00",
           "summary": "STATUS（successor）：阻塞自行解除——设备归属已厘清（此前观察到的外部原生进程均确认属于另一张设备），分配的健康空闲设备每次启动前都在配置的锁下核查，未动他人进程、未 reset。原生 inverse_mm leaf 先跑原始 full B1/HV32/C64/bd4 通过，再 B1/HV1/C1、B1/HV1/C5、B2/HV3/C3，五个输出有限且过未改的 .02/.02/.05 判据，相对 L2 约 .00164–.00168；公开 plain 与 cached 前向在 B1/T4096/H32/HV32/bd4 通过（九个 cache 张量、plain/cached 字节一致、偶数 C 原始对照不变量），输出相对 L2 .0032664、final-state .0025472（对 CPU FP32）；所有 vendor 在首次自定义执行前注册完。下一步完整 T4096 backward，再是既有五个 case、真实形状、span105 边界，均用未改的梯度预算。仅部分原生验收，PR #83 仍草稿，非 DONE。状态 blocked→in_progress"
+        },
+        {
+          "at": "2026-09-19T05:25",
+          "summary": "STATUS（successor）：完整原生 backward 与全部必需回归通过（自述）——既有 5 个 case、4 个真实形状检查（含 B1/T4096/H32/HV32）、跨度 46/94/104/精确 105；六个梯度全部有限非零且低于未改的预算；完整 T4096 误差 dq .03035、dk .03451、dv .00354、dbeta .00332、dg .05706、dh0 .00234；exact105 用显式 FP32 可表示的门控增量，span106 被缓存版公开入口拒绝。缩小 inverse_mm sim/pipesim 8/8（五个完整数值输出、零 hazard、无死锁）；Aqk 12/12 对照按预期（奇数 C 的 original/qg-only 仍失败，repaired 干净）。公开网格 336/336 与跨 bd 比较通过：9240 个 head/chunk 行，双 CPU FP32 oracle，双公开入口，全部 9 个 cache，偶数 C 不变量；bd1/2/3/4 输出/cache/prefix-state 字节完全一致；最差相对 L2 输出 .003904291、状态 .004268510。原始输出失败计数新测 36/30/30/12（与 A5K-01 记录的 bd3=26 不同，它声明不复用旧数，DONE 审查时核对口径）。下一步：T1024/T4096 三轮同步三明治与 Torch NPU 基线，然后刷新报告/资格回执、验证脱敏归档恢复、最终主机/隐私检查再 ready/DONE。PR #83 仍草稿，非 DONE"
         }
       ],
       "result": null
