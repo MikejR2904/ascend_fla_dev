@@ -2602,7 +2602,7 @@
       },
       "spec": "docs/pm/tasks/A2-44.md",
       "issue": 86,
-      "pr": null,
+      "pr": 99,
       "assignee": "limjiunnbin",
       "assignee_caps": {
         "agent": "Codex，KDA/PKDA session（自述）",
@@ -2646,6 +2646,10 @@
         {
           "at": "2026-09-19T14:23",
           "summary": "RISK write-set-expansion 批准：PM 现场核实——公开 chunk_kda 定义在 ascend_fla/ops/kda/autograd.py、__init__.py 从它导出，原规格把它当成在 chunk.py 里是规格的错。追加三处写集：autograd.py（只补公开可选参数，预处理放在 Function 外以保留 raw 参数梯度链；不改 Function 数值与默认路径）、__init__.py（只更新 API 说明，不改导出身份）、tests/test_kda_layer_npu.py（只改 CPU 参考 mock 识别新 flags，预算与用例不放宽）。与在飞任务（GDA-03）无写集冲突，不碰 reserved_paths；与 A2-02（open）、A2-15（gated）重叠，本任务在飞期间它们不可派。不允许重导出/运行时替换绕行。合入仍按 D-PM-33/34：真机验证 + PM 审查 + 无争议才自行合入；这次追加是 PM 事先批准的，PR 落在更新后的写集内不算「写集扩大」争议"
+        },
+        {
+          "at": "2026-09-19T14:34",
+          "summary": "草稿 PR #99 已开（task/A2-44，5 个文件 +350/−7，全在原五条写集内，无隐私命中；autograd.py 等三处已批追加尚未改）。STATUS（14:20Z，自述，PM 未核实）：D1/D3、decode 原始输入 flags、共享预处理/域检查已实现；申领人自己的 CPU venv 全量 573 passed/5 skipped，基线 D1/D3 失败在同一环境复现；bd4 已成功构建 5 前向 + 9 反向 + 1 decode 共 15 个 vendor（编译回执脚本把正常 SystemExit 0 误列为 failure，在修）。尚无真机通过证据：候选设备窗口被他人活跃任务占用，其启动检查拒绝执行，未干预（机器归 agent 管）。该 STATUS 写于 PM 批准 write-set-expansion 之前，仍称 RISK 待裁决——PM 的裁决已发在 #86。仍 in_progress、未 DONE"
         }
       ],
       "result": null,
@@ -2722,6 +2726,10 @@
         {
           "at": "2026-09-19T14:23",
           "summary": "草稿 PR #98 已开（task/GDA-03，36 个文件、+85059 行，绝大部分是证据 JSON/日志）。PM 对草稿做了早期扫描：全部文件在写集内，无禁改/保留路径，无 IP/绝对路径/令牌/主机名线索；一处待 DONE 审查时细看：测试里对 pin 版 FLA naive 做 FP64 抬升用了 exec(compile(ast…))——要核对只改两处 torch.float32 属性、且执行前校验了 pin 源码哈希。两条 STATUS（自述，PM 未核实）：69 个校准 case（含完整 T4096 四种分组比 × 三种 cotangent）A/B 最大相对 L2 ≤ 4.9e-7；bd2 全网格通过——69 case × FP32/BF16 公共 dtype = 138 条记录，FP32 核心梯度对 A 最大相对 L2 dq/dk/dv/dg/dbeta = 4.86e-7/6.74e-7/6.88e-7/8.83e-7/7.04e-7（对 B 同量级；预算每项 1e-4），BF16 公共 dq/dk/dv 约 1.7e-3–1.8e-3（<5e-3 质量界）；原始日志 693 行、逐 case 数字、源码清单、环境回执与 case→日志行索引已在 PR。较大的 C2 分组 pipesim 撞解释器 walltime，保留为失败，改用缩小模型（B1T128H=HV1、B1T64H1HV3）通过。bd1 网格在跑，随后 138 case 字节比较、同卡三轮计时、终审。无阻塞，仍 in_progress，未发 DONE"
+        },
+        {
+          "at": "2026-09-19T14:34",
+          "summary": "STATUS（14:30Z，自述，PM 未核实）：bd1 与 bd2 两个原生网格都通过——69 个校准 case × 2 个 bd × FP32/BF16 公共 dtype = 276 条记录，每个 block_dim 的 job 结束时设备健康；跨 bd 字节比较 138 个 case/dtype 对 × （10 个保留 stage 数组 + 5 个公共梯度）= 2070 对数组逐字节相同；FP32 各梯度对两个参考最大相对 L2 dq 4.86e-7/dk 6.74e-7/dv 6.88e-7/dg 8.85e-7/dbeta 7.05e-7（预算 1e-4），BF16 公共最大 1.85e-3（<5e-3）；收了 6 份按源码签名选出的原生构建目录、完整构建日志与 264 个产物哈希，构建期告警定位到 SDK 弃用提示、未使用的 CMake 交叉编译参数、SDK Python 模板转义。下一步：隔离启动对照（解释两条 CANN 初始化告警），然后同卡三轮 baseline/candidate/baseline 计时（T1024/4096 × 两种 dtype，1800 个原始样本），PR 保持草稿直到计时与终审完成。无阻塞"
         }
       ],
       "result": null,
