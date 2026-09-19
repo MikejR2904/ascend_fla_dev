@@ -11,7 +11,7 @@
 
 ### 正在飞的任务（现在没有；A5K-02、PK-02、PK-03 都已于 2026-09-19 合入）
 
-> **2026-09-19T19:55Z 更新：BF-01 DONE 已评审 accept（PR #111），BF-04 头移到 2d9e4068（仅证据元数据，已复核），两个合入都在等用户授权；A2-03 的估计偏差约 45 倍。**
+> **2026-09-19T19:45Z 更新：BF-01 DONE 已评审 accept（PR #111），BF-04 头移到 2d9e4068（仅证据元数据，已复核），两个合入都在等用户授权；A2-03 的估计偏差约 45 倍。**
 > - **合入被自动模式分类器拦着（不绕过）**：`gh pr merge` 报 `[Merge Without Review]`；这一轮连 `git fetch origin pull/N/head` 和 `poll --advance` 也被报 `[Auto-Mode Bypass]`（复盘：分类器在合入被拒后对「把 PR 头取到本地」「推进游标」变敏感）。**评审改用只读 API**：`gh api repos/…/tarball/<sha>` 取源码快照、`gh api …/pulls/N/files --paginate` 取完整文件列表（**`gh pr view --json files` 最多只给 100 个，135 个文件的 PR 会被截断，别用它做写集核对**）、`gh api …/compare/A...B` 看头之间的差异。`git push origin main`（板子提交）单独跑可以，和 sync / 游标推进拼在一条复合命令里会被拦。
 > - **要用户做的**：授权合入 #110（头 `2d9e4068`，不是原来的 `a25ba5e`）与 #111（头 `c5ddd293`）；用户也可以在设置里加一条允许 `gh pr merge` 的 Bash 权限规则，让 D-PM-33 的常设授权对分类器生效。合入要经 bot 账号（`GH_TOKEN=$(gh auth token -u ascend-fla-pm-bot) gh pr merge N --merge --match-head-commit <sha>`），`limjiunnbin` 无权限。
 > - **BF-01（PR #111，头 `c5ddd293`，A5 真机）**：PM 从原始 JSON / 日志自己复算——112 条原生记录 0 失败，BF16 vsA 最大相对 L2 o 1.6758e-3 / state 1.019e-6（与自述逐位一致），BF16 最紧 误差/预算 = 0.333；跨 bd 1120 个哈希全相同；FP32 原 / 新 392 项 0 不同；host 审计每次调用 13 个 `aten.empty`（PM 代理审计得到相同）；900 个原始样本重算的加速比 T1024 0.993、T4096 0.996（BF16 与 FP32 墙钟持平，无速度声称）；测的代码就是合入的代码（源码清单 582/585 逐字节相同，差的 3 个是文档与契约状态）；无 NPU 环境新增 38 个测试全过、换回 base 入口 20 个失败、全量 707 passed / 12 skipped；135 个文件全在写集内、无二进制、隐私扫描 0 真命中。**REVIEW accept 已发在 #111。** BF-01 合入后直接派 BF-02（写集已预批准补上 `tests/test_gdn_chunk_bwd.py`，因为 GDA-03 的 15 个「全 BF16 一律拒绝」用例与 BF-02 目标矛盾），再 BF-03。

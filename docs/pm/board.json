@@ -532,7 +532,7 @@
           "summary": "STATUS（18:32Z，自述）：PR #111 仍在 c5ddd293、无变更；BF-02 只读预检发现具体的写集冲突——tests/test_gdn_chunk_bwd.py:35-47 的 15 个参数化用例要求全 BF16 输入在任何张量操作之前拒绝并指向 BF-02，而 BF-02 要让匹配的全 BF16 输入成功，该文件不在 BF-02 写集内；申领人请求把这处过时的拒绝测试窄范围并入 BF-02 写集（保留混用 dtype 的提前拒绝，把全 BF16 的拒绝换成分派 / ABI 覆盖），不会跳过测试或在生产代码里加只为测试存在的行为。PM 已核实成立并预批准（见 BF-02）。blockers: none"
         },
         {
-          "at": "2026-09-19T19:50",
+          "at": "2026-09-19T19:44",
           "summary": "PM 评审 accept（REVIEW 已发在 #111，头 c5ddd293；PM 从 evidence/ 的原始 JSON / 日志自己复算）：bd1/2 × 28 case × 2 dtype = 112 条原生记录 0 失败，BF16 vsA 最大相对 L2 o 1.6758e-3 / state 1.019e-6、vsB o 1.6758e-3 / state 2.2745e-6，FP32 vsA o 1.476e-6 / state 1.035e-6、vsB o 2.175e-6 / state 2.273e-6，与自述逐位一致；BF16 每 case 用实现前校准固定的 min(1e-2, 3F) 核，最紧 误差/预算 = 0.333；跨 bd 1120 个哈希全相同（728 对阶段数组 + 112 对公开数组）；FP32 原 / 新 392 项比较 0 不同；host 审计 112 条记录每条 13 个 aten.empty（共 1456）、无禁用算子，PM 代理审计（桩掉 launch 跑 TorchDispatchMode，两 dtype × 4 形状）每次 13 个 empty，静态无转换 / 重排；900 个原始样本重算的三段中位数与 candidate/mean(baseline) 逐项一致（T1024 0.993、T4096 0.996，BF16 与 FP32 墙钟基本持平，无速度声称）；四份候选回执的源码清单（各 585 文件）对 PR 头 582 个逐字节相同（含全部 .py），3 个不同（docs / README / contract.json，与「c67f50e 之后只改文档与契约状态」一致）；每份回执的 log_sha256 / 行数与原始日志一致，原始回执自带 soc / cann / opp（Ascend950PR_9589V100 / 9.2.0 / ascend950）；保留的失败只有加锁失败、误选测试、采集脚本转义，无数值 / kernel 失败被藏。无 NPU 环境复跑（钉住的 GDN naive SHA 与自述一致）：新增 38 个测试全过，入口换回 base 后 20 个失败（负对照），全量 707 passed / 12 skipped（main 基线 669 / 12）；135 个文件（134 新增、1 修改）全在写集内，无保留路径 / .github / pyproject / 二进制，全部 135 个文件隐私扫描 0 真命中；域与 FP32 共用同一个 _validate，未收窄未设新闸。合入被自动模式分类器拦下（[Merge Without Review]，与 #110 相同），按 D-PM-33 不绕过，等用户授权；授权对象是头 c5ddd293。合入依赖暂定的「校验」类裁定（CPU 诊断 launcher 的只读校验沿用）。BF-01 合入并 CLOSE 后 PM 直接派 BF-02（写集已补 tests/test_gdn_chunk_bwd.py），再 BF-03。"
         }
       ],
