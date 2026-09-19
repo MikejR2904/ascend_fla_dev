@@ -63,11 +63,10 @@ _KERNEL_MODULES = {
     "finalize_reduce": "finalize_reduce_kernel",
 }
 
-#: 本仓 ``kda_bwd_stable`` 单元覆盖的两个 kernel。其余七个仍用上游的。
-#: 为什么只这两个：它们是反向里唯一把成对衰减分解成两个指数相乘的地方。
-#: ``inverse_epilogue`` / ``scan_fused`` 里的 ``exp(g)`` / ``exp(g_last−g)`` 都 ≤1，
-#: 下溢到 0 正是「完全衰减」的正确结果，不存在 0×inf。
+# The two finalize kernels stabilize gate exponentials. The inverse_mm derivative
+# preserves arithmetic while fitting the accepted 32-ID local mutex budget.
 _STABLE_BWD_KERNELS = {
+    "inverse_mm": "inverse_mm_bounded_kernel",
     "finalize_pre": "finalize_pre_stable_kernel",
     "finalize_post": "finalize_post_stable_kernel",
 }
@@ -104,8 +103,8 @@ def kda_bwd_kernels(impl: str = "stable") -> dict[str, Any]:
     （harness 专用），而九个 kernel 文件本身只依赖 ``ascriptor.a5``。
 
     Args:
-        impl: ``"stable"``（默认）把 ``finalize_pre`` / ``finalize_post`` 换成本仓
-            ``kda_bwd_stable`` 单元的版本；``"upstream"`` 全用 ascriptor 的。
+        impl: ``"stable"`` selects local ``finalize_pre`` / ``finalize_post`` and
+            resource-bounded ``inverse_mm``; ``"upstream"`` keeps owner sources.
             **必须与前向的 impl 一致** —— 两边对可用门控跨度的上限不同，混用会让
             门控检查挡不住实际会失效的那一侧。
     """

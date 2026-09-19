@@ -1,4 +1,4 @@
-"""Task-local execution of the stable composition; public dispatch is unchanged."""
+"""Explicit original/repaired controls independent of public dispatch changes."""
 from __future__ import annotations
 
 import functools
@@ -18,7 +18,10 @@ def selected_kernels(variant):
     if variant == "repaired":
         functions["recurrent"] = _load_kernel("aqk_repair", Path(__file__).parent / "kernels",
                                               "recurrent", "kda_sub45_aqk_repaired_kernel")
-    elif variant != "baseline":
+    elif variant == "baseline":
+        # Keep the original negative control after public stable integration.
+        functions["recurrent"] = kda_fwd_kernels("upstream")["recurrent"]
+    else:
         raise ValueError(f"Unknown variant: {variant}")
     return functions
 

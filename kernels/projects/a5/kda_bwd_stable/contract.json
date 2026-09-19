@@ -160,7 +160,6 @@
     "pairs_with": "a5.kda_fwd_stable",
     "shared_kernels": [
       "scan_fused_kernel",
-      "inverse_mm_kernel",
       "inverse_epilogue_kernel",
       "inverse_dainv_kernel",
       "inverse_dakk_fused_kernel",
@@ -168,10 +167,11 @@
       "finalize_reduce_kernel"
     ],
     "own_kernels": [
+      "inverse_mm_bounded_kernel",
       "finalize_pre_stable_kernel",
       "finalize_post_stable_kernel"
     ],
-    "note": "七个复用的 kernel 里的指数都 ≤1，下溢到 0 正是「完全衰减」的正确结果，不存在 0/0 或 0×inf。inverse_epilogue 的 exp(g_last−g) 本来就是先减后指数。细节与逐项核对见 README.md。"
+    "note": "Six kernels retain the upstream source. The two local finalize kernels stabilize paired exponentials; the local inverse_mm only reduces two L0C allocations to fit the accepted local mutex budget, preserving arithmetic and the saved-cache ABI."
   },
   "comparison": {
     "default": {
@@ -259,10 +259,12 @@
     "reference": "passed",
     "sim": "untested",
     "emit": "passed",
-    "compile": "passed",
-    "board_cce": "passed",
+    "compile": "untested",
+    "board_cce": "untested",
     "static_check": "passed",
-    "note": "真机证据（Ascend950PR / CANN 9.1.0，经本仓 runtime 桥，2026-09-11）：① 上游 a5.kda_bwd 契约的五个 case 全部通过本单元，预算取 comparison（默认 0.05 / dk 0.15 / dg 0.25），相对 L2 与上游反向三位有效数字全同、只第四位有差（最大差是 gentle_decay 的 dbeta 3.928e-03 对 3.854e-03）；② 有限性逐档到 169.76，见 domain.gate_span。emit/compile/board 的证据来自本仓的 runtime 桥而**不是** ascriptor harness —— sim 要等 harness 集成（gaps.json 的 stable-unit-no-harness）。**还差一项**：默认初始化（跨度 ~94）下整层反向的精度，需要有 ascend950 算子包的机器（层里的投影/卷积/softplus 是 torch_npu 算子），测试已写好（tests/test_kda_layer_npu.py::test_default_init_backward_matches_cpu_reference）。"
+    "note": "真机证据（Ascend950PR / CANN 9.1.0，经本仓 runtime 桥，2026-09-11）：① 上游 a5.kda_bwd 契约的五个 case 全部通过本单元，预算取 comparison（默认 0.05 / dk 0.15 / dg 0.25），相对 L2 与上游反向三位有效数字全同、只第四位有差（最大差是 gentle_decay 的 dbeta 3.928e-03 对 3.854e-03）；② 有限性逐档到 169.76，见 domain.gate_span。emit/compile/board 的证据来自本仓的 runtime 桥而**不是** ascriptor harness —— sim 要等 harness 集成（gaps.json 的 stable-unit-no-harness）。**还差一项**：默认初始化（跨度 ~94）下整层反向的精度，需要有 ascend950 算子包的机器（层里的投影/卷积/softplus 是 torch_npu 算子），测试已写好（tests/test_kda_layer_npu.py::test_default_init_backward_matches_cpu_reference）。 The historical results above predate A5K-02. The selected A5K-02 runtime bridge now passes complete vendor builds and 13 native backward regressions, with 8 reduced inverse_mm sim/pipesim checks. These fresh results qualify the new derivative at the measured cases; canonical standalone harness/full-chain model statuses remain separate. See native_runtime_receipt.",
+    "native_runtime_bridge": "passed",
+    "native_runtime_receipt": "../kda_fwd_stable/public_validation.json"
   },
   "provenance": {
     "derived_from": {
@@ -285,6 +287,18 @@
         "stable_ops": 372
       },
       "note": "ascriptor check 报的 IR op 数，**不是周期数**，只用来界定改动规模。多出的 4 个是 2 个 RegList lane 的乘法，且在 64 行循环外，每 chunk 只算一次。"
+    },
+    "inverse_mm_resource_fix": {
+      "task": "A5K-02 / D-PM-24",
+      "source": "a5.kda_bwd/kernels/inverse_mm.py",
+      "kernels_revision": "b3b3f9c16df7c4626ed3c081032a1be5a753d0b1",
+      "library_revision": "90cfcdc720bbcd66e8bd4361c4dd4fbc1a2a57b5",
+      "changes": "Rename the entry; make l0c_dvh and l0c_dvbeta singleton L0C tensors and update their views. Arithmetic, event credits, loop/lookahead/drain and all other buffers remain unchanged.",
+      "local_mutex_count": {
+        "cube": 32,
+        "vec": 15
+      },
+      "qualification": "A5K-02 passed: emission cube32/vector15; complete CANN vendor builds at bd1..4; full inverse leaf B1/HV32/C64/bd4 plus 3 smaller native cases; 13 complete-backward regressions including five existing cases, four real shapes and spans 46/94/104/exact 105; 8 reduced leaf sim/pipesim checks, zero hazards/deadlocks. Original precision/resource limits unchanged. Receipt: ../kda_fwd_stable/public_validation.json."
     }
   },
   "release_scope": {

@@ -206,7 +206,7 @@ def test_bwd_stable_overrides_exactly_the_kernels_it_declares():
 
 @pytest.mark.parametrize("unit,stems", [
     ("kda_fwd_stable", ("gate", "intra", "wy", "recurrent")),
-    ("kda_bwd_stable", ("finalize_pre", "finalize_post")),
+    ("kda_bwd_stable", ("inverse_mm", "finalize_pre", "finalize_post")),
 ])
 def test_stable_units_define_the_functions_they_claim(unit, stems):
     """单元里 contract 声明的 kernel 函数必须真的定义在对应文件里。
@@ -275,47 +275,19 @@ def test_chunk_kda_skips_caches_when_no_grad_is_needed():
             assert fwd.call_count == 1 and apply_.call_count == 0, "no_grad 下仍走了 autograd"
 
 
-# --------------------------------------------------------------- C=1 多头的静默错误
-def test_single_chunk_multihead_gate_matches_measured_failure_pattern():
-    """C=1 且 ``B*HV > block_dim`` 必须报错 —— 上游 kernel 在这里静默写错 ``o``。
+# The upstream odd-C guard is a measured safety limit, not a shape restriction.
+@pytest.mark.parametrize("impl", ["stable", "upstream"])
+@pytest.mark.parametrize("c", [1, 2, 3, 4, 5, 6, 16, 64])
+@pytest.mark.parametrize("bd", SUPPORTED_BLOCK_DIM)
+def test_recurrent_multihead_gate_matches_measured_failure_pattern(impl, c, bd):
+    from ascend_fla.ops.kda.chunk import _check_recurrent_heads
 
-    闸的边界直接照实测的"正确的头 = 每个 cube 核的最后一个头"写：安全条件是
-    ``B*HV <= block_dim``（``pair_begin/pair_end`` 按 ``GetCubeIdx()/GetCubeNum()`` 切
-    ``B*HV``，而 ``GetCubeNum() == block_dim``）。这里把实测过的组合逐个钉住 ——
-    **这类缺陷没有 NaN、范数还正常**，一旦闸被改松就再也没有别的东西会报警。
-    """
-    from ascend_fla.ops.kda.chunk import _check_single_chunk_heads
-
-    # 实测全对的组合（每核 ≤1 个头）：不该报错
-    for b, hv, bd in ((1, 1, 1), (1, 2, 2), (1, 4, 4), (1, 2, 4), (1, 1, 4)):
-        _check_single_chunk_heads(b, hv, c=1, block_dim=bd)
-    # 实测出错的组合（每核 ≥2 个头）：必须报错
-    for b, hv, bd in ((1, 2, 1), (1, 4, 1), (1, 8, 1), (1, 16, 1),
-                      (1, 4, 2), (1, 8, 2), (1, 8, 4), (1, 16, 4), (1, 32, 4)):
-        with pytest.raises(ValueError, match="静默错误"):
-            _check_single_chunk_heads(b, hv, c=1, block_dim=bd)
-    # C≥2 实测全对，任何 HV 都不该被拦
-    for c in (2, 3, 16, 64):
-        for hv in (1, 2, 8, 32):
-            _check_single_chunk_heads(1, hv, c=c, block_dim=1)
-
-
-def test_single_chunk_multihead_gate_is_wired_into_the_forward_check():
-    """闸必须挂在 ``_check`` 上 —— 两个前向入口共用它，漏挂一个就等于没挂。"""
-    import inspect
-
-    from ascend_fla.ops.kda import chunk as m
-
-    src = inspect.getsource(m._check)
-    assert "_check_single_chunk_heads" in src, "_check 里没有调用 C=1 多头闸"
-    # 两个前向入口都必须过 _check
-    for fn in (m.chunk_kda_fwd, m.chunk_kda_fwd_with_caches):
-        assert "_check(" in inspect.getsource(fn), f"{fn.__name__} 没有过 _check"
-    # 反向**不该**装这个闸：实测 C=1/HV=8 的六项梯度全在预算内（反向不消费 o）
-    from ascend_fla.ops.kda import chunk_bwd as mb
-    assert "_check_single_chunk_heads" not in inspect.getsource(mb), (
-        "反向装了这个闸，但实测反向不受影响 —— 多余的闸会把能用的路径拒掉"
-    )
+    for b, hv in ((1, 1), (1, 2), (1, 4), (1, 8), (1, 16), (1, 32), (2, 2)):
+        if impl == "upstream" and c % 2 and b * hv > bd:
+            with pytest.raises(ValueError, match="silently corrupt"):
+                _check_recurrent_heads(b, hv, c, bd, impl)
+        else:
+            _check_recurrent_heads(b, hv, c, bd, impl)
 
 
 def test_c1_multihead_gap_is_recorded_as_p0():

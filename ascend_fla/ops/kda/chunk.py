@@ -36,10 +36,10 @@ VALUE_DIM = 128
 # 组切，融合尾部按 B*HV 头对切（两个 V=64 tile 必须留在同一组）。
 SUPPORTED_BLOCK_DIM = (1, 2, 3, 4)
 
-#: 两套前向实现。``upstream`` 原样用 ascriptor 的五个 kernel；``stable`` 把 gate / scores /
-#: wy 换成本仓 ``kernels/projects/a5/kda_fwd_stable/`` 下的版本，把门控算术改成对深衰减
-#: 数值稳定的形式（见那三个文件的 docstring 与 gaps.json 的 gate-range-beyond-declared）。
-#: inverse 与 recurrent 两套共用 —— 它们只用绝对量，下溢到 0 本身就是正确结果。
+#: Stable uses the local gate/scores/WY kernels for gate-span stability and the
+#: repaired recurrent kernel for continuous Aqk slot rotation across heads.
+#: Only inverse is shared. Upstream preserves the original five kernels, with
+#: an odd-C repeated-head guard for its known Aqk handoff defect.
 IMPLS = ("stable", "upstream")
 
 _UPSTREAM_KERNELS = {
@@ -53,6 +53,7 @@ _STABLE_KERNELS = {
     "gate": ("gate", "kda_sub1_gate_stable_kernel"),
     "scores": ("intra", "kda_sub2_score_stable_kernel"),
     "wy": ("wy", "kda_sub3_wy_stable_kernel"),
+    "recurrent": ("recurrent", "kda_sub45_aqk_repaired_kernel"),
 }
 
 
@@ -112,7 +113,7 @@ def _load_kernel(tag: str, pkg_dir: pathlib.Path, module_name: str, fn_name: str
 def kda_fwd_kernels(impl: str = "stable") -> dict[str, Any]:
     """载入某一套实现的五个 kernel 定义。
 
-    ``stable`` 的 gate / scores / wy 来自本仓单元，inverse / recurrent 仍用 ascriptor 的。
+    Stable selects local gate/scores/WY/recurrent; inverse stays upstream.
     """
     if impl not in IMPLS:
         raise ValueError(f"impl 只能是 {IMPLS}，收到 {impl!r}")
@@ -143,8 +144,10 @@ def _compiled_chain(device: str, block_dim: int, impl: str = "stable") -> dict[s
             for name, fn in kda_fwd_kernels(impl).items()}
 
 
-def _check(q, k, v, g, beta, initial_state, block_dim) -> tuple[int, int, int, int]:
+def _check(q, k, v, g, beta, initial_state, block_dim, impl="stable") -> tuple[int, int, int, int]:
     """门控。返回 ``(B, H, HV, C)``。任何不满足都报错，绝不静默降级。"""
+    if impl not in IMPLS:
+        raise ValueError(f"impl must be one of {IMPLS}, got {impl!r}")
     if block_dim not in SUPPORTED_BLOCK_DIM:
         raise ValueError(
             f"block_dim 只支持 {SUPPORTED_BLOCK_DIM}（ascriptor kda_fwd 契约声明的范围），"
@@ -200,46 +203,28 @@ def _check(q, k, v, g, beta, initial_state, block_dim) -> tuple[int, int, int, i
                 f"shape={tuple(x.shape)}；先自己 .contiguous() 再传进来"
             )
     c = t // L_PER_CHUNK
-    _check_single_chunk_heads(b, hv, c, block_dim)
+    _check_recurrent_heads(b, hv, c, block_dim, impl)
     return b, h, hv, c
 
 
-def _check_single_chunk_heads(b: int, hv: int, c: int, block_dim: int) -> None:
-    """C=1 且一个 cube 核要连续处理多个头时，``kda_sub45_fused_kernel`` 的 ``o`` 是错的。
+def _check_recurrent_heads(b: int, hv: int, c: int, block_dim: int, impl: str) -> None:
+    """Reject the original recurrent's unsafe odd-C repeated-head ownership.
 
-    **这是实测出来的上游 kernel 缺陷，不是定尺限制。** 现象：``o`` 有限、量级正常
-    （``|got| ≈ |ref|``）、**内容错** —— 逐元素比值完全乱。``final_state`` 不受影响，
-    反向也不受影响（它不消费 ``o``）。所以这是最难发现的那一类：没有 NaN、没有报错、
-    范数看起来对。
-
-    失效规律（2026-09-11 实测，H=1，跨度 46，``upstream`` 与 ``stable`` 逐位相同 ——
-    是共享的 ``kda_sub45_fused_kernel``，不是本仓派生引入的）::
-
-        bd=1: HV=2 只有头 1 对   HV=4 只有头 3 对   HV=8 只有头 7 对   HV=16 只有头 15 对
-        bd=2: HV=2 全对          HV=4 头 {1,3} 对    HV=8 头 {3,7} 对    HV=16 头 {7,15} 对
-        bd=4: HV=4 全对          HV=8 头 {1,3,5,7}   HV=16 头 {3,7,11,15}
-
-    正确的恰好是**每个 cube 核分到的最后一个头**。kernel 里
-    ``pair_begin/pair_end`` 按 ``GetCubeIdx()/GetCubeNum()`` 切 ``B*HV``，而
-    ``GetCubeNum() == block_dim``，所以安全条件是 ``B*HV <= block_dim``。
-    C≥2 时全对 —— chunk 循环跑第二遍时补上了缺的那次同步。kernel 源码里那句
-    ``auto sync is not used here because the nested for loops interfere with it``
-    说明同步是手写的，而手写的那份假设了 C≥2。
-
-    **为什么契约的 case 测不到**：``kda_fwd`` 四个 case 里 C=1 的三个都是 HV=1，
-    唯一 HV=2 的那个是 C=2 —— ``C=1 且 HV≥2`` 一个 case 都没覆盖。
-    详见 docs/matrix/gaps.json 的 ``c1-multihead-o-corrupt``。
+    A5K-01 confirmed C=1 and C=3 corruption on silicon. The original two-credit
+    Aqk channel restarts slot rotation at each head: odd C reuses the last slot
+    before its final reader retires. Even C and at most one head per core avoid
+    that boundary. Stable now selects the qualified continuous-rotation repair.
+    See docs/research/kda_aqk_handoff_repair.md for the source and measured scope.
     """
-    if c != 1 or b * hv <= block_dim:
+    if impl not in IMPLS:
+        raise ValueError(f"impl must be one of {IMPLS}, got {impl!r}")
+    if impl == "stable" or c % 2 == 0 or b * hv <= block_dim:
         return
     raise ValueError(
-        f"C=1（T={L_PER_CHUNK}）且 B*HV={b * hv} > block_dim={block_dim} 时，上游 "
-        f"kda_sub45_fused_kernel 会写出**静默错误**的 o（有限、量级正常、内容错；"
-        f"只有每个 cube 核的最后一个头是对的，本例即 {block_dim}/{b * hv} 个头）。"
-        f"final_state 与反向梯度不受影响。"
-        f"绕法：① T 取 {2 * L_PER_CHUNK} 的倍数（C≥2 时全对，实测）；"
-        f"② 或把 B*HV 降到 ≤{block_dim}（例如按头分批调用）。"
-        f"详见 docs/matrix/gaps.json 的 c1-multihead-o-corrupt"
+        f"impl='upstream' with odd C={c} and B*HV={b * hv} > block_dim={block_dim} "
+        "can silently corrupt o (静默错误) in kda_sub45_fused_kernel. "
+        "Use impl='stable' for the validated Aqk handoff repair, or use an even "
+        "chunk count or B*HV <= block_dim. See docs/research/kda_aqk_handoff_repair.md."
     )
 
 
@@ -498,17 +483,18 @@ def chunk_kda_fwd(
             NaN，那比报错糟得多。代价是对 ``g`` 做一次 cumsum + 两次规约。
             **这里用的是前向那条闸**（``stable`` 下 155）；要跑反向请走
             :func:`chunk_kda_fwd_with_caches` 或 :func:`~ascend_fla.ops.kda.chunk_kda`，
-            它们用更严的反向闸（100）。
-        impl: ``"stable"``（默认）用本仓 ``kernels/projects/a5/kda_fwd_stable`` 的
-            gate / scores / wy，门控算术对深衰减数值稳定，前向可用跨度 155；
-            ``"upstream"`` 原样用 ascriptor 的五个 kernel，可用跨度 80。
-            两者数学同义，差别只在浮点表示范围。
+            它们用更严的反向闸（105）。
+        impl: ``"stable"`` (default) selects the local stable gate/scores/WY
+            and repaired recurrent; forward gate span <=155.
+            Stable supports odd-C repeated-head ownership; upstream rejects it.
+            ``"upstream"`` uses the original five kernels with gate span <=80.
+            Both implement the same recurrence on their supported domains.
 
     Returns:
         ``(o, final_state)``，``o`` 为 ``[B, T, HV, 128]`` bfloat16；
         ``final_state`` 为 ``[B, HV, 128, 128]`` float32 或 ``None``。
     """
-    b, h, hv, c = _check(q, k, v, g, beta, initial_state, block_dim)
+    b, h, hv, c = _check(q, k, v, g, beta, initial_state, block_dim, impl)
     on_cpu = _resolve_layout(layout_device)
     if check_gate_range:
         _check_gate_range(g, c, on_cpu=on_cpu, impl=impl, path="forward")
@@ -609,7 +595,7 @@ def chunk_kda_fwd_with_caches(
         ``(o, final_state, caches)``。``caches`` 的键正是 :data:`BWD_CACHE_NAMES`，
         全部 bfloat16、token-major（``h`` 为 ``[B,C,HV,128,128]``），可直接喂 ``kda_bwd``。
     """
-    b, h_q, hv, c = _check(q, k, v, g, beta, initial_state, block_dim)
+    b, h_q, hv, c = _check(q, k, v, g, beta, initial_state, block_dim, impl)
     on_cpu = _resolve_layout(layout_device)
     # ⚠️ 门控必须在编译**之前**查。两个理由：
     #   ① 注定要被拒的调用不该先付一次完整编译的代价（十几个 kernel，分钟级）；
