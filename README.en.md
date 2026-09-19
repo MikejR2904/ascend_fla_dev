@@ -27,14 +27,14 @@ serves only as the semantic authority during testing (`naive.py` as a CPU fp32 o
 
 | family | id | track | kernels | task progress |
 |---|---|---|---|---|
-| KDA (Kimi Delta Attention) | `kda` | open to agents | 5 | 3/16 |
-| GDN (Gated DeltaNet) | `gated_delta_rule` | open to agents | 4 | 2/8 |
+| KDA (Kimi Delta Attention) | `kda` | open to agents | 5 | 3/18 |
+| GDN (Gated DeltaNet) | `gated_delta_rule` | open to agents | 4 | 2/10 |
 | DeltaNet | `delta_rule` | no task yet | 2 | 2/2 units with validation records |
-| GDN-2 (Gated DeltaNet 2) | `gdn2` | owner track | 6 | 3/4 |
+| GDN-2 (Gated DeltaNet 2) | `gdn2` | owner track | 6 | 3/5 |
 | Whole-network fusion ops (module / layer) | `fusion` | open to agents | 4 | 1/4 |
 | Mamba-1/2/3 | `mamba` | not scheduled (G4) | — | — |
 | GLA (Gated Linear Attention) | `gla` | not scheduled (G4) | — | — |
-| PKDA / PGDN (preconditioned) | `pkda` | open to agents | 2 | 3/4 |
+| PKDA / PGDN (preconditioned) | `pkda` | open to agents | 2 | 3/6 |
 | Log-Linear Attention | `log_linear` | not scheduled (G4) | — | — |
 | DLA (Dynamic Linear Attention) | `dla` | not scheduled (G4) | — | — |
 | StateX (wide state) | `statex` | not scheduled (G4) | — | — |
@@ -47,19 +47,19 @@ serves only as the semantic authority during testing (`naive.py` as a CPU fp32 o
 
 ### Expand for detail (family → kernel → task)
 
-<details><summary><b>KDA (Kimi Delta Attention) —— 5 kernel(s)，3/16 done</b></summary>
+<details><summary><b>KDA (Kimi Delta Attention) —— 5 kernel(s)，3/18 done</b></summary>
 
 _First target family; used by Kimi-Linear_
 
 | kernel | track | BF16 | FP32 | progress | next |
 |---|---|---|---|---|---|
-| `kda_fwd_stable` | open to agents | ✅ native · A5 hw | ⛔ rejected | 3/10 | [#34](https://github.com/ddddwee1/ascend_fla_dev/issues/34) A2-03 |
+| `kda_fwd_stable` | open to agents | ✅ native · A5 hw | ⛔ rejected | 3/11 | [#34](https://github.com/ddddwee1/ascend_fla_dev/issues/34) A2-03 |
 | `kda_bwd_stable` | open to agents | ✅ native · A5 hw | — | 0/8 | [#34](https://github.com/ddddwee1/ascend_fla_dev/issues/34) A2-03 |
-| `kda_fused_recurrent` | open to agents | 🔁 API-widen · A5 hw | ✅ native · A5 hw | 0/9 | [#34](https://github.com/ddddwee1/ascend_fla_dev/issues/34) A2-03 |
+| `kda_fused_recurrent` | open to agents | 🔁 API-widen · A5 hw → BF-06 | ✅ native · A5 hw | 0/10 | — BF-06 |
 | `kda_fwd` | upstream unit | ✅ native · A5 hw | — | 5/9 passed | _Upstream unit; superseded here by kda_fwd_stable_ |
 | `kda_bwd` | upstream unit | ✅ native · A5 hw | — | 4/9 passed，1 项 gap | _Upstream unit; superseded here by kda_bwd_stable_ |
 
-<details><summary>kda_fwd_stable —— 3/10 done，start A2-03、A2-04、A5K-01、A5-04</summary>
+<details><summary>kda_fwd_stable —— 3/11 done，start A2-03、A2-04、A5K-01、A5-04</summary>
 
 | task | issue | SoC | dtype | status | note |
 |---|---|---|---|---|---|
@@ -68,6 +68,7 @@ _First target family; used by Kimi-Linear_
 | A5-04 | [#50](https://github.com/ddddwee1/ascend_fla_dev/issues/50) | `a5` | bf16、fp32 | 🔒 gated (wave:W-A3) | ★ start |
 | A5K-01 | [#76](https://github.com/ddddwee1/ascend_fla_dev/issues/76) | `a5` | bf16、fp32 | ✅ done | ★ start |
 | A5K-02 | [#81](https://github.com/ddddwee1/ascend_fla_dev/issues/81) | `a5` | bf16、fp32 | ✅ done |  |
+| BF-07 | — | `a5` | bf16 | 🔒 gated (kernel-batch-approval) |  |
 | A2-12 | [#39](https://github.com/ddddwee1/ascend_fla_dev/issues/39) | `a2` | bf16、fp32 | 🔒 gated (machines:a2) |  |
 | A2-K1 | [#44](https://github.com/ddddwee1/ascend_fla_dev/issues/44) | `a2` | bf16、fp32 | 🔒 gated (kernel-batch-approval) |  |
 | A2-15 | [#42](https://github.com/ddddwee1/ascend_fla_dev/issues/42) | `a2` | bf16、fp32 | 🔒 gated (machines:a2) |  |
@@ -91,10 +92,11 @@ _First target family; used by Kimi-Linear_
 
 </details>
 
-<details><summary>kda_fused_recurrent —— 0/9 done，start A2-03、A2-K1、A5-01、A5-02、A5-03</summary>
+<details><summary>kda_fused_recurrent —— 0/10 done，start BF-06、A2-03、A2-K1、A5-01、A5-02、A5-03</summary>
 
 | task | issue | SoC | dtype | status | note |
 |---|---|---|---|---|---|
+| BF-06 | — | `a5` | bf16 | ⬜ open | ★ start |
 | A2-03 | [#34](https://github.com/ddddwee1/ascend_fla_dev/issues/34) | `a2` | bf16、fp32 | ⬜ open | ★ start |
 | A2-K1 | [#44](https://github.com/ddddwee1/ascend_fla_dev/issues/44) | `a2` | bf16、fp32 | 🔒 gated (kernel-batch-approval) | ★ start |
 | A5-01 | [#47](https://github.com/ddddwee1/ascend_fla_dev/issues/47) | `a5` | fp32 | 🔒 gated (wave:W-A3) | ★ start |
@@ -109,18 +111,18 @@ _First target family; used by Kimi-Linear_
 
 </details>
 
-<details><summary><b>GDN (Gated DeltaNet) —— 4 kernel(s)，2/8 done</b></summary>
+<details><summary><b>GDN (Gated DeltaNet) —— 4 kernel(s)，2/10 done</b></summary>
 
 _Used by Qwen3-Next; six ABI gaps to close (phase 4, unrelated to this). **GDN/PGDN exception track** (D-PM-20/22): GDA-01 (non-GQA forward) and GDA-02 (GQA/GVA grouping) both merged; PK-03 (PGDN forward) unlocked; sequence continues to backward → decode → perf_
 
 | kernel | track | BF16 | FP32 | progress | next |
 |---|---|---|---|---|---|
-| `gdn_fwd` | open to agents | ✅ native · A5 hw | — | 2/6 | [#35](https://github.com/ddddwee1/ascend_fla_dev/issues/35) A2-07 |
-| `gdn_bwd` | open to agents | ✅ native · A5 hw | 🔵 in progress | 0/5 | [#35](https://github.com/ddddwee1/ascend_fla_dev/issues/35) A2-07 |
+| `gdn_fwd` | open to agents | ✅ native · A5 hw | — | 2/7 | [#35](https://github.com/ddddwee1/ascend_fla_dev/issues/35) A2-07 |
+| `gdn_bwd` | open to agents | ✅ native · A5 hw → BF-02 | 🔵 in progress | 0/6 | [#35](https://github.com/ddddwee1/ascend_fla_dev/issues/35) A2-07 |
 | `gdn_fused_recurrent` | open to agents | — | — | 0/2 | [#94](https://github.com/ddddwee1/ascend_fla_dev/issues/94) GDA-04 |
-| `gdn_chunk_fwd_a5` | open to agents | 🔁 API-widen · A5 hw | ✅ native · A5 hw | — | _Narrow exception (D-PM-20/22): non-GQA forward and GQA/GVA grouping both merged (GDA-01/02)_ |
+| `gdn_chunk_fwd_a5` | open to agents | 🔁 API-widen · A5 hw → BF-01 | ✅ native · A5 hw | — | _Narrow exception (D-PM-20/22): non-GQA forward and GQA/GVA grouping both merged (GDA-01/02)_ |
 
-<details><summary>gdn_fwd —— 2/6 done，start A2-07、GDA-01</summary>
+<details><summary>gdn_fwd —— 2/7 done，start A2-07、GDA-01</summary>
 
 | task | issue | SoC | dtype | status | note |
 |---|---|---|---|---|---|
@@ -128,17 +130,19 @@ _Used by Qwen3-Next; six ABI gaps to close (phase 4, unrelated to this). **GDN/P
 | GDA-01 | [#73](https://github.com/ddddwee1/ascend_fla_dev/issues/73) | `a5` | bf16、fp32 | ✅ done | ★ start |
 | A2-K1 | [#44](https://github.com/ddddwee1/ascend_fla_dev/issues/44) | `a2` | bf16、fp32 | 🔒 gated (kernel-batch-approval) |  |
 | GDA-02 | [#82](https://github.com/ddddwee1/ascend_fla_dev/issues/82) | `a5` | bf16、fp32 | ✅ done |  |
+| BF-01 | — | `a5` | bf16 | ⬜ open |  |
 | A2-20 | [#45](https://github.com/ddddwee1/ascend_fla_dev/issues/45) | `a2` | bf16、fp32 | 🔒 gated (kernel-batch-approval) |  |
 | GDA-05 | [#96](https://github.com/ddddwee1/ascend_fla_dev/issues/96) | `a5` | bf16、fp32 | 🔒 gated (user-decision) |  |
 
 </details>
 
-<details><summary>gdn_bwd —— 0/5 done，start A2-07、GDA-03</summary>
+<details><summary>gdn_bwd —— 0/6 done，start A2-07、GDA-03</summary>
 
 | task | issue | SoC | dtype | status | note |
 |---|---|---|---|---|---|
 | A2-07 | [#35](https://github.com/ddddwee1/ascend_fla_dev/issues/35) | `a2` | bf16、fp32 | ⬜ open | ★ start |
 | GDA-03 | [#91](https://github.com/ddddwee1/ascend_fla_dev/issues/91) | `a5` | bf16、fp32 | 🔵 in_progress | ★ start |
+| BF-02 | — | `a5` | bf16 | ⬜ open |  |
 | A2-K1 | [#44](https://github.com/ddddwee1/ascend_fla_dev/issues/44) | `a2` | bf16、fp32 | 🔒 gated (kernel-batch-approval) |  |
 | GDA-05 | [#96](https://github.com/ddddwee1/ascend_fla_dev/issues/96) | `a5` | bf16、fp32 | 🔒 gated (user-decision) |  |
 | A2-20 | [#45](https://github.com/ddddwee1/ascend_fla_dev/issues/45) | `a2` | bf16、fp32 | 🔒 gated (kernel-batch-approval) |  |
@@ -167,7 +171,7 @@ _Upstream units exist; no task scheduled here yet_
 
 </details>
 
-<details><summary><b>GDN-2 (Gated DeltaNet 2) —— 6 kernel(s)，3/4 done</b></summary>
+<details><summary><b>GDN-2 (Gated DeltaNet 2) —— 6 kernel(s)，3/5 done</b></summary>
 
 _Owner's parallel track; see docs/handoff.md §1. **Exception** (D-PM-16, 2026-09-17): chunk forward is opened to the agent track (GD2-01 forward, merged; GD2-02 device+full-network validation, unassigned; GD2-03 perf, merged), scoped to new files only, reserved_paths untouched_
 
@@ -177,14 +181,15 @@ _Owner's parallel track; see docs/handoff.md §1. **Exception** (D-PM-16, 2026-0
 | `gdn2_fused_decode` | owner track | ✅ native · A5 hw | ❓ unchecked | 6/6 passed | _Owner track: model-specific fused decode_ |
 | `gdn2_short_conv_decode` | owner track | ✅ native · A5 hw | ❓ unchecked | 6/6 passed | _Owner track: packed short-conv decode_ |
 | `gdn2_norm2_w12_swiglu` | owner track | ✅ native · A5 hw | ❓ unchecked | 4/6 passed | _Owner track: fused RMSNorm + SwiGLU_ |
-| `gdn2_chunk_fwd` | open to agents | 🔁 API-widen · host only | ✅ native · A5 hw | 3/4 | [#62](https://github.com/ddddwee1/ascend_fla_dev/issues/62) GD2-01 |
+| `gdn2_chunk_fwd` | open to agents | 🔁 API-widen · host only → BF-05 | ✅ native · A5 hw | 3/5 | [#62](https://github.com/ddddwee1/ascend_fla_dev/issues/62) GD2-01 |
 | `gdn2_chunk_fwd_bwd` | owner track | ❓ unchecked | ❓ unchecked | — | _Backward not yet scheduled; forward is done via the agent track, see gdn2_chunk_fwd_ |
 
-<details><summary>gdn2_chunk_fwd —— 3/4 done，start GD2-01</summary>
+<details><summary>gdn2_chunk_fwd —— 3/5 done，start GD2-01</summary>
 
 | task | issue | SoC | dtype | status | note |
 |---|---|---|---|---|---|
 | GD2-01 | [#62](https://github.com/ddddwee1/ascend_fla_dev/issues/62) | `a5` | bf16、fp32 | ✅ done | ★ start |
+| BF-05 | — | `a5` | bf16 | ⬜ open |  |
 | GD2-02 | [#63](https://github.com/ddddwee1/ascend_fla_dev/issues/63) | `a5` | bf16、fp32 | ⬜ open |  |
 | GD2-03 | [#66](https://github.com/ddddwee1/ascend_fla_dev/issues/66) | `a5` | bf16、fp32 | ✅ done |  |
 | GD2-04 | [#72](https://github.com/ddddwee1/ascend_fla_dev/issues/72) | `a5` | bf16、fp32 | ✅ done |  |
@@ -254,29 +259,31 @@ _Not scheduled: gated epic G4 (narrow-slice rule — no target model, no work). 
 
 </details>
 
-<details><summary><b>PKDA / PGDN (preconditioned) —— 2 kernel(s)，3/4 done</b></summary>
+<details><summary><b>PKDA / PGDN (preconditioned) —— 2 kernel(s)，3/6 done</b></summary>
 
 _Source of truth established (2026-09-17, see docs/research/pkda_semantics.md): paper *Preconditioned DeltaNet* (arXiv:2604.21100, ICML 2026), merged upstream into fla (PR fla-org/flash-linear-attention#950, 0.6.0). PKDA is KDA plus an ATK preconditioning step, reusing kda_fwd_stable/kda_bwd_stable — see PK-02. PGDN is the same preconditioning on GDN, but GDN itself lacks GQA grouping (gdn-no-gqa) — PGDN is sequenced after that, see PK-03 (gated). Neither has a released pretrained checkpoint; end-to-end validation cannot reach real logits_
 
 | kernel | track | BF16 | FP32 | progress | next |
 |---|---|---|---|---|---|
-| `pkda_chunk_fwd` | open to agents | ⛔ rejected | ✅ native · A5 hw | 2/2 | [#68](https://github.com/ddddwee1/ascend_fla_dev/issues/68) PK-02 |
-| `pgdn_chunk_fwd` | open to agents | 🔁 API-widen · A5 hw | ✅ native · A5 hw | 1/2 | [#69](https://github.com/ddddwee1/ascend_fla_dev/issues/69) PK-03 |
+| `pkda_chunk_fwd` | open to agents | ⛔ rejected → BF-04 | ✅ native · A5 hw | 2/3 | [#68](https://github.com/ddddwee1/ascend_fla_dev/issues/68) PK-02 |
+| `pgdn_chunk_fwd` | open to agents | 🔁 API-widen · A5 hw → BF-03 | ✅ native · A5 hw | 1/3 | [#69](https://github.com/ddddwee1/ascend_fla_dev/issues/69) PK-03 |
 
-<details><summary>pkda_chunk_fwd —— 2/2 done，start PK-02</summary>
+<details><summary>pkda_chunk_fwd —— 2/3 done，start PK-02</summary>
 
 | task | issue | SoC | dtype | status | note |
 |---|---|---|---|---|---|
 | PK-02 | [#68](https://github.com/ddddwee1/ascend_fla_dev/issues/68) | `a5` | fp32 | ✅ done | ★ start |
 | PK-04 | [#92](https://github.com/ddddwee1/ascend_fla_dev/issues/92) | `a5` | fp32 | ✅ done |  |
+| BF-04 | — | `a5` | bf16 | ⬜ open |  |
 
 </details>
 
-<details><summary>pgdn_chunk_fwd —— 1/2 done，start PK-03</summary>
+<details><summary>pgdn_chunk_fwd —— 1/3 done，start PK-03</summary>
 
 | task | issue | SoC | dtype | status | note |
 |---|---|---|---|---|---|
 | PK-03 | [#69](https://github.com/ddddwee1/ascend_fla_dev/issues/69) | `a5` | bf16、fp32 | ✅ done | ★ start |
+| BF-03 | — | `a5` | bf16 | ⬜ open |  |
 | GDA-05 | [#96](https://github.com/ddddwee1/ascend_fla_dev/issues/96) | `a5` | bf16、fp32 | 🔒 gated (user-decision) |  |
 
 </details>
@@ -342,7 +349,7 @@ _Not scheduled: gated epic G4 (narrow-slice rule — no target model, no work). 
 
 | dtype | track | tasks | note |
 |---|---|---|---|
-| `bf16` | open to agents | 32 | Current ABI: q/k/v/o and most intermediates |
+| `bf16` | open to agents | 39 | Current ABI: q/k/v/o and most intermediates |
 | `fp32` | open to agents | 41 | Current ABI: state, gate accumulation, all correctness judged in fp32 |
 | `fp16` | not scheduled (G3) | — | Explicitly rejected by the contract |
 | `int8` | not scheduled (G3) | 1 | Not scheduled; state drift needs a design first |
@@ -358,7 +365,7 @@ _Not scheduled: gated epic G4 (narrow-slice rule — no target model, no work). 
 > **not scheduled (G4)** families have no kernel here — narrow-slice rule: no target model, no work.
 > Task specs and issues are written in Chinese.
 > BF16 / FP32 columns = the kernel's q/k/v operand dtype: ✅ native = the kernel computes in that dtype and is verified on real hardware of the SoC shown;
-> 🔁 API-widen = the public entry accepts that dtype but widens it to FP32 on the host, runs FP32 kernels and casts the output back — **the kernel itself does not run that dtype**;
+> 🔁 API-widen = the public entry accepts that dtype but widens it to FP32 on the host, runs FP32 kernels and casts the output back — **the kernel itself does not run that dtype**; **non-compliant since D-PM-35 (BF16 must be computed in kernels); `→ BF-xx` is the task that fixes it**;
 > ⛔ rejected = the public entry raises; 🔵 in progress; — not implemented; ❓ not checked (owner-track / upstream details the PM has not verified).
 > The task counts in the Data types table are not progress; per-kernel BF16 / FP32 progress is in these two columns.
 <!-- fla-pm:kernels end -->

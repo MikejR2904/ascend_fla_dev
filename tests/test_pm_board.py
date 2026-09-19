@@ -409,6 +409,18 @@ class TestKernelDtypeStatus(unittest.TestCase):
             self.assertIn("⛔", row)      # PKDA 公共入口显式拒绝 BF16
             self.assertIn("✅", row)      # FP32 原生、A5 真机
 
+    def test_dtype_fix_must_name_an_existing_task_and_is_rendered(self):
+        board = {"tasks": [_task("BF-X", write_set=["b.py"])], "kernel_inventory": {"kernels": [
+            {"id": "k", "family": "f", "track": "agent", "dtype_status": {"bf16": "widen@a5", "fp32": "native@a5"},
+             "dtype_fix": {"bf16": "BF-NOPE"}}]}}
+        self.assertTrue(any("dtype_fix" in p for p in pm_board.check(board)))
+        board["kernel_inventory"]["kernels"][0]["dtype_fix"] = {"bf16": "BF-X"}
+        self.assertFalse(any("dtype_fix" in p for p in pm_board.check(board)))
+        committed = pm_board.load()
+        row = next(line for line in pm_board.render_readme_block(committed, "zh").splitlines()
+                   if line.startswith("| `gdn_chunk_fwd_a5`"))
+        self.assertIn("→ BF-01", row)   # GDN 前向的 BF16 现在是 host 加宽，BF-01 改正它
+
     def test_dtype_cell_words(self):
         self.assertEqual(pm_board.dtype_cell("native@a5", "zh"), "✅ 原生 · A5 真机")
         self.assertEqual(pm_board.dtype_cell("widen@host", "zh"), "🔁 API 加宽 · 仅主机侧")

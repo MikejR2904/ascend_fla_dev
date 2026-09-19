@@ -9,6 +9,12 @@
 - 写集：`kernels/projects/a5/gdn_chunk_bwd/**`、`ascend_fla/ops/gdn_chunk_bwd.py`、
   `tests/test_gdn_chunk_bwd.py`、`docs/research/gdn_chunk_bwd_gate_range.md`
 
+## 2026-09-19 追加（用户 D-PM-35）：本任务不含 BF16 计算
+
+用户要求 BF16 计算必须在 kernel 里、不能在 host 侧完成（`docs/pm/bf16-kernel-side.md`）。本任务的 kernel 是 FP32 的，所以：
+**公共入口对 BF16（`q/k/v/do`）显式报错，错误信息指向 `BF-02`**，不做 `.float()` / `.to(dtype)` 的 host 加宽；FP32 一切不变。
+本规格里所有 BF16 条款（BF16 质量检查、BF16 公共调用、BF16 workload、BF16 三明治）作废，已收集的 BF16 记录不进交付声称；FP32 证据不受影响。原生 BF16 反向是 `BF-02`。
+
 ## 这条任务是怎么来的
 
 用户给的 GDN/PGDN 排期（D-PM-22）：GDN 前向（GDA-01）→ GQA 分组（GDA-02）→ PGDN 前向（PK-03）→ **backward** → decode →

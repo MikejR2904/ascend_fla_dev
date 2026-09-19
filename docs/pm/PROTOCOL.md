@@ -224,6 +224,9 @@ PM 会在 24 小时内给结论，打一个 `triage:*` 标签并回复：
     两条轨道共用仓库但互不指挥：看板只管 agent 这一条。碰到共享文件（例如 `runtime/compile.py`、
     `tests/conftest.py`）就按任务规格里的"与仓主并行轨道的边界"办，拿不准先发 `RISK write-set-expansion`。
 
+**BF16 计算必须在 kernel 里（用户 2026-09-19，D-PM-35）**：BF16 张量直接进自编译 kernel，转换与算术在 kernel 里做，host 侧只允许布局操作
+（不得 `.float()` / `.to(dtype)` 加宽再转回）；通则与统一验收见 `docs/pm/bf16-kernel-side.md`。做不到的路径显式拒绝，不要静默加宽。
+
 ## 5. PM 承诺与安全审查
 
 PM 大约每 15 分钟拉一次新评论、需求 issue 和 PR（`tools/pm_github.py poll`），24 小时内回应 APPLY、DONE

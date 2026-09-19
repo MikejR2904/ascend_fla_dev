@@ -230,6 +230,13 @@
       "by": "user",
       "decision": "所有任务必须完成真机验证。（用户原话：「所有任务必须完成真机验证」。）",
       "risk": "PM 的读法（用户可纠正）：(1) 适用于所有尚未 done 的任务；已 done 的纯主机任务（PM-0、A2-04、A2-05、A2-40、PK-01、GD2-01、PK-02）不追溯，除非用户另说。(2) DONE 里没有真机验证就 REVIEW rework，不进入合入，也不能靠主机侧/CPU 测试补；D-PM-33 里「没有真机验证的 PR 先问用户」一条由此改为「退回补真机」。(3) soc=any 的任务在 assignee 自己的真机上验证，结论只对那个 SoC 成立、不外推；具体 SoC 的任务要求 assignee 声明过该 SoC 真机（看板校验与 --next 已按此匹配：socs 写 none 的申领人接不到任何任务）。(4) 设计/调研类任务的「真机验证」读作：把设计所依赖的、能在真机上实测的事实（算子包覆盖、dtype/指令支持、核数/UB/block_dim 上限、原型编译与运行）测出来。(5) 确实无法真机的任务（比如没人有对应 SoC 的真机）由用户决定是否豁免，PM 不自行豁免。(6) 涉及 a2 的仍受 AGENTS.md §2 约束：A2-11 之前 A2 真机数字只作观测记录，不构成算子结论。(7) 已在飞的 A2-44（原规格「不需要真机」）已改规格并通知申领人。"
+    },
+    {
+      "id": "D-PM-35",
+      "date": "2026-09-19",
+      "by": "user",
+      "decision": "BF16 计算必须是 kernel 侧的计算，不能在 host 侧完成；追加任务改正；后续 BF16 优先。（用户原话：「bf16计算必须是kernel侧的计算，不能再host侧完成。追加任务把这个改正。 后续bf16优先」）",
+      "risk": "PM 的读法（用户可纠正）：(1) 约束对象是 BF16 路径的计算：BF16 张量直接进自编译 kernel，转换/算术在 kernel 里，host 侧只允许零算术零转换的布局操作；FP32 路径不变。(2) 现存不合规项——GDN 前向、PGDN 前向、GDN-2 chunk 前向、KDA decode 的 BF16 入口在 host 侧 `.float()` 加宽再转回；PKDA 直接拒绝 BF16——由 BF-01…BF-06 改正（P0，排在看板最前）；已合入的历史 PR 不回滚，首页表标 `→ BF-xx`。(3) 在飞/待审：GDA-03 的 BF16 公共入口不得再 host 加宽，改为显式拒绝、BF16 反向归 BF-02（已改规格并通知申领人）；PK-05/GDA-04/PK-06 骨架同样显式拒绝 BF16；A2-44 已合入，它的 raw flags 预处理是 FP32 host 算子（不是 BF16 计算），融进 kernel 归 BF-07。(4) BF-07 要改已有派生单元的 kernel 源码，属 kernel 批次，gated `kernel-batch-approval`，只问用户。(5) BF 任务来源是用户直接指令，origin=user，不需要放行；BF-02/BF-03 有依赖（GDA-03、BF-01），BF-06 依赖 A2-44（已完成）。(6) 统一验收（`docs/pm/bf16-kernel-side.md`）：host 算子审计为硬判据；BF16 预算先校准（误差地板 F）、实现前写定、事后不得放宽；BF16 的门控域要重测，比 FP32 窄属域变化，先问用户。(7) 「后续 bf16 优先」按看板顺序与 P0 落实：BF 任务插在看板最前，`--next` 先给它们。"
     }
   ],
   "gated_epics": [
@@ -363,6 +370,340 @@
         ],
         "note": "看板、协议、GitHub 通道、需求提案入口与两个校验器均已就位；26 个 issue 已建但被 GitHub 反滥用过滤隐藏，见 gaps 之外的待办"
       }
+    },
+    {
+      "id": "BF-01",
+      "title": "GDN chunk 前向：BF16 原生 kernel（含 GQA/GVA 分组），A5 真机",
+      "wave": "W0",
+      "soc": "a5",
+      "priority": "P0",
+      "status": "open",
+      "model": [],
+      "kernel": [
+        "gdn_fwd"
+      ],
+      "dtype": [
+        "bf16"
+      ],
+      "deps": [
+        "GDA-02"
+      ],
+      "write_set": [
+        "kernels/projects/a5/gdn_chunk_fwd_bf16/**",
+        "ascend_fla/ops/gdn_chunk_fwd.py",
+        "tests/test_gdn_chunk_fwd_bf16.py",
+        "docs/research/gdn_chunk_fwd_bf16.md"
+      ],
+      "needs": {
+        "npu": true,
+        "ascriptor": true,
+        "fla": true
+      },
+      "spec": "docs/pm/tasks/BF-01.md",
+      "issue": null,
+      "pr": null,
+      "assignee": null,
+      "assignee_caps": null,
+      "branch": null,
+      "timebox_h": 24,
+      "reports": [
+        {
+          "at": "2026-09-19T15:49",
+          "summary": "用户 D-PM-35 建：GDN 前向现在的 BF16 入口是 host 侧 q.float() 加宽再转回，不合规。origin=user，open"
+        }
+      ],
+      "result": null,
+      "origin": {
+        "kind": "user",
+        "note": "用户 2026-09-19 直接指令（D-PM-35）：BF16 必须 kernel 侧，追加任务改正，后续 BF16 优先"
+      }
+    },
+    {
+      "id": "BF-02",
+      "title": "GDN chunk 反向：BF16 原生 kernel（含分组），A5 真机",
+      "wave": "W0",
+      "soc": "a5",
+      "priority": "P0",
+      "status": "open",
+      "model": [],
+      "kernel": [
+        "gdn_bwd"
+      ],
+      "dtype": [
+        "bf16"
+      ],
+      "deps": [
+        "GDA-03",
+        "BF-01"
+      ],
+      "write_set": [
+        "kernels/projects/a5/gdn_chunk_bwd_bf16/**",
+        "ascend_fla/ops/gdn_chunk_bwd.py",
+        "tests/test_gdn_chunk_bwd_bf16.py",
+        "docs/research/gdn_chunk_bwd_bf16.md"
+      ],
+      "needs": {
+        "npu": true,
+        "ascriptor": true,
+        "fla": true
+      },
+      "spec": "docs/pm/tasks/BF-02.md",
+      "issue": null,
+      "pr": null,
+      "assignee": null,
+      "assignee_caps": null,
+      "branch": null,
+      "timebox_h": 24,
+      "reports": [
+        {
+          "at": "2026-09-19T15:49",
+          "summary": "用户 D-PM-35 建：GDA-03 的 FP32 反向不做 BF16 计算（公共入口对 BF16 显式拒绝），BF16 反向归本任务；GDA-03 与 BF-01 完成后才可派"
+        }
+      ],
+      "result": null,
+      "origin": {
+        "kind": "user",
+        "note": "用户 2026-09-19 直接指令（D-PM-35）：BF16 必须 kernel 侧，追加任务改正，后续 BF16 优先"
+      }
+    },
+    {
+      "id": "BF-03",
+      "title": "PGDN chunk 前向：BF16 原生 kernel（含 ATK 与 q/k 归一化），A5 真机",
+      "wave": "W0",
+      "soc": "a5",
+      "priority": "P0",
+      "status": "open",
+      "model": [],
+      "kernel": [
+        "pgdn_chunk_fwd"
+      ],
+      "dtype": [
+        "bf16"
+      ],
+      "deps": [
+        "PK-03",
+        "BF-01"
+      ],
+      "write_set": [
+        "kernels/projects/a5/pgdn_chunk_fwd_bf16/**",
+        "ascend_fla/ops/pgdn_chunk_fwd.py",
+        "tests/test_pgdn_chunk_fwd_bf16.py",
+        "docs/research/pgdn_chunk_fwd_bf16.md"
+      ],
+      "needs": {
+        "npu": true,
+        "ascriptor": true,
+        "fla": true
+      },
+      "spec": "docs/pm/tasks/BF-03.md",
+      "issue": null,
+      "pr": null,
+      "assignee": null,
+      "assignee_caps": null,
+      "branch": null,
+      "timebox_h": 24,
+      "reports": [
+        {
+          "at": "2026-09-19T15:49",
+          "summary": "用户 D-PM-35 建：PGDN 前向的 BF16 入口是 host 加宽；q/k 归一化必须进 kernel。BF-01 完成后才可派"
+        }
+      ],
+      "result": null,
+      "origin": {
+        "kind": "user",
+        "note": "用户 2026-09-19 直接指令（D-PM-35）：BF16 必须 kernel 侧，追加任务改正，后续 BF16 优先"
+      }
+    },
+    {
+      "id": "BF-04",
+      "title": "PKDA chunk 前向：BF16 原生 kernel（含 ATK），先做精度研究，A5 真机",
+      "wave": "W0",
+      "soc": "a5",
+      "priority": "P0",
+      "status": "open",
+      "model": [],
+      "kernel": [
+        "pkda_chunk_fwd"
+      ],
+      "dtype": [
+        "bf16"
+      ],
+      "deps": [
+        "PK-04"
+      ],
+      "write_set": [
+        "kernels/projects/a5/pkda_chunk_fwd_bf16/**",
+        "ascend_fla/ops/pkda_chunk_fwd.py",
+        "tests/test_pkda_chunk_fwd_bf16.py",
+        "docs/research/pkda_chunk_fwd_bf16.md"
+      ],
+      "needs": {
+        "npu": true,
+        "ascriptor": true,
+        "fla": true
+      },
+      "spec": "docs/pm/tasks/BF-04.md",
+      "issue": null,
+      "pr": null,
+      "assignee": null,
+      "assignee_caps": null,
+      "branch": null,
+      "timebox_h": 24,
+      "reports": [
+        {
+          "at": "2026-09-19T15:49",
+          "summary": "用户 D-PM-35 建，并直接问过「pkda 为何没有 bf16」：仓内记录的是范围决定不是不可行证明；先做 CPU 精度研究再写 kernel，BF16 门控域要重测，比 FP32 窄先问用户"
+        }
+      ],
+      "result": null,
+      "origin": {
+        "kind": "user",
+        "note": "用户 2026-09-19 直接指令（D-PM-35）：BF16 必须 kernel 侧，追加任务改正，后续 BF16 优先"
+      }
+    },
+    {
+      "id": "BF-05",
+      "title": "GDN-2 chunk 前向：BF16 原生 kernel，A5 真机",
+      "wave": "W0",
+      "soc": "a5",
+      "priority": "P0",
+      "status": "open",
+      "model": [],
+      "kernel": [
+        "gdn2_chunk_fwd"
+      ],
+      "dtype": [
+        "bf16"
+      ],
+      "deps": [
+        "GD2-01"
+      ],
+      "write_set": [
+        "kernels/projects/a5/gdn2_chunk_fwd_bf16/**",
+        "ascend_fla/ops/gdn2_chunk_fwd.py",
+        "tests/test_gdn2_chunk_fwd_bf16.py",
+        "docs/research/gdn2_chunk_fwd_bf16.md"
+      ],
+      "needs": {
+        "npu": true,
+        "ascriptor": true,
+        "fla": true
+      },
+      "spec": "docs/pm/tasks/BF-05.md",
+      "issue": null,
+      "pr": null,
+      "assignee": null,
+      "assignee_caps": null,
+      "branch": null,
+      "timebox_h": 24,
+      "reports": [
+        {
+          "at": "2026-09-19T15:49",
+          "summary": "用户 D-PM-35 建：GDN-2 chunk 前向的 BF16 入口是 host 加宽；不得触碰仓主轨道的保留路径"
+        }
+      ],
+      "result": null,
+      "origin": {
+        "kind": "user",
+        "note": "用户 2026-09-19 直接指令（D-PM-35）：BF16 必须 kernel 侧，追加任务改正，后续 BF16 优先"
+      }
+    },
+    {
+      "id": "BF-06",
+      "title": "KDA decode（fused_recurrent）：BF16 原生 kernel，A5 真机",
+      "wave": "W0",
+      "soc": "a5",
+      "priority": "P0",
+      "status": "open",
+      "model": [],
+      "kernel": [
+        "kda_fused_recurrent"
+      ],
+      "dtype": [
+        "bf16"
+      ],
+      "deps": [
+        "A2-44"
+      ],
+      "write_set": [
+        "kernels/projects/a5/kda_fused_recurrent_bf16/**",
+        "ascend_fla/ops/kda/fused_recurrent.py",
+        "tests/test_kda_decode_bf16.py",
+        "docs/research/kda_decode_bf16.md"
+      ],
+      "needs": {
+        "npu": true,
+        "ascriptor": true,
+        "fla": true
+      },
+      "spec": "docs/pm/tasks/BF-06.md",
+      "issue": null,
+      "pr": null,
+      "assignee": null,
+      "assignee_caps": null,
+      "branch": null,
+      "timebox_h": 16,
+      "reports": [
+        {
+          "at": "2026-09-19T15:49",
+          "summary": "用户 D-PM-35 建：KDA decode 入口 host 侧 .to(float32) 后进 FP32 kernel，不合规；prefill→decode 一致性是硬判据"
+        }
+      ],
+      "result": null,
+      "origin": {
+        "kind": "user",
+        "note": "用户 2026-09-19 直接指令（D-PM-35）：BF16 必须 kernel 侧，追加任务改正，后续 BF16 优先"
+      }
+    },
+    {
+      "id": "BF-07",
+      "title": "KDA 前向：q/k l2norm、门控变换、beta sigmoid 融进 kernel（BF16 路径；骨架，gated）",
+      "wave": "W0",
+      "soc": "a5",
+      "priority": "P0",
+      "status": "gated",
+      "model": [],
+      "kernel": [
+        "kda_fwd_stable"
+      ],
+      "dtype": [
+        "bf16"
+      ],
+      "deps": [
+        "A2-44",
+        "BF-06"
+      ],
+      "write_set": [
+        "kernels/projects/a5/kda_fwd_stable/**",
+        "ascend_fla/ops/kda/chunk.py",
+        "ascend_fla/ops/kda/autograd.py",
+        "tests/test_kda_fused_prep_kernel.py",
+        "docs/research/kda_fused_prep.md"
+      ],
+      "needs": {
+        "npu": true,
+        "ascriptor": true,
+        "fla": true
+      },
+      "spec": "docs/pm/tasks/BF-07.md",
+      "issue": null,
+      "pr": null,
+      "assignee": null,
+      "assignee_caps": null,
+      "branch": null,
+      "timebox_h": 16,
+      "reports": [
+        {
+          "at": "2026-09-19T15:49",
+          "summary": "用户 D-PM-35 的延伸：A2-44 的 raw flags 预处理仍在 host 侧（FP32 PyTorch 算子），按「BF16 计算必须 kernel 侧」应融进 kernel；要改已有派生单元的 kernel 源码，属 kernel 批次，等用户批准（写集待定，放行后 PM 细化）"
+        }
+      ],
+      "result": null,
+      "origin": {
+        "kind": "user",
+        "note": "用户 2026-09-19 直接指令（D-PM-35）：BF16 必须 kernel 侧，追加任务改正，后续 BF16 优先"
+      },
+      "gate": "kernel-batch-approval"
     },
     {
       "id": "A2-01",
@@ -2769,6 +3110,10 @@
         {
           "at": "2026-09-19T15:17",
           "summary": "STATUS（15:00Z，自述，PM 未核实）：276 条原生网格记录与 2070 对跨 bd 字节相同数组保持通过，源码、逐 case 原始数字与行号索引、6 份编译回执与已定位的运行时告警已进 PR；独立启动对照复现了两条 CANN 初始化告警。第一轮计时 job 跑完 12 个三明治轮次/1800 个样本，数学检查、baseline/candidate 字节一致与运行后健康都过，但原始样本先私存：申领人发现主机侧 fuser 采样从未观察到自己的计算进程，空的 fuser 记录不能证明独占——有界实测确认它持有的是驱动管理/通信字符 FD，而不是持久的 per-device davinci FD，容器与主机的设备节点 inode 也不同；未杀/未复位任何他人进程。它不接受这批空样本作为同卡测量，正在定位驱动的 owner-header 进程查询 API、用已知活进程验证后带有效占用监控重跑三明治；原样本与失败审计保留，不放宽任何数值预算或必测 case。（占用监控属 agent 自管的机器事务，PM 只记录）。无阻塞，仍 in_progress，未 DONE"
+        },
+        {
+          "at": "2026-09-19T15:49",
+          "summary": "用户 D-PM-35：BF16 计算必须 kernel 侧、不能 host 加宽。GDA-03 的 BF16 公共入口（q.float() 加宽、梯度转回）因此不能进交付：规格已加「本任务不含 BF16 计算」——公共入口对 BF16 显式报错并指向 BF-02，规格里的 BF16 条款作废，FP32 证据不受影响；已在 #91 通知申领人"
         }
       ],
       "result": null,
@@ -2913,6 +3258,10 @@
         {
           "at": "2026-09-19T12:42",
           "summary": "预研细节并入骨架（自述，PM 未核实）：七个输入梯度、三路 cotangent，最大相对 L2 1.0479961e-6；组内 value-head 贡献先归约再进共享的 per-H ATK 伴随，final ATK cotangent 每个 H 只播种一次。仍 gated"
+        },
+        {
+          "at": "2026-09-19T15:49",
+          "summary": "用户 D-PM-35：规格加「BF16 显式拒绝、不 host 加宽」，BF16 kernel 侧另有 BF 系列任务。仍 gated"
         }
       ],
       "result": null,
@@ -2967,6 +3316,10 @@
         {
           "at": "2026-09-19T12:42",
           "summary": "规格补一条：GDN 的 naive 与前向都不归一化，decode 同样不做，fla fused_recurrent 的可选归一化本任务显式拒绝。仍 gated"
+        },
+        {
+          "at": "2026-09-19T15:49",
+          "summary": "用户 D-PM-35：规格加「BF16 显式拒绝、不 host 加宽」，BF16 kernel 侧另有 BF 系列任务。仍 gated"
         }
       ],
       "result": null,
@@ -3022,6 +3375,10 @@
         {
           "at": "2026-09-19T12:42",
           "summary": "PM 已对 pin 住的源码核实：fla 的 PGDN fused_recurrent.py:130-132 用加性 epsilon 归一化 x/sqrt(Σx²+1e-6)，与 naive 的 F.normalize 分叉；已写进规格——decode 必须显式保持已接受的 naive 归一化，否则 prefill→decode 的 state 在近零行不连续。仍 gated"
+        },
+        {
+          "at": "2026-09-19T15:49",
+          "summary": "用户 D-PM-35：规格加「BF16 显式拒绝、不 host 加宽」，BF16 kernel 侧另有 BF 系列任务。仍 gated"
         }
       ],
       "result": null,
@@ -3174,6 +3531,9 @@
         "dtype_status": {
           "bf16": "widen@a5",
           "fp32": "native@a5"
+        },
+        "dtype_fix": {
+          "bf16": "BF-06"
         }
       },
       {
@@ -3218,6 +3578,9 @@
         "dtype_status": {
           "bf16": "native@a5",
           "fp32": "wip"
+        },
+        "dtype_fix": {
+          "bf16": "BF-02"
         }
       },
       {
@@ -3306,6 +3669,9 @@
         "dtype_status": {
           "bf16": "widen@host",
           "fp32": "native@a5"
+        },
+        "dtype_fix": {
+          "bf16": "BF-05"
         }
       },
       {
@@ -3372,6 +3738,9 @@
         "dtype_status": {
           "bf16": "reject",
           "fp32": "native@a5"
+        },
+        "dtype_fix": {
+          "bf16": "BF-04"
         }
       },
       {
@@ -3383,6 +3752,9 @@
         "dtype_status": {
           "bf16": "widen@a5",
           "fp32": "native@a5"
+        },
+        "dtype_fix": {
+          "bf16": "BF-03"
         }
       },
       {
@@ -3394,6 +3766,9 @@
         "dtype_status": {
           "bf16": "widen@a5",
           "fp32": "native@a5"
+        },
+        "dtype_fix": {
+          "bf16": "BF-01"
         }
       }
     ]

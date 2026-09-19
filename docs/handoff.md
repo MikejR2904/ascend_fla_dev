@@ -11,6 +11,19 @@
 
 ### 正在飞的任务（现在没有；A5K-02、PK-02、PK-03 都已于 2026-09-19 合入）
 
+> **2026-09-19T15:55Z 更新：用户定了「BF16 计算必须 kernel 侧，不能在 host 侧完成；追加任务改正；后续 BF16 优先」（D-PM-35）。**
+> - **通则**：`docs/pm/bf16-kernel-side.md`——BF16 张量直接进自编译 kernel，转换/算术在 kernel 里，host 侧只允许零算术零转换的布局操作；`q.float()` 加宽再转回不合规；
+>   统一验收里的**硬判据是真机上的 host 算子审计**（`TorchDispatchMode` 记录入口内的 aten 算子，出现算术/转换算子即失败）；BF16 预算先校准（误差地板 F）、实现前写定；BF16 的门控域要重测，比 FP32 窄属域变化，先问用户。
+> - **新任务（origin=user，不需要放行；P0，插在看板最前，`--next` 先给它们）**：`BF-01` GDN 前向、`BF-02` GDN 反向（依赖 GDA-03、BF-01）、`BF-03` PGDN 前向（依赖 PK-03、BF-01）、
+>   `BF-04` PKDA 前向（先做 CPU 精度研究）、`BF-05` GDN-2 chunk 前向、`BF-06` KDA decode（依赖 A2-44，已完成）；`BF-07`（KDA 前向里融合 q/k l2norm、门控、beta sigmoid）**gated `kernel-batch-approval`，等用户批**。
+>   首页 kernel 表的 BF16 格里 `🔁 API 加宽 → BF-xx` 就是待改项；已合入的历史 PR 不回滚。
+> - **在飞的调整**：GDA-03 的 BF16 公共入口不得再 host 加宽——改为显式拒绝，规格里的 BF16 条款作废，FP32 证据不受影响（已在 #91 通知申领人）；PK-05 / GDA-04 / PK-06 骨架同样显式拒绝 BF16。
+>   A2-44（已合入）的 raw flags 预处理是 FP32 host 算子、不是 BF16 计算，按 D-PM-35 的读法不违规，融进 kernel 归 BF-07。
+> - **同一轮**：A2-44 已合入（PR #99 → `afafe03`，依 D-PM-33/34 自行合入，第二个）：8 个文件恰为批准写集，语义对 FLA v0.5.2 源码核实，新 D1/D3 测试在 base 上 4 失败/3 通过，真机日志（4 个 bd，25 个带哈希的 case 跨 bd 逐位相同，最大误差 4.9e-3，预算 0.05）由 PM 从原始记录复算，合入后 main 598 passed / 15 skipped。
+>   缺口表：`kda-layer-l2norm-eps-formula-diverges`、`kda-layer-missing-silu-when-no-short-conv` 转 resolved，`qk-l2norm-not-in-kernel` 收窄（预处理仍在 kernel 外）。
+>   **观察**：`check_domain=True`（默认）时 beta 用严格不等式 (0,1)，调用方自己算 sigmoid 并饱和成恰好 1.0/0 会被误拒（规格如此，层已走 raw flags 不受影响，可 `check_domain=False`）。
+> - **待办**：A2-44 的申领人（session `01a0b7ce-…`）在 #31 排队申请 A2-02；按 BF16 优先，派它 `BF-04`（PKDA BF16 是用户直接问到的），A2-02 顺延。GDN 系列 session 的下一个是 `BF-01`（GDA-03 完成后）。
+>
 > **2026-09-19T15:20Z 更新：首页进展表按 kernel 列出 BF16 / FP32 现状（用户指出原表只有「涉及任务」计数，看不出每个 kernel 每种 dtype 的进展）。**
 > - **实况**（对着源码与 contract 核过）：**不是只有 BF16 的 kernel。** 原生 BF16 operand 的只有 KDA 前/反向（Kimi-Linear 主路径，state 为 FP32）、GDN-2 的 decode 侧融合 kernel 与上游单元；
 >   本仓新做的 GDN / PGDN / PKDA / GDN-2 chunk 前向以及 GDN 反向（进行中）的 **kernel 都是 FP32**。GDN / PGDN / GDN-2 chunk 的公共入口收 BF16，但是 host 侧 `q.float()` 加宽后进 FP32 kernel、输出转回
