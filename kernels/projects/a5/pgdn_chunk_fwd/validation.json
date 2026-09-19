@@ -20,7 +20,8 @@
     "ref/reference.py": "2af5c1518868e65ec5e7572474c6524aa26c7259fc28279bdfa1a0d9ebb0d01c",
     "run.py": "8557f3a1494c5996e4837d87cb25fb4090f36f34849f763403e23927adefb5aa",
     "unit.py": "35934a2d2f03b76076d4be9057d09ea076c65713bff1c1fdd829d09973b7d1ba",
-    "verify.py": "97c184ff9d3696393f8c85940d18089d73b93e4008e59935c22462403ed891dc"
+    "verify.py": "97c184ff9d3696393f8c85940d18089d73b93e4008e59935c22462403ed891dc",
+    "measure.py": "dd0711afd49359501d248c2396e563c25b429cd3e6e11b99e52017d14d09e3ec"
   },
   "wrapper_sha256": "3ce60fbec79d4586c33e6125de6830e2a9bf0c93b6bdbc4770539b7ff69b0060",
   "host": {
@@ -4857,5 +4858,28 @@
     "source_bytes_verified": true,
     "command": "python -m pytest tests/test_pgdn_chunk_fwd.py -q -rs --noconftest -p no:cacheprovider",
     "result": "104 passed in 25.02s"
+  },
+  "measurement_harness": {
+    "status": "untested_on_device",
+    "cli_help": "passed",
+    "source_sha256": "dd0711afd49359501d248c2396e563c25b429cd3e6e11b99e52017d14d09e3ec",
+    "baseline": "Unmodified GDN with timed NPU FP32 q/k normalization and output cast; no ATK",
+    "lengths": [
+      4096,
+      1024
+    ],
+    "public_dtypes": [
+      "fp32",
+      "bf16"
+    ],
+    "rounds": 3,
+    "order": [
+      "baseline",
+      "candidate",
+      "baseline"
+    ],
+    "warmup": 10,
+    "repeat": 50,
+    "no_speed_threshold": true
   }
 }

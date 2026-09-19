@@ -34,6 +34,13 @@ Repeat `--case` to select several cases for that block dimension; the default
 still runs its full grid. `--torch-oracle` checks the pinned recurrence on the
 selected NPU; `--profile-torch-oracle` also times it. Native FP32 matmul/conv HF32
 settings are disabled and recorded. Match inputs and device for timing comparisons.
+After native correctness acceptance, `measure.py` measures three synchronized
+GDN/PGDN/GDN rounds at T=4096 and T=1024, with FP32 and BF16 public inputs.
+The unmodified GDN cost baseline includes NPU FP32 normalization and output casting;
+it has no ATK. Each side is checked against its own pinned semantics before and
+after measurement. PGDN also uses the independent block-solve reference.
+All eleven operators are prepared before execution, with one block dimension per
+process/build. The measurement harness is provided but has not run on hardware.
 A full chosen hardware workload must precede reduced diagnostic simulations when
 hardware is available. A model check is never hardware acceptance.
 
