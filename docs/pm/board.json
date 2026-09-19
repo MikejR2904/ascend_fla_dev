@@ -1846,7 +1846,7 @@
       "wave": "W0",
       "soc": "a5",
       "priority": "-",
-      "status": "assigned",
+      "status": "in_progress",
       "model": [],
       "kernel": [
         "pgdn_chunk_fwd"
@@ -1875,13 +1875,15 @@
       "assignee": "limjiunnbin",
       "assignee_caps": {
         "agent": "Codex; new PGDN forward session（自述，撤回后重新申领）",
-        "socs": [],
-        "soc_details": "申领时设备 SSH 认证不通，设备占用/CANN/OPP 未复验，不声称任何 SoC 能力；PK-03 needs.npu=false，不影响派单",
+        "socs": [
+          "a5"
+        ],
+        "soc_details": "自述（APPLY 评论 04:40Z 编辑后）：SSH 已恢复；CANN/OPP 9.2.0，算子包 ascend950/ascend910b/ascend910_93；只读驱动清单：一卡健康、另一卡故障（故障码与 GDA-01 记录的相同）；进程占用未核实（npu-smi 不可用）；未提交任何 kernel、未 reset/kill。执行前提：健康且空闲的卡 + 共享锁。PK-03 needs.npu=false，真机为可选项",
         "ascriptor": "library 90cfcdc720bb / kernels b3b3f9c16df7（自述；与 ops.json 的 current_compatibility_pin 一致）",
         "fla": "e52dbc0ea19d3a40d7ab7f9eed855d2b473994d2（自述，隔离 worktree）",
         "fork": "limjiunnbin/ascend_fla_dev",
         "session": "pgdn-forward-20260919T041214Z-7b59b3a6",
-        "note": "撤回后重新申领；用户已确认（D-PM-25）。与 A5K-02（session 01a0b7ce-…）是同账号不同 session，按并发规则放行。原 session gdn-pgdn-forward 的申领作废"
+        "note": "撤回后重新申领；用户已确认（D-PM-25）。与 A5K-02（session 01a0b7ce-…）是同账号不同 session，按并发规则放行。原 session gdn-pgdn-forward 的申领作废；APPLY 评论于 04:40Z 被编辑（socs none→a5）。ASSIGN 已按编辑前的声明发出，不影响：needs.npu=false"
       },
       "branch": "task/PK-03",
       "timebox_h": 24,
@@ -1901,6 +1903,10 @@
         {
           "at": "2026-09-19T04:37",
           "summary": "APPLY（撤回后重新申领，session pgdn-forward-20260919T041214Z-7b59b3a6，socs 声明 none；needs.npu=false，--next 列为候选）。评论自称用户授权，PM 无法从 issue 核实，已问用户，用户答'是'（D-PM-25）。PM 先改写 PK-03.md 为可派状态（窄 ABI 与现有 GDN 门控逐项一致、oracle A=fla naive.py + B=独立 CPU 参考、真机可选）再 ASSIGN。同账号不同 session，并发规则放行；写集与 A5K-02 无交集。原 session gdn-pgdn-forward 的申领作废"
+        },
+        {
+          "at": "2026-09-19T04:42",
+          "summary": "ACK（eta_h 20；读了 20b5247 的规格）：计划与规格一致——冻结窄 ABI、naive FP32 归一化、k 读/写路径不对称、独立 CPU chunk 参考对 pinned naive；真机验收与同卡测量作为另行报告的额外证据（与规格'可选、不阻塞'一致）。澄清 beta_atk 输入域取 [0,1]（依据 fla 层 sigmoid，自述），PM 采纳并补进规格。APPLY 评论 04:40Z 被编辑：socs none→a5（SSH 已恢复；一卡健康、一卡故障；占用未核实；未动设备）"
         }
       ],
       "result": null
