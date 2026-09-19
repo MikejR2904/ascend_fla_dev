@@ -1,54 +1,134 @@
-# KDA Aqk handoff repair: A5K-01
+# KDA public Aqk integration: A5K-02
 
-The derived stable unit repairs the odd-chunk, repeated-head Aqk handoff defect.
-All 336 native grid cases pass both CPU FP32 oracles. Repaired stage tensors and
-every chunk state are byte-identical across block_dim 1, 2, 3 and 4; all even-C
-cases are byte-identical to the original baseline. This is a correctness repair;
-the timing experiment does not establish a consistent speed gain over baseline.
+Public stable KDA forward and cached-forward now select the repaired Aqk recurrent
+kernel. The original upstream path rejects odd C with B*HV > block_dim before
+launch. The diagnostic baseline explicitly retains the original recurrent.
+[Issue81](https://github.com/ddddwee1/ascend_fla_dev/issues/81) and
+[PR83](https://github.com/ddddwee1/ascend_fla_dev/pull/83) deliver this integration.
 
-This report covers [A5K-01](https://github.com/ddddwee1/ascend_fla_dev/issues/76),
-the narrow D-PM-21 exception derived from
-[A2-04 / PR #60](https://github.com/ddddwee1/ascend_fla_dev/pull/60).
-A5K-01 qualified the standalone unit without changing public dispatch.
-The integration candidate proposed in [request #79](https://github.com/ddddwee1/ascend_fla_dev/issues/79)
-selects that same repaired source for public stable forward and cached-forward.
-The original upstream path rejects odd C with B*HV > block_dim; the old
-claim that all C>=2 are safe was disproved by the C=3 silicon result below.
-The stable first four stages plus original recurrent remain an explicitly
-pinned negative control. Public integration validation is pending; the
-A5K-01 numbers below qualify the earlier standalone composition only.
-A5-01 through A5-06 remain gated on W-A3.
+Cached-forward precompiles backward. Under D-PM-24, the local inverse_mm derivative
+makes only l0c_dvh and l0c_dvbeta single-slot L0C tensors and updates their views.
+Arithmetic, event credits, loops, lookahead/drain, other buffers and ABI stay the
+same. Existing mode-zero M/FIX ownership retires the final FIX read before the
+next M overwrite. Actual lowering uses cube 32/vector 15; the unchanged upstream
+still refuses 34 > 32. No compiler limit or upstream source was changed.
 
-The initial integration draft passed 337 host tests (5 skipped), including 109 scoped
-gate/dispatch checks, and 8 canonical CPU reference cases. Source emission passes
-all five forward kernels, the original recurrent control and eight of nine
-backward dependencies. The unchanged upstream `inverse_mm_kernel` is refused:
-its cube side needs 34 local mutex IDs while the accepted limit is 32. Because
-the real cached-forward API precompiles backward vendors before its first launch,
-this is a cached-path blocker at the accepted pins. Neither precompilation nor
-synchronization checks have been bypassed. Public native grid and timing remain
-unqualified; the measurements below still describe A5K-01 only.
+All required current-PR acceptance checks pass. The compact receipt is
+[`public_validation.json`](../../kernels/projects/a5/kda_fwd_stable/public_validation.json).
+The tested implementation is 888862be37d6f0c4effece69ec4915c22ea8b5d2; the subsequent
+closeout commit adds reports/qualification evidence only. Historical A5K-01
+results are retained in the separate appendix and `validation.json`.
 
-D-PM-24 approves a narrow local `inverse_mm` derivative and stable selector
-update. The derivative changes only `l0c_dvh` and `l0c_dvbeta` from double buffers
-to single-slot L0C tensors, with corresponding direct views. Emitted local mutex
-counts become cube=32 and vector=15. M writes and every FIX read retain mode-zero
-ownership; the final FIX release must retire before the next iteration's M write.
-The three-slot cross-side buffers, event credits, two-work lookahead, drain and
-all arithmetic remain unchanged. Upstream source and the 32-ID limit stay intact.
-This is an emission result, with native leaf/backward and synchronization regression
-still pending. `verify_kda_aqk_public.py inverse` first tests the full B1/T4096/HV32
-leaf against a CPU FP32 reference, then single-item, repeated-slot and uneven-work
-cases; public cache/grid verification remains a separate required check.
-The existing backward inventory test caught the required contract amendment:
-the derived `inverse_mm` must be listed as owned rather than shared. PM confirmed
-that metadata write set, and the inventory now matches the selector. The gate is
-retained unchanged. The full host suite now passes 338 tests with 5 skips, including
-the 20 focused source-selection, safety and compiler-budget regressions. The
-complete selected forward/backward chain also vendor-compiles
-at block_dim=4; builds for the remaining block counts are in progress.
+## Current source and environment
 
-## Source and hardware scope
+| Component | Identity |
+|---|---|
+| Library | 90cfcdc720bbcd66e8bd4361c4dd4fbc1a2a57b5 |
+| Kernels | b3b3f9c16df7c4626ed3c081032a1be5a753d0b1 |
+| FLA | e52dbc0ea19d3a40d7ab7f9eed855d2b473994d2 |
+| Native | 950PR_9589 V100 / CANN9.2.0 / Python3.12.13 / Torch2.12.0+cpu / torch_npu2.12.0 |
+| OPP | ascend950, ascend910b, ascend910_93 |
+| CPU reference/model/host | Python3.11.15 / Torch2.10.0+cpu |
+
+All 481 project/dependency/oracle source files were hash-verified before native
+execution. Complete forward/control/all-nine-backward vendor builds passed at
+bd 1/2/3/4. Each bd uses a separate process, with every required vendor registered
+before the first custom kernel. Device ownership and health were checked under
+the configured lock; final health was 0. Foreign processes and devices were not
+modified. Private machine values are excluded from public evidence.
+
+## Current numerical and synchronization acceptance
+
+The hardware-first sequence ran full inverse_mm B1/T4096/HV32/bd 4, actual public
+plain and cached-forward B1/T4096/H32/HV32/bd 4, and complete backward workloads
+before reduced models. Golden computation uses Torch CPU FP32. Forward/leaf
+checks retain rtol=atol=.02 and relative-L2 <=.05; backward retains its existing
+per-gradient budgets, finite outputs and explicit rejection of zero gradients.
+
+- Full inverse leaf and three reuse/batch/uneven-work cases pass all five outputs;
+  relative-L2 ranges approximately .00164–.00168. An independent CPU ABI-slice
+  reference agrees exactly and rejects zero-output controls.
+- Full public T4096 output relative-L2 is .0032664153, max_abs 1.2901262e-5;
+  final-state relative-L2 is .0025471812, max_abs 7.0009381e-5. Both public entries,
+  every head/chunk, all nine caches and even-C original bytes pass.
+- The 336-case grid covers C1..6, seven (H,HV) pairs, zero/random state, bd 1..4.
+  All 9240 head/chunk rows pass both independent CPU and pinned FLA oracles.
+  Every output, prefix state and cache is byte-identical across bd 1..4. Worst
+  slice relative-L2 is .003904291(output) and .004268510(state). Original-control
+  output failures are 36/30/30/12 by bd; timing-sensitive control passes remain
+  passes. Both unsafe upstream entries reject before launch.
+- All 13 backward regressions pass: five existing unit cases; KimiT1024,
+  H16/HV32T1024 and T4096, plus KimiT4096; and spans 46/94/104/exact 105.
+  Existing unit-oracle FP32 autograd/BF16 output ABI is retained for the five
+  cases; real/wide cases use unrounded CPU FP32 recurrence/autograd.
+  The exact 105 fixture uses token 0=0, 60 increments of -1.5, then 3 of -5 per chunk;
+  the same input reaches kernel and oracle. Span 106 is rejected by the real
+  cached-forward API. No gate threshold or gradient budget was relaxed.
+
+| Gradient | Full KimiT4096 relative-L2 | Worst of 13 cases | Budget(strict <) |
+|---|---:|---:|---:|
+| dq | 0.03034958 | 0.04781887 | 0.05 |
+| dk | 0.03451302 | 0.09298248 | 0.15 |
+| dv | 0.00354112 | 0.00382118 | 0.05 |
+| dbeta | 0.00331782 | 0.00647579 | 0.05 |
+| dg | 0.05706130 | 0.17371406 | 0.25 |
+| dh0 | 0.00234284 | 0.00516330 | 0.05 |
+
+Reduced inverse sim/pipesim covers B1/HV1/C1,3,5/bd 1 and C1/bd 2. All 8 checks return
+five complete numerical outputs, zero hazards and no deadlock. Aqk controls cover
+C1/2/3/5 at HV2/bd 1: original and qg-only retain two hazards and incorrect replay
+for odd C; repaired is clean and replay-correct. All 12 expected outcomes pass.
+These are reduced-model results; full-backward standalone harness/model
+qualification and wider input domains are not inferred.
+
+## Current public-path performance
+
+Each shape uses three synchronized baseline/candidate/baseline rounds, 10 warmups
+and 50 samples per measurement. Public gate checks, layout, allocation and launches
+are included; compilation and cached-forward are excluded. Torch NPU composition
+also passes both CPU golden checks before timing. Every raw sample is archived.
+
+| Shape | Round | Baseline before(ms) | Candidate(ms) | Baseline after(ms) | Faster baseline/candidate |
+|---|---:|---:|---:|---:|---:|
+| kimi_t1024 | 1 | 19.456404 | 19.506187 | 19.475997 | 0.997448 |
+| kimi_t1024 | 2 | 19.440594 | 19.426497 | 19.319314 | 0.994483 |
+| kimi_t1024 | 3 | 19.274349 | 19.279193 | 19.313852 | 0.999749 |
+| kimi_t4096 | 1 | 74.550863 | 74.562949 | 74.542489 | 0.999726 |
+| kimi_t4096 | 2 | 74.559864 | 74.579152 | 74.563674 | 0.999741 |
+| kimi_t4096 | 3 | 74.597541 | 74.588059 | 74.601321 | 1.000127 |
+
+Torch NPU composition medians: T1024 31.845413 ms;
+T4096 94.630783 ms. The candidate is
+slightly slower in all T1024 rounds versus the faster bracket and in two T4096
+rounds. These data do not establish a consistent speed gain. Existing compiler
+warnings are performance advisories about ND-to-NZ movement and UB bank stride;
+no correctness/synchronization warning was suppressed or left unresolved.
+
+## Host checks, evidence and recovery
+
+Host suite: **338 passed / 5 skipped**; canonical CPU reference 8/8. The skips are NPU-only
+modules in the CPU environment, not replacements for the native checks above.
+Matrix, PM-board, privacy and diff checks pass. The archive has 889
+manifest-verified payload files, including all 481 exact tested source files,
+raw metrics/digests/timing samples, model diagnostics, sanitized verifier logs
+and replay helpers. All hashes were verified after extraction; an ordinary
+restored source tree reran 8/8 CPU reference cases. Machine configuration is external.
+
+- Archive: `a5k-02-evidence.tar.gz`
+- SHA-256: `4602633ad3456f2e3518f3b0b31d0a3168706c028c3586c4b89828805b5b384e`
+- Manifest SHA-256: `8f532c59daaa256ed2afc17a12e3dd5d159a4cd452e5db30a850588ac4bd0aef`
+
+The archive contains the tested implementation snapshot; final report-only changes
+are in the PR. No A2/A3 qualification, A5 wave exit, wider gate/block domain or
+consistent speedup is claimed. PM owns matrix/board updates.
+
+## Historical appendix: A5K-01 standalone composition
+
+Everything below predates this public integration and qualifies the A5K-01
+standalone composition only. Its environment, control failure counts, timings,
+host totals and archive are distinct from the current results above.
+
+### Source and hardware scope
 
 | Component | Executed identity |
 |---|---|
@@ -73,7 +153,7 @@ omitted it and failed compilation. Declaring `depth=2` preserves the previous
 default and its two `DBuff` slots. Both baseline and repair include this same
 compatibility prerequisite; their arithmetic is identical.
 
-## Repair and lifecycle argument
+### Repair and lifecycle argument
 
 The accepted upstream `projects/a5/kda_fwd/kernels/recurrent.py` remains read-only.
 The local derived source changes its entry name and exactly two slot expressions:
@@ -100,7 +180,7 @@ casts, other buffer indices and launch structure are unchanged. No extra buffer,
 lookahead or synchronization operation is introduced. For even C, the slot
 expression is algebraically identical to the original one.
 
-## Native correctness
+### Native correctness
 
 Inputs are generated at run time, seed 2026: BF16 normalized q/k, BF16 v scaled
 by 0.04, negative FP32 gates calibrated to maximum per-chunk span 46, FP32 beta
@@ -146,7 +226,7 @@ for state; worst absolute differences are 1.2379838e-5 and 1.0044687e-4.
 block counts, all even-C baseline bytes, complete case coverage and identical
 source identities/budgets. All checks pass.
 
-## Synchronization regression and host checks
+### Synchronization regression and host checks
 
 Reduced CPU pipesim uses B=1/H=1/HV=2/bd=1, C in {1,2,3,5}, and the actual
 shipped recurrent source. The original and qg-only mutation are retained as
@@ -172,7 +252,7 @@ are unchanged. Added tests compare the independent CPU recurrence to FLA at
 every chunk and ensure a finite, ordinary-scale wrong-head output is rejected.
 The existing source-inventory test additionally covers the new recurrent file.
 
-## Same-device performance
+### Same-device performance
 
 Shapes are B=1, H=HV=32, K=V=128, span 46, random initial state, block_dim=4.
 Each timing group has 10 warmups and 50 samples with NPU synchronization before
@@ -204,7 +284,7 @@ Aqk change. At T=4096 the first repair round is 5.6% slower than its faster
 bracketing baseline; the next two are within 0.12%. Its cause was not isolated,
 so the slow round remains in the receipt. There is no consistent repair speedup.
 
-## Reproduction and retained evidence
+### Reproduction and retained evidence
 
 The [unit README](../../kernels/projects/a5/kda_fwd_stable/README.md) lists native,
 model and cross-block verification commands. The current compact, machine-readable
@@ -229,7 +309,7 @@ records the baseline recurrent, inverse and FLA naive digests.
 Public dispatch integration, backward changes, a new gate-span/block_dim domain,
 other devices/SoCs and the general A5 wave remain outside this claim.
 
-## Grid projection
+### Grid projection
 
 Each row applies to **all four block_dims** because repaired stage/state bytes
 match. Numbers are the maximum over heads/chunks and both CPU oracles; the

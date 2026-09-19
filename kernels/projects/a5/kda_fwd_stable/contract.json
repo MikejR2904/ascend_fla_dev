@@ -130,7 +130,7 @@
       "kernel": "a5.kda_bwd_stable/inverse_mm_bounded_kernel",
       "reason": "Cached public forward precompiles backward. The accepted original inverse_mm exceeds the A5 local mutex budget (34 > 32).",
       "change": "Use one L0C slot each for l0c_dvh and l0c_dvbeta, with corresponding direct views. Preserve arithmetic, output ABI, event credits, loop structure, two-work lookahead and all other buffers. The last FIX read must retire before the next M overwrite under the existing mode-zero ownership contract.",
-      "qualification": "Native leaf/backward regression and public cached-forward verification are pending; emission alone does not qualify the dependency."
+      "qualification": "A5K-02 passed: vendor compilation at bd1..4, full native inverse leaf and public cached-forward, all 13 backward regressions at unchanged budgets, and 8 reduced inverse sim/pipesim checks with no hazard/deadlock. See public_validation.json; full backward-chain simulator/harness qualification is not claimed."
     },
     "python": ">=3.10",
     "ascriptor": "==0.1.0",
@@ -330,7 +330,7 @@
         "aqk_c3_gqa",
         "aqk_c5_gqa"
       ],
-      "note": "Native five-stage composition on 950PR_9589 V100 / CANN 9.2.0, OPP ascend950/ascend910b/ascend910_93. Matching generated-input grid cells pass bd=1..4; public dispatch remains unchanged. See validation.json for the complete 336-cell grid and full workload."
+      "note": "Historical A5K-01 standalone qualification is retained in validation.json. Current A5K-02 public runtime-bridge CCE qualification is separately recorded in public_validation.json: complete vendor builds at bd1..4, 336 public plain/cached-forward cases, full T4096 forward/backward and unchanged numerical budgets. This does not qualify a wider simulator or hardware domain."
     },
     {
       "device": "a5",
@@ -343,7 +343,7 @@
         "aqk_c3_gqa",
         "aqk_c5_gqa"
       ],
-      "note": "Native five-stage composition on 950PR_9589 V100 / CANN 9.2.0, OPP ascend950/ascend910b/ascend910_93. Matching generated-input grid cells pass bd=1..4; public dispatch remains unchanged. See validation.json for the complete 336-cell grid and full workload."
+      "note": "Historical A5K-01 standalone qualification is retained in validation.json. Current A5K-02 public runtime-bridge CCE qualification is separately recorded in public_validation.json: complete vendor builds at bd1..4, 336 public plain/cached-forward cases, full T4096 forward/backward and unchanged numerical budgets. This does not qualify a wider simulator or hardware domain."
     }
   ],
   "provenance": {
@@ -372,6 +372,12 @@
       "evidence": "docs/research/kda_aqk_handoff_repair.md",
       "scope": "A5K-01 is an A5 exception; it does not unlock A5-01 through A5-06 or change public dispatch.",
       "receipt": "validation.json"
+    },
+    "public_integration": {
+      "task": "A5K-02 / D-PM-23 / D-PM-24",
+      "implementation_revision": "888862be37d6f0c4effece69ec4915c22ea8b5d2",
+      "receipt": "public_validation.json",
+      "qualified": "Actual public plain/cached forward 336-case grid, full T4096 workload, complete backward regressions, cross-bd output/state/nine-cache bytes, reduced diagnostics and synchronized public-path timing. CPU FP32 golden; Torch NPU timing. No wider gate-span/block_dim domain or A5 wave exit."
     }
   },
   "release_scope": {

@@ -262,7 +262,9 @@
     "compile": "untested",
     "board_cce": "untested",
     "static_check": "passed",
-    "note": "真机证据（Ascend950PR / CANN 9.1.0，经本仓 runtime 桥，2026-09-11）：① 上游 a5.kda_bwd 契约的五个 case 全部通过本单元，预算取 comparison（默认 0.05 / dk 0.15 / dg 0.25），相对 L2 与上游反向三位有效数字全同、只第四位有差（最大差是 gentle_decay 的 dbeta 3.928e-03 对 3.854e-03）；② 有限性逐档到 169.76，见 domain.gate_span。emit/compile/board 的证据来自本仓的 runtime 桥而**不是** ascriptor harness —— sim 要等 harness 集成（gaps.json 的 stable-unit-no-harness）。**还差一项**：默认初始化（跨度 ~94）下整层反向的精度，需要有 ascend950 算子包的机器（层里的投影/卷积/softplus 是 torch_npu 算子），测试已写好（tests/test_kda_layer_npu.py::test_default_init_backward_matches_cpu_reference）。 The historical native evidence above predates the A5K-02 inverse_mm resource derivative; current compile/board status remains unqualified until its regressions complete."
+    "note": "真机证据（Ascend950PR / CANN 9.1.0，经本仓 runtime 桥，2026-09-11）：① 上游 a5.kda_bwd 契约的五个 case 全部通过本单元，预算取 comparison（默认 0.05 / dk 0.15 / dg 0.25），相对 L2 与上游反向三位有效数字全同、只第四位有差（最大差是 gentle_decay 的 dbeta 3.928e-03 对 3.854e-03）；② 有限性逐档到 169.76，见 domain.gate_span。emit/compile/board 的证据来自本仓的 runtime 桥而**不是** ascriptor harness —— sim 要等 harness 集成（gaps.json 的 stable-unit-no-harness）。**还差一项**：默认初始化（跨度 ~94）下整层反向的精度，需要有 ascend950 算子包的机器（层里的投影/卷积/softplus 是 torch_npu 算子），测试已写好（tests/test_kda_layer_npu.py::test_default_init_backward_matches_cpu_reference）。 The historical results above predate A5K-02. The selected A5K-02 runtime bridge now passes complete vendor builds and 13 native backward regressions, with 8 reduced inverse_mm sim/pipesim checks. These fresh results qualify the new derivative at the measured cases; canonical standalone harness/full-chain model statuses remain separate. See native_runtime_receipt.",
+    "native_runtime_bridge": "passed",
+    "native_runtime_receipt": "../kda_fwd_stable/public_validation.json"
   },
   "provenance": {
     "derived_from": {
@@ -296,7 +298,7 @@
         "cube": 32,
         "vec": 15
       },
-      "qualification": "Emission and block_dim=4 CANN build passed. Native leaf, complete backward and reduced synchronization checks pending."
+      "qualification": "A5K-02 passed: emission cube32/vector15; complete CANN vendor builds at bd1..4; full inverse leaf B1/HV32/C64/bd4 plus 3 smaller native cases; 13 complete-backward regressions including five existing cases, four real shapes and spans 46/94/104/exact 105; 8 reduced leaf sim/pipesim checks, zero hazards/deadlocks. Original precision/resource limits unchanged. Receipt: ../kda_fwd_stable/public_validation.json."
     }
   },
   "release_scope": {

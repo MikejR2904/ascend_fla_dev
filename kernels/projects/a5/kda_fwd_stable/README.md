@@ -60,7 +60,8 @@ locally to repair the independent Aqk handoff defect described below.
 
 The public stable runtime API selects the repaired recurrent kernel. The original
 upstream path rejects odd C when B*HV exceeds block_dim. A5K-02 public-path native
-qualification is pending; A5K-01 evidence below belongs to its standalone unit.
+qualification passes 336 public plain/cached-forward cases and 13 backward regressions;
+see `public_validation.json`. A5K-01 evidence below belongs to its standalone unit.
 
 ```python
 from ascend_fla.ops.kda import chunk_kda_fwd
@@ -132,10 +133,15 @@ custom launch. The original `kda_bwd/kernels/inverse_mm.py` needs 34 local cube
 mutex IDs, exceeding 32. Under D-PM-24, stable dispatch selects the local
 `inverse_mm_bounded_kernel`: only two L0C output buffers change to single slots,
 preserving arithmetic, event credits and loop structure. Its emitted counts are
-cube=32 and vector=15. Native leaf/backward and synchronization qualification are
-pending; the driver does not skip precompilation or treat emission as execution.
+cube=32 and vector=15. Full native leaf/backward and public cached-forward checks
+pass, followed by 8 reduced inverse sim/pipesim checks with no hazards or deadlocks.
+All required vendors were compiled before the first custom execution. The current
+receipt also records 336 public cases, 9240 head/chunk rows and cross-bd equality
+for every output, prefix state and all nine caches. The archive restores 889 payload
+files and reruns 8 CPU reference cases. Timing includes public gate/layout overhead;
+small slowdowns are retained, with no consistent speedup claim.
 
 `repair_diagnostics.py` preserves the original and qg-only negative controls;
 only reduced shapes run in the pipe model. Complete workloads run on hardware
-first. The public dispatch and the A5 wave gates require their own integration
-decision; this unit's evidence does not change them.
+first. Public integration is qualified by the A5K-02 receipt; A5 wave gates and
+A2/A3 qualification remain unchanged.
