@@ -1,0 +1,463 @@
+{
+ "case_receipts": [
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 128,
+    "M": 16,
+    "N": 64,
+    "barrier": false,
+    "bias": false,
+    "dtype": "bf16",
+    "expect": "probe",
+    "id": "splitk_bf16_m16_n64_k128_s16",
+    "kind": "splitk",
+    "splitk": 16,
+    "terms": 1,
+    "why": "BF16 operands: the settle rule is FP32-only, so no barrier is inserted"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "515379e2eba4f8964f921207c35bc4a8a3c0f6b3a13255a8ce76da0672f88433",
+   "reference_sha256": "ab27c067dd712d4fabc25d3f0101baa05a17cf1e2b1829989b9bbfea3984a2f4",
+   "runs": [
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "ab27c067dd712d4fabc25d3f0101baa05a17cf1e2b1829989b9bbfea3984a2f4",
+     "patch_generated": "settle",
+     "patch_insertions": 1,
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 34.771
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "ab27c067dd712d4fabc25d3f0101baa05a17cf1e2b1829989b9bbfea3984a2f4",
+     "patch_generated": "settle",
+     "patch_insertions": 1,
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 2,
+     "wall_s": 3.795
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "ab27c067dd712d4fabc25d3f0101baa05a17cf1e2b1829989b9bbfea3984a2f4",
+     "patch_generated": "settle",
+     "patch_insertions": 1,
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 3,
+     "wall_s": 3.745
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "ab27c067dd712d4fabc25d3f0101baa05a17cf1e2b1829989b9bbfea3984a2f4",
+     "patch_generated": "settle",
+     "patch_insertions": 1,
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 4,
+     "wall_s": 4.75
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "ab27c067dd712d4fabc25d3f0101baa05a17cf1e2b1829989b9bbfea3984a2f4",
+     "patch_generated": "settle",
+     "patch_insertions": 1,
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 5,
+     "wall_s": 3.745
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 32,
+    "M": 16,
+    "N": 64,
+    "barrier": false,
+    "bias": false,
+    "dtype": "bf16",
+    "expect": "probe",
+    "id": "splitk_bf16_m16_n64_k32_s16",
+    "kind": "splitk",
+    "splitk": 16,
+    "terms": 1,
+    "why": "bf16 split-K sweep: 2 K fragments, M16"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "2e2bfd77b3442d38bc7a9abbc4b13f1dc04426a7139af8ca660bf7dda0336f3c",
+   "reference_sha256": "928e043033f806e9f7046d072213263801aa46ec5ecacc5137c0b6bd5ac21900",
+   "runs": [
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "928e043033f806e9f7046d072213263801aa46ec5ecacc5137c0b6bd5ac21900",
+     "patch_generated": "settle",
+     "patch_insertions": 1,
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 35.214
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "928e043033f806e9f7046d072213263801aa46ec5ecacc5137c0b6bd5ac21900",
+     "patch_generated": "settle",
+     "patch_insertions": 1,
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 2,
+     "wall_s": 3.75
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "928e043033f806e9f7046d072213263801aa46ec5ecacc5137c0b6bd5ac21900",
+     "patch_generated": "settle",
+     "patch_insertions": 1,
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 3,
+     "wall_s": 3.744
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "928e043033f806e9f7046d072213263801aa46ec5ecacc5137c0b6bd5ac21900",
+     "patch_generated": "settle",
+     "patch_insertions": 1,
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 4,
+     "wall_s": 3.8
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "928e043033f806e9f7046d072213263801aa46ec5ecacc5137c0b6bd5ac21900",
+     "patch_generated": "settle",
+     "patch_insertions": 1,
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 5,
+     "wall_s": 4.745
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 128,
+    "M": 16,
+    "N": 64,
+    "barrier": false,
+    "bias": false,
+    "dtype": "f16",
+    "expect": "probe",
+    "id": "splitk_f16_m16_n64_k128_s16",
+    "kind": "splitk",
+    "splitk": 16,
+    "terms": 1,
+    "why": "FP16 operands: the settle rule is FP32-only, so no barrier is inserted"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "7c36d5321f7cfdad3a40faf64e9173a9d85df6b86eaa7a838e693d3c8275b983",
+   "reference_sha256": "b0773ee0d6b35d320fece577181ae9b262c92a3de6c386906b9b846621c6995c",
+   "runs": [
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "b0773ee0d6b35d320fece577181ae9b262c92a3de6c386906b9b846621c6995c",
+     "patch_generated": "settle",
+     "patch_insertions": 1,
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 34.875
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "b0773ee0d6b35d320fece577181ae9b262c92a3de6c386906b9b846621c6995c",
+     "patch_generated": "settle",
+     "patch_insertions": 1,
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 2,
+     "wall_s": 3.745
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "b0773ee0d6b35d320fece577181ae9b262c92a3de6c386906b9b846621c6995c",
+     "patch_generated": "settle",
+     "patch_insertions": 1,
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 3,
+     "wall_s": 3.753
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "b0773ee0d6b35d320fece577181ae9b262c92a3de6c386906b9b846621c6995c",
+     "patch_generated": "settle",
+     "patch_insertions": 1,
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 4,
+     "wall_s": 4.75
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "b0773ee0d6b35d320fece577181ae9b262c92a3de6c386906b9b846621c6995c",
+     "patch_generated": "settle",
+     "patch_insertions": 1,
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 5,
+     "wall_s": 3.796
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 32,
+    "M": 16,
+    "N": 64,
+    "barrier": false,
+    "bias": false,
+    "dtype": "f16",
+    "expect": "probe",
+    "id": "splitk_f16_m16_n64_k32_s16",
+    "kind": "splitk",
+    "splitk": 16,
+    "terms": 1,
+    "why": "f16 split-K sweep: 2 K fragments, M16"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "a22f80364c1a3724c81356e1e988a0aa27aa147a20425a34c9c277cd65015ba4",
+   "reference_sha256": "b5a46ee99af1d755f8a815d010b997750ec6ed3b677b398adb706b5d58db5bfc",
+   "runs": [
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "b5a46ee99af1d755f8a815d010b997750ec6ed3b677b398adb706b5d58db5bfc",
+     "patch_generated": "settle",
+     "patch_insertions": 1,
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 34.521
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "b5a46ee99af1d755f8a815d010b997750ec6ed3b677b398adb706b5d58db5bfc",
+     "patch_generated": "settle",
+     "patch_insertions": 1,
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 2,
+     "wall_s": 3.746
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "b5a46ee99af1d755f8a815d010b997750ec6ed3b677b398adb706b5d58db5bfc",
+     "patch_generated": "settle",
+     "patch_insertions": 1,
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 3,
+     "wall_s": 4.757
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "b5a46ee99af1d755f8a815d010b997750ec6ed3b677b398adb706b5d58db5bfc",
+     "patch_generated": "settle",
+     "patch_insertions": 1,
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 4,
+     "wall_s": 3.795
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "b5a46ee99af1d755f8a815d010b997750ec6ed3b677b398adb706b5d58db5bfc",
+     "patch_generated": "settle",
+     "patch_insertions": 1,
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 5,
+     "wall_s": 3.744
+    }
+   ]
+  }
+ ],
+ "cases": [
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 5,
+   "error": null,
+   "expect": "probe",
+   "id": "splitk_bf16_m16_n64_k128_s16",
+   "max_abs_diff": 0.0,
+   "runs": 5
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 5,
+   "error": null,
+   "expect": "probe",
+   "id": "splitk_f16_m16_n64_k128_s16",
+   "max_abs_diff": 0.0,
+   "runs": 5
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 5,
+   "error": null,
+   "expect": "probe",
+   "id": "splitk_bf16_m16_n64_k32_s16",
+   "max_abs_diff": 0.0,
+   "runs": 5
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 5,
+   "error": null,
+   "expect": "probe",
+   "id": "splitk_f16_m16_n64_k32_s16",
+   "max_abs_diff": 0.0,
+   "runs": 5
+  }
+ ],
+ "comparison": "bitwise vs CPU float64 reference rounded once to FP32 (exact domain)",
+ "device": {
+  "builtin_op_packages": [
+   "ascend910_93",
+   "ascend910b",
+   "config"
+  ],
+  "cann_version": "9.0.0",
+  "cube_core_num": 20,
+  "soc": "Ascend910B3",
+  "torch_npu": "2.10.0",
+  "vector_core_num": 40
+ },
+ "failed_expectation": [],
+ "finished_at": "2026-09-19T15:47:26Z",
+ "launcher": "aclnn",
+ "profile": "a2",
+ "repeat": 5,
+ "schema": "a2-01.repro/1",
+ "started_at": "2026-09-19T15:44:02Z",
+ "versions": {
+  "ascriptor_commit": "90cfcdc720bbcd66e8bd4361c4dd4fbc1a2a57b5",
+  "ascriptor_desugar_sha256": "900610ea92dcb97afd1bbea1f4abc6b306adc5fe98547bdbedde37eca34cc295",
+  "ascriptor_lint_sha256": "c2e4662604224cb4e84522859577872b6eeb87f90ac15736c36550ecd61b3a2e",
+  "ascriptor_version": "0.1.0",
+  "numpy": "1.26.4",
+  "python": "3.11.15",
+  "torch": "2.10.0+cpu"
+ }
+}
