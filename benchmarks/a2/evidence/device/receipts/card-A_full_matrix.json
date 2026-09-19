@@ -1,0 +1,4412 @@
+{
+ "case_receipts": [
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 16,
+    "N": 16,
+    "barrier": false,
+    "bias": false,
+    "dtype": "bf16",
+    "expect": "bitwise",
+    "id": "chain_bf16_m16_n16_k16_t1",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 1,
+    "why": "single MMAD control (no accumulate)"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 1,
+    "mmad_accumulate": 0,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "a0c40a19363ab4bfe13a48506b157a2dba198c77445499402be359ab8e483a81",
+   "reference_sha256": "c664d78434549d3c21ad682981f3be3583772984cda17d8dc01d50b3e03c2357",
+   "runs": [
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "c664d78434549d3c21ad682981f3be3583772984cda17d8dc01d50b3e03c2357",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 34.266
+    },
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "c664d78434549d3c21ad682981f3be3583772984cda17d8dc01d50b3e03c2357",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 2,
+     "wall_s": 3.775
+    },
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "c664d78434549d3c21ad682981f3be3583772984cda17d8dc01d50b3e03c2357",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 3,
+     "wall_s": 4.778
+    },
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "c664d78434549d3c21ad682981f3be3583772984cda17d8dc01d50b3e03c2357",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 4,
+     "wall_s": 3.773
+    },
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "c664d78434549d3c21ad682981f3be3583772984cda17d8dc01d50b3e03c2357",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 5,
+     "wall_s": 3.776
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 16,
+    "N": 16,
+    "barrier": true,
+    "bias": false,
+    "dtype": "bf16",
+    "expect": "bitwise",
+    "id": "chain_bf16_m16_n16_k16_t2_bar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 2,
+    "why": "accumulate chain; 2 matmuls into one L0C, barrier(Pipe.M) between"
+   },
+   "ir": {
+    "barrier_M": 1,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "649cd126b75898a870b0e780fbac341cabc56155007ca6ce16f6ab6e36bf9775",
+   "reference_sha256": "d164a255d38efe818a9320c5074f765c25116f53ecba6fbbdd4c07c6fbd4dd38",
+   "runs": [
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "d164a255d38efe818a9320c5074f765c25116f53ecba6fbbdd4c07c6fbd4dd38",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 35.053
+    },
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "d164a255d38efe818a9320c5074f765c25116f53ecba6fbbdd4c07c6fbd4dd38",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 2,
+     "wall_s": 4.822
+    },
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "d164a255d38efe818a9320c5074f765c25116f53ecba6fbbdd4c07c6fbd4dd38",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 3,
+     "wall_s": 3.749
+    },
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "d164a255d38efe818a9320c5074f765c25116f53ecba6fbbdd4c07c6fbd4dd38",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 4,
+     "wall_s": 3.799
+    },
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "d164a255d38efe818a9320c5074f765c25116f53ecba6fbbdd4c07c6fbd4dd38",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 5,
+     "wall_s": 3.798
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 16,
+    "N": 16,
+    "barrier": false,
+    "bias": false,
+    "dtype": "bf16",
+    "expect": "probe",
+    "id": "chain_bf16_m16_n16_k16_t2_nobar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 2,
+    "why": "accumulate chain; 2 matmuls into one L0C, no barrier"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "83af110921f05b7e17ac1121ec7b27bbc2da30d8bdbbf66826bee4a5a3ba2d99",
+   "reference_sha256": "0836f52338e9e9919fbea00714ba607abb85b92c50c8945e6bb3a2ce2d58a1d9",
+   "runs": [
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "0836f52338e9e9919fbea00714ba607abb85b92c50c8945e6bb3a2ce2d58a1d9",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 35.054
+    },
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "0836f52338e9e9919fbea00714ba607abb85b92c50c8945e6bb3a2ce2d58a1d9",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 2,
+     "wall_s": 3.799
+    },
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "0836f52338e9e9919fbea00714ba607abb85b92c50c8945e6bb3a2ce2d58a1d9",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 3,
+     "wall_s": 3.8
+    },
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "0836f52338e9e9919fbea00714ba607abb85b92c50c8945e6bb3a2ce2d58a1d9",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 4,
+     "wall_s": 4.806
+    },
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "0836f52338e9e9919fbea00714ba607abb85b92c50c8945e6bb3a2ce2d58a1d9",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 5,
+     "wall_s": 4.853
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 16,
+    "N": 16,
+    "barrier": true,
+    "bias": false,
+    "dtype": "bf16",
+    "expect": "bitwise",
+    "id": "chain_bf16_m16_n16_k16_t3_bar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 3,
+    "why": "accumulate chain; 3 matmuls into one L0C, barrier(Pipe.M) between"
+   },
+   "ir": {
+    "barrier_M": 2,
+    "barrier_M_settle": 0,
+    "mmad": 3,
+    "mmad_accumulate": 2,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "127a3908236b907bc52c21c8bd8a23a463b795b59ed0e5c87a795e55b9ca2a67",
+   "reference_sha256": "6dd4688ad3387d8e6b2ed2a158ab515022beb9b5f7ab3c28204e60a419412542",
+   "runs": [
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "6dd4688ad3387d8e6b2ed2a158ab515022beb9b5f7ab3c28204e60a419412542",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 34.698
+    },
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "6dd4688ad3387d8e6b2ed2a158ab515022beb9b5f7ab3c28204e60a419412542",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 2,
+     "wall_s": 3.778
+    },
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "6dd4688ad3387d8e6b2ed2a158ab515022beb9b5f7ab3c28204e60a419412542",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 3,
+     "wall_s": 3.774
+    },
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "6dd4688ad3387d8e6b2ed2a158ab515022beb9b5f7ab3c28204e60a419412542",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 4,
+     "wall_s": 4.827
+    },
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "6dd4688ad3387d8e6b2ed2a158ab515022beb9b5f7ab3c28204e60a419412542",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 5,
+     "wall_s": 3.825
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 16,
+    "N": 16,
+    "barrier": false,
+    "bias": false,
+    "dtype": "bf16",
+    "expect": "probe",
+    "id": "chain_bf16_m16_n16_k16_t3_nobar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 3,
+    "why": "accumulate chain; 3 matmuls into one L0C, no barrier"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 3,
+    "mmad_accumulate": 2,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "d41457096c3b917e13e3ac5fc724027368719046ac56838566dcd68acef4abe6",
+   "reference_sha256": "d1693dfc1396d70d6b513c5e1162fd1fcf5c6ac38935f4dfe34ad4979e3408c3",
+   "runs": [
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "d1693dfc1396d70d6b513c5e1162fd1fcf5c6ac38935f4dfe34ad4979e3408c3",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 35.301
+    },
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "d1693dfc1396d70d6b513c5e1162fd1fcf5c6ac38935f4dfe34ad4979e3408c3",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 2,
+     "wall_s": 3.827
+    },
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "d1693dfc1396d70d6b513c5e1162fd1fcf5c6ac38935f4dfe34ad4979e3408c3",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 3,
+     "wall_s": 3.826
+    },
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "d1693dfc1396d70d6b513c5e1162fd1fcf5c6ac38935f4dfe34ad4979e3408c3",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 4,
+     "wall_s": 4.775
+    },
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "d1693dfc1396d70d6b513c5e1162fd1fcf5c6ac38935f4dfe34ad4979e3408c3",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 5,
+     "wall_s": 3.773
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 32,
+    "N": 16,
+    "barrier": true,
+    "bias": false,
+    "dtype": "bf16",
+    "expect": "bitwise",
+    "id": "chain_bf16_m32_n16_k16_t2_bar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 2,
+    "why": "accumulate chain; 2 matmuls into one L0C, barrier(Pipe.M) between"
+   },
+   "ir": {
+    "barrier_M": 1,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "3f8e4e2c1956b137fb50608e8706c478f4afd000b7d00a9f893660f16b1734bf",
+   "reference_sha256": "cca7b4e27ee2420c0ba730be642e26915bcbefe2d74c87a4f80d5f502995ac23",
+   "runs": [
+    {
+     "bitwise": true,
+     "elements": 512,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "cca7b4e27ee2420c0ba730be642e26915bcbefe2d74c87a4f80d5f502995ac23",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 34.845
+    },
+    {
+     "bitwise": true,
+     "elements": 512,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "cca7b4e27ee2420c0ba730be642e26915bcbefe2d74c87a4f80d5f502995ac23",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 2,
+     "wall_s": 3.799
+    },
+    {
+     "bitwise": true,
+     "elements": 512,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "cca7b4e27ee2420c0ba730be642e26915bcbefe2d74c87a4f80d5f502995ac23",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 3,
+     "wall_s": 3.749
+    },
+    {
+     "bitwise": true,
+     "elements": 512,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "cca7b4e27ee2420c0ba730be642e26915bcbefe2d74c87a4f80d5f502995ac23",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 4,
+     "wall_s": 4.799
+    },
+    {
+     "bitwise": true,
+     "elements": 512,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "cca7b4e27ee2420c0ba730be642e26915bcbefe2d74c87a4f80d5f502995ac23",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 5,
+     "wall_s": 3.799
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 32,
+    "N": 16,
+    "barrier": false,
+    "bias": false,
+    "dtype": "bf16",
+    "expect": "probe",
+    "id": "chain_bf16_m32_n16_k16_t2_nobar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 2,
+    "why": "accumulate chain; 2 matmuls into one L0C, no barrier"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "994f5c84a8255cbb500d62976d494f149828087bfbacbe47b47db96a076dabed",
+   "reference_sha256": "a2e3785f7e8beda2a5453e92cc5cb165de155312c558295b7183109f24836638",
+   "runs": [
+    {
+     "bitwise": true,
+     "elements": 512,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "a2e3785f7e8beda2a5453e92cc5cb165de155312c558295b7183109f24836638",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 34.8
+    },
+    {
+     "bitwise": true,
+     "elements": 512,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "a2e3785f7e8beda2a5453e92cc5cb165de155312c558295b7183109f24836638",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 2,
+     "wall_s": 3.797
+    },
+    {
+     "bitwise": true,
+     "elements": 512,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "a2e3785f7e8beda2a5453e92cc5cb165de155312c558295b7183109f24836638",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 3,
+     "wall_s": 3.797
+    },
+    {
+     "bitwise": true,
+     "elements": 512,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "a2e3785f7e8beda2a5453e92cc5cb165de155312c558295b7183109f24836638",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 4,
+     "wall_s": 4.8
+    },
+    {
+     "bitwise": true,
+     "elements": 512,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "a2e3785f7e8beda2a5453e92cc5cb165de155312c558295b7183109f24836638",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 5,
+     "wall_s": 3.749
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 32,
+    "N": 16,
+    "barrier": true,
+    "bias": false,
+    "dtype": "bf16",
+    "expect": "bitwise",
+    "id": "chain_bf16_m32_n16_k16_t3_bar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 3,
+    "why": "accumulate chain; 3 matmuls into one L0C, barrier(Pipe.M) between"
+   },
+   "ir": {
+    "barrier_M": 2,
+    "barrier_M_settle": 0,
+    "mmad": 3,
+    "mmad_accumulate": 2,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "cac6f4620c7a4791bd359fee33f15e4cfbe6c16ccac372aa63c6f4e652d2ae5c",
+   "reference_sha256": "c2248eb0d77425fbf792cdaf554a1c30d75a95de8a953960605324b3b33287ec",
+   "runs": [
+    {
+     "bitwise": true,
+     "elements": 512,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "c2248eb0d77425fbf792cdaf554a1c30d75a95de8a953960605324b3b33287ec",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 35.409
+    },
+    {
+     "bitwise": true,
+     "elements": 512,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "c2248eb0d77425fbf792cdaf554a1c30d75a95de8a953960605324b3b33287ec",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 2,
+     "wall_s": 3.823
+    },
+    {
+     "bitwise": true,
+     "elements": 512,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "c2248eb0d77425fbf792cdaf554a1c30d75a95de8a953960605324b3b33287ec",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 3,
+     "wall_s": 3.824
+    },
+    {
+     "bitwise": true,
+     "elements": 512,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "c2248eb0d77425fbf792cdaf554a1c30d75a95de8a953960605324b3b33287ec",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 4,
+     "wall_s": 3.776
+    },
+    {
+     "bitwise": true,
+     "elements": 512,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "c2248eb0d77425fbf792cdaf554a1c30d75a95de8a953960605324b3b33287ec",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 5,
+     "wall_s": 4.775
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 32,
+    "N": 16,
+    "barrier": false,
+    "bias": false,
+    "dtype": "bf16",
+    "expect": "probe",
+    "id": "chain_bf16_m32_n16_k16_t3_nobar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 3,
+    "why": "accumulate chain; 3 matmuls into one L0C, no barrier"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 3,
+    "mmad_accumulate": 2,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "203513daf602819f0a8e60fcc5b7a9926b4365a91461d38b9993c3368feb1719",
+   "reference_sha256": "262ee4ca0a924cea69651ba1987a5662c00514e2c4b768b5eb7eb7383177c49e",
+   "runs": [
+    {
+     "bitwise": true,
+     "elements": 512,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "262ee4ca0a924cea69651ba1987a5662c00514e2c4b768b5eb7eb7383177c49e",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 35.967
+    },
+    {
+     "bitwise": true,
+     "elements": 512,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "262ee4ca0a924cea69651ba1987a5662c00514e2c4b768b5eb7eb7383177c49e",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 2,
+     "wall_s": 3.827
+    },
+    {
+     "bitwise": true,
+     "elements": 512,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "262ee4ca0a924cea69651ba1987a5662c00514e2c4b768b5eb7eb7383177c49e",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 3,
+     "wall_s": 3.823
+    },
+    {
+     "bitwise": true,
+     "elements": 512,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "262ee4ca0a924cea69651ba1987a5662c00514e2c4b768b5eb7eb7383177c49e",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 4,
+     "wall_s": 3.821
+    },
+    {
+     "bitwise": true,
+     "elements": 512,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "262ee4ca0a924cea69651ba1987a5662c00514e2c4b768b5eb7eb7383177c49e",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 5,
+     "wall_s": 3.778
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 64,
+    "N": 16,
+    "barrier": true,
+    "bias": false,
+    "dtype": "bf16",
+    "expect": "bitwise",
+    "id": "chain_bf16_m64_n16_k16_t2_bar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 2,
+    "why": "accumulate chain; 2 matmuls into one L0C, barrier(Pipe.M) between"
+   },
+   "ir": {
+    "barrier_M": 1,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "f85f1c5a87543e8a4035ff34c628d3b83cb4438e7b1227bc490d0a658853c21e",
+   "reference_sha256": "fc867af71a6454d8b4f7a8d9a1790748d2d783bc80aa8a2d6fb8c9f4e3ef1ddc",
+   "runs": [
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "fc867af71a6454d8b4f7a8d9a1790748d2d783bc80aa8a2d6fb8c9f4e3ef1ddc",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 35.542
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "fc867af71a6454d8b4f7a8d9a1790748d2d783bc80aa8a2d6fb8c9f4e3ef1ddc",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 2,
+     "wall_s": 5.088
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "fc867af71a6454d8b4f7a8d9a1790748d2d783bc80aa8a2d6fb8c9f4e3ef1ddc",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 3,
+     "wall_s": 4.802
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "fc867af71a6454d8b4f7a8d9a1790748d2d783bc80aa8a2d6fb8c9f4e3ef1ddc",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 4,
+     "wall_s": 3.748
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "fc867af71a6454d8b4f7a8d9a1790748d2d783bc80aa8a2d6fb8c9f4e3ef1ddc",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 5,
+     "wall_s": 3.807
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 64,
+    "N": 16,
+    "barrier": false,
+    "bias": false,
+    "dtype": "bf16",
+    "expect": "probe",
+    "id": "chain_bf16_m64_n16_k16_t2_nobar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 2,
+    "why": "accumulate chain; 2 matmuls into one L0C, no barrier"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "7f5fa6ebba02dace8a6eaec56cc00baa03168349be8becd1f622069a65167fa9",
+   "reference_sha256": "02af3c56bfad5895c944264ca0201adcebe5c9e55c8d1ab24ad39f6fbfd2fe4d",
+   "runs": [
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "02af3c56bfad5895c944264ca0201adcebe5c9e55c8d1ab24ad39f6fbfd2fe4d",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 35.299
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "02af3c56bfad5895c944264ca0201adcebe5c9e55c8d1ab24ad39f6fbfd2fe4d",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 2,
+     "wall_s": 4.863
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "02af3c56bfad5895c944264ca0201adcebe5c9e55c8d1ab24ad39f6fbfd2fe4d",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 3,
+     "wall_s": 3.746
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "02af3c56bfad5895c944264ca0201adcebe5c9e55c8d1ab24ad39f6fbfd2fe4d",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 4,
+     "wall_s": 3.747
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "02af3c56bfad5895c944264ca0201adcebe5c9e55c8d1ab24ad39f6fbfd2fe4d",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 5,
+     "wall_s": 3.745
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 64,
+    "N": 16,
+    "barrier": true,
+    "bias": false,
+    "dtype": "bf16",
+    "expect": "bitwise",
+    "id": "chain_bf16_m64_n16_k16_t3_bar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 3,
+    "why": "accumulate chain; 3 matmuls into one L0C, barrier(Pipe.M) between"
+   },
+   "ir": {
+    "barrier_M": 2,
+    "barrier_M_settle": 0,
+    "mmad": 3,
+    "mmad_accumulate": 2,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "725ac8018a25c0c494533e97923d89a6f859c5fbd01db5d7dba8ae145c10668e",
+   "reference_sha256": "a64dff4016be88c39bd63e1bfa08ee4d40882bfafcbb0e4dd0f6fe6cc1c9716d",
+   "runs": [
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "a64dff4016be88c39bd63e1bfa08ee4d40882bfafcbb0e4dd0f6fe6cc1c9716d",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 36.317
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "a64dff4016be88c39bd63e1bfa08ee4d40882bfafcbb0e4dd0f6fe6cc1c9716d",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 2,
+     "wall_s": 3.827
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "a64dff4016be88c39bd63e1bfa08ee4d40882bfafcbb0e4dd0f6fe6cc1c9716d",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 3,
+     "wall_s": 3.874
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "a64dff4016be88c39bd63e1bfa08ee4d40882bfafcbb0e4dd0f6fe6cc1c9716d",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 4,
+     "wall_s": 3.823
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "a64dff4016be88c39bd63e1bfa08ee4d40882bfafcbb0e4dd0f6fe6cc1c9716d",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 5,
+     "wall_s": 4.827
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 64,
+    "N": 16,
+    "barrier": false,
+    "bias": false,
+    "dtype": "bf16",
+    "expect": "probe",
+    "id": "chain_bf16_m64_n16_k16_t3_nobar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 3,
+    "why": "accumulate chain; 3 matmuls into one L0C, no barrier"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 3,
+    "mmad_accumulate": 2,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "dfa2da5b2870f8d66f4451aa844b487e43dad975570eeb2f61e8536960ff05c5",
+   "reference_sha256": "9385b668b90cb07990a3745dcb2a250b5064a9596b0386eb0b82e2112cc28218",
+   "runs": [
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "9385b668b90cb07990a3745dcb2a250b5064a9596b0386eb0b82e2112cc28218",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 36.637
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "9385b668b90cb07990a3745dcb2a250b5064a9596b0386eb0b82e2112cc28218",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 2,
+     "wall_s": 4.822
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "9385b668b90cb07990a3745dcb2a250b5064a9596b0386eb0b82e2112cc28218",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 3,
+     "wall_s": 3.821
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "9385b668b90cb07990a3745dcb2a250b5064a9596b0386eb0b82e2112cc28218",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 4,
+     "wall_s": 3.829
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "9385b668b90cb07990a3745dcb2a250b5064a9596b0386eb0b82e2112cc28218",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 5,
+     "wall_s": 3.825
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 16,
+    "N": 16,
+    "barrier": false,
+    "bias": false,
+    "dtype": "f16",
+    "expect": "bitwise",
+    "id": "chain_f16_m16_n16_k16_t1",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 1,
+    "why": "single MMAD control (no accumulate)"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 1,
+    "mmad_accumulate": 0,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "35ee4788776162acd36d6d2ea4b296aaea359d4480caabd8b19fb724f643ea42",
+   "reference_sha256": "37dce6f7073683d5e5f9cf9c7f125edcdeb966bbe80f1b774ab004512ee03ef5",
+   "runs": [
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "37dce6f7073683d5e5f9cf9c7f125edcdeb966bbe80f1b774ab004512ee03ef5",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 35.201
+    },
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "37dce6f7073683d5e5f9cf9c7f125edcdeb966bbe80f1b774ab004512ee03ef5",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 2,
+     "wall_s": 3.826
+    },
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "37dce6f7073683d5e5f9cf9c7f125edcdeb966bbe80f1b774ab004512ee03ef5",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 3,
+     "wall_s": 4.776
+    },
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "37dce6f7073683d5e5f9cf9c7f125edcdeb966bbe80f1b774ab004512ee03ef5",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 4,
+     "wall_s": 3.723
+    },
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "37dce6f7073683d5e5f9cf9c7f125edcdeb966bbe80f1b774ab004512ee03ef5",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 5,
+     "wall_s": 3.773
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 16,
+    "N": 16,
+    "barrier": true,
+    "bias": false,
+    "dtype": "f16",
+    "expect": "bitwise",
+    "id": "chain_f16_m16_n16_k16_t2_bar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 2,
+    "why": "accumulate chain; 2 matmuls into one L0C, barrier(Pipe.M) between"
+   },
+   "ir": {
+    "barrier_M": 1,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "93d5e0a103207ecfe8218e1aebd3bb94bae10fdf99aabc232321ebdbed2f9b6e",
+   "reference_sha256": "01f8e6cda3e2a984889eac53f3166d98f1f1377c819b3d9f3724bebcca766673",
+   "runs": [
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "01f8e6cda3e2a984889eac53f3166d98f1f1377c819b3d9f3724bebcca766673",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 35.09
+    },
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "01f8e6cda3e2a984889eac53f3166d98f1f1377c819b3d9f3724bebcca766673",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 2,
+     "wall_s": 3.898
+    },
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "01f8e6cda3e2a984889eac53f3166d98f1f1377c819b3d9f3724bebcca766673",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 3,
+     "wall_s": 4.802
+    },
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "01f8e6cda3e2a984889eac53f3166d98f1f1377c819b3d9f3724bebcca766673",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 4,
+     "wall_s": 3.802
+    },
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "01f8e6cda3e2a984889eac53f3166d98f1f1377c819b3d9f3724bebcca766673",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 5,
+     "wall_s": 3.747
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 16,
+    "N": 16,
+    "barrier": false,
+    "bias": false,
+    "dtype": "f16",
+    "expect": "probe",
+    "id": "chain_f16_m16_n16_k16_t2_nobar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 2,
+    "why": "accumulate chain; 2 matmuls into one L0C, no barrier"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "f20dfd1bd5e527e2ce77e01b7e6767ace9f2b8887835070a951d2dfae419d324",
+   "reference_sha256": "0b3f6c80e84b6f506cb3d8d56c99b23159ccb047432cbaf224e0110b8149c5d3",
+   "runs": [
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "0b3f6c80e84b6f506cb3d8d56c99b23159ccb047432cbaf224e0110b8149c5d3",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 35.518
+    },
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "0b3f6c80e84b6f506cb3d8d56c99b23159ccb047432cbaf224e0110b8149c5d3",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 2,
+     "wall_s": 3.75
+    },
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "0b3f6c80e84b6f506cb3d8d56c99b23159ccb047432cbaf224e0110b8149c5d3",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 3,
+     "wall_s": 3.759
+    },
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "0b3f6c80e84b6f506cb3d8d56c99b23159ccb047432cbaf224e0110b8149c5d3",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 4,
+     "wall_s": 3.754
+    },
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "0b3f6c80e84b6f506cb3d8d56c99b23159ccb047432cbaf224e0110b8149c5d3",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 5,
+     "wall_s": 3.797
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 16,
+    "N": 16,
+    "barrier": true,
+    "bias": false,
+    "dtype": "f16",
+    "expect": "bitwise",
+    "id": "chain_f16_m16_n16_k16_t3_bar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 3,
+    "why": "accumulate chain; 3 matmuls into one L0C, barrier(Pipe.M) between"
+   },
+   "ir": {
+    "barrier_M": 2,
+    "barrier_M_settle": 0,
+    "mmad": 3,
+    "mmad_accumulate": 2,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "870bb4736ed0273127de7935f63cd3b3c00fe13d6163861ab564fd17a76d420e",
+   "reference_sha256": "8774979c1d6218daa2190ef96b13bb60b694309da68591bd2e9a145ff335c21b",
+   "runs": [
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "8774979c1d6218daa2190ef96b13bb60b694309da68591bd2e9a145ff335c21b",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 35.954
+    },
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "8774979c1d6218daa2190ef96b13bb60b694309da68591bd2e9a145ff335c21b",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 2,
+     "wall_s": 3.776
+    },
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "8774979c1d6218daa2190ef96b13bb60b694309da68591bd2e9a145ff335c21b",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 3,
+     "wall_s": 3.822
+    },
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "8774979c1d6218daa2190ef96b13bb60b694309da68591bd2e9a145ff335c21b",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 4,
+     "wall_s": 3.822
+    },
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "8774979c1d6218daa2190ef96b13bb60b694309da68591bd2e9a145ff335c21b",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 5,
+     "wall_s": 4.775
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 16,
+    "N": 16,
+    "barrier": false,
+    "bias": false,
+    "dtype": "f16",
+    "expect": "probe",
+    "id": "chain_f16_m16_n16_k16_t3_nobar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 3,
+    "why": "accumulate chain; 3 matmuls into one L0C, no barrier"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 3,
+    "mmad_accumulate": 2,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "c8ec4acb0064c4d127a402a13ec024e77aa45851cc56bf156181cf5618f080b1",
+   "reference_sha256": "10512ec7f318bf5867694f0cd3da06b9cb7f995260b8c23f457ccf4b0b2d3197",
+   "runs": [
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "10512ec7f318bf5867694f0cd3da06b9cb7f995260b8c23f457ccf4b0b2d3197",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 35.894
+    },
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "10512ec7f318bf5867694f0cd3da06b9cb7f995260b8c23f457ccf4b0b2d3197",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 2,
+     "wall_s": 3.822
+    },
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "10512ec7f318bf5867694f0cd3da06b9cb7f995260b8c23f457ccf4b0b2d3197",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 3,
+     "wall_s": 4.826
+    },
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "10512ec7f318bf5867694f0cd3da06b9cb7f995260b8c23f457ccf4b0b2d3197",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 4,
+     "wall_s": 4.82
+    },
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "10512ec7f318bf5867694f0cd3da06b9cb7f995260b8c23f457ccf4b0b2d3197",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 5,
+     "wall_s": 3.771
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 32,
+    "N": 16,
+    "barrier": true,
+    "bias": false,
+    "dtype": "f16",
+    "expect": "bitwise",
+    "id": "chain_f16_m32_n16_k16_t2_bar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 2,
+    "why": "accumulate chain; 2 matmuls into one L0C, barrier(Pipe.M) between"
+   },
+   "ir": {
+    "barrier_M": 1,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "64c3db4cc947ec9d331013113e6f672c8fdbee03af153c09e70f394e70e4090e",
+   "reference_sha256": "fda5e7cf95a5debab40a2790637a67093557879443f8f62d2f0f4d3a091be557",
+   "runs": [
+    {
+     "bitwise": true,
+     "elements": 512,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "fda5e7cf95a5debab40a2790637a67093557879443f8f62d2f0f4d3a091be557",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 35.491
+    },
+    {
+     "bitwise": true,
+     "elements": 512,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "fda5e7cf95a5debab40a2790637a67093557879443f8f62d2f0f4d3a091be557",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 2,
+     "wall_s": 4.749
+    },
+    {
+     "bitwise": true,
+     "elements": 512,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "fda5e7cf95a5debab40a2790637a67093557879443f8f62d2f0f4d3a091be557",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 3,
+     "wall_s": 3.746
+    },
+    {
+     "bitwise": true,
+     "elements": 512,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "fda5e7cf95a5debab40a2790637a67093557879443f8f62d2f0f4d3a091be557",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 4,
+     "wall_s": 3.797
+    },
+    {
+     "bitwise": true,
+     "elements": 512,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "fda5e7cf95a5debab40a2790637a67093557879443f8f62d2f0f4d3a091be557",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 5,
+     "wall_s": 3.746
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 32,
+    "N": 16,
+    "barrier": false,
+    "bias": false,
+    "dtype": "f16",
+    "expect": "probe",
+    "id": "chain_f16_m32_n16_k16_t2_nobar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 2,
+    "why": "accumulate chain; 2 matmuls into one L0C, no barrier"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "681d5656aa0ec8ab96658835dd070d738ff99d7b5fb72e7f953bd97c8b671967",
+   "reference_sha256": "19c31be4cba81cec28d618b58ecdad3343af9c02e586290446f8dfdd0c0c5f32",
+   "runs": [
+    {
+     "bitwise": true,
+     "elements": 512,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "19c31be4cba81cec28d618b58ecdad3343af9c02e586290446f8dfdd0c0c5f32",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 35.56
+    },
+    {
+     "bitwise": true,
+     "elements": 512,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "19c31be4cba81cec28d618b58ecdad3343af9c02e586290446f8dfdd0c0c5f32",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 2,
+     "wall_s": 3.809
+    },
+    {
+     "bitwise": true,
+     "elements": 512,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "19c31be4cba81cec28d618b58ecdad3343af9c02e586290446f8dfdd0c0c5f32",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 3,
+     "wall_s": 3.746
+    },
+    {
+     "bitwise": true,
+     "elements": 512,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "19c31be4cba81cec28d618b58ecdad3343af9c02e586290446f8dfdd0c0c5f32",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 4,
+     "wall_s": 4.797
+    },
+    {
+     "bitwise": true,
+     "elements": 512,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "19c31be4cba81cec28d618b58ecdad3343af9c02e586290446f8dfdd0c0c5f32",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 5,
+     "wall_s": 3.747
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 32,
+    "N": 16,
+    "barrier": true,
+    "bias": false,
+    "dtype": "f16",
+    "expect": "bitwise",
+    "id": "chain_f16_m32_n16_k16_t3_bar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 3,
+    "why": "accumulate chain; 3 matmuls into one L0C, barrier(Pipe.M) between"
+   },
+   "ir": {
+    "barrier_M": 2,
+    "barrier_M_settle": 0,
+    "mmad": 3,
+    "mmad_accumulate": 2,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "c307f653de266a26a3c068c8ebd50a7edc0471fe31babf8ae66164816b3a1cb1",
+   "reference_sha256": "de8443a3b59f3f3d557d84c59b68fe0abb80f9f5f430cdf1f501d7d5aeca8c6d",
+   "runs": [
+    {
+     "bitwise": true,
+     "elements": 512,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "de8443a3b59f3f3d557d84c59b68fe0abb80f9f5f430cdf1f501d7d5aeca8c6d",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 35.189
+    },
+    {
+     "bitwise": true,
+     "elements": 512,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "de8443a3b59f3f3d557d84c59b68fe0abb80f9f5f430cdf1f501d7d5aeca8c6d",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 2,
+     "wall_s": 3.824
+    },
+    {
+     "bitwise": true,
+     "elements": 512,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "de8443a3b59f3f3d557d84c59b68fe0abb80f9f5f430cdf1f501d7d5aeca8c6d",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 3,
+     "wall_s": 3.822
+    },
+    {
+     "bitwise": true,
+     "elements": 512,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "de8443a3b59f3f3d557d84c59b68fe0abb80f9f5f430cdf1f501d7d5aeca8c6d",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 4,
+     "wall_s": 4.777
+    },
+    {
+     "bitwise": true,
+     "elements": 512,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "de8443a3b59f3f3d557d84c59b68fe0abb80f9f5f430cdf1f501d7d5aeca8c6d",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 5,
+     "wall_s": 3.824
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 32,
+    "N": 16,
+    "barrier": false,
+    "bias": false,
+    "dtype": "f16",
+    "expect": "probe",
+    "id": "chain_f16_m32_n16_k16_t3_nobar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 3,
+    "why": "accumulate chain; 3 matmuls into one L0C, no barrier"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 3,
+    "mmad_accumulate": 2,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "fdf0eedac2733116cf433a0c0c429011b15f5cd7667054564bfeedd6c05381d9",
+   "reference_sha256": "0c9504ac3b83f982360fccf69a0a72d31230f11bea36a9b331453201674c73d9",
+   "runs": [
+    {
+     "bitwise": true,
+     "elements": 512,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "0c9504ac3b83f982360fccf69a0a72d31230f11bea36a9b331453201674c73d9",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 35.487
+    },
+    {
+     "bitwise": true,
+     "elements": 512,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "0c9504ac3b83f982360fccf69a0a72d31230f11bea36a9b331453201674c73d9",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 2,
+     "wall_s": 3.823
+    },
+    {
+     "bitwise": true,
+     "elements": 512,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "0c9504ac3b83f982360fccf69a0a72d31230f11bea36a9b331453201674c73d9",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 3,
+     "wall_s": 3.829
+    },
+    {
+     "bitwise": true,
+     "elements": 512,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "0c9504ac3b83f982360fccf69a0a72d31230f11bea36a9b331453201674c73d9",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 4,
+     "wall_s": 3.83
+    },
+    {
+     "bitwise": true,
+     "elements": 512,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "0c9504ac3b83f982360fccf69a0a72d31230f11bea36a9b331453201674c73d9",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 5,
+     "wall_s": 3.872
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 64,
+    "N": 16,
+    "barrier": true,
+    "bias": false,
+    "dtype": "f16",
+    "expect": "bitwise",
+    "id": "chain_f16_m64_n16_k16_t2_bar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 2,
+    "why": "accumulate chain; 2 matmuls into one L0C, barrier(Pipe.M) between"
+   },
+   "ir": {
+    "barrier_M": 1,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "ffb8a8ad4db1010fb881aba56edd1f5d550e97c9a7c134eac9e6facc011151f0",
+   "reference_sha256": "3ab4eca82f5f020e15f7aa4c9a6b73274995e399ab8ad65026a73d67c07053a8",
+   "runs": [
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "3ab4eca82f5f020e15f7aa4c9a6b73274995e399ab8ad65026a73d67c07053a8",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 35.239
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "3ab4eca82f5f020e15f7aa4c9a6b73274995e399ab8ad65026a73d67c07053a8",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 2,
+     "wall_s": 4.798
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "3ab4eca82f5f020e15f7aa4c9a6b73274995e399ab8ad65026a73d67c07053a8",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 3,
+     "wall_s": 4.803
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "3ab4eca82f5f020e15f7aa4c9a6b73274995e399ab8ad65026a73d67c07053a8",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 4,
+     "wall_s": 3.797
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "3ab4eca82f5f020e15f7aa4c9a6b73274995e399ab8ad65026a73d67c07053a8",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 5,
+     "wall_s": 3.806
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 64,
+    "N": 16,
+    "barrier": false,
+    "bias": false,
+    "dtype": "f16",
+    "expect": "probe",
+    "id": "chain_f16_m64_n16_k16_t2_nobar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 2,
+    "why": "accumulate chain; 2 matmuls into one L0C, no barrier"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "cc1df933f6f8b60da56419c8cafb0cf3e99f70c11e12170709243b1230a8c009",
+   "reference_sha256": "cdb67ffaacdcad55ddd1b25a278123f121ea6ba2336baf7af533a92d7f38cdc2",
+   "runs": [
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "cdb67ffaacdcad55ddd1b25a278123f121ea6ba2336baf7af533a92d7f38cdc2",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 36.107
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "cdb67ffaacdcad55ddd1b25a278123f121ea6ba2336baf7af533a92d7f38cdc2",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 2,
+     "wall_s": 3.746
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "cdb67ffaacdcad55ddd1b25a278123f121ea6ba2336baf7af533a92d7f38cdc2",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 3,
+     "wall_s": 3.797
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "cdb67ffaacdcad55ddd1b25a278123f121ea6ba2336baf7af533a92d7f38cdc2",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 4,
+     "wall_s": 3.846
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "cdb67ffaacdcad55ddd1b25a278123f121ea6ba2336baf7af533a92d7f38cdc2",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 5,
+     "wall_s": 4.747
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 64,
+    "N": 16,
+    "barrier": true,
+    "bias": false,
+    "dtype": "f16",
+    "expect": "bitwise",
+    "id": "chain_f16_m64_n16_k16_t3_bar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 3,
+    "why": "accumulate chain; 3 matmuls into one L0C, barrier(Pipe.M) between"
+   },
+   "ir": {
+    "barrier_M": 2,
+    "barrier_M_settle": 0,
+    "mmad": 3,
+    "mmad_accumulate": 2,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "c5d823827f37178e834a559b82f09f8e302123cf6d542b551c94ce3e2ddf75ae",
+   "reference_sha256": "8cc5c421b425e9079796aadc3647da323c969b475eb066010be84d46dd39f125",
+   "runs": [
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "8cc5c421b425e9079796aadc3647da323c969b475eb066010be84d46dd39f125",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 35.299
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "8cc5c421b425e9079796aadc3647da323c969b475eb066010be84d46dd39f125",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 2,
+     "wall_s": 4.829
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "8cc5c421b425e9079796aadc3647da323c969b475eb066010be84d46dd39f125",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 3,
+     "wall_s": 3.776
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "8cc5c421b425e9079796aadc3647da323c969b475eb066010be84d46dd39f125",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 4,
+     "wall_s": 4.825
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "8cc5c421b425e9079796aadc3647da323c969b475eb066010be84d46dd39f125",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 5,
+     "wall_s": 3.771
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 64,
+    "N": 16,
+    "barrier": false,
+    "bias": false,
+    "dtype": "f16",
+    "expect": "probe",
+    "id": "chain_f16_m64_n16_k16_t3_nobar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 3,
+    "why": "accumulate chain; 3 matmuls into one L0C, no barrier"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 3,
+    "mmad_accumulate": 2,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "3a7a0d2eca26e7609df1c1caa221a107010d48b9e38ca7cb038ea84c8c30baaa",
+   "reference_sha256": "6ce81b69849187e0dc964ecdca174d34eb78401db0a7af43582962cebd3fb9a9",
+   "runs": [
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "6ce81b69849187e0dc964ecdca174d34eb78401db0a7af43582962cebd3fb9a9",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 35.144
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "6ce81b69849187e0dc964ecdca174d34eb78401db0a7af43582962cebd3fb9a9",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 2,
+     "wall_s": 3.82
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "6ce81b69849187e0dc964ecdca174d34eb78401db0a7af43582962cebd3fb9a9",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 3,
+     "wall_s": 3.77
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "6ce81b69849187e0dc964ecdca174d34eb78401db0a7af43582962cebd3fb9a9",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 4,
+     "wall_s": 4.781
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "6ce81b69849187e0dc964ecdca174d34eb78401db0a7af43582962cebd3fb9a9",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 5,
+     "wall_s": 4.822
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 16,
+    "N": 16,
+    "barrier": false,
+    "bias": false,
+    "dtype": "f32",
+    "expect": "bitwise",
+    "id": "chain_f32_m16_n16_k16_t1",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 1,
+    "why": "single MMAD control (no accumulate)"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 1,
+    "mmad_accumulate": 0,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "7423e2cedde5709615483ec87f466a16b0c43d5f645edc77152fd5bc9c3f6599",
+   "reference_sha256": "43700f3830f721ffc410ba8f30392b97f8f347bfd18208dc9df092fd34fb2101",
+   "runs": [
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "43700f3830f721ffc410ba8f30392b97f8f347bfd18208dc9df092fd34fb2101",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 34.932
+    },
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "43700f3830f721ffc410ba8f30392b97f8f347bfd18208dc9df092fd34fb2101",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 2,
+     "wall_s": 3.723
+    },
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "43700f3830f721ffc410ba8f30392b97f8f347bfd18208dc9df092fd34fb2101",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 3,
+     "wall_s": 3.723
+    },
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "43700f3830f721ffc410ba8f30392b97f8f347bfd18208dc9df092fd34fb2101",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 4,
+     "wall_s": 3.722
+    },
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "43700f3830f721ffc410ba8f30392b97f8f347bfd18208dc9df092fd34fb2101",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 5,
+     "wall_s": 3.772
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 16,
+    "N": 16,
+    "barrier": true,
+    "bias": false,
+    "dtype": "f32",
+    "expect": "bitwise",
+    "id": "chain_f32_m16_n16_k16_t2_bar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 2,
+    "why": "KDA/GDN triangular-inverse construct; 2 matmuls into one L0C, barrier(Pipe.M) between"
+   },
+   "ir": {
+    "barrier_M": 1,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "5d6b4f3135d557da1da2a771aa23c8285d372d1b9ff43a7f41b7848a05165ed0",
+   "reference_sha256": "44237e65a68c3865dbdfe75ba33f1fe1d65c945903c3468b3f5fbb5d83ce8d43",
+   "runs": [
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "44237e65a68c3865dbdfe75ba33f1fe1d65c945903c3468b3f5fbb5d83ce8d43",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 36.092
+    },
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "44237e65a68c3865dbdfe75ba33f1fe1d65c945903c3468b3f5fbb5d83ce8d43",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 2,
+     "wall_s": 4.754
+    },
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "44237e65a68c3865dbdfe75ba33f1fe1d65c945903c3468b3f5fbb5d83ce8d43",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 3,
+     "wall_s": 3.8
+    },
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "44237e65a68c3865dbdfe75ba33f1fe1d65c945903c3468b3f5fbb5d83ce8d43",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 4,
+     "wall_s": 3.808
+    },
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "44237e65a68c3865dbdfe75ba33f1fe1d65c945903c3468b3f5fbb5d83ce8d43",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 5,
+     "wall_s": 3.797
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 16,
+    "N": 16,
+    "barrier": false,
+    "bias": false,
+    "dtype": "f32",
+    "expect": "probe",
+    "id": "chain_f32_m16_n16_k16_t2_nobar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 2,
+    "why": "KDA/GDN triangular-inverse construct; 2 matmuls into one L0C, no barrier"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": [
+     "_a2_family_unsettled_fp32_mmad: fp32 MMAD accumulation reads %l0c after an earlier MMAD on at least one path with no PIPE_M/PIPE_ALL barrier between them"
+    ]
+   },
+   "kernel_source_sha256": "c9d84b16d02b2dd934456982c0e0fb373f22a57f434ec1aca37915104e87ba6e",
+   "reference_sha256": "0b1dbcfcd44549a09aadb13ff7bc14c99361d48011ef7bbab8373071d0a7d71f",
+   "runs": [
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "0b1dbcfcd44549a09aadb13ff7bc14c99361d48011ef7bbab8373071d0a7d71f",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 36.245
+    },
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "0b1dbcfcd44549a09aadb13ff7bc14c99361d48011ef7bbab8373071d0a7d71f",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 2,
+     "wall_s": 3.748
+    },
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "0b1dbcfcd44549a09aadb13ff7bc14c99361d48011ef7bbab8373071d0a7d71f",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 3,
+     "wall_s": 3.748
+    },
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "0b1dbcfcd44549a09aadb13ff7bc14c99361d48011ef7bbab8373071d0a7d71f",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 4,
+     "wall_s": 3.747
+    },
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "0b1dbcfcd44549a09aadb13ff7bc14c99361d48011ef7bbab8373071d0a7d71f",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 5,
+     "wall_s": 4.75
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 16,
+    "N": 16,
+    "barrier": true,
+    "bias": false,
+    "dtype": "f32",
+    "expect": "bitwise",
+    "id": "chain_f32_m16_n16_k16_t3_bar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 3,
+    "why": "KDA/GDN triangular-inverse construct; 3 matmuls into one L0C, barrier(Pipe.M) between"
+   },
+   "ir": {
+    "barrier_M": 2,
+    "barrier_M_settle": 0,
+    "mmad": 3,
+    "mmad_accumulate": 2,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "cd06dc6c00cff885503c551930ad5683122f494e6b3568f21d2b8b959e423a3a",
+   "reference_sha256": "459f9c82b38877c49b2db702aba13995e6ef32b6e2e2c2ef9e10c630382e970f",
+   "runs": [
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "459f9c82b38877c49b2db702aba13995e6ef32b6e2e2c2ef9e10c630382e970f",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 35.347
+    },
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "459f9c82b38877c49b2db702aba13995e6ef32b6e2e2c2ef9e10c630382e970f",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 2,
+     "wall_s": 3.771
+    },
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "459f9c82b38877c49b2db702aba13995e6ef32b6e2e2c2ef9e10c630382e970f",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 3,
+     "wall_s": 4.825
+    },
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "459f9c82b38877c49b2db702aba13995e6ef32b6e2e2c2ef9e10c630382e970f",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 4,
+     "wall_s": 3.774
+    },
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "459f9c82b38877c49b2db702aba13995e6ef32b6e2e2c2ef9e10c630382e970f",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 5,
+     "wall_s": 3.773
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 16,
+    "N": 16,
+    "barrier": false,
+    "bias": false,
+    "dtype": "f32",
+    "expect": "probe",
+    "id": "chain_f32_m16_n16_k16_t3_nobar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 3,
+    "why": "KDA/GDN triangular-inverse construct; 3 matmuls into one L0C, no barrier"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 3,
+    "mmad_accumulate": 2,
+    "trap_lints": [
+     "_a2_family_unsettled_fp32_mmad: fp32 MMAD accumulation reads %l0c after an earlier MMAD on at least one path with no PIPE_M/PIPE_ALL barrier between them"
+    ]
+   },
+   "kernel_source_sha256": "9f4079eab93b454b111246f65e91d268b394ddc2cfc10a6c73d34b198fccfda2",
+   "reference_sha256": "13d972ae5583ee9eb0282fb670dec49b39950ea25d0556cd9d14afa00d9e5b4c",
+   "runs": [
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "13d972ae5583ee9eb0282fb670dec49b39950ea25d0556cd9d14afa00d9e5b4c",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 35.343
+    },
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "13d972ae5583ee9eb0282fb670dec49b39950ea25d0556cd9d14afa00d9e5b4c",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 2,
+     "wall_s": 3.826
+    },
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "13d972ae5583ee9eb0282fb670dec49b39950ea25d0556cd9d14afa00d9e5b4c",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 3,
+     "wall_s": 3.826
+    },
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "13d972ae5583ee9eb0282fb670dec49b39950ea25d0556cd9d14afa00d9e5b4c",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 4,
+     "wall_s": 3.82
+    },
+    {
+     "bitwise": true,
+     "elements": 256,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "13d972ae5583ee9eb0282fb670dec49b39950ea25d0556cd9d14afa00d9e5b4c",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 5,
+     "wall_s": 4.774
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 32,
+    "N": 16,
+    "barrier": true,
+    "bias": false,
+    "dtype": "f32",
+    "expect": "bitwise",
+    "id": "chain_f32_m32_n16_k16_t2_bar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 2,
+    "why": "accumulate chain; 2 matmuls into one L0C, barrier(Pipe.M) between"
+   },
+   "ir": {
+    "barrier_M": 1,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "642e9bbcc1b03a8619994c25bf53623483cacbfcbef4dba040cee2d58bb6ade5",
+   "reference_sha256": "4e0655b648d4266ab5f37865c56cc5b20ddc02c76e7b34a06814b09bb177a7cf",
+   "runs": [
+    {
+     "bitwise": true,
+     "elements": 512,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "4e0655b648d4266ab5f37865c56cc5b20ddc02c76e7b34a06814b09bb177a7cf",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 35.098
+    },
+    {
+     "bitwise": true,
+     "elements": 512,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "4e0655b648d4266ab5f37865c56cc5b20ddc02c76e7b34a06814b09bb177a7cf",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 2,
+     "wall_s": 4.752
+    },
+    {
+     "bitwise": true,
+     "elements": 512,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "4e0655b648d4266ab5f37865c56cc5b20ddc02c76e7b34a06814b09bb177a7cf",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 3,
+     "wall_s": 3.746
+    },
+    {
+     "bitwise": true,
+     "elements": 512,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "4e0655b648d4266ab5f37865c56cc5b20ddc02c76e7b34a06814b09bb177a7cf",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 4,
+     "wall_s": 3.746
+    },
+    {
+     "bitwise": true,
+     "elements": 512,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "4e0655b648d4266ab5f37865c56cc5b20ddc02c76e7b34a06814b09bb177a7cf",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 5,
+     "wall_s": 3.799
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 32,
+    "N": 16,
+    "barrier": false,
+    "bias": false,
+    "dtype": "f32",
+    "expect": "probe",
+    "id": "chain_f32_m32_n16_k16_t2_nobar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 2,
+    "why": "accumulate chain; 2 matmuls into one L0C, no barrier"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": [
+     "_a2_family_unsettled_fp32_mmad: fp32 MMAD accumulation reads %l0c after an earlier MMAD on at least one path with no PIPE_M/PIPE_ALL barrier between them"
+    ]
+   },
+   "kernel_source_sha256": "23553f83b8cc9d7b3b1e2929288013608995ee551347b96e3291b921cee2db44",
+   "reference_sha256": "94c2814c8157757dbd7818cb6cdf73a9377a943103dc98e1533f2199dd6d22c2",
+   "runs": [
+    {
+     "bitwise": true,
+     "elements": 512,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "94c2814c8157757dbd7818cb6cdf73a9377a943103dc98e1533f2199dd6d22c2",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 34.24
+    },
+    {
+     "bitwise": true,
+     "elements": 512,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "94c2814c8157757dbd7818cb6cdf73a9377a943103dc98e1533f2199dd6d22c2",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 2,
+     "wall_s": 3.798
+    },
+    {
+     "bitwise": true,
+     "elements": 512,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "94c2814c8157757dbd7818cb6cdf73a9377a943103dc98e1533f2199dd6d22c2",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 3,
+     "wall_s": 3.855
+    },
+    {
+     "bitwise": true,
+     "elements": 512,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "94c2814c8157757dbd7818cb6cdf73a9377a943103dc98e1533f2199dd6d22c2",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 4,
+     "wall_s": 3.748
+    },
+    {
+     "bitwise": true,
+     "elements": 512,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "94c2814c8157757dbd7818cb6cdf73a9377a943103dc98e1533f2199dd6d22c2",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 5,
+     "wall_s": 4.8
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 32,
+    "N": 16,
+    "barrier": true,
+    "bias": false,
+    "dtype": "f32",
+    "expect": "bitwise",
+    "id": "chain_f32_m32_n16_k16_t3_bar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 3,
+    "why": "accumulate chain; 3 matmuls into one L0C, barrier(Pipe.M) between"
+   },
+   "ir": {
+    "barrier_M": 2,
+    "barrier_M_settle": 0,
+    "mmad": 3,
+    "mmad_accumulate": 2,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "38fc9fe3e59b9d83c0af5514766187b08099d8d6f2dad0b27c41f6f58c646a5f",
+   "reference_sha256": "1b74deb3d8dcd9825b51dc5c84a47299280e9a9e01e9438f5c1ee4e29b9c0642",
+   "runs": [
+    {
+     "bitwise": true,
+     "elements": 512,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "1b74deb3d8dcd9825b51dc5c84a47299280e9a9e01e9438f5c1ee4e29b9c0642",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 35.346
+    },
+    {
+     "bitwise": true,
+     "elements": 512,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "1b74deb3d8dcd9825b51dc5c84a47299280e9a9e01e9438f5c1ee4e29b9c0642",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 2,
+     "wall_s": 3.77
+    },
+    {
+     "bitwise": true,
+     "elements": 512,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "1b74deb3d8dcd9825b51dc5c84a47299280e9a9e01e9438f5c1ee4e29b9c0642",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 3,
+     "wall_s": 3.774
+    },
+    {
+     "bitwise": true,
+     "elements": 512,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "1b74deb3d8dcd9825b51dc5c84a47299280e9a9e01e9438f5c1ee4e29b9c0642",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 4,
+     "wall_s": 4.773
+    },
+    {
+     "bitwise": true,
+     "elements": 512,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "1b74deb3d8dcd9825b51dc5c84a47299280e9a9e01e9438f5c1ee4e29b9c0642",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 5,
+     "wall_s": 3.822
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 32,
+    "N": 16,
+    "barrier": false,
+    "bias": false,
+    "dtype": "f32",
+    "expect": "probe",
+    "id": "chain_f32_m32_n16_k16_t3_nobar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 3,
+    "why": "accumulate chain; 3 matmuls into one L0C, no barrier"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 3,
+    "mmad_accumulate": 2,
+    "trap_lints": [
+     "_a2_family_unsettled_fp32_mmad: fp32 MMAD accumulation reads %l0c after an earlier MMAD on at least one path with no PIPE_M/PIPE_ALL barrier between them"
+    ]
+   },
+   "kernel_source_sha256": "fcaea5903804e633ba802f0cbf25bb5b3ef94166ee67d02d0edf05db88cd7dd7",
+   "reference_sha256": "e452cdb60a9121a562822d550442df0609170f944d67900eb208b1288c989c2d",
+   "runs": [
+    {
+     "bitwise": true,
+     "elements": 512,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "e452cdb60a9121a562822d550442df0609170f944d67900eb208b1288c989c2d",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 35.843
+    },
+    {
+     "bitwise": true,
+     "elements": 512,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "e452cdb60a9121a562822d550442df0609170f944d67900eb208b1288c989c2d",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 2,
+     "wall_s": 4.775
+    },
+    {
+     "bitwise": true,
+     "elements": 512,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "e452cdb60a9121a562822d550442df0609170f944d67900eb208b1288c989c2d",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 3,
+     "wall_s": 3.771
+    },
+    {
+     "bitwise": true,
+     "elements": 512,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "e452cdb60a9121a562822d550442df0609170f944d67900eb208b1288c989c2d",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 4,
+     "wall_s": 3.824
+    },
+    {
+     "bitwise": true,
+     "elements": 512,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "e452cdb60a9121a562822d550442df0609170f944d67900eb208b1288c989c2d",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 5,
+     "wall_s": 3.77
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 64,
+    "N": 16,
+    "barrier": true,
+    "bias": false,
+    "dtype": "f32",
+    "expect": "bitwise",
+    "id": "chain_f32_m64_n16_k16_t2_bar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 2,
+    "why": "accumulate chain; 2 matmuls into one L0C, barrier(Pipe.M) between"
+   },
+   "ir": {
+    "barrier_M": 1,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "23abb0ee03a5b7be24ac682d9c338c309227b3138196c94f9ab0ba4122313631",
+   "reference_sha256": "f3fb99d56a2753db0ab24911719508fe3e6db3fa5afff1fc5740bc330482e455",
+   "runs": [
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "f3fb99d56a2753db0ab24911719508fe3e6db3fa5afff1fc5740bc330482e455",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 35.24
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "f3fb99d56a2753db0ab24911719508fe3e6db3fa5afff1fc5740bc330482e455",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 2,
+     "wall_s": 4.806
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "f3fb99d56a2753db0ab24911719508fe3e6db3fa5afff1fc5740bc330482e455",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 3,
+     "wall_s": 3.796
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "f3fb99d56a2753db0ab24911719508fe3e6db3fa5afff1fc5740bc330482e455",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 4,
+     "wall_s": 3.75
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "f3fb99d56a2753db0ab24911719508fe3e6db3fa5afff1fc5740bc330482e455",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 5,
+     "wall_s": 3.801
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 64,
+    "N": 16,
+    "barrier": false,
+    "bias": false,
+    "dtype": "f32",
+    "expect": "probe",
+    "id": "chain_f32_m64_n16_k16_t2_nobar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 2,
+    "why": "accumulate chain; 2 matmuls into one L0C, no barrier"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": [
+     "_a2_family_unsettled_fp32_mmad: fp32 MMAD accumulation reads %l0c after an earlier MMAD on at least one path with no PIPE_M/PIPE_ALL barrier between them"
+    ]
+   },
+   "kernel_source_sha256": "229bf71cb6d7605cdcd4c72a23ec43586687a2e6fcda7538195fe06e2aaadcbe",
+   "reference_sha256": "21f7d0a8c21b9bcec2d3fa26c34db31f66e7379934d5df3c87672f916b88efdf",
+   "runs": [
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "21f7d0a8c21b9bcec2d3fa26c34db31f66e7379934d5df3c87672f916b88efdf",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 34.789
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "21f7d0a8c21b9bcec2d3fa26c34db31f66e7379934d5df3c87672f916b88efdf",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 2,
+     "wall_s": 3.746
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "21f7d0a8c21b9bcec2d3fa26c34db31f66e7379934d5df3c87672f916b88efdf",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 3,
+     "wall_s": 3.797
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "21f7d0a8c21b9bcec2d3fa26c34db31f66e7379934d5df3c87672f916b88efdf",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 4,
+     "wall_s": 4.8
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "21f7d0a8c21b9bcec2d3fa26c34db31f66e7379934d5df3c87672f916b88efdf",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 5,
+     "wall_s": 3.748
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 64,
+    "N": 16,
+    "barrier": true,
+    "bias": false,
+    "dtype": "f32",
+    "expect": "bitwise",
+    "id": "chain_f32_m64_n16_k16_t3_bar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 3,
+    "why": "accumulate chain; 3 matmuls into one L0C, barrier(Pipe.M) between"
+   },
+   "ir": {
+    "barrier_M": 2,
+    "barrier_M_settle": 0,
+    "mmad": 3,
+    "mmad_accumulate": 2,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "592444858b268f7c3a0eae52b722743446cf5eb2ad048af5eebeb26c960f0d39",
+   "reference_sha256": "39825ef09f8d0aedd11c25a761f32ea8c9f6f609a6be043107bc3198baed51e7",
+   "runs": [
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "39825ef09f8d0aedd11c25a761f32ea8c9f6f609a6be043107bc3198baed51e7",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 36.452
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "39825ef09f8d0aedd11c25a761f32ea8c9f6f609a6be043107bc3198baed51e7",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 2,
+     "wall_s": 3.825
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "39825ef09f8d0aedd11c25a761f32ea8c9f6f609a6be043107bc3198baed51e7",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 3,
+     "wall_s": 3.827
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "39825ef09f8d0aedd11c25a761f32ea8c9f6f609a6be043107bc3198baed51e7",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 4,
+     "wall_s": 3.824
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "39825ef09f8d0aedd11c25a761f32ea8c9f6f609a6be043107bc3198baed51e7",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 5,
+     "wall_s": 3.772
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 64,
+    "N": 16,
+    "barrier": false,
+    "bias": false,
+    "dtype": "f32",
+    "expect": "probe",
+    "id": "chain_f32_m64_n16_k16_t3_nobar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 3,
+    "why": "accumulate chain; 3 matmuls into one L0C, no barrier"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 3,
+    "mmad_accumulate": 2,
+    "trap_lints": [
+     "_a2_family_unsettled_fp32_mmad: fp32 MMAD accumulation reads %l0c after an earlier MMAD on at least one path with no PIPE_M/PIPE_ALL barrier between them"
+    ]
+   },
+   "kernel_source_sha256": "834e2ed5017a5a1add8401d4138c4ae13cd9fc55903e9c48d12c3c3c4ca0e05f",
+   "reference_sha256": "30926d1324397ed200dd64174a018e77d26fb6999c247f03613544c8e9f31467",
+   "runs": [
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "30926d1324397ed200dd64174a018e77d26fb6999c247f03613544c8e9f31467",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 35.854
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "30926d1324397ed200dd64174a018e77d26fb6999c247f03613544c8e9f31467",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 2,
+     "wall_s": 4.776
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "30926d1324397ed200dd64174a018e77d26fb6999c247f03613544c8e9f31467",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 3,
+     "wall_s": 4.828
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "30926d1324397ed200dd64174a018e77d26fb6999c247f03613544c8e9f31467",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 4,
+     "wall_s": 3.774
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "30926d1324397ed200dd64174a018e77d26fb6999c247f03613544c8e9f31467",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 5,
+     "wall_s": 3.773
+    }
+   ]
+  },
+  {
+   "all_bitwise": false,
+   "case": {
+    "K": 128,
+    "M": 16,
+    "N": 64,
+    "barrier": false,
+    "bias": false,
+    "dtype": "bf16",
+    "expect": "probe",
+    "id": "splitk_bf16_m16_n64_k128_s16",
+    "kind": "splitk",
+    "splitk": 16,
+    "terms": 1,
+    "why": "BF16 operands: the settle rule is FP32-only, so no barrier is inserted"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "515379e2eba4f8964f921207c35bc4a8a3c0f6b3a13255a8ce76da0672f88433",
+   "reference_sha256": "ab27c067dd712d4fabc25d3f0101baa05a17cf1e2b1829989b9bbfea3984a2f4",
+   "runs": [
+    {
+     "bitwise": false,
+     "elements": 1024,
+     "max_abs_diff": 15.671875,
+     "mismatched": 1024,
+     "non_finite": 0,
+     "output_sha256": "69e5b56d79caa78e2e92cb5d4cb1d3c392e13c4e46986f3ac395bd9fb01227f5",
+     "poison_left": 0,
+     "rel_l2": 1.3456698503113427,
+     "run": 1,
+     "wall_s": 35.392
+    },
+    {
+     "bitwise": false,
+     "elements": 1024,
+     "max_abs_diff": 15.671875,
+     "mismatched": 1024,
+     "non_finite": 0,
+     "output_sha256": "69e5b56d79caa78e2e92cb5d4cb1d3c392e13c4e46986f3ac395bd9fb01227f5",
+     "poison_left": 0,
+     "rel_l2": 1.3456698503113427,
+     "run": 2,
+     "wall_s": 3.747
+    },
+    {
+     "bitwise": false,
+     "elements": 1024,
+     "max_abs_diff": 15.671875,
+     "mismatched": 1024,
+     "non_finite": 0,
+     "output_sha256": "69e5b56d79caa78e2e92cb5d4cb1d3c392e13c4e46986f3ac395bd9fb01227f5",
+     "poison_left": 0,
+     "rel_l2": 1.3456698503113427,
+     "run": 3,
+     "wall_s": 3.748
+    },
+    {
+     "bitwise": false,
+     "elements": 1024,
+     "max_abs_diff": 15.671875,
+     "mismatched": 1024,
+     "non_finite": 0,
+     "output_sha256": "69e5b56d79caa78e2e92cb5d4cb1d3c392e13c4e46986f3ac395bd9fb01227f5",
+     "poison_left": 0,
+     "rel_l2": 1.3456698503113427,
+     "run": 4,
+     "wall_s": 3.803
+    },
+    {
+     "bitwise": false,
+     "elements": 1024,
+     "max_abs_diff": 15.671875,
+     "mismatched": 1024,
+     "non_finite": 0,
+     "output_sha256": "69e5b56d79caa78e2e92cb5d4cb1d3c392e13c4e46986f3ac395bd9fb01227f5",
+     "poison_left": 0,
+     "rel_l2": 1.3456698503113427,
+     "run": 5,
+     "wall_s": 4.752
+    }
+   ]
+  },
+  {
+   "all_bitwise": false,
+   "case": {
+    "K": 128,
+    "M": 16,
+    "N": 64,
+    "barrier": false,
+    "bias": false,
+    "dtype": "f16",
+    "expect": "probe",
+    "id": "splitk_f16_m16_n64_k128_s16",
+    "kind": "splitk",
+    "splitk": 16,
+    "terms": 1,
+    "why": "FP16 operands: the settle rule is FP32-only, so no barrier is inserted"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "7c36d5321f7cfdad3a40faf64e9173a9d85df6b86eaa7a838e693d3c8275b983",
+   "reference_sha256": "b0773ee0d6b35d320fece577181ae9b262c92a3de6c386906b9b846621c6995c",
+   "runs": [
+    {
+     "bitwise": false,
+     "elements": 1024,
+     "max_abs_diff": 15.875,
+     "mismatched": 1022,
+     "non_finite": 0,
+     "output_sha256": "dc4996a879173eb9a07aff3cae5635adefa053e6fb3859d930185d47d42a0c1f",
+     "poison_left": 0,
+     "rel_l2": 1.1710171861187195,
+     "run": 1,
+     "wall_s": 34.632
+    },
+    {
+     "bitwise": false,
+     "elements": 1024,
+     "max_abs_diff": 15.875,
+     "mismatched": 1022,
+     "non_finite": 0,
+     "output_sha256": "dc4996a879173eb9a07aff3cae5635adefa053e6fb3859d930185d47d42a0c1f",
+     "poison_left": 0,
+     "rel_l2": 1.1710171861187195,
+     "run": 2,
+     "wall_s": 3.75
+    },
+    {
+     "bitwise": false,
+     "elements": 1024,
+     "max_abs_diff": 15.875,
+     "mismatched": 1022,
+     "non_finite": 0,
+     "output_sha256": "dc4996a879173eb9a07aff3cae5635adefa053e6fb3859d930185d47d42a0c1f",
+     "poison_left": 0,
+     "rel_l2": 1.1710171861187195,
+     "run": 3,
+     "wall_s": 3.749
+    },
+    {
+     "bitwise": false,
+     "elements": 1024,
+     "max_abs_diff": 15.875,
+     "mismatched": 1022,
+     "non_finite": 0,
+     "output_sha256": "dc4996a879173eb9a07aff3cae5635adefa053e6fb3859d930185d47d42a0c1f",
+     "poison_left": 0,
+     "rel_l2": 1.1710171861187195,
+     "run": 4,
+     "wall_s": 4.752
+    },
+    {
+     "bitwise": false,
+     "elements": 1024,
+     "max_abs_diff": 15.875,
+     "mismatched": 1022,
+     "non_finite": 0,
+     "output_sha256": "dc4996a879173eb9a07aff3cae5635adefa053e6fb3859d930185d47d42a0c1f",
+     "poison_left": 0,
+     "rel_l2": 1.1710171861187195,
+     "run": 5,
+     "wall_s": 3.797
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 128,
+    "M": 16,
+    "N": 64,
+    "barrier": false,
+    "bias": false,
+    "dtype": "f32",
+    "expect": "bitwise",
+    "id": "splitk_f32_m16_n64_k128_s16",
+    "kind": "splitk",
+    "splitk": 16,
+    "terms": 1,
+    "why": "original shape without bias (also runs on the a5 profile)"
+   },
+   "ir": {
+    "barrier_M": 1,
+    "barrier_M_settle": 1,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "8720ccc69ceb5bab9a824e26582e711869bc2123343c371ed686c65598cccdf1",
+   "reference_sha256": "1f92875aec85114e3061362b030207c2f9f1563f5313ea7c640a84a331460a62",
+   "runs": [
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "1f92875aec85114e3061362b030207c2f9f1563f5313ea7c640a84a331460a62",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 35.098
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "1f92875aec85114e3061362b030207c2f9f1563f5313ea7c640a84a331460a62",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 2,
+     "wall_s": 4.808
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "1f92875aec85114e3061362b030207c2f9f1563f5313ea7c640a84a331460a62",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 3,
+     "wall_s": 3.802
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "1f92875aec85114e3061362b030207c2f9f1563f5313ea7c640a84a331460a62",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 4,
+     "wall_s": 3.754
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "1f92875aec85114e3061362b030207c2f9f1563f5313ea7c640a84a331460a62",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 5,
+     "wall_s": 3.747
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 128,
+    "M": 16,
+    "N": 64,
+    "barrier": false,
+    "bias": true,
+    "dtype": "f32",
+    "expect": "bitwise",
+    "id": "splitk_f32_m16_n64_k128_s16_bias",
+    "kind": "splitk",
+    "splitk": 16,
+    "terms": 1,
+    "why": "original M10-081 case (8 K fragments + bias); a2: settled by the pinned desugar rule"
+   },
+   "ir": {
+    "barrier_M": 1,
+    "barrier_M_settle": 1,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "5ee75c5d514b90eb573e40146eb52d7aa41ce7d3fe79ed26127d32d8b9b08969",
+   "reference_sha256": "dd9925e181274d1db1d90ff248576dd4098f9be627477b849cfcc5300c6b57da",
+   "runs": [
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "dd9925e181274d1db1d90ff248576dd4098f9be627477b849cfcc5300c6b57da",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 4.972
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "dd9925e181274d1db1d90ff248576dd4098f9be627477b849cfcc5300c6b57da",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 2,
+     "wall_s": 3.758
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "dd9925e181274d1db1d90ff248576dd4098f9be627477b849cfcc5300c6b57da",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 3,
+     "wall_s": 3.759
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "dd9925e181274d1db1d90ff248576dd4098f9be627477b849cfcc5300c6b57da",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 4,
+     "wall_s": 3.759
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "dd9925e181274d1db1d90ff248576dd4098f9be627477b849cfcc5300c6b57da",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 5,
+     "wall_s": 3.808
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 32,
+    "M": 16,
+    "N": 64,
+    "barrier": false,
+    "bias": false,
+    "dtype": "f32",
+    "expect": "bitwise",
+    "id": "splitk_f32_m16_n64_k32_s16",
+    "kind": "splitk",
+    "splitk": 16,
+    "terms": 1,
+    "why": "M10-081 isolation shape: two K fragments"
+   },
+   "ir": {
+    "barrier_M": 1,
+    "barrier_M_settle": 1,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "c94c161a118154c8a274d9b5d74f5fcaf0cc85832fef36d5c593acb147d72ac9",
+   "reference_sha256": "8ce4a0b9cf6f0ec708d06c3f84a2d0e7bd482f5fc719f4530c7346afd67bb0fe",
+   "runs": [
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "8ce4a0b9cf6f0ec708d06c3f84a2d0e7bd482f5fc719f4530c7346afd67bb0fe",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 35.692
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "8ce4a0b9cf6f0ec708d06c3f84a2d0e7bd482f5fc719f4530c7346afd67bb0fe",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 2,
+     "wall_s": 3.747
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "8ce4a0b9cf6f0ec708d06c3f84a2d0e7bd482f5fc719f4530c7346afd67bb0fe",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 3,
+     "wall_s": 3.798
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "8ce4a0b9cf6f0ec708d06c3f84a2d0e7bd482f5fc719f4530c7346afd67bb0fe",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 4,
+     "wall_s": 3.797
+    },
+    {
+     "bitwise": true,
+     "elements": 1024,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "8ce4a0b9cf6f0ec708d06c3f84a2d0e7bd482f5fc719f4530c7346afd67bb0fe",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 5,
+     "wall_s": 3.794
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 128,
+    "M": 64,
+    "N": 64,
+    "barrier": false,
+    "bias": false,
+    "dtype": "f32",
+    "expect": "bitwise",
+    "id": "splitk_f32_m64_n64_k128_s64",
+    "kind": "splitk",
+    "splitk": 64,
+    "terms": 1,
+    "why": "KDA kda_fwd(_stable)/intra.py shape: FP32 [64,128]x[64,128]^T, split-K 64"
+   },
+   "ir": {
+    "barrier_M": 1,
+    "barrier_M_settle": 1,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "5a1423e99aab9a51fdc07b61174415d314f6cf964eba19de0b26ee51406d304d",
+   "reference_sha256": "f1b0b9afd2568662f444f6519610d5873bfab1cd4ed2b99870f85e297a6a181b",
+   "runs": [
+    {
+     "bitwise": true,
+     "elements": 4096,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "f1b0b9afd2568662f444f6519610d5873bfab1cd4ed2b99870f85e297a6a181b",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 34.199
+    },
+    {
+     "bitwise": true,
+     "elements": 4096,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "f1b0b9afd2568662f444f6519610d5873bfab1cd4ed2b99870f85e297a6a181b",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 2,
+     "wall_s": 3.748
+    },
+    {
+     "bitwise": true,
+     "elements": 4096,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "f1b0b9afd2568662f444f6519610d5873bfab1cd4ed2b99870f85e297a6a181b",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 3,
+     "wall_s": 4.75
+    },
+    {
+     "bitwise": true,
+     "elements": 4096,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "f1b0b9afd2568662f444f6519610d5873bfab1cd4ed2b99870f85e297a6a181b",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 4,
+     "wall_s": 3.796
+    },
+    {
+     "bitwise": true,
+     "elements": 4096,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "non_finite": 0,
+     "output_sha256": "f1b0b9afd2568662f444f6519610d5873bfab1cd4ed2b99870f85e297a6a181b",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 5,
+     "wall_s": 3.745
+    }
+   ]
+  }
+ ],
+ "cases": [
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 5,
+   "error": null,
+   "expect": "bitwise",
+   "id": "splitk_f32_m16_n64_k128_s16_bias",
+   "max_abs_diff": 0.0,
+   "runs": 5
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 5,
+   "error": null,
+   "expect": "bitwise",
+   "id": "splitk_f32_m16_n64_k128_s16",
+   "max_abs_diff": 0.0,
+   "runs": 5
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 5,
+   "error": null,
+   "expect": "bitwise",
+   "id": "splitk_f32_m16_n64_k32_s16",
+   "max_abs_diff": 0.0,
+   "runs": 5
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 5,
+   "error": null,
+   "expect": "bitwise",
+   "id": "splitk_f32_m64_n64_k128_s64",
+   "max_abs_diff": 0.0,
+   "runs": 5
+  },
+  {
+   "all_bitwise": false,
+   "bitwise_runs": 0,
+   "error": null,
+   "expect": "probe",
+   "id": "splitk_bf16_m16_n64_k128_s16",
+   "max_abs_diff": 15.671875,
+   "runs": 5
+  },
+  {
+   "all_bitwise": false,
+   "bitwise_runs": 0,
+   "error": null,
+   "expect": "probe",
+   "id": "splitk_f16_m16_n64_k128_s16",
+   "max_abs_diff": 15.875,
+   "runs": 5
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 5,
+   "error": null,
+   "expect": "bitwise",
+   "id": "chain_f32_m16_n16_k16_t1",
+   "max_abs_diff": 0.0,
+   "runs": 5
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 5,
+   "error": null,
+   "expect": "probe",
+   "id": "chain_f32_m16_n16_k16_t2_nobar",
+   "max_abs_diff": 0.0,
+   "runs": 5
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 5,
+   "error": null,
+   "expect": "bitwise",
+   "id": "chain_f32_m16_n16_k16_t2_bar",
+   "max_abs_diff": 0.0,
+   "runs": 5
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 5,
+   "error": null,
+   "expect": "probe",
+   "id": "chain_f32_m16_n16_k16_t3_nobar",
+   "max_abs_diff": 0.0,
+   "runs": 5
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 5,
+   "error": null,
+   "expect": "bitwise",
+   "id": "chain_f32_m16_n16_k16_t3_bar",
+   "max_abs_diff": 0.0,
+   "runs": 5
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 5,
+   "error": null,
+   "expect": "probe",
+   "id": "chain_f32_m32_n16_k16_t2_nobar",
+   "max_abs_diff": 0.0,
+   "runs": 5
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 5,
+   "error": null,
+   "expect": "bitwise",
+   "id": "chain_f32_m32_n16_k16_t2_bar",
+   "max_abs_diff": 0.0,
+   "runs": 5
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 5,
+   "error": null,
+   "expect": "probe",
+   "id": "chain_f32_m32_n16_k16_t3_nobar",
+   "max_abs_diff": 0.0,
+   "runs": 5
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 5,
+   "error": null,
+   "expect": "bitwise",
+   "id": "chain_f32_m32_n16_k16_t3_bar",
+   "max_abs_diff": 0.0,
+   "runs": 5
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 5,
+   "error": null,
+   "expect": "probe",
+   "id": "chain_f32_m64_n16_k16_t2_nobar",
+   "max_abs_diff": 0.0,
+   "runs": 5
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 5,
+   "error": null,
+   "expect": "bitwise",
+   "id": "chain_f32_m64_n16_k16_t2_bar",
+   "max_abs_diff": 0.0,
+   "runs": 5
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 5,
+   "error": null,
+   "expect": "probe",
+   "id": "chain_f32_m64_n16_k16_t3_nobar",
+   "max_abs_diff": 0.0,
+   "runs": 5
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 5,
+   "error": null,
+   "expect": "bitwise",
+   "id": "chain_f32_m64_n16_k16_t3_bar",
+   "max_abs_diff": 0.0,
+   "runs": 5
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 5,
+   "error": null,
+   "expect": "bitwise",
+   "id": "chain_bf16_m16_n16_k16_t1",
+   "max_abs_diff": 0.0,
+   "runs": 5
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 5,
+   "error": null,
+   "expect": "probe",
+   "id": "chain_bf16_m16_n16_k16_t2_nobar",
+   "max_abs_diff": 0.0,
+   "runs": 5
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 5,
+   "error": null,
+   "expect": "bitwise",
+   "id": "chain_bf16_m16_n16_k16_t2_bar",
+   "max_abs_diff": 0.0,
+   "runs": 5
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 5,
+   "error": null,
+   "expect": "probe",
+   "id": "chain_bf16_m16_n16_k16_t3_nobar",
+   "max_abs_diff": 0.0,
+   "runs": 5
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 5,
+   "error": null,
+   "expect": "bitwise",
+   "id": "chain_bf16_m16_n16_k16_t3_bar",
+   "max_abs_diff": 0.0,
+   "runs": 5
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 5,
+   "error": null,
+   "expect": "probe",
+   "id": "chain_bf16_m32_n16_k16_t2_nobar",
+   "max_abs_diff": 0.0,
+   "runs": 5
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 5,
+   "error": null,
+   "expect": "bitwise",
+   "id": "chain_bf16_m32_n16_k16_t2_bar",
+   "max_abs_diff": 0.0,
+   "runs": 5
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 5,
+   "error": null,
+   "expect": "probe",
+   "id": "chain_bf16_m32_n16_k16_t3_nobar",
+   "max_abs_diff": 0.0,
+   "runs": 5
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 5,
+   "error": null,
+   "expect": "bitwise",
+   "id": "chain_bf16_m32_n16_k16_t3_bar",
+   "max_abs_diff": 0.0,
+   "runs": 5
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 5,
+   "error": null,
+   "expect": "probe",
+   "id": "chain_bf16_m64_n16_k16_t2_nobar",
+   "max_abs_diff": 0.0,
+   "runs": 5
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 5,
+   "error": null,
+   "expect": "bitwise",
+   "id": "chain_bf16_m64_n16_k16_t2_bar",
+   "max_abs_diff": 0.0,
+   "runs": 5
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 5,
+   "error": null,
+   "expect": "probe",
+   "id": "chain_bf16_m64_n16_k16_t3_nobar",
+   "max_abs_diff": 0.0,
+   "runs": 5
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 5,
+   "error": null,
+   "expect": "bitwise",
+   "id": "chain_bf16_m64_n16_k16_t3_bar",
+   "max_abs_diff": 0.0,
+   "runs": 5
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 5,
+   "error": null,
+   "expect": "bitwise",
+   "id": "chain_f16_m16_n16_k16_t1",
+   "max_abs_diff": 0.0,
+   "runs": 5
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 5,
+   "error": null,
+   "expect": "probe",
+   "id": "chain_f16_m16_n16_k16_t2_nobar",
+   "max_abs_diff": 0.0,
+   "runs": 5
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 5,
+   "error": null,
+   "expect": "bitwise",
+   "id": "chain_f16_m16_n16_k16_t2_bar",
+   "max_abs_diff": 0.0,
+   "runs": 5
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 5,
+   "error": null,
+   "expect": "probe",
+   "id": "chain_f16_m16_n16_k16_t3_nobar",
+   "max_abs_diff": 0.0,
+   "runs": 5
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 5,
+   "error": null,
+   "expect": "bitwise",
+   "id": "chain_f16_m16_n16_k16_t3_bar",
+   "max_abs_diff": 0.0,
+   "runs": 5
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 5,
+   "error": null,
+   "expect": "probe",
+   "id": "chain_f16_m32_n16_k16_t2_nobar",
+   "max_abs_diff": 0.0,
+   "runs": 5
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 5,
+   "error": null,
+   "expect": "bitwise",
+   "id": "chain_f16_m32_n16_k16_t2_bar",
+   "max_abs_diff": 0.0,
+   "runs": 5
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 5,
+   "error": null,
+   "expect": "probe",
+   "id": "chain_f16_m32_n16_k16_t3_nobar",
+   "max_abs_diff": 0.0,
+   "runs": 5
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 5,
+   "error": null,
+   "expect": "bitwise",
+   "id": "chain_f16_m32_n16_k16_t3_bar",
+   "max_abs_diff": 0.0,
+   "runs": 5
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 5,
+   "error": null,
+   "expect": "probe",
+   "id": "chain_f16_m64_n16_k16_t2_nobar",
+   "max_abs_diff": 0.0,
+   "runs": 5
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 5,
+   "error": null,
+   "expect": "bitwise",
+   "id": "chain_f16_m64_n16_k16_t2_bar",
+   "max_abs_diff": 0.0,
+   "runs": 5
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 5,
+   "error": null,
+   "expect": "probe",
+   "id": "chain_f16_m64_n16_k16_t3_nobar",
+   "max_abs_diff": 0.0,
+   "runs": 5
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 5,
+   "error": null,
+   "expect": "bitwise",
+   "id": "chain_f16_m64_n16_k16_t3_bar",
+   "max_abs_diff": 0.0,
+   "runs": 5
+  }
+ ],
+ "comparison": "bitwise vs CPU float64 reference rounded once to FP32 (exact domain)",
+ "device": {
+  "builtin_op_packages": [
+   "ascend910_93",
+   "ascend910b",
+   "config"
+  ],
+  "cann_version": "9.0.0",
+  "cube_core_num": 20,
+  "soc": "Ascend910B3",
+  "torch_npu": "2.10.0",
+  "vector_core_num": 40
+ },
+ "failed_expectation": [],
+ "finished_at": "2026-09-19T15:49:04Z",
+ "launcher": "aclnn",
+ "profile": "a2",
+ "repeat": 5,
+ "schema": "a2-01.repro/1",
+ "started_at": "2026-09-19T15:10:51Z",
+ "versions": {
+  "ascriptor_commit": "90cfcdc720bbcd66e8bd4361c4dd4fbc1a2a57b5",
+  "ascriptor_desugar_sha256": "900610ea92dcb97afd1bbea1f4abc6b306adc5fe98547bdbedde37eca34cc295",
+  "ascriptor_lint_sha256": "c2e4662604224cb4e84522859577872b6eeb87f90ac15736c36550ecd61b3a2e",
+  "ascriptor_version": "0.1.0",
+  "numpy": "1.26.4",
+  "python": "3.11.15",
+  "torch": "2.10.0+cpu"
+ }
+}

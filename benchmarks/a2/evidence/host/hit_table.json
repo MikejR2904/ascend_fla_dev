@@ -1,0 +1,2432 @@
+[
+ {
+  "calls": [],
+  "file": "kda_fwd_stable/kernels/gate.py",
+  "group": "KDA fwd",
+  "ir_accumulate_ops": 0,
+  "ir_mmad_ops": 0,
+  "ir_sites": [],
+  "kernel": "kda_sub1_gate_stable_kernel",
+  "role": "dispatched",
+  "stage": "gate",
+  "tree": "repo",
+  "verdict": [
+   "MISS no cube matmul"
+  ]
+ },
+ {
+  "calls": [
+   {
+    "dtypes": [
+     "f32",
+     "f32",
+     "f32"
+    ],
+    "in": "kda_sub2_score_stable_kernel",
+    "is_init": "True",
+    "line": 246,
+    "mnk": [
+     "L",
+     "L",
+     "K_DIM"
+    ],
+    "op": "matmul",
+    "splitk": "K_BLOCK",
+    "splitn": null
+   },
+   {
+    "dtypes": [
+     "f32",
+     "f32",
+     "f32"
+    ],
+    "in": "kda_sub2_score_stable_kernel",
+    "is_init": "True",
+    "line": 247,
+    "mnk": [
+     "L",
+     "L",
+     "K_DIM"
+    ],
+    "op": "matmul",
+    "splitk": "K_BLOCK",
+    "splitn": null
+   }
+  ],
+  "file": "kda_fwd_stable/kernels/intra.py",
+  "group": "KDA fwd",
+  "ir_accumulate_ops": 2,
+  "ir_mmad_ops": 4,
+  "ir_sites": [
+   {
+    "expansion": [
+     "cube.matmul",
+     "owned by A5 local mutex autosync",
+     "propagate immutable integer values",
+     "specialize proven constant dimensions"
+    ],
+    "file": "intra.py",
+    "library_fp32_rule": true,
+    "line": 246,
+    "operand_dtypes": [
+     "f32",
+     "f32"
+    ],
+    "root": "l0c_aqk"
+   },
+   {
+    "expansion": [
+     "cube.matmul",
+     "owned by A5 local mutex autosync",
+     "propagate immutable integer values",
+     "specialize proven constant dimensions"
+    ],
+    "file": "intra.py",
+    "library_fp32_rule": true,
+    "line": 247,
+    "operand_dtypes": [
+     "f32",
+     "f32"
+    ],
+    "root": "l0c_strict"
+   }
+  ],
+  "kernel": "kda_sub2_score_stable_kernel",
+  "role": "dispatched",
+  "stage": "scores",
+  "tree": "repo",
+  "verdict": [
+   "HIT-A fp32 split-K (a2: settled by the pinned desugar rule)"
+  ]
+ },
+ {
+  "calls": [
+   {
+    "dtypes": [
+     "?",
+     "?",
+     "?"
+    ],
+    "in": "_matmul_to_l1_tmp",
+    "is_init": "True",
+    "line": 142,
+    "mnk": [
+     "BLOCK",
+     "BLOCK",
+     "BLOCK"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": null
+   },
+   {
+    "dtypes": [
+     "f32",
+     "f32",
+     "f32"
+    ],
+    "in": "tril_inverse64_v2_strict_bf16_kernel",
+    "is_init": "True",
+    "line": 216,
+    "mnk": [
+     "BLOCK",
+     "BLOCK",
+     "BLOCK"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": null
+   },
+   {
+    "dtypes": [
+     "f32",
+     "f32",
+     "f32"
+    ],
+    "in": "tril_inverse64_v2_strict_bf16_kernel",
+    "is_init": "True",
+    "line": 263,
+    "mnk": [
+     "BLOCK",
+     "BLOCK",
+     "BLOCK"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": null
+   },
+   {
+    "dtypes": [
+     "f32",
+     "f32",
+     "f32"
+    ],
+    "in": "tril_inverse64_v2_strict_bf16_kernel",
+    "is_init": "True",
+    "line": 268,
+    "mnk": [
+     "BLOCK",
+     "BLOCK",
+     "BLOCK"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": null
+   },
+   {
+    "dtypes": [
+     "f32",
+     "f32",
+     "f32"
+    ],
+    "in": "tril_inverse64_v2_strict_bf16_kernel",
+    "is_init": "True",
+    "line": 272,
+    "mnk": [
+     "BLOCK",
+     "BLOCK",
+     "BLOCK"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": null
+   },
+   {
+    "dtypes": [
+     "f32",
+     "f32",
+     "f32"
+    ],
+    "in": "tril_inverse64_v2_strict_bf16_kernel",
+    "is_init": "False",
+    "line": 273,
+    "mnk": [
+     "BLOCK",
+     "BLOCK",
+     "BLOCK"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": null
+   },
+   {
+    "dtypes": [
+     "f32",
+     "f32",
+     "f32"
+    ],
+    "in": "tril_inverse64_v2_strict_bf16_kernel",
+    "is_init": "True",
+    "line": 278,
+    "mnk": [
+     "BLOCK",
+     "BLOCK",
+     "BLOCK"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": null
+   },
+   {
+    "dtypes": [
+     "f32",
+     "f32",
+     "f32"
+    ],
+    "in": "tril_inverse64_v2_strict_bf16_kernel",
+    "is_init": "False",
+    "line": 279,
+    "mnk": [
+     "BLOCK",
+     "BLOCK",
+     "BLOCK"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": null
+   },
+   {
+    "dtypes": [
+     "f32",
+     "f32",
+     "f32"
+    ],
+    "in": "tril_inverse64_v2_strict_bf16_kernel",
+    "is_init": "True",
+    "line": 283,
+    "mnk": [
+     "BLOCK",
+     "BLOCK",
+     "BLOCK"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": null
+   },
+   {
+    "dtypes": [
+     "f32",
+     "f32",
+     "f32"
+    ],
+    "in": "tril_inverse64_v2_strict_bf16_kernel",
+    "is_init": "False",
+    "line": 284,
+    "mnk": [
+     "BLOCK",
+     "BLOCK",
+     "BLOCK"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": null
+   },
+   {
+    "dtypes": [
+     "f32",
+     "f32",
+     "f32"
+    ],
+    "in": "tril_inverse64_v2_strict_bf16_kernel",
+    "is_init": "False",
+    "line": 285,
+    "mnk": [
+     "BLOCK",
+     "BLOCK",
+     "BLOCK"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": null
+   }
+  ],
+  "file": "kda_fwd/kernels/triangular_inverse.py",
+  "group": "KDA fwd",
+  "ir_accumulate_ops": 4,
+  "ir_mmad_ops": 16,
+  "ir_sites": [
+   {
+    "expansion": [
+     "cube.matmul",
+     "owned by A5 local mutex autosync"
+    ],
+    "file": "triangular_inverse.py",
+    "library_fp32_rule": true,
+    "line": 273,
+    "operand_dtypes": [
+     "f32",
+     "f32"
+    ],
+    "root": "l0c_work"
+   },
+   {
+    "expansion": [
+     "cube.matmul",
+     "owned by A5 local mutex autosync"
+    ],
+    "file": "triangular_inverse.py",
+    "library_fp32_rule": true,
+    "line": 279,
+    "operand_dtypes": [
+     "f32",
+     "f32"
+    ],
+    "root": "l0c_work"
+   },
+   {
+    "expansion": [
+     "cube.matmul",
+     "owned by A5 local mutex autosync"
+    ],
+    "file": "triangular_inverse.py",
+    "library_fp32_rule": true,
+    "line": 284,
+    "operand_dtypes": [
+     "f32",
+     "f32"
+    ],
+    "root": "l0c_work"
+   },
+   {
+    "expansion": [
+     "cube.matmul",
+     "owned by A5 local mutex autosync"
+    ],
+    "file": "triangular_inverse.py",
+    "library_fp32_rule": true,
+    "line": 285,
+    "operand_dtypes": [
+     "f32",
+     "f32"
+    ],
+    "root": "l0c_work"
+   }
+  ],
+  "kernel": "tril_inverse64_v2_strict_bf16_kernel",
+  "role": "dispatched",
+  "stage": "inverse",
+  "tree": "upstream",
+  "verdict": [
+   "HIT-B fp32 accumulate chain, NOT settled (a2 lint trap)"
+  ]
+ },
+ {
+  "calls": [
+   {
+    "dtypes": [
+     "f32",
+     "bf16",
+     "bf16"
+    ],
+    "in": "kda_sub3_wy_stable_kernel",
+    "is_init": "True",
+    "line": 201,
+    "mnk": [
+     "L",
+     "K_DIM",
+     "L"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": "SPLIT_N"
+   },
+   {
+    "dtypes": [
+     "f32",
+     "bf16",
+     "bf16"
+    ],
+    "in": "kda_sub3_wy_stable_kernel",
+    "is_init": "True",
+    "line": 202,
+    "mnk": [
+     "L",
+     "V_DIM",
+     "L"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": "SPLIT_N"
+   }
+  ],
+  "file": "kda_fwd_stable/kernels/wy.py",
+  "group": "KDA fwd",
+  "ir_accumulate_ops": 0,
+  "ir_mmad_ops": 2,
+  "ir_sites": [],
+  "kernel": "kda_sub3_wy_stable_kernel",
+  "role": "dispatched",
+  "stage": "wy",
+  "tree": "repo",
+  "verdict": [
+   "MISS every MMAD initialises its L0C (no accumulate)"
+  ]
+ },
+ {
+  "calls": [
+   {
+    "dtypes": [
+     "f32",
+     "bf16",
+     "bf16"
+    ],
+    "in": "kda_sub45_aqk_repaired_kernel",
+    "is_init": "True",
+    "line": 282,
+    "mnk": [
+     "L",
+     "V_BLOCK",
+     "K_DIM"
+    ],
+    "op": "mmad",
+    "splitk": null,
+    "splitn": null
+   },
+   {
+    "dtypes": [
+     "f32",
+     "bf16",
+     "bf16"
+    ],
+    "in": "kda_sub45_aqk_repaired_kernel",
+    "is_init": "True",
+    "line": 354,
+    "mnk": [
+     "K_DIM",
+     "V_BLOCK",
+     "L"
+    ],
+    "op": "mmad",
+    "splitk": null,
+    "splitn": null
+   },
+   {
+    "dtypes": [
+     "f32",
+     "bf16",
+     "bf16"
+    ],
+    "in": "kda_sub45_aqk_repaired_kernel",
+    "is_init": "True",
+    "line": 395,
+    "mnk": [
+     "L",
+     "V_BLOCK",
+     "K_DIM"
+    ],
+    "op": "mmad",
+    "splitk": null,
+    "splitn": null
+   },
+   {
+    "dtypes": [
+     "f32",
+     "bf16",
+     "bf16"
+    ],
+    "in": "kda_sub45_aqk_repaired_kernel",
+    "is_init": "False",
+    "line": 401,
+    "mnk": [
+     "L",
+     "V_BLOCK",
+     "L"
+    ],
+    "op": "mmad",
+    "splitk": null,
+    "splitn": null
+   }
+  ],
+  "file": "kda_fwd_stable/kernels/recurrent.py",
+  "group": "KDA fwd",
+  "ir_accumulate_ops": 1,
+  "ir_mmad_ops": 4,
+  "ir_sites": [
+   {
+    "expansion": [],
+    "file": "recurrent.py",
+    "library_fp32_rule": false,
+    "line": 401,
+    "operand_dtypes": [
+     "bf16",
+     "bf16"
+    ],
+    "root": "l0c_out"
+   }
+  ],
+  "kernel": "kda_sub45_aqk_repaired_kernel",
+  "role": "dispatched",
+  "stage": "recurrent",
+  "tree": "repo",
+  "verdict": [
+   "EXPOSED-C bf16 accumulate, outside the fp32 rule (device probe)"
+  ]
+ },
+ {
+  "calls": [
+   {
+    "dtypes": [
+     "?",
+     "?",
+     "?"
+    ],
+    "in": "_phase_matmul",
+    "is_init": "True",
+    "line": 187,
+    "mnk": [
+     "m",
+     "n",
+     "k"
+    ],
+    "op": "mmad",
+    "splitk": null,
+    "splitn": null
+   }
+  ],
+  "file": "kda_bwd/kernels/scan_fused.py",
+  "group": "KDA bwd",
+  "ir_accumulate_ops": 0,
+  "ir_mmad_ops": 8,
+  "ir_sites": [],
+  "kernel": "scan_fused_kernel",
+  "role": "dispatched",
+  "stage": "scan_fused",
+  "tree": "upstream",
+  "verdict": [
+   "MISS every MMAD initialises its L0C (no accumulate)"
+  ]
+ },
+ {
+  "calls": [
+   {
+    "dtypes": [
+     "f32",
+     "bf16",
+     "bf16"
+    ],
+    "in": "inverse_mm_bounded_kernel",
+    "is_init": "True",
+    "line": 105,
+    "mnk": [
+     "L",
+     "D",
+     "D"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": "D"
+   },
+   {
+    "dtypes": [
+     "f32",
+     "bf16",
+     "bf16"
+    ],
+    "in": "inverse_mm_bounded_kernel",
+    "is_init": "True",
+    "line": 106,
+    "mnk": [
+     "L",
+     "D",
+     "D"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": "D"
+   },
+   {
+    "dtypes": [
+     "f32",
+     "bf16",
+     "bf16"
+    ],
+    "in": "inverse_mm_bounded_kernel",
+    "is_init": "True",
+    "line": 107,
+    "mnk": [
+     "L",
+     "D",
+     "L"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": "D"
+   },
+   {
+    "dtypes": [
+     "f32",
+     "bf16",
+     "bf16"
+    ],
+    "in": "inverse_mm_bounded_kernel",
+    "is_init": "True",
+    "line": 108,
+    "mnk": [
+     "L",
+     "D",
+     "D"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": "D"
+   },
+   {
+    "dtypes": [
+     "f32",
+     "bf16",
+     "bf16"
+    ],
+    "in": "inverse_mm_bounded_kernel",
+    "is_init": "True",
+    "line": 158,
+    "mnk": [
+     "L",
+     "D",
+     "L"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": "D"
+   }
+  ],
+  "file": "kda_bwd_stable/kernels/inverse_mm.py",
+  "group": "KDA bwd",
+  "ir_accumulate_ops": 0,
+  "ir_mmad_ops": 5,
+  "ir_sites": [],
+  "kernel": "inverse_mm_bounded_kernel",
+  "role": "dispatched",
+  "stage": "inverse_mm",
+  "tree": "repo",
+  "verdict": [
+   "MISS every MMAD initialises its L0C (no accumulate)"
+  ]
+ },
+ {
+  "calls": [],
+  "file": "kda_bwd/kernels/inverse_epilogue.py",
+  "group": "KDA bwd",
+  "ir_accumulate_ops": 0,
+  "ir_mmad_ops": 0,
+  "ir_sites": [],
+  "kernel": "inverse_epilogue_kernel",
+  "role": "dispatched",
+  "stage": "inverse_epilogue",
+  "tree": "upstream",
+  "verdict": [
+   "MISS no cube matmul"
+  ]
+ },
+ {
+  "calls": [
+   {
+    "dtypes": [
+     "f32",
+     "bf16",
+     "bf16"
+    ],
+    "in": "inverse_dainv_kernel",
+    "is_init": "True",
+    "line": 104,
+    "mnk": [
+     "L",
+     "L",
+     "D"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": "L"
+   },
+   {
+    "dtypes": [
+     "f32",
+     "bf16",
+     "bf16"
+    ],
+    "in": "inverse_dainv_kernel",
+    "is_init": "True",
+    "line": 105,
+    "mnk": [
+     "L",
+     "L",
+     "D"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": "L"
+   }
+  ],
+  "file": "kda_bwd/kernels/inverse_dainv.py",
+  "group": "KDA bwd",
+  "ir_accumulate_ops": 0,
+  "ir_mmad_ops": 2,
+  "ir_sites": [],
+  "kernel": "inverse_dainv_kernel",
+  "role": "dispatched",
+  "stage": "inverse_dainv",
+  "tree": "upstream",
+  "verdict": [
+   "MISS every MMAD initialises its L0C (no accumulate)"
+  ]
+ },
+ {
+  "calls": [
+   {
+    "dtypes": [
+     "f32",
+     "bf16",
+     "bf16"
+    ],
+    "in": "inverse_dakk_fused_kernel",
+    "is_init": "True",
+    "line": 89,
+    "mnk": [
+     "L",
+     "L",
+     "L"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": "L"
+   },
+   {
+    "dtypes": [
+     "f32",
+     "bf16",
+     "bf16"
+    ],
+    "in": "inverse_dakk_fused_kernel",
+    "is_init": "True",
+    "line": 112,
+    "mnk": [
+     "L",
+     "L",
+     "L"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": "L"
+   }
+  ],
+  "file": "kda_bwd/kernels/inverse_dakk_fused.py",
+  "group": "KDA bwd",
+  "ir_accumulate_ops": 0,
+  "ir_mmad_ops": 2,
+  "ir_sites": [],
+  "kernel": "inverse_dakk_fused_kernel",
+  "role": "dispatched",
+  "stage": "inverse_dakk_fused",
+  "tree": "upstream",
+  "verdict": [
+   "MISS every MMAD initialises its L0C (no accumulate)"
+  ]
+ },
+ {
+  "calls": [],
+  "file": "kda_bwd_stable/kernels/finalize_pre.py",
+  "group": "KDA bwd",
+  "ir_accumulate_ops": 0,
+  "ir_mmad_ops": 0,
+  "ir_sites": [],
+  "kernel": "finalize_pre_stable_kernel",
+  "role": "dispatched",
+  "stage": "finalize_pre",
+  "tree": "repo",
+  "verdict": [
+   "MISS no cube matmul"
+  ]
+ },
+ {
+  "calls": [
+   {
+    "dtypes": [
+     "f32",
+     "bf16",
+     "bf16"
+    ],
+    "in": "finalize_pair_kernel",
+    "is_init": "True",
+    "line": 45,
+    "mnk": [
+     "L",
+     "D",
+     "L"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": "D"
+   },
+   {
+    "dtypes": [
+     "f32",
+     "bf16",
+     "bf16"
+    ],
+    "in": "finalize_pair_kernel",
+    "is_init": "True",
+    "line": 46,
+    "mnk": [
+     "L",
+     "D",
+     "L"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": "D"
+   },
+   {
+    "dtypes": [
+     "f32",
+     "bf16",
+     "bf16"
+    ],
+    "in": "finalize_pair_kernel",
+    "is_init": "True",
+    "line": 53,
+    "mnk": [
+     "L",
+     "D",
+     "L"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": "D"
+   },
+   {
+    "dtypes": [
+     "f32",
+     "bf16",
+     "bf16"
+    ],
+    "in": "finalize_pair_kernel",
+    "is_init": "True",
+    "line": 54,
+    "mnk": [
+     "L",
+     "D",
+     "L"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": "D"
+   }
+  ],
+  "file": "kda_bwd/kernels/finalize_pair.py",
+  "group": "KDA bwd",
+  "ir_accumulate_ops": 0,
+  "ir_mmad_ops": 4,
+  "ir_sites": [],
+  "kernel": "finalize_pair_kernel",
+  "role": "dispatched",
+  "stage": "finalize_pair",
+  "tree": "upstream",
+  "verdict": [
+   "MISS every MMAD initialises its L0C (no accumulate)"
+  ]
+ },
+ {
+  "calls": [],
+  "file": "kda_bwd_stable/kernels/finalize_post.py",
+  "group": "KDA bwd",
+  "ir_accumulate_ops": 0,
+  "ir_mmad_ops": 0,
+  "ir_sites": [],
+  "kernel": "finalize_post_stable_kernel",
+  "role": "dispatched",
+  "stage": "finalize_post",
+  "tree": "repo",
+  "verdict": [
+   "MISS no cube matmul"
+  ]
+ },
+ {
+  "calls": [],
+  "file": "kda_bwd/kernels/finalize_reduce.py",
+  "group": "KDA bwd",
+  "ir_accumulate_ops": 0,
+  "ir_mmad_ops": 0,
+  "ir_sites": [],
+  "kernel": "finalize_reduce_kernel",
+  "role": "dispatched",
+  "stage": "finalize_reduce",
+  "tree": "upstream",
+  "verdict": [
+   "MISS no cube matmul"
+  ]
+ },
+ {
+  "calls": [],
+  "file": "kda_fused_recurrent/kernels/step.py",
+  "group": "KDA decode",
+  "ir_accumulate_ops": 0,
+  "ir_mmad_ops": 0,
+  "ir_sites": [],
+  "kernel": "kda_fused_recurrent_kernel",
+  "role": "dispatched",
+  "stage": "step",
+  "tree": "repo",
+  "verdict": [
+   "MISS no cube matmul"
+  ]
+ },
+ {
+  "calls": [
+   {
+    "dtypes": [
+     "f32",
+     "f32",
+     "f32"
+    ],
+    "in": "gdn_preprocess_v2_kernel",
+    "is_init": "True",
+    "line": 143,
+    "mnk": [
+     "1",
+     "L",
+     "L"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": null
+   },
+   {
+    "dtypes": [
+     "f32",
+     "bf16",
+     "bf16"
+    ],
+    "in": "gdn_preprocess_v2_kernel",
+    "is_init": "True",
+    "line": 146,
+    "mnk": [
+     "L",
+     "L",
+     "D"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": "L"
+   }
+  ],
+  "file": "gdn_fwd/kernels/preprocess.py",
+  "group": "GDN fwd",
+  "ir_accumulate_ops": 0,
+  "ir_mmad_ops": 2,
+  "ir_sites": [],
+  "kernel": "gdn_preprocess_v2_kernel",
+  "role": "dispatched",
+  "stage": "preprocess",
+  "tree": "upstream",
+  "verdict": [
+   "MISS every MMAD initialises its L0C (no accumulate)"
+  ]
+ },
+ {
+  "calls": [
+   {
+    "dtypes": [
+     "?",
+     "?",
+     "?"
+    ],
+    "in": "_matmul_to_l1_tmp",
+    "is_init": "True",
+    "line": 172,
+    "mnk": [
+     "BLOCK",
+     "BLOCK",
+     "BLOCK"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": null
+   },
+   {
+    "dtypes": [
+     "f32",
+     "f32",
+     "f32"
+    ],
+    "in": "tril_inverse64_v2_strict_bf16_kernel",
+    "is_init": "True",
+    "line": 249,
+    "mnk": [
+     "BLOCK",
+     "BLOCK",
+     "BLOCK"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": null
+   },
+   {
+    "dtypes": [
+     "f32",
+     "f32",
+     "f32"
+    ],
+    "in": "tril_inverse64_v2_strict_bf16_kernel",
+    "is_init": "True",
+    "line": 296,
+    "mnk": [
+     "BLOCK",
+     "BLOCK",
+     "BLOCK"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": null
+   },
+   {
+    "dtypes": [
+     "f32",
+     "f32",
+     "f32"
+    ],
+    "in": "tril_inverse64_v2_strict_bf16_kernel",
+    "is_init": "True",
+    "line": 301,
+    "mnk": [
+     "BLOCK",
+     "BLOCK",
+     "BLOCK"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": null
+   },
+   {
+    "dtypes": [
+     "f32",
+     "f32",
+     "f32"
+    ],
+    "in": "tril_inverse64_v2_strict_bf16_kernel",
+    "is_init": "True",
+    "line": 305,
+    "mnk": [
+     "BLOCK",
+     "BLOCK",
+     "BLOCK"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": null
+   },
+   {
+    "dtypes": [
+     "f32",
+     "f32",
+     "f32"
+    ],
+    "in": "tril_inverse64_v2_strict_bf16_kernel",
+    "is_init": "False",
+    "line": 306,
+    "mnk": [
+     "BLOCK",
+     "BLOCK",
+     "BLOCK"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": null
+   },
+   {
+    "dtypes": [
+     "f32",
+     "f32",
+     "f32"
+    ],
+    "in": "tril_inverse64_v2_strict_bf16_kernel",
+    "is_init": "True",
+    "line": 311,
+    "mnk": [
+     "BLOCK",
+     "BLOCK",
+     "BLOCK"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": null
+   },
+   {
+    "dtypes": [
+     "f32",
+     "f32",
+     "f32"
+    ],
+    "in": "tril_inverse64_v2_strict_bf16_kernel",
+    "is_init": "False",
+    "line": 312,
+    "mnk": [
+     "BLOCK",
+     "BLOCK",
+     "BLOCK"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": null
+   },
+   {
+    "dtypes": [
+     "f32",
+     "f32",
+     "f32"
+    ],
+    "in": "tril_inverse64_v2_strict_bf16_kernel",
+    "is_init": "True",
+    "line": 316,
+    "mnk": [
+     "BLOCK",
+     "BLOCK",
+     "BLOCK"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": null
+   },
+   {
+    "dtypes": [
+     "f32",
+     "f32",
+     "f32"
+    ],
+    "in": "tril_inverse64_v2_strict_bf16_kernel",
+    "is_init": "False",
+    "line": 317,
+    "mnk": [
+     "BLOCK",
+     "BLOCK",
+     "BLOCK"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": null
+   },
+   {
+    "dtypes": [
+     "f32",
+     "f32",
+     "f32"
+    ],
+    "in": "tril_inverse64_v2_strict_bf16_kernel",
+    "is_init": "False",
+    "line": 318,
+    "mnk": [
+     "BLOCK",
+     "BLOCK",
+     "BLOCK"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": null
+   }
+  ],
+  "file": "gdn_fwd/kernels/inverse.py",
+  "group": "GDN fwd",
+  "ir_accumulate_ops": 4,
+  "ir_mmad_ops": 16,
+  "ir_sites": [
+   {
+    "expansion": [
+     "cube.matmul",
+     "owned by A5 local mutex autosync"
+    ],
+    "file": "inverse.py",
+    "library_fp32_rule": true,
+    "line": 306,
+    "operand_dtypes": [
+     "f32",
+     "f32"
+    ],
+    "root": "l0c_work"
+   },
+   {
+    "expansion": [
+     "cube.matmul",
+     "owned by A5 local mutex autosync"
+    ],
+    "file": "inverse.py",
+    "library_fp32_rule": true,
+    "line": 312,
+    "operand_dtypes": [
+     "f32",
+     "f32"
+    ],
+    "root": "l0c_work"
+   },
+   {
+    "expansion": [
+     "cube.matmul",
+     "owned by A5 local mutex autosync"
+    ],
+    "file": "inverse.py",
+    "library_fp32_rule": true,
+    "line": 317,
+    "operand_dtypes": [
+     "f32",
+     "f32"
+    ],
+    "root": "l0c_work"
+   },
+   {
+    "expansion": [
+     "cube.matmul",
+     "owned by A5 local mutex autosync"
+    ],
+    "file": "inverse.py",
+    "library_fp32_rule": true,
+    "line": 318,
+    "operand_dtypes": [
+     "f32",
+     "f32"
+    ],
+    "root": "l0c_work"
+   }
+  ],
+  "kernel": "tril_inverse64_v2_strict_bf16_kernel",
+  "role": "dispatched",
+  "stage": "inverse",
+  "tree": "upstream",
+  "verdict": [
+   "HIT-B fp32 accumulate chain, NOT settled (a2 lint trap)"
+  ]
+ },
+ {
+  "calls": [
+   {
+    "dtypes": [
+     "f32",
+     "bf16",
+     "bf16"
+    ],
+    "in": "gdn_recompute_wu_v2_kernel",
+    "is_init": "True",
+    "line": 145,
+    "mnk": [
+     null,
+     null,
+     null
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": "128"
+   },
+   {
+    "dtypes": [
+     "f32",
+     "bf16",
+     "bf16"
+    ],
+    "in": "gdn_recompute_wu_v2_kernel",
+    "is_init": "True",
+    "line": 146,
+    "mnk": [
+     null,
+     null,
+     null
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": "128"
+   }
+  ],
+  "file": "gdn_fwd/kernels/recompute.py",
+  "group": "GDN fwd",
+  "ir_accumulate_ops": 0,
+  "ir_mmad_ops": 2,
+  "ir_sites": [],
+  "kernel": "gdn_recompute_wu_v2_kernel",
+  "role": "dispatched",
+  "stage": "recompute",
+  "tree": "upstream",
+  "verdict": [
+   "MISS every MMAD initialises its L0C (no accumulate)"
+  ]
+ },
+ {
+  "calls": [
+   {
+    "dtypes": [
+     "f32",
+     "bf16",
+     "bf16"
+    ],
+    "in": "sub1_kernel",
+    "is_init": "True",
+    "line": 72,
+    "mnk": [
+     null,
+     null,
+     null
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": null
+   }
+  ],
+  "file": "gdn_fwd/kernels/scores.py",
+  "group": "GDN fwd",
+  "ir_accumulate_ops": 0,
+  "ir_mmad_ops": 1,
+  "ir_sites": [],
+  "kernel": "sub1_kernel",
+  "role": "dispatched",
+  "stage": "scores",
+  "tree": "upstream",
+  "verdict": [
+   "MISS every MMAD initialises its L0C (no accumulate)"
+  ]
+ },
+ {
+  "calls": [
+   {
+    "dtypes": [
+     "f32",
+     "bf16",
+     "bf16"
+    ],
+    "in": "gdn_recurrent_plain",
+    "is_init": "True",
+    "line": 283,
+    "mnk": [
+     "L",
+     "D",
+     "D"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": "D"
+   },
+   {
+    "dtypes": [
+     "f32",
+     "bf16",
+     "bf16"
+    ],
+    "in": "gdn_recurrent_plain",
+    "is_init": "True",
+    "line": 298,
+    "mnk": [
+     "L",
+     "D",
+     "D"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": "D"
+   },
+   {
+    "dtypes": [
+     "f32",
+     "bf16",
+     "bf16"
+    ],
+    "in": "gdn_recurrent_plain",
+    "is_init": "True",
+    "line": 318,
+    "mnk": [
+     "L",
+     "D",
+     "L"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": "D"
+   },
+   {
+    "dtypes": [
+     "f32",
+     "bf16",
+     "bf16"
+    ],
+    "in": "gdn_recurrent_plain",
+    "is_init": "True",
+    "line": 331,
+    "mnk": [
+     "D",
+     "D",
+     "L"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": "D"
+   }
+  ],
+  "file": "gdn_fwd/kernels/recurrent.py",
+  "group": "GDN fwd",
+  "ir_accumulate_ops": 0,
+  "ir_mmad_ops": 4,
+  "ir_sites": [],
+  "kernel": "gdn_recurrent_plain",
+  "role": "dispatched",
+  "stage": "recurrent",
+  "tree": "upstream",
+  "verdict": [
+   "MISS every MMAD initialises its L0C (no accumulate)"
+  ]
+ },
+ {
+  "calls": [
+   {
+    "dtypes": [
+     "f32",
+     "bf16",
+     "bf16"
+    ],
+    "in": "scan_local_bwd_kernel",
+    "is_init": "True",
+    "line": 174,
+    "mnk": [
+     "L",
+     "L",
+     "D"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": "L"
+   },
+   {
+    "dtypes": [
+     "f32",
+     "bf16",
+     "bf16"
+    ],
+    "in": "scan_local_bwd_kernel",
+    "is_init": "True",
+    "line": 175,
+    "mnk": [
+     "L",
+     "L",
+     "D"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": "L"
+   },
+   {
+    "dtypes": [
+     "f32",
+     "bf16",
+     "bf16"
+    ],
+    "in": "scan_local_bwd_kernel",
+    "is_init": "True",
+    "line": 216,
+    "mnk": [
+     "L",
+     "D",
+     "L"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": "D"
+   }
+  ],
+  "file": "gdn_bwd/kernels/scan_local.py",
+  "group": "GDN bwd",
+  "ir_accumulate_ops": 0,
+  "ir_mmad_ops": 3,
+  "ir_sites": [],
+  "kernel": "scan_local_bwd_kernel",
+  "role": "dispatched",
+  "stage": "scan_local",
+  "tree": "upstream",
+  "verdict": [
+   "MISS every MMAD initialises its L0C (no accumulate)"
+  ]
+ },
+ {
+  "calls": [
+   {
+    "dtypes": [
+     "?",
+     "?",
+     "?"
+    ],
+    "in": "_state_mmad",
+    "is_init": "is_init",
+    "line": 374,
+    "mnk": [
+     "m",
+     "n",
+     "k"
+    ],
+    "op": "mmad",
+    "splitk": null,
+    "splitn": null
+   }
+  ],
+  "file": "gdn_bwd/kernels/scan_state.py",
+  "group": "GDN bwd",
+  "ir_accumulate_ops": 1,
+  "ir_mmad_ops": 11,
+  "ir_sites": [],
+  "kernel": "scan_state_bwd_kernel",
+  "role": "dispatched",
+  "stage": "scan_state",
+  "tree": "upstream",
+  "verdict": [
+   "MISS every accumulate MMAD follows an explicit M/ALL barrier"
+  ]
+ },
+ {
+  "calls": [
+   {
+    "dtypes": [
+     "f32",
+     "bf16",
+     "bf16"
+    ],
+    "in": "wu_bwd_kernel",
+    "is_init": "True",
+    "line": 205,
+    "mnk": [
+     "L",
+     "L",
+     "D"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": "L"
+   },
+   {
+    "dtypes": [
+     "f32",
+     "bf16",
+     "bf16"
+    ],
+    "in": "wu_bwd_kernel",
+    "is_init": "False",
+    "line": 206,
+    "mnk": [
+     "L",
+     "L",
+     "D"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": "L"
+   },
+   {
+    "dtypes": [
+     "f32",
+     "bf16",
+     "bf16"
+    ],
+    "in": "wu_bwd_kernel",
+    "is_init": "True",
+    "line": 207,
+    "mnk": [
+     "L",
+     "D",
+     "L"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": "D"
+   },
+   {
+    "dtypes": [
+     "f32",
+     "bf16",
+     "bf16"
+    ],
+    "in": "wu_bwd_kernel",
+    "is_init": "True",
+    "line": 208,
+    "mnk": [
+     "L",
+     "D",
+     "L"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": "D"
+   }
+  ],
+  "file": "gdn_bwd/kernels/wu.py",
+  "group": "GDN bwd",
+  "ir_accumulate_ops": 1,
+  "ir_mmad_ops": 4,
+  "ir_sites": [
+   {
+    "expansion": [
+     "cube.matmul",
+     "owned by A5 local mutex autosync",
+     "propagate immutable integer values",
+     "specialize proven constant dimensions"
+    ],
+    "file": "wu.py",
+    "library_fp32_rule": false,
+    "line": 206,
+    "operand_dtypes": [
+     "bf16",
+     "bf16"
+    ],
+    "root": "l0c_d_wu"
+   }
+  ],
+  "kernel": "wu_bwd_kernel",
+  "role": "dispatched",
+  "stage": "wu",
+  "tree": "upstream",
+  "verdict": [
+   "EXPOSED-C bf16 accumulate, outside the fp32 rule (device probe)"
+  ]
+ },
+ {
+  "calls": [
+   {
+    "dtypes": [
+     "?",
+     "?",
+     "?"
+    ],
+    "in": "inverse_preprocess_bwd_kernel",
+    "is_init": "True",
+    "line": 232,
+    "mnk": [
+     "L",
+     "L",
+     "D"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": "L"
+   },
+   {
+    "dtypes": [
+     "?",
+     "?",
+     "?"
+    ],
+    "in": "inverse_preprocess_bwd_kernel",
+    "is_init": "True",
+    "line": 233,
+    "mnk": [
+     "L",
+     "L",
+     "L"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": "L"
+   },
+   {
+    "dtypes": [
+     "?",
+     "?",
+     "?"
+    ],
+    "in": "inverse_preprocess_bwd_kernel",
+    "is_init": "True",
+    "line": 238,
+    "mnk": [
+     "L",
+     "L",
+     "L"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": "L"
+   },
+   {
+    "dtypes": [
+     "?",
+     "?",
+     "?"
+    ],
+    "in": "inverse_preprocess_bwd_kernel",
+    "is_init": "True",
+    "line": 289,
+    "mnk": [
+     "L",
+     "D",
+     "L"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": "D"
+   },
+   {
+    "dtypes": [
+     "?",
+     "?",
+     "?"
+    ],
+    "in": "inverse_preprocess_bwd_kernel",
+    "is_init": "True",
+    "line": 290,
+    "mnk": [
+     "L",
+     "D",
+     "L"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": "D"
+   }
+  ],
+  "file": "gdn_bwd/kernels/inverse_preprocess.py",
+  "group": "GDN bwd",
+  "ir_accumulate_ops": 0,
+  "ir_mmad_ops": 5,
+  "ir_sites": [],
+  "kernel": "inverse_preprocess_bwd_kernel",
+  "role": "dispatched",
+  "stage": "inverse_preprocess",
+  "tree": "upstream",
+  "verdict": [
+   "MISS every MMAD initialises its L0C (no accumulate)"
+  ]
+ },
+ {
+  "calls": [
+   {
+    "dtypes": [
+     "f32",
+     "f32",
+     "f32"
+    ],
+    "in": "finalize_bwd_kernel",
+    "is_init": "True",
+    "line": 204,
+    "mnk": [
+     "rows_cube",
+     "L",
+     "L"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": null
+   },
+   {
+    "dtypes": [
+     "f32",
+     "f32",
+     "f32"
+    ],
+    "in": "finalize_bwd_kernel",
+    "is_init": "False",
+    "line": 205,
+    "mnk": [
+     "rows_cube",
+     "L",
+     "L"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": null
+   },
+   {
+    "dtypes": [
+     "f32",
+     "f32",
+     "?"
+    ],
+    "in": "finalize_bwd_kernel",
+    "is_init": "False",
+    "line": 217,
+    "mnk": [
+     "rows_cube",
+     "L",
+     "L"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": null
+   },
+   {
+    "dtypes": [
+     "f32",
+     "f32",
+     "?"
+    ],
+    "in": "finalize_bwd_kernel",
+    "is_init": "False",
+    "line": 226,
+    "mnk": [
+     "rows_cube",
+     "L",
+     "L"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": null
+   },
+   {
+    "dtypes": [
+     "f32",
+     "f32",
+     "?"
+    ],
+    "in": "finalize_bwd_kernel",
+    "is_init": "False",
+    "line": 235,
+    "mnk": [
+     "rows_cube",
+     "L",
+     "L"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": null
+   },
+   {
+    "dtypes": [
+     "f32",
+     "f32",
+     "?"
+    ],
+    "in": "finalize_bwd_kernel",
+    "is_init": "False",
+    "line": 244,
+    "mnk": [
+     "rows_cube",
+     "L",
+     "L"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": null
+   },
+   {
+    "dtypes": [
+     "f32",
+     "f32",
+     "f32"
+    ],
+    "in": "finalize_bwd_kernel",
+    "is_init": "True",
+    "line": 258,
+    "mnk": [
+     "rows_cube",
+     "L",
+     "L"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": null
+   }
+  ],
+  "file": "gdn_bwd/kernels/finalize.py",
+  "group": "GDN bwd",
+  "ir_accumulate_ops": 5,
+  "ir_mmad_ops": 7,
+  "ir_sites": [
+   {
+    "expansion": [
+     "cube.matmul",
+     "owned by A5 local mutex autosync"
+    ],
+    "file": "finalize.py",
+    "library_fp32_rule": true,
+    "line": 205,
+    "operand_dtypes": [
+     "f32",
+     "f32"
+    ],
+    "root": "l0c_x"
+   },
+   {
+    "expansion": [
+     "cube.matmul",
+     "owned by A5 local mutex autosync"
+    ],
+    "file": "finalize.py",
+    "library_fp32_rule": true,
+    "line": 217,
+    "operand_dtypes": [
+     "f32",
+     "f32"
+    ],
+    "root": "l0c_x"
+   },
+   {
+    "expansion": [
+     "cube.matmul",
+     "owned by A5 local mutex autosync"
+    ],
+    "file": "finalize.py",
+    "library_fp32_rule": true,
+    "line": 226,
+    "operand_dtypes": [
+     "f32",
+     "f32"
+    ],
+    "root": "l0c_x"
+   },
+   {
+    "expansion": [
+     "cube.matmul",
+     "owned by A5 local mutex autosync"
+    ],
+    "file": "finalize.py",
+    "library_fp32_rule": true,
+    "line": 235,
+    "operand_dtypes": [
+     "f32",
+     "f32"
+    ],
+    "root": "l0c_x"
+   },
+   {
+    "expansion": [
+     "cube.matmul",
+     "owned by A5 local mutex autosync"
+    ],
+    "file": "finalize.py",
+    "library_fp32_rule": true,
+    "line": 244,
+    "operand_dtypes": [
+     "f32",
+     "f32"
+    ],
+    "root": "l0c_x"
+   }
+  ],
+  "kernel": "finalize_bwd_kernel",
+  "role": "dispatched",
+  "stage": "finalize",
+  "tree": "upstream",
+  "verdict": [
+   "HIT-B fp32 accumulate chain, NOT settled (a2 lint trap)"
+  ]
+ },
+ {
+  "calls": [
+   {
+    "dtypes": [
+     "f32",
+     "bf16",
+     "bf16"
+    ],
+    "in": "gdn_recurrent_saved",
+    "is_init": "True",
+    "line": 291,
+    "mnk": [
+     "L",
+     "D",
+     "D"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": "D"
+   },
+   {
+    "dtypes": [
+     "f32",
+     "bf16",
+     "bf16"
+    ],
+    "in": "gdn_recurrent_saved",
+    "is_init": "True",
+    "line": 307,
+    "mnk": [
+     "L",
+     "D",
+     "D"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": "D"
+   },
+   {
+    "dtypes": [
+     "f32",
+     "bf16",
+     "bf16"
+    ],
+    "in": "gdn_recurrent_saved",
+    "is_init": "True",
+    "line": 327,
+    "mnk": [
+     "L",
+     "D",
+     "L"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": "D"
+   },
+   {
+    "dtypes": [
+     "f32",
+     "bf16",
+     "bf16"
+    ],
+    "in": "gdn_recurrent_saved",
+    "is_init": "True",
+    "line": 342,
+    "mnk": [
+     "D",
+     "D",
+     "L"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": "D"
+   }
+  ],
+  "file": "gdn_fwd/kernels/recurrent_saved.py",
+  "group": "GDN fwd",
+  "ir_accumulate_ops": 0,
+  "ir_mmad_ops": 4,
+  "ir_sites": [],
+  "kernel": "gdn_recurrent_saved",
+  "role": "alternative",
+  "stage": "recurrent_saved",
+  "tree": "upstream",
+  "verdict": [
+   "MISS every MMAD initialises its L0C (no accumulate)"
+  ]
+ },
+ {
+  "calls": [],
+  "file": "kda_fwd/kernels/gate.py",
+  "group": "KDA fwd",
+  "ir_accumulate_ops": 0,
+  "ir_mmad_ops": 0,
+  "ir_sites": [],
+  "kernel": "kda_sub1_gate_kernel",
+  "role": "replaced",
+  "stage": "gate",
+  "tree": "upstream",
+  "verdict": [
+   "MISS no cube matmul"
+  ]
+ },
+ {
+  "calls": [
+   {
+    "dtypes": [
+     "f32",
+     "f32",
+     "f32"
+    ],
+    "in": "kda_sub2_score_kernel",
+    "is_init": "True",
+    "line": 179,
+    "mnk": [
+     "L",
+     "L",
+     "K_DIM"
+    ],
+    "op": "matmul",
+    "splitk": "K_BLOCK",
+    "splitn": null
+   },
+   {
+    "dtypes": [
+     "f32",
+     "f32",
+     "f32"
+    ],
+    "in": "kda_sub2_score_kernel",
+    "is_init": "True",
+    "line": 180,
+    "mnk": [
+     "L",
+     "L",
+     "K_DIM"
+    ],
+    "op": "matmul",
+    "splitk": "K_BLOCK",
+    "splitn": null
+   }
+  ],
+  "file": "kda_fwd/kernels/intra.py",
+  "group": "KDA fwd",
+  "ir_accumulate_ops": 2,
+  "ir_mmad_ops": 4,
+  "ir_sites": [
+   {
+    "expansion": [
+     "cube.matmul",
+     "owned by A5 local mutex autosync",
+     "propagate immutable integer values",
+     "specialize proven constant dimensions"
+    ],
+    "file": "intra.py",
+    "library_fp32_rule": true,
+    "line": 179,
+    "operand_dtypes": [
+     "f32",
+     "f32"
+    ],
+    "root": "l0c_aqk"
+   },
+   {
+    "expansion": [
+     "cube.matmul",
+     "owned by A5 local mutex autosync",
+     "propagate immutable integer values",
+     "specialize proven constant dimensions"
+    ],
+    "file": "intra.py",
+    "library_fp32_rule": true,
+    "line": 180,
+    "operand_dtypes": [
+     "f32",
+     "f32"
+    ],
+    "root": "l0c_strict"
+   }
+  ],
+  "kernel": "kda_sub2_score_kernel",
+  "role": "replaced",
+  "stage": "scores",
+  "tree": "upstream",
+  "verdict": [
+   "HIT-A fp32 split-K (a2: settled by the pinned desugar rule)"
+  ]
+ },
+ {
+  "calls": [
+   {
+    "dtypes": [
+     "f32",
+     "bf16",
+     "bf16"
+    ],
+    "in": "kda_sub3_wy_kernel",
+    "is_init": "True",
+    "line": 157,
+    "mnk": [
+     "L",
+     "K_DIM",
+     "L"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": "SPLIT_N"
+   },
+   {
+    "dtypes": [
+     "f32",
+     "bf16",
+     "bf16"
+    ],
+    "in": "kda_sub3_wy_kernel",
+    "is_init": "True",
+    "line": 158,
+    "mnk": [
+     "L",
+     "V_DIM",
+     "L"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": "SPLIT_N"
+   }
+  ],
+  "file": "kda_fwd/kernels/wy.py",
+  "group": "KDA fwd",
+  "ir_accumulate_ops": 0,
+  "ir_mmad_ops": 2,
+  "ir_sites": [],
+  "kernel": "kda_sub3_wy_kernel",
+  "role": "replaced",
+  "stage": "wy",
+  "tree": "upstream",
+  "verdict": [
+   "MISS every MMAD initialises its L0C (no accumulate)"
+  ]
+ },
+ {
+  "calls": [
+   {
+    "dtypes": [
+     "f32",
+     "bf16",
+     "bf16"
+    ],
+    "in": "kda_sub45_fused_kernel",
+    "is_init": "True",
+    "line": 282,
+    "mnk": [
+     "L",
+     "V_BLOCK",
+     "K_DIM"
+    ],
+    "op": "mmad",
+    "splitk": null,
+    "splitn": null
+   },
+   {
+    "dtypes": [
+     "f32",
+     "bf16",
+     "bf16"
+    ],
+    "in": "kda_sub45_fused_kernel",
+    "is_init": "True",
+    "line": 354,
+    "mnk": [
+     "K_DIM",
+     "V_BLOCK",
+     "L"
+    ],
+    "op": "mmad",
+    "splitk": null,
+    "splitn": null
+   },
+   {
+    "dtypes": [
+     "f32",
+     "bf16",
+     "bf16"
+    ],
+    "in": "kda_sub45_fused_kernel",
+    "is_init": "True",
+    "line": 395,
+    "mnk": [
+     "L",
+     "V_BLOCK",
+     "K_DIM"
+    ],
+    "op": "mmad",
+    "splitk": null,
+    "splitn": null
+   },
+   {
+    "dtypes": [
+     "f32",
+     "bf16",
+     "bf16"
+    ],
+    "in": "kda_sub45_fused_kernel",
+    "is_init": "False",
+    "line": 401,
+    "mnk": [
+     "L",
+     "V_BLOCK",
+     "L"
+    ],
+    "op": "mmad",
+    "splitk": null,
+    "splitn": null
+   }
+  ],
+  "file": "kda_fwd/kernels/recurrent.py",
+  "group": "KDA fwd",
+  "ir_accumulate_ops": 1,
+  "ir_mmad_ops": 4,
+  "ir_sites": [
+   {
+    "expansion": [],
+    "file": "recurrent.py",
+    "library_fp32_rule": false,
+    "line": 401,
+    "operand_dtypes": [
+     "bf16",
+     "bf16"
+    ],
+    "root": "l0c_out"
+   }
+  ],
+  "kernel": "kda_sub45_fused_kernel",
+  "role": "replaced",
+  "stage": "recurrent",
+  "tree": "upstream",
+  "verdict": [
+   "EXPOSED-C bf16 accumulate, outside the fp32 rule (device probe)"
+  ]
+ },
+ {
+  "calls": [
+   {
+    "dtypes": [
+     "f32",
+     "bf16",
+     "bf16"
+    ],
+    "in": "inverse_mm_kernel",
+    "is_init": "True",
+    "line": 98,
+    "mnk": [
+     "L",
+     "D",
+     "D"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": "D"
+   },
+   {
+    "dtypes": [
+     "f32",
+     "bf16",
+     "bf16"
+    ],
+    "in": "inverse_mm_kernel",
+    "is_init": "True",
+    "line": 99,
+    "mnk": [
+     "L",
+     "D",
+     "D"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": "D"
+   },
+   {
+    "dtypes": [
+     "f32",
+     "bf16",
+     "bf16"
+    ],
+    "in": "inverse_mm_kernel",
+    "is_init": "True",
+    "line": 100,
+    "mnk": [
+     "L",
+     "D",
+     "L"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": "D"
+   },
+   {
+    "dtypes": [
+     "f32",
+     "bf16",
+     "bf16"
+    ],
+    "in": "inverse_mm_kernel",
+    "is_init": "True",
+    "line": 101,
+    "mnk": [
+     "L",
+     "D",
+     "D"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": "D"
+   },
+   {
+    "dtypes": [
+     "f32",
+     "bf16",
+     "bf16"
+    ],
+    "in": "inverse_mm_kernel",
+    "is_init": "True",
+    "line": 151,
+    "mnk": [
+     "L",
+     "D",
+     "L"
+    ],
+    "op": "matmul",
+    "splitk": null,
+    "splitn": "D"
+   }
+  ],
+  "file": "kda_bwd/kernels/inverse_mm.py",
+  "group": "KDA bwd",
+  "ir_error": "PassError: local_mutex: cube needs 34 mutex IDs (maximum 32) at #18 loc(\"inverse_mm.py:65:15\"); %_l0a: 2 slots; %_l0b: 2 slots; %l1_do: 2 slots; %l1_vnew: 2 slots; %l1_dv: 2 slots; %l1_h: 2 slots; %l1",
+  "kernel": "inverse_mm_kernel",
+  "role": "replaced",
+  "stage": "inverse_mm",
+  "tree": "upstream",
+  "verdict": [
+   "MISS every MMAD initialises its L0C (no accumulate)",
+   "IR: PassError: local_mutex: cube needs 34 mutex IDs (maximum 32) at #18 loc(\"inverse_mm.py:65:15\"); %_l0a: 2 slots; %_l0b: 2 slots; %l1_do: 2 slots; %l1_vnew: 2 slots; %l1_dv: 2 slots; %l1_h: 2 slots; %l1"
+  ]
+ },
+ {
+  "calls": [],
+  "file": "kda_bwd/kernels/finalize_pre.py",
+  "group": "KDA bwd",
+  "ir_accumulate_ops": 0,
+  "ir_mmad_ops": 0,
+  "ir_sites": [],
+  "kernel": "finalize_pre_kernel",
+  "role": "replaced",
+  "stage": "finalize_pre",
+  "tree": "upstream",
+  "verdict": [
+   "MISS no cube matmul"
+  ]
+ },
+ {
+  "calls": [],
+  "file": "kda_bwd/kernels/finalize_post.py",
+  "group": "KDA bwd",
+  "ir_accumulate_ops": 0,
+  "ir_mmad_ops": 0,
+  "ir_sites": [],
+  "kernel": "finalize_post_kernel",
+  "role": "replaced",
+  "stage": "finalize_post",
+  "tree": "upstream",
+  "verdict": [
+   "MISS no cube matmul"
+  ]
+ }
+]

@@ -1,0 +1,548 @@
+{
+  "backend": "cce",
+  "cases": [
+    {
+      "block_dim": 1,
+      "comparison": {
+        "dbeta": {
+          "comparison": {
+            "atol": 2e-05,
+            "max_relative_l2": 0.0001,
+            "mode": "allclose",
+            "reason": "Fixed per-gradient/task intermediate FP32 relative L2 budget; elementwise bound is supplemental.",
+            "rtol": 0.0002
+          },
+          "max_abs_error": 8.847564458847046e-09,
+          "passed": true,
+          "relative_l2_error": 3.3355656418909074e-07
+        },
+        "dg": {
+          "comparison": {
+            "atol": 2e-05,
+            "max_relative_l2": 0.0001,
+            "mode": "allclose",
+            "reason": "Fixed per-gradient/task intermediate FP32 relative L2 budget; elementwise bound is supplemental.",
+            "rtol": 0.0002
+          },
+          "max_abs_error": 1.1175870895385742e-08,
+          "passed": true,
+          "relative_l2_error": 6.088808791038023e-07
+        },
+        "dk": {
+          "comparison": {
+            "atol": 2e-05,
+            "max_relative_l2": 0.0001,
+            "mode": "allclose",
+            "reason": "Fixed per-gradient/task intermediate FP32 relative L2 budget; elementwise bound is supplemental.",
+            "rtol": 0.0002
+          },
+          "max_abs_error": 1.4901161193847656e-08,
+          "passed": true,
+          "relative_l2_error": 1.076295387980258e-07
+        },
+        "dq": {
+          "comparison": {
+            "atol": 2e-05,
+            "max_relative_l2": 0.0001,
+            "mode": "allclose",
+            "reason": "Fixed per-gradient/task intermediate FP32 relative L2 budget; elementwise bound is supplemental.",
+            "rtol": 0.0002
+          },
+          "max_abs_error": 2.3283064365386963e-10,
+          "passed": true,
+          "relative_l2_error": 1.0973521828633568e-07
+        },
+        "dv": {
+          "comparison": {
+            "atol": 2e-05,
+            "max_relative_l2": 0.0001,
+            "mode": "allclose",
+            "reason": "Fixed per-gradient/task intermediate FP32 relative L2 budget; elementwise bound is supplemental.",
+            "rtol": 0.0002
+          },
+          "max_abs_error": 2.60770320892334e-08,
+          "passed": true,
+          "relative_l2_error": 2.220408102761993e-07
+        }
+      },
+      "execution_evidence": [
+        {
+          "backend_executed": false,
+          "block_dim": 1,
+          "device": "a5",
+          "kernel": "gdn_bwd_checkpoints",
+          "launcher": "sim",
+          "model": "functional Surface IR",
+          "requested_backend": "cce",
+          "sim_processes": "threads",
+          "stage": "sim"
+        },
+        {
+          "backend_executed": false,
+          "block_dim": 1,
+          "device": "a5",
+          "kernel": "gdn_bwd_reverse",
+          "launcher": "sim",
+          "model": "functional Surface IR",
+          "requested_backend": "cce",
+          "sim_processes": "threads",
+          "stage": "sim"
+        },
+        {
+          "backend_executed": false,
+          "block_dim": 1,
+          "device": "a5",
+          "kernel": "gdn_bwd_group_reduce",
+          "launcher": "sim",
+          "model": "functional Surface IR",
+          "requested_backend": "cce",
+          "sim_processes": "threads",
+          "stage": "sim"
+        },
+        {
+          "backend_executed": false,
+          "block_dim": 1,
+          "device": "a5",
+          "kernel": "gdn_bwd_checkpoints",
+          "launcher": "sim",
+          "model": "functional Surface IR",
+          "requested_backend": "cce",
+          "sim_processes": "threads",
+          "stage": "sim"
+        },
+        {
+          "backend_executed": false,
+          "block_dim": 1,
+          "device": "a5",
+          "kernel": "gdn_bwd_reverse",
+          "launcher": "sim",
+          "model": "functional Surface IR",
+          "requested_backend": "cce",
+          "sim_processes": "threads",
+          "stage": "sim"
+        },
+        {
+          "backend_executed": false,
+          "block_dim": 1,
+          "device": "a5",
+          "kernel": "gdn_bwd_group_reduce",
+          "launcher": "sim",
+          "model": "functional Surface IR",
+          "requested_backend": "cce",
+          "sim_processes": "threads",
+          "stage": "sim"
+        }
+      ],
+      "id": "grid_r1_c1_both_bd1",
+      "parameters": {
+        "B": 1,
+        "H": 2,
+        "HV": 2,
+        "N": 1,
+        "T": 64,
+        "kind": "random",
+        "mode": "both"
+      },
+      "passed": true,
+      "reference": {
+        "dbeta": {
+          "comparison": {
+            "atol": 2e-05,
+            "max_relative_l2": 0.0001,
+            "mode": "allclose",
+            "reason": "Fixed per-gradient/task intermediate FP32 relative L2 budget; elementwise bound is supplemental.",
+            "rtol": 0.0002
+          },
+          "dtype": "float32",
+          "sha256": "5960812c31e472d0fbf320aa9f80bee6b7e6e28e77c90313b96b6d77db612596",
+          "shape": [
+            1,
+            64,
+            2
+          ]
+        },
+        "dg": {
+          "comparison": {
+            "atol": 2e-05,
+            "max_relative_l2": 0.0001,
+            "mode": "allclose",
+            "reason": "Fixed per-gradient/task intermediate FP32 relative L2 budget; elementwise bound is supplemental.",
+            "rtol": 0.0002
+          },
+          "dtype": "float32",
+          "sha256": "b1744f515e3d97ae32ccb3d7e907694cb490de6c1d0988b6f71f2ca25b798943",
+          "shape": [
+            1,
+            64,
+            2
+          ]
+        },
+        "dk": {
+          "comparison": {
+            "atol": 2e-05,
+            "max_relative_l2": 0.0001,
+            "mode": "allclose",
+            "reason": "Fixed per-gradient/task intermediate FP32 relative L2 budget; elementwise bound is supplemental.",
+            "rtol": 0.0002
+          },
+          "dtype": "float32",
+          "sha256": "ba228ac2be8e18a090852b3aaa98d4d1476d246fcc50dd1b34708cef7cd845a1",
+          "shape": [
+            1,
+            64,
+            2,
+            128
+          ]
+        },
+        "dq": {
+          "comparison": {
+            "atol": 2e-05,
+            "max_relative_l2": 0.0001,
+            "mode": "allclose",
+            "reason": "Fixed per-gradient/task intermediate FP32 relative L2 budget; elementwise bound is supplemental.",
+            "rtol": 0.0002
+          },
+          "dtype": "float32",
+          "sha256": "9419f9f08985ed45f297620426fe2607817f80a90f7ee9ad3cd178d959611347",
+          "shape": [
+            1,
+            64,
+            2,
+            128
+          ]
+        },
+        "dv": {
+          "comparison": {
+            "atol": 2e-05,
+            "max_relative_l2": 0.0001,
+            "mode": "allclose",
+            "reason": "Fixed per-gradient/task intermediate FP32 relative L2 budget; elementwise bound is supplemental.",
+            "rtol": 0.0002
+          },
+          "dtype": "float32",
+          "sha256": "91ac83f53fbd15b5c52ea7dac9fea34084477c51f942270d0042703dfc1664ea",
+          "shape": [
+            1,
+            64,
+            2,
+            128
+          ]
+        }
+      },
+      "seed": 91000,
+      "stage_comparison": {
+        "checkpoints": {
+          "comparison": {
+            "atol": 2e-05,
+            "max_relative_l2": 0.0001,
+            "mode": "allclose",
+            "reason": "Fixed per-gradient/task intermediate FP32 relative L2 budget; elementwise bound is supplemental.",
+            "rtol": 0.0002
+          },
+          "max_abs_error": 0.0,
+          "passed": true,
+          "relative_l2_error": 0.0
+        },
+        "dbeta": {
+          "comparison": {
+            "atol": 2e-05,
+            "max_relative_l2": 0.0001,
+            "mode": "allclose",
+            "reason": "Fixed per-gradient/task intermediate FP32 relative L2 budget; elementwise bound is supplemental.",
+            "rtol": 0.0002
+          },
+          "max_abs_error": 8.847564458847046e-09,
+          "passed": true,
+          "relative_l2_error": 3.3355656418909074e-07
+        },
+        "dg": {
+          "comparison": {
+            "atol": 2e-05,
+            "max_relative_l2": 0.0001,
+            "mode": "allclose",
+            "reason": "Fixed per-gradient/task intermediate FP32 relative L2 budget; elementwise bound is supplemental.",
+            "rtol": 0.0002
+          },
+          "max_abs_error": 1.1175870895385742e-08,
+          "passed": true,
+          "relative_l2_error": 6.088808791038023e-07
+        },
+        "dk": {
+          "comparison": {
+            "atol": 2e-05,
+            "max_relative_l2": 0.0001,
+            "mode": "allclose",
+            "reason": "Fixed per-gradient/task intermediate FP32 relative L2 budget; elementwise bound is supplemental.",
+            "rtol": 0.0002
+          },
+          "max_abs_error": 0.0,
+          "passed": true,
+          "relative_l2_error": 0.0
+        },
+        "dk_parts": {
+          "comparison": {
+            "atol": 2e-05,
+            "max_relative_l2": 0.0001,
+            "mode": "allclose",
+            "reason": "Fixed per-gradient/task intermediate FP32 relative L2 budget; elementwise bound is supplemental.",
+            "rtol": 0.0002
+          },
+          "max_abs_error": 1.4901161193847656e-08,
+          "passed": true,
+          "relative_l2_error": 1.076295387980258e-07
+        },
+        "dq": {
+          "comparison": {
+            "atol": 2e-05,
+            "max_relative_l2": 0.0001,
+            "mode": "allclose",
+            "reason": "Fixed per-gradient/task intermediate FP32 relative L2 budget; elementwise bound is supplemental.",
+            "rtol": 0.0002
+          },
+          "max_abs_error": 0.0,
+          "passed": true,
+          "relative_l2_error": 0.0
+        },
+        "dq_parts": {
+          "comparison": {
+            "atol": 2e-05,
+            "max_relative_l2": 0.0001,
+            "mode": "allclose",
+            "reason": "Fixed per-gradient/task intermediate FP32 relative L2 budget; elementwise bound is supplemental.",
+            "rtol": 0.0002
+          },
+          "max_abs_error": 2.3283064365386963e-10,
+          "passed": true,
+          "relative_l2_error": 1.0973521828633568e-07
+        },
+        "dv": {
+          "comparison": {
+            "atol": 2e-05,
+            "max_relative_l2": 0.0001,
+            "mode": "allclose",
+            "reason": "Fixed per-gradient/task intermediate FP32 relative L2 budget; elementwise bound is supplemental.",
+            "rtol": 0.0002
+          },
+          "max_abs_error": 2.60770320892334e-08,
+          "passed": true,
+          "relative_l2_error": 2.220408102761993e-07
+        },
+        "final_state": {
+          "comparison": {
+            "atol": 2e-05,
+            "max_relative_l2": 0.0001,
+            "mode": "allclose",
+            "reason": "Fixed per-gradient/task intermediate FP32 relative L2 budget; elementwise bound is supplemental.",
+            "rtol": 0.0002
+          },
+          "max_abs_error": 9.313225746154785e-10,
+          "passed": true,
+          "relative_l2_error": 1.539235109877958e-08
+        },
+        "tape": {
+          "comparison": {
+            "atol": 2e-05,
+            "max_relative_l2": 0.0001,
+            "mode": "allclose",
+            "reason": "Fixed per-gradient/task intermediate FP32 relative L2 budget; elementwise bound is supplemental.",
+            "rtol": 0.0002
+          },
+          "max_abs_error": 1.862645149230957e-09,
+          "passed": true,
+          "relative_l2_error": 1.3682198289596887e-08
+        }
+      },
+      "stage_reference": {
+        "checkpoints": {
+          "comparison": {
+            "atol": 2e-05,
+            "max_relative_l2": 0.0001,
+            "mode": "allclose",
+            "reason": "Fixed per-gradient/task intermediate FP32 relative L2 budget; elementwise bound is supplemental.",
+            "rtol": 0.0002
+          },
+          "dtype": "float32",
+          "sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471",
+          "shape": [
+            1,
+            1,
+            2,
+            128,
+            128
+          ]
+        },
+        "dbeta": {
+          "comparison": {
+            "atol": 2e-05,
+            "max_relative_l2": 0.0001,
+            "mode": "allclose",
+            "reason": "Fixed per-gradient/task intermediate FP32 relative L2 budget; elementwise bound is supplemental.",
+            "rtol": 0.0002
+          },
+          "dtype": "float32",
+          "sha256": "5960812c31e472d0fbf320aa9f80bee6b7e6e28e77c90313b96b6d77db612596",
+          "shape": [
+            1,
+            64,
+            2
+          ]
+        },
+        "dg": {
+          "comparison": {
+            "atol": 2e-05,
+            "max_relative_l2": 0.0001,
+            "mode": "allclose",
+            "reason": "Fixed per-gradient/task intermediate FP32 relative L2 budget; elementwise bound is supplemental.",
+            "rtol": 0.0002
+          },
+          "dtype": "float32",
+          "sha256": "b1744f515e3d97ae32ccb3d7e907694cb490de6c1d0988b6f71f2ca25b798943",
+          "shape": [
+            1,
+            64,
+            2
+          ]
+        },
+        "dk": {
+          "comparison": {
+            "atol": 2e-05,
+            "max_relative_l2": 0.0001,
+            "mode": "allclose",
+            "reason": "Fixed per-gradient/task intermediate FP32 relative L2 budget; elementwise bound is supplemental.",
+            "rtol": 0.0002
+          },
+          "dtype": "float32",
+          "sha256": "ba228ac2be8e18a090852b3aaa98d4d1476d246fcc50dd1b34708cef7cd845a1",
+          "shape": [
+            1,
+            64,
+            2,
+            128
+          ]
+        },
+        "dk_parts": {
+          "comparison": {
+            "atol": 2e-05,
+            "max_relative_l2": 0.0001,
+            "mode": "allclose",
+            "reason": "Fixed per-gradient/task intermediate FP32 relative L2 budget; elementwise bound is supplemental.",
+            "rtol": 0.0002
+          },
+          "dtype": "float32",
+          "sha256": "ba228ac2be8e18a090852b3aaa98d4d1476d246fcc50dd1b34708cef7cd845a1",
+          "shape": [
+            1,
+            64,
+            2,
+            128
+          ]
+        },
+        "dq": {
+          "comparison": {
+            "atol": 2e-05,
+            "max_relative_l2": 0.0001,
+            "mode": "allclose",
+            "reason": "Fixed per-gradient/task intermediate FP32 relative L2 budget; elementwise bound is supplemental.",
+            "rtol": 0.0002
+          },
+          "dtype": "float32",
+          "sha256": "9419f9f08985ed45f297620426fe2607817f80a90f7ee9ad3cd178d959611347",
+          "shape": [
+            1,
+            64,
+            2,
+            128
+          ]
+        },
+        "dq_parts": {
+          "comparison": {
+            "atol": 2e-05,
+            "max_relative_l2": 0.0001,
+            "mode": "allclose",
+            "reason": "Fixed per-gradient/task intermediate FP32 relative L2 budget; elementwise bound is supplemental.",
+            "rtol": 0.0002
+          },
+          "dtype": "float32",
+          "sha256": "9419f9f08985ed45f297620426fe2607817f80a90f7ee9ad3cd178d959611347",
+          "shape": [
+            1,
+            64,
+            2,
+            128
+          ]
+        },
+        "dv": {
+          "comparison": {
+            "atol": 2e-05,
+            "max_relative_l2": 0.0001,
+            "mode": "allclose",
+            "reason": "Fixed per-gradient/task intermediate FP32 relative L2 budget; elementwise bound is supplemental.",
+            "rtol": 0.0002
+          },
+          "dtype": "float32",
+          "sha256": "91ac83f53fbd15b5c52ea7dac9fea34084477c51f942270d0042703dfc1664ea",
+          "shape": [
+            1,
+            64,
+            2,
+            128
+          ]
+        },
+        "final_state": {
+          "comparison": {
+            "atol": 2e-05,
+            "max_relative_l2": 0.0001,
+            "mode": "allclose",
+            "reason": "Fixed per-gradient/task intermediate FP32 relative L2 budget; elementwise bound is supplemental.",
+            "rtol": 0.0002
+          },
+          "dtype": "float32",
+          "sha256": "03d071949ad8643f01d85183a8906516674a3b99b001ea2e54ba21702e46d555",
+          "shape": [
+            1,
+            2,
+            128,
+            128
+          ]
+        },
+        "tape": {
+          "comparison": {
+            "atol": 2e-05,
+            "max_relative_l2": 0.0001,
+            "mode": "allclose",
+            "reason": "Fixed per-gradient/task intermediate FP32 relative L2 budget; elementwise bound is supplemental.",
+            "rtol": 0.0002
+          },
+          "dtype": "float32",
+          "sha256": "9ddd17140f4b7ac30642fc79b63334b368f17dc0f7fccb76986107909d032508",
+          "shape": [
+            1,
+            2,
+            64,
+            128,
+            128
+          ]
+        }
+      }
+    }
+  ],
+  "command": "check",
+  "contract_sha256": "4375e02ca84107a819a1d2f6486c38ec92a24dde1789cef59dd2786306febe90",
+  "device": "a5",
+  "dsl_imported": true,
+  "kernel_imported": true,
+  "launcher": "sim",
+  "passed": true,
+  "runner_sha256": "8e91d95ed0294ddbfc204957b8bf77606a79123655fc096963b94658b633566b",
+  "schema": "ascriptor.unit-result/1",
+  "simulator_imported": true,
+  "stage": "sim",
+  "started_at": "2026-09-19T13:34:29.129766+00:00",
+  "unit": "a5.gdn_chunk_bwd",
+  "versions": {
+    "ascriptor": "0.1.0",
+    "numpy": "1.26.4",
+    "python": "3.11.15",
+    "torch": "2.10.0+cpu"
+  }
+}

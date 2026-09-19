@@ -1,0 +1,38 @@
+{
+  "stage": "host_test_selection",
+  "environment": {
+    "python": "3.11.15",
+    "torch": "2.10.0+cpu",
+    "ascriptor": "0.1.0",
+    "library_pin": "90cfcdc720bbcd66e8bd4361c4dd4fbc1a2a57b5",
+    "fla_pin": "e52dbc0ea19d3a40d7ab7f9eed855d2b473994d2"
+  },
+  "oracle_binding": "Explicit externally selected pinned standalone naive sources; no full FLA package import",
+  "runs": [
+    {
+      "passed": 567,
+      "skipped": 4,
+      "seconds": 134.72,
+      "log": "host-full.log",
+      "scope": "CPU-only selection before four additional backward shape-rejection cases; four cache-adapter skips require full FLA",
+      "reproduction_command": "python -m pytest tests/ -q -rs --noconftest --ignore=tests/test_kda_fwd_npu.py --ignore=tests/test_kda_bwd_npu.py --ignore=tests/test_kda_bwd_deep_npu.py --ignore=tests/test_kda_caches_npu.py --ignore=tests/test_kda_layer_npu.py"
+    },
+    {
+      "passed": 55,
+      "skipped": 0,
+      "seconds": 8.95,
+      "log": "host-tests-final.log",
+      "scope": "Dedicated backward tests after the four additional rejection cases",
+      "reproduction_command": "python -m pytest tests/test_gdn_chunk_bwd.py -q --noconftest"
+    },
+    {
+      "passed": 67,
+      "skipped": 0,
+      "seconds": 8.88,
+      "log": "host-tests-fp32-only.log",
+      "scope": "Final FP32-only public wrapper; 15 BF16 q/k/v/do rejection cases across three launchers with zero tensor operations before rejection",
+      "reproduction_command": "python -m pytest tests/test_gdn_chunk_bwd.py -q --noconftest"
+    }
+  ],
+  "scope": "Separate runs; no full repository NPU-suite claim"
+}

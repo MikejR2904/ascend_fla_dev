@@ -1,0 +1,14 @@
+Traceback (most recent call last):
+  File "<TASK_PRIVATE_PATH>", line 14, in <module>
+    expected=json.loads((root/'config/expected-sources.json').read_text())
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<ENV_PRIVATE_PATH>", line 346, in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<ENV_PRIVATE_PATH>", line 338, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<ENV_PRIVATE_PATH>", line 354, in raw_decode
+    obj, end = self.scan_once(s, idx)
+               ^^^^^^^^^^^^^^^^^^^^^^
+json.decoder.JSONDecodeError: Unterminated string starting at: line 1 column 32735 (char 32734)
