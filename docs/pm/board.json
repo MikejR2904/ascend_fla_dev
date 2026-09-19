@@ -777,6 +777,10 @@
         {
           "at": "2026-09-19T15:17",
           "summary": "ACK（eta 10h，自述）：缺陷原始记录已定位为 ascriptor 库缺陷 M10-081（A2 系 FP32 短 MMAD 累加进同一 L0C 时缺 PIPE_M settle），修复候选已在 pin 90cfcdc 内（desugar 对 a2 系 FP32 split-K 自动插 barrier；手写 MMAD 链只有 lint trap、不自动修）；计划：摘录记录并查实 a2 profile；repro_splitk_fp32.py（原 case + 手写 MMAD 链探针 FP32/BF16/FP16 × M16/32/64 × 有无 barrier，CPU 参考对 sim/pipesim，--profile a2|a5 对照，--launcher aclnn 在 910B3 真机实跑）；25 个 kernel 逐个列 file:line 命中表（初扫：KDA intra 的 FP32 split-K、KDA/GDN triangular inverse 与 GDN bwd finalize 的 FP32 is_init=False 链，后者正是 M16 失效形状且不在自动修复范围内）；绕行方案表 + fp32 验证计划，脱敏回执进 benchmarks/a2/evidence/；不改任何 kernel 源码与 ascriptor 仓。状态 assigned→in_progress"
+        },
+        {
+          "at": "2026-09-19T16:10",
+          "summary": "STATUS（15:24Z，自述）：缺陷原始记录是 ascriptor 库缺陷 M10-081（A2 系两次短 FP32 MMAD 写同一 L0C 时硬件不互锁）；修复在 pin 90cfcdc 里，desugar.py / lint.py 的 sha256 与修复回执逐字相同；真机 a2（910B3，CANN 9.0.0）cube_core_num=20 / vector_core_num=40，与 ascriptor a2→b3 profile 声明一致；FP32 split-K 三个 case 5/5 逐位；命中表初版 25 个在用 kernel：FP32 split-K 1 个、FP32 累加链未 settle 3 个、BF16 累加链 2 个、其余 19 个未命中。RISK silent-wrong-result（15:56Z，自述）：pin 里 M10-081 的修复按 dtype 收窄，BF16/FP16 的 split-K 在 910B3 / CANN 9.0.0 上 M16 输出有限但全错（1022–1024/1024 元素不对）、M32 触发 AI Core 异常（507015）、M64 逐位；只在生成 CCE 的 MMAD 分支后补一行 PipeBarrier<PIPE_M>() 后 M16/M32 的 BF16/FP16 全部逐位，只插注释的 sham 版照样错；手写 8 段 K16 链不加 barrier 真机 5/5 逐位（背靠背发出才踩到）；sim/pipesim 在 a2/a5 两个 profile 都看不出。本仓现有 25 个在用 kernel 都不用 BF16/FP16 split-K，A5 现有路径不受影响；A2 派生单元若用则中招。PM 核对：pin 里 desugar.py:411 确实只在 a2 系且 A/B 均为 f32 时插 barrier，注释写明其他 dtype 不在范围内，sha256 与申领人所报一致（静态部分成立）；真机部分 PM 无 A2 真机、未复现，按原始证据审，A2-11 之前只作观测。已上报用户（需转给 ascriptor 所有者，本仓不改 ascriptor）；A2-03 规格加了线索；gaps.json 两条与 AGENTS.md §2 的措辞改写等 DONE 证据（含 docs/pm/deltas/A2-01.json）到了再做"
         }
       ],
       "result": null
@@ -3129,6 +3133,10 @@
         {
           "at": "2026-09-19T15:49",
           "summary": "用户 D-PM-35：BF16 计算必须 kernel 侧、不能 host 加宽。GDA-03 的 BF16 公共入口（q.float() 加宽、梯度转回）因此不能进交付：规格已加「本任务不含 BF16 计算」——公共入口对 BF16 显式报错并指向 BF-02，规格里的 BF16 条款作废，FP32 证据不受影响；已在 #91 通知申领人"
+        },
+        {
+          "at": "2026-09-19T16:10",
+          "summary": "DONE（15:37Z，早于 D-PM-35 通知）与两条 STATUS（15:21Z、16:05Z），自述：DONE 声称 276 条原生记录 + 2070 对跨 bd 字节相同数组 + 1800 个计时样本，并修了占用监控（此前的 FD 采样器作为失败诊断保留）；基线是任务自带的「saved-boundary-checkpoint 伴随（不含边界生成）」，候选是完整公共 API（T4096 FP32 基线 545.4ms vs 候选 645.2ms，无速度门槛）。16:05Z 的 STATUS（在 D-PM-35 通知之后）：申领人接受收窄为 FP32-only 交付——q/k/v/do 为 BF16 显式拒绝并指向 BF-02、删除公共入口的加宽与回转，补拒绝路径测试、更新契约/文档/FP32 证据摘要，对交付源码跑完整 T4096 FP32 closeout（对比早先实际输出字节哈希）、刷新清单并重做 FP32 同卡计时。因此 15:37Z 的 DONE 被规格变更取代，PM 等更新后的 DONE 再审（PR #98 仍是草稿）；无阻塞"
         }
       ],
       "result": null,
@@ -3277,6 +3285,10 @@
         {
           "at": "2026-09-19T15:49",
           "summary": "用户 D-PM-35：规格加「BF16 显式拒绝、不 host 加宽」，BF16 kernel 侧另有 BF 系列任务。仍 gated"
+        },
+        {
+          "at": "2026-09-19T16:10",
+          "summary": "GDN 系列 session 在 #93 申请 PK-05（条件：GDA-03 关闭且规格冻结后正式 ASSIGN）。PK-05 仍 gated（外部需求，放行是用户的事）且依赖 GDA-03；回 NO_TASK。按 D-PM-35，这个 session 在 GDA-03 关闭后的下一个是 BF-01（P0、可派、在它的 GDN 工作线内）。申请里的预研要点（PGDN naive 有四处 FP32 物化、1e-12 钳位边界要覆盖 below/at/above、三路 cotangent 子集）留给规格细化时采纳"
         }
       ],
       "result": null,
