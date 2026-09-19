@@ -1,8 +1,84 @@
 # 交接：下一个会话从哪里接
 
-> 写于 2026-09-11，会话状态更新至 2026-09-18。**本文件只记"接手需要知道的"**；权威状态在
+> 写于 2026-09-11，会话状态更新至 2026-09-19。**本文件只记"接手需要知道的"**；权威状态在
 > `docs/matrix/*.json`（`gen_matrix.py` 校验），纪律在 `AGENTS.md`，分期在 `docs/plan.md`。
 > 三者冲突时以 json 为准，并顺手修本文件。
+
+## -1. 2026-09-19 PM 交接（本节最新，PM 换人先读这个）
+
+**这是一次 PM 账号本身的交接，不是算子进度交接。** 下面按"现在手上有什么、有什么坑、
+下一步该干什么"排列，配合 `docs/pm/board.json`（权威）和 `python tools/pm_board.py --render` 看。
+
+### 正在飞的任务（2 个）
+
+- **`A5K-02`**（issue #81，草稿 PR #83，`blocked`，assignee `limjiunnbin`，
+  session `01a0ae7a-d1c0-7f02-b040-be977ec47393`）：D-PM-24 批的 `inverse_mm.py` 派生
+  kernel（mutex 34→32 单槽化）已实现，公开前向选择/原始对照/全部 9 个 backward kernel
+  在 `block_dim=4` 下 vendor-compile 通过，bd1-3 编译中。**唯一的阻塞是设备空闲窗口**——
+  同机另有任务在跑，另一张卡不健康。写集含 `ascend_fla/ops/kda/chunk.py`、
+  `chunk_bwd.py`、`kda_fwd_stable/**`、`kda_bwd_stable/**`（含新加的 `inverse_mm.py` 与
+  `contract.json`）。最近一次 STATUS：2026-09-18T09:31。
+- **`PK-03`**（issue #69，`assigned`，assignee `limjiunnbin`，
+  session `gdn-pgdn-forward`——**与 A5K-02 是同账号不同 session，按并发规则合法并存**，
+  见下面"并发规则实战"）：PGDN chunk 前向 + ATK 预条件，D-PM-22 排期解锁（前置 `GDA-02`
+  已合入）。截至交接时还没有 ACK/STATUS，最近一条是 ASSIGN 本身（2026-09-18T09:52）。
+
+### 这次会话新合入的两个 PR（供快速对账，细节见 §0.x 各节和 gaps.json）
+
+- **PR #84（`GDA-02`，commit `8303167`）**：GDN chunk 前向补 GQA/GVA 分组
+  （`HV % H == 0`），`HV==H` 退化路径逐位不变（代码层面可证明，见 `kernels/pipeline.py`
+  的 `expand_inputs`）。合入后解锁了 `PK-03`。
+- **PR #85（`A2-40`，commit `1c1abe3`）**：整网融合算子（`causal_conv1d` /
+  `fused_rms_norm_gated` / `qk_l2norm_gate` / `packed_projection`）的清单/ABI/验收设计，
+  纯文档，没动 kernel。发现两处本仓层与 fla 的静默分叉：
+  - **D1**：`ascend_fla/layers/kda.py` 用 `F.normalize(x, eps=1e-6)`（对范数取 max），
+    fla 是 `x/sqrt(Σx²+eps)`（分母整体加 eps）。‖x‖=1e-4 时两者差出一个数量级
+    （fla 给 0.0995，本仓给 1.0）。近零行才触发，Kimi-Linear 的正常输入大概率碰不到。
+  - **D3**：`use_short_conv=False` 时本仓不做 silu，fla 做。Kimi-Linear 用短卷积碰不到，
+    但构造参数接受这个开关。
+  - 两条都记进了 `gaps.json`（`kda-layer-l2norm-eps-formula-diverges` P2、
+    `kda-layer-missing-silu-when-no-short-conv` P3），修复任务是新建的 **`A2-44`**
+    （纯主机侧，不动 kernel）。
+
+### 写集重叠：一个新问题类别，这次连续撞上两次
+
+`A5K-02` 在飞期间，`ascend_fla/ops/kda/chunk.py`（以及 `chunk_bwd.py`、
+`fused_recurrent.py`）实际上被它"占用"着——它要在这些文件里切换公开调度选中的
+recurrent kernel。这次会话里，**`A2-44`**（issue #86）和 **`A2-02`**（issue #31，
+`platform.py` 的 SoC 显式化重构）先后 APPLY，写集都覆盖到这几个文件，都被我按
+write-set-overlap 转 `gated` 并加了 `deps: [..., A5K-02]`，NO_TASK 回复已发（issue
+#86、#31 各有一条说明）。
+
+**给下一个 PM 的提醒**：`A5K-02` 合入之后，`A2-02` 和 `A2-44` 会同时解锁——**它们两个
+自己的写集也有重叠**（都碰 `ascend_fla/layers/kda.py` 和 `ops/kda/**` 的部分文件），
+到时候谁先 APPLY 谁先做，第二个大概率还要再 gate 一轮，除非先手动协调一下顺序或者
+缩小其中一个的写集。这不是这次会话能提前处理的（两个任务都还没人在写），只是先说清楚
+免得到时候被当成新问题重新分析一遍。
+
+### 并发规则实战：这次真的被用上了，而且是级联的
+
+`docs/pm/PROTOCOL.md` §3.1 的 `session` 并发规则（同账号、不同 `session`，可以同时持有
+两个任务）这次被 `limjiunnbin` 账号连续用了两轮：先是 GDA-01/A5K-01/A5K-02 这条链
+（`session: 01a0ae7a-...`），现在又叠加了 `PK-03` 的 `session: gdn-pgdn-forward`。
+**目前 `limjiunnbin` 账号同时占着 A5K-02（blocked）和 PK-03（assigned）两个任务**，
+这是按规则允许的形式条件（两边都填了 session 且不同），**不代表 PM 核实过真的是两个人
+在操作**——如果后续两边的 STATUS 内容有明显不一致或互相矛盾的地方，值得留意。
+
+### A2-40 留下的一个未决问题，需要用户拍板
+
+`A2-40` 文中提出：`A2-41` 涉及的四个融合算子对象都是纯向量运算、不经过 cube，
+技术上不受 split-K FP32 cube 缺陷影响，但 `AGENTS.md` §2 写的是"A2-11 之前 A2 上任何
+算子结论都不算数"（不分 cube/vector）。**要不要对纯向量单元放宽这条总闸，是规则层面的
+决定，我没有单方面处理，已经在 issue #54 的 CLOSE 里原样转达给用户，默认维持不放宽。**
+下一个 PM 如果看到用户对此表态，直接改 `AGENTS.md` §2 并解除 `A2-41` 的 `machines:a2`
+闸（如果用户决定放宽的话）。
+
+### 心跳 / 轮询状态（交接时刻）
+
+两个在飞任务的最近 STATUS/ASSIGN 时间都在 2026-09-18 上午，交接时刻约 2026-09-19
+凌晨，年龄约 16~17 小时，远未到 48h PING 阈值。`tools/pm_github.py poll` 的游标已推进
+到最新（2026-09-19T01:23:11Z），没有积压事件。下一个 PM 直接按
+`docs/pm/prompts/pm.md` 的轮询流程接手即可，不需要补跑历史事件。
 
 ## 0. 2026-09-15 更新：SoC 顺序变更 + 多 agent 协作（先读这节）
 
