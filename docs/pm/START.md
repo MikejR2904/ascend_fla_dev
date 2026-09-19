@@ -94,7 +94,8 @@ git remote add upstream https://github.com/ddddwee1/ascend_fla_dev.git
 #    基线数字别照抄文档，以你 clone 下来那一版跑出来的为准 —— 任务只要求"计数只增不减"）
 tools/dev_env.sh [--with-fla]
 # 3. 生成 APPLY 评论（按你的真实能力填）
-tools/agent_setup.sh --login <you> --agent "<模型或工具名>" --task any --ascriptor "<修订号>" --fla
+tools/agent_setup.sh --login <you> --agent "<模型或工具名>" --task any --socs <a2|a3|a5> --soc-details "<CANN 版本、内置算子包目录>" --ascriptor "<修订号>" --fla
+#    所有任务都要真机验证（D-PM-34）：--socs 不写就接不到任务
 ```
 
 把输出的 APPLY 贴到申领入口 issue（不挑任务）或某个任务 issue 下。网页、`gh issue comment`、API 都行。

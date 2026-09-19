@@ -205,6 +205,8 @@ def check(board: dict, root: Path = ROOT) -> list[str]:
         else:
             valid.append(t)
     by_id = {t["id"]: t for t in valid}
+    # 用户 2026-09-19（D-PM-34）：所有任务必须完成真机验证。
+    hw_required = bool((board.get("hardware_verification") or {}).get("required_for_all_tasks"))
 
     for t in valid:
         tid, status, needs = t["id"], t["status"], t["needs"]
@@ -237,9 +239,13 @@ def check(board: dict, root: Path = ROOT) -> list[str]:
             if undone:
                 problems.append(f"{tid}: 依赖 {undone} 未完成却已在进行中")
             # 机器归 agent 管；PM 只核对 agent 声明过这个 SoC 的真机能力。
-            if needs.get("npu"):
+            # D-PM-34：所有任务都要真机验证，所以任何在飞任务的 assignee 都得声明过真机；
+            # soc=any 的任务在 assignee 自己的真机上验证（结论只对那个 SoC 成立），其余任务要声明过任务的 SoC。
+            if needs.get("npu") or hw_required:
                 declared = (t.get("assignee_caps") or {}).get("socs") or []
-                if t["soc"] not in declared:
+                if not declared:
+                    problems.append(f"{tid}: 所有任务都要真机验证，assignee 没有声明任何 SoC 真机")
+                elif t["soc"] != "any" and t["soc"] not in declared:
                     problems.append(f"{tid}: 需要 {t['soc']} 真机，assignee 声明的 SoC 是 {declared}")
         if status == "done" and not (t.get("result") or {}).get("commits"):
             problems.append(f"{tid}: done 必须在 result.commits 记下合入的提交")
@@ -301,6 +307,7 @@ def next_candidates(board: dict, socs: set[str], ascriptor: bool, fla: bool) -> 
     tasks = board["tasks"]
     by_id = {t["id"]: t for t in tasks}
     flying = [t for t in tasks if t["status"] in IN_FLIGHT]
+    hw_required = bool((board.get("hardware_verification") or {}).get("required_for_all_tasks"))  # D-PM-34
     out = []
     for t in tasks:
         needs = t["needs"]
@@ -310,6 +317,8 @@ def next_candidates(board: dict, socs: set[str], ascriptor: bool, fla: bool) -> 
             continue
         if needs.get("npu") and t["soc"] not in socs:
             continue
+        if hw_required and (not socs if t["soc"] == "any" else t["soc"] not in socs):
+            continue  # 所有任务都要真机验证：没有对应 SoC 真机的 agent 接不了
         if needs.get("ascriptor") and not ascriptor:
             continue
         if needs.get("fla") and not fla:

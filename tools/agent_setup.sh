@@ -10,7 +10,7 @@
 #   --login L         你的 GitHub 账号（必填）
 #   --agent A         你是什么：模型 / 工具名，或 human（必填）
 #   --task ID|any     申领的任务；any 表示在申领入口 issue 由 PM 派
-#   --socs a2,a3      你能用的 SoC 真机；纯主机侧不写
+#   --socs a2,a3      你能用的 SoC 真机。所有任务都要真机验证（D-PM-34），不写就接不到任务
 #   --soc-details S   CANN 版本、内置算子包覆盖（不要写主机信息）
 #   --ascriptor REV   有 ascriptor workspace 时写 library 修订号
 #   --fla             装了 fla
