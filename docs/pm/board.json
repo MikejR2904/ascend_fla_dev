@@ -2702,6 +2702,10 @@
         {
           "at": "2026-09-19T12:42",
           "summary": "申领人 APPLY 于 #92（session 01a0b7ce-…）；#90 是 #68 需求的重复，关闭。同一 issue 下出现申领人的 RISK silent-wrong-result（无 assignee，poll 标不采信）：原 PKDA 前向在域内对抗性门控（B1/T192/H8，每 chunk 首项 g=-154.9992、其余 -1e-5，跨度<155）的真机输出有限但超预算，公开 API 对 CPU FP32 naive 的相对 L2 o=1.30e-4、S=1.82e-4，首个偏差在 prepare 的 gc（连续 FP32 累加对 CPU cumsum 最大误差 3.35693359375e-4）——自述，原始日志在其私有工作区，PM 未见。PM 独立复算了机理数字：纯 FP32 顺序累加该 pattern 对高精度累加的最大偏差恰为 0.000335693359375（ulp(155)=1.526e-5，−1e-5 的加数每步被舍成 1 ulp），机理成立；kernel 实际就是这样累加、以及 o/S 超预算，PM 未复现。已把「一大后小」模式写进 PK-04 验收与陷阱；申领人提议的补偿累加修法未批准，放行后先定位再修。矩阵目前没有 PKDA 的真机结论，故没有需要更正的条目；gaps.json 待 DONE 审查见到原始证据后再记。已上报用户。申领人另自述：一台 CANN 9.2.0 机器上 pinned ascriptor 的 tensorutils_cce.h:143 与工具链 sys_macros_impl.h:17 都定义 g_coreType（重定义），已换另一套兼容工具链重跑；DONE 审查时评估是否记 gaps.json（版本字符串相同不代表头文件/编译器相同）。任务仍 gated，等用户放行"
+        },
+        {
+          "at": "2026-09-19T12:50",
+          "summary": "申领人在 #92 的纯文字评论（12:36Z，早于 PM 的 hold 回复，poll 不可见，PM 手工读到）自述：已在自己的工作区对 prepare 的 FP32 前缀求和做补偿累加（新增 512B 补偿行，13 个单槽 UB 缓冲 4736B），T64/H1 prepare-only 模型上 gc 误差 3.3569336e-4→0，pipesim 无 hazard/deadlock，PKDA 主机测试 51 passed；回到完整 B1/T4096/H8 真机后 bd4 的 28 个全链案例（含 3 个域内对抗种子，误差约 6e-6）与 10 项公开 API 状态检查通过，其余 bd 与同卡性能仍在跑；称正式交付分支已备为 task/PK-04。均为自述，PM 未见原始证据；没有 PR，任务仍 gated、无 assignee。PM 立场不变：修法未批准，放行后按规格先定位再修；PR 出现时按 gated 任务来源核对，审查与合入都要用户授权"
         }
       ],
       "result": null,
