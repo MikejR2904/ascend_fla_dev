@@ -68,12 +68,22 @@ def _cpu_reference_attn(q, k, v, g, beta, *args, **kwargs):
     ``exp(g_max - g)``，跨度超过 80 就在 fp32 上溢。递推版按 per-token 增量做
     ``exp(g_i)``（量级 ~1.5），任何跨度都安全。
     """
+    # Independent raw-input adapter; do not call production preprocessing.
+    if kwargs.get("use_qk_l2norm_in_kernel", False):
+        q = (q.float() / (q.float().square().sum(-1, keepdim=True) + 1e-6).sqrt()).bfloat16()
+        k = (k.float() / (k.float().square().sum(-1, keepdim=True) + 1e-6).sqrt()).bfloat16()
+    if kwargs.get("use_gate_in_kernel", False):
+        hv, kd = g.shape[-2:]
+        g = -kwargs["A_log"].float().exp().reshape(hv, 1) * torch.nn.functional.softplus(
+            g.float() + kwargs["dt_bias"].float().reshape(hv, kd))
+    if kwargs.get("use_beta_sigmoid_in_kernel", False):
+        beta = beta.float().sigmoid()
     o, state = kda_recurrent_ref(
         q.float(), k.float(), v.float(), g, beta,
         initial_state=kwargs.get("initial_state"),
         output_final_state=kwargs.get("output_final_state", False),
     )
-    return o.to(q.dtype), state
+    return o.to(v.dtype), state
 
 
 @pytest.mark.parametrize("b,t,num_heads,num_v_heads,hidden", [

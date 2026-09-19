@@ -31,6 +31,90 @@ __all__ = ["chunk_kda_fwd", "kda_fwd_kernels"]
 L_PER_CHUNK = 64
 HEAD_DIM = 128
 VALUE_DIM = 128
+
+
+def _l2norm(x: torch.Tensor) -> torch.Tensor:
+    """FLA's additive squared epsilon, evaluated in FP32 before ABI rounding."""
+    x = x.float()
+    return x / torch.sqrt(x.square().sum(dim=-1, keepdim=True) + 1e-6)
+
+
+# BF16 round-to-nearest bound, calibrated over 1,048,704 K=128 rows.
+# See test_kda_domain_checks.py: observed maximum norm 1.0027123859343965.
+_QK_NORM_TOL = 2 ** -8
+
+
+def _prepare_inputs(q, k, g, beta, *, A_log=None, dt_bias=None,
+                    use_qk_l2norm_in_kernel=False, use_gate_in_kernel=False,
+                    use_beta_sigmoid_in_kernel=False, qk_dtype=torch.bfloat16):
+    """Differentiable host-op preparation; never changes a disabled route.
+
+    All arithmetic is FP32. Only normalized q/k cross the requested ABI cast.
+    These flags describe input semantics; no new fusion is claimed.
+    """
+    def raw_tensor(name, x):
+        if not isinstance(x, torch.Tensor) or not x.is_floating_point():
+            raise ValueError(f"{name} must be a floating tensor for raw-input preparation")
+        if not x.is_contiguous():
+            raise ValueError(f"{name} must be contiguous before raw-input preparation")
+
+    if use_gate_in_kernel:
+        if A_log is None or dt_bias is None:
+            missing = ", ".join(n for n, x in (("A_log", A_log), ("dt_bias", dt_bias)) if x is None)
+            raise ValueError(f"use_gate_in_kernel=True requires {missing}")
+        for name, x in (("g", g), ("A_log", A_log), ("dt_bias", dt_bias)):
+            raw_tensor(name, x)
+        if g.dim() != 4:
+            raise ValueError("g must have shape [B,T,HV,K]")
+        hv, kd = g.shape[-2:]
+        if A_log.shape != (hv,):
+            raise ValueError(f"A_log must have shape [HV]=[{hv}], got {tuple(A_log.shape)}")
+        if dt_bias.shape != (hv * kd,):
+            raise ValueError(f"dt_bias must have shape [HV*K]=[{hv * kd}], got {tuple(dt_bias.shape)}")
+        if A_log.device != g.device or dt_bias.device != g.device:
+            raise ValueError("A_log and dt_bias must be on the same device as g")
+        g = -A_log.float().exp().view(hv, 1) * torch.nn.functional.softplus(
+            g.float() + dt_bias.float().view(hv, kd))
+    if use_qk_l2norm_in_kernel:
+        for name, x in (("q", q), ("k", k)):
+            raw_tensor(name, x)
+        if q.dim() != 4 or k.shape != q.shape:
+            raise ValueError("q and k must have the same shape [B,T,H,K]")
+        q, k = _l2norm(q).to(qk_dtype), _l2norm(k).to(qk_dtype)
+    if use_beta_sigmoid_in_kernel:
+        raw_tensor("beta", beta)
+        beta = beta.float().sigmoid()
+    return q, k, g, beta
+
+
+def _check_input_domain(q, k, g, beta, *, use_qk_l2norm_in_kernel=False,
+                        use_gate_in_kernel=False, use_beta_sigmoid_in_kernel=False):
+    """Chunk-only heuristic: small raw vectors cannot be distinguished."""
+    # Rank errors belong to the existing ABI guard in both execution paths.
+    # Numerical heuristics on malformed tensors would obscure that diagnostic;
+    # returning here never permits them through the lower-level shape checks.
+    if q.dim() != 4 or k.dim() != 4 or g.dim() != 4 or beta.dim() != 3:
+        return
+
+    def reject(name, flag, requirement):
+        raise ValueError(
+            f"{name} must satisfy {requirement}; this looks like a raw, unactivated input. "
+            f"Pass {flag}=True for raw inputs, or check_domain=False to opt out of "
+            "this heuristic (ABI and gate-span checks still apply).")
+
+    with torch.no_grad():
+        if not use_gate_in_kernel and not bool((torch.isfinite(g) & (g <= 0)).all()):
+            reject("g", "use_gate_in_kernel", "finite g <= 0")
+        if not use_beta_sigmoid_in_kernel and not bool(
+                (torch.isfinite(beta) & (beta > 0) & (beta < 1)).all()):
+            reject("beta", "use_beta_sigmoid_in_kernel", "finite beta in (0,1)")
+        if not use_qk_l2norm_in_kernel:
+            for name, x in (("q", q), ("k", k)):
+                norm = x.float().norm(dim=-1)
+                if not bool((torch.isfinite(norm) & (norm <= 1 + _QK_NORM_TOL)).all()):
+                    reject(name, "use_qk_l2norm_in_kernel", f"L2 norm <= {1 + _QK_NORM_TOL}")
+
+
 # ascriptor kda_fwd contract.json 的 shapes.block_dim 声明；只有这几个值被 cases 覆盖过。
 # 契约的 core_ownership 说明分区方式：gate 按向量核切 B*HV*C，scores/WY/inverse 按 cube
 # 组切，融合尾部按 B*HV 头对切（两个 V=64 tile 必须留在同一组）。

@@ -26,7 +26,7 @@ from typing import Any
 
 import torch
 
-from .chunk import HEAD_DIM, VALUE_DIM, _load_kernel
+from .chunk import HEAD_DIM, VALUE_DIM, _load_kernel, _prepare_inputs
 
 #: 本单元声明的 block_dim。**比 chunk 路径的 4 宽** —— 这个 kernel 只用向量核、
 #: 不碰 cube，而 ``GetVecNum() == 2 * block_dim``，物理上有 56 个向量核。
@@ -112,6 +112,12 @@ def fused_recurrent_kda(
     initial_state: torch.Tensor | None = None,
     output_final_state: bool = False,
     *,
+    A_log: torch.Tensor | None = None,
+    dt_bias: torch.Tensor | None = None,
+    use_qk_l2norm_in_kernel: bool = False,
+    use_gate_in_kernel: bool = False,
+    use_beta_sigmoid_in_kernel: bool = False,
+    check_domain: bool = True,
     device: str = "a5",
     block_dim: int = 1,
 ) -> tuple[torch.Tensor, torch.Tensor | None]:
@@ -122,12 +128,28 @@ def fused_recurrent_kda(
             dtype 任意浮点 —— 内部统一升到 fp32（decode 的量很小，见模块文档）。
         scale: q 的缩放，默认 ``128 ** -0.5``。**在 host 侧预乘进 q**。
         initial_state: ``[B,HV,128,128]`` float32，K 在前。
+        A_log, dt_bias: Raw-gate parameters with shapes ``[HV]`` and ``[HV*K]``;
+            both are required when ``use_gate_in_kernel=True``.
+        use_qk_l2norm_in_kernel: Normalize raw q/k in FP32 with additive
+            squared epsilon 1e-6, then round to v.dtype before the existing ABI.
+        use_gate_in_kernel: Apply ``-exp(A_log)*softplus(g+dt_bias)`` in FP32.
+        use_beta_sigmoid_in_kernel: Apply sigmoid to raw beta logits in FP32.
+            These flags select host-op preparation, not fused kernel execution.
+        check_domain: Accepted for API symmetry; heuristic domain checks run
+            only in chunk mode, never on each decode step. Shape checks remain.
 
     Returns:
         ``(o, final_state)``，``o`` 为 ``[B,T,HV,128]``（与输入同 dtype），
         ``final_state`` 为 ``[B,HV,128,128]`` float32 或 ``None``。
     """
     b, t, h, hv = _check(q, k, v, g, beta, initial_state, block_dim)
+    q, k, g, beta = _prepare_inputs(
+        q, k, g, beta, A_log=A_log, dt_bias=dt_bias,
+        use_qk_l2norm_in_kernel=use_qk_l2norm_in_kernel,
+        use_gate_in_kernel=use_gate_in_kernel,
+        use_beta_sigmoid_in_kernel=use_beta_sigmoid_in_kernel,
+        qk_dtype=v.dtype,
+    )
     out_dtype = v.dtype
     sc = HEAD_DIM ** -0.5 if scale is None else float(scale)
     groups = hv // h
