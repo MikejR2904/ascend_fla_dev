@@ -116,7 +116,7 @@ _Qwen3-Next 用它，六项 ABI 缺口待补（第四期，与本条无关）。
 |---|---|---|---|
 | `gdn_fwd` | 可申领 | 2/6 | [#35](https://github.com/ddddwee1/ascend_fla_dev/issues/35) A2-07 |
 | `gdn_bwd` | 可申领 | 0/5 | [#35](https://github.com/ddddwee1/ascend_fla_dev/issues/35) A2-07 |
-| `gdn_fused_recurrent` | 可申领 | 0/2 | — GDA-04 |
+| `gdn_fused_recurrent` | 可申领 | 0/2 | [#94](https://github.com/ddddwee1/ascend_fla_dev/issues/94) GDA-04 |
 | `gdn_chunk_fwd_a5` | 可申领 | — | _窄范围例外（D-PM-20/22）：非 GQA 前向 + GQA/GVA 分组均已合入（GDA-01/02）_ |
 
 <details><summary>gdn_fwd —— 2/6 完成，起点 A2-07、GDA-01</summary>
@@ -128,7 +128,7 @@ _Qwen3-Next 用它，六项 ABI 缺口待补（第四期，与本条无关）。
 | A2-K1 | [#44](https://github.com/ddddwee1/ascend_fla_dev/issues/44) | `a2` | bf16、fp32 | 🔒 gated (kernel-batch-approval) |  |
 | GDA-02 | [#82](https://github.com/ddddwee1/ascend_fla_dev/issues/82) | `a5` | bf16、fp32 | ✅ done |  |
 | A2-20 | [#45](https://github.com/ddddwee1/ascend_fla_dev/issues/45) | `a2` | bf16、fp32 | 🔒 gated (kernel-batch-approval) |  |
-| GDA-05 | — | `a5` | bf16、fp32 | 🔒 gated (user-decision) |  |
+| GDA-05 | [#96](https://github.com/ddddwee1/ascend_fla_dev/issues/96) | `a5` | bf16、fp32 | 🔒 gated (user-decision) |  |
 
 </details>
 
@@ -137,9 +137,9 @@ _Qwen3-Next 用它，六项 ABI 缺口待补（第四期，与本条无关）。
 | 任务 | issue | SoC | dtype | 状态 | 说明 |
 |---|---|---|---|---|---|
 | A2-07 | [#35](https://github.com/ddddwee1/ascend_fla_dev/issues/35) | `a2` | bf16、fp32 | ⬜ open | ★ 起点 |
-| GDA-03 | — | `a5` | bf16、fp32 | 🔒 gated (user-decision) | ★ 起点 |
+| GDA-03 | [#91](https://github.com/ddddwee1/ascend_fla_dev/issues/91) | `a5` | bf16、fp32 | 🔒 gated (user-decision) | ★ 起点 |
 | A2-K1 | [#44](https://github.com/ddddwee1/ascend_fla_dev/issues/44) | `a2` | bf16、fp32 | 🔒 gated (kernel-batch-approval) |  |
-| GDA-05 | — | `a5` | bf16、fp32 | 🔒 gated (user-decision) |  |
+| GDA-05 | [#96](https://github.com/ddddwee1/ascend_fla_dev/issues/96) | `a5` | bf16、fp32 | 🔒 gated (user-decision) |  |
 | A2-20 | [#45](https://github.com/ddddwee1/ascend_fla_dev/issues/45) | `a2` | bf16、fp32 | 🔒 gated (kernel-batch-approval) |  |
 
 </details>
@@ -149,7 +149,7 @@ _Qwen3-Next 用它，六项 ABI 缺口待补（第四期，与本条无关）。
 | 任务 | issue | SoC | dtype | 状态 | 说明 |
 |---|---|---|---|---|---|
 | A2-20 | [#45](https://github.com/ddddwee1/ascend_fla_dev/issues/45) | `a2` | bf16、fp32 | 🔒 gated (kernel-batch-approval) | ★ 起点 |
-| GDA-04 | — | `a5` | bf16、fp32 | 🔒 gated (user-decision) | ★ 起点 |
+| GDA-04 | [#94](https://github.com/ddddwee1/ascend_fla_dev/issues/94) | `a5` | bf16、fp32 | 🔒 gated (user-decision) | ★ 起点 |
 
 </details>
 
@@ -267,7 +267,7 @@ _权威来源已确立（2026-09-17，见 docs/research/pkda_semantics.md）：�
 | 任务 | issue | SoC | dtype | 状态 | 说明 |
 |---|---|---|---|---|---|
 | PK-02 | [#68](https://github.com/ddddwee1/ascend_fla_dev/issues/68) | `a5` | bf16、fp32 | ✅ done | ★ 起点 |
-| PK-04 | — | `a5` | bf16、fp32 | 🔒 gated (user-decision) |  |
+| PK-04 | [#92](https://github.com/ddddwee1/ascend_fla_dev/issues/92) | `a5` | bf16、fp32 | 🔒 gated (user-decision) |  |
 
 </details>
 
@@ -276,7 +276,7 @@ _权威来源已确立（2026-09-17，见 docs/research/pkda_semantics.md）：�
 | 任务 | issue | SoC | dtype | 状态 | 说明 |
 |---|---|---|---|---|---|
 | PK-03 | [#69](https://github.com/ddddwee1/ascend_fla_dev/issues/69) | `a5` | bf16、fp32 | ✅ done | ★ 起点 |
-| GDA-05 | — | `a5` | bf16、fp32 | 🔒 gated (user-decision) |  |
+| GDA-05 | [#96](https://github.com/ddddwee1/ascend_fla_dev/issues/96) | `a5` | bf16、fp32 | 🔒 gated (user-decision) |  |
 
 </details>
 

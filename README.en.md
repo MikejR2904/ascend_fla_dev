@@ -117,7 +117,7 @@ _Used by Qwen3-Next; six ABI gaps to close (phase 4, unrelated to this). **GDN/P
 |---|---|---|---|
 | `gdn_fwd` | open to agents | 2/6 | [#35](https://github.com/ddddwee1/ascend_fla_dev/issues/35) A2-07 |
 | `gdn_bwd` | open to agents | 0/5 | [#35](https://github.com/ddddwee1/ascend_fla_dev/issues/35) A2-07 |
-| `gdn_fused_recurrent` | open to agents | 0/2 | — GDA-04 |
+| `gdn_fused_recurrent` | open to agents | 0/2 | [#94](https://github.com/ddddwee1/ascend_fla_dev/issues/94) GDA-04 |
 | `gdn_chunk_fwd_a5` | open to agents | — | _Narrow exception (D-PM-20/22): non-GQA forward and GQA/GVA grouping both merged (GDA-01/02)_ |
 
 <details><summary>gdn_fwd —— 2/6 done，start A2-07、GDA-01</summary>
@@ -129,7 +129,7 @@ _Used by Qwen3-Next; six ABI gaps to close (phase 4, unrelated to this). **GDN/P
 | A2-K1 | [#44](https://github.com/ddddwee1/ascend_fla_dev/issues/44) | `a2` | bf16、fp32 | 🔒 gated (kernel-batch-approval) |  |
 | GDA-02 | [#82](https://github.com/ddddwee1/ascend_fla_dev/issues/82) | `a5` | bf16、fp32 | ✅ done |  |
 | A2-20 | [#45](https://github.com/ddddwee1/ascend_fla_dev/issues/45) | `a2` | bf16、fp32 | 🔒 gated (kernel-batch-approval) |  |
-| GDA-05 | — | `a5` | bf16、fp32 | 🔒 gated (user-decision) |  |
+| GDA-05 | [#96](https://github.com/ddddwee1/ascend_fla_dev/issues/96) | `a5` | bf16、fp32 | 🔒 gated (user-decision) |  |
 
 </details>
 
@@ -138,9 +138,9 @@ _Used by Qwen3-Next; six ABI gaps to close (phase 4, unrelated to this). **GDN/P
 | task | issue | SoC | dtype | status | note |
 |---|---|---|---|---|---|
 | A2-07 | [#35](https://github.com/ddddwee1/ascend_fla_dev/issues/35) | `a2` | bf16、fp32 | ⬜ open | ★ start |
-| GDA-03 | — | `a5` | bf16、fp32 | 🔒 gated (user-decision) | ★ start |
+| GDA-03 | [#91](https://github.com/ddddwee1/ascend_fla_dev/issues/91) | `a5` | bf16、fp32 | 🔒 gated (user-decision) | ★ start |
 | A2-K1 | [#44](https://github.com/ddddwee1/ascend_fla_dev/issues/44) | `a2` | bf16、fp32 | 🔒 gated (kernel-batch-approval) |  |
-| GDA-05 | — | `a5` | bf16、fp32 | 🔒 gated (user-decision) |  |
+| GDA-05 | [#96](https://github.com/ddddwee1/ascend_fla_dev/issues/96) | `a5` | bf16、fp32 | 🔒 gated (user-decision) |  |
 | A2-20 | [#45](https://github.com/ddddwee1/ascend_fla_dev/issues/45) | `a2` | bf16、fp32 | 🔒 gated (kernel-batch-approval) |  |
 
 </details>
@@ -150,7 +150,7 @@ _Used by Qwen3-Next; six ABI gaps to close (phase 4, unrelated to this). **GDN/P
 | task | issue | SoC | dtype | status | note |
 |---|---|---|---|---|---|
 | A2-20 | [#45](https://github.com/ddddwee1/ascend_fla_dev/issues/45) | `a2` | bf16、fp32 | 🔒 gated (kernel-batch-approval) | ★ start |
-| GDA-04 | — | `a5` | bf16、fp32 | 🔒 gated (user-decision) | ★ start |
+| GDA-04 | [#94](https://github.com/ddddwee1/ascend_fla_dev/issues/94) | `a5` | bf16、fp32 | 🔒 gated (user-decision) | ★ start |
 
 </details>
 
@@ -268,7 +268,7 @@ _Source of truth established (2026-09-17, see docs/research/pkda_semantics.md): 
 | task | issue | SoC | dtype | status | note |
 |---|---|---|---|---|---|
 | PK-02 | [#68](https://github.com/ddddwee1/ascend_fla_dev/issues/68) | `a5` | bf16、fp32 | ✅ done | ★ start |
-| PK-04 | — | `a5` | bf16、fp32 | 🔒 gated (user-decision) |  |
+| PK-04 | [#92](https://github.com/ddddwee1/ascend_fla_dev/issues/92) | `a5` | bf16、fp32 | 🔒 gated (user-decision) |  |
 
 </details>
 
@@ -277,7 +277,7 @@ _Source of truth established (2026-09-17, see docs/research/pkda_semantics.md): 
 | task | issue | SoC | dtype | status | note |
 |---|---|---|---|---|---|
 | PK-03 | [#69](https://github.com/ddddwee1/ascend_fla_dev/issues/69) | `a5` | bf16、fp32 | ✅ done | ★ start |
-| GDA-05 | — | `a5` | bf16、fp32 | 🔒 gated (user-decision) |  |
+| GDA-05 | [#96](https://github.com/ddddwee1/ascend_fla_dev/issues/96) | `a5` | bf16、fp32 | 🔒 gated (user-decision) |  |
 
 </details>
 
