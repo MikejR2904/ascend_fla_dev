@@ -2200,7 +2200,7 @@
       "wave": "W0",
       "soc": "a5",
       "priority": "P1",
-      "status": "in_progress",
+      "status": "review",
       "model": [
         "kimi-linear-48b-a3b"
       ],
@@ -2294,6 +2294,10 @@
         {
           "at": "2026-09-19T05:25",
           "summary": "STATUS（successor）：完整原生 backward 与全部必需回归通过（自述）——既有 5 个 case、4 个真实形状检查（含 B1/T4096/H32/HV32）、跨度 46/94/104/精确 105；六个梯度全部有限非零且低于未改的预算；完整 T4096 误差 dq .03035、dk .03451、dv .00354、dbeta .00332、dg .05706、dh0 .00234；exact105 用显式 FP32 可表示的门控增量，span106 被缓存版公开入口拒绝。缩小 inverse_mm sim/pipesim 8/8（五个完整数值输出、零 hazard、无死锁）；Aqk 12/12 对照按预期（奇数 C 的 original/qg-only 仍失败，repaired 干净）。公开网格 336/336 与跨 bd 比较通过：9240 个 head/chunk 行，双 CPU FP32 oracle，双公开入口，全部 9 个 cache，偶数 C 不变量；bd1/2/3/4 输出/cache/prefix-state 字节完全一致；最差相对 L2 输出 .003904291、状态 .004268510。原始输出失败计数新测 36/30/30/12（与 A5K-01 记录的 bd3=26 不同，它声明不复用旧数，DONE 审查时核对口径）。下一步：T1024/T4096 三轮同步三明治与 Torch NPU 基线，然后刷新报告/资格回执、验证脱敏归档恢复、最终主机/隐私检查再 ready/DONE。PR #83 仍草稿，非 DONE"
+        },
+        {
+          "at": "2026-09-19T06:35",
+          "summary": "DONE 收到（PR #83，头 3e3670f，非草稿；含逐条验收、SoC/CANN/opp、未过滤 verifier 行）。PM 审查完成，结论接受：写集 13/13、无红旗、隐私扫描无命中；stable 选修复版 recurrent、upstream 对奇数 C 提前拒、baseline 钉回原始（pin 版 library+kernels 上复跑 108 passed）；inverse_mm 与 pin 上游逐行 diff 仅入口改名 + l0c_dvh/l0c_dvbeta 双槽改单槽；互斥锁 cube32/vec15、原版 34>32 在 pin 版 library 上复现；主机全量 328 passed/15 skipped（其中 10 个需 pin 版 FLA 源码，328+10=338 与 DONE 对账，5 个 NPU 模块 skip 相同）；真机数字 DONE/回执 JSON/文档三处逐项一致（PM 无法复跑，按证据审）。记入限制：stable 路径无奇数 C 闸（C=1..6 与 T4096 已原生验证，其余按构造论证）；dq 最坏 .04782 / 预算 .05，余量约 4.4%（预算未改）。合入待用户确认；PR 仍 open，头 3e3670f。状态 in_progress→review"
         }
       ],
       "result": null
