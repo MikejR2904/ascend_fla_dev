@@ -59,7 +59,8 @@ agent 可以是任何账号、任何模型，默认不可信。
 更新看板状态与 `reports`（一句话，别贴日志），提交推送同步。
 
 `RISK` 按 PROTOCOL §3.5 的处置表办。这几类立刻告诉用户：`silent-wrong-result`、`positioning-change`、
-`shared-machine`、影响计划的 `soc-assumption`、超时 50%。`kernel-change-needed` 记进 `docs/matrix/gaps.json`
+影响计划的 `soc-assumption`、超时 50%。**机器与卡不归 PM 管**（用户 2026-09-19 明确）：`shared-machine` 只记录，
+不上报、不仲裁，也不要求或提供占用证据；PM 只管 tasks 的进度与提交代码的质量。`kernel-change-needed` 记进 `docs/matrix/gaps.json`
 （`requires_kernel_change` + `kernel_change_note`，同步 `summary`，跑 `tools/gen_matrix.py` 与 `--check`）。
 
 ### DONE → 审查 → REVIEW → 合入 → CLOSE（顺序不可颠倒）

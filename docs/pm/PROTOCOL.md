@@ -127,7 +127,7 @@ proposal: …
 | `silent-wrong-result` | 输出有限、量级也正常，但内容是错的 | 立刻上报用户；按 `AGENTS.md` §7 装闸 |
 | `kernel-change-needed` | 不改 kernel 源码就走不下去 | 记进 `gaps.json`，你先别改，等 kernel 批次 |
 | `positioning-change` | 你的做法会改变仓库定位（接 fla dispatch、静默兜底之类） | 立刻上报用户 |
-| `shared-machine` | 共享机器上卡不健康、有别人的进程、要动别人的东西 | 立刻上报用户 |
+| `shared-machine` | 机器/卡相关的事（卡不健康、有别人的进程等） | **PM 不管**：机器与卡归 agent 自己管理（用户 2026-09-19 明确，D-PM-28）。PM 只在 reports 里记一句，不上报、不仲裁，也不要求或提供占用证据 |
 | `contradicts-handoff` | 实测结果和 `handoff.md` / `plan.md` / 本协议对不上 | PM 复核后改文档 |
 | `soc-assumption` | 某条事实只在一个 SoC 上成立 | 影响到计划就上报用户 |
 | `timebox-slip` | 预计超时 25% 以上 | 超 50% 上报用户 |

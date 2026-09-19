@@ -18,6 +18,9 @@
 > `kda-bwd-inverse-mm-mutex-over-budget`（P1，进 kernel 修复队列，指上游源码）。**下面 A5K-02 的条目是合入前的记录。**
 > **`A2-02` 与 `A2-44` 的 `write-set-overlap:A5K-02` 门条件已满足，但 PM 没有解门**（放行 gated 项只问用户），等用户决定；
 > 两个任务的写集彼此也有重叠，解门后先 APPLY 者先做。
+>
+> **PM 的边界（用户 2026-09-19，D-PM-28）**：机器与卡不归 PM 管理，agent 自己管理；PM 只管 tasks 的进度与提交代码的质量。
+> 此前 PM 给 PK-03 设的'占用证据必须由用户/管理员提供'关卡已撤销，`shared-machine` 类 RISK 只记录、不上报。
 
 - **`A5K-02`**（issue #81，草稿 PR #83，`blocked`，assignee `limjiunnbin`，
   session `01a0ae7a-d1c0-7f02-b040-be977ec47393`）：D-PM-24 批的 `inverse_mm.py` 派生
@@ -33,7 +36,7 @@
 - **`PK-03`**（issue #69）：2026-09-19T02:41Z 撤回，04:16Z 由新 session 重新申领，**用户确认（D-PM-25）后
   已重新 ASSIGN**（session `pgdn-forward-20260919T041214Z-7b59b3a6`，与 A5K-02 同账号不同 session，并发规则放行）。
   `PK-03.md` 已重写为"主机侧、窄范围"的可派状态：ABI 与现有 GDN 门控逐项一致；oracle A=fla naive.py +
-  B=独立 CPU 参考；**真机验收是必须项**（用户 2026-09-19，D-PM-26），通过后可合入，占用证据待用户/管理员提供。原 session `gdn-pgdn-forward` 的申领作废。已 ACK，草稿 PR #87 已开、主机侧验收就绪，等真机。
+  B=独立 CPU 参考；**真机验收是必须项**（用户 2026-09-19，D-PM-26），通过后可合入；机器与卡归 assignee 自己管理（D-PM-28），PM 不设占用证据关卡。原 session `gdn-pgdn-forward` 的申领作废。已 ACK，草稿 PR #87 已开、主机侧验收就绪，等真机。
   （PGDN chunk 前向 + ATK 预条件，D-PM-22 排期解锁。）
 
 ### 这次会话新合入的两个 PR（供快速对账，细节见 §0.x 各节和 gaps.json）
