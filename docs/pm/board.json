@@ -1364,6 +1364,10 @@
         {
           "at": "2026-09-19T20:32",
           "summary": "PM 技术评审 accept（REVIEW 已发在 #113，头 de893f2e；PM 无 A2 真机，真机部分只对原始回执复算，不能复现）：64 个文件全是新增、全在 kernels/projects/a2/** 内，a5 与保留路径零改动，无二进制，全部 64 个文件隐私扫描 0 命中，两个单元的 _unit_runner.py 与 canonical runner 逐字节相同。真机回执复算：fwd 20 个 case 全过，o rel_l2 [2.956e-3, 3.448e-3] / final_state [1.937e-3, 2.877e-3] / g_cumsum [9.77e-8, 1.09e-7]（预算 0.05，沿用 a5），网格 12 格与自述逐格一致；decode 8 个 case 全过，o [1.367e-3, 1.725e-3]（预算 5e-3，约 3F）/ final_state [4.96e-8, 1.05e-7]（预算 1e-5）；每个 case 的 execution_evidence 都是 aclnn / board / a2 / backend_executed=true（fwd 200 条、decode 8 条）；逐 kernel 真机日志的范围与自述一致，NaN 为 0，bd1↔bd2 哈希逐项相同。PM 在本机对钉住的库独立复跑（CPU）：reference（fwd 20/20、decode 8/8）与 sim（20/20、8/8）通过且 60 + 16 个数字与申领人 sim.json 逐位相同，pipesim 抽查 C=1 多头 / 奇数 C / grid_c1_hv4_bd1 与 decode 全部 8 个通过，6 个 kernel 的 ascriptor check 全 0 error / 0 warning、op 数 61 / 273 / 447 / 192 / 231 / 218 与自述一致。A2-01 结论：所有 is_init=False 的 matmul（recurrent.py:188，triangular_inverse.py:213 / 224 / 234 / 236）紧邻 barrier(Pipe.M)，无 BF16 / FP16 splitk；契约 board stage untested、门控跨度闸 recommended_limit=null 标 A2-12 重测、block_dim 只声明 1 与 2、不继承 A5 的值；host 只有 NaN 预填分配与不拷贝的 view。全量测试 669 passed / 12 skipped，与 main 基线相同（本 PR 不改测试）。合入是 A2 上的 PR，按 D-PM-33 与 AGENTS §2 等用户授权（授权对象是头 de893f2e）；实际耗时约 3.5h（估计 60h、时限 24h）。非阻塞：SoC / CANN / 算子包只在 evidence/env.json（申领人脚本写的一份），逐次运行的回执里没有；性能没测（已声明）；inverse 日志的哈希字段命名与别处不一致。A2-03 合入后 PM 直接派 A2-09（16h）。"
+        },
+        {
+          "at": "2026-09-19T21:38",
+          "summary": "STATUS ×2（21:31Z / 21:32Z 内容相同，自述）：交付完毕，收到 REVIEW accept，合入等用户授权；两条非阻塞意见（每次运行的回执自带 SoC / CANN / 算子包一行、哈希字段统一命名成 *_sha）不动 PR #113，放到 A2-09 一起改。等待期间已只读地准备 A2-09（读完九个反向 kernel 与 a5 bwd 单元的组合与 host 胶水，确认了两处要挪进 kernel 的 host 操作：g_cumsum 每 chunk 末行的切片拷贝、inverse_mm 输出的取负）。申领人问等待期能否派一条与 kernels/projects/a2/** 不冲突的任务（例如 A2-07 的 GDN ABI 调研）。PM 裁定不派：「一个 agent 同时只接一个任务」是用户 2026-09-18 的决定（review 也算在飞，只有两边都填了不同 session 才放行），不能替它绕、也不改规则；继续只读准备 A2-09，#113 合入（要用户授权）后 PM 直接派 A2-09。a2 真机 agent 因此在等用户对 #113 的授权，是当前的空转点。"
         }
       ],
       "result": null
