@@ -1945,6 +1945,10 @@
         {
           "at": "2026-09-19T07:38",
           "summary": "STATUS：仍 in_progress，未 DONE（用户要求真机证据先于 DONE，D-PM-26）。容器内 CPU 复验：PGDN 104 passed（25.02s，Python 3.12.13/Torch 2.12.0+cpu/Ascriptor 0.1.0，非 NPU 执行）；原生 harness 更新（可重复选 case、launch 进度、显式记录 FP32 matmul/conv 精度、可选的仅验证用 pinned Torch NPU 递推），kernel/pipeline/wrapper/reference 源字节不变、数值预算与计时默认值不变；草稿 PR #87 头 a380bf7（仍 18 文件，无新增路径）。阻塞（自述）：用户现要求在 Docker 内执行并把任务写入限定在指定 home 目录；一台目标机有运行中的已分配容器但无兼容的进程监视器（私下放入的监视器与该机驱动动态链接失败），另一台设备健康空闲但 Docker 守护进程未启动，等可用的 Docker 上下文/socket 或容器入口。未取设备锁，未在物理硬件上运行任何 PGDN kernel；未改系统守护进程/驱动/他人进程。无新的设备或性能数字"
+        },
+        {
+          "at": "2026-09-19T09:10",
+          "summary": "STATUS：确认已读规格与 D-PM-26（真机验收与同卡三轮三明治现为必须项），从 PR 描述删掉过时的'仅主机侧验收'表述。新增 measure.py（写集内）：T4096/T1024，B1/H=HV8/K=V128，FP32 与 BF16，三轮 warmup10/repeat50；基线是未改动的 GDA-02 原生 GDN（含计时的 NPU FP32 q/k 归一化与输出 cast），自述为'不含 ATK 的成本对比'；两侧各对自己的 pinned naive 语义检查，PGDN 另对独立 block solve 在计时前后检查；11 个算子在首次执行前全部 prepare，block_dim 分进程分 build；记录原始样本、输入/源哈希与基线漂移。该 harness 尚未在硬件上运行；kernel、公开 wrapper、reference 源不变。草稿 PR #87 头 aed81f4（19 文件 +8693，写集外无）。阻塞：占用证据仍缺——候选卡健康，进程归属不可得，仍有外部设备管理句柄；已向用户请求'这张卡当前空闲'的具体书面确认；未伪造证据、未取锁、未在物理设备上启动 PGDN kernel。无新的原生/计时数字"
         }
       ],
       "result": null
