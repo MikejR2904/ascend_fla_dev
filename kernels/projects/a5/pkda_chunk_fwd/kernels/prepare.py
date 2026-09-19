@@ -20,7 +20,8 @@ def zero_row(x: Tensor):
 @vf()
 def prepare_row(q: Tensor, k: Tensor, v: Tensor, g: Tensor,
                 ga: Tensor, ba: Tensor, beta: Tensor, center: Tensor,
-                a: Tensor, p: Tensor, bk: Tensor, prefix: Tensor, scale: Var):
+                a: Tensor, p: Tensor, bk: Tensor, prefix: Tensor,
+                compensation: Tensor, scale: Var):
     qr = RegList(DT.float, 2)
     kr = RegList(DT.float, 2)
     vr = RegList(DT.float, 2)
@@ -64,11 +65,19 @@ def prepare_row(q: Tensor, k: Tensor, v: Tensor, g: Tensor,
     qr <<= qr * scale
     decay <<= g[0:1, 0:D]
     pref <<= prefix[0:1, 0:D]
-    pref <<= pref + decay
+    # Keep weak decays after a large jump from accumulating one rounding
+    # error per token. Scores later subtract these FP32 prefixes.
+    weight <<= compensation[0:1, 0:D]
+    decay <<= decay - weight
+    tmp <<= pref + decay
+    weight <<= tmp - pref
+    weight <<= weight - decay
+    pref <<= tmp
     q[0:1, 0:D] <<= qr
     v[0:1, 0:D] <<= vr
     a[0:1, 0:D] <<= ar
     prefix[0:1, 0:D] <<= pref
+    compensation[0:1, 0:D] <<= weight
     vf_barrier(VfPipe.STORE, VfPipe.LOAD)
 
 
@@ -90,6 +99,7 @@ def pkda_chunk_prepare(
     gu = Tensor(DT.float, [1, D], Position.UB)
     bu = Tensor(DT.float, [1, D], Position.UB)
     pu = Tensor(DT.float, [1, D], Position.UB)
+    pcu = Tensor(DT.float, [1, D], Position.UB)
     au = Tensor(DT.float, [1, D], Position.UB)
     pku = Tensor(DT.float, [1, D], Position.UB)
     gau = Tensor(DT.float, [1, 8], Position.UB)
@@ -107,6 +117,7 @@ def pkda_chunk_prepare(
             centeru[:, 0:1] <<= log_atk_scale[0:1, hh:hh+1]
             for cc in range(N):
                 zero_row(pu)
+                zero_row(pcu)
                 for ii in range(C):
                     tt = Var(cc * C + ii)
                     if tt < T:
@@ -118,7 +129,7 @@ def pkda_chunk_prepare(
                         bau[:, 0:1] <<= beta_atk[bb, tt:tt+1, hh:hh+1]
                         betau[:, 0:1] <<= beta[bb, tt:tt+1, hh:hh+1]
                         prepare_row(qu, ku, vu, gu, gau, bau, betau, centeru,
-                                    au, pku, bu, pu, scale)
+                                    au, pku, bu, pu, pcu, scale)
                     else:
                         zero_row(qu)
                         zero_row(pku)

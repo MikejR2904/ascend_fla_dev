@@ -129,3 +129,36 @@ def test_public_returns_actual_sim_outputs_and_optional_states(tmp_path):
     assert result[2].data_ptr()!=data['initial_A_state'].data_ptr()
     result=op.chunk_precond_kda(**data,launcher='sim',out_dir=tmp_path/'without-state')
     assert result[1:] == (None,None)
+
+
+def test_prepare_compensates_weak_decay_after_large_jump():
+    # A sequential FP32 sum loses ~3.36e-4 here despite span <155; subtracting
+    # those prefixes previously pushed native o/S beyond their 1e-4 budgets.
+    from ascriptor.backends.sim.launch import run_kernel
+    pipeline = op._module('kernels.pipeline')
+    data = inputs(64, 1)
+    data['g'].fill_(-1e-5)
+    data['g'][:, 0].fill_(-154.9992)
+    expected = stages.reference_stages(data)
+    observed = {}
+
+    class Prepared(Exception):
+        pass
+
+    def launch(entry, sources, outputs, scalars):
+        if observed:
+            raise Prepared
+        values = run_kernel(entry, *(tuple(sources.values()) + tuple(outputs.values()) +
+                                      tuple(scalars.values())), block_dim=1,
+                            timeout=120, seed_outputs=True, processes=False)
+        observed.update(zip(outputs, values))
+        return observed
+
+    with pytest.raises(Prepared):
+        pipeline.run(data, launch)
+    # This generated case has an exactly representable rounded CPU prefix.
+    # Check every token/channel, not merely a relative error dominated by155.
+    torch.testing.assert_close(observed['gc'], expected['gc'], atol=2e-5, rtol=0)
+    assert float(observed['gc'].min()) >= -155
+    for name in ('qn', 'kn', 'bk', 'wv', 'final_A_state'):
+        torch.testing.assert_close(observed[name], expected[name], atol=1e-6, rtol=1e-6)

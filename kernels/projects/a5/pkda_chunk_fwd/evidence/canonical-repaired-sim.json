@@ -1,0 +1,668 @@
+{
+  "backend": "cce",
+  "cases": [
+    {
+      "block_dim": 1,
+      "comparison": {
+        "final_A_state": {
+          "comparison": {
+            "atol": 0.0001,
+            "max_relative_l2": 0.0001,
+            "mode": "allclose",
+            "reason": "All arithmetic/state are FP32, but CCE register reductions may differ from the CPU reduction tree; bitwise equality is not required.",
+            "rtol": 0.0001
+          },
+          "max_abs_error": 0.0,
+          "passed": true,
+          "relative_l2_error": 0.0
+        },
+        "final_state": {
+          "comparison": {
+            "atol": 0.0001,
+            "max_relative_l2": 0.0001,
+            "mode": "allclose",
+            "reason": "All arithmetic/state are FP32, but CCE register reductions may differ from the CPU reduction tree; bitwise equality is not required.",
+            "rtol": 0.0001
+          },
+          "max_abs_error": 1.4901161193847656e-08,
+          "passed": true,
+          "relative_l2_error": 2.2402161468727025e-08
+        },
+        "o": {
+          "comparison": {
+            "atol": 0.0001,
+            "max_relative_l2": 0.0001,
+            "mode": "allclose",
+            "reason": "All arithmetic/state are FP32, but CCE register reductions may differ from the CPU reduction tree; bitwise equality is not required.",
+            "rtol": 0.0001
+          },
+          "max_abs_error": 1.862645149230957e-09,
+          "passed": true,
+          "relative_l2_error": 1.4250040408666168e-07
+        }
+      },
+      "execution_evidence": [
+        {
+          "backend_executed": false,
+          "block_dim": 1,
+          "device": "a5",
+          "kernel": "pkda_chunk_prepare",
+          "launcher": "sim",
+          "model": "functional Surface IR",
+          "requested_backend": "cce",
+          "sim_processes": "threads",
+          "stage": "sim"
+        },
+        {
+          "backend_executed": false,
+          "block_dim": 1,
+          "device": "a5",
+          "kernel": "pkda_chunk_scores",
+          "launcher": "sim",
+          "model": "functional Surface IR",
+          "requested_backend": "cce",
+          "sim_processes": "threads",
+          "stage": "sim"
+        },
+        {
+          "backend_executed": false,
+          "block_dim": 1,
+          "device": "a5",
+          "kernel": "pkda_chunk_wy",
+          "launcher": "sim",
+          "model": "functional Surface IR",
+          "requested_backend": "cce",
+          "sim_processes": "threads",
+          "stage": "sim"
+        },
+        {
+          "backend_executed": false,
+          "block_dim": 1,
+          "device": "a5",
+          "kernel": "pkda_chunk_scan",
+          "launcher": "sim",
+          "model": "functional Surface IR",
+          "requested_backend": "cce",
+          "sim_processes": "threads",
+          "stage": "sim"
+        },
+        {
+          "backend_executed": false,
+          "block_dim": 1,
+          "device": "a5",
+          "kernel": "pkda_chunk_output",
+          "launcher": "sim",
+          "model": "functional Surface IR",
+          "requested_backend": "cce",
+          "sim_processes": "threads",
+          "stage": "sim"
+        },
+        {
+          "backend_executed": false,
+          "block_dim": 1,
+          "device": "a5",
+          "kernel": "pkda_chunk_prepare",
+          "launcher": "sim",
+          "model": "functional Surface IR",
+          "requested_backend": "cce",
+          "sim_processes": "threads",
+          "stage": "sim"
+        },
+        {
+          "backend_executed": false,
+          "block_dim": 1,
+          "device": "a5",
+          "kernel": "pkda_chunk_scores",
+          "launcher": "sim",
+          "model": "functional Surface IR",
+          "requested_backend": "cce",
+          "sim_processes": "threads",
+          "stage": "sim"
+        },
+        {
+          "backend_executed": false,
+          "block_dim": 1,
+          "device": "a5",
+          "kernel": "pkda_chunk_wy",
+          "launcher": "sim",
+          "model": "functional Surface IR",
+          "requested_backend": "cce",
+          "sim_processes": "threads",
+          "stage": "sim"
+        },
+        {
+          "backend_executed": false,
+          "block_dim": 1,
+          "device": "a5",
+          "kernel": "pkda_chunk_scan",
+          "launcher": "sim",
+          "model": "functional Surface IR",
+          "requested_backend": "cce",
+          "sim_processes": "threads",
+          "stage": "sim"
+        },
+        {
+          "backend_executed": false,
+          "block_dim": 1,
+          "device": "a5",
+          "kernel": "pkda_chunk_output",
+          "launcher": "sim",
+          "model": "functional Surface IR",
+          "requested_backend": "cce",
+          "sim_processes": "threads",
+          "stage": "sim"
+        }
+      ],
+      "id": "t1_h1",
+      "parameters": {
+        "A_scale": 0.03,
+        "B": 1,
+        "H": 1,
+        "N": 1,
+        "T": 1,
+        "gate_scale": 0.1,
+        "state_scale": 0.05
+      },
+      "passed": true,
+      "reference": {
+        "final_A_state": {
+          "comparison": {
+            "atol": 0.0001,
+            "max_relative_l2": 0.0001,
+            "mode": "allclose",
+            "reason": "All arithmetic/state are FP32, but CCE register reductions may differ from the CPU reduction tree; bitwise equality is not required.",
+            "rtol": 0.0001
+          },
+          "dtype": "float32",
+          "sha256": "d04185368ef453b5f3339f9efc889840975481e8bdd1de74b96817bfdee95549",
+          "shape": [
+            1,
+            1,
+            128
+          ]
+        },
+        "final_state": {
+          "comparison": {
+            "atol": 0.0001,
+            "max_relative_l2": 0.0001,
+            "mode": "allclose",
+            "reason": "All arithmetic/state are FP32, but CCE register reductions may differ from the CPU reduction tree; bitwise equality is not required.",
+            "rtol": 0.0001
+          },
+          "dtype": "float32",
+          "sha256": "f191058c4e1ca1eb2902f1d26d739accfcb94265dd0d9552e6ca729df8ee9cd3",
+          "shape": [
+            1,
+            1,
+            128,
+            128
+          ]
+        },
+        "o": {
+          "comparison": {
+            "atol": 0.0001,
+            "max_relative_l2": 0.0001,
+            "mode": "allclose",
+            "reason": "All arithmetic/state are FP32, but CCE register reductions may differ from the CPU reduction tree; bitwise equality is not required.",
+            "rtol": 0.0001
+          },
+          "dtype": "float32",
+          "sha256": "325aba68d6bcfa9465bb195b7bbfba81d2056008edfdd2861a491378ed2123e8",
+          "shape": [
+            1,
+            1,
+            1,
+            128
+          ]
+        }
+      },
+      "seed": 4101,
+      "stage_comparison": {
+        "bk": {
+          "comparison": {
+            "atol": 0.0001,
+            "max_relative_l2": 0.0001,
+            "mode": "allclose",
+            "reason": "All arithmetic/state are FP32, but CCE register reductions may differ from the CPU reduction tree; bitwise equality is not required.",
+            "rtol": 0.0001
+          },
+          "max_abs_error": 0.0,
+          "passed": true,
+          "relative_l2_error": 0.0
+        },
+        "delta": {
+          "comparison": {
+            "atol": 0.0001,
+            "max_relative_l2": 0.0001,
+            "mode": "allclose",
+            "reason": "All arithmetic/state are FP32, but CCE register reductions may differ from the CPU reduction tree; bitwise equality is not required.",
+            "rtol": 0.0001
+          },
+          "max_abs_error": 2.2351741790771484e-08,
+          "passed": true,
+          "relative_l2_error": 2.902687887939215e-07
+        },
+        "final_A_state": {
+          "comparison": {
+            "atol": 0.0001,
+            "max_relative_l2": 0.0001,
+            "mode": "allclose",
+            "reason": "All arithmetic/state are FP32, but CCE register reductions may differ from the CPU reduction tree; bitwise equality is not required.",
+            "rtol": 0.0001
+          },
+          "max_abs_error": 0.0,
+          "passed": true,
+          "relative_l2_error": 0.0
+        },
+        "final_state": {
+          "comparison": {
+            "atol": 0.0001,
+            "max_relative_l2": 0.0001,
+            "mode": "allclose",
+            "reason": "All arithmetic/state are FP32, but CCE register reductions may differ from the CPU reduction tree; bitwise equality is not required.",
+            "rtol": 0.0001
+          },
+          "max_abs_error": 1.4901161193847656e-08,
+          "passed": true,
+          "relative_l2_error": 2.2402161468727025e-08
+        },
+        "gc": {
+          "comparison": {
+            "atol": 0.0001,
+            "max_relative_l2": 0.0001,
+            "mode": "allclose",
+            "reason": "All arithmetic/state are FP32, but CCE register reductions may differ from the CPU reduction tree; bitwise equality is not required.",
+            "rtol": 0.0001
+          },
+          "max_abs_error": 0.0,
+          "passed": true,
+          "relative_l2_error": 0.0
+        },
+        "kn": {
+          "comparison": {
+            "atol": 0.0001,
+            "max_relative_l2": 0.0001,
+            "mode": "allclose",
+            "reason": "All arithmetic/state are FP32, but CCE register reductions may differ from the CPU reduction tree; bitwise equality is not required.",
+            "rtol": 0.0001
+          },
+          "max_abs_error": 0.0,
+          "passed": true,
+          "relative_l2_error": 0.0
+        },
+        "lower": {
+          "comparison": {
+            "atol": 0.0001,
+            "max_relative_l2": 0.0001,
+            "mode": "allclose",
+            "reason": "All arithmetic/state are FP32, but CCE register reductions may differ from the CPU reduction tree; bitwise equality is not required.",
+            "rtol": 0.0001
+          },
+          "max_abs_error": 0.0,
+          "passed": true,
+          "relative_l2_error": 0.0
+        },
+        "o": {
+          "comparison": {
+            "atol": 0.0001,
+            "max_relative_l2": 0.0001,
+            "mode": "allclose",
+            "reason": "All arithmetic/state are FP32, but CCE register reductions may differ from the CPU reduction tree; bitwise equality is not required.",
+            "rtol": 0.0001
+          },
+          "max_abs_error": 1.862645149230957e-09,
+          "passed": true,
+          "relative_l2_error": 1.4250040408666168e-07
+        },
+        "qn": {
+          "comparison": {
+            "atol": 0.0001,
+            "max_relative_l2": 0.0001,
+            "mode": "allclose",
+            "reason": "All arithmetic/state are FP32, but CCE register reductions may differ from the CPU reduction tree; bitwise equality is not required.",
+            "rtol": 0.0001
+          },
+          "max_abs_error": 0.0,
+          "passed": true,
+          "relative_l2_error": 0.0
+        },
+        "score": {
+          "comparison": {
+            "atol": 0.0001,
+            "max_relative_l2": 0.0001,
+            "mode": "allclose",
+            "reason": "All arithmetic/state are FP32, but CCE register reductions may differ from the CPU reduction tree; bitwise equality is not required.",
+            "rtol": 0.0001
+          },
+          "max_abs_error": 1.280568540096283e-09,
+          "passed": true,
+          "relative_l2_error": 1.1737761756088671e-06
+        },
+        "states": {
+          "comparison": {
+            "atol": 0.0001,
+            "max_relative_l2": 0.0001,
+            "mode": "allclose",
+            "reason": "All arithmetic/state are FP32, but CCE register reductions may differ from the CPU reduction tree; bitwise equality is not required.",
+            "rtol": 0.0001
+          },
+          "max_abs_error": 0.0,
+          "passed": true,
+          "relative_l2_error": 0.0
+        },
+        "u": {
+          "comparison": {
+            "atol": 0.0001,
+            "max_relative_l2": 0.0001,
+            "mode": "allclose",
+            "reason": "All arithmetic/state are FP32, but CCE register reductions may differ from the CPU reduction tree; bitwise equality is not required.",
+            "rtol": 0.0001
+          },
+          "max_abs_error": 0.0,
+          "passed": true,
+          "relative_l2_error": 0.0
+        },
+        "wv": {
+          "comparison": {
+            "atol": 0.0001,
+            "max_relative_l2": 0.0001,
+            "mode": "allclose",
+            "reason": "All arithmetic/state are FP32, but CCE register reductions may differ from the CPU reduction tree; bitwise equality is not required.",
+            "rtol": 0.0001
+          },
+          "max_abs_error": 0.0,
+          "passed": true,
+          "relative_l2_error": 0.0
+        },
+        "wy": {
+          "comparison": {
+            "atol": 0.0001,
+            "max_relative_l2": 0.0001,
+            "mode": "allclose",
+            "reason": "All arithmetic/state are FP32, but CCE register reductions may differ from the CPU reduction tree; bitwise equality is not required.",
+            "rtol": 0.0001
+          },
+          "max_abs_error": 0.0,
+          "passed": true,
+          "relative_l2_error": 0.0
+        }
+      },
+      "stage_reference": {
+        "bk": {
+          "comparison": {
+            "atol": 0.0001,
+            "max_relative_l2": 0.0001,
+            "mode": "allclose",
+            "reason": "All arithmetic/state are FP32, but CCE register reductions may differ from the CPU reduction tree; bitwise equality is not required.",
+            "rtol": 0.0001
+          },
+          "dtype": "float32",
+          "sha256": "caae7fa6dab373214441fae4220416c2e0ca44254ea0f24f4fdb5fd61c3aba40",
+          "shape": [
+            1,
+            1,
+            1,
+            64,
+            128
+          ]
+        },
+        "delta": {
+          "comparison": {
+            "atol": 0.0001,
+            "max_relative_l2": 0.0001,
+            "mode": "allclose",
+            "reason": "All arithmetic/state are FP32, but CCE register reductions may differ from the CPU reduction tree; bitwise equality is not required.",
+            "rtol": 0.0001
+          },
+          "dtype": "float32",
+          "sha256": "8f2a0917d0ba662acf8af1a17fd5f9455ef22950dc21de3089daf86de8536dbb",
+          "shape": [
+            1,
+            1,
+            1,
+            64,
+            128
+          ]
+        },
+        "final_A_state": {
+          "comparison": {
+            "atol": 0.0001,
+            "max_relative_l2": 0.0001,
+            "mode": "allclose",
+            "reason": "All arithmetic/state are FP32, but CCE register reductions may differ from the CPU reduction tree; bitwise equality is not required.",
+            "rtol": 0.0001
+          },
+          "dtype": "float32",
+          "sha256": "d04185368ef453b5f3339f9efc889840975481e8bdd1de74b96817bfdee95549",
+          "shape": [
+            1,
+            1,
+            128
+          ]
+        },
+        "final_state": {
+          "comparison": {
+            "atol": 0.0001,
+            "max_relative_l2": 0.0001,
+            "mode": "allclose",
+            "reason": "All arithmetic/state are FP32, but CCE register reductions may differ from the CPU reduction tree; bitwise equality is not required.",
+            "rtol": 0.0001
+          },
+          "dtype": "float32",
+          "sha256": "f191058c4e1ca1eb2902f1d26d739accfcb94265dd0d9552e6ca729df8ee9cd3",
+          "shape": [
+            1,
+            1,
+            128,
+            128
+          ]
+        },
+        "gc": {
+          "comparison": {
+            "atol": 0.0001,
+            "max_relative_l2": 0.0001,
+            "mode": "allclose",
+            "reason": "All arithmetic/state are FP32, but CCE register reductions may differ from the CPU reduction tree; bitwise equality is not required.",
+            "rtol": 0.0001
+          },
+          "dtype": "float32",
+          "sha256": "531a0ffefa485e58d44513d2669857602c4e77394316b2ab7ece56305e074c00",
+          "shape": [
+            1,
+            1,
+            1,
+            64,
+            128
+          ]
+        },
+        "kn": {
+          "comparison": {
+            "atol": 0.0001,
+            "max_relative_l2": 0.0001,
+            "mode": "allclose",
+            "reason": "All arithmetic/state are FP32, but CCE register reductions may differ from the CPU reduction tree; bitwise equality is not required.",
+            "rtol": 0.0001
+          },
+          "dtype": "float32",
+          "sha256": "56130866ba8c8c2066eb1833b3fe0700f14fd1180206329c80e62cab239afa85",
+          "shape": [
+            1,
+            1,
+            1,
+            64,
+            128
+          ]
+        },
+        "lower": {
+          "comparison": {
+            "atol": 0.0001,
+            "max_relative_l2": 0.0001,
+            "mode": "allclose",
+            "reason": "All arithmetic/state are FP32, but CCE register reductions may differ from the CPU reduction tree; bitwise equality is not required.",
+            "rtol": 0.0001
+          },
+          "dtype": "float32",
+          "sha256": "4fe7b59af6de3b665b67788cc2f99892ab827efae3a467342b3bb4e3bc8e5bfe",
+          "shape": [
+            1,
+            1,
+            1,
+            64,
+            64
+          ]
+        },
+        "o": {
+          "comparison": {
+            "atol": 0.0001,
+            "max_relative_l2": 0.0001,
+            "mode": "allclose",
+            "reason": "All arithmetic/state are FP32, but CCE register reductions may differ from the CPU reduction tree; bitwise equality is not required.",
+            "rtol": 0.0001
+          },
+          "dtype": "float32",
+          "sha256": "325aba68d6bcfa9465bb195b7bbfba81d2056008edfdd2861a491378ed2123e8",
+          "shape": [
+            1,
+            1,
+            1,
+            128
+          ]
+        },
+        "qn": {
+          "comparison": {
+            "atol": 0.0001,
+            "max_relative_l2": 0.0001,
+            "mode": "allclose",
+            "reason": "All arithmetic/state are FP32, but CCE register reductions may differ from the CPU reduction tree; bitwise equality is not required.",
+            "rtol": 0.0001
+          },
+          "dtype": "float32",
+          "sha256": "4c6472ae3eae562e3b863454102c9807dd6c75efe65ea1115baaa7963cf31968",
+          "shape": [
+            1,
+            1,
+            1,
+            64,
+            128
+          ]
+        },
+        "score": {
+          "comparison": {
+            "atol": 0.0001,
+            "max_relative_l2": 0.0001,
+            "mode": "allclose",
+            "reason": "All arithmetic/state are FP32, but CCE register reductions may differ from the CPU reduction tree; bitwise equality is not required.",
+            "rtol": 0.0001
+          },
+          "dtype": "float32",
+          "sha256": "5ee5c19a9c9fe872d1545910248aa0cfdcc87855c6a2bb6c154c29609815314a",
+          "shape": [
+            1,
+            1,
+            1,
+            64,
+            64
+          ]
+        },
+        "states": {
+          "comparison": {
+            "atol": 0.0001,
+            "max_relative_l2": 0.0001,
+            "mode": "allclose",
+            "reason": "All arithmetic/state are FP32, but CCE register reductions may differ from the CPU reduction tree; bitwise equality is not required.",
+            "rtol": 0.0001
+          },
+          "dtype": "float32",
+          "sha256": "b03b5ab14532352908c2b8b4087749bb6e7be2d7fd0acc08d2e14932f3523834",
+          "shape": [
+            1,
+            1,
+            1,
+            128,
+            128
+          ]
+        },
+        "u": {
+          "comparison": {
+            "atol": 0.0001,
+            "max_relative_l2": 0.0001,
+            "mode": "allclose",
+            "reason": "All arithmetic/state are FP32, but CCE register reductions may differ from the CPU reduction tree; bitwise equality is not required.",
+            "rtol": 0.0001
+          },
+          "dtype": "float32",
+          "sha256": "16e9aa233a8d5644c064bcf7951524e0bde773d892d70ce5dd5d9612a6855bd2",
+          "shape": [
+            1,
+            1,
+            1,
+            64,
+            128
+          ]
+        },
+        "wv": {
+          "comparison": {
+            "atol": 0.0001,
+            "max_relative_l2": 0.0001,
+            "mode": "allclose",
+            "reason": "All arithmetic/state are FP32, but CCE register reductions may differ from the CPU reduction tree; bitwise equality is not required.",
+            "rtol": 0.0001
+          },
+          "dtype": "float32",
+          "sha256": "16e9aa233a8d5644c064bcf7951524e0bde773d892d70ce5dd5d9612a6855bd2",
+          "shape": [
+            1,
+            1,
+            1,
+            64,
+            128
+          ]
+        },
+        "wy": {
+          "comparison": {
+            "atol": 0.0001,
+            "max_relative_l2": 0.0001,
+            "mode": "allclose",
+            "reason": "All arithmetic/state are FP32, but CCE register reductions may differ from the CPU reduction tree; bitwise equality is not required.",
+            "rtol": 0.0001
+          },
+          "dtype": "float32",
+          "sha256": "090001a9dfbe831edaf5f2b5bca1718453969adf8ef54abbca550379633f2a6a",
+          "shape": [
+            1,
+            1,
+            1,
+            64,
+            128
+          ]
+        }
+      }
+    }
+  ],
+  "command": "check",
+  "contract_sha256": "7314454021ceafb151a0e984c86bf1409e5706395493098e949cfbfc40a879ac",
+  "device": "a5",
+  "dsl_imported": true,
+  "imports": {
+    "ascriptor": "selected-library/ascriptor/__init__.py",
+    "ascriptor.a5": "selected-library/ascriptor/a5.py",
+    "kernels": "selected-source/kernels/__init__.py",
+    "ref": "selected-source/ref/__init__.py",
+    "unit": "selected-source/unit.py"
+  },
+  "kernel_imported": true,
+  "launcher": "sim",
+  "passed": true,
+  "runner_sha256": "8e91d95ed0294ddbfc204957b8bf77606a79123655fc096963b94658b633566b",
+  "schema": "ascriptor.unit-result/1",
+  "simulator_imported": true,
+  "stage": "sim",
+  "started_at": "2026-09-19T12:38:07.888032+00:00",
+  "unit": "a5.pkda_chunk_fwd",
+  "versions": {
+    "ascriptor": null,
+    "numpy": "1.26.4",
+    "python": "3.11.15",
+    "torch": "2.10.0+cpu"
+  }
+}
