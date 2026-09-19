@@ -59,7 +59,7 @@ from torch import nn
 from ..modules.convolution import ShortConvolution
 from ..modules.fused_norm_gated import FusedRMSNormGated
 from ..ops.kda.autograd import chunk_kda
-from ..ops.kda.chunk import HEAD_DIM, L_PER_CHUNK, VALUE_DIM
+from ..ops.kda.chunk import HEAD_DIM, L_PER_CHUNK, VALUE_DIM, _l2norm
 from ..ops.kda.fused_recurrent import T_MAX as RECURRENT_T_MAX
 from ..ops.kda.fused_recurrent import fused_recurrent_kda
 
@@ -313,17 +313,17 @@ class KimiDeltaAttention(nn.Module):
             q, conv_out[0] = self.q_conv1d(q, cache=conv_in[0], output_final_state=keep_state)
             k, conv_out[1] = self.k_conv1d(k, cache=conv_in[1], output_final_state=keep_state)
             v, conv_out[2] = self.v_conv1d(v, cache=conv_in[2], output_final_state=keep_state)
-        elif cache is not None:
-            # 没有短卷积时 conv_state 恒为空 —— 明确写回 None，免得调用方以为忘了更新
-            conv_out = [None, None, None]
+        else:
+            # FLA applies SiLU even when the short convolution is disabled.
+            q, k, v = F.silu(q), F.silu(k), F.silu(v)
 
         q = q.view(b, t, self.num_heads, self.head_k_dim)
         k = k.view(b, t, self.num_heads, self.head_k_dim)
         v = v.view(b, t, self.num_v_heads, self.head_v_dim)
         # kernel 不做 l2norm（fla 的 use_qk_l2norm_in_kernel=True 在它那边做了），
         # 所以这里显式做，并在 fp32 下做以免 bf16 的平方和丢位
-        q = F.normalize(q.float(), dim=-1, eps=1e-6).bfloat16()
-        k = F.normalize(k.float(), dim=-1, eps=1e-6).bfloat16()
+        q = _l2norm(q).bfloat16()
+        k = _l2norm(k).bfloat16()
         v = v.bfloat16()
 
         g = self._gate(hidden_states, b, t)
