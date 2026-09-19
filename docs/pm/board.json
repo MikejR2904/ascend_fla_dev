@@ -2591,7 +2591,7 @@
       "wave": "W0",
       "soc": "any",
       "priority": "P2",
-      "status": "in_progress",
+      "status": "done",
       "model": [
         "kimi-linear-48b-a3b"
       ],
@@ -2669,9 +2669,25 @@
         {
           "at": "2026-09-19T14:34",
           "summary": "草稿 PR #99 已开（task/A2-44，5 个文件 +350/−7，全在原五条写集内，无隐私命中；autograd.py 等三处已批追加尚未改）。STATUS（14:20Z，自述，PM 未核实）：D1/D3、decode 原始输入 flags、共享预处理/域检查已实现；申领人自己的 CPU venv 全量 573 passed/5 skipped，基线 D1/D3 失败在同一环境复现；bd4 已成功构建 5 前向 + 9 反向 + 1 decode 共 15 个 vendor（编译回执脚本把正常 SystemExit 0 误列为 failure，在修）。尚无真机通过证据：候选设备窗口被他人活跃任务占用，其启动检查拒绝执行，未干预（机器归 agent 管）。该 STATUS 写于 PM 批准 write-set-expansion 之前，仍称 RISK 待裁决——PM 的裁决已发在 #86。仍 in_progress、未 DONE"
+        },
+        {
+          "at": "2026-09-19T15:41",
+          "summary": "合入：PR #99 合并提交 afafe03（合入的是审过的头 e5a8900，--match-head-commit）。审查要点见上面 result：8 个文件恰为批准写集、语义对 FLA v0.5.2 核实、负控制 4 失败/3 通过、真机日志逐项复算（跨 bd 哈希、最大误差、源文件哈希）、全量 589/15 对账。合入后 main 全量 598 passed/15 skipped。三条缺口已按申领人的 handoff_notes 更新（两条 resolved，qk-l2norm-not-in-kernel 收窄）。状态 in_progress→done"
         }
       ],
-      "result": null,
+      "result": {
+        "commits": [
+          "e5a8900",
+          "afafe03"
+        ],
+        "evidence": [
+          "PR #99（评论里的完整原始日志与机器可读验收 JSON）",
+          "tests/test_kda_domain_checks.py（BF16 标定脚本与 160 条记录的出处）",
+          "tests/test_kda_layer_semantics.py"
+        ],
+        "numbers": "真机（A5，Ascend950PR_9589 / CANN 9.2.0 / OPP ascend950,910b,910_93，交付头实际执行，非编译/历史结果）：4 个 bd 独立进程，25 个带哈希的 case 在其出现的所有 bd 上逐位相同（15 个 bd1–4、10 个 decode 的 bd1/2/4，PM 从原始日志逐条比）；全部 errors 的最大值（PM 从原始日志重算）：o 4.945e-3、state 3.875e-3、raw 梯度 q/k/v/g/beta/A_log/dt_bias/h0 ≤ 5.04e-3/5.02e-3/4.45e-3/5.36e-3/4.22e-3/8.84e-3/4.93e-3/3.21e-3，均低于既有预算 0.05；FP32 decode 2.29e-7（预算 1e-5）；近零层 D1/D3 输出/状态 1.97e-3/5.99e-4；证据里 8 个源文件 sha256 与 PR 头逐个一致。PM 复跑：全量 589 passed/15 skipped 对账申领人的 599/5（+10 个需 pin 版 FLA 的 skip）；负控制：新 D1/D3 回归测试在 base 源码上 4 失败/3 通过、PR 上全过；FLA v0.5.2（9c8e42e）的 l2norm 加性 eps、无短卷积分支 SiLU、门控公式由 PM 对源码核实。合入后 main 全量 598 passed/15 skipped，无回归（+9 是 PM 工具测试）。",
+        "note": "结论只对这一套 A5 精确环境成立，不外推 A2/A3 或另一安装；不声称 kernel 融合与性能。raw flags 的预处理仍在 kernel 外（PyTorch 算子，FP32），domain 检查是启发式（检不出小范数 raw q/k，decode 不逐步检查）；qk-l2norm-not-in-kernel 只收窄、不标融合完成；D1/D3 两条缺口已 resolved。check_domain 默认 True 时 beta 用严格 (0,1)，调用方自算 sigmoid 饱和成恰好 1.0/0 会被误拒（规格如此，层已走 raw flags，可 check_domain=False），记入 handoff 观察。按用户常设授权 D-PM-33/34 由 PM 自行合入（PM 事先批准的 write-set-expansion 三处）。"
+      },
       "gate": null
     },
     {

@@ -208,7 +208,7 @@ kimi_linear_layer / bd=4 的拆分（ms）：fwd_kernels 1.314 · caches_host_si
 
 ## 缺口
 
-P0 2 项 · P1 18 项 · P2 10 项 · 已解决 11 项 · 共 42 项
+P0 2 项 · P1 18 项 · P2 9 项 · 已解决 13 项 · 共 42 项
 
 **第一期里程碑**：第一期五项已全部有结论，并补齐了同机性能对比：aclnn 编译、runtime 桥、kda_fwd 接线、KDA 本地基线均实测通过；自编译算子在 block_dim=4 下比 torch_npu 组合快 4.43x（kimi_linear_layer）/ 2.38x（long_context T=4096）/ 19.7x（smoke）。过程中修掉两个自己的 bug（bridge-per-call-overhead、op-name-collision-in-process），它们先后让 block_dim 的效果被完全掩盖。当前最大的性能项是 block-dim-ceiling（已升 P1）：扩展性一路线性到契约上限 4，而硬件有 28 cube。第二期的前置障碍 kda-fwd-bwd-dtype-mismatch 已量化（降 P2）。
 
@@ -237,7 +237,7 @@ P0 2 项 · P1 18 项 · P2 10 项 · 已解决 11 项 · 共 42 项
 
 | 算子族 | P0 | P1 | P2 |
 |---|---|---|---|
-| KDA | `c1-multihead-o-corrupt`<br>`ascriptor-gm-transfer-two-slice-row-gap` | `decode-call-overhead`<br>`decode-layer-overhead`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`no-tail-path`<br>`block-dim-ceiling`<br>`qk-l2norm-not-in-kernel`<br>`state-layout-k-first`<br>`kda-bwd-inverse-mm-mutex-over-budget` | `kda-fwd-bwd-dtype-mismatch`<br>`npu-builtin-ops-missing`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`kernel-nd2nz-suboptimal`<br>`fwd-caches-not-emitted`<br>`modules-are-torch-not-kernels`<br>`stable-unit-no-harness`<br>`gate-span-still-bounded`<br>`kda-layer-l2norm-eps-formula-diverges` |
+| KDA | `c1-multihead-o-corrupt`<br>`ascriptor-gm-transfer-two-slice-row-gap` | `decode-call-overhead`<br>`decode-layer-overhead`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`no-tail-path`<br>`block-dim-ceiling`<br>`qk-l2norm-not-in-kernel`<br>`state-layout-k-first`<br>`kda-bwd-inverse-mm-mutex-over-budget` | `kda-fwd-bwd-dtype-mismatch`<br>`npu-builtin-ops-missing`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`kernel-nd2nz-suboptimal`<br>`fwd-caches-not-emitted`<br>`modules-are-torch-not-kernels`<br>`stable-unit-no-harness`<br>`gate-span-still-bounded` |
 | GDN | `ascriptor-gm-transfer-two-slice-row-gap` | `gdn-no-gqa`<br>`layout-not-token-major`<br>`nonzero-initial-state`<br>`d-initial-state-absent`<br>`state-dtype-bf16`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`scale-param-no-slot`<br>`no-tail-path`<br>`block-dim-ceiling` | `npu-builtin-ops-missing`<br>`fixed-kv-128`<br>`asymmetric-kv-dim` |
 | GDN-2 | `ascriptor-gm-transfer-two-slice-row-gap` | `no-varlen`<br>`no-tail-path`<br>`gdn2-abi-not-gdn`<br>`gdn2-chunk-gate-range`<br>`gdn2-decode-fragmentation` | `npu-builtin-ops-missing`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`modules-are-torch-not-kernels` |
 | DeltaNet | `ascriptor-gm-transfer-two-slice-row-gap` | `layout-not-token-major`<br>`nonzero-initial-state`<br>`d-initial-state-absent`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`scale-param-no-slot`<br>`no-tail-path` | `npu-builtin-ops-missing`<br>`fixed-kv-128`<br>`asymmetric-kv-dim` |
@@ -456,6 +456,8 @@ PM 在权威 workspace 上独立跑了 `benchmarks/diag_c1_multihead.py`，**上
 - **依据** fla 的 KimiDeltaAttention 调 chunk_kda 时传 use_qk_l2norm_in_kernel=True、use_gate_in_kernel=True、use_beta_sigmoid_in_kernel=True，即三步都在它的 kernel 里：g 的变换是 -exp(A_log) * softplus(g + dt_bias.view(HV,K))，beta 过 sigmoid，q/k 沿头维 L2 归一化。ascriptor 的 kda_fwd/kda_bwd 的 inlet 只收已经变换好的 q/k/g/beta，contract 里没有 A_log / dt_bias 这两个入口。
 
 **A2-40 复核收窄（issue #54 / PR #85，2026-09-18）**：照抄 fla 的调用方式（传 `use_qk_l2norm_in_kernel=True` 等 flags）在本仓会直接 `TypeError`，不是静默——`chunk_kda`/`fused_recurrent_kda` 签名没有 `**kwargs`。真正的静默面是调用方为了消掉这个报错、把不认识的 kwargs 删掉后传入未归一化/未激活的原始值：这在数值上完全合法，门控闸也未必拦得住（原始值尺度小时跨度也小）。
+
+**2026-09-19 收窄（A2-44，PR #99 → afafe03）**：公开 `chunk_kda` / `fused_recurrent_kda` 现在显式支持 fla 式 raw flags（`use_qk_l2norm_in_kernel` / `use_gate_in_kernel` / `use_beta_sigmoid_in_kernel`，`A_log` / `dt_bias`）：FP32 预处理、保留梯度，层已改走这条路，调用方不再需要自己做三步，缺参与不支持的组合显式报错。**但这三步仍在 kernel 外（PyTorch 算子），没有融合进 kernel——不要把这条标成融合完成。**`check_domain` 对 prepared 输入的检查是启发式，检不出小范数的 raw q/k，decode 不做逐步检查。
 - **影响** **门控挡不住这一条** —— 没做归一化的 q/k 在数值上完全合法，算子会照算并给出一个静静地错的结果。这是本仓目前唯一"错了不报错"的语义缺口，因此列 P1。另外这三步的梯度也落在调用方这边，autograd 链要从层级算起。
 - **建议** 当前处置：ascend_fla/layers/kda.py 显式做这三步并在 fp32 下做，ops/kda 的 docstring 与 __init__ 写明"调用方需已做"。直接调算子的人要自己负责。若要彻底消除风险，得在 ascriptor 侧给 kernel 加 A_log/dt_bias 入口与 l2norm —— 那是第四期的事，收益还包括省掉几趟 elementwise 的访存。
 
@@ -591,10 +593,3 @@ PM 在权威 workspace 上独立跑了 `benchmarks/diag_c1_multihead.py`，**上
 ① **先查 dq 为什么是约束项**。它在跨度 46 时就已用掉 58% 预算，说明深衰减下 `dq` 的主项（`d_qg · exp(g) · scale`，见 inverse_epilogue）对 bf16 的 `g` 最敏感。若把 `g_cumsum` 检查点从 bf16 升到 fp32（kda_bwd 的 ABI 问题，见 kda-fwd-bwd-dtype-mismatch），这条曲线可能整体下移 —— **这是推测，要测**。
 ② 把 64×64 的 tile 再按行列分块，每对子块用各自的中点（等价于分块 log-sum-exp），有限性上限随分块数线性增长。但若约束是精度而不是有限性，这一项帮不上忙。
 ③ fla 的 `lower_bound` / `safe_gate`：给门控设下界。那**会改变数学**，属于模型侧决策，不能当数值修补悄悄加上（本仓目前显式拒绝这两个开关）。
-
-#### `kda-layer-l2norm-eps-formula-diverges` — 本仓层里的 l2norm 用 F.normalize 的 eps 语义，和 fla 的公式在近零行上静默分叉（D1）
-
-- **类别** correctness · **适用于** KDA · **阻塞** —
-- **依据** fla v0.5.2：`x / sqrt(Σx² + 1e-6)`（`modules/l2norm.py:43,105`、`ops/kda/fused_recurrent.py:155`）。本仓 `ascend_fla/layers/kda.py` 用 `F.normalize(x, eps=1e-6)` = `x / max(‖x‖, 1e-6)`。‖x‖ 大时两者相对差 ≈ 1e-6/(2‖x‖²)，在 bf16 分辨率以下。**‖x‖ 小时分叉**：‖x‖=1e-4 时 fla 输出范数 0.0995，本仓输出 1.0（算例：1/sqrt(1e-8+1e-6)=995，乘 1e-4 得 0.0995）。全零行两边都给 0。发现于 A2-40（issue #54 / PR #85 `docs/research/a2_fusion_ops.md` §2.1 D1）。
-- **影响** 只在近零行上分叉（padding token、刚初始化的卷积输出），主训练路径大概率不触发，但会让"数值对齐 fla"这句话在边界上不成立，且分叉是静默的（不报错、不 NaN、形状不变）。
-- **建议** 改用 fla 的公式（分母整体加 eps 再开方，不是对范数取 max），划入 A2-44（纯主机侧，不动 kernel）。
