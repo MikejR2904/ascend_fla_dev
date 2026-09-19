@@ -1,6 +1,6 @@
 {
   "schema": "pgdn-forward-qualification/1",
-  "scope": "PGDN forward + ATK, host/model/CANN compilation evidence; native hardware and performance unverified",
+  "scope": "PGDN forward + ATK: host, bounded models, CANN compilation, 60 native correctness cases and three-round same-card measurements. No CUDA/Triton/checkpoint or standalone board/aclnn execution.",
   "sources": {
     "guidance": "0f106aaf6ce7a2b273ac3fdff6f9f51096f4faad",
     "repository_base": "20b5247977f2eeaf1604176c3a2f575fc7a0a5d1",
@@ -21,7 +21,7 @@
     "run.py": "8557f3a1494c5996e4837d87cb25fb4090f36f34849f763403e23927adefb5aa",
     "unit.py": "35934a2d2f03b76076d4be9057d09ea076c65713bff1c1fdd829d09973b7d1ba",
     "verify.py": "97c184ff9d3696393f8c85940d18089d73b93e4008e59935c22462403ed891dc",
-    "measure.py": "dd0711afd49359501d248c2396e563c25b429cd3e6e11b99e52017d14d09e3ec"
+    "measure.py": "94c80206f22eb5cdf0c90ec77a9b882f7016c340cffbf52afe925e8b19af38c9"
   },
   "wrapper_sha256": "3ce60fbec79d4586c33e6125de6830e2a9bf0c93b6bdbc4770539b7ff69b0060",
   "host": {
@@ -4825,11 +4825,282 @@
     ]
   },
   "native_inprocess": {
-    "status": "blocked",
-    "reason": "No device kernel executed. Required container runtime or verified occupancy unavailable on configured targets."
+    "status": "passed",
+    "native_cases": 60,
+    "independent_leaf_arrays": 1020,
+    "public_calls": 120,
+    "passed": true,
+    "fp32": {
+      "A_pinned_cpu_recurrence": {
+        "o": 1.5343699827967288e-06,
+        "final_state": 2.215286200965215e-06,
+        "final_A_state": 5.81353770909301e-07
+      },
+      "B_independent_cpu_block_solve": {
+        "o": 2.454782412374371e-06,
+        "final_state": 3.2284060214564652e-06,
+        "final_A_state": 4.7486684650938164e-07
+      }
+    },
+    "bf16": {
+      "A": {
+        "o": 0.00168057785439583,
+        "final_state": 2.215286200965215e-06,
+        "final_A_state": 6.010470290481654e-07
+      },
+      "B": {
+        "o": 0.0016805873978457807,
+        "final_state": 3.2284060214564652e-06,
+        "final_A_state": 4.788971069254692e-07
+      }
+    },
+    "composition_stage_arrays": 1020,
+    "environment": {
+      "soc": "Ascend950PR_9589 V100",
+      "cann": "9.2.0",
+      "opp": "opp/built-in/op_impl/ai_core/tbe/kernel/ascend950",
+      "python": "3.12.13",
+      "torch": "2.12.0+cpu",
+      "torch_npu": "2.12.0",
+      "ascriptor": "0.1.0",
+      "numpy": "2.5.1",
+      "einops": "0.8.2",
+      "driver": "7.0.t9.0.B798"
+    },
+    "block_dim": [
+      1,
+      2
+    ],
+    "full_workload_first": "B1/T4096/H=HV8/K=V128, block_dim2, followed by block_dim1 and the remaining grid.",
+    "cross_block_dim_pairs": 30,
+    "public_bitwise_outputs_per_dtype": 3,
+    "intermediate_bitwise_arrays": 17,
+    "inputs_unchanged": true,
+    "shared_lock": true,
+    "final_health": "Healthy",
+    "lock_released": true,
+    "owned_compute_processes_remaining": 0,
+    "raw_evidence": {
+      "evidence/native/first-full-bd2-result.json": {
+        "sha256": "48571c16ae7c1319590f7be741fa6f0057e260417dd00070defc15c7c7e28a94",
+        "lines": 370,
+        "bytes": 12793
+      },
+      "evidence/native/first-full-bd2-run.log": {
+        "sha256": "cf3d646376c7783039144e8b75b387c116c516469ddabbbb7a1dacc64ea2f255",
+        "lines": 7,
+        "bytes": 1187
+      },
+      "evidence/native/first-full-bd1-result.json": {
+        "sha256": "1272f1535f7f1af24d9afe9c0bda0c23acd9d589a21ff8b21e3364505c2363db",
+        "lines": 370,
+        "bytes": 12793
+      },
+      "evidence/native/first-full-bd1-run.log": {
+        "sha256": "145b2a6542a042fe53756c703c2398ec1f5d6824eae6255c51f92813a32a93f3",
+        "lines": 7,
+        "bytes": 1187
+      },
+      "evidence/native/grid-bd1-result.json": {
+        "sha256": "247b8b12cd9945712d6048570e14ec24ad052f07155b8220e360e866070d830e",
+        "lines": 9766,
+        "bytes": 319547
+      },
+      "evidence/native/grid-bd1-run.log": {
+        "sha256": "1d29ebfa6339b0ed0331e70cbfb7c898adfdf908c31e545df1084697f81b645c",
+        "lines": 203,
+        "bytes": 34039
+      },
+      "evidence/native/grid-bd2-result.json": {
+        "sha256": "aae9a91e1c95db18866c85fa6b11c5241a6de8954cd3fdd603451efb0fddc5cc",
+        "lines": 9766,
+        "bytes": 319547
+      },
+      "evidence/native/grid-bd2-run.log": {
+        "sha256": "6520d6feea40690305560c5935c3a06c984b33c46e91fea0c900a87eff9d766a",
+        "lines": 203,
+        "bytes": 34039
+      },
+      "evidence/native/measure-bd2-result.json": {
+        "sha256": "802747320a970a21ca5bcdfd7a838aaba78056c01cab0c95eb17ee242c2ac882",
+        "lines": 2698,
+        "bytes": 78981
+      },
+      "evidence/native/measure-bd2-run.log": {
+        "sha256": "b19ac130225aefbf4480ed4e7e28b476b9bfbaa70c2d2554d7cf0399282874ed",
+        "lines": 36,
+        "bytes": 3462
+      },
+      "evidence/native/byte-comparison-full.json": {
+        "sha256": "fc19e0c7b48d5176d4f367275d4b3370670e859dea0f5513209bba09dc4553b8"
+      },
+      "evidence/native/native-grid-summary.json": {
+        "sha256": "d5b874d64fb362d93562a06734e6bed5a98f24591aa4eabd32d76c1afe55af47"
+      }
+    }
   },
   "performance": {
-    "status": "untested"
+    "status": "passed",
+    "scope": "Synchronized wall microseconds, including Python dispatch; no speed threshold",
+    "baseline": "GDN equations through the five PGDN-owned chunk kernels with equal read/write keys; timed NPU FP32 normalization/output cast; no ATK",
+    "candidate": "Native public PGDN with ATK, both final states and validation predicates",
+    "block_dim": 2,
+    "B": 1,
+    "H": 8,
+    "HV": 8,
+    "K": 128,
+    "V": 128,
+    "warmup": 10,
+    "repeat": 50,
+    "rounds": 3,
+    "measurements": [
+      {
+        "T": 4096,
+        "dtype": "torch.float32",
+        "rounds": [
+          {
+            "round": 1,
+            "medians_us": {
+              "baseline_before": 547686.4275,
+              "candidate": 566339.4915,
+              "baseline_after": 547668.2715
+            },
+            "candidate_over_mean_baseline": 1.0340750663087264,
+            "baseline_drift_ratio": 0.9999668496440877
+          },
+          {
+            "round": 2,
+            "medians_us": {
+              "baseline_before": 547669.1939999999,
+              "candidate": 566420.69,
+              "baseline_after": 547669.3335
+            },
+            "candidate_over_mean_baseline": 1.0342385952456146,
+            "baseline_drift_ratio": 1.0000002547158058
+          },
+          {
+            "round": 3,
+            "medians_us": {
+              "baseline_before": 547663.6755,
+              "candidate": 566280.4484999999,
+              "baseline_after": 547661.594
+            },
+            "candidate_over_mean_baseline": 1.0339950410502239,
+            "baseline_drift_ratio": 0.999996199309735
+          }
+        ]
+      },
+      {
+        "T": 4096,
+        "dtype": "torch.bfloat16",
+        "rounds": [
+          {
+            "round": 1,
+            "medians_us": {
+              "baseline_before": 547864.3640000001,
+              "candidate": 566907.0955,
+              "baseline_after": 547836.4755
+            },
+            "candidate_over_mean_baseline": 1.0347844503955954,
+            "baseline_drift_ratio": 0.9999490959773392
+          },
+          {
+            "round": 2,
+            "medians_us": {
+              "baseline_before": 547835.96,
+              "candidate": 566630.273,
+              "baseline_after": 547833.2505000001
+            },
+            "candidate_over_mean_baseline": 1.034309018762009,
+            "baseline_drift_ratio": 0.9999950541764365
+          },
+          {
+            "round": 3,
+            "medians_us": {
+              "baseline_before": 547828.8130000001,
+              "candidate": 566604.1329999999,
+              "baseline_after": 547865.343
+            },
+            "candidate_over_mean_baseline": 1.034237756763211,
+            "baseline_drift_ratio": 1.0000666814142174
+          }
+        ]
+      },
+      {
+        "T": 1024,
+        "dtype": "torch.float32",
+        "rounds": [
+          {
+            "round": 1,
+            "medians_us": {
+              "baseline_before": 137843.161,
+              "candidate": 143646.97499999998,
+              "baseline_after": 137818.954
+            },
+            "candidate_over_mean_baseline": 1.0421959869240645,
+            "baseline_drift_ratio": 0.999824387370223
+          },
+          {
+            "round": 2,
+            "medians_us": {
+              "baseline_before": 137855.01049999997,
+              "candidate": 143645.68550000002,
+              "baseline_after": 137821.40600000002
+            },
+            "candidate_over_mean_baseline": 1.0421325648652286,
+            "baseline_drift_ratio": 0.9997562330170077
+          },
+          {
+            "round": 3,
+            "medians_us": {
+              "baseline_before": 137821.1775,
+              "candidate": 143650.9085,
+              "baseline_after": 137870.3695
+            },
+            "candidate_over_mean_baseline": 1.0421132607304784,
+            "baseline_drift_ratio": 1.0003569262786194
+          }
+        ]
+      },
+      {
+        "T": 1024,
+        "dtype": "torch.bfloat16",
+        "rounds": [
+          {
+            "round": 1,
+            "medians_us": {
+              "baseline_before": 137815.8645,
+              "candidate": 143998.93349999998,
+              "baseline_after": 137857.652
+            },
+            "candidate_over_mean_baseline": 1.0447063274574653,
+            "baseline_drift_ratio": 1.000303212552137
+          },
+          {
+            "round": 2,
+            "medians_us": {
+              "baseline_before": 137833.154,
+              "candidate": 144069.7935,
+              "baseline_after": 137774.975
+            },
+            "candidate_over_mean_baseline": 1.0454683903753796,
+            "baseline_drift_ratio": 0.9995779027156267
+          },
+          {
+            "round": 3,
+            "medians_us": {
+              "baseline_before": 137770.42349999998,
+              "candidate": 143935.8655,
+              "baseline_after": 137774.3995
+            },
+            "candidate_over_mean_baseline": 1.0447364892063316,
+            "baseline_drift_ratio": 1.0000288596049791
+          }
+        ]
+      }
+    ],
+    "raw_samples": "evidence/native/measure-bd2-result.json",
+    "no_speed_threshold": true
   },
   "board_launcher": {
     "status": "untested"
@@ -4847,7 +5118,7 @@
     "previous_sha256": "9f9014878776c7e73bf53029da41b07a0451fe524de412aff8d3582863994a26",
     "sha256": "cc61cb65ae37c478593335f16ab3af9f8495773cf617f07c0154db27acd77b80",
     "scope": "Repeatable case selection, launch progress, explicit FP32 oracle precision and verification-only Torch NPU oracle option; no kernel or ABI changes.",
-    "validation": "CLI --help passed; device execution untested. Historical model and compilation receipts cover unchanged kernel, pipeline, reference and wrapper sources."
+    "validation": "CLI smoke and all60 native correctness cases passed on this exact runner; unchanged computational sources retain prior host/model evidence."
   },
   "container_host": {
     "stage": "host CPU only",
@@ -4860,10 +5131,10 @@
     "result": "104 passed in 25.02s"
   },
   "measurement_harness": {
-    "status": "untested_on_device",
+    "status": "passed_on_device",
     "cli_help": "passed",
-    "source_sha256": "dd0711afd49359501d248c2396e563c25b429cd3e6e11b99e52017d14d09e3ec",
-    "baseline": "Unmodified GDN with timed NPU FP32 q/k normalization and output cast; no ATK",
+    "source_sha256": "94c80206f22eb5cdf0c90ec77a9b882f7016c340cffbf52afe925e8b19af38c9",
+    "baseline": "GDN equations through the five PGDN-owned chunk kernels with equal read/write keys; timed NPU FP32 normalization/output cast; no ATK",
     "lengths": [
       4096,
       1024
@@ -4880,6 +5151,329 @@
     ],
     "warmup": 10,
     "repeat": 50,
-    "no_speed_threshold": true
-  }
+    "no_speed_threshold": true,
+    "block_dim": 2
+  },
+  "native_compilation": {
+    "passed": true,
+    "environment": "Docker CANN 9.2.0",
+    "emitted_cpp_matches_previous_builds": true,
+    "receipts": [
+      {
+        "block_dim": 1,
+        "units": [
+          {
+            "operator": "pgdn_chunk_atk-00cb3fe7566a79b3",
+            "artifacts": {
+              "artifacts/pgdn_chunk_atk.cpp": {
+                "bytes": 899,
+                "sha256": "42e994d0fd97f62224c0c47e791f417a670ad4f6ef63a2ad6d1b2b67d3ef437b"
+              },
+              "custom_op/vendors/customize/op_api/lib/libcust_opapi.so": {
+                "bytes": 14944,
+                "sha256": "a1a410c9e349040e9ee4d5c147205678c25381c2bd57265198febe931eac7ac8"
+              },
+              "custom_op/vendors/customize/op_impl/ai_core/tbe/kernel/ascend950/pgdn_chunk_atk/PgdnChunkAtk_dcf9938695adffff8cdf8d6bd62b352c.o": {
+                "bytes": 5552,
+                "sha256": "212ae86d5cb7b23bca6203e298d63fc601096c74f0d7a5bd2d15ee1176870be0"
+              }
+            },
+            "build_log_sha256": "f439931797446a6cb34b07374c6984dfa039daa656e3c8e0dad3b554a0a46142",
+            "build_log_lines": 217,
+            "cce_compat_warnings": 0
+          },
+          {
+            "operator": "pgdn_chunk_output-c2574d6427644edc",
+            "artifacts": {
+              "artifacts/pgdn_chunk_output.cpp": {
+                "bytes": 812,
+                "sha256": "23b887414dc63510b6379d10b45c8f4cf566bebba3a03662d9934a4297121789"
+              },
+              "custom_op/vendors/customize/op_api/lib/libcust_opapi.so": {
+                "bytes": 14944,
+                "sha256": "920f1ab5fd7ff897cabc4b51c53b9c701dfc47caa29f3b3880e41393a7148bc4"
+              },
+              "custom_op/vendors/customize/op_impl/ai_core/tbe/kernel/ascend950/pgdn_chunk_output/PgdnChunkOutput_97dac9d354741cbe8146795177f2dbd0.o": {
+                "bytes": 4632,
+                "sha256": "df30220da5a51e319f70ba322220805573d439454fc23e0734d58a91bec68e87"
+              }
+            },
+            "build_log_sha256": "8238964e0b64a79657cb65aa973da63f5b8c7e88af30a8fe5834ddc219c11d07",
+            "build_log_lines": 216,
+            "cce_compat_warnings": 0
+          },
+          {
+            "operator": "pgdn_chunk_prepare-82202c2880aed6cc",
+            "artifacts": {
+              "artifacts/pgdn_chunk_prepare.cpp": {
+                "bytes": 972,
+                "sha256": "9ac298b9ae1d2e112347013742ce110d5370e5018f1154cf69a53ba8e86ee341"
+              },
+              "custom_op/vendors/customize/op_api/lib/libcust_opapi.so": {
+                "bytes": 14992,
+                "sha256": "3409c29436655bb8111d4046a1b9b070a19a8ddbbb62ebc5582b827a0418022b"
+              },
+              "custom_op/vendors/customize/op_impl/ai_core/tbe/kernel/ascend950/pgdn_chunk_prepare/PgdnChunkPrepare_fadc7f6e0735b71ae86b6ec0fbf8622a.o": {
+                "bytes": 5168,
+                "sha256": "35f8f591ede13ce063fef90ddc5487589e5b3deab7ef8a2de49a7189a9d6baa4"
+              }
+            },
+            "build_log_sha256": "e3cebf50ab90e29adaeb095cd8cfdd8e8d83108a46e67fd268a1814765441983",
+            "build_log_lines": 216,
+            "cce_compat_warnings": 0
+          },
+          {
+            "operator": "pgdn_chunk_scan-29847d4737496a34",
+            "artifacts": {
+              "artifacts/pgdn_chunk_scan.cpp": {
+                "bytes": 893,
+                "sha256": "255dfa8a199f53cdccb23fb0e19ddb171bec4a01508cce373c237d2363cc88e3"
+              },
+              "custom_op/vendors/customize/op_api/lib/libcust_opapi.so": {
+                "bytes": 14944,
+                "sha256": "ff63a950dc375a3db9feecdf5cf40c142858306f795a9190bfb96b0c1baeb14c"
+              },
+              "custom_op/vendors/customize/op_impl/ai_core/tbe/kernel/ascend950/pgdn_chunk_scan/PgdnChunkScan_56eebb8b2ad37277e362e1411ecbabd9.o": {
+                "bytes": 4640,
+                "sha256": "7f88c912f31369d01512bd1d3f11ff4b2cb124c7906af058f6cd2a00d74e696e"
+              }
+            },
+            "build_log_sha256": "e39fa2279a2477c54b016b756c8cedf7b6e14e6d9b22d2f6cb81d6f0fba8f948",
+            "build_log_lines": 216,
+            "cce_compat_warnings": 0
+          },
+          {
+            "operator": "pgdn_chunk_scores-6c96b0c3d14daf76",
+            "artifacts": {
+              "artifacts/pgdn_chunk_scores.cpp": {
+                "bytes": 803,
+                "sha256": "edf47ee3df78ac9784f9b48eaa562a5efd1c7a5ba992ba53da10f168bb08771c"
+              },
+              "custom_op/vendors/customize/op_api/lib/libcust_opapi.so": {
+                "bytes": 14944,
+                "sha256": "feea2d5a01815e121d74323a87f36f6c192bea372a946796ed8870e89b47e9f6"
+              },
+              "custom_op/vendors/customize/op_impl/ai_core/tbe/kernel/ascend950/pgdn_chunk_scores/PgdnChunkScores_82bfbdce71c778c2f56a5e6c88108d93.o": {
+                "bytes": 4408,
+                "sha256": "de4ca5606af49e50dc96a549257099500639b05441e7f770e9483d51d5b91b3f"
+              }
+            },
+            "build_log_sha256": "6f9698b9b48a7564a0fa4c154ff58c8067e775443a6a6bdc7da7ec05be0b3e1c",
+            "build_log_lines": 216,
+            "cce_compat_warnings": 0
+          },
+          {
+            "operator": "pgdn_chunk_wy-f66f5452dbdfe3b4",
+            "artifacts": {
+              "artifacts/pgdn_chunk_wy.cpp": {
+                "bytes": 771,
+                "sha256": "efdf74a6c535aa9061ddc97295c78b715aac99576c996ec2b227ea743f268ffa"
+              },
+              "custom_op/vendors/customize/op_api/lib/libcust_opapi.so": {
+                "bytes": 14944,
+                "sha256": "4d82f1fea814477c69a9c8c41638ab718b48d41673c0194c9e6fdf68d8c85439"
+              },
+              "custom_op/vendors/customize/op_impl/ai_core/tbe/kernel/ascend950/pgdn_chunk_wy/PgdnChunkWy_1a106a6e5b0a61668f8bd473c8f4ad4e.o": {
+                "bytes": 4560,
+                "sha256": "d222c5e7637f010ebe64374c43f8fb75bf4234ce741ec157409697fba5483351"
+              }
+            },
+            "build_log_sha256": "ec060ca064644f224abf7eced81f145c52c16d8338b3188583e6a4c8b3c6720a",
+            "build_log_lines": 216,
+            "cce_compat_warnings": 0
+          }
+        ]
+      },
+      {
+        "block_dim": 2,
+        "units": [
+          {
+            "operator": "pgdn_chunk_atk-26abd5b34a68a835",
+            "artifacts": {
+              "artifacts/pgdn_chunk_atk.cpp": {
+                "bytes": 899,
+                "sha256": "42e994d0fd97f62224c0c47e791f417a670ad4f6ef63a2ad6d1b2b67d3ef437b"
+              },
+              "custom_op/vendors/customize/op_api/lib/libcust_opapi.so": {
+                "bytes": 14944,
+                "sha256": "a1a410c9e349040e9ee4d5c147205678c25381c2bd57265198febe931eac7ac8"
+              },
+              "custom_op/vendors/customize/op_impl/ai_core/tbe/kernel/ascend950/pgdn_chunk_atk/PgdnChunkAtk_dcf9938695adffff8cdf8d6bd62b352c.o": {
+                "bytes": 5552,
+                "sha256": "212ae86d5cb7b23bca6203e298d63fc601096c74f0d7a5bd2d15ee1176870be0"
+              }
+            },
+            "build_log_sha256": "c9d04ea393adb3e49d3798083b4f5e7f5cbb554aeae5584671153873dde94789",
+            "build_log_lines": 217,
+            "cce_compat_warnings": 0
+          },
+          {
+            "operator": "pgdn_chunk_output-644a4531418b096d",
+            "artifacts": {
+              "artifacts/pgdn_chunk_output.cpp": {
+                "bytes": 812,
+                "sha256": "23b887414dc63510b6379d10b45c8f4cf566bebba3a03662d9934a4297121789"
+              },
+              "custom_op/vendors/customize/op_api/lib/libcust_opapi.so": {
+                "bytes": 14944,
+                "sha256": "920f1ab5fd7ff897cabc4b51c53b9c701dfc47caa29f3b3880e41393a7148bc4"
+              },
+              "custom_op/vendors/customize/op_impl/ai_core/tbe/kernel/ascend950/pgdn_chunk_output/PgdnChunkOutput_97dac9d354741cbe8146795177f2dbd0.o": {
+                "bytes": 4632,
+                "sha256": "df30220da5a51e319f70ba322220805573d439454fc23e0734d58a91bec68e87"
+              }
+            },
+            "build_log_sha256": "2384935b6daab5851a88b230ab8d5cf18e40ba9cc16497e10ec0503ec30df85e",
+            "build_log_lines": 216,
+            "cce_compat_warnings": 0
+          },
+          {
+            "operator": "pgdn_chunk_prepare-2dc6d57c1b156026",
+            "artifacts": {
+              "artifacts/pgdn_chunk_prepare.cpp": {
+                "bytes": 972,
+                "sha256": "9ac298b9ae1d2e112347013742ce110d5370e5018f1154cf69a53ba8e86ee341"
+              },
+              "custom_op/vendors/customize/op_api/lib/libcust_opapi.so": {
+                "bytes": 14992,
+                "sha256": "3409c29436655bb8111d4046a1b9b070a19a8ddbbb62ebc5582b827a0418022b"
+              },
+              "custom_op/vendors/customize/op_impl/ai_core/tbe/kernel/ascend950/pgdn_chunk_prepare/PgdnChunkPrepare_fadc7f6e0735b71ae86b6ec0fbf8622a.o": {
+                "bytes": 5168,
+                "sha256": "35f8f591ede13ce063fef90ddc5487589e5b3deab7ef8a2de49a7189a9d6baa4"
+              }
+            },
+            "build_log_sha256": "d2db5d428198ce21cc23649c37d008802c5ed7e822e618598fcabda2125e372f",
+            "build_log_lines": 216,
+            "cce_compat_warnings": 0
+          },
+          {
+            "operator": "pgdn_chunk_scan-5099fe83cf8b5a7e",
+            "artifacts": {
+              "artifacts/pgdn_chunk_scan.cpp": {
+                "bytes": 893,
+                "sha256": "255dfa8a199f53cdccb23fb0e19ddb171bec4a01508cce373c237d2363cc88e3"
+              },
+              "custom_op/vendors/customize/op_api/lib/libcust_opapi.so": {
+                "bytes": 14944,
+                "sha256": "ff63a950dc375a3db9feecdf5cf40c142858306f795a9190bfb96b0c1baeb14c"
+              },
+              "custom_op/vendors/customize/op_impl/ai_core/tbe/kernel/ascend950/pgdn_chunk_scan/PgdnChunkScan_56eebb8b2ad37277e362e1411ecbabd9.o": {
+                "bytes": 4640,
+                "sha256": "7f88c912f31369d01512bd1d3f11ff4b2cb124c7906af058f6cd2a00d74e696e"
+              }
+            },
+            "build_log_sha256": "1e150defb36b476eb2ed04987631922c07ef8887f696e7355d410279d28dde1e",
+            "build_log_lines": 216,
+            "cce_compat_warnings": 0
+          },
+          {
+            "operator": "pgdn_chunk_scores-3685f220242d7aa6",
+            "artifacts": {
+              "artifacts/pgdn_chunk_scores.cpp": {
+                "bytes": 803,
+                "sha256": "edf47ee3df78ac9784f9b48eaa562a5efd1c7a5ba992ba53da10f168bb08771c"
+              },
+              "custom_op/vendors/customize/op_api/lib/libcust_opapi.so": {
+                "bytes": 14944,
+                "sha256": "feea2d5a01815e121d74323a87f36f6c192bea372a946796ed8870e89b47e9f6"
+              },
+              "custom_op/vendors/customize/op_impl/ai_core/tbe/kernel/ascend950/pgdn_chunk_scores/PgdnChunkScores_82bfbdce71c778c2f56a5e6c88108d93.o": {
+                "bytes": 4408,
+                "sha256": "de4ca5606af49e50dc96a549257099500639b05441e7f770e9483d51d5b91b3f"
+              }
+            },
+            "build_log_sha256": "ec7109324a2acae9692ab010df5f18499dbf4d6ff60fa60e2d2363de23f39ef7",
+            "build_log_lines": 216,
+            "cce_compat_warnings": 0
+          },
+          {
+            "operator": "pgdn_chunk_wy-cec720236a561e1e",
+            "artifacts": {
+              "artifacts/pgdn_chunk_wy.cpp": {
+                "bytes": 771,
+                "sha256": "efdf74a6c535aa9061ddc97295c78b715aac99576c996ec2b227ea743f268ffa"
+              },
+              "custom_op/vendors/customize/op_api/lib/libcust_opapi.so": {
+                "bytes": 14944,
+                "sha256": "4d82f1fea814477c69a9c8c41638ab718b48d41673c0194c9e6fdf68d8c85439"
+              },
+              "custom_op/vendors/customize/op_impl/ai_core/tbe/kernel/ascend950/pgdn_chunk_wy/PgdnChunkWy_1a106a6e5b0a61668f8bd473c8f4ad4e.o": {
+                "bytes": 4560,
+                "sha256": "d222c5e7637f010ebe64374c43f8fb75bf4234ce741ec157409697fba5483351"
+              }
+            },
+            "build_log_sha256": "15bcf95f2e0f6b04d9f49fbaaf5b6aa0543d40745ae195998d9471e2164fd948",
+            "build_log_lines": 216,
+            "cce_compat_warnings": 0
+          }
+        ]
+      }
+    ],
+    "other_messages": [
+      "CANN header deprecation notices",
+      "CANN template regex escape SyntaxWarning",
+      "Unused CMAKE_CROSS_PLATFORM_COMPILER option"
+    ]
+  },
+  "runtime_log_review": {
+    "log_count": 21,
+    "warnings": [
+      {
+        "kind": "tensorflow_preload",
+        "line": 30
+      },
+      {
+        "kind": "tensorflow_preload",
+        "line": 30
+      },
+      {
+        "kind": "tensorflow_preload",
+        "line": 30
+      },
+      {
+        "kind": "tensorflow_preload",
+        "line": 30
+      },
+      {
+        "kind": "tensorflow_preload",
+        "line": 30
+      },
+      {
+        "kind": "plugin_policy_query",
+        "line": 76
+      },
+      {
+        "kind": "plugin_policy_query",
+        "line": 76
+      },
+      {
+        "kind": "plugin_policy_query",
+        "line": 76
+      },
+      {
+        "kind": "plugin_policy_query",
+        "line": 76
+      },
+      {
+        "kind": "plugin_policy_query",
+        "line": 76
+      }
+    ],
+    "error_count": 0,
+    "raw_logs": "Ignored private configuration; original line offsets retained in the following public excerpts.",
+    "plugin_policy_query": {
+      "owner": "plugin_version_manager.cpp:38",
+      "message": "halGetDeviceInfo(INFO_TYPE_SWPLUGIN_UPGRADE_POLICY) failed, retCode[3], fallback to PLUGIN_NOT_FORCE_UPDATE",
+      "scope": "Installed driver maps 3 to DRV_ERROR_INVALID_VALUE. Compat-plugin load is subsequently skipped and startup succeeds. No support claim for this plugin policy query; no suppression or forced update."
+    },
+    "tensorflow_preload": {
+      "owner": "ae_kernel_lib_fwk.cc:298 LoadTfSo",
+      "message": "load tensorflow so failed, ret is[11002]",
+      "scope": "AICPU scheduler framework preload. Original first device-log lines29/30/31 are preload start/warning/end; lines36/37 confirm scheduler start/init success. Installed SDK does not expose the failing loader implementation; exact missing library unresolved. No TensorFlow backend support is claimed. Actual task uses custom CCE plus Torch NPU operators and all tested calls complete without downstream execution errors."
+    }
+  },
+  "native_source_identity_note": "Correctness reports retain the old unused measure.py hash; all executed kernels/pipeline/reference/wrapper/benchmark match the final delivered bytes. The completed measurement report binds the revised measure.py. Contract updates after running only change measured/support evidence metadata.",
+  "native_tested_contract_sha256": "98ee5012367a4999ffc21f71ede44550e4952334ca42350d24d67cddd9fce242",
+  "delivered_contract_sha256": "ea72fc8082f514d04cf71381a444aa87fead11625d59fdde897ac61c05ae0878"
 }

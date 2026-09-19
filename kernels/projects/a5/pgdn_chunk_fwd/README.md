@@ -36,11 +36,14 @@ selected NPU; `--profile-torch-oracle` also times it. Native FP32 matmul/conv HF
 settings are disabled and recorded. Match inputs and device for timing comparisons.
 After native correctness acceptance, `measure.py` measures three synchronized
 GDN/PGDN/GDN rounds at T=4096 and T=1024, with FP32 and BF16 public inputs.
-The unmodified GDN cost baseline includes NPU FP32 normalization and output casting;
-it has no ATK. Each side is checked against its own pinned semantics before and
-after measurement. PGDN also uses the independent block-solve reference.
-All eleven operators are prepared before execution, with one block dimension per
-process/build. The measurement harness is provided but has not run on hardware.
+The GDN cost baseline executes the five PGDN-owned chunk kernels with equal
+normalized read/write keys and no ATK; normalization, zero-state allocation,
+dispatch and output casting on NPU are timed. It is a GDN-equation cost baseline,
+not GDA-02 implementation performance or an equivalent PGDN algorithm.
+GDN is checked against its pinned naive semantics; PGDN against both pinned
+recurrence and independent block solve, before and after timing.
+All six operators are prepared before execution. The completed measurement uses
+block_dim2; correctness covers block_dim1/2 in separate processes/builds.
 A full chosen hardware workload must precede reduced diagnostic simulations when
 hardware is available. A model check is never hardware acceptance.
 
@@ -48,8 +51,17 @@ hardware is available. A model check is never hardware acceptance.
 Name a bounded case for sim/pipesim rather than running that entire grid in a model.
 All machine bindings belong to ignored external configuration.
 
-[validation.json](validation.json) binds the submitted sources to 60 reference
-cases, seven bounded model cases, dual-reference metrics and both six-kernel
-CANN builds. Native execution and performance remain unverified.
-The native runner revision has a CLI smoke check only. Container CPU validation
-also passes all 104 PGDN tests with the selected library sources.
+[validation.json](validation.json) binds the submitted computational sources to
+60 reference cases, seven bounded model cases, dual-reference metrics, both
+six-kernel CANN builds and **60 passed native cases / 120 public dtype calls**.
+All 17 actual stage arrays and all three public outputs in both dtypes match
+bitwise across block_dim1/2 for every one of the 30 input sets.
+Three same-card GDN/PGDN/GDN rounds passed at both lengths and dtypes, retaining
+all 1800 measured samples plus pre/post numerical checks. PGDN medians are
+143.65–144.07 ms at T1024 and 566.28–566.91 ms at T4096 (block_dim2).
+
+See [native evidence](evidence/native/README.md) for exact shape, environment,
+per-round medians, raw report/log locations and the two disclosed initialization
+warnings. No TensorFlow backend support is inferred from these runs.
+Standalone board/aclnn launchers, CUDA/Triton and weights remain untested.
+Container CPU validation also passes all 104 PGDN tests.

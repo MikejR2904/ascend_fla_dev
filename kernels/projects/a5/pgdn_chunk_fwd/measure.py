@@ -1,8 +1,9 @@
 """Three synchronized GDN/PGDN/GDN rounds on one externally locked NPU.
 
-Run after full native correctness acceptance. GDN is a cost baseline without
-ATK, not an equivalent PGDN algorithm. Its normalization and output cast are
-included in timing. Both public calls request final states; PGDN returns two.
+Run after full native correctness acceptance. The GDN baseline uses the same
+five chunk kernels with equal read/write keys, without ATK. It is not an
+equivalent PGDN algorithm. NPU normalization and output casting are timed.
+GDN returns its final main state; public PGDN returns both final states.
 """
 from __future__ import annotations
 
@@ -16,6 +17,35 @@ import torch
 from benchmark import ROOT, NAMES, NAIVE_SHA256, check, digest, load, timing
 
 GDN_NAIVE_SHA256 = 'd1cf17992349fd3e94af999b22e3d3a81be4a2d1881ce5b70a3457257166e0cb'
+
+
+def gdn_baseline(inputs, pgdn, compiled, dtype):
+    """GDN equations through PGDN-owned stages; no ATK or public API change."""
+    q = torch.nn.functional.normalize(inputs['q'].float(), dim=-1)
+    k = torch.nn.functional.normalize(inputs['k'].float(), dim=-1)
+    b, t, h, _ = q.shape
+    hv = inputs['v'].shape[2]
+    n = t//64
+    scalars = dict(B=b, T=t, H=h, HV=hv, N=n)
+    values = dict(q_norm=q, k_read=k, k_write=k, v=inputs['v'].float(),
+                  g=inputs['g'], beta=inputs['beta'],
+                  initial_state=torch.zeros(b, hv, 128, 128, device=q.device))
+    shapes = {name: (b, n, hv, 64, 128) for name in ('qn', 'kw', 'gc', 'bk', 'wv', 'u', 'wy', 'delta')}
+    shapes.update(lower=(b,n,hv,64,64), score=(b,n,hv,64,64), states=(b,n,hv,128,128),
+                  o=(b,t,hv,128), final_state=(b,hv,128,128))
+    graph = pgdn._pipeline().GRAPH[1:]
+    for index, (entry, (_, names, outputs)) in enumerate(zip(pgdn._pipeline().entries()[1:], graph)):
+        op = compiled[entry.name]
+        fresh = {name: torch.empty(shapes[name], dtype=torch.float32, device=q.device) for name in outputs}
+        op({name: values[name] for name in names}, {name: scalars[name] for name in op.scalar_names}, fresh)
+        values.update(fresh)
+        live = {'o', 'final_state'}
+        for _, future_inputs, _ in graph[index+1:]:
+            live.update(future_inputs)
+        for name in tuple(values):
+            if name not in live:
+                del values[name]
+    return values['o'].to(dtype), values['final_state']
 
 
 def main():
@@ -33,21 +63,20 @@ def main():
         assert hashlib.sha256(path.read_bytes()).hexdigest() == expected, 'oracle pin mismatch'
     import ascriptor
     import torch_npu
-    from ascend_fla.ops import gdn_chunk_fwd as gdn, pgdn_chunk_fwd as pgdn
+    from ascend_fla.ops import pgdn_chunk_fwd as pgdn
     torch.set_num_threads(1)
     torch.npu.matmul.allow_hf32 = False
     torch.npu.conv.allow_hf32 = False
     # CANN resolves the complete vendor search path on the first operator call.
     pgdn.prepare(block_dim=args.block_dim)
-    gdn.prepare(block_dim=args.block_dim)
+    compiled = dict(zip((entry.name for entry in pgdn._pipeline().entries()), pgdn._compiled(args.block_dim)))
     refs = load('pgdn_measure_reference', ROOT/'ref/reference.py')
     pgdn_naive = load('pgdn_measure_naive', args.fla_naive).naive_recurrent_precond_gated_delta_rule
     gdn_naive = load('gdn_measure_naive', args.fla_gdn_naive).naive_recurrent_gated_delta_rule
     repo = ROOT.parents[3]
-    sources = list(ROOT.rglob('*.py')) + list((repo/'kernels/projects/a5/gdn_chunk_fwd/kernels').rglob('*.py'))
-    sources += [repo/'ascend_fla/ops'/f'{name}_chunk_fwd.py' for name in ('gdn', 'pgdn')]
+    sources = list(ROOT.rglob('*.py')) + [repo/'ascend_fla/ops/pgdn_chunk_fwd.py']
     report = dict(schema='pgdn-forward-sandwich/1', stage='native_inprocess',
-                  baseline='GDA-02 native GDN plus timed NPU FP32 q/k normalization and output cast; no ATK',
+                  baseline='GDN equations through the five PGDN-owned chunk kernels with equal read/write keys; timed NPU FP32 normalization/output cast; no ATK',
                   candidate='Native public PGDN with ATK, both final states and validation predicates',
                   timing='Synchronized wall microseconds, including Python dispatch; no speed threshold',
                   block_dim=args.block_dim, warmup=args.warmup, repeat=args.repeat, rounds=3,
@@ -73,11 +102,7 @@ def main():
                                           torch.nn.functional.normalize(cpu['k'], dim=-1), cpu['v'],
                                           cpu['beta'], cpu['g'], output_final_state=True)
                 def baseline():
-                    q = torch.nn.functional.normalize(npu['q'].float(), dim=-1)
-                    k = torch.nn.functional.normalize(npu['k'].float(), dim=-1)
-                    o, state = gdn.chunk_gdn(q, k, npu['v'].float(), npu['g'], npu['beta'],
-                                             block_dim=args.block_dim, output_final_state=True)
-                    return o.to(dtype), state
+                    return gdn_baseline(npu, pgdn, compiled, dtype)
                 def candidate():
                     return pgdn.chunk_pgdn(*(npu[n] for n in NAMES), block_dim=args.block_dim, output_final_state=True)
                 def verify():

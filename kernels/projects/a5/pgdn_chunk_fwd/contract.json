@@ -1273,7 +1273,7 @@
       "stage": "emit",
       "status": "passed",
       "evidence": "validation.json",
-      "note": "All six kernels, bd1/2; source generation and vendor compilation only, no device execution."
+      "note": "All six kernels, bd1/2. These stage receipts certify source generation/vendor compilation; separate native in-process execution evidence is in measured."
     },
     {
       "device": "a5",
@@ -1281,7 +1281,7 @@
       "stage": "compile",
       "status": "passed",
       "evidence": "validation.json",
-      "note": "All six kernels, bd1/2; source generation and vendor compilation only, no device execution."
+      "note": "All six kernels, bd1/2. These stage receipts certify source generation/vendor compilation; separate native in-process execution evidence is in measured."
     },
     {
       "device": "a5",
@@ -1328,11 +1328,27 @@
   },
   "measured": {
     "native_inprocess": {
-      "status": "blocked",
-      "reason": "Current target occupancy not verified; no device kernel executed."
+      "status": "passed",
+      "cases": 60,
+      "block_dim": [
+        1,
+        2
+      ],
+      "evidence": "validation.json"
     },
     "performance": {
-      "status": "untested"
+      "status": "passed",
+      "block_dim": 2,
+      "lengths": [
+        1024,
+        4096
+      ],
+      "dtypes": [
+        "fp32",
+        "bf16"
+      ],
+      "rounds": 3,
+      "evidence": "evidence/native/measure-bd2-result.json"
     }
   }
 }

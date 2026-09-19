@@ -224,10 +224,9 @@ selection reported384passed/4skipped; five KDA NPU modules and the shared
 hardware-compilation fixture were explicitly excluded, because this host exposes
 unassigned devices. All CPU tests, including the host-only KDA decode checks,
 were retained. No local NPU work was submitted. All6 static checks reported
-0errors/0warnings. Complete
-native hardware acceptance and measurements are pending; CPU or pipe-model
-results must not be described as device execution. Board/aclnn launchers remain
-untested unless those exact launchers receive their own execution receipts.
+0errors/0warnings. Native in-process acceptance and same-card measurements are
+now complete, with their separate records below. Board/aclnn launchers remain
+untested; those exact launchers require their own execution receipts.
 
 The independent CPU chunk solve against pinned recurrent A produced the following
 FP32 relative L2 values (fresh seeded inputs, K=V128). B is the independent chunk
@@ -280,3 +279,65 @@ Both final six-kernel builds completed with CANN 9.2.0 in Python3.12.13 /
 torch2.12.0+cpu / Ascriptor0.1.0. The validation artifact records generated CCE,
 operator-library and device-object hashes. Complete compiler logs were inspected:
 no `-Wcce-compat` remains. Compilation does not establish native execution.
+
+
+### Native in-process acceptance
+
+All30 input sets at each of block_dim1/2 passed on **Ascend950PR_9589 V100**,
+CANN9.2.0, with `opp/built-in/op_impl/ai_core/tbe/kernel/ascend950` installed.
+The Docker runtime used Python3.12.13, torch2.12.0+cpu, torch_npu2.12.0,
+Ascriptor0.1.0 and the source pins above. The first workload was the complete
+B1/T4096/H=HV8/K=V128 case. Both block dimensions used separate native processes
+and build directories; all six operators were prepared before computation.
+Each run held the shared device lock and passed fresh health checks. Final health
+was Healthy, the lock was released, and no task compute process remained.
+
+Each of the60 cases checks all17 independently fed leaf arrays, all17 composition
+arrays, and two public dtype calls against A/B. All120 public calls passed;
+inputs were unchanged. All30 cross-block-dimension input sets produced bitwise
+equal stage arrays and bitwise equal o/S/A in both public dtype calls.
+
+| Native FP32 comparison | o relL2 | S relL2 | A relL2 |
+| --- | ---: | ---: | ---: |
+| B1/T4096/H=HV8 vs A, either block_dim | 5.0915756e-7 | 6.8781757e-7 | 3.4574505e-7 |
+| B1/T4096/H=HV8 vs B, either block_dim | 6.5432414e-7 | 8.1185242e-7 | 4.2966896e-7 |
+| Maximum over all60 native cases vs A | 1.5343700e-6 | 2.2152862e-6 | 5.8135377e-7 |
+| Maximum over all60 native cases vs B | 2.4547824e-6 | 3.2284060e-6 | 4.7486685e-7 |
+
+Maximum BF16 output quality relL2 was0.00168057785 versus A and0.00168058740
+versus B. Both states retain the FP32 budget; every threshold is unchanged.
+The maxima may occur in different cases. Raw reports retain every case's shape,
+seed, max_abs, relL2, input/output hashes and software/source identity.
+
+The final Docker builds match the earlier emitted CCE source hashes and have
+zero CCE compatibility warnings. Review of all21 runtime logs (1214 lines)
+found zero ERROR/FATAL/CRITICAL entries and two recurring initialization warnings:
+plugin-update policy discovery returns DRV_ERROR_INVALID_VALUE and uses its
+logged non-forced-update fallback; AICPU framework preloading cannot load the
+TensorFlow SO, then scheduler startup succeeds. The installed SDK does not expose
+the latter loader implementation, so the exact missing library remains unresolved.
+Neither warning was suppressed. No plugin-policy-query or TensorFlow backend
+support is claimed; the actual custom CCE and Torch NPU operations above passed.
+See the native evidence index for owner locations and original log line offsets.
+
+### Same-card measurements
+
+Three synchronized baseline/candidate/baseline rounds use B1/H=HV8/K=V128,
+block_dim2, T4096 thenT1024, FP32 and BF16. Each phase has10 warmups and50 measured
+calls. These are wall times including Python dispatch, not isolated kernel cycles.
+Pre/post checks cover GDN versus its pinned naive and PGDN versus A/B; all pass.
+
+The GDN baseline uses the five PGDN-owned chunk kernels with identical normalized
+read/write keys, omitting ATK. NPU FP32 normalization, state allocation, dispatch
+and output casting are included. PGDN includes its public predicates, ATK and
+both states. This compares their costs; it is neither GDA-02 implementation
+performance nor a semantically equivalent PGDN alternative. The reserved GDN
+path is unchanged. No speed threshold or optimization is part of this task.
+
+PGDN medians are143.65–144.07ms at T1024 and566.28–566.91ms at T4096;
+GDN baseline medians are137.77–137.87ms and547.66–547.87ms respectively.
+The candidate/mean-baseline ratio across rounds is1.0340–1.0455. Full per-round
+medians and all1800 individual samples are linked from
+[native evidence](../../kernels/projects/a5/pgdn_chunk_fwd/evidence/native/README.md).
+No block_dim1 latency, standalone board/aclnn, CUDA/Triton or checkpoint result
+is claimed.
