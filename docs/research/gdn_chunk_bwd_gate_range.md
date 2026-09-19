@@ -1,6 +1,6 @@
 # GDA-03 grouped GDN backward ABI and range contract
 
-Status: complete native grid and block_dim byte identity passed; timing remains in progress.
+Status: complete native grid, block_dim byte identity and same-device measurement passed.
 This task is standalone backward. The accepted grouped forward and GDN-2 are
 unchanged. The authority is FLA pin `e52dbc0ea19d3a40d7ab7f9eed855d2b473994d2`,
 `fla/ops/gated_delta_rule/naive.py::naive_recurrent_gated_delta_rule`.
@@ -85,69 +85,74 @@ overflow the recurrence; observed results are scoped to executed workloads.
 Three launches: boundary recurrence → replay/adjoint → grouped dq/dk reduction.
 The first writes FP32 `[B,N,HV,128,128]` chunk-start states, where N=T/64,
 and final state for leaf validation. The second owns one `(B,HV)` at a time,
-replays64 tokens into FP32 `[B,HV,64,128,128]` scratch, then reverses them.
+replays 64 tokens into FP32 `[B,HV,64,128,128]` scratch, then reverses them.
 It emits per-value-head dq/dk and final dv/dg/dbeta. The third deterministically
 sums dq/dk in ascending group order, with one owner per `(B,T,H)` and no atomics.
 There are no checkpoints supplied by or modifications to the forward operator.
 
 Each vector owner has a single UB slot per tensor. State and state adjoint
-require128KiB together; row/scalar buffers fit in the selected profile's remaining
-UB. State rows are128 FP32 elements, exactly two vector registers. DMA and VF
+require 128 KiB together; row/scalar buffers fit in the selected profile's remaining
+UB. State rows are 128 FP32 elements, exactly two vector registers. DMA and VF
 lifetimes use local autosync; explicit VF STORE→LOAD barriers protect dependent
 local reloads. A local MTE3→MTE2 event publishes the replay tape; a local drain
 precedes tape reuse. Stream-ordered launches publish inter-stage GM edges.
-The tape has one independent slice per value head and costs32MiB at B1/HV8,
+The tape has one independent slice per value head and costs 32 MiB at B1/HV8,
 independent of T. All outputs are fresh, fully written, and inputs are read-only.
 
-## Initial measured evidence (whole-task validation remains in progress)
+## Reference and diagnostic qualification
 
-Before writing device kernels,58 completed calibration cases passed A/B <=1e-5;
-maximum per-gradient relative L2 was dq2.47549645e-7, dk0, dv0,
-dg4.84878352e-7, dbeta0. Both FP64 checks passed at ratios1/2. The preserved
+Before writing device kernels, 58 completed calibration cases passed A/B <=1e-5;
+maximum per-gradient relative L2 was dq 2.47549645e-7, dk 0, dv 0,
+dg 4.84878352e-7, dbeta 0. Both FP64 checks passed at ratios 1/2. The preserved
 [pre-kernel report](../../kernels/projects/a5/gdn_chunk_bwd/evidence/pre-kernel-calibration.json)
-contains individual case numbers. The completed extended calibration now has69
-cases, including all four ratios atT4096 and all three cotangents, with unchanged
+contains individual case numbers. The completed extended calibration has 69
+cases, including all four ratios at T4096 and all three cotangents, with unchanged
 maxima; see [full calibration](../../kernels/projects/a5/gdn_chunk_bwd/evidence/calibration.json).
 
 The first complete native workload B1/T4096/H=HV8/K=V128, both cotangents, bd2,
 passed FP32 and BF16 public-output checks. FP32 core maximum against both
-references (including BF16-valued inputs) was2.71993077e-7. Public BF16 dq/dk/dv
-relative L2 was0.00165841/0.00167523/0.00163092 against A. All10 composition and
-all10 independently supplied leaf outputs passed; inputs were unchanged.
+references (including BF16-valued inputs) was 2.71993077e-7. Public BF16 dq/dk/dv
+relative L2 was 0.00165841/0.00167523/0.00163092 against A. All 10 composition and
+all 10 independently supplied leaf outputs passed; inputs were unchanged.
 [Raw native output](../../kernels/projects/a5/gdn_chunk_bwd/evidence/first-full-bd2.log),
 [numbers](../../kernels/projects/a5/gdn_chunk_bwd/evidence/first-full-bd2.json), and
 [verified source manifest](../../kernels/projects/a5/gdn_chunk_bwd/evidence/first-full-source-manifest.json)
-identify this run. This is not yet evidence for the remaining grid, bd1/bd2
-identity or the required timing sandwiches. Bounded synchronization evidence is below.
+identify this run. The complete grid and block_dim comparison are recorded below.
 
 Initial vendor compilation rejected the internal parameter name `do`, a C++
 keyword, before device computation. Renaming the native argument to `dout`
 fixed compilation; the public parameter remains `do`. No equation or budget
-changed. Full failed compiler logs remain in task scratch.
+changed. Full failed compiler logs are retained in the failed-run evidence linked below.
 
-The canonical CPU reference sweep passed all138cases. A bounded functional
+The canonical CPU reference sweep passed all 138 cases. A bounded functional
 model case (C1/equal heads/bd1) passed all ten independent leaf arrays and five
 composition gradients. The first larger pipesim (C2/grouped/multiple head items)
 timed out in the interpreter with an empty blocked-lane summary. Two smaller source diagnostics isolate tape reuse and uneven head ownership.
-Host regression:567passed/4skipped (full FLA cache adapters).
+The CPU-only host selection passed 567 tests with 4 skips (full FLA cache
+adapters). It used `--noconftest` and excluded the five KDA NPU test modules:
+`test_kda_fwd_npu`, `test_kda_bwd_npu`, `test_kda_bwd_deep_npu`,
+`test_kda_caches_npu`, and `test_kda_layer_npu`. After four additional shape
+rejection cases, the dedicated backward test file passed all 55 tests. These
+counts are separate runs; they are not a claim that the entire repository's
+NPU suite ran.
 
 The reduced B1/T128/H=HV1/bd1 pipe diagnostic has now passed all three stages:
-empty event balance, no hazards/deadlock, all10arrays<=2.46e-7. This case retains
+empty event balance, no hazards/deadlock, all 10 arrays <=2.46e-7. This case retains
 the GM tape overwrite between chunks. The larger timeout remains recorded and
 is not relabeled a pass. The separate B1/T64/H1/HV3/bd1 uneven head-reuse diagnostic also passed all
-three stages, with no hazards/deadlock and all10arrays<=2.48e-7. One vector
+three stages, with no hazards/deadlock and all 10 arrays <=2.48e-7. One vector
 worker processes two heads while the other processes one. The reverse stage
-finished in212.96s within its240s diagnostic bound, derived from the earlier
+finished in 212.96s within its 240s diagnostic bound, derived from the earlier
 measured model cost. These are bounded model results, not device timings. See
 [tape-reuse result](../../kernels/projects/a5/gdn_chunk_bwd/evidence/pipe-tape-reuse.json)
 and [head-reuse result](../../kernels/projects/a5/gdn_chunk_bwd/evidence/pipe-head-reuse.json).
 
 ## Complete block_dim=2 native grid
 
-All69canonical cases ran with FP32 and BF16 public inputs (138records): all four
+All 69 canonical cases ran with FP32 and BF16 public inputs (138records): all four
 head ratios, C1/2/3 and T4096, three cotangents, multi-batch, gate/beta endpoints,
-underflow, spikes and zero q/k. Every10composition array,10independent-leaf
-array and5public gradient passed, with inputs unchanged. Health was checked
+underflow, spikes and zero q/k. All 10 composition arrays, 10 independent-leaf
+arrays and 5 public gradients passed, with inputs unchanged. Health was checked
 before and after the locked Docker job. Core FP32 maxima over both input dtypes:
 
 | Gradient | Against literal A | Against independent B |
@@ -158,7 +163,7 @@ before and after the locked Docker job. Core FP32 maxima over both input dtypes:
 | dg | 8.833763473e-07 | 8.841634564e-07 |
 | dbeta | 7.043351236e-07 | 7.043351236e-07 |
 
-Public BF16 dq/dk/dv maxima against A are0.00168075/0.00184963/0.00175118.
+Public BF16 dq/dk/dv maxima against A are 0.00168075/0.00184963/0.00175118.
 The actual dg/dbeta outputs remain FP32.
 [Raw log](../../kernels/projects/a5/gdn_chunk_bwd/evidence/grid-bd2.log),
 [per-case numbers](../../kernels/projects/a5/gdn_chunk_bwd/evidence/grid-bd2.json),
@@ -170,11 +175,11 @@ Validation walltime is not a performance measurement.
 
 ## Complete block_dim pair qualification
 
-The block_dim=1 grid also passed all69cases x both public dtypes. Across the
-combined276records, all original budgets and input-immutability checks passed;
+The block_dim=1 grid also passed all 69 cases x both public dtypes. Across the
+combined 276 records, all original budgets and input-immutability checks passed;
 per-gradient maxima are unchanged from the table above. Comparing the exact
-returned byte hashes gives138case/dtype pairs x (10stage +5public) arrays =
-**2070byte-identical array pairs**. Both jobs finished with Healthy device status.
+returned byte hashes gives 138 case/dtype pairs x (10 stage + 5 public) arrays =
+**2070 byte-identical array pairs**. Both jobs finished with Healthy device status.
 The second grid began with the original B1/T4096/H=HV8 workload before smaller
 cases. [bd1 raw log](../../kernels/projects/a5/gdn_chunk_bwd/evidence/grid-bd1.log),
 [bd1 numbers](../../kernels/projects/a5/gdn_chunk_bwd/evidence/grid-bd1.json),
@@ -182,10 +187,17 @@ cases. [bd1 raw log](../../kernels/projects/a5/gdn_chunk_bwd/evidence/grid-bd1.l
 and [complete byte comparison](../../kernels/projects/a5/gdn_chunk_bwd/evidence/bd1-bd2-byte-comparison.json)
 make this qualification reproducible with `compare_runs.py`.
 
+The delivered production Python files match both device snapshots. The bd1 run
+uses the final validation harness; the bd2 manifest identifies earlier versions
+of three validation files. Every per-case metric against A, B and stage
+references is also identical between runs, in addition to the returned-array
+byte identity. The [source identity review](../../kernels/projects/a5/gdn_chunk_bwd/evidence/source-identity-review.json)
+records these harness revisions explicitly.
+
 ## Build and runtime diagnostics
 
 [Six selected build receipts](../../kernels/projects/a5/gdn_chunk_bwd/evidence/compiler/build-artifact-manifest.json)
-retain hashes for264emitted/compiled files and every vendor build-log line.
+retain hashes for 264 emitted/compiled files and every vendor build-log line.
 Build directories are selected from the current kernel source signature, not
 from stale directory timestamps. SDK header deprecations, an unused CMake
 cross-compiler parameter, and a Python escape SyntaxWarning in the SDK's
@@ -199,12 +211,63 @@ TensorFlow framework preload failure at `ae_kernel_lib_fwk.cc:298`. A fresh
 process importing only Torch/Torch NPU, with basic NPU transfer/multiply/add and
 synchronization, reproduced both warnings while returning exact results; the
 subsequent device scheduler initialization succeeded. The installed driver
-header maps query return3 to `DRV_ERROR_INVALID_VALUE`; its logged fallback is
+header maps query return 3 to `DRV_ERROR_INVALID_VALUE`; its logged fallback is
 `PLUGIN_NOT_FORCE_UPDATE`. The exact missing TensorFlow library remains
 unidentified, and no TensorFlow backend support is claimed. The qualified path
 uses task CCE and Torch NPU operations, whose actual outputs are checked above.
 
-The pre-timing [runtime review](../../kernels/projects/a5/gdn_chunk_bwd/evidence/runtime/runtime-review.json)
-retains all1234lines from19logs:10startup warnings and0ERROR/FATAL/CRITICAL.
-Machine identifiers are redacted without removing lines. This warning/control
-qualification is separate from the pending timing measurement.
+The [runtime review](../../kernels/projects/a5/gdn_chunk_bwd/evidence/runtime/runtime-review.json)
+retains all 2438 lines from 39 logs: 20 startup warnings and
+0 ERROR/FATAL/CRITICAL. Machine identifiers are redacted without removing lines.
+This includes the completed device validation, controls and accepted timing run.
+
+## Same-device measurements
+
+The candidate is the complete public API, including device promotions,
+allocations, all three launches, checkpoint recomputation and storage casts.
+The baseline is the same task-owned adjoint supplied with cached boundary
+checkpoints; it excludes checkpoint generation. It is a cost baseline, not a
+separate complete backward implementation. Neither timing path runs a host
+recurrence. Inputs and independent B references are generated during the run.
+
+For B1/H=HV8/K=V128 and block_dim=2, each shape/dtype used three
+baseline/candidate/baseline rounds. Every segment had 10 warmups and 50 measured
+calls, synchronized before and after each call: 1800 raw wall-time samples.
+The table reports the range of segment medians across the three rounds.
+
+| T | Public dtype | Baseline median range (ms) | Complete API median range (ms) |
+|---:|---|---:|---:|
+| 1024 | float32 | 135.578–135.710 | 159.210–159.324 |
+| 1024 | bfloat16 | 135.690–135.866 | 160.210–160.324 |
+| 4096 | float32 | 545.436–545.460 | 645.160–645.225 |
+| 4096 | bfloat16 | 545.308–545.508 | 644.387–644.625 |
+
+Mathematical checks against independent B and byte identity between baseline
+and candidate passed before and after each workload. FP32 dg/dbeta retain the
+1e-4 budget for both public dtypes. No speed threshold was imposed.
+[Raw samples](../../kernels/projects/a5/gdn_chunk_bwd/evidence/sandwich-context-bd2.json),
+[unfiltered native log](../../kernels/projects/a5/gdn_chunk_bwd/evidence/sandwich-context-bd2.log),
+[round-to-log index and target identity](../../kernels/projects/a5/gdn_chunk_bwd/evidence/timing-index.json),
+and [summary](../../kernels/projects/a5/gdn_chunk_bwd/evidence/timing-summary.json)
+record every measured number. These measurements do not compare CUDA/Triton or
+pretrained-weight execution.
+
+The job held the shared device lock in Docker, with fresh source/environment
+checks and Healthy device status before and after. A known live control first
+qualified the installed driver's read-only SVM and TRS process registries.
+The timing audit retained 409 snapshots, matched contexts to the exact
+compute child, found zero foreign contexts, and waited for its contexts to drain
+before releasing the lock. See the [occupancy receipt](../../kernels/projects/a5/gdn_chunk_bwd/evidence/timing-occupancy.json)
+and [positive control](../../kernels/projects/a5/gdn_chunk_bwd/evidence/occupancy-positive-control.json).
+Raw machine identities remain private.
+
+An earlier complete measurement is [retained as unqualified](../../kernels/projects/a5/gdn_chunk_bwd/evidence/failures/timing-first-unqualified.json):
+its per-device FD sampler missed a known live process. It is not used for the
+accepted timing table. The corrected monitor and complete repeated measurement
+supply the evidence above.
+
+The canonical `board`/`aclnn` launchers remain untested for this task. Actual
+vendor compilation and native device acceptance used the in-process CCE path;
+functional simulation and the two reduced pipe diagnostics are separately
+scoped evidence. No other backend, device family, input domain or weight-level
+validation is claimed.

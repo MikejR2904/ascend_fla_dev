@@ -6,9 +6,9 @@ own chunk checkpoints and returns five FP32 mathematical gradients. The public
 BF16 q/k/v/do and returns dq/dk/dv in their input storage dtype. g/beta/dht and
 dg/dbeta remain FP32. Existing forward and autograd dispatch are unchanged.
 
-The native grid passed276case/dtype records across block_dim1/2, and2070
-returned-array pairs were byte-identical. Required same-device timing remains
-in progress. See the task's gate-range
+The native grid passed 276 case/dtype records across block_dim 1/2, and 2070
+returned-array pairs were byte-identical. Required same-device timing also passed,
+with 1800 raw samples and an explicitly identified saved-checkpoint cost baseline. See the task's gate-range
 document and evidence directory for exact source identity and measured scope.
 
 Three ordered launches generate chunk-start states, replay and reverse each
@@ -34,7 +34,7 @@ hashes. Native builds for different block_dim values require separate processes
 and build directories. All stages must compile before first CANN resolution.
 
 The complete canonical case set contains three upstream-gradient combinations,
-ratios1/2/4/8, chunks1/2/3 and4096 tokens, multi-batch, beta/gate endpoints, zero
+ratios 1/2/4/8, chunks 1/2/3 and 4096 tokens, multi-batch, beta/gate endpoints, zero
 keys, and underflow/spike cases. Full native B1/T4096/H=HV8 is run first. Sim and
 pipesim are only later bounded diagnostics, with their scope recorded separately.
 

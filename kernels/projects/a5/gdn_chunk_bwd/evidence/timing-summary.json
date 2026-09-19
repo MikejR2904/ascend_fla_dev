@@ -1,0 +1,133 @@
+{
+  "passed": true,
+  "raw_samples": 1800,
+  "baseline": "Task-owned saved-boundary-checkpoint adjoint cost baseline; excludes boundary generation, not a separate complete backward implementation",
+  "candidate": "Complete public chunk_gdn_bwd including promotions, allocation, checkpoint recomputation, all3launches and storage casts",
+  "synchronize": "before and after every timed call",
+  "warmup": 10,
+  "repeat": 50,
+  "block_dim": 2,
+  "rows": [
+    {
+      "T": 1024,
+      "dtype": "torch.float32",
+      "round": 1,
+      "baseline_before_ms": 135.69820099999998,
+      "candidate_ms": 159.2955935,
+      "baseline_after_ms": 135.577612,
+      "candidate_over_average_baseline": 1.1744179603656741,
+      "baseline_after_over_before": 0.9991113441511285
+    },
+    {
+      "T": 1024,
+      "dtype": "torch.float32",
+      "round": 2,
+      "baseline_before_ms": 135.6408705,
+      "candidate_ms": 159.20950849999997,
+      "baseline_after_ms": 135.65939550000002,
+      "candidate_over_average_baseline": 1.173677496504924,
+      "baseline_after_over_before": 1.0001365738802157
+    },
+    {
+      "T": 1024,
+      "dtype": "torch.float32",
+      "round": 3,
+      "baseline_before_ms": 135.710305,
+      "candidate_ms": 159.32390449999997,
+      "baseline_after_ms": 135.608148,
+      "candidate_over_average_baseline": 1.1744420826400628,
+      "baseline_after_over_before": 0.9992472421309494
+    },
+    {
+      "T": 1024,
+      "dtype": "torch.bfloat16",
+      "round": 1,
+      "baseline_before_ms": 135.725675,
+      "candidate_ms": 160.21029149999998,
+      "baseline_after_ms": 135.72268499999998,
+      "candidate_over_average_baseline": 1.1804108265748963,
+      "baseline_after_over_before": 0.9999779702698107
+    },
+    {
+      "T": 1024,
+      "dtype": "torch.bfloat16",
+      "round": 2,
+      "baseline_before_ms": 135.690138,
+      "candidate_ms": 160.2492035,
+      "baseline_after_ms": 135.751869,
+      "candidate_over_average_baseline": 1.180725159462883,
+      "baseline_after_over_before": 1.0004549409478825
+    },
+    {
+      "T": 1024,
+      "dtype": "torch.bfloat16",
+      "round": 3,
+      "baseline_before_ms": 135.734373,
+      "candidate_ms": 160.3235795,
+      "baseline_after_ms": 135.865806,
+      "candidate_over_average_baseline": 1.1805852270811645,
+      "baseline_after_over_before": 1.0009683103630647
+    },
+    {
+      "T": 4096,
+      "dtype": "torch.float32",
+      "round": 1,
+      "baseline_before_ms": 545.460431,
+      "candidate_ms": 645.2254164999999,
+      "baseline_after_ms": 545.4572205,
+      "candidate_over_average_baseline": 1.1829039810893553,
+      "baseline_after_over_before": 0.9999941141468426
+    },
+    {
+      "T": 4096,
+      "dtype": "torch.float32",
+      "round": 2,
+      "baseline_before_ms": 545.456005,
+      "candidate_ms": 645.2033319999999,
+      "baseline_after_ms": 545.436772,
+      "candidate_over_average_baseline": 1.1828904647702143,
+      "baseline_after_over_before": 0.999964739594351
+    },
+    {
+      "T": 4096,
+      "dtype": "torch.float32",
+      "round": 3,
+      "baseline_before_ms": 545.4440585,
+      "candidate_ms": 645.1601169999999,
+      "baseline_after_ms": 545.4364519999999,
+      "candidate_over_average_baseline": 1.1828245363083696,
+      "baseline_after_over_before": 0.9999860544818822
+    },
+    {
+      "T": 4096,
+      "dtype": "torch.bfloat16",
+      "round": 1,
+      "baseline_before_ms": 545.507876,
+      "candidate_ms": 644.624913,
+      "baseline_after_ms": 545.414591,
+      "candidate_over_average_baseline": 1.1817978499841457,
+      "baseline_after_over_before": 0.9998289942196911
+    },
+    {
+      "T": 4096,
+      "dtype": "torch.bfloat16",
+      "round": 2,
+      "baseline_before_ms": 545.308009,
+      "candidate_ms": 644.387289,
+      "baseline_after_ms": 545.4526055,
+      "candidate_over_average_baseline": 1.181537507742493,
+      "baseline_after_over_before": 1.0002651648199063
+    },
+    {
+      "T": 4096,
+      "dtype": "torch.bfloat16",
+      "round": 3,
+      "baseline_before_ms": 545.3731244999999,
+      "candidate_ms": 644.4291695,
+      "baseline_after_ms": 545.412679,
+      "candidate_over_average_baseline": 1.1815870126512882,
+      "baseline_after_over_before": 1.000072527409627
+    }
+  ],
+  "scope": "Synchronized end-to-end wall time of fixed inputs on one selected device; no speed threshold, no CUDA/Triton comparison"
+}

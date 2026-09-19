@@ -2539,7 +2539,16 @@
       }
     },
     "performance": {
-      "status": "untested"
+      "status": "passed",
+      "scope": "B1/H=HV8/K=V128, T1024/4096, FP32/BF16 public dtype, block_dim2; 3 baseline/candidate/baseline rounds, 10 warmups/50 samples per segment, synchronized end-to-end public API",
+      "baseline": "Task-owned saved-boundary-checkpoint adjoint cost baseline; excludes boundary generation, not a separate complete backward implementation",
+      "raw_samples": 1800,
+      "evidence": [
+        "evidence/timing-summary.json",
+        "evidence/timing-index.json",
+        "evidence/sandwich-context-bd2.json",
+        "evidence/timing-occupancy.json"
+      ]
     },
     "pipesim_diagnostics": {
       "status": "passed",
@@ -2561,7 +2570,7 @@
     },
     "runtime_startup_control": {
       "status": "passed",
-      "scope": "Basic Torch NPU transfer/multiply/add/synchronize without task kernel imports reproduced both initialization warnings; exact output and scheduler initialization passed. Snapshot before timing, no TensorFlow backend support claim.",
+      "scope": "Basic Torch NPU transfer/multiply/add/synchronize without task kernel imports reproduced both initialization warnings; exact output and scheduler initialization passed. Full log review includes completed timing. No TensorFlow backend support claim.",
       "evidence": "evidence/runtime/runtime-review.json"
     }
   }
