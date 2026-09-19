@@ -188,6 +188,20 @@
       "by": "user",
       "decision": "角色边界：machine 与卡不归 PM 管理，agent 自己管理；PM 只管 tasks 的进度与提交代码的质量。（用户原话：'machine及卡不归属你管理。agent本身自己管理。你只管tasks的进度，提交代码的质量'。）",
       "risk": "取代 PM 此前设的两道关：① PK-03.md 里'占用证据由用户/管理员提供，assignee 不得自行推断空闲'与'没有占用证据就不取锁、不启动'；② PM 在 #69 上对 RISK(shared-machine) 的回复里'不批准没有占用证据的真机启动'，以及对用户反复索要该证据。D-PM-26（真机验收是必须项）本身不变。PROTOCOL §3.5 的 shared-machine 处置由'立刻上报用户'改为'PM 只记录，不上报、不仲裁'。AGENTS.md §5 对 agent 的纪律（绝不 kill 或修改他人进程等）仍有效，但那是 agent 自己的事，PM 不做关卡。"
+    },
+    {
+      "id": "D-PM-29",
+      "date": "2026-09-19",
+      "by": "user",
+      "decision": "A2-02 与 A2-44 解门：'write-set-overlap:A5K-02' 的条件已因 A5K-02 合入而满足，用户明确放行。（用户原话：'A2-02/44 解门'。）",
+      "risk": "两个任务的写集彼此也有重叠（ops/kda/chunk.py、layers/kda.py 等）：先 APPLY 者先做，后者大概率再 gate 一轮；同一个 agent 同时只接一个任务。此前 APPLY 被 NO_TASK 的申领人已在 #31、#86 下被通知重新 APPLY。"
+    },
+    {
+      "id": "D-PM-30",
+      "date": "2026-09-19",
+      "by": "user",
+      "decision": "A2-11 总闸不对纯向量单元放宽：维持 AGENTS.md §2 原文——A2-11 之前 A2 上任何算子结论都不算数，不分 cube/vector。（用户原话：'A2-11不放宽'。）",
+      "risk": "A2-40 提出 A2-41 涉及的四个融合算子是纯向量运算、技术上不受 split-K FP32 cube 缺陷影响，用户仍决定不放宽。A2-41 的 machines:a2 闸与对 A2-11 的依赖保持不变，AGENTS.md 无需改动。"
     }
   ],
   "gated_epics": [
@@ -451,7 +465,7 @@
       "wave": "W0",
       "soc": "any",
       "priority": "P1",
-      "status": "gated",
+      "status": "open",
       "model": [],
       "kernel": [],
       "dtype": [],
@@ -486,10 +500,14 @@
         {
           "at": "2026-09-19T09:05",
           "summary": "A5K-02 已合入（PR #83，合并提交 2589942），本任务 gate 'write-set-overlap:A5K-02' 的条件已满足。gated 项的放行只问用户，PM 未自行解门，等用户决定；两个任务的写集彼此也有重叠（ops/kda/chunk.py、layers/kda.py），解门后先 APPLY 者先做，后者大概率再 gate 一轮"
+        },
+        {
+          "at": "2026-09-19T10:05",
+          "summary": "用户决定解门（D-PM-29）：A5K-02 已合入（PR #83，2589942），转 open。两个任务（A2-02/A2-44）写集彼此重叠，先 APPLY 者先做，后者大概率再 gate 一轮；PM 已在 issue 下通知此前被 NO_TASK 的申领人重新 APPLY"
         }
       ],
       "result": null,
-      "gate": "write-set-overlap:A5K-02"
+      "gate": null
     },
     {
       "id": "A2-05",
@@ -1445,7 +1463,12 @@
       "assignee_caps": null,
       "branch": null,
       "timebox_h": 24,
-      "reports": [],
+      "reports": [
+        {
+          "at": "2026-09-19T10:05",
+          "summary": "用户决定（D-PM-30）：A2-11 总闸不对纯向量单元放宽，维持 AGENTS.md §2 原文（A2-11 之前 A2 上任何算子结论都不算数，不分 cube/vector）。本任务的 machines:a2 闸与对 A2-11 的依赖不变"
+        }
+      ],
       "result": null,
       "gate": "machines:a2"
     },
@@ -2464,7 +2487,7 @@
       "wave": "W0",
       "soc": "any",
       "priority": "P2",
-      "status": "gated",
+      "status": "open",
       "model": [
         "kimi-linear-48b-a3b"
       ],
@@ -2508,10 +2531,14 @@
         {
           "at": "2026-09-19T09:05",
           "summary": "A5K-02 已合入（PR #83，合并提交 2589942），本任务 gate 'write-set-overlap:A5K-02' 的条件已满足。gated 项的放行只问用户，PM 未自行解门，等用户决定；两个任务的写集彼此也有重叠（ops/kda/chunk.py、layers/kda.py），解门后先 APPLY 者先做，后者大概率再 gate 一轮"
+        },
+        {
+          "at": "2026-09-19T10:05",
+          "summary": "用户决定解门（D-PM-29）：A5K-02 已合入（PR #83，2589942），转 open。两个任务（A2-02/A2-44）写集彼此重叠，先 APPLY 者先做，后者大概率再 gate 一轮；PM 已在 issue 下通知此前被 NO_TASK 的申领人重新 APPLY"
         }
       ],
       "result": null,
-      "gate": "write-set-overlap:A5K-02"
+      "gate": null
     }
   ],
   "label_github_login": "ascend-fla-pm-bot",
