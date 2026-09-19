@@ -1,6 +1,6 @@
 # Native evidence index
 
-Archive SHA256: `25cfee4b9e0b556f5fc7079e5239bf6f1f143220919438cb5abfd2d442053269`. 447 payload files plus `archive-index.json`; every SHA256 verified after extraction. Complete test/performance logs are retained; only private machine prefixes are redacted. Device-ownership process records remain private.
+Archive SHA256: `de07f1a69d5a12a73d3e5d85cb36014fa5b2acd9bb28537c54239a96c454b078`. 447 payload files plus `archive-index.json`; every SHA256 verified after extraction. Complete test/performance logs are retained; only private machine prefixes are redacted. Device-ownership process records remain private.
 
 Selected locations below refer to original line numbers inside the archive. These excerpts do not replace the complete logs.
 
