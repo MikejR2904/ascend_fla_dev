@@ -1908,6 +1908,10 @@
         {
           "at": "2026-09-19T09:58",
           "summary": "RISK contradicts-handoff：申领人指出 PKDA 的 naive.py 无内部 q/k 归一化。PM 对 pin 住的 fla 源码逐项核实成立——naive.py 全文件无 normalize/l2norm 调用，q/k 转 FP32 后只把 q 乘 scale；chunk.py:785 以字面 True 强制 use_qk_l2norm_in_kernel；l2norm 是 x/sqrt(Σx²+1e-6) 以输入 dtype 物化；预测用原始 k、写入用 k_precond。PM 先前在 PK-02.md 口径补充第 3 条写'naive 也归一化、只是 eps 不同'是错的，已更正：kernel 取 naive 语义，q/k 按调用方给的原样消费，算子与 ATK prepare 不做隐式归一化，调用方负责归一化；报告量化 raw-naive 对 normalized-chunk 在 ‖x‖=1e-2/1e-4/1e-6/0 的差。同时更正 pkda_semantics.md §7；PGDN 的 naive 做 F.normalize（已核实），两算子归一化结论不共用，PK-03.md 对应自述改为已核实。采纳申领人提案，预算与写集不变"
+        },
+        {
+          "at": "2026-09-19T10:17",
+          "summary": "STATUS：FP32 五阶段前向与公共门控在四条写集路径内实现——q/k 原样消费、预测用原始 k、ATK 写入用 k_precond、A/S 状态独立；已收到 PM 归一化更正评论，分支快进到 53fdbf4。五个 kernel 通过源码发射与静态检查 0 error/0 warning；规范 CPU 参考 16/16；缩小规范 sim T1H1 与 pipesim T2H1 的 14 个阶段比较全过；实际双 oracle pipesim T65H1/bd1 与 B2T2H3/bd1..4 通过，14 个阶段输出在 bd1..4 上逐字节相同（分进程），无 hazard/死锁。主机全量 415 passed/5 skipped（87.85s），矩阵与看板检查通过；原生 board/aclnn 保持 untested，与发布的任务范围一致。CPU 16 case 独立 chunk 对 FLA-naive 最大相对 L2：o 3.62e-7、S 2.12e-7、A 0（含 340M 几何 H8/K=V128 到 T4096）；实际 pipesim T65H1 对 naive：o 4.37e-7、S 4.42e-7、A 0；预算 1e-4 不变。保留的不支持域：跨度 4096 的抵消误差 S 1.34e-4（超预算）；公开跨度 155 不变，域内对抗性跨度 155 最坏 S 6.63e-6。下一步：收尾独立恢复/边界诊断、冻结脱敏回执与范围、评审并推 PR，全部发布检查完成后才交 DONE"
         }
       ],
       "result": null
@@ -1918,7 +1922,7 @@
       "wave": "W0",
       "soc": "a5",
       "priority": "-",
-      "status": "in_progress",
+      "status": "review",
       "model": [],
       "kernel": [
         "pgdn_chunk_fwd"
@@ -1943,7 +1947,7 @@
       },
       "spec": "docs/pm/tasks/PK-03.md",
       "issue": 69,
-      "pr": null,
+      "pr": 87,
       "assignee": "limjiunnbin",
       "assignee_caps": {
         "agent": "Codex; new PGDN forward session（自述，撤回后重新申领）",
@@ -2015,6 +2019,10 @@
         {
           "at": "2026-09-19T09:57",
           "summary": "STATUS：全部 60 个原生 case 通过——30 组输入 × block_dim 1/2，每个 case 17 个阶段数组 + 17 个独立 leaf，120 次 FP32/BF16 公共调用对 A/B 通过、输入未被修改；30 对 bd1↔bd2 的输入哈希相同、17 个阶段数组与三个公共输出（两种 dtype）逐位相同。覆盖：完整 B1/T4096/H=HV8 workload 先跑、H14/T4096、分组比 1/2/4/8、奇偶 chunk、多 batch、零/极小范数、门控/ATK 边界。全网格最大 FP32 相对 L2 对 A：o/S/A=1.534e-6/2.215e-6/5.814e-7，对 B：2.455e-6/3.228e-6/4.749e-7；BF16 输出质量对 A/B：0.001681/0.001681（预算未改）。下一步：必需的三轮同卡测量在跑；其基线改为'GDN 方程成本基线'——用已验证的五个 PGDN chunk kernel 在读/写 key 相等、不带 ATK 下执行并对 pinned GDN naive 检查（计时含 NPU 归一化/状态分配/输出 cast），自述'不是 GDA-02 实现的性能'，避免把保留的 GDN 混合位宽循环形式带进测量构建；候选 kernel 与全网格计算源不变。GDN oracle 需要 einops 0.8.2，只装在任务私有容器 venv，无共享依赖变更。运行时有一条特性查询警告（TDT 插件更新策略查询返回 DRV_ERROR_INVALID_VALUE，回退到非强制更新，运行时启动成功），定位在策略发现而非自定义 CCE 计算/同步，不声称支持该特性、不压制。审查 DONE 时要核对：测量基线的标注是否如实写成'成本基线'而不是'与 GDA-02 对比'；数字为 assignee 自报，PM 无法复跑，按原始日志行审"
+        },
+        {
+          "at": "2026-09-19T10:40",
+          "summary": "STATUS×1（10:13）+ DONE 收到（PR #87，头 54843bb，非草稿；含逐条验收、SoC/CANN/opp、原始日志行）。PM 审查完成，结论接受：写集 32/32、无红旗、隐私扫描（含 21 份原始日志与结果 JSON）无命中；chunk_pgdn 门控覆盖规格每一行'其余'；ATK kernel 语义与 pin 住的 naive 逐项对得上（PM 对源码核实）；独立参考 B 不复用 A 且自带负控制。PM 复跑（pin 版 library、torch_npu 排除、pin 版 oracle A）：PGDN 测试 104 passed、契约 reference 60 case 通过、全量 378 passed/15 skipped 与 DONE 的 384/4 精确对账（差的 6 个是需 FLA_*_NAIVE 的用例）。真机数字 PM 无法复跑，对 PR 内原始文件逐项核：完整 workload 日志、60 case 摘要（1020 leaf/120 公共调用）、30 对 bd1↔bd2 逐位相同、1800 计时样本重算中位数 0 处不一致，均与 DONE 一致；计算相关源在四个提交间零改动。全网格最大 FP32 相对 L2 对 A：o/S/A=1.53e-6/2.22e-6/5.81e-7，对 B：2.45e-6/3.23e-6/4.75e-7（预算 1e-4）；BF16 输出 .00168。测量基线如实标注为'GDN 方程成本基线，不是 GDA-02 性能'，PGDN 慢 3.4%–4.5%，不声称加速。限制：PM 未独立复现 ascriptor check、sim/pipesim 与真机数字；范围窄（仅前向、A5、bd1/2、T≤4096、初始状态 None、内核内归一化必开）。用户 D-PM-26 表态'真机验证通过后可合入'，但合入动作被自动模式拦下（无人工确认对 #87 的明确授权），PR 仍 open，头 54843bb，等用户确认。状态 in_progress→review"
         }
       ],
       "result": null
