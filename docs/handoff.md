@@ -9,7 +9,15 @@
 **这是一次 PM 账号本身的交接，不是算子进度交接。** 下面按"现在手上有什么、有什么坑、
 下一步该干什么"排列，配合 `docs/pm/board.json`（权威）和 `python tools/pm_board.py --render` 看。
 
-### 正在飞的任务（2 个：A5K-02 blocked、PK-03 assigned；PK-03 中间撤回过一次又重新派了）
+### 正在飞的任务（现在只剩 PK-03；A5K-02 已于 2026-09-19 合入）
+
+> **2026-09-19T09:05Z 更新：A5K-02 已合入**（PR #83，合并提交 `2589942`，合入的是审过的头 `3e3670f`；用户 D-PM-27 授权）。
+> 公开 KDA 调度的 stable 路径现在选修复后的 recurrent（奇数 C 多头不再静默写错 `o`），upstream 路径对奇数 C 且
+> `B*HV>block_dim` 提前报错；派生 `inverse_mm` 只做了被批准的事（与 pin 上游逐行 diff：仅入口改名 + 两块 L0C 双槽改单槽）。
+> 缺口表已更新：`c1-multihead-o-corrupt` 保持 P0，写明默认路径已修与仍未解决的边界；新增
+> `kda-bwd-inverse-mm-mutex-over-budget`（P1，进 kernel 修复队列，指上游源码）。**下面 A5K-02 的条目是合入前的记录。**
+> **`A2-02` 与 `A2-44` 的 `write-set-overlap:A5K-02` 门条件已满足，但 PM 没有解门**（放行 gated 项只问用户），等用户决定；
+> 两个任务的写集彼此也有重叠，解门后先 APPLY 者先做。
 
 - **`A5K-02`**（issue #81，草稿 PR #83，`blocked`，assignee `limjiunnbin`，
   session `01a0ae7a-d1c0-7f02-b040-be977ec47393`）：D-PM-24 批的 `inverse_mm.py` 派生
@@ -105,6 +113,20 @@ write-set-overlap 转 `gated` 并加了 `deps: [..., A5K-02]`，NO_TASK 回复�
   官方 v2.101.0 两样都有。装官方 release 的二进制并校验 sha256。`!gh auth login` 会报
   `--web or --with-token required when not running interactively`，要用 `--web`（设备码）或
   `--with-token < <token 文件>`。做法与登录顺序见 `docs/pm/START.md` §2 第 3、4 步。
+
+### 在装了 torch_npu 的共享机器上复跑 PR 测试（2026-09-19 实测，都是踩过的）
+
+- **不清环境直接 `pytest tests/` 会碰设备。** 机器装了 torch_npu/CANN 且有 NPU 设备可见：`import torch` 会自动加载
+  torch_npu，`tests/conftest.py` 的 session fixture 会去编译全部 kernel，NPU 测试也可能起跑，而设备是共享的。
+  做法：设 `TORCH_DEVICE_BACKEND_AUTOLOAD=0`，再在 `PYTHONPATH` 最前放一个只写 `raise ImportError(...)` 的
+  `torch_npu/__init__.py` 桩，并**先验证 `torch.npu.is_available()` 为 False** 才跑。只 `env -i` 清环境不够：
+  torch_npu 会半初始化，报 `TORCH_LIBRARY` 重复注册并段错误。
+- **测试要 pin 版的 ascriptor。** 同级目录的 `ascriptor-kernels` 是 kernels 的 pin（用 `git rev-parse` 核对，工作区要干净）；
+  同级的 `ascriptor`（library）修订常常不是 pin，用 `git archive <pin> | tar -x` 从 git 对象导出 pin 版到临时目录，
+  别动别人的检出。用 `ASCRIPTOR_KDA_FWD` / `ASCRIPTOR_KDA_BWD` 指向 kernels 的 `projects/a5/kda_fwd` / `kda_bwd`，
+  `PYTHONPATH` 指向导出的 library。gitcode 要凭据，匿名取不到。
+- **有 10 个测试需要 pin 版 FLA 源码**（cache adapter 4、GDN 3、GDN-2 1、KDA gating 2），本机没有 fla 就会 skip；
+  对账时要写清 `passed + 这 10 个 = 申领人报的 passed`。全量套件在这个环境里约 70 秒，卡住不是测试慢，是没排除 torch_npu。
 
 ## 0. 2026-09-15 更新：SoC 顺序变更 + 多 agent 协作（先读这节）
 

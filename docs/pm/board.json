@@ -174,6 +174,13 @@
       "by": "user",
       "decision": "PK-03 的真机测试是必须项，不是可选项：DONE 之前必须在 A5 真机上完成测试，通过后可合入。（用户在 PM 会话里回答'真机是否可选'的问题，原话：'真机非可选项，必须在真机完成测试。通过后就能合入'。）",
       "risk": "用户只明说了'真机必须、通过后可合入'两件事。真机测试的具体内容（完整选定 workload、对两个 CPU oracle 的 FP32 1e-4 / BF16 5e-3 预算、bd1 与 bd2 逐位相同、同卡三明治不设速度门槛）是 PM 依 AGENTS.md §5/§6 与 GDA-01/02 先例定的，用户可调整。'通过后可合入'指 PM 审查通过后，仍走 pm.md 的审查流程，不跳过。当前设备占用无法核实（监视工具缺失、驱动进程查询 NOT_SUPPORT），真机部分要等用户/管理员提供占用证据；PM 不代为提供，assignee 不得自行推断空闲。这条只针对 PK-03，不代表 PR #83（A5K-02）的合入已获批准——后者的真机证据已在 DONE 里，是否合入仍待用户确认。"
+    },
+    {
+      "id": "D-PM-27",
+      "date": "2026-09-19",
+      "by": "user",
+      "decision": "批准 PR #83（A5K-02）在 PM 审查后合入。用户原话：'#83完成了真机验证，你review后就可以合入'。",
+      "risk": "PM 审查结论为接受（见 PR 下的 REVIEW 评论与 A5K-02 的 reports）。真机数字由 assignee 报告，PM 无法复跑，按证据审；合入的是审过的头 3e3670f，合并提交 2589942。之前一次合入尝试被自动模式拦下（无人工确认），现以用户的明确授权为准。"
     }
   ],
   "gated_epics": [
@@ -468,6 +475,10 @@
         {
           "at": "2026-09-19T01:21",
           "summary": "APPLY from joshjms（#31）身份/能力校验通过，但写集（ops/kda/** 含 chunk.py、chunk_bwd.py、fused_recurrent.py 的 _kernels_root/_stable_kernels_root/_unit_root）与在飞的 A5K-02（blocked，limjiunnbin，草稿 PR #83）重叠——A5K-02 正在这些文件里加公开调度选择修复版 kernel 的逻辑，A2-02 要把这些文件里写死的 device=\"a5\" 改成走 platform 解析。两边都改同一批调度函数，冲突风险真实存在。转 gated，补 A5K-02 为依赖，NO_TASK 已发"
+        },
+        {
+          "at": "2026-09-19T09:05",
+          "summary": "A5K-02 已合入（PR #83，合并提交 2589942），本任务 gate 'write-set-overlap:A5K-02' 的条件已满足。gated 项的放行只问用户，PM 未自行解门，等用户决定；两个任务的写集彼此也有重叠（ops/kda/chunk.py、layers/kda.py），解门后先 APPLY 者先做，后者大概率再 gate 一轮"
         }
       ],
       "result": null,
@@ -2219,7 +2230,7 @@
       "wave": "W0",
       "soc": "a5",
       "priority": "P1",
-      "status": "review",
+      "status": "done",
       "model": [
         "kimi-linear-48b-a3b"
       ],
@@ -2317,9 +2328,25 @@
         {
           "at": "2026-09-19T06:35",
           "summary": "DONE 收到（PR #83，头 3e3670f，非草稿；含逐条验收、SoC/CANN/opp、未过滤 verifier 行）。PM 审查完成，结论接受：写集 13/13、无红旗、隐私扫描无命中；stable 选修复版 recurrent、upstream 对奇数 C 提前拒、baseline 钉回原始（pin 版 library+kernels 上复跑 108 passed）；inverse_mm 与 pin 上游逐行 diff 仅入口改名 + l0c_dvh/l0c_dvbeta 双槽改单槽；互斥锁 cube32/vec15、原版 34>32 在 pin 版 library 上复现；主机全量 328 passed/15 skipped（其中 10 个需 pin 版 FLA 源码，328+10=338 与 DONE 对账，5 个 NPU 模块 skip 相同）；真机数字 DONE/回执 JSON/文档三处逐项一致（PM 无法复跑，按证据审）。记入限制：stable 路径无奇数 C 闸（C=1..6 与 T4096 已原生验证，其余按构造论证）；dq 最坏 .04782 / 预算 .05，余量约 4.4%（预算未改）。合入待用户确认；PR 仍 open，头 3e3670f。状态 in_progress→review"
+        },
+        {
+          "at": "2026-09-19T09:05",
+          "summary": "合入：PR #83 合并提交 2589942（合入的是审过的头 3e3670f，--match-head-commit）。用户 D-PM-27 授权；PM 先发 REVIEW accept 再合入。合入后 board/矩阵校验通过；gaps.json 更新 c1-multihead-o-corrupt（保持 P0，写明默认公开路径已修与仍未解决的边界）并新增上游 inverse_mm 互斥锁超预算一条（P1，进 kernel 修复队列）。状态 review→done"
         }
       ],
-      "result": null
+      "result": {
+        "commits": [
+          "3e3670f",
+          "2589942"
+        ],
+        "evidence": [
+          "PR #83",
+          "docs/research/kda_aqk_handoff_repair.md",
+          "kernels/projects/a5/kda_fwd_stable/public_validation.json"
+        ],
+        "numbers": "主机侧：PM 在 pin 版 library+kernels、纯 CPU 环境复跑 328 passed/15 skipped（10 个需 pin 版 FLA，328+10=338 与 DONE 对账，5 个 NPU 模块 skip 相同），相关两个测试文件 108 passed；D-PM-24 派生 kernel 与 pin 上游逐行 diff 仅入口改名 + 两块 L0C 双槽改单槽，互斥锁 cube32/vec15、原版 34>32 由 PM 独立复现。真机（A5，950PR_9589 V100 / CANN 9.2.0）：公开 API 336/336 网格、9240 个 head/chunk 行，最差相对 L2 输出 .003904、状态 .004269；Kimi T4096 前向输出/状态 .0032664/.0025472，完整 backward 六个梯度均低于未改预算；bd1..4 字节一致；性能三明治略慢（≤0.3%），不声称加速",
+        "note": "真机数字由 assignee 报告，PM 无 A5 真机、无法复跑，按证据审（DONE、回执 JSON、文档三处逐项一致）。限制已记入 gaps.json：stable 路径无奇数 C 闸（C=1..6 与 T4096 已原生验证）、原始对照失败计数 30 与 A5K-01 的 26 口径不同、dq 余量约 4.4%。用户 D-PM-27 授权合入"
+      }
     },
     {
       "id": "GDA-02",
@@ -2442,6 +2469,10 @@
         {
           "at": "2026-09-18T12:20",
           "summary": "APPLY from joshjms（#86）身份/能力校验通过，但写集与在飞的 A5K-02（blocked，限 limjiunnbin，草稿 PR #83）在 ascend_fla/ops/kda/chunk.py 上重叠——A5K-02 正在改这个文件里的 recurrent 选择逻辑（把公开调度切到修复版 kernel），A2-44 要在同一个文件给 chunk_kda 加 fla 式关键字参数。两边并发改同一个函数所在文件风险真实存在（合并冲突或互相覆盖对方的改动），不是排期便利问题。转 gated，补 A5K-02 为依赖，NO_TASK 回复已发，建议 A5K-02 合入后重新 APPLY"
+        },
+        {
+          "at": "2026-09-19T09:05",
+          "summary": "A5K-02 已合入（PR #83，合并提交 2589942），本任务 gate 'write-set-overlap:A5K-02' 的条件已满足。gated 项的放行只问用户，PM 未自行解门，等用户决定；两个任务的写集彼此也有重叠（ops/kda/chunk.py、layers/kda.py），解门后先 APPLY 者先做，后者大概率再 gate 一轮"
         }
       ],
       "result": null,

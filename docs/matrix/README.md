@@ -208,7 +208,7 @@ kimi_linear_layer / bd=4 的拆分（ms）：fwd_kernels 1.314 · caches_host_si
 
 ## 缺口
 
-P0 2 项 · P1 17 项 · P2 10 项 · 已解决 11 项 · 共 41 项
+P0 2 项 · P1 18 项 · P2 10 项 · 已解决 11 项 · 共 42 项
 
 **第一期里程碑**：第一期五项已全部有结论，并补齐了同机性能对比：aclnn 编译、runtime 桥、kda_fwd 接线、KDA 本地基线均实测通过；自编译算子在 block_dim=4 下比 torch_npu 组合快 4.43x（kimi_linear_layer）/ 2.38x（long_context T=4096）/ 19.7x（smoke）。过程中修掉两个自己的 bug（bridge-per-call-overhead、op-name-collision-in-process），它们先后让 block_dim 的效果被完全掩盖。当前最大的性能项是 block-dim-ceiling（已升 P1）：扩展性一路线性到契约上限 4，而硬件有 28 cube。第二期的前置障碍 kda-fwd-bwd-dtype-mismatch 已量化（降 P2）。
 
@@ -237,18 +237,18 @@ P0 2 项 · P1 17 项 · P2 10 项 · 已解决 11 项 · 共 41 项
 
 | 算子族 | P0 | P1 | P2 |
 |---|---|---|---|
-| KDA | `c1-multihead-o-corrupt`<br>`ascriptor-gm-transfer-two-slice-row-gap` | `decode-call-overhead`<br>`decode-layer-overhead`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`no-tail-path`<br>`block-dim-ceiling`<br>`qk-l2norm-not-in-kernel`<br>`state-layout-k-first` | `kda-fwd-bwd-dtype-mismatch`<br>`npu-builtin-ops-missing`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`kernel-nd2nz-suboptimal`<br>`fwd-caches-not-emitted`<br>`modules-are-torch-not-kernels`<br>`stable-unit-no-harness`<br>`gate-span-still-bounded`<br>`kda-layer-l2norm-eps-formula-diverges` |
+| KDA | `c1-multihead-o-corrupt`<br>`ascriptor-gm-transfer-two-slice-row-gap` | `decode-call-overhead`<br>`decode-layer-overhead`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`no-tail-path`<br>`block-dim-ceiling`<br>`qk-l2norm-not-in-kernel`<br>`state-layout-k-first`<br>`kda-bwd-inverse-mm-mutex-over-budget` | `kda-fwd-bwd-dtype-mismatch`<br>`npu-builtin-ops-missing`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`kernel-nd2nz-suboptimal`<br>`fwd-caches-not-emitted`<br>`modules-are-torch-not-kernels`<br>`stable-unit-no-harness`<br>`gate-span-still-bounded`<br>`kda-layer-l2norm-eps-formula-diverges` |
 | GDN | `ascriptor-gm-transfer-two-slice-row-gap` | `gdn-no-gqa`<br>`layout-not-token-major`<br>`nonzero-initial-state`<br>`d-initial-state-absent`<br>`state-dtype-bf16`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`scale-param-no-slot`<br>`no-tail-path`<br>`block-dim-ceiling` | `npu-builtin-ops-missing`<br>`fixed-kv-128`<br>`asymmetric-kv-dim` |
 | GDN-2 | `ascriptor-gm-transfer-two-slice-row-gap` | `no-varlen`<br>`no-tail-path`<br>`gdn2-abi-not-gdn`<br>`gdn2-chunk-gate-range`<br>`gdn2-decode-fragmentation` | `npu-builtin-ops-missing`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`modules-are-torch-not-kernels` |
 | DeltaNet | `ascriptor-gm-transfer-two-slice-row-gap` | `layout-not-token-major`<br>`nonzero-initial-state`<br>`d-initial-state-absent`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`scale-param-no-slot`<br>`no-tail-path` | `npu-builtin-ops-missing`<br>`fixed-kv-128`<br>`asymmetric-kv-dim` |
 
 ### 待统一修复的 kernel 问题
 
-> **kernel 源码层面的问题统一修一轮，不零散改。** 这是 2026-09-11 定的：发现一条就去改一条，会在 ascriptor 侧留下一串互相干扰的小改动，而且每改一次都要重跑全部 case。做法：发现时把它记进本表并打 `requires_kernel_change`，本仓侧先按 AGENTS.md §7 **装闸报错或记为声明限制**，保证不静默出错；等攒够一批再统一进 ascriptor 侧（§3：本仓不改那个仓，要改走那一侧的流程或建本仓派生单元）。当前队列 24 项，见下表。
+> **kernel 源码层面的问题统一修一轮，不零散改。** 这是 2026-09-11 定的：发现一条就去改一条，会在 ascriptor 侧留下一串互相干扰的小改动，而且每改一次都要重跑全部 case。做法：发现时把它记进本表并打 `requires_kernel_change`，本仓侧先按 AGENTS.md §7 **装闸报错或记为声明限制**，保证不静默出错；等攒够一批再统一进 ascriptor 侧（§3：本仓不改那个仓，要改走那一侧的流程或建本仓派生单元）。当前队列 25 项，见下表。
 
 | 缺口 | 级别 | 要在 kernel 侧改什么 |
 |---|---|---|
-| `c1-multihead-o-corrupt` | P0 | **根因已定位**（A2-04 / PR #60，joshjms 诊断，PM 独立复算）：`kda_fwd/kernels/recurrent.py` 的 `Aqk` L1 交接是**两信用配固定槽** —— `aqk_l1_valid = DEvent(Pipe.MTE1, Pipe.MTE2, preset=True)`（:130）给两个信用，而槽是 `aqk_slot = Var(c_idx % 2)`（:243 写、:373 读），按 chunk 取。一个头最后一个 chunk 的槽是 `(C-1)%2`，下一个头第一个 chunk 的槽是 `0` —— **当且仅当 C 为奇数时两者相撞**，写方领先一周期踩进还没被读走的槽（:245 的 MTE2 写 与 :398 的 MTE1 读无序）。每核最后一个头后面没有写，所以恰好是对的。**不是漏了某次 DEvent/Mutex 调用**，是信用数与实际轮转的槽数不匹配 —— 与 ascriptor `library/docs/defects/M10-076-mutex-credits-and-handoff-slots.md` 同型（那一条在 autosync 里已修成『depth <= j 才算有序』，但本 kernel 是手写同步，不过 autosync）。**修法**：让槽按每核周期序号轮转 `((pair_idx - pair_begin) * C + c_idx) % 2`，两信用配两槽；或把两个 DEvent 降成 SEvent（少一周期 run-ahead）。 **补充（来自 A2-04 的 delta）**：`l1_Aqk` 是两槽 `DBuff`（:146）。备选修法是把 `aqk_l1_valid`/`aqk_l1_ready` 改 `SEvent`（去掉一拍 run-ahead，**性能未测**）。落地按 AGENTS.md §3 走本仓派生单元、进 kernel 批次。A5 上的硬判据：失效表 12 格全对、偶数 C 与未修版逐位相同、bd=1 与 bd=4 逐位相同。 |
+| `c1-multihead-o-corrupt` | P0 | **根因已定位**（A2-04 / PR #60，joshjms 诊断，PM 独立复算）：`kda_fwd/kernels/recurrent.py` 的 `Aqk` L1 交接是**两信用配固定槽** —— `aqk_l1_valid = DEvent(Pipe.MTE1, Pipe.MTE2, preset=True)`（:130）给两个信用，而槽是 `aqk_slot = Var(c_idx % 2)`（:243 写、:373 读），按 chunk 取。一个头最后一个 chunk 的槽是 `(C-1)%2`，下一个头第一个 chunk 的槽是 `0` —— **当且仅当 C 为奇数时两者相撞**，写方领先一周期踩进还没被读走的槽（:245 的 MTE2 写 与 :398 的 MTE1 读无序）。每核最后一个头后面没有写，所以恰好是对的。**不是漏了某次 DEvent/Mutex 调用**，是信用数与实际轮转的槽数不匹配 —— 与 ascriptor `library/docs/defects/M10-076-mutex-credits-and-handoff-slots.md` 同型（那一条在 autosync 里已修成『depth <= j 才算有序』，但本 kernel 是手写同步，不过 autosync）。**修法**：让槽按每核周期序号轮转 `((pair_idx - pair_begin) * C + c_idx) % 2`，两信用配两槽；或把两个 DEvent 降成 SEvent（少一周期 run-ahead）。 **补充（来自 A2-04 的 delta）**：`l1_Aqk` 是两槽 `DBuff`（:146）。备选修法是把 `aqk_l1_valid`/`aqk_l1_ready` 改 `SEvent`（去掉一拍 run-ahead，**性能未测**）。落地按 AGENTS.md §3 走本仓派生单元、进 kernel 批次。A5 上的硬判据：失效表 12 格全对、偶数 C 与未修版逐位相同、bd=1 与 bd=4 逐位相同。 **2026-09-19**：本仓派生单元已落地并接入公开调度（见 proposed_action）；上游 ascriptor 的 `kda_fwd/kernels/recurrent.py` 源码仍未改，`requires_kernel_change` 因此保持 true（指上游）。 |
 | `block-dim-ceiling` | P1 | kda_fwd/kda_bwd 的 contract domain.block_dim 上限由 4 抬高并补 case。物理 28 cube / 56 vec，实测到 4 仍是线性扩展，所以这是当前最大的单点性能头寸。 |
 | `d-initial-state-absent` | P1 | gdn / delta_rule 的 backward 产出 dh0。 |
 | `decode-call-overhead` | P1 | 若要消掉 host 侧 15.4µs 的布局转换：kda_fused_recurrent 改成直接吃 token-major [B,T,H/HV,128] 并在 kernel 内按 hv//groups 取 q/k 的头。桥侧那 25µs 不用改 kernel。 |
@@ -257,6 +257,7 @@ P0 2 项 · P1 17 项 · P2 10 项 · 已解决 11 项 · 共 41 项
 | `gdn2-abi-not-gdn` | P1 | recurrent 已由本仓 a5.gdn2_fused_recurrent 解决；队列中只剩独立 gdn2 chunk fwd/bwd，正式 ABI 需要 channel-wise g[B,T,H,K]、b[B,T,H,K]、w[B,T,H,V]。 |
 | `gdn2-chunk-gate-range` | P1 | 新建 gdn2 chunk fwd/bwd 时必须从一开始采用覆盖至少已观测 1461 局部跨度的数值表示；禁止直接复制 KDA stable 的 105/155 跨度实现。 |
 | `gdn2-decode-fragmentation` | P1 | BF16 raw-gate recurrent+output-norm、qkv short-conv+cache、RMSNorm2+paired W1/W2+SiLU×Mul三个模型专用CCE单元均已通过整网/profile。后续大步优化需新建weight-only低精度GEMV及质量验证链。 |
+| `kda-bwd-inverse-mm-mutex-over-budget` | P1 | 要改 ascriptor 的 `a5.kda_bwd/kernels/inverse_mm.py`：`l0c_dvh`、`l0c_dvbeta` 由 `DBuff` 改为单槽 `Tensor`（并去掉这两块在使用点的 `[pipe_work]` 下标），互斥锁 34→32；算式、事件信用、循环、lookahead 不动。本仓派生单元已落地并通过原生验证（见 proposed_action），上游源码仍未改。 |
 | `layout-not-token-major` | P1 | gdn / delta_rule 的公开布局改 token-major。 |
 | `no-tail-path` | P1 | kda kernel 加 partial chunk 的 tail 路径，解除 T % 64 == 0。 |
 | `no-varlen` | P1 | kda kernel 支持 cu_seqlens（变长序列打包）。 |
@@ -303,7 +304,10 @@ PM 在权威 workspace 上独立跑了 `benchmarks/diag_c1_multihead.py`，**上
 **根因定位（A2-04，#30 / PR #60，library 627f55f / kernels c89f69b，a5 管线模型值）**：pipesim 报出的冒险全部是"本头的 Aqk L1 读（:398）↔ 同核下一头的 Aqk L1 写（:245）"无序，条数与归因逐格相等、无其它冒险。按调度回放 o：真机失效表 12/12 格逐头吻合（逐位正确的头 = 表中对的头）。用 verify_real_shapes.py 同款输入（跨度 46）预测：kimi H32/HV32/C1/bd4 整体 o 相对 L2 1.060（本条记录 1.06），H1/HV8/C1/bd1 为 2.721e-01（本条记录 2.721e-01），kimi final_state 2.458e-03（本条记录 2.46e-03）；错头 |o|/|ref| 0.9254~1.1319、全部有限。**C≥2 全对的原因不是"chunk 循环第二遍补上了同步"**：C 为偶数时相邻两次写的槽交替，信用数与槽数匹配；C 为奇数时每次换头相撞一次。L0C 输出握手各头一致，与缺陷无关。修补（aqk-only 槽轮转）在模型中 43/43 格与奇数 C 12/12 格冒险 0、全头正确，偶数 C 格与上游逐位相同；负对照（只改 q/qg 槽）不起作用。
 **一条被推翻的旧解释**：本条原来写着 C≥2 全对是因为『chunk 循环跑第二遍时补上了缺的那次同步』。两半都错 —— 根因不是漏同步（是信用数与槽数不匹配），C≥2 也不全对（奇数 C 照样撞）。那句话是从『C=1 坏、C=2 好』这个症状规律倒推的。AGENTS.md §6 已同步更正。
 2026-09-18 真机首次证实（A5K-01，#76，950PR_9589 V100，CANN 9.2.0，BF16 q/k/v/o、FP32 gate/state，B1 H=HV=32 K=V=128，span46，bd4）：T64/C1 output relL2=1.06026316（与历史记录 1.06 吻合），T192/C3 output relL2=0.689781666——C=3 在真机上确实错，不只是 pipesim 模型预测，此前奇数 C 结构性暴露的结论首次拿到真机证据支撑。T4096/C64（偶数）relL2=0.00326641649，在预算内。错误的输出逐元素 atol=.02 仍能通过（有限值、量级正常），现有 .05 相对 L2 闸正确拒绝了 C1/C3——闸没有失效，此前记录的闸只拦 C=1、奇数 C≥3 结构上同样暴露，现在有真机数据佐证。
-- **影响** ① **T=64 的前向输出是错的**（HV>block_dim 时），错得没有任何信号：有限值、量级正常、`final_state` 还对。短 prompt 的 prefill 正好落在这里 —— kimi 形状 HV=32、bd=4 时 32 个头里只有 4 个对。
+- **影响** **2026-09-19 更新（A5K-02，#83，合并提交 2589942）——先读这一段，下面 ①~④ 描述的是修复前的行为，以及仍未修复的 upstream 路径：**
+默认公开路径（`impl="stable"`，含 `chunk_kda_fwd` 与带 cache 的前向/训练前向）已改用修复后的 recurrent，奇数 C 且多头不再写出错误的 `o`。A5 真机（950PR_9589 V100 / CANN 9.2.0 / 算子包 ascend950,ascend910b,ascend910_93）经公开 API 验证：C=1..6 × 7 组 H/HV × 零/随机 state × bd=1..4 共 336 例、9240 个 head/chunk 行，对两个 CPU FP32 oracle 在未改的预算内（最差相对 L2：输出 .003904、状态 .004269）；Kimi 真实形状 B1/T4096/H32/HV32/bd4 的前向与完整 backward 通过；bd1..4 的输出/cache/prefix-state 字节完全一致；偶数 C 与 9 个 cache 相对原始逐位不变。真机数字由 assignee 报告，PM 无法复跑，按证据审。
+`impl="upstream"` 仍是原始有缺陷的 kernel，但奇数 C 且 B*HV>block_dim 在布局/编译/发射之前报错（闸由 `C==1` 收紧为奇数 C），不再静默出错。
+① **T=64 的前向输出是错的**（HV>block_dim 时），错得没有任何信号：有限值、量级正常、`final_state` 还对。短 prompt 的 prefill 正好落在这里 —— kimi 形状 HV=32、bd=4 时 32 个头里只有 4 个对。
 ② 训练同样中招：梯度本身没问题，但**前向输出错 → loss 错**，所以 T=64 的训练步是垃圾。
 ③ 之前所有精度结论都不受影响 —— 它们用的形状要么 HV=1（安全），要么 C≥2（安全）。这也是它藏了两期没被发现的原因。
 ④ **实测到的一个具体后果（decode 接线时撞上）**：64 token 粒度的 prefill 用不了 —— T=64 就是 C=1，HV=2 且 bd=1 时就已经越界。prefill 要么一次 ≥128 个 token，要么按头分批。写 prefill→decode 的测试时被闸拦下，只能把 prefill 从 64 改成 128。
@@ -317,6 +321,7 @@ PM 在权威 workspace 上独立跑了 `benchmarks/diag_c1_multihead.py`，**上
 ⑥ **真机侧要补的**：本条记的『C=3 全对』在仓里**没有对应的运行日志**。闸的范围要按奇数 C 定的话，得先在 A5 上补 C=3 / C=5 且 `B*HV > block_dim` 的逐 chunk 比对。
 2026-09-18 修复已落地（A5K-01，#78）：kernels/projects/a5/kda_fwd_stable/kernels/recurrent.py 把槽表达式改成 Var(((pair_idx - pair_begin) * C + c_idx) % 2)（写读两处都改），与 A2-04 pipesim 验证过的方案一致。真机确认：336/336 case（C=1..6 x 7 组 H/HV x 零/随机 state x bd=1..4，含 Kimi 真实形状 H=HV=32）全过，负对照（原始/qg-only）保留、真机上仍复现奇数 C 冒险；偶数 C 与未修改基线逐位相同，跨 bd=1..4 也逐位相同。PM 独立复算了不依赖真机的部分：repair_diagnostics.py 的 12 格缩小 pipesim 回归——负对照在奇数 C=1,3,5 冒险数=2、回放错误，修复版全部 C 冒险数=0、回放正确，与报告逐字一致。
 **重要边界（未解决）**：修复只落在这个独立单元里，`ascend_fla/ops/kda/chunk.py` 的公开调度仍然选择原始（有缺陷的）recurrent——那个文件不在 A5K-01 的写集内，接线是一个需要仓库所有者另外决定的独立步骤。**在接线完成之前，公开 API 的用户仍然会撞上这个缺陷**，本条修复目前只是证明了可行，没有改变任何用户能感知到的行为。
+**2026-09-19 接线已落地（A5K-02，#83，合并提交 2589942；上面『重要边界（未解决）』那一条现已解决）**：`ops/kda/chunk.py` 的 stable 选修复后的 recurrent（含 cached-forward）；upstream 的闸收紧为奇数 C 且 B*HV>block_dim；`repair_runtime.py` 的 baseline 显式钉回原始 recurrent，A5K-01 的负对照保留；新增 `tests/test_kda_aqk_dispatch.py` 盯住『公开调度确实选中修复版』。**仍未解决**：(a) stable 路径没有奇数 C 闸——C=1..6 与 T4096（C=64）已原生验证，其余 C 只有『槽位按全局计数取模』的构造性论证，未原生测；(b) 上游 ascriptor 的 kernel 源码本身仍有缺陷（本仓不改，AGENTS.md §3），上游补 case（C=1 且 HV≥2、奇数 C≥3 且 B*HV>block_dim）仍未做；(c) 只覆盖 A5、block_dim 1..4，A2/A3 未建立；(d) A5K-02 新测的原始输出失败计数是 36/30/30/12（bd1..4），与 A5K-01 记录的 bd3=26 不同，口径未统一，两者不要互相替代；(e) 13 个 backward 回归里 dq 的最坏值 .04782 离预算 .05 只有约 4.4% 余量（预算未改，非本次引入）。
 
 #### `ascriptor-gm-transfer-two-slice-row-gap` — 【P0·静默错误·ascriptor 库缺陷】gm_transfer 的双切片分支漏算夹在中间的标量索引维，行间距算成 0
 
@@ -491,6 +496,13 @@ PM 在权威 workspace 上独立跑了 `benchmarks/diag_c1_multihead.py`，**上
 **真实生成接线**：`GDN2NPUGraphDecodeRunner` 与 `generate_tokens(decode_backend="npu-graph")` 已接入。真实95B、64-token greedy在graph-first/eager-second与eager-first/graph-second两组独立进程中，四次token ids逐项相同。含logits D2H、CPU argmax、token H2D的graph decode为244.21/244.79 token/s，对应eager为173.02/148.84，两个顺序加速1.411x/1.645x；含冷prefill和每请求setup的64-token总吞吐graph为99.11/104.23、eager为96.73/91.60，两个顺序加速1.025x/1.138x。四个接受窗口物理0活跃均为0，物理7各只有一个本任务PID。证据：tmp/gdn2-graph-generation/{graph-greedy64-v2,eager-greedy64-v1,eager-greedy64-v2,graph-greedy64-v3}.json（git-ignored）；一轮与外部作业竞争的smoke已隔离为rejected，不作性能证据。
 - **影响** host gap与大部分elementwise fragmentation已经消除：低内存默认纯模型Graph约2.659ms/376.11 token/s；保守mixed显式opt-in为2.589ms/386.32 token/s。其最新device时间90.175%是native GEMV+mixed W12权重流，mixed AIC MTE2平均91.88%。gamma-fold v1的56.24us/token投影已因递推精度作废；保守v2以1,029,832,704 bytes派生权重换取clean Graph约68.20us/token，必须连同内存决策。若要下一次大步收益，需要weight-only低精度/量化及独立任务质量实验。
 - **建议** 精度、同卡stateful Graph A/B和profile均已完成。现在先决定：①保持vendor低内存默认；②用1.030GB派生布局换2.6%吞吐；③设计prompt/decode共用布局去掉重复权重。若继续追求大步收益，再决策weight-only低精度及真实生成/任务质量预算。明确不选：单独W1/W2 kernel、N=64小tile、减小block_dim、增加冗余工作，或已证伪的细粒度DMA双缓冲。W3融合不减少约85.8MB/layer的BF16 W12+W3权重字节，只是ceiling候选。
+
+#### `kda-bwd-inverse-mm-mutex-over-budget` — 上游 kda_bwd 的 inverse_mm_kernel 需要 34 个 cube 互斥锁 ID，超过 A5 局部预算 32，pin 版 kernels 下带 cache 的公开前向无法编译
+
+- **类别** runtime · **适用于** KDA · **阻塞** —
+- **依据** pin 版 `a5.kda_bwd/kernels/inverse_mm.py`（kernels b3b3f9c16df7）在 A5 上降级失败：`PassError: cube needs 34 mutex IDs (maximum 32) at kda_bwd/kernels/inverse_mm.py:65:15`。D-PM-24 记录 PM 已独立复现；2026-09-19 PM 在 pin 版 library（90cfcdc720bb）+ pin 版 kernels 上再次复现，并落成 `tests/test_kda_aqk_dispatch.py::test_cached_forward_dependency_fits_mutex_budget_and_keeps_upstream_control`：原版 `lower_kernel` 仍报 34>32，本仓派生版降级后 cube 32 / vec 15。根因（A5K-02 定位，PM 对着上游原文件逐行 diff 核过）：`l0c_dvh`、`l0c_dvbeta` 两块 L0C 是 `DBuff`（双槽），改成单槽 `Tensor` 即由 34 降到 32；互斥锁、事件信用、循环、lookahead、算式一行没动。
+- **影响** A5K-02 的 contract 记录：带 cache 的公开前向（`chunk_kda_fwd_with_caches`，训练前向）会预编译 backward 的全部 9 个 kernel，pin 版上游 `inverse_mm` 在这一步降级失败，所以训练路径编不出来。**现状**：本仓派生单元已绕开（A5K-02，合并提交 2589942），公开 stable 路径不再触发；上游 kernel 本身仍是坏的，任何直接用上游 `inverse_mm` 的路径仍会撞上。
+- **建议** **已做**：A5K-02（#83）在派生单元 `kernels/projects/a5/kda_bwd_stable/kernels/inverse_mm.py` 落地受限版（入口 `inverse_mm_bounded_kernel`），`ops/kda/chunk_bwd.py` 的 stable 覆盖表选它。原生验证：完整 inverse leaf B1/HV32/C64/bd4 + 3 个小 case、13 个完整 backward 回归（含 Kimi T4096、跨度 46/94/104/精确 105）都在未改的预算内，leaf 相对 L2 ≈ .00164–.00168；缩小 sim/pipesim 8/8 无 hazard/死锁。**要做**：上游（ascriptor）应改 `kda_bwd/kernels/inverse_mm.py`，本仓不改（AGENTS.md §3），进上游 kernel 批次；届时可删掉本仓派生，并把 `test_aqk_dispatch` 里『原版 34>32』的对照测试改成『原版通过』。
 
 ### P2
 

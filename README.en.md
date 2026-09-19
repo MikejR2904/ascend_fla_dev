@@ -27,7 +27,7 @@ serves only as the semantic authority during testing (`naive.py` as a CPU fp32 o
 
 | family | id | track | kernels | task progress |
 |---|---|---|---|---|
-| KDA (Kimi Delta Attention) | `kda` | open to agents | 5 | 2/16 |
+| KDA (Kimi Delta Attention) | `kda` | open to agents | 5 | 3/16 |
 | GDN (Gated DeltaNet) | `gated_delta_rule` | open to agents | 4 | 2/5 |
 | DeltaNet | `delta_rule` | no task yet | 2 | 2/2 units with validation records |
 | GDN-2 (Gated DeltaNet 2) | `gdn2` | owner track | 6 | 3/4 |
@@ -47,19 +47,19 @@ serves only as the semantic authority during testing (`naive.py` as a CPU fp32 o
 
 ### Expand for detail (family → kernel → task)
 
-<details><summary><b>KDA (Kimi Delta Attention) —— 5 kernel(s)，2/16 done</b></summary>
+<details><summary><b>KDA (Kimi Delta Attention) —— 5 kernel(s)，3/16 done</b></summary>
 
 _First target family; used by Kimi-Linear_
 
 | kernel | track | progress | next |
 |---|---|---|---|
-| `kda_fwd_stable` | open to agents | 2/10 | [#34](https://github.com/ddddwee1/ascend_fla_dev/issues/34) A2-03 |
+| `kda_fwd_stable` | open to agents | 3/10 | [#34](https://github.com/ddddwee1/ascend_fla_dev/issues/34) A2-03 |
 | `kda_bwd_stable` | open to agents | 0/8 | [#34](https://github.com/ddddwee1/ascend_fla_dev/issues/34) A2-03 |
 | `kda_fused_recurrent` | open to agents | 0/9 | [#34](https://github.com/ddddwee1/ascend_fla_dev/issues/34) A2-03 |
 | `kda_fwd` | upstream unit | 5/9 passed | _Upstream unit; superseded here by kda_fwd_stable_ |
 | `kda_bwd` | upstream unit | 4/9 passed，1 项 gap | _Upstream unit; superseded here by kda_bwd_stable_ |
 
-<details><summary>kda_fwd_stable —— 2/10 done，start A2-03、A2-04、A5K-01、A5-04</summary>
+<details><summary>kda_fwd_stable —— 3/10 done，start A2-03、A2-04、A5K-01、A5-04</summary>
 
 | task | issue | SoC | dtype | status | note |
 |---|---|---|---|---|---|
@@ -67,7 +67,7 @@ _First target family; used by Kimi-Linear_
 | A2-03 | [#34](https://github.com/ddddwee1/ascend_fla_dev/issues/34) | `a2` | bf16、fp32 | ⬜ open | ★ start |
 | A5-04 | [#50](https://github.com/ddddwee1/ascend_fla_dev/issues/50) | `a5` | bf16、fp32 | 🔒 gated (wave:W-A3) | ★ start |
 | A5K-01 | [#76](https://github.com/ddddwee1/ascend_fla_dev/issues/76) | `a5` | bf16、fp32 | ✅ done | ★ start |
-| A5K-02 | [#81](https://github.com/ddddwee1/ascend_fla_dev/issues/81) | `a5` | bf16、fp32 | 🔵 review |  |
+| A5K-02 | [#81](https://github.com/ddddwee1/ascend_fla_dev/issues/81) | `a5` | bf16、fp32 | ✅ done |  |
 | A2-12 | [#39](https://github.com/ddddwee1/ascend_fla_dev/issues/39) | `a2` | bf16、fp32 | 🔒 gated (machines:a2) |  |
 | A2-K1 | [#44](https://github.com/ddddwee1/ascend_fla_dev/issues/44) | `a2` | bf16、fp32 | 🔒 gated (kernel-batch-approval) |  |
 | A2-15 | [#42](https://github.com/ddddwee1/ascend_fla_dev/issues/42) | `a2` | bf16、fp32 | 🔒 gated (machines:a2) |  |
