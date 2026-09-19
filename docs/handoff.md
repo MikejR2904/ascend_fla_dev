@@ -9,7 +9,7 @@
 **这是一次 PM 账号本身的交接，不是算子进度交接。** 下面按"现在手上有什么、有什么坑、
 下一步该干什么"排列，配合 `docs/pm/board.json`（权威）和 `python tools/pm_board.py --render` 看。
 
-### 正在飞的任务（交接时 2 个；PK-03 随后撤回，现在只剩 A5K-02）
+### 正在飞的任务（2 个：A5K-02 blocked、PK-03 assigned；PK-03 中间撤回过一次又重新派了）
 
 - **`A5K-02`**（issue #81，草稿 PR #83，`blocked`，assignee `limjiunnbin`，
   session `01a0ae7a-d1c0-7f02-b040-be977ec47393`）：D-PM-24 批的 `inverse_mm.py` 派生
@@ -18,10 +18,15 @@
   同机另有任务在跑，另一张卡不健康。写集含 `ascend_fla/ops/kda/chunk.py`、
   `chunk_bwd.py`、`kda_fwd_stable/**`、`kda_bwd_stable/**`（含新加的 `inverse_mm.py` 与
   `contract.json`）。最近一次 STATUS：2026-09-18T09:31。
-- **`PK-03`**（issue #69）：**已于 2026-09-19T02:41Z WITHDRAW，转回 `open`**（分支 `task/PK-03` 保留；
-  assignee 自述是用户直接要求撤回，未产出任何 PGDN 实现/PR/真机运行）。前置 `GDA-02` 已合入，
-  所以它仍然可派——只是现在没有人在做。原先的 `session: gdn-pgdn-forward` 申领随之作废。
-  （交接时它是 `assigned`，PGDN chunk 前向 + ATK 预条件，D-PM-22 排期解锁。）
+  **2026-09-19T04:08Z 更新**：换成 successor session `01a0b7ce-3daf-7550-a7bf-31c67eb91ca3`
+  （自述受用户指示接手，PM 已记录，session 自称、不核实）；PR #83 head 仍 `888862b`（草稿）。
+  **阻塞原因变了**：不再是"等设备空闲窗口"，而是**设备 SSH 认证失败**，
+  远端构建、设备健康/占用/锁状态都未知；它没有动设备。机器归 assignee 管，PM 不代为恢复访问。
+- **`PK-03`**（issue #69）：2026-09-19T02:41Z 撤回，04:16Z 由新 session 重新申领，**用户确认（D-PM-25）后
+  已重新 ASSIGN**（session `pgdn-forward-20260919T041214Z-7b59b3a6`，与 A5K-02 同账号不同 session，并发规则放行）。
+  `PK-03.md` 已重写为"主机侧、窄范围"的可派状态：ABI 与现有 GDN 门控逐项一致；oracle A=fla naive.py +
+  B=独立 CPU 参考；真机可选、不阻塞验收。原 session `gdn-pgdn-forward` 的申领作废。截至 ASSIGN 还没有 ACK。
+  （PGDN chunk 前向 + ATK 预条件，D-PM-22 排期解锁。）
 
 ### 这次会话新合入的两个 PR（供快速对账，细节见 §0.x 各节和 gaps.json）
 
@@ -57,8 +62,9 @@ write-set-overlap 转 `gated` 并加了 `deps: [..., A5K-02]`，NO_TASK 回复�
 
 ### 并发规则实战：这次真的被用上了，而且是级联的
 
-> **2026-09-19 更新**：`PK-03` 在本节写完 11 分钟后被 WITHDRAW，`limjiunnbin` 现在只占 A5K-02 一个任务。
-> 下面描述的是撤回之前的状态，规则本身没变。
+> **2026-09-19 更新**：`PK-03` 在本节写完 11 分钟后被 WITHDRAW，04:16Z 又由新 session 重新申领并重新 ASSIGN
+> （D-PM-25）。`limjiunnbin` 现在仍同时占 A5K-02（session `01a0b7ce-…`）与 PK-03（session `pgdn-forward-…`）
+> 两个任务，按 session 不同放行；规则本身没变。
 
 `docs/pm/PROTOCOL.md` §3.1 的 `session` 并发规则（同账号、不同 `session`，可以同时持有
 两个任务）这次被 `limjiunnbin` 账号连续用了两轮：先是 GDA-01/A5K-01/A5K-02 这条链

@@ -160,6 +160,13 @@
       "by": "user",
       "decision": "批准 A5K-02 的窄范围写集扩展：kernels/projects/a5/kda_bwd_stable/kernels/inverse_mm.py（新派生单元文件）与 ascend_fla/ops/kda/chunk_bwd.py 的选择器更新。仅限把 l0c_dvh/l0c_dvbeta 两个 L0C 缓冲区从双槽改单槽以降低互斥锁 ID 计数（34→32，硬件上限 32），不改算式、不做其它 backward 改动，不触碰 A5-01..A5-06 的写集",
       "risk": "PM 已独立复现这个阻塞（PassError: cube needs 34 mutex IDs (maximum 32) at kda_bwd/kernels/inverse_mm.py:65:15），是当前 pin 下未修改的上游 kernel 的真实编译失败，不是申请方编造的。这条修法碰的是 KDA-on-A5 backward 领域，本来是 A5-01..A5-06 波次门之后才做的事——本次只批这一个narrow 派生单元修复，不代表 backward 工作整体提前，A5-01..A5-06 的 gated: wave:W-A3 原样保留"
+    },
+    {
+      "id": "D-PM-25",
+      "date": "2026-09-19",
+      "by": "user",
+      "decision": "确认 PK-03 撤回后的重新申领：PM 问'是否确实授权了这次重新申领（与 02:41Z 的撤回相反）'，用户答'是'。PK-03 重新 ASSIGN 给同账号的新 session。",
+      "risk": "撤回与重新申领只隔约 1.5 小时，申领评论里'用户已授权'是自述，PM 无法从 issue 内容核实，所以专门问了用户。用户只确认了'重新申领'这一件事；规格口径（窄 ABI 与现有 GDN 门控逐项一致、oracle A=fla naive.py + B=独立 CPU 参考、真机可选、主机侧验收）是 PM 依 AGENTS.md §1/§6/§7 与 PK-02 先例定的，不是用户逐条批的。"
     }
   ],
   "gated_epics": [
@@ -1835,11 +1842,11 @@
     },
     {
       "id": "PK-03",
-      "title": "PGDN chunk 前向：GDN 加 ATK 预条件（排在 GDN 自身 ABI 之后）",
+      "title": "PGDN chunk 前向：GDN 加 ATK 预条件（主机侧，窄范围）",
       "wave": "W0",
       "soc": "a5",
       "priority": "-",
-      "status": "open",
+      "status": "assigned",
       "model": [],
       "kernel": [
         "pgdn_chunk_fwd"
@@ -1865,8 +1872,17 @@
       "spec": "docs/pm/tasks/PK-03.md",
       "issue": 69,
       "pr": null,
-      "assignee": null,
-      "assignee_caps": null,
+      "assignee": "limjiunnbin",
+      "assignee_caps": {
+        "agent": "Codex; new PGDN forward session（自述，撤回后重新申领）",
+        "socs": [],
+        "soc_details": "申领时设备 SSH 认证不通，设备占用/CANN/OPP 未复验，不声称任何 SoC 能力；PK-03 needs.npu=false，不影响派单",
+        "ascriptor": "library 90cfcdc720bb / kernels b3b3f9c16df7（自述；与 ops.json 的 current_compatibility_pin 一致）",
+        "fla": "e52dbc0ea19d3a40d7ab7f9eed855d2b473994d2（自述，隔离 worktree）",
+        "fork": "limjiunnbin/ascend_fla_dev",
+        "session": "pgdn-forward-20260919T041214Z-7b59b3a6",
+        "note": "撤回后重新申领；用户已确认（D-PM-25）。与 A5K-02（session 01a0b7ce-…）是同账号不同 session，按并发规则放行。原 session gdn-pgdn-forward 的申领作废"
+      },
       "branch": "task/PK-03",
       "timebox_h": 24,
       "reports": [
@@ -1881,6 +1897,10 @@
         {
           "at": "2026-09-19T02:50",
           "summary": "WITHDRAW（session gdn-pgdn-forward，limjiunnbin 自述用户直接要求撤回本次申领）：本 session 未产出任何 PGDN 实现/PR/真机运行，只做了源码阅读与语义预检；只撤回本任务，GDA-01/GDA-02 的既有交付与其它 session 不受影响。转回 open，分支 task/PK-03 保留"
+        },
+        {
+          "at": "2026-09-19T04:37",
+          "summary": "APPLY（撤回后重新申领，session pgdn-forward-20260919T041214Z-7b59b3a6，socs 声明 none；needs.npu=false，--next 列为候选）。评论自称用户授权，PM 无法从 issue 核实，已问用户，用户答'是'（D-PM-25）。PM 先改写 PK-03.md 为可派状态（窄 ABI 与现有 GDN 门控逐项一致、oracle A=fla naive.py + B=独立 CPU 参考、真机可选）再 ASSIGN。同账号不同 session，并发规则放行；写集与 A5K-02 无交集。原 session gdn-pgdn-forward 的申领作废"
         }
       ],
       "result": null
@@ -2201,7 +2221,7 @@
       "pr": 83,
       "assignee": "limjiunnbin",
       "assignee_caps": {
-        "agent": "Codex (self-described, per #79/#81)",
+        "agent": "Codex successor; KDA A5K-02 only（自述）",
         "socs": [
           "a5"
         ],
@@ -2209,8 +2229,8 @@
         "ascriptor": "library 90cfcdc720bb / kernels b3b3f9c16df",
         "fla": "e52dbc0ea19d3a40d7ab7f9eed855d2b473994d2",
         "fork": "limjiunnbin/ascend_fla_dev",
-        "session": "01a0ae7a-d1c0-7f02-b040-be977ec47393",
-        "note": "A5K-01 的原 assignee/session 延续"
+        "session": "01a0b7ce-3daf-7550-a7bf-31c67eb91ca3",
+        "note": "A5K-01 的原 assignee/session 延续；2026-09-19T04:08Z 换手：successor session 自称受用户指示接手，PM 记录（session 自称、不核实）；原 session 01a0ae7a-… 不再沿用"
       },
       "branch": "task/A5K-02",
       "timebox_h": 16,
@@ -2244,6 +2264,10 @@
         {
           "at": "2026-09-18T09:31",
           "summary": "STATUS：D-PM-24 的派生 kernel 实现已推到草稿 PR #83（e5c7314）；元数据同步确认已收到并应用，正重跑完整主机套件。公开前向选择、原始 recurrent 对照、全部 9 个 backward kernel 在 bd=4 下 vendor-compile 通过，bd1-3 编译中。inverse_mm 的资源拒绝在派生源里已解决，硬件预算与预编译策略未改。独立 CPU leaf-reference 布局检查通过且拒绝零输出对照。缩小规模模型 runner 已就绪，等完整 leaf 接收。阻塞未变：已分配的健康设备仍有其他任务在跑，另一张卡不健康，未声称新的真机执行。写集问题均已解决"
+        },
+        {
+          "at": "2026-09-19T04:08",
+          "summary": "STATUS（successor session 01a0b7ce-…，自述受用户指示接手）：PR #83 head 仍为 888862b（草稿）；私有交接的 46 个载荷文件与 pinned 依赖已离线恢复。设备 SSH 认证失败，远端构建结果、设备健康/占用/锁状态未知；未跑任何设备负载、reset、外部进程操作或源码同步。blocked 的原因由'等设备空闲窗口'变为'设备访问丢失'，状态保持 blocked。PM 记录换手（范围与数值/预编译/资源约束不变）"
         }
       ],
       "result": null
