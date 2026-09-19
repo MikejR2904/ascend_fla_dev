@@ -243,10 +243,10 @@ def check(board: dict, root: Path = ROOT) -> list[str]:
             # soc=any 的任务在 assignee 自己的真机上验证（结论只对那个 SoC 成立），其余任务要声明过任务的 SoC。
             if needs.get("npu") or hw_required:
                 declared = (t.get("assignee_caps") or {}).get("socs") or []
-                if not declared:
-                    problems.append(f"{tid}: 所有任务都要真机验证，assignee 没有声明任何 SoC 真机")
-                elif t["soc"] != "any" and t["soc"] not in declared:
+                if t["soc"] != "any" and t["soc"] not in declared:
                     problems.append(f"{tid}: 需要 {t['soc']} 真机，assignee 声明的 SoC 是 {declared}")
+                elif not declared:
+                    problems.append(f"{tid}: 所有任务都要真机验证，assignee 没有声明任何 SoC 真机")
         if status == "done" and not (t.get("result") or {}).get("commits"):
             problems.append(f"{tid}: done 必须在 result.commits 记下合入的提交")
 

@@ -370,7 +370,7 @@
       "wave": "W0",
       "soc": "a2",
       "priority": "P0",
-      "status": "open",
+      "status": "assigned",
       "model": [],
       "kernel": [],
       "dtype": [
@@ -379,7 +379,8 @@
       "deps": [],
       "write_set": [
         "benchmarks/a2/repro_splitk_fp32.py",
-        "benchmarks/a2/README.md"
+        "benchmarks/a2/README.md",
+        "benchmarks/a2/evidence/**"
       ],
       "needs": {
         "npu": false,
@@ -389,9 +390,20 @@
       "spec": "docs/pm/tasks/A2-01.md",
       "issue": 29,
       "pr": null,
-      "assignee": null,
-      "assignee_caps": null,
-      "branch": null,
+      "assignee": "limjiunnbin",
+      "assignee_caps": {
+        "agent": "Claude Opus 5（Claude Code）（自述）",
+        "socs": [
+          "a2"
+        ],
+        "soc_details": "自述：SoC 910B3，CANN 9.0.0，内置算子包目录含 ascend910b、ascend910_93（无 ascend950）；机器与卡归 assignee 管理（D-PM-28）",
+        "ascriptor": "library 90cfcdc / kernels b3b3f9c（按 agent/compatibility.json 的 pin；自述）",
+        "fla": "e52dbc0e（自述）",
+        "fork": "limjiunnbin/ascend_fla_dev",
+        "session": "a2-01-20260919T143510Z-35b3db2a",
+        "note": "第一个声明了 a2 真机的申领人。与 GDA-03（session gdn-series-…）、A2-44（session 01a0b7ce-…）同账号，三个 session 互不相同，并发规则放行。申领于 #29（2026-09-19T14:35:11Z）。"
+      },
+      "branch": "task/A2-01",
       "timebox_h": 12,
       "reports": [
         {
@@ -401,6 +413,10 @@
         {
           "at": "2026-09-17T11:07",
           "summary": "24h 未 ACK（ASSIGN 2026-09-16T11:05:46Z），按 §3.3 收回，回 open。分支未建，无需保留"
+        },
+        {
+          "at": "2026-09-19T14:51",
+          "summary": "按 #29 的 APPLY 派给 limjiunnbin（session a2-01-…，第一个声明 a2 真机的申领人），12h，分支 task/A2-01。规格随 D-PM-34 改为：sim/pipesim 保留、必须在 a2 真机上把最小复现真跑一遍，写集加 benchmarks/a2/evidence/**（脱敏原始回执，PM 从中复算）；A2 真机数字只作观测、不解除 A2 总闸。A2 上的结论按 D-PM-33 合入前仍先问用户。申领人在 APPLY 里报了一个失败测试 tests/test_pm_board.py::test_npu_task_requires_declared_soc——是 PM 的 D-PM-34 改动（a00951e）把报错文案改了而没跑 pm_board 测试造成的回归，已修（具体 SoC 的任务保留原文案，soc=any 才用新文案）并补 4 个 D-PM-34 测试，47 个 pm_board 测试全过"
         }
       ],
       "result": null

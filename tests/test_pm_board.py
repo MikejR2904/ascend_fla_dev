@@ -350,5 +350,37 @@ class TestNextCandidates(unittest.TestCase):
         self.assertIn("waiting", [t["id"] for t in pm_board.next_candidates(board, set(), False, False)])
 
 
+class TestHardwareVerificationRule(_Tmp):
+    """用户 2026-09-19（D-PM-34）：所有任务必须完成真机验证。看板标志打开后，
+    校验器与 --next 都要按"assignee 声明过真机"来匹配，哪怕任务自己不需要 NPU。"""
+
+    FLAG = {"hardware_verification": {"required_for_all_tasks": True}}
+
+    def problems_hw(self, *tasks):
+        for t in tasks:
+            (self.root / t["spec"]).write_text("spec", encoding="utf-8")
+        return pm_board.check({"tasks": list(tasks), **self.FLAG}, root=self.root)
+
+    def test_any_soc_task_needs_some_declared_hardware(self):
+        found = self.problems_hw(_task("A", "in_progress", soc="any"))
+        self.assertTrue(any("所有任务都要真机验证" in p for p in found), found)
+        self.assertEqual(self.problems_hw(_task("B", "in_progress", soc="any", assignee_caps={"socs": ["a5"]})), [])
+
+    def test_concrete_soc_task_needs_that_soc_even_without_npu_need(self):
+        found = self.problems_hw(_task("A", "in_progress", soc="a2", assignee_caps={"socs": ["a5"]}))
+        self.assertTrue(any("需要 a2 真机" in p for p in found), found)
+        self.assertEqual(self.problems_hw(_task("B", "in_progress", soc="a2", assignee_caps={"socs": ["a2", "a5"]})), [])
+
+    def test_without_the_flag_host_only_tasks_stay_host_only(self):
+        self.assertEqual(self.problems(_task("A", "in_progress", soc="a2")), [])
+
+    def test_next_candidates_follow_the_same_rule(self):
+        board = {"tasks": [_task("any_task", write_set=["a.py"]), _task("a2_task", write_set=["b.py"], soc="a2")], **self.FLAG}
+        ids = lambda socs: [t["id"] for t in pm_board.next_candidates(board, socs, False, False)]
+        self.assertEqual(ids(set()), [])                       # 纯主机 agent 接不到任何任务
+        self.assertEqual(ids({"a5"}), ["any_task"])            # soc=any 的任务给任何有真机的 agent
+        self.assertEqual(ids({"a2"}), ["any_task", "a2_task"])  # 具体 SoC 的任务要有那个 SoC
+
+
 if __name__ == "__main__":
     unittest.main()
