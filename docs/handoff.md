@@ -9,7 +9,7 @@
 **这是一次 PM 账号本身的交接，不是算子进度交接。** 下面按"现在手上有什么、有什么坑、
 下一步该干什么"排列，配合 `docs/pm/board.json`（权威）和 `python tools/pm_board.py --render` 看。
 
-### 正在飞的任务（2 个）
+### 正在飞的任务（交接时 2 个；PK-03 随后撤回，现在只剩 A5K-02）
 
 - **`A5K-02`**（issue #81，草稿 PR #83，`blocked`，assignee `limjiunnbin`，
   session `01a0ae7a-d1c0-7f02-b040-be977ec47393`）：D-PM-24 批的 `inverse_mm.py` 派生
@@ -18,10 +18,10 @@
   同机另有任务在跑，另一张卡不健康。写集含 `ascend_fla/ops/kda/chunk.py`、
   `chunk_bwd.py`、`kda_fwd_stable/**`、`kda_bwd_stable/**`（含新加的 `inverse_mm.py` 与
   `contract.json`）。最近一次 STATUS：2026-09-18T09:31。
-- **`PK-03`**（issue #69，`assigned`，assignee `limjiunnbin`，
-  session `gdn-pgdn-forward`——**与 A5K-02 是同账号不同 session，按并发规则合法并存**，
-  见下面"并发规则实战"）：PGDN chunk 前向 + ATK 预条件，D-PM-22 排期解锁（前置 `GDA-02`
-  已合入）。截至交接时还没有 ACK/STATUS，最近一条是 ASSIGN 本身（2026-09-18T09:52）。
+- **`PK-03`**（issue #69）：**已于 2026-09-19T02:41Z WITHDRAW，转回 `open`**（分支 `task/PK-03` 保留；
+  assignee 自述是用户直接要求撤回，未产出任何 PGDN 实现/PR/真机运行）。前置 `GDA-02` 已合入，
+  所以它仍然可派——只是现在没有人在做。原先的 `session: gdn-pgdn-forward` 申领随之作废。
+  （交接时它是 `assigned`，PGDN chunk 前向 + ATK 预条件，D-PM-22 排期解锁。）
 
 ### 这次会话新合入的两个 PR（供快速对账，细节见 §0.x 各节和 gaps.json）
 
@@ -57,6 +57,9 @@ write-set-overlap 转 `gated` 并加了 `deps: [..., A5K-02]`，NO_TASK 回复�
 
 ### 并发规则实战：这次真的被用上了，而且是级联的
 
+> **2026-09-19 更新**：`PK-03` 在本节写完 11 分钟后被 WITHDRAW，`limjiunnbin` 现在只占 A5K-02 一个任务。
+> 下面描述的是撤回之前的状态，规则本身没变。
+
 `docs/pm/PROTOCOL.md` §3.1 的 `session` 并发规则（同账号、不同 `session`，可以同时持有
 两个任务）这次被 `limjiunnbin` 账号连续用了两轮：先是 GDA-01/A5K-01/A5K-02 这条链
 （`session: 01a0ae7a-...`），现在又叠加了 `PK-03` 的 `session: gdn-pgdn-forward`。
@@ -79,6 +82,23 @@ write-set-overlap 转 `gated` 并加了 `deps: [..., A5K-02]`，NO_TASK 回复�
 凌晨，年龄约 16~17 小时，远未到 48h PING 阈值。`tools/pm_github.py poll` 的游标已推进
 到最新（2026-09-19T01:23:11Z），没有积压事件。下一个 PM 直接按
 `docs/pm/prompts/pm.md` 的轮询流程接手即可，不需要补跑历史事件。
+
+> **2026-09-19 更正**：上面"不需要补跑历史事件"**只在同一台机器上成立**。下一节是换到全新机器时踩到的两个坑。
+
+### 换机器接手 PM 的两个坑（2026-09-19，换到一台全新机器时实测）
+
+- **poll 游标是机器本地的。** 它存在 `tmp/pm/github_state.json`（git-ignored），换机器就没有；
+  没有时 `since` 默认 `1970-01-01`，第一次 `poll` 会把整个仓库历史当成新事件吐出来。
+  做法：从旧机器拷过来；拷不到就按上一次交接记下的时间戳手工播种 `{"since": "<ISO 时间>"}`，
+  **宁早勿晚**（偏早只会重放少量已处理的事件，偏晚会静默丢事件）。播种前先匿名读一次公开 API
+  （`issues/comments?since=…`）看回放量。本次按 01:23:11Z 播种，只回放 2 个事件：
+  PK-03 的 WITHDRAW（上一个 PM 已处理；因为 assignee 已被清空，工具报"不采信"，是**重放的假警报**，
+  不是冒充）和 A5K-02 草稿 PR #83（无警告、无需动作）。
+- **`gh` 要够新，而且 `!` 通道没有 TTY。** 工具用了 `gh auth token -u <账号>`，系统包管理器里的老版本
+  没有它也没有 `gh auth switch`（Ubuntu jammy 的 apt 包是 2.4.0，两样都缺，也只能存一个账号）；
+  官方 v2.101.0 两样都有。装官方 release 的二进制并校验 sha256。`!gh auth login` 会报
+  `--web or --with-token required when not running interactively`，要用 `--web`（设备码）或
+  `--with-token < <token 文件>`。做法与登录顺序见 `docs/pm/START.md` §2 第 3、4 步。
 
 ## 0. 2026-09-15 更新：SoC 顺序变更 + 多 agent 协作（先读这节）
 

@@ -48,13 +48,20 @@ PM 跑在用户自己的机器上，本仓主 checkout（不是 worktree）的 `
 3. 本机装好工具：
    ```bash
    tools/dev_env.sh                 # .venv（Python 3.11 + torch + pytest），并跑一遍主机侧测试
-   gh --version                     # 没有就装 GitHub CLI
+   gh --version                     # 没有就装官方 release 的 GitHub CLI（版本要求见下）
    ```
-4. 用 bot 账号登录 gh。这一步是交互式的，在 Claude Code 里用 `!` 前缀自己跑：
+   > **`gh` 要够新。** 本仓工具用了 `gh auth token -u <账号>` 与多账号切换。系统包管理器里的老版本没有这两个
+   > 子命令，也只能存一个账号（2026-09-19 实测：Ubuntu jammy 的 apt 包是 2.4.0，两样都缺；官方 v2.101.0 都有）。
+   > 装官方 release 的二进制并校验 sha256，装完 `gh auth token --help` 里应有 `--user`。
+4. 用 bot 账号登录 gh。`!` 前缀的命令**没有 TTY**，交互菜单跑不起来
+   （`--web or --with-token required when not running interactively`），所以用设备码，或从文件读 token：
    ```bash
-   !gh auth login                   # 选 GitHub.com → HTTPS → 用 bot 账号浏览器登录
-   !gh auth setup-git               # 让 git push 走 bot 账号的凭据
+   !gh auth login -h github.com --web           # 打印一次性验证码 + 网址，在浏览器里用对应账号授权
+   !gh auth login --with-token < <token 文件>    # 或者：token 放在文件里，别贴进对话
    ```
+   设备码授权的是**浏览器当前登着的账号**，登第二个账号前先在浏览器里切账号。后登的账号会成为 Active，
+   而 PM 要求 Active 等于 `pm_github_login`，所以最后用 `gh auth switch -u <账号>` 纠正。
+   `gh auth setup-git`（让 git push 走 gh 的凭据）是可选项；本机已有可用的 git 凭据助手就别动它。
    已经登录过个人账号的话，`gh auth login` 是新增一个账号，之后用 `gh auth switch` 切。
    细粒度 token 在这里用不了：GitHub 明确不支持外部协作者用它访问别人名下的个人仓库，浏览器登录或
    classic token（`repo` scope）才行。
