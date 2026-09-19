@@ -1,0 +1,359 @@
+# cwd <TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project
+# set -e
+if [ -f "<CANN>/bin/setenv.bash" ]; then source "<CANN>/bin/setenv.bash"; fi
+export ASCEND_HOME_PATH=<CANN>
+bash build.sh
+cd build_out
+for f in custom_*.run; do bash .<EXTERNAL_PATH> --install-path=<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/custom_op; done
+using ASCEND_HOME_PATH: <CANN>
+Preset CMake variables:
+
+  ASCEND_CANN_PACKAGE_PATH:PATH="<CANN>"
+  ASCEND_COMPUTE_UNIT:STRING="ascend950"
+  ASCEND_PACK_SHARED_LIBRARY:BOOL="False"
+  ASCEND_PYTHON_EXECUTABLE:STRING="python3"
+  CMAKE_BUILD_TYPE:STRING="Release"
+  CMAKE_CROSS_PLATFORM_COMPILER:PATH="<EXTERNAL_PATH>"
+  CMAKE_INSTALL_PREFIX:PATH="<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out"
+  ENABLE_BINARY_PACKAGE:BOOL="True"
+  ENABLE_CROSS_COMPILE:BOOL="False"
+  ENABLE_SOURCE_PACKAGE:BOOL="True"
+  ENABLE_TEST:BOOL="True"
+  vendor_name:STRING="customize"
+
+-- The C compiler identification is GNU 12.3.1
+-- The CXX compiler identification is GNU 12.3.1
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: <EXTERNAL_PATH> - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: <EXTERNAL_PATH> - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Opbuild generating sources
+-- Opbuild generating sources - done
+-- Configuring done (3.9s)
+-- Generating done (0.0s)
+CMake Warning:
+  Manually-specified variables were not used by the project:
+
+    CMAKE_CROSS_PLATFORM_COMPILER
+
+
+-- Build files have been written to: <TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out
+[ 33%] Generating tbe/op_info_cfg/ai_core/ascend950/aic-ascend950-ops-info.json
+
+
+==============check valid for ops info start==============
+==============check valid for ops info end================
+
+
+Compile op info cfg successfully.
+[ 33%] Built target ops_info_gen_ascend950
+[ 66%] Building CXX object op_host/CMakeFiles/cust_optiling.dir/gdn_bwd_reverse.cpp.o
+In file included from <CANN>/include/external/ge_common/api_error_codes.h:16,
+                 from <CANN>/include/exe_graph/runtime/continuous_vector.h:20,
+                 from <CANN>/include/exe_graph/runtime/runtime_attrs.h:16,
+                 from <CANN>/include/exe_graph/runtime/infer_shape_context.h:16,
+                 from <CANN>/include/register/op_impl_registry.h:19,
+                 from <CANN>/include/register/op_def.h:19,
+                 from <CANN>/include/register/op_def_registry.h:14,
+                 from <TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/op_host/gdn_bwd_reverse.cpp:2:
+<CANN>/include/external/ge_common/ge_error_codes.h:15:122: note: ‘#pragma message: Warning: ge_error_codes.h is deprecated and will be removed after 2027-06. Include "graph/error_codes.h" instead.’
+   15 |     "Warning: ge_error_codes.h is deprecated and will be removed after 2027-06. Include \"graph/error_codes.h\" instead.")
+      |                                                                                                                          ^
+In file included from <CANN>/include/external/ge_common/api_error_codes.h:17:
+<CANN>/include/external/ge_common/ge_api_types.h:15:122: note: ‘#pragma message: Warning: ge_api_types.h is deprecated and will be removed after 2027-06. Include "ge_common_api_types.h" instead.’
+   15 |     "Warning: ge_api_types.h is deprecated and will be removed after 2027-06. Include \"ge_common_api_types.h\" instead.")
+      |                                                                                                                          ^
+[100%] Linking CXX shared library libcust_opmaster_rt2.0.so
+[100%] Built target cust_optiling
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/cmake/util/ascendc_impl_build.py:194: SyntaxWarning: invalid escape sequence '\d'
+  ascendc_api_version = re.findall(r"#define ASCENDC_API_VERSION (\d+)", ascendc_api_version_file.read())
+[ascend950] Generating GdnBwdReverse_a65867281282d1c9dda124b5888e1903 ...
+[INFO] ATRACE(<PID>,python3):2026-09-19-13:27:31.845.359 [trace_recorder.c:166](tid:<PID>) get path by env ASCEND_WORK_PATH: <TASK_NATIVE>/work
+[INFO] RUNTIME(<PID>,python3):2026-09-19-13:27:31.856.736 [task_fail_callback_data_manager.cc:89] 374499 TaskFailCallBackManager: Constructor.
+[INFO] RUNTIME(<PID>,python3):2026-09-19-13:27:31.856.753 [xpu_task_fail_callback_data_manager.cc:59] 374499 XpuTaskFailCallBackManager: XpuTaskFailCallBackManager Constructor.
+[INFO] RUNTIME(<PID>,python3):2026-09-19-13:27:31.858.938 [runtime_keeper.cc:213] 374499 CreateRuntimeImpl: Open libruntime_v200.so successfully
+[INFO] RUNTIME(<PID>,python3):2026-09-19-13:27:31.860.085 [runtime.cc:5059] 374499 GetVisibleDevices: real deviceCnt:2 userDeviceCnt:1 isSetVisibleDev:1 ASCEND_RT_VISIBLE_DEVICES:[1] available visible devices:[1]
+[INFO] TDT(<PID>,python3):2026-09-19-13:27:31.861.116 [package_worker_factory.cpp:37][RegisterPackageWorkerCreator][tid:<PID>] Register[2] package worker was created successfully
+[INFO] TDT(<PID>,python3):2026-09-19-13:27:31.861.129 [package_worker_factory.cpp:37][RegisterPackageWorkerCreator][tid:<PID>] Register[3] package worker was created successfully
+Opc tool start working now, please wait for a moment.
+[INFO] RUNTIME(<PID>,python3):2026-09-19-13:27:35.472.243 [runtime.cc:1582] 374499 WaitMonitorExit: wait monitor success, used count=0.
+[INFO] RUNTIME(<PID>,python3):2026-09-19-13:27:35.642.298 [xpu_task_fail_callback_data_manager.cc:64] 374499 ~XpuTaskFailCallBackManager: XpuTaskFailCallBackManager Destructor.
+[INFO] RUNTIME(<PID>,python3):2026-09-19-13:27:35.642.317 [task_fail_callback_data_manager.cc:91] 374499 ~TaskFailCallBackManager: Destructor.
+[INFO] ATRACE(<PID>,python3):2026-09-19-13:27:35.763.628 [stacktrace_signal.c:229](tid:<PID>) unregister all signal handlers, can not capture signal.
+[ascend950] Generating GdnBwdReverse_a65867281282d1c9dda124b5888e1903 Done
+[100%] Built target GdnBwdReverse_ascend950
+[100%] Built target ascendc_bin_ascend950_gen_ops_config
+[100%] Built target binary
+[ 10%] Generating scripts/install.sh, scripts/upgrade.sh
+[ 10%] Built target modify_vendor
+[ 10%] Built target gen_version_info
+[ 20%] Building CXX object op_host/CMakeFiles/cust_op_proto.dir/gdn_bwd_reverse.cpp.o
+In file included from <CANN>/include/external/ge_common/api_error_codes.h:16,
+                 from <CANN>/include/exe_graph/runtime/continuous_vector.h:20,
+                 from <CANN>/include/exe_graph/runtime/runtime_attrs.h:16,
+                 from <CANN>/include/exe_graph/runtime/infer_shape_context.h:16,
+                 from <CANN>/include/register/op_impl_registry.h:19,
+                 from <CANN>/include/register/op_def.h:19,
+                 from <CANN>/include/register/op_def_registry.h:14,
+                 from <TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/op_host/gdn_bwd_reverse.cpp:2:
+<CANN>/include/external/ge_common/ge_error_codes.h:15:122: note: ‘#pragma message: Warning: ge_error_codes.h is deprecated and will be removed after 2027-06. Include "graph/error_codes.h" instead.’
+   15 |     "Warning: ge_error_codes.h is deprecated and will be removed after 2027-06. Include \"graph/error_codes.h\" instead.")
+      |                                                                                                                          ^
+In file included from <CANN>/include/external/ge_common/api_error_codes.h:17:
+<CANN>/include/external/ge_common/ge_api_types.h:15:122: note: ‘#pragma message: Warning: ge_api_types.h is deprecated and will be removed after 2027-06. Include "ge_common_api_types.h" instead.’
+   15 |     "Warning: ge_api_types.h is deprecated and will be removed after 2027-06. Include \"ge_common_api_types.h\" instead.")
+      |                                                                                                                          ^
+[ 30%] Building CXX object op_host/CMakeFiles/cust_op_proto.dir/__/autogen/op_proto.cc.o
+In file included from <CANN>/include/external/ge_common/api_error_codes.h:16,
+                 from <CANN>/include/exe_graph/runtime/continuous_vector.h:20,
+                 from <CANN>/include/exe_graph/runtime/runtime_attrs.h:16,
+                 from <CANN>/include/exe_graph/runtime/infer_shape_context.h:16,
+                 from <CANN>/include/register/op_impl_registry.h:19,
+                 from <TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/op_proto.h:5,
+                 from <TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/op_proto.cc:1:
+<CANN>/include/external/ge_common/ge_error_codes.h:15:122: note: ‘#pragma message: Warning: ge_error_codes.h is deprecated and will be removed after 2027-06. Include "graph/error_codes.h" instead.’
+   15 |     "Warning: ge_error_codes.h is deprecated and will be removed after 2027-06. Include \"graph/error_codes.h\" instead.")
+      |                                                                                                                          ^
+In file included from <CANN>/include/external/ge_common/api_error_codes.h:17:
+<CANN>/include/external/ge_common/ge_api_types.h:15:122: note: ‘#pragma message: Warning: ge_api_types.h is deprecated and will be removed after 2027-06. Include "ge_common_api_types.h" instead.’
+   15 |     "Warning: ge_api_types.h is deprecated and will be removed after 2027-06. Include \"ge_common_api_types.h\" instead.")
+      |                                                                                                                          ^
+[ 40%] Linking CXX shared library libcust_opsproto_rt2.0.so
+[ 40%] Built target cust_op_proto
+[ 50%] Building CXX object op_host/CMakeFiles/cust_optiling.dir/gdn_bwd_reverse.cpp.o
+In file included from <CANN>/include/external/ge_common/api_error_codes.h:16,
+                 from <CANN>/include/exe_graph/runtime/continuous_vector.h:20,
+                 from <CANN>/include/exe_graph/runtime/runtime_attrs.h:16,
+                 from <CANN>/include/exe_graph/runtime/infer_shape_context.h:16,
+                 from <CANN>/include/register/op_impl_registry.h:19,
+                 from <CANN>/include/register/op_def.h:19,
+                 from <CANN>/include/register/op_def_registry.h:14,
+                 from <TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/op_host/gdn_bwd_reverse.cpp:2:
+<CANN>/include/external/ge_common/ge_error_codes.h:15:122: note: ‘#pragma message: Warning: ge_error_codes.h is deprecated and will be removed after 2027-06. Include "graph/error_codes.h" instead.’
+   15 |     "Warning: ge_error_codes.h is deprecated and will be removed after 2027-06. Include \"graph/error_codes.h\" instead.")
+      |                                                                                                                          ^
+In file included from <CANN>/include/external/ge_common/api_error_codes.h:17:
+<CANN>/include/external/ge_common/ge_api_types.h:15:122: note: ‘#pragma message: Warning: ge_api_types.h is deprecated and will be removed after 2027-06. Include "ge_common_api_types.h" instead.’
+   15 |     "Warning: ge_api_types.h is deprecated and will be removed after 2027-06. Include \"ge_common_api_types.h\" instead.")
+      |                                                                                                                          ^
+[ 60%] Linking CXX shared library libcust_opmaster_rt2.0.so
+[ 60%] Built target cust_optiling
+[ 70%] Building CXX object op_host/CMakeFiles/cust_opapi.dir/__/autogen/aclnn_gdn_bwd_reverse.cpp.o
+In file included from <TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:3:
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.h:46:24: warning: null character(s) ignored
+   46 |     const aclTensor *do<U+0000>,
+      |                        ^~~~~~~~
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:154:24: warning: null character(s) ignored
+  154 |     const aclTensor *do<U+0000>,
+      |                        ^~~~~~~~
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:186:38: warning: null character(s) ignored
+  186 |     NNOPBASE_ASSERT_NOTNULL_RETVAL(do<U+0000>);
+      |                                      ^~~~~~~~
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:213:61: warning: null character(s) ignored
+  213 |     NNOPBASE_ASSERT_OK_RETVAL(NnopbaseAddInput(*executor, do<U+0000>, 5));
+      |                                                             ^~~~~~~~
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:239:70: warning: null character(s) preserved in literal
+  239 |         NNOPBASE_ASSERT_OK_RETVAL(NnopbaseAddParamName(*executor, 5, "do ", true));
+      |                                                                      ^
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.h:46:22: error: expected ‘,’ or ‘...’ before ‘do’
+   46 |     const aclTensor *do ,
+      |                      ^~
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:154:22: error: expected ‘,’ or ‘...’ before ‘do’
+  154 |     const aclTensor *do ,
+      |                      ^~
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp: In function ‘aclnnStatus aclnnGdnBwdReverseGetWorkspaceSize(const aclTensor*, const aclTensor*, const aclTensor*, const aclTensor*, const aclTensor*, const aclTensor*)’:
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:186:36: error: expected primary-expression before ‘do’
+  186 |     NNOPBASE_ASSERT_NOTNULL_RETVAL(do );
+      |                                    ^~
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:142:14: note: in definition of macro ‘NNOPBASE_ASSERT_NOTNULL_RETVAL’
+  142 |         if ((v) == nullptr) {                                           \
+      |              ^
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:186:36: error: expected ‘)’ before ‘do’
+  186 |     NNOPBASE_ASSERT_NOTNULL_RETVAL(do );
+      |                                    ^~
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:142:14: note: in definition of macro ‘NNOPBASE_ASSERT_NOTNULL_RETVAL’
+  142 |         if ((v) == nullptr) {                                           \
+      |              ^
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:142:13: note: to match this ‘(’
+  142 |         if ((v) == nullptr) {                                           \
+      |             ^
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:186:5: note: in expansion of macro ‘NNOPBASE_ASSERT_NOTNULL_RETVAL’
+  186 |     NNOPBASE_ASSERT_NOTNULL_RETVAL(do );
+      |     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:146:5: error: expected ‘)’ before ‘}’ token
+  146 |     } while (false)
+      |     ^
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:186:5: note: in expansion of macro ‘NNOPBASE_ASSERT_NOTNULL_RETVAL’
+  186 |     NNOPBASE_ASSERT_NOTNULL_RETVAL(do );
+      |     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:142:12: note: to match this ‘(’
+  142 |         if ((v) == nullptr) {                                           \
+      |            ^
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:186:5: note: in expansion of macro ‘NNOPBASE_ASSERT_NOTNULL_RETVAL’
+  186 |     NNOPBASE_ASSERT_NOTNULL_RETVAL(do );
+      |     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:146:5: error: expected primary-expression before ‘}’ token
+  146 |     } while (false)
+      |     ^
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:186:5: note: in expansion of macro ‘NNOPBASE_ASSERT_NOTNULL_RETVAL’
+  186 |     NNOPBASE_ASSERT_NOTNULL_RETVAL(do );
+      |     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:187:36: error: ‘dht’ was not declared in this scope
+  187 |     NNOPBASE_ASSERT_NOTNULL_RETVAL(dht);
+      |                                    ^~~
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:142:14: note: in definition of macro ‘NNOPBASE_ASSERT_NOTNULL_RETVAL’
+  142 |         if ((v) == nullptr) {                                           \
+      |              ^
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:188:36: error: ‘checkpoints’ was not declared in this scope
+  188 |     NNOPBASE_ASSERT_NOTNULL_RETVAL(checkpoints);
+      |                                    ^~~~~~~~~~~
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:142:14: note: in definition of macro ‘NNOPBASE_ASSERT_NOTNULL_RETVAL’
+  142 |         if ((v) == nullptr) {                                           \
+      |              ^
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:189:36: error: ‘tapeOut’ was not declared in this scope
+  189 |     NNOPBASE_ASSERT_NOTNULL_RETVAL(tapeOut);
+      |                                    ^~~~~~~
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:142:14: note: in definition of macro ‘NNOPBASE_ASSERT_NOTNULL_RETVAL’
+  142 |         if ((v) == nullptr) {                                           \
+      |              ^
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:190:36: error: ‘dqPartsOut’ was not declared in this scope
+  190 |     NNOPBASE_ASSERT_NOTNULL_RETVAL(dqPartsOut);
+      |                                    ^~~~~~~~~~
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:142:14: note: in definition of macro ‘NNOPBASE_ASSERT_NOTNULL_RETVAL’
+  142 |         if ((v) == nullptr) {                                           \
+      |              ^
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:191:36: error: ‘dkPartsOut’ was not declared in this scope
+  191 |     NNOPBASE_ASSERT_NOTNULL_RETVAL(dkPartsOut);
+      |                                    ^~~~~~~~~~
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:142:14: note: in definition of macro ‘NNOPBASE_ASSERT_NOTNULL_RETVAL’
+  142 |         if ((v) == nullptr) {                                           \
+      |              ^
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:192:36: error: ‘dvOut’ was not declared in this scope
+  192 |     NNOPBASE_ASSERT_NOTNULL_RETVAL(dvOut);
+      |                                    ^~~~~
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:142:14: note: in definition of macro ‘NNOPBASE_ASSERT_NOTNULL_RETVAL’
+  142 |         if ((v) == nullptr) {                                           \
+      |              ^
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:193:36: error: ‘dgOut’ was not declared in this scope
+  193 |     NNOPBASE_ASSERT_NOTNULL_RETVAL(dgOut);
+      |                                    ^~~~~
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:142:14: note: in definition of macro ‘NNOPBASE_ASSERT_NOTNULL_RETVAL’
+  142 |         if ((v) == nullptr) {                                           \
+      |              ^
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:194:36: error: ‘dbetaOut’ was not declared in this scope
+  194 |     NNOPBASE_ASSERT_NOTNULL_RETVAL(dbetaOut);
+      |                                    ^~~~~~~~
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:142:14: note: in definition of macro ‘NNOPBASE_ASSERT_NOTNULL_RETVAL’
+  142 |         if ((v) == nullptr) {                                           \
+      |              ^
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:202:36: error: ‘executor’ was not declared in this scope
+  202 |     NNOPBASE_ASSERT_NOTNULL_RETVAL(executor);
+      |                                    ^~~~~~~~
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:142:14: note: in definition of macro ‘NNOPBASE_ASSERT_NOTNULL_RETVAL’
+  142 |         if ((v) == nullptr) {                                           \
+      |              ^
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:203:6: error: ‘executor’ was not declared in this scope
+  203 |     *executor = reinterpret_cast<aclOpExecutor *>(nnopExecutor);
+      |      ^~~~~~~~
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:213:59: error: expected primary-expression before ‘do’
+  213 |     NNOPBASE_ASSERT_OK_RETVAL(NnopbaseAddInput(*executor, do , 5));
+      |                                                           ^~
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:133:42: note: in definition of macro ‘NNOPBASE_ASSERT_OK_RETVAL’
+  133 |         const aclnnStatus _chk_stutus = (v);                            \
+      |                                          ^
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:214:59: error: ‘dht’ was not declared in this scope
+  214 |     NNOPBASE_ASSERT_OK_RETVAL(NnopbaseAddInput(*executor, dht, 6));
+      |                                                           ^~~
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:133:42: note: in definition of macro ‘NNOPBASE_ASSERT_OK_RETVAL’
+  133 |         const aclnnStatus _chk_stutus = (v);                            \
+      |                                          ^
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:215:59: error: ‘checkpoints’ was not declared in this scope
+  215 |     NNOPBASE_ASSERT_OK_RETVAL(NnopbaseAddInput(*executor, checkpoints, 7));
+      |                                                           ^~~~~~~~~~~
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:133:42: note: in definition of macro ‘NNOPBASE_ASSERT_OK_RETVAL’
+  133 |         const aclnnStatus _chk_stutus = (v);                            \
+      |                                          ^
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:216:87: error: ‘b’ was not declared in this scope
+  216 |     NNOPBASE_ASSERT_OK_RETVAL(NnopbaseAddAttrWithDtype(*executor, static_cast<void*>(&b), sizeof(int64_t), 0, kNnopbaseInt));
+      |                                                                                       ^
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:133:42: note: in definition of macro ‘NNOPBASE_ASSERT_OK_RETVAL’
+  133 |         const aclnnStatus _chk_stutus = (v);                            \
+      |                                          ^
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:217:87: error: ‘t’ was not declared in this scope
+  217 |     NNOPBASE_ASSERT_OK_RETVAL(NnopbaseAddAttrWithDtype(*executor, static_cast<void*>(&t), sizeof(int64_t), 1, kNnopbaseInt));
+      |                                                                                       ^
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:133:42: note: in definition of macro ‘NNOPBASE_ASSERT_OK_RETVAL’
+  133 |         const aclnnStatus _chk_stutus = (v);                            \
+      |                                          ^
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:218:87: error: ‘h’ was not declared in this scope
+  218 |     NNOPBASE_ASSERT_OK_RETVAL(NnopbaseAddAttrWithDtype(*executor, static_cast<void*>(&h), sizeof(int64_t), 2, kNnopbaseInt));
+      |                                                                                       ^
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:133:42: note: in definition of macro ‘NNOPBASE_ASSERT_OK_RETVAL’
+  133 |         const aclnnStatus _chk_stutus = (v);                            \
+      |                                          ^
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:219:87: error: ‘hV’ was not declared in this scope
+  219 |     NNOPBASE_ASSERT_OK_RETVAL(NnopbaseAddAttrWithDtype(*executor, static_cast<void*>(&hV), sizeof(int64_t), 3, kNnopbaseInt));
+      |                                                                                       ^~
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:133:42: note: in definition of macro ‘NNOPBASE_ASSERT_OK_RETVAL’
+  133 |         const aclnnStatus _chk_stutus = (v);                            \
+      |                                          ^
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:220:87: error: ‘n’ was not declared in this scope
+  220 |     NNOPBASE_ASSERT_OK_RETVAL(NnopbaseAddAttrWithDtype(*executor, static_cast<void*>(&n), sizeof(int64_t), 4, kNnopbaseInt));
+      |                                                                                       ^
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:133:42: note: in definition of macro ‘NNOPBASE_ASSERT_OK_RETVAL’
+  133 |         const aclnnStatus _chk_stutus = (v);                            \
+      |                                          ^
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:221:60: error: ‘tapeOut’ was not declared in this scope
+  221 |     NNOPBASE_ASSERT_OK_RETVAL(NnopbaseAddOutput(*executor, tapeOut, 0));
+      |                                                            ^~~~~~~
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:133:42: note: in definition of macro ‘NNOPBASE_ASSERT_OK_RETVAL’
+  133 |         const aclnnStatus _chk_stutus = (v);                            \
+      |                                          ^
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:222:60: error: ‘dqPartsOut’ was not declared in this scope
+  222 |     NNOPBASE_ASSERT_OK_RETVAL(NnopbaseAddOutput(*executor, dqPartsOut, 1));
+      |                                                            ^~~~~~~~~~
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:133:42: note: in definition of macro ‘NNOPBASE_ASSERT_OK_RETVAL’
+  133 |         const aclnnStatus _chk_stutus = (v);                            \
+      |                                          ^
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:223:60: error: ‘dkPartsOut’ was not declared in this scope
+  223 |     NNOPBASE_ASSERT_OK_RETVAL(NnopbaseAddOutput(*executor, dkPartsOut, 2));
+      |                                                            ^~~~~~~~~~
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:133:42: note: in definition of macro ‘NNOPBASE_ASSERT_OK_RETVAL’
+  133 |         const aclnnStatus _chk_stutus = (v);                            \
+      |                                          ^
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:224:60: error: ‘dvOut’ was not declared in this scope
+  224 |     NNOPBASE_ASSERT_OK_RETVAL(NnopbaseAddOutput(*executor, dvOut, 3));
+      |                                                            ^~~~~
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:133:42: note: in definition of macro ‘NNOPBASE_ASSERT_OK_RETVAL’
+  133 |         const aclnnStatus _chk_stutus = (v);                            \
+      |                                          ^
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:225:60: error: ‘dgOut’ was not declared in this scope
+  225 |     NNOPBASE_ASSERT_OK_RETVAL(NnopbaseAddOutput(*executor, dgOut, 4));
+      |                                                            ^~~~~
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:133:42: note: in definition of macro ‘NNOPBASE_ASSERT_OK_RETVAL’
+  133 |         const aclnnStatus _chk_stutus = (v);                            \
+      |                                          ^
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:226:60: error: ‘dbetaOut’ was not declared in this scope
+  226 |     NNOPBASE_ASSERT_OK_RETVAL(NnopbaseAddOutput(*executor, dbetaOut, 5));
+      |                                                            ^~~~~~~~
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:133:42: note: in definition of macro ‘NNOPBASE_ASSERT_OK_RETVAL’
+  133 |         const aclnnStatus _chk_stutus = (v);                            \
+      |                                          ^
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:228:42: error: ‘workspaceSize’ was not declared in this scope
+  228 |         if (NnopbaseMatchArgs(*executor, workspaceSize)) {
+      |                                          ^~~~~~~~~~~~~
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:254:66: error: ‘workspaceSize’ was not declared in this scope
+  254 |     NNOPBASE_ASSERT_OK_RETVAL(NnopbaseRunForWorkspace(*executor, workspaceSize));
+      |                                                                  ^~~~~~~~~~~~~
+<TASK_NATIVE>/build-bd2/gdn_bwd_reverse-4289f47dfa474914/project/build_out/autogen/aclnn_gdn_bwd_reverse.cpp:133:42: note: in definition of macro ‘NNOPBASE_ASSERT_OK_RETVAL’
+  133 |         const aclnnStatus _chk_stutus = (v);                            \
+      |                                          ^
+gmake[2]: *** [op_host/CMakeFiles/cust_opapi.dir/build.make:76: op_host/CMakeFiles/cust_opapi.dir/__/autogen/aclnn_gdn_bwd_reverse.cpp.o] Error 1
+gmake[1]: *** [CMakeFiles/Makefile2:235: op_host/CMakeFiles/cust_opapi.dir/all] Error 2
+gmake: *** [Makefile:156: all] Error 2

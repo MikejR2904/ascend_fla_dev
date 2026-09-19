@@ -1,0 +1,73 @@
+{
+  "passed": true,
+  "raw_samples": 900,
+  "baseline": "Task-owned saved-boundary-checkpoint adjoint cost baseline; excludes boundary generation, not a separate complete backward implementation",
+  "candidate": "Complete public chunk_gdn_bwd including allocation, checkpoint recomputation and all3launches; FP32 only",
+  "synchronize": "before and after every timed call",
+  "warmup": 10,
+  "repeat": 50,
+  "block_dim": 2,
+  "rows": [
+    {
+      "T": 1024,
+      "dtype": "torch.float32",
+      "round": 1,
+      "baseline_before_ms": 136.545323,
+      "candidate_ms": 160.34245399999998,
+      "baseline_after_ms": 136.52434849999997,
+      "candidate_over_average_baseline": 1.1743702852039355,
+      "baseline_after_over_before": 0.9998463916629351
+    },
+    {
+      "T": 1024,
+      "dtype": "torch.float32",
+      "round": 2,
+      "baseline_before_ms": 136.56378899999999,
+      "candidate_ms": 160.347279,
+      "baseline_after_ms": 136.49856949999997,
+      "candidate_over_average_baseline": 1.1744370764306573,
+      "baseline_after_over_before": 0.9995224246450864
+    },
+    {
+      "T": 1024,
+      "dtype": "torch.float32",
+      "round": 3,
+      "baseline_before_ms": 136.5417385,
+      "candidate_ms": 160.3858025,
+      "baseline_after_ms": 136.53457099999997,
+      "candidate_over_average_baseline": 1.174659221033599,
+      "baseline_after_over_before": 0.9999475068936519
+    },
+    {
+      "T": 4096,
+      "dtype": "torch.float32",
+      "round": 1,
+      "baseline_before_ms": 545.7931974999999,
+      "candidate_ms": 645.315926,
+      "baseline_after_ms": 545.9253014999999,
+      "candidate_over_average_baseline": 1.18220205408464,
+      "baseline_after_over_before": 1.0002420403929642
+    },
+    {
+      "T": 4096,
+      "dtype": "torch.float32",
+      "round": 2,
+      "baseline_before_ms": 546.1991424999999,
+      "candidate_ms": 645.5200084999999,
+      "baseline_after_ms": 546.1674324999999,
+      "candidate_over_average_baseline": 1.1818743327989507,
+      "baseline_after_over_before": 0.9999419442515878
+    },
+    {
+      "T": 4096,
+      "dtype": "torch.float32",
+      "round": 3,
+      "baseline_before_ms": 546.3366555,
+      "candidate_ms": 645.5107849999999,
+      "baseline_after_ms": 545.8568829999999,
+      "candidate_over_average_baseline": 1.1820446875862927,
+      "baseline_after_over_before": 0.9991218372496699
+    }
+  ],
+  "scope": "Synchronized end-to-end wall time of fixed inputs on one selected device; no speed threshold, no CUDA/Triton comparison"
+}
