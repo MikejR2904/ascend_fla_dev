@@ -42,16 +42,15 @@ def main():
         op(sources,{n:scalars[n] for n in op.scalar_names},outputs)
         return outputs
     report=dict(stage='native_same_card_sandwich',baseline='Task-owned saved-boundary-checkpoint adjoint cost baseline; excludes boundary generation, not a separate complete backward implementation',
-                candidate='Complete public chunk_gdn_bwd including promotions, allocation, checkpoint recomputation, all3launches and storage casts',
+                candidate='Complete public chunk_gdn_bwd including allocation, checkpoint recomputation and all3launches; FP32 only',
                 block_dim=args.block_dim,warmup=args.warmup,repeat=args.repeat,synchronize='before and after every timed call',rounds=3,cases=[])
     out=Path(args.output);out.parent.mkdir(parents=True,exist_ok=True)
     for T in (1024,4096):
-        for dtype in (torch.float32,torch.bfloat16):
+        for dtype in (torch.float32,):
             values=list(inputs(1,T,8,8,seed=91900))
-            for i in (0,1,2,5):values[i]=values[i].to(dtype)
             cpu=dict(zip(('q','k','v','g','beta','do','dht'),values))
             public={n:t.npu() for n,t in cpu.items()}
-            math_inputs={n:t.float() for n,t in public.items()}
+            math_inputs=dict(public)
             known=_pipeline().run(math_inputs,launch,retain_stages=True)
             cached={n:known[n] for n in ('checkpoints','final_state')}
             del known
@@ -61,17 +60,17 @@ def main():
             @torch.no_grad()
             def baseline():
                 _validate(**public,block_dim=args.block_dim)
-                data={n:t.float() for n,t in public.items()}
+                data=dict(public)
                 result=_pipeline().run(data,cached_launch)
-                return tuple(result[n].to(dtype) if n in ('dq','dk','dv') else result[n] for n in NAMES)
+                return tuple(result[n] for n in NAMES)
             def candidate():return chunk_gdn_bwd(**public,block_dim=args.block_dim)
-            expected=analytical(*(x.float() for x in values))
+            expected=analytical(*values)
             def check():
                 a,b=baseline(),candidate();torch.npu.synchronize()
                 aa={n:t.cpu() for n,t in zip(NAMES,a)};bb={n:t.cpu() for n,t in zip(NAMES,b)}
                 exact=all(torch.equal(aa[n].view(torch.uint8),bb[n].view(torch.uint8)) for n in NAMES)
                 assert exact,'baseline/candidate should be byte-identical for fixed checkpoint inputs'
-                numbers=metrics(bb,expected);assert acceptable(numbers,1e-4 if dtype==torch.float32 else 5e-3)
+                numbers=metrics(bb,expected);assert acceptable(numbers,1e-4)
                 return dict(byte_identical=True,independent_B=numbers)
             row=dict(B=1,T=T,H=8,HV=8,dtype=str(dtype),before=check(),rounds=[])
             for round_index in range(3):

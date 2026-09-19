@@ -2,14 +2,14 @@
 
 Standalone A5 CCE backward of raw, unnormalized GDN. The unit recomputes its
 own chunk checkpoints and returns five FP32 mathematical gradients. The public
-`ascend_fla.ops.gdn_chunk_bwd.chunk_gdn_bwd` wrapper additionally accepts matching
-BF16 q/k/v/do and returns dq/dk/dv in their input storage dtype. g/beta/dht and
-dg/dbeta remain FP32. Existing forward and autograd dispatch are unchanged.
+`ascend_fla.ops.gdn_chunk_bwd.chunk_gdn_bwd` wrapper requires FP32 for every
+input/cotangent and returns five FP32 gradients. BF16 q/k/v/do reject before
+preparation or dispatch with an error pointing to BF-02 (D-PM-35).
 
-The native grid passed 276 case/dtype records across block_dim 1/2, and 2070
-returned-array pairs were byte-identical. Required same-device timing also passed,
-with 1800 raw samples and an explicitly identified saved-checkpoint cost baseline. See the task's gate-range
-document and evidence directory for exact source identity and measured scope.
+The accepted FP32 grid has 138 records across block_dim1/2 and 1035 byte-identical
+returned-array pairs. Historical BF16 rows remain raw history and are excluded
+from current delivery claims. Final-source closeout/timing refresh is in progress;
+see the gate-range document for source identity and measured scope.
 
 Three ordered launches generate chunk-start states, replay and reverse each
 64-token chunk, then sum grouped q/k contributions deterministically. No inverse

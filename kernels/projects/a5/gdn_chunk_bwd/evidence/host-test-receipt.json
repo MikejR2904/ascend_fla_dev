@@ -24,6 +24,14 @@
       "log": "host-tests-final.log",
       "scope": "Dedicated backward tests after the four additional rejection cases",
       "reproduction_command": "python -m pytest tests/test_gdn_chunk_bwd.py -q --noconftest"
+    },
+    {
+      "passed": 67,
+      "skipped": 0,
+      "seconds": 8.88,
+      "log": "host-tests-fp32-only.log",
+      "scope": "Final FP32-only public wrapper; 15 BF16 q/k/v/do rejection cases across three launchers with zero tensor operations before rejection",
+      "reproduction_command": "python -m pytest tests/test_gdn_chunk_bwd.py -q --noconftest"
     }
   ],
   "scope": "Separate runs; no full repository NPU-suite claim"

@@ -8,8 +8,6 @@ from ref.stages import reference_stages
 def make_inputs(case):
     p=case['parameters']
     values=list(generated_inputs(p['B'],p['T'],p['H'],p['HV'],p.get('kind','random'),seed=case['seed']))
-    if p.get('bf16_values',False):
-        for i in (0,1,2,5):values[i]=values[i].bfloat16().float()
     if p['mode']=='do':values[6].zero_()
     if p['mode']=='dht':values[5].zero_()
     return dict(zip(('q','k','v','g','beta','do','dht'),values))

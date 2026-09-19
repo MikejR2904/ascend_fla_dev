@@ -1,0 +1,42 @@
+{
+  "passed": true,
+  "rule": "D-PM-35; only dtype == torch.float32 rows accepted; BF16 history excluded",
+  "accepted_records": 138,
+  "case_pairs": 69,
+  "byte_identical_array_pairs": 1035,
+  "max_relative_l2": {
+    "fp32_A": {
+      "dq": 4.855229916074576e-07,
+      "dk": 6.724300832510739e-07,
+      "dv": 6.876718133757637e-07,
+      "dg": 8.329418537054343e-07,
+      "dbeta": 7.043351236401782e-07
+    },
+    "fp32_B": {
+      "dq": 4.851761854920598e-07,
+      "dk": 6.724300832510739e-07,
+      "dv": 6.876718133757636e-07,
+      "dg": 8.319868937408158e-07,
+      "dbeta": 7.043351236401781e-07
+    },
+    "public_A": {
+      "dq": 4.855229916074576e-07,
+      "dk": 6.724300832510739e-07,
+      "dv": 6.876718133757637e-07,
+      "dg": 8.329418537054343e-07,
+      "dbeta": 7.043351236401782e-07
+    },
+    "public_B": {
+      "dq": 4.851761854920598e-07,
+      "dk": 6.724300832510739e-07,
+      "dv": 6.876718133757636e-07,
+      "dg": 8.319868937408158e-07,
+      "dbeta": 7.043351236401781e-07
+    }
+  },
+  "sources": [
+    "grid-bd1.json",
+    "grid-bd2.json"
+  ],
+  "old_source_note": "Wrapper and validation sources predate FP32-only revision; final-source closeout separately required. Unchanged kernel/pipeline identities remain applicable."
+}

@@ -1,4 +1,7 @@
-"""Audit native grids and compare every retained stage/public output byte hash."""
+"""Audit FP32 native grids and compare every stage/public output byte hash.
+
+Historical BF16 rows are retained in old raw reports, excluded by D-PM-35.
+"""
 import argparse
 import hashlib
 import json
@@ -16,21 +19,23 @@ def load_grid(path, block_dim):
     expected = {row['id']: row for row in expected if row['block_dim'] == block_dim}
     indexed = {}
     for row in data['cases']:
+        if row['dtype'] == 'torch.bfloat16':
+            continue
         case = expected[row['case']]
         assert row['seed'] == case['seed'] and row['parameters'] == case['parameters']
         assert row['inputs_unchanged']
         assert set(row['stage_hashes']) == STAGES
         assert set(row['public_hashes']) == set(GRADIENTS)
-        assert row['dtype'] in ('torch.float32', 'torch.bfloat16')
+        assert row['dtype'] == 'torch.float32'
         for group in ('composition', 'leaf', 'fp32_A', 'fp32_B', 'public_A', 'public_B'):
             for name, metric in row[group].items():
-                limit = 5e-3 if group.startswith('public') and row['dtype'] == 'torch.bfloat16' and name in ('dq', 'dk', 'dv') else 1e-4
+                limit = 1e-4
                 assert metric['finite'] and math.isfinite(metric['relative_l2'])
                 assert metric['relative_l2'] <= limit, (row['case'], group, name, metric)
         key = (row['case'].removesuffix(f'_bd{block_dim}'), row['dtype'])
         assert key not in indexed
         indexed[key] = row
-    assert len(indexed) == 2 * len(expected)
+    assert len(indexed) == len(expected)
     return indexed
 
 

@@ -2360,7 +2360,7 @@
     "scale": "128**-.5",
     "normalization": "none",
     "initial_state": "None only",
-    "public_dtype": "qkv/do/dqkv matching FP32 or BF16; g/beta/dht/dg/dbeta FP32",
+    "public_dtype": "All inputs, cotangents and returned gradients FP32; BF16 rejects with BF-02",
     "gates": "finite g<=0,beta in[0,1]"
   },
   "workspace": {
@@ -2370,7 +2370,7 @@
   },
   "saved_state": {
     "training": "Standalone explicit first derivative; no autograd connection and no dh0",
-    "precision": "All core state/checkpoint/gradient arithmetic FP32; public dqkv round on return only"
+    "precision": "All core state/checkpoint/gradient arithmetic and public outputs FP32; no public dtype conversion"
   },
   "provenance": {
     "task": "GDA-03, issue91",
@@ -2522,27 +2522,28 @@
         "zero_qk_both_bd2"
       ],
       "public_dtypes": [
-        "float32",
-        "bfloat16"
+        "float32"
       ],
-      "records": 276,
+      "records": 138,
       "evidence": [
         "evidence/grid-bd1.json",
         "evidence/grid-bd2.json",
         "evidence/grid-bd1-receipt.json",
-        "evidence/grid-bd2-receipt.json"
+        "evidence/grid-bd2-receipt.json",
+        "evidence/fp32-grid-summary.json"
       ],
       "byte_identity": {
-        "case_dtype_pairs": 138,
-        "array_pairs": 2070,
-        "evidence": "evidence/bd1-bd2-byte-comparison.json"
-      }
+        "case_dtype_pairs": 69,
+        "array_pairs": 1035,
+        "evidence": "evidence/fp32-bd-comparison.json"
+      },
+      "acceptance_scope": "Only torch.float32 rows in historical raw grids. BF16 rows are retained history excluded by D-PM-35. Final FP32-only wrapper closeout pending."
     },
     "performance": {
       "status": "passed",
-      "scope": "B1/H=HV8/K=V128, T1024/4096, FP32/BF16 public dtype, block_dim2; 3 baseline/candidate/baseline rounds, 10 warmups/50 samples per segment, synchronized end-to-end public API",
+      "scope": "B1/H=HV8/K=V128, T1024/4096, FP32 public dtype, block_dim2; three sandwiches; only FP32 historical rows accepted; final-source refresh pending",
       "baseline": "Task-owned saved-boundary-checkpoint adjoint cost baseline; excludes boundary generation, not a separate complete backward implementation",
-      "raw_samples": 1800,
+      "raw_samples": 900,
       "evidence": [
         "evidence/timing-summary.json",
         "evidence/timing-index.json",

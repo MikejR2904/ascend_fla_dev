@@ -68,8 +68,11 @@ def _validate(q, k, v, g, beta, do, dht, *, initial_state=None, scale=SCALE,
     HV = v.shape[2]
     if HV < 1 or HV % H:
         raise ValueError('HV must be a positive multiple of H')
-    if q.dtype not in (torch.float32, torch.bfloat16):
-        raise ValueError('q/k/v require matching float32 or bfloat16')
+    for name, x in dict(q=q, k=k, v=v, do=do).items():
+        if isinstance(x, torch.Tensor) and x.dtype == torch.bfloat16:
+            raise ValueError(f'{name}: BF16 backward requires BF-02; GDA-03 supports FP32 only')
+    if q.dtype != torch.float32:
+        raise ValueError('q/k/v require float32')
     if do is None and dht is None:
         raise ValueError('at least one of do/dht is required')
     if do is not None:
@@ -103,8 +106,8 @@ def chunk_gdn_bwd(q, k, v, g, beta, do=None, dht=None, *, initial_state=None,
                   out_dir=None, timeout=600):
     """Return (dq, dk, dv, dg, dbeta) for <do,o> + <dht,final_state>.
 
-    q/k gradients sum consecutive value-head contributions. dq/dk/dv use the
-    corresponding input storage dtype; all internal math and dg/dbeta are FP32.
+    q/k gradients sum consecutive value-head contributions. All inputs,
+    cotangents, internal math and returned gradients are FP32. BF16 requires BF-02.
     At least one cotangent is required; an absent cotangent contributes zero.
     Finite inputs/cotangents, g<=0, beta in [0,1] are NPU caller preconditions,
     checked for explicit CPU launchers. Zero initial state only, no dh0.
@@ -115,8 +118,8 @@ def chunk_gdn_bwd(q, k, v, g, beta, do=None, dht=None, *, initial_state=None,
               cu_seqlens=cu_seqlens,cp_context=cp_context,
               use_qk_l2norm_in_kernel=use_qk_l2norm_in_kernel,
               device=device,block_dim=block_dim,launcher=launcher)
-    inputs = dict(q=q.float(),k=k.float(),v=v.float(),g=g,beta=beta,
-                  do=torch.zeros_like(v,dtype=torch.float32) if do is None else do.float(),
+    inputs = dict(q=q,k=k,v=v,g=g,beta=beta,
+                  do=torch.zeros_like(v) if do is None else do,
                   dht=torch.zeros(q.shape[0],v.shape[2],128,128,dtype=torch.float32,device=q.device)
                   if dht is None else dht)
     if launcher == 'inprocess':
@@ -134,5 +137,4 @@ def chunk_gdn_bwd(q, k, v, g, beta, do=None, dht=None, *, initial_state=None,
             result = op(*(tuple(sources.values())+tuple(outputs.values())+tuple(scalars.values())))
             return dict(zip(outputs,(result,) if len(outputs)==1 else result))
     result = _pipeline().run(inputs,launch)
-    return (result['dq'].to(q.dtype),result['dk'].to(k.dtype),result['dv'].to(v.dtype),
-            result['dg'],result['dbeta'])
+    return tuple(result[name] for name in ('dq', 'dk', 'dv', 'dg', 'dbeta'))

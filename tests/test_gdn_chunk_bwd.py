@@ -25,12 +25,26 @@ def valid(dtype=torch.float32):
 
 
 @pytest.mark.parametrize('mode',['do','dht','both'])
-@pytest.mark.parametrize('dtype',[torch.float32,torch.bfloat16])
-def test_valid_modes(mode,dtype):
-    values=valid(dtype)
+def test_valid_modes(mode):
+    values=valid()
     if mode=='do':values['dht']=None
     if mode=='dht':values['do']=None
     op._validate(**values,launcher='board')
+
+
+@pytest.mark.parametrize('launcher', ['inprocess', 'aclnn', 'board'])
+@pytest.mark.parametrize('name', ['q', 'k', 'v', 'do', 'all'])
+def test_bf16_rejected_before_preparation(name, launcher, monkeypatch):
+    values = valid()
+    for key in ('q', 'k', 'v', 'do') if name == 'all' else (name,):
+        values[key] = values[key].bfloat16()
+    monkeypatch.setattr(op, '_pipeline', lambda: pytest.fail('BF16 must reject before dispatch'))
+    from torch.utils._python_dispatch import TorchDispatchMode
+    class NoTensorOperation(TorchDispatchMode):
+        def __torch_dispatch__(self, func, types, args=(), kwargs=None):
+            pytest.fail(f'BF16 rejection must precede tensor preparation: {func}')
+    with NoTensorOperation(), pytest.raises(ValueError, match='BF-02'):
+        op.chunk_gdn_bwd(**values, launcher=launcher)
 
 
 @pytest.mark.parametrize('opts',[
