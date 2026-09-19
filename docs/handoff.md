@@ -11,6 +11,23 @@
 
 ### 正在飞的任务（现在没有；A5K-02、PK-02、PK-03 都已于 2026-09-19 合入）
 
+> **2026-09-19T13:50Z 更新：PK-04 已合入（PR #97，合并提交 `add76cd`，合入的是审过的头 `108a500`）——第一个按 D-PM-33 由 PM 自行合入的 PR。**
+> - **发现的缺陷与修复**：合入的 PK-02 版 PKDA 前向 `prepare` 的门控前缀和是纯 FP32 顺序累加，在域内（跨度 <155）「每 chunk 首项 ≈ −155、其余 −1e-5」的门控上
+>   偏差 3.357e-4，真机 o/S 相对 L2 到 1.30e-4/1.82e-4，超 1e-4 预算（silent-wrong-result，已在 PK-04 里抓到并修）。修复是 prepare 的 FP32 Kahan 补偿前缀求和，
+>   ATK、其余四个 kernel、公开 ABI、155 域、1e-4 预算都没动。修后真机 112 个全链 case（4 个 bd × 28）、40 个 API 边界、65 个尾长全 passed，最大相对 L2 6.6e-6，
+>   跨 bd 逐位相同（PM 从原始 JSON 自己逐 case 比的）；同卡三明治比 Torch NPU eager 的 pinned naive 快 13×（T1024）/26×（T4096），基线不是 Triton、无速度门槛。
+>   PM 复跑：新增回归测试在原 prepare.py 上失败（最大绝对差恰为 0.000335693359375）、修复后通过；合入后 main 全量 511 passed / 15 skipped，无回归。
+> - **资格只到「这套精确环境 + in-process 桥的 FP32 前向」**（950PR_9589 V100、CANN 9.2.0、算子包 ascend950/910b/910_93、torch_npu 2.12.0）；SSH board/aclnn、BF16、backward、Triton、checkpoint 仍未测。
+>   `docs/matrix/ops.json` 仍没有 PKDA 条目（矩阵欠账，等 A2-06 一并补）。
+> - **待查（假设，没验证）**：KDA 链路的门控前缀和是否同构。KDA 的 155.97 精度扫描用的不是「一大后小」模式；`AGENTS.md` §6 的「整条链同类算式列一遍」适用。不在任何在飞任务的写集里，要查得另开任务（用户定）。
+> - **申领人自述、PM 没复现**：另一套 CANN 9.2.0 头文件安装上 vendor 编译失败——pin 版 ascriptor 的 `tensorutils_cce.h:143` 只认 `IMPL_UTILS_SYS_MACROS_H`，而该工具链的 `sys_macros_impl.h:17` 用
+>   `IMPL_UTILS_SYS_MACROS_IMPL_H`，`g_coreType` 重定义。仓内没有这次失败的原始证据（日志在其私有环境），所以**没记 gaps.json**；若别的 agent 在别的 A5 机器上撞到，
+>   再带证据记（P2，ascriptor 库侧，我们不改）。与 AGENTS.md §5「同为 A5，不同机器不同」是同一类：**版本字符串相同不代表头文件/编译器相同**。
+> - **同一轮的其余变化**：`GDA-03` 已 ACK（in_progress，eta 24h）；`A2-44` 已按 #86 的 APPLY 派给 session `01a0b7ce-…`（PK-04 的同一个 session，PK-04 已 done，并发规则不再挡），16h。
+>   A2-44 与 A2-02 写集重叠，在飞期间 A2-02 若有人申领会被 gate。A2-44 是纯主机侧、没有真机验证，**它的 PR 合入前 PM 仍要问用户**（D-PM-33 只覆盖有真机验证的 PR）。
+> - **PM 工具坑（今天踩的）**：`poll` 输出的最后一行 JSON 后面会**粘着**「已暂存到 …」那行头（没换行）；`json.loads` 会报 `Extra data`。用 `json.JSONDecoder().raw_decode(line)`
+>   取第一个对象；别用 `str.splitlines()` 切（文本里的 `\x0c`、`\u2028` 会把一行事件切开，看起来像"非 JSON 行"）。
+>
 > **2026-09-19T13:05Z 更新：用户给了常设合入授权（D-PM-33）——取代下面所有「合入需要用户明确授权」的说法。**
 > 原话：「PR只要有通过真机验证，你审查后确认正确性，高质量就可以合入，不需要我授权。有争议时，再向我提问」。PM 的读法（用户可纠正）：
 > 只适用于带通过的真机验证的 PR；审查流程不变；证据只有自述、缺原始日志/标识、真机项被省略的按「有争议」问用户；

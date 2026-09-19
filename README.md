@@ -33,7 +33,7 @@ fla 系列线性注意力算子在昇腾 NPU 上的高效实现库。后端用
 | 整网融合算子（模块 / 层级） | `fusion` | 可申领 | 4 | 1/4 |
 | Mamba-1/2/3 | `mamba` | 未排期 (G4) | — | — |
 | GLA（Gated Linear Attention） | `gla` | 未排期 (G4) | — | — |
-| PKDA / PGDN（预条件） | `pkda` | 可申领 | 2 | 2/4 |
+| PKDA / PGDN（预条件） | `pkda` | 可申领 | 2 | 3/4 |
 | Log-Linear Attention | `log_linear` | 未排期 (G4) | — | — |
 | DLA（动态线性注意力） | `dla` | 未排期 (G4) | — | — |
 | StateX（宽状态） | `statex` | 未排期 (G4) | — | — |
@@ -137,7 +137,7 @@ _Qwen3-Next 用它，六项 ABI 缺口待补（第四期，与本条无关）。
 | 任务 | issue | SoC | dtype | 状态 | 说明 |
 |---|---|---|---|---|---|
 | A2-07 | [#35](https://github.com/ddddwee1/ascend_fla_dev/issues/35) | `a2` | bf16、fp32 | ⬜ open | ★ 起点 |
-| GDA-03 | [#91](https://github.com/ddddwee1/ascend_fla_dev/issues/91) | `a5` | bf16、fp32 | 🔵 assigned | ★ 起点 |
+| GDA-03 | [#91](https://github.com/ddddwee1/ascend_fla_dev/issues/91) | `a5` | bf16、fp32 | 🔵 in_progress | ★ 起点 |
 | A2-K1 | [#44](https://github.com/ddddwee1/ascend_fla_dev/issues/44) | `a2` | bf16、fp32 | 🔒 gated (kernel-batch-approval) |  |
 | GDA-05 | [#96](https://github.com/ddddwee1/ascend_fla_dev/issues/96) | `a5` | bf16、fp32 | 🔒 gated (user-decision) |  |
 | A2-20 | [#45](https://github.com/ddddwee1/ascend_fla_dev/issues/45) | `a2` | bf16、fp32 | 🔒 gated (kernel-batch-approval) |  |
@@ -253,21 +253,21 @@ _未排期：属 gated epic G4（窄切片原则 —— 没有目标模型就不
 
 </details>
 
-<details><summary><b>PKDA / PGDN（预条件） —— 2 个 kernel，2/4 完成</b></summary>
+<details><summary><b>PKDA / PGDN（预条件） —— 2 个 kernel，3/4 完成</b></summary>
 
 _权威来源已确立（2026-09-17，见 docs/research/pkda_semantics.md）：论文《Preconditioned DeltaNet》(arXiv:2604.21100, ICML 2026)，已合入上游 fla（PR fla-org/flash-linear-attention#950，0.6.0）。PKDA 是 KDA 加一层 ATK预条件，可复用 kda_fwd_stable/kda_bwd_stable，见 PK-02。PGDN 是 GDN 加同一层预条件，但 GDN 自身缺 GQA 分组（gdn-no-gqa），PGDN 排在其后，见 PK-03（gated）。两者都没有已发布的预训练权重，端到端验证到不了真实 logits 一级_
 
 | kernel | 归属 | 进度 | 下一步 |
 |---|---|---|---|
-| `pkda_chunk_fwd` | 可申领 | 1/2 | [#68](https://github.com/ddddwee1/ascend_fla_dev/issues/68) PK-02 |
+| `pkda_chunk_fwd` | 可申领 | 2/2 | [#68](https://github.com/ddddwee1/ascend_fla_dev/issues/68) PK-02 |
 | `pgdn_chunk_fwd` | 可申领 | 1/2 | [#69](https://github.com/ddddwee1/ascend_fla_dev/issues/69) PK-03 |
 
-<details><summary>pkda_chunk_fwd —— 1/2 完成，起点 PK-02</summary>
+<details><summary>pkda_chunk_fwd —— 2/2 完成，起点 PK-02</summary>
 
 | 任务 | issue | SoC | dtype | 状态 | 说明 |
 |---|---|---|---|---|---|
 | PK-02 | [#68](https://github.com/ddddwee1/ascend_fla_dev/issues/68) | `a5` | bf16、fp32 | ✅ done | ★ 起点 |
-| PK-04 | [#92](https://github.com/ddddwee1/ascend_fla_dev/issues/92) | `a5` | bf16、fp32 | 🔵 assigned |  |
+| PK-04 | [#92](https://github.com/ddddwee1/ascend_fla_dev/issues/92) | `a5` | bf16、fp32 | ✅ done |  |
 
 </details>
 

@@ -2565,7 +2565,7 @@
       "wave": "W0",
       "soc": "any",
       "priority": "P2",
-      "status": "open",
+      "status": "assigned",
       "model": [
         "kimi-linear-48b-a3b"
       ],
@@ -2593,9 +2593,20 @@
       "spec": "docs/pm/tasks/A2-44.md",
       "issue": 86,
       "pr": null,
-      "assignee": null,
-      "assignee_caps": null,
-      "branch": null,
+      "assignee": "limjiunnbin",
+      "assignee_caps": {
+        "agent": "Codex，KDA/PKDA session（自述）",
+        "socs": [
+          "a5"
+        ],
+        "soc_details": "自述：本任务是纯主机侧，不作 A2/A3 真机能力声称；另有 A5/CANN 9.2.0 的独立任务测试环境",
+        "ascriptor": "library 90cfcdc720bb / kernels b3b3f9c16df7（自述）",
+        "fla": "e52dbc0ea19d3a40d7ab7f9eed855d2b473994d2（自述）",
+        "fork": "limjiunnbin/ascend_fla_dev",
+        "session": "01a0b7ce-3daf-7550-a7bf-31c67eb91ca3",
+        "note": "此前持有 A5K-02、PK-02、PK-04（均已 done）；与 GDA-03（session gdn-series-…）同账号不同 session，并发规则放行。申领于 #86（2026-09-19T13:09:22Z），自述先读了规格且不提前改 KDA 文件。"
+      },
+      "branch": "task/A2-44",
       "timebox_h": 16,
       "reports": [
         {
@@ -2613,6 +2624,10 @@
         {
           "at": "2026-09-19T10:05",
           "summary": "用户决定解门（D-PM-29）：A5K-02 已合入（PR #83，2589942），转 open。两个任务（A2-02/A2-44）写集彼此重叠，先 APPLY 者先做，后者大概率再 gate 一轮；PM 已在 issue 下通知此前被 NO_TASK 的申领人重新 APPLY"
+        },
+        {
+          "at": "2026-09-19T13:45",
+          "summary": "按 #86 的 APPLY 派给 limjiunnbin（session 01a0b7ce-…），16h，分支 task/A2-44，原五条写集。申领人的 PK-04 已合入，同 session 无在飞任务。写集与 A2-02 重叠（ops/kda/chunk.py、layers/kda.py）：本任务在飞期间 A2-02 若有人申领会被 gate。纯主机侧、没有真机验证，所以这个 PR 合入前 PM 仍要问用户（D-PM-33 只覆盖有真机验证的 PR）"
         }
       ],
       "result": null,
@@ -2624,7 +2639,7 @@
       "wave": "W0",
       "soc": "a5",
       "priority": "-",
-      "status": "assigned",
+      "status": "in_progress",
       "model": [],
       "kernel": [
         "gdn_bwd"
@@ -2677,6 +2692,10 @@
         {
           "at": "2026-09-19T12:55",
           "summary": "用户放行（D-PM-32，「两个都放行」）。按 #28 上的 APPLY 派给 limjiunnbin（session gdn-series-…），timebox 24h，分支 task/GDA-03。规格不变；预算在实现前定死（FP32 逐梯度 ≤1e-4，先校准 A↔B）。合入仍需用户对具体 PR 的明确授权"
+        },
+        {
+          "at": "2026-09-19T13:45",
+          "summary": "ACK（session gdn-series-…，eta 24h，分支 task/GDA-03，base 0ad6fe5）。计划：先冻结独立反向 ABI 与梯度 dtype，再重建 A/B 参考与 FP64 有限差分、三种 cotangent 组合的校准，之后实现原生 FP32 stage，完整 workload 先跑。状态 assigned→in_progress"
         }
       ],
       "result": null,
@@ -2693,7 +2712,7 @@
       "wave": "W0",
       "soc": "a5",
       "priority": "-",
-      "status": "assigned",
+      "status": "done",
       "model": [],
       "kernel": [
         "pkda_chunk_fwd"
@@ -2718,7 +2737,7 @@
       },
       "spec": "docs/pm/tasks/PK-04.md",
       "issue": 92,
-      "pr": null,
+      "pr": 97,
       "assignee": "limjiunnbin",
       "assignee_caps": {
         "agent": "Codex; PK-02 之后的续接 session（自述）",
@@ -2750,9 +2769,26 @@
         {
           "at": "2026-09-19T12:55",
           "summary": "用户放行（D-PM-32）。按 #92 的 APPLY 派给 limjiunnbin（session 01a0b7ce-…），timebox 16h，分支 task/PK-04。放行不追认放行前的私有进度（上一条 report 里的自述）：DONE 时按规格逐项核对原始证据——原失败样本要保留、修复要有「先定位」的证据、修复后的全部验收要在同一份修复后的版本上重跑。补偿累加修法仍是候选，由 DONE 审查判定。合入仍需用户对具体 PR 的明确授权"
+        },
+        {
+          "at": "2026-09-19T13:45",
+          "summary": "合入：PR #97 合并提交 add76cd（合入的是审过的头 108a500，--match-head-commit）。依 D-PM-33 自行合入：63 个文件全在写集内，无红旗/隐私命中；修复是标准 Kahan（PM 核对了寄存器复用）；PM 独立复算机理并跑了负控制；真机证据的 112 行、跨 bd 哈希、性能样本都由 PM 从原始 JSON 重算，日志行号锚点对得上。合入后 main 全量 511 passed/15 skipped。状态 assigned→done（申领人在 PK-04 ASSIGN 后 21 分钟内交付）"
         }
       ],
-      "result": null,
+      "result": {
+        "commits": [
+          "108a500",
+          "add76cd"
+        ],
+        "evidence": [
+          "PR #97",
+          "docs/research/pkda_chunk_fwd_gate_range.md",
+          "kernels/projects/a5/pkda_chunk_fwd/validation.json",
+          "kernels/projects/a5/pkda_chunk_fwd/evidence/README.md"
+        ],
+        "numbers": "真机（原始日志与 JSON 在 PR 里，PM 逐项复算）：4 个 bd 各 28 case（16 契约 + 9 额外 + 3 对抗种子）全 passed，112 行的 14 阶段哈希与输入哈希跨 bd 逐位相同（PM 自己逐 case 比的）；公开 o/S/A 对 pinned CPU FP32 naive 最大相对 L2 6.209e-6/6.617e-6/4.472e-7（预算 1e-4），对独立 CPU chunk 4.92e-7/4.95e-7/4.47e-7；完整 B1/T4096/H8 4.459e-7/4.017e-7/7.202e-8；40 个公共 API 边界检查、65 个尾长 case（T4096 + tail_count_1..64，最大 4.46e-7）全 passed。原失败（已合入的 PK-02 prepare，对抗种子 71）o/S 1.297e-4/1.823e-4，gc 偏差 3.357e-4（PM 用 numpy 复算机理，逐位一致）。三轮同卡三明治：T1024 候选 46.8–47.1 ms vs Torch NPU eager 基线 604.8–613.6 ms；T4096 179.8–179.9 ms vs 4679–4697 ms（基线是 pinned FLA naive 的 Torch NPU eager，不是 Triton；无速度门槛）。PM 复跑：PKDA 51 passed，全量 511 passed/15 skipped，与申领人的 521/5 精确对账（+10 个需要 pin 版 FLA 的 skip）；负控制：新增回归测试在原 prepare.py 上失败（最大绝对差 0.000335693359375）、在修复版上通过。合入后 main 全量 511 passed/15 skipped，无回归。",
+        "note": "PKDA FP32 前向的 in-process 真机资格只限这套精确环境（950PR_9589 V100、CANN 9.2.0、算子包 ascend950/ascend910b/ascend910_93、torch_npu 2.12.0）：SSH board/aclnn、BF16、backward、Triton、checkpoint 仍未测。修复是 prepare 的 FP32 Kahan 补偿前缀求和（+512B，13 个单槽共 4736B），ATK、其余四个 kernel、公开 ABI、155 域、1e-4 预算不变。申领人自述另一套 CANN 9.2.0 头文件安装上 vendor 编译因 g_coreType 重定义失败（tensorutils_cce.h:143 与 sys_macros_impl.h:17，未资格化，原始日志私有）：PM 未复现、没有记 gaps.json（仓内无该失败的证据），见 handoff。KDA 链路的前缀和是否同构未知（不在本写集）。这是第一个按用户常设授权 D-PM-33（真机验证通过 + PM 审查确认正确与质量 + 无争议）由 PM 自行合入的 PR。"
+      },
       "origin": {
         "kind": "request",
         "issue": 68,
