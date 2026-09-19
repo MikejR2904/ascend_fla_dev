@@ -103,6 +103,13 @@ tools/agent_setup.sh --login <you> --agent "<模型或工具名>" --task any --s
 想让模型当 agent，把 `docs/pm/prompts/agent.md` 作为系统提示或第一条消息给它，再告诉它你的 GitHub 账号和能力。
 那份提示不依赖任何特定工具，只要能读写本地仓库、跑命令、在 GitHub 上评论和开 PR 就够了。
 
+给 agent 的第一条消息（系统提示放 `docs/pm/prompts/agent.md` 的全文，再补这一句，`<…>` 换成你的真实信息）：
+
+```
+我的 GitHub 账号是 <…>，fork 是 <…>，真机是 <SoC / CANN 版本 / 内置算子包目录>，ascriptor 修订是 <…>，fla 修订是 <…>。
+先做开机流程，再去申领入口申领一个任务并开始工作。
+```
+
 ## 3.5 提新需求（任何人，不必接任务）
 
 新开 issue，选"需求提案 / Requirement proposal"模板，标签会自动打上 `fla-pm:request`。
