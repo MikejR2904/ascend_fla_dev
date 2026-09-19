@@ -36,17 +36,15 @@ def main():
     contract=json.loads((root/'contract.json').read_text())
     torch.set_num_threads(1)
     write('environment',dict(python=platform.python_version(),torch=torch.__version__,torch_npu=torch_npu.__version__,ascriptor=ascriptor.__version__,source_sha256={str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(root.rglob('*.py'))},public_sha256=hashlib.sha256(Path(api.__file__).read_bytes()).hexdigest()))
-    from importlib import import_module
-    fp32_guard=import_module(package+'.kernels.fp32_guard').pkda_fp32_guard
     vendors={};builds=[]
-    for family,entries in (('BF16',pipeline.entries()),('FP32',(*api._module('kernels.pipeline').entries(),fp32_guard))):
+    for family,entries in (('BF16',pipeline.entries()),('FP32',api._module('kernels.pipeline').entries())):
         for entry in entries:
             print('COMPILE_START',family,entry.name,args.block_dim,flush=True);start=time.monotonic()
             op=compile_kernel(entry,device='a5',block_dim=args.block_dim,backend='cce')
             if family=='BF16':vendors[entry.name]=op
             builds.append(dict(family=family,entry=entry.name,signature=op.signature,seconds=time.monotonic()-start,
                 vendor_files={str(p.relative_to(op.vendor_dir)):hashlib.sha256(p.read_bytes()).hexdigest() for p in op.vendor_dir.rglob('*') if p.is_file() and p.suffix in ('.so','.o','.json')}))
-            write('compile',dict(complete=len(builds)==12,block_dim=args.block_dim,entries=builds))
+            write('compile',dict(complete=len(builds)==11,block_dim=args.block_dim,entries=builds))
             print('COMPILE_PASS',entry.name,flush=True)
     api.prepare(block_dim=args.block_dim,dtype=torch.float32)
     api.prepare(block_dim=args.block_dim,dtype=torch.bfloat16)
@@ -61,17 +59,52 @@ def main():
         if case['parameters'].get('adversarial',False):
             data['g'].fill_(-1e-5);data['g'][:,::64].fill_(-154.9992)
         return data
+    allowed={'aten.empty.memory_format','aten.empty_strided.default','aten.view.default',
+             'aten.reshape.default','aten.expand.default','aten.zeros.default','aten.full.default'}
+    validation_allowed={'aten._local_scalar_dense.default','aten.abs.default','aten.alias.default',
+                        'aten.all.default','aten.any.default','aten.bitwise_or.Tensor',
+                        'aten.eq.Tensor','aten.gt.Scalar','aten.isfinite.default','aten.lt.Scalar',
+                        'aten.mul.Tensor','aten.ne.Scalar','aten.neg.default','aten.pow.Tensor_Scalar',
+                        'aten.slice.Tensor','aten.sum.dim_IntList'}
     class Audit(TorchDispatchMode):
-        def __init__(self):super().__init__();self.operations=[]
+        def __init__(self):
+            super().__init__();self.operations=[];self.classified=[];self.phase='operator';self.control_readbacks=[]
+        def __enter__(self):
+            # PM5743858594: original read-only numeric validation is a separate
+            # audit class. Its masks/scalars never enter the mathematical path.
+            owner=api._module('ref.reference');self.owner=owner;self.validator=owner.validate_inputs
+            def validate(*args,**kwargs):
+                previous=self.phase;self.phase='readonly_validation'
+                try:return self.validator(*args,**kwargs)
+                finally:self.phase=previous
+            owner.validate_inputs=validate
+            self.readback=pipeline.check_status
+            def readback(status):
+                self.control_readbacks.append(dict(kind='control_metadata',method='aclrtMemcpy_D2H',
+                    dtype=str(status.dtype),elements=status.numel(),bytes=status.numel()*status.element_size(),
+                    meaning='numeric-guard codes only; no computational tensor values'))
+                return self.readback(status)
+            pipeline.check_status=readback
+            return super().__enter__()
+        def __exit__(self,*args):
+            pipeline.check_status=self.readback;self.owner.validate_inputs=self.validator
+            return super().__exit__(*args)
         def __torch_dispatch__(self,func,types,args=(),kwargs=None):
-            self.operations.append(str(func));return func(*args,**(kwargs or {}))
-    allowed={'aten.empty.memory_format','aten.empty_strided.default','aten.view.default','aten.reshape.default','aten.expand.default'}
+            name=str(func);self.operations.append(name)
+            category=self.phase
+            if name in ('aten.zeros.default','aten.full.default'):category='constant_allocation'
+            self.classified.append(dict(operator=name,category=category))
+            return func(*args,**(kwargs or {}))
+        def violations(self):
+            return [r for r in self.classified if r['operator'] not in allowed and
+                    not (r['category']=='readonly_validation' and r['operator'] in validation_allowed)]
     def call(data):
         audit=Audit()
         with audit:got=api.chunk_precond_kda(**data,output_final_state=True,block_dim=args.block_dim)
         torch.npu.synchronize()
-        unexpected=sorted(set(audit.operations)-allowed)
+        unexpected=audit.violations()
         if unexpected:raise AssertionError(dict(unexpected_host_operators=unexpected,all_operations=audit.operations))
+        call.last_categories=audit.classified;call.last_control_readbacks=audit.control_readbacks
         return dict(zip(pipeline.OUTPUTS,(cpu(x) for x in got))),audit.operations
     rows=[]
     def execute_case(case):
@@ -95,7 +128,7 @@ def main():
         row=dict(case=case,block_dim=args.block_dim,**result,input_sha256={n:digest(x) for n,x in data.items() if isinstance(x,torch.Tensor)},
                  input_unchanged=unchanged,poison_all_written=stage_finite,public_equals_staged=stage_equal,
                  stage_sha256={n:digest(x) for n,x in staged.items()},output_sha256={n:digest(x) for n,x in got.items()},
-                 stage_errors={n:checks.metric(staged[n],refs['stages'][n]) for n in refs['stages']},stage_seconds=timings,host_operations=operations)
+                 stage_errors={n:checks.metric(staged[n],refs['stages'][n]) for n in refs['stages']},stage_seconds=timings,host_operations=operations,host_operator_categories=call.last_categories,control_readbacks=call.last_control_readbacks)
         row['passed']=result['passed'] and all(unchanged.values()) and all(stage_finite.values()) and stage_equal
         write(case['id'],row)
         if not row['passed']:

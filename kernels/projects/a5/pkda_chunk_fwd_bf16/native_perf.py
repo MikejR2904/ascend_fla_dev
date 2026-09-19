@@ -35,13 +35,29 @@ def measure(api,ref,checks,bd,to_device):
                 result[label]=dict(milliseconds=samples,median_ms=statistics.median(samples))
             baseline=(result['fp32_before']['median_ms']+result['fp32_after']['median_ms'])/2
             result['bf16_speedup_vs_fp32']=baseline/result['bf16']['median_ms'];rounds.append(result)
+            print('FP32_BF16_PERF_ROUND',length,index+1,result,flush=True)
         got={n:x.cpu() for n,x in zip(('o','final_state','final_A_state'),invoke(bfdev))}
         check=checks.compare(got,checks.references(bf));assert check['passed'],check
-        guarded=[]
-        for _ in range(5):
-            torch.npu.synchronize();start=time.perf_counter()
-            api.chunk_precond_kda(**fpdev,output_final_state=True,block_dim=bd);torch.npu.synchronize()
-            guarded.append((time.perf_counter()-start)*1000)
+        # Also retain the user's Torch-NPU eager baseline. All of this is
+        # benchmark code, outside the audited public implementation.
+        import importlib
+        naive=importlib.import_module(checks.__package__+'.oracles').fla_naive()
+        def torch_baseline():return naive(**bfdev,output_final_state=True)
+        base=torch_baseline();torch.npu.synchronize()
+        base_check=checks.compare(dict(zip(('o','final_state','final_A_state'),(x.cpu() for x in base))),checks.references(bf))
+        assert base_check['passed'],base_check
+        torch_rounds=[]
+        for index in range(3):
+            row={}
+            for label,fn,count in (('torch_npu_before',torch_baseline,2),('bf16',lambda:invoke(bfdev),3),('torch_npu_after',torch_baseline,2)):
+                samples=[]
+                for _ in range(count):
+                    torch.npu.synchronize();start=time.perf_counter();fn();torch.npu.synchronize()
+                    samples.append((time.perf_counter()-start)*1000)
+                row[label]=dict(milliseconds=samples,median_ms=statistics.median(samples))
+            baseline=(row['torch_npu_before']['median_ms']+row['torch_npu_after']['median_ms'])/2
+            row['bf16_speedup_vs_torch_npu']=baseline/row['bf16']['median_ms'];torch_rounds.append(row)
+            print('TORCH_NPU_PERF_ROUND',length,index+1,row,flush=True)
         rows.append(dict(T=length,B=1,H=8,block_dim=bd,rounds=rounds,correctness=check,
-                         fp32_after_device_guard_ms=guarded,fp32_after_device_guard_median_ms=statistics.median(guarded)))
-    return dict(passed=True,baseline='Recorded pre-BF04 FP32 public wrapper and unchanged five FP32 kernels; BF16-rounded inputs widened only in verifier',baseline_source_sha256=hashlib.sha256(before_path.read_bytes()).hexdigest(),timing='same device, synchronized API wall time including numeric validation and allocations',cases=rows)
+                         torch_npu_rounds=torch_rounds,torch_npu_correctness=base_check))
+    return dict(passed=True,baseline='Recorded pre-BF04 FP32 public wrapper and unchanged five FP32 kernels; BF16-rounded inputs widened only in verifier',baseline_source_sha256=hashlib.sha256(before_path.read_bytes()).hexdigest(),additional_baseline='Pinned FLA naive recurrence on Torch NPU eager, actual BF16 inputs and FP32 recurrence',timing='same device, synchronized API wall time including numeric validation and allocations',cases=rows)

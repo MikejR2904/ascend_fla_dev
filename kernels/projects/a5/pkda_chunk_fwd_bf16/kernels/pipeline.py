@@ -26,7 +26,7 @@ def entries():
     return (pkda_bf16_init, pkda_bf16_prepare, *STAGES, pkda_bf16_output)
 
 
-def validate_metadata(inputs, *, expected_device=None, input_dtype=torch.bfloat16):
+def validate_metadata(inputs, *, expected_device=None):
     q = inputs['q']
     if not isinstance(q, torch.Tensor) or q.ndim != 4:
         raise ValueError('q must be BF16 [B,T,H,128]')
@@ -42,7 +42,7 @@ def validate_metadata(inputs, *, expected_device=None, input_dtype=torch.bfloat1
         x = inputs.get(n)
         if x is None and n in ('initial_state','initial_A_state','log_atk_scale'):
             continue
-        dtype = input_dtype if n in ('q','k','v') else torch.float32
+        dtype = torch.bfloat16 if n in ('q','k','v') else torch.float32
         if not isinstance(x,torch.Tensor) or tuple(x.shape) != shape or x.dtype != dtype:
             raise ValueError(f'{n} must be {dtype} {shape}')
         if x.device != q.device or not x.is_contiguous():

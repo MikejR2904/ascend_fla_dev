@@ -18,7 +18,7 @@ def boundaries(api,ref,checks,bd,call,to_device,digest,Audit,allowed):
             args.pop('log_atk_scale');gold['log_atk_scale']=torch.full((3,),-.2)
             got,ops=call(to_device(args));result=checks.compare(got,checks.references(gold))
             assert result['passed'],result
-            rows.append(dict(kind='optional_states',S=use_s,A=use_a,host_operations=ops,**result))
+            rows.append(dict(kind='optional_states',S=use_s,A=use_a,host_operations=ops,host_operator_categories=call.last_categories,control_readbacks=call.last_control_readbacks,**result))
     refs=checks.references(data)
     for split in (1,63,64,65,129):
         token=('q','k','v','g','g_atk','beta_atk','beta')
@@ -77,10 +77,10 @@ def boundaries(api,ref,checks,bd,call,to_device,digest,Audit,allowed):
         audit_after=Audit()
         with audit_after:new=api.chunk_precond_kda(**inp,output_final_state=True,block_dim=bd)
         torch.npu.synchronize()
-        assert not set(audit_after.operations)-allowed,audit_after.operations
+        assert not audit_after.violations(),audit_after.classified
         same=[digest(a.cpu())==digest(b.cpu()) for a,b in zip(old,new)]
         assert all(same),(case['id'],same)
-        rows.append(dict(kind='fp32_before_after',case=case['id'],passed=True,bytes_equal=same,before_host_operations=audit_before.operations,after_host_operations=audit_after.operations,before_source_sha256=hashlib.sha256(before_path.read_bytes()).hexdigest()))
+        rows.append(dict(kind='fp32_before_after',case=case['id'],passed=True,bytes_equal=same,before_host_operations=audit_before.operations,after_host_operations=audit_after.operations,after_host_operator_categories=audit_after.classified,before_source_sha256=hashlib.sha256(before_path.read_bytes()).hexdigest()))
     for use_s in (False,True):
         for use_a in (False,True):
             inp=fp_ref.make_inputs(case)
@@ -91,9 +91,9 @@ def boundaries(api,ref,checks,bd,call,to_device,digest,Audit,allowed):
             audit_after=Audit()
             with audit_after:new=api.chunk_precond_kda(**inp,output_final_state=True,block_dim=bd)
             torch.npu.synchronize()
-            assert not set(audit_after.operations)-allowed,audit_after.operations
+            assert not audit_after.violations(),audit_after.classified
             assert all(digest(a.cpu())==digest(b.cpu()) for a,b in zip(old,new))
-            rows.append(dict(kind='fp32_defaults_before_after',S=use_s,A=use_a,passed=True,host_operations=audit_after.operations))
+            rows.append(dict(kind='fp32_defaults_before_after',S=use_s,A=use_a,passed=True,host_operations=audit_after.operations,host_operator_categories=audit_after.classified))
     return rows
 
 
@@ -115,7 +115,7 @@ def fp32_full(api,bd,Audit,allowed,to_device,digest):
     errors=oracle.metrics(new,gold);same={n:digest(old[n])==digest(new[n]) for n in old}
     unchanged={n:digest(dev[n].cpu())==digest(x) for n,x in data.items()}
     result=dict(case=case,block_dim=bd,errors=errors,bytes_equal=same,input_unchanged=unchanged,
-                before_host_operations=old_audit.operations,after_host_operations=new_audit.operations,
+                before_host_operations=old_audit.operations,after_host_operations=new_audit.operations,after_host_operator_categories=new_audit.classified,
                 before_source_sha256=hashlib.sha256(before_path.read_bytes()).hexdigest(),
-                passed=all(same.values()) and all(unchanged.values()) and not set(new_audit.operations)-allowed and all(m['relative_l2']<=1e-4 for m in errors.values()))
+                passed=all(same.values()) and all(unchanged.values()) and not new_audit.violations() and all(m['relative_l2']<=1e-4 for m in errors.values()))
     return result

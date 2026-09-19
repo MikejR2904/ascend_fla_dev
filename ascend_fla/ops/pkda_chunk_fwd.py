@@ -1,4 +1,4 @@
-"""Experimental native FP32/BF16 PKDA forward with device-side domain guards.
+"""Experimental native FP32/BF16 PKDA forward with BF16 device-side domain guards.
 
 This entry follows the pinned FLA naive semantics: q/k are consumed as
 supplied. It does not normalize them, activate gates, cast inputs or provide a
@@ -8,6 +8,7 @@ from __future__ import annotations
 import functools
 import importlib
 import importlib.util
+import math
 from pathlib import Path
 import sys
 import torch
@@ -57,7 +58,6 @@ def prepare(*, device='a5', block_dim=1, dtype=torch.float32):
     if dtype == torch.bfloat16:
         _bf16_module().compiled(block_dim)
     elif dtype == torch.float32:
-        _bf16_module().compiled_fp32_guard(block_dim)
         _compiled(block_dim)
     else:
         raise ValueError('PKDA prepare supports FP32 or BF16')
@@ -107,10 +107,39 @@ def chunk_precond_kda(
             board=board,out_dir=out_dir,timeout=timeout)
     if q.dtype != torch.float32:
         raise ValueError('PKDA requires FP32 or BF16 q/k/v')
-    return _bf16_module().execute_fp32(
-        dict(q=q,k=k,v=v,g=g,g_atk=g_atk,beta_atk=beta_atk,beta=beta,
-             initial_state=initial_state,initial_A_state=initial_A_state,
-             log_atk_scale=log_atk_scale,scale=128**-0.5 if scale is None else float(scale)),
-        original_pipeline=_module('kernels.pipeline'),original_compiled=_compiled,
-        output_final_state=output_final_state,block_dim=block_dim,launcher=launcher,
-        board=board,out_dir=out_dir,timeout=timeout)
+    expected_device = 'npu' if launcher == 'inprocess' else 'cpu'
+    if q.device.type != expected_device:
+        raise ValueError(f'{launcher} requires {expected_device} tensors')
+    scale = 128**-0.5 if scale is None else float(scale)
+    if not math.isfinite(scale) or scale <= 0 or scale > torch.finfo(torch.float32).max:
+        raise ValueError('scale must be finite and positive')
+    # Default-value initialization is the only tensor preparation done here.
+    if initial_state is None:
+        initial_state = torch.zeros((B,H,128,128), dtype=torch.float32, device=q.device)
+    if initial_A_state is None:
+        initial_A_state = torch.zeros((B,H,128), dtype=torch.float32, device=q.device)
+    if log_atk_scale is None:
+        log_atk_scale = torch.full((H,), -0.2, dtype=torch.float32, device=q.device)
+    inputs = dict(q=q,k=k,v=v,g=g,g_atk=g_atk,beta_atk=beta_atk,beta=beta,
+                  initial_state=initial_state,initial_A_state=initial_A_state,
+                  log_atk_scale=log_atk_scale,scale=scale)
+    _module('ref.reference').validate_inputs(inputs)
+    if torch.is_grad_enabled() and any(t.requires_grad for t in inputs.values() if isinstance(t,torch.Tensor)):
+        raise RuntimeError('PKDA forward has no backward/autograd implementation')
+    pipeline = _module('kernels.pipeline')
+    if launcher == 'inprocess':
+        compiled = dict(zip((entry.name for entry in pipeline.entries()), _compiled(block_dim), strict=True))
+        def launch(entry, sources, outputs, scalars):
+            op = compiled[entry.name]
+            op(sources, {n: scalars[n] for n in op.scalar_names}, outputs)
+            return outputs
+    else:
+        from ascriptor.runtime import OpExec
+        def launch(entry, sources, outputs, scalars):
+            root = None if out_dir is None else Path(out_dir) / entry.name
+            ex = OpExec(entry, launcher=launcher, device=device, backend='cce',
+                        block_dim=block_dim, board=board, out_dir=root, timeout=timeout)
+            result = ex(*(tuple(sources.values()) + tuple(outputs.values()) + tuple(scalars.values())))
+            return dict(zip(outputs, (result,) if len(outputs)==1 else result, strict=True))
+    got = pipeline.run(inputs, launch, retain_stages=False)
+    return got['o'], (got['final_state'] if output_final_state else None), (got['final_A_state'] if output_final_state else None)
