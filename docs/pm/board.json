@@ -2603,6 +2603,305 @@
       ],
       "result": null,
       "gate": null
+    },
+    {
+      "id": "GDA-03",
+      "title": "GDN chunk 反向：GQA/GVA 分组，A5 真机验收",
+      "wave": "W0",
+      "soc": "a5",
+      "priority": "-",
+      "status": "gated",
+      "model": [],
+      "kernel": [
+        "gdn_bwd"
+      ],
+      "dtype": [
+        "bf16",
+        "fp32"
+      ],
+      "deps": [
+        "GDA-02"
+      ],
+      "write_set": [
+        "kernels/projects/a5/gdn_chunk_bwd/**",
+        "ascend_fla/ops/gdn_chunk_bwd.py",
+        "tests/test_gdn_chunk_bwd.py",
+        "docs/research/gdn_chunk_bwd_gate_range.md"
+      ],
+      "needs": {
+        "npu": true,
+        "ascriptor": true,
+        "fla": true
+      },
+      "spec": "docs/pm/tasks/GDA-03.md",
+      "issue": null,
+      "pr": null,
+      "assignee": null,
+      "assignee_caps": null,
+      "branch": null,
+      "timebox_h": 24,
+      "reports": [
+        {
+          "at": "2026-09-19T12:16",
+          "summary": "分诊：采纳需求（issue #89，提案人 limjiunnbin）为 gated 任务，等用户放行；来源是外部需求，用户批准前不能是 open。完整规格已写（预算在实现前定死）。范围在 D-PM-22 的 GDN/PGDN 序列之内，不含 GDN-2、Qwen3-Next、A2 与 #80 被否决的'GDN 全族推进'。"
+        }
+      ],
+      "result": null,
+      "gate": "user-decision",
+      "origin": {
+        "kind": "request",
+        "issue": 89,
+        "by": "limjiunnbin"
+      }
+    },
+    {
+      "id": "PK-04",
+      "title": "PKDA chunk 前向：A5 真机验收补齐（PK-02 的后续）",
+      "wave": "W0",
+      "soc": "a5",
+      "priority": "-",
+      "status": "gated",
+      "model": [],
+      "kernel": [
+        "pkda_chunk_fwd"
+      ],
+      "dtype": [
+        "bf16",
+        "fp32"
+      ],
+      "deps": [
+        "PK-02"
+      ],
+      "write_set": [
+        "kernels/projects/a5/pkda_chunk_fwd/**",
+        "ascend_fla/ops/pkda_chunk_fwd.py",
+        "tests/test_pkda_chunk_fwd.py",
+        "docs/research/pkda_chunk_fwd_gate_range.md"
+      ],
+      "needs": {
+        "npu": true,
+        "ascriptor": true,
+        "fla": true
+      },
+      "spec": "docs/pm/tasks/PK-04.md",
+      "issue": null,
+      "pr": null,
+      "assignee": null,
+      "assignee_caps": null,
+      "branch": null,
+      "timebox_h": 16,
+      "reports": [
+        {
+          "at": "2026-09-19T12:16",
+          "summary": "分诊：采纳需求（issue #68，提案人 limjiunnbin）为 gated 任务，等用户放行；来源是外部需求，用户批准前不能是 open。完整规格已写（预算在实现前定死）。范围在 D-PM-22 的 GDN/PGDN 序列之内，不含 GDN-2、Qwen3-Next、A2 与 #80 被否决的'GDN 全族推进'。"
+        }
+      ],
+      "result": null,
+      "gate": "user-decision",
+      "origin": {
+        "kind": "request",
+        "issue": 68,
+        "by": "limjiunnbin"
+      }
+    },
+    {
+      "id": "PK-05",
+      "title": "PGDN chunk 反向：ATK 求导，A5 真机验收（骨架）",
+      "wave": "W0",
+      "soc": "a5",
+      "priority": "-",
+      "status": "gated",
+      "model": [],
+      "kernel": [
+        "pgdn_chunk_bwd"
+      ],
+      "dtype": [
+        "bf16",
+        "fp32"
+      ],
+      "deps": [
+        "PK-03",
+        "GDA-03"
+      ],
+      "write_set": [
+        "kernels/projects/a5/pgdn_chunk_bwd/**",
+        "ascend_fla/ops/pgdn_chunk_bwd.py",
+        "tests/test_pgdn_chunk_bwd.py",
+        "docs/research/pgdn_chunk_bwd_gate_range.md"
+      ],
+      "needs": {
+        "npu": true,
+        "ascriptor": true,
+        "fla": true
+      },
+      "spec": "docs/pm/tasks/PK-05.md",
+      "issue": null,
+      "pr": null,
+      "assignee": null,
+      "assignee_caps": null,
+      "branch": null,
+      "timebox_h": 24,
+      "reports": [
+        {
+          "at": "2026-09-19T12:16",
+          "summary": "分诊：采纳需求（issue #89，提案人 limjiunnbin）为 gated 任务，等用户放行；来源是外部需求，用户批准前不能是 open。只写了骨架规格，细化与放行在前置任务完成后由 PM 做（D-PM-22：逐个排）。范围在 D-PM-22 的 GDN/PGDN 序列之内，不含 GDN-2、Qwen3-Next、A2 与 #80 被否决的'GDN 全族推进'。"
+        }
+      ],
+      "result": null,
+      "gate": "user-decision",
+      "origin": {
+        "kind": "request",
+        "issue": 89,
+        "by": "limjiunnbin"
+      }
+    },
+    {
+      "id": "GDA-04",
+      "title": "GDN decode（fused recurrent）：A5 真机验收（骨架）",
+      "wave": "W0",
+      "soc": "a5",
+      "priority": "-",
+      "status": "gated",
+      "model": [],
+      "kernel": [
+        "gdn_fused_recurrent"
+      ],
+      "dtype": [
+        "bf16",
+        "fp32"
+      ],
+      "deps": [
+        "PK-05"
+      ],
+      "write_set": [
+        "kernels/projects/a5/gdn_fused_recurrent/**",
+        "ascend_fla/ops/gdn_fused_recurrent.py",
+        "tests/test_gdn_fused_recurrent.py",
+        "docs/research/gdn_fused_recurrent_gate_range.md"
+      ],
+      "needs": {
+        "npu": true,
+        "ascriptor": true,
+        "fla": true
+      },
+      "spec": "docs/pm/tasks/GDA-04.md",
+      "issue": null,
+      "pr": null,
+      "assignee": null,
+      "assignee_caps": null,
+      "branch": null,
+      "timebox_h": 16,
+      "reports": [
+        {
+          "at": "2026-09-19T12:16",
+          "summary": "分诊：采纳需求（issue #89，提案人 limjiunnbin）为 gated 任务，等用户放行；来源是外部需求，用户批准前不能是 open。只写了骨架规格，细化与放行在前置任务完成后由 PM 做（D-PM-22：逐个排）。范围在 D-PM-22 的 GDN/PGDN 序列之内，不含 GDN-2、Qwen3-Next、A2 与 #80 被否决的'GDN 全族推进'。"
+        }
+      ],
+      "result": null,
+      "gate": "user-decision",
+      "origin": {
+        "kind": "request",
+        "issue": 89,
+        "by": "limjiunnbin"
+      }
+    },
+    {
+      "id": "PK-06",
+      "title": "PGDN decode（fused recurrent，带 ATK 状态）：A5 真机验收（骨架）",
+      "wave": "W0",
+      "soc": "a5",
+      "priority": "-",
+      "status": "gated",
+      "model": [],
+      "kernel": [
+        "pgdn_fused_recurrent"
+      ],
+      "dtype": [
+        "bf16",
+        "fp32"
+      ],
+      "deps": [
+        "PK-03",
+        "GDA-04"
+      ],
+      "write_set": [
+        "kernels/projects/a5/pgdn_fused_recurrent/**",
+        "ascend_fla/ops/pgdn_fused_recurrent.py",
+        "tests/test_pgdn_fused_recurrent.py",
+        "docs/research/pgdn_fused_recurrent_gate_range.md"
+      ],
+      "needs": {
+        "npu": true,
+        "ascriptor": true,
+        "fla": true
+      },
+      "spec": "docs/pm/tasks/PK-06.md",
+      "issue": null,
+      "pr": null,
+      "assignee": null,
+      "assignee_caps": null,
+      "branch": null,
+      "timebox_h": 16,
+      "reports": [
+        {
+          "at": "2026-09-19T12:16",
+          "summary": "分诊：采纳需求（issue #89，提案人 limjiunnbin）为 gated 任务，等用户放行；来源是外部需求，用户批准前不能是 open。只写了骨架规格，细化与放行在前置任务完成后由 PM 做（D-PM-22：逐个排）。范围在 D-PM-22 的 GDN/PGDN 序列之内，不含 GDN-2、Qwen3-Next、A2 与 #80 被否决的'GDN 全族推进'。"
+        }
+      ],
+      "result": null,
+      "gate": "user-decision",
+      "origin": {
+        "kind": "request",
+        "issue": 89,
+        "by": "limjiunnbin"
+      }
+    },
+    {
+      "id": "GDA-05",
+      "title": "GDN/PGDN 性能：先 profile 再定目标（骨架）",
+      "wave": "W0",
+      "soc": "a5",
+      "priority": "-",
+      "status": "gated",
+      "model": [],
+      "kernel": [
+        "gdn_fwd",
+        "gdn_bwd",
+        "pgdn_chunk_fwd"
+      ],
+      "dtype": [
+        "bf16",
+        "fp32"
+      ],
+      "deps": [
+        "PK-06"
+      ],
+      "write_set": [],
+      "needs": {
+        "npu": true,
+        "ascriptor": true,
+        "fla": true
+      },
+      "spec": "docs/pm/tasks/GDA-05.md",
+      "issue": null,
+      "pr": null,
+      "assignee": null,
+      "assignee_caps": null,
+      "branch": null,
+      "timebox_h": 24,
+      "reports": [
+        {
+          "at": "2026-09-19T12:16",
+          "summary": "分诊：采纳需求（issue #89，提案人 limjiunnbin）为 gated 任务，等用户放行；来源是外部需求，用户批准前不能是 open。只写了骨架规格，细化与放行在前置任务完成后由 PM 做（D-PM-22：逐个排）。范围在 D-PM-22 的 GDN/PGDN 序列之内，不含 GDN-2、Qwen3-Next、A2 与 #80 被否决的'GDN 全族推进'。"
+        }
+      ],
+      "result": null,
+      "gate": "user-decision",
+      "origin": {
+        "kind": "request",
+        "issue": 89,
+        "by": "limjiunnbin"
+      }
     }
   ],
   "label_github_login": "ascend-fla-pm-bot",
@@ -2626,7 +2925,9 @@
       "packed_projection",
       "gdn2_chunk_fwd",
       "pkda_chunk_fwd",
-      "pgdn_chunk_fwd"
+      "pgdn_chunk_fwd",
+      "pgdn_chunk_bwd",
+      "pgdn_fused_recurrent"
     ],
     "dtype": [
       "bf16",

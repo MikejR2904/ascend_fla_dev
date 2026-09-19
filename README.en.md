@@ -28,13 +28,13 @@ serves only as the semantic authority during testing (`naive.py` as a CPU fp32 o
 | family | id | track | kernels | task progress |
 |---|---|---|---|---|
 | KDA (Kimi Delta Attention) | `kda` | open to agents | 5 | 3/16 |
-| GDN (Gated DeltaNet) | `gated_delta_rule` | open to agents | 4 | 2/5 |
+| GDN (Gated DeltaNet) | `gated_delta_rule` | open to agents | 4 | 2/8 |
 | DeltaNet | `delta_rule` | no task yet | 2 | 2/2 units with validation records |
 | GDN-2 (Gated DeltaNet 2) | `gdn2` | owner track | 6 | 3/4 |
 | Whole-network fusion ops (module / layer) | `fusion` | open to agents | 4 | 1/4 |
 | Mamba-1/2/3 | `mamba` | not scheduled (G4) | — | — |
 | GLA (Gated Linear Attention) | `gla` | not scheduled (G4) | — | — |
-| PKDA / PGDN (preconditioned) | `pkda` | open to agents | 2 | 2/2 |
+| PKDA / PGDN (preconditioned) | `pkda` | open to agents | 2 | 2/4 |
 | Log-Linear Attention | `log_linear` | not scheduled (G4) | — | — |
 | DLA (Dynamic Linear Attention) | `dla` | not scheduled (G4) | — | — |
 | StateX (wide state) | `statex` | not scheduled (G4) | — | — |
@@ -109,18 +109,18 @@ _First target family; used by Kimi-Linear_
 
 </details>
 
-<details><summary><b>GDN (Gated DeltaNet) —— 4 kernel(s)，2/5 done</b></summary>
+<details><summary><b>GDN (Gated DeltaNet) —— 4 kernel(s)，2/8 done</b></summary>
 
 _Used by Qwen3-Next; six ABI gaps to close (phase 4, unrelated to this). **GDN/PGDN exception track** (D-PM-20/22): GDA-01 (non-GQA forward) and GDA-02 (GQA/GVA grouping) both merged; PK-03 (PGDN forward) unlocked; sequence continues to backward → decode → perf_
 
 | kernel | track | progress | next |
 |---|---|---|---|
-| `gdn_fwd` | open to agents | 2/5 | [#35](https://github.com/ddddwee1/ascend_fla_dev/issues/35) A2-07 |
-| `gdn_bwd` | open to agents | 0/3 | [#35](https://github.com/ddddwee1/ascend_fla_dev/issues/35) A2-07 |
-| `gdn_fused_recurrent` | open to agents | 0/1 | [#45](https://github.com/ddddwee1/ascend_fla_dev/issues/45) A2-20 |
+| `gdn_fwd` | open to agents | 2/6 | [#35](https://github.com/ddddwee1/ascend_fla_dev/issues/35) A2-07 |
+| `gdn_bwd` | open to agents | 0/5 | [#35](https://github.com/ddddwee1/ascend_fla_dev/issues/35) A2-07 |
+| `gdn_fused_recurrent` | open to agents | 0/2 | — GDA-04 |
 | `gdn_chunk_fwd_a5` | open to agents | — | _Narrow exception (D-PM-20/22): non-GQA forward and GQA/GVA grouping both merged (GDA-01/02)_ |
 
-<details><summary>gdn_fwd —— 2/5 done，start A2-07、GDA-01</summary>
+<details><summary>gdn_fwd —— 2/6 done，start A2-07、GDA-01</summary>
 
 | task | issue | SoC | dtype | status | note |
 |---|---|---|---|---|---|
@@ -129,24 +129,28 @@ _Used by Qwen3-Next; six ABI gaps to close (phase 4, unrelated to this). **GDN/P
 | A2-K1 | [#44](https://github.com/ddddwee1/ascend_fla_dev/issues/44) | `a2` | bf16、fp32 | 🔒 gated (kernel-batch-approval) |  |
 | GDA-02 | [#82](https://github.com/ddddwee1/ascend_fla_dev/issues/82) | `a5` | bf16、fp32 | ✅ done |  |
 | A2-20 | [#45](https://github.com/ddddwee1/ascend_fla_dev/issues/45) | `a2` | bf16、fp32 | 🔒 gated (kernel-batch-approval) |  |
+| GDA-05 | — | `a5` | bf16、fp32 | 🔒 gated (user-decision) |  |
 
 </details>
 
-<details><summary>gdn_bwd —— 0/3 done，start A2-07</summary>
+<details><summary>gdn_bwd —— 0/5 done，start A2-07、GDA-03</summary>
 
 | task | issue | SoC | dtype | status | note |
 |---|---|---|---|---|---|
 | A2-07 | [#35](https://github.com/ddddwee1/ascend_fla_dev/issues/35) | `a2` | bf16、fp32 | ⬜ open | ★ start |
+| GDA-03 | — | `a5` | bf16、fp32 | 🔒 gated (user-decision) | ★ start |
 | A2-K1 | [#44](https://github.com/ddddwee1/ascend_fla_dev/issues/44) | `a2` | bf16、fp32 | 🔒 gated (kernel-batch-approval) |  |
+| GDA-05 | — | `a5` | bf16、fp32 | 🔒 gated (user-decision) |  |
 | A2-20 | [#45](https://github.com/ddddwee1/ascend_fla_dev/issues/45) | `a2` | bf16、fp32 | 🔒 gated (kernel-batch-approval) |  |
 
 </details>
 
-<details><summary>gdn_fused_recurrent —— 0/1 done，start A2-20</summary>
+<details><summary>gdn_fused_recurrent —— 0/2 done，start GDA-04、A2-20</summary>
 
 | task | issue | SoC | dtype | status | note |
 |---|---|---|---|---|---|
 | A2-20 | [#45](https://github.com/ddddwee1/ascend_fla_dev/issues/45) | `a2` | bf16、fp32 | 🔒 gated (kernel-batch-approval) | ★ start |
+| GDA-04 | — | `a5` | bf16、fp32 | 🔒 gated (user-decision) | ★ start |
 
 </details>
 
@@ -250,28 +254,30 @@ _Not scheduled: gated epic G4 (narrow-slice rule — no target model, no work). 
 
 </details>
 
-<details><summary><b>PKDA / PGDN (preconditioned) —— 2 kernel(s)，2/2 done</b></summary>
+<details><summary><b>PKDA / PGDN (preconditioned) —— 2 kernel(s)，2/4 done</b></summary>
 
 _Source of truth established (2026-09-17, see docs/research/pkda_semantics.md): paper *Preconditioned DeltaNet* (arXiv:2604.21100, ICML 2026), merged upstream into fla (PR fla-org/flash-linear-attention#950, 0.6.0). PKDA is KDA plus an ATK preconditioning step, reusing kda_fwd_stable/kda_bwd_stable — see PK-02. PGDN is the same preconditioning on GDN, but GDN itself lacks GQA grouping (gdn-no-gqa) — PGDN is sequenced after that, see PK-03 (gated). Neither has a released pretrained checkpoint; end-to-end validation cannot reach real logits_
 
 | kernel | track | progress | next |
 |---|---|---|---|
-| `pkda_chunk_fwd` | open to agents | 1/1 | [#68](https://github.com/ddddwee1/ascend_fla_dev/issues/68) PK-02 |
-| `pgdn_chunk_fwd` | open to agents | 1/1 | [#69](https://github.com/ddddwee1/ascend_fla_dev/issues/69) PK-03 |
+| `pkda_chunk_fwd` | open to agents | 1/2 | [#68](https://github.com/ddddwee1/ascend_fla_dev/issues/68) PK-02 |
+| `pgdn_chunk_fwd` | open to agents | 1/2 | [#69](https://github.com/ddddwee1/ascend_fla_dev/issues/69) PK-03 |
 
-<details><summary>pkda_chunk_fwd —— 1/1 done，start PK-02</summary>
+<details><summary>pkda_chunk_fwd —— 1/2 done，start PK-02</summary>
 
 | task | issue | SoC | dtype | status | note |
 |---|---|---|---|---|---|
 | PK-02 | [#68](https://github.com/ddddwee1/ascend_fla_dev/issues/68) | `a5` | bf16、fp32 | ✅ done | ★ start |
+| PK-04 | — | `a5` | bf16、fp32 | 🔒 gated (user-decision) |  |
 
 </details>
 
-<details><summary>pgdn_chunk_fwd —— 1/1 done，start PK-03</summary>
+<details><summary>pgdn_chunk_fwd —— 1/2 done，start PK-03</summary>
 
 | task | issue | SoC | dtype | status | note |
 |---|---|---|---|---|---|
 | PK-03 | [#69](https://github.com/ddddwee1/ascend_fla_dev/issues/69) | `a5` | bf16、fp32 | ✅ done | ★ start |
+| GDA-05 | — | `a5` | bf16、fp32 | 🔒 gated (user-decision) |  |
 
 </details>
 
@@ -336,8 +342,8 @@ _Not scheduled: gated epic G4 (narrow-slice rule — no target model, no work). 
 
 | dtype | track | tasks | note |
 |---|---|---|---|
-| `bf16` | open to agents | 28 | Current ABI: q/k/v/o and most intermediates |
-| `fp32` | open to agents | 35 | Current ABI: state, gate accumulation, all correctness judged in fp32 |
+| `bf16` | open to agents | 34 | Current ABI: q/k/v/o and most intermediates |
+| `fp32` | open to agents | 41 | Current ABI: state, gate accumulation, all correctness judged in fp32 |
 | `fp16` | not scheduled (G3) | — | Explicitly rejected by the contract |
 | `int8` | not scheduled (G3) | 1 | Not scheduled; state drift needs a design first |
 | `mxfp8` | not scheduled (G3) | 1 | Not scheduled; native 950 decode unverified |
