@@ -6,8 +6,9 @@ own chunk checkpoints and returns five FP32 mathematical gradients. The public
 BF16 q/k/v/do and returns dq/dk/dv in their input storage dtype. g/beta/dht and
 dg/dbeta remain FP32. Existing forward and autograd dispatch are unchanged.
 
-This is work in progress. The first complete native workload passed, while the
-full grid and required timing remain in progress. See the task's gate-range
+The native grid passed276case/dtype records across block_dim1/2, and2070
+returned-array pairs were byte-identical. Required same-device timing remains
+in progress. See the task's gate-range
 document and evidence directory for exact source identity and measured scope.
 
 Three ordered launches generate chunk-start states, replay and reverse each

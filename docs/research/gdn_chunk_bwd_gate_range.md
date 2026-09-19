@@ -1,6 +1,6 @@
 # GDA-03 grouped GDN backward ABI and range contract
 
-Status: native block_dim=2 grid passed; block_dim=1 and timing remain in progress.
+Status: complete native grid and block_dim byte identity passed; timing remains in progress.
 This task is standalone backward. The accepted grouped forward and GDN-2 are
 unchanged. The authority is FLA pin `e52dbc0ea19d3a40d7ab7f9eed855d2b473994d2`,
 `fla/ops/gated_delta_rule/naive.py::naive_recurrent_gated_delta_rule`.
@@ -167,3 +167,44 @@ and [case-to-log-line index](../../kernels/projects/a5/gdn_chunk_bwd/evidence/gr
 preserve each number and its source. The receipt identifies A5
 Ascend950PR_9589V100, CANN9.2.0, and built-in ascend950 operator package.
 Validation walltime is not a performance measurement.
+
+## Complete block_dim pair qualification
+
+The block_dim=1 grid also passed all69cases x both public dtypes. Across the
+combined276records, all original budgets and input-immutability checks passed;
+per-gradient maxima are unchanged from the table above. Comparing the exact
+returned byte hashes gives138case/dtype pairs x (10stage +5public) arrays =
+**2070byte-identical array pairs**. Both jobs finished with Healthy device status.
+The second grid began with the original B1/T4096/H=HV8 workload before smaller
+cases. [bd1 raw log](../../kernels/projects/a5/gdn_chunk_bwd/evidence/grid-bd1.log),
+[bd1 numbers](../../kernels/projects/a5/gdn_chunk_bwd/evidence/grid-bd1.json),
+[bd1 line index](../../kernels/projects/a5/gdn_chunk_bwd/evidence/grid-bd1-index.json),
+and [complete byte comparison](../../kernels/projects/a5/gdn_chunk_bwd/evidence/bd1-bd2-byte-comparison.json)
+make this qualification reproducible with `compare_runs.py`.
+
+## Build and runtime diagnostics
+
+[Six selected build receipts](../../kernels/projects/a5/gdn_chunk_bwd/evidence/build/build-artifact-manifest.json)
+retain hashes for264emitted/compiled files and every vendor build-log line.
+Build directories are selected from the current kernel source signature, not
+from stale directory timestamps. SDK header deprecations, an unused CMake
+cross-compiler parameter, and a Python escape SyntaxWarning in the SDK's
+non-raw script template are preserved. All six selected builds completed.
+The original C++ keyword compile failure and larger bounded pipe timeout remain
+in [failed-run evidence](../../kernels/projects/a5/gdn_chunk_bwd/evidence/failures/).
+
+Two runtime startup warning classes were investigated without changing shared
+software: plugin-policy query fallback at `plugin_version_manager.cpp:38`, and
+TensorFlow framework preload failure at `ae_kernel_lib_fwk.cc:298`. A fresh
+process importing only Torch/Torch NPU, with basic NPU transfer/multiply/add and
+synchronization, reproduced both warnings while returning exact results; the
+subsequent device scheduler initialization succeeded. The installed driver
+header maps query return3 to `DRV_ERROR_INVALID_VALUE`; its logged fallback is
+`PLUGIN_NOT_FORCE_UPDATE`. The exact missing TensorFlow library remains
+unidentified, and no TensorFlow backend support is claimed. The qualified path
+uses task CCE and Torch NPU operations, whose actual outputs are checked above.
+
+The pre-timing [runtime review](../../kernels/projects/a5/gdn_chunk_bwd/evidence/runtime/runtime-review.json)
+retains all1234lines from19logs:10startup warnings and0ERROR/FATAL/CRITICAL.
+Machine identifiers are redacted without removing lines. This warning/control
+qualification is separate from the pending timing measurement.
