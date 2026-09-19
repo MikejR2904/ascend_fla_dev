@@ -2324,7 +2324,7 @@
       "cases": [
         "grid_r2_c2_both_bd1"
       ],
-      "note": "Initial bounded model timed out with empty blocked-lane summary; reduced tape-reuse diagnostic in progress. No synchronization model acceptance yet."
+      "note": "Original grouped C2 model exceeded the 180-second interpreter budget with an empty blocked-lane summary; retained as failed. Separate reduced C2 tape-reuse and uneven three-head diagnostics passed, recorded under measured."
     },
     {
       "device": "a5",
@@ -2380,11 +2380,28 @@
   "measured": {
     "native_inprocess": {
       "status": "partial",
-      "workload": "B1T4096H=HV8,K=V128,do+dht,bd2,publicFP32/BF16",
-      "evidence": "evidence/first-full-bd2.json"
+      "workload": "All69canonical cases atbd2 x publicFP32/BF16; original fullB1T4096H=HV8 ran first separately",
+      "evidence": [
+        "evidence/first-full-bd2.json",
+        "evidence/grid-bd2.json",
+        "evidence/grid-bd2-receipt.json"
+      ],
+      "remaining": "bd1 full grid, byte identity, same-card timing"
     },
     "performance": {
       "status": "untested"
+    },
+    "pipesim_diagnostics": {
+      "status": "passed",
+      "scope": [
+        "B1T128H1HV1/bd1, GM tape reuse across two chunks",
+        "B1T64H1HV3/bd1, uneven head ownership and grouped reduction"
+      ],
+      "evidence": [
+        "evidence/pipe-tape-reuse.json",
+        "evidence/pipe-head-reuse.json"
+      ],
+      "original_timeout": "grid_r2_c2_both_bd1 remains a failed bounded run; no larger model claim"
     }
   }
 }
