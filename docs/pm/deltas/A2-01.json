@@ -1,0 +1,61 @@
+{
+ "task": "A2-01",
+ "kind": "matrix_delta_proposal",
+ "applies_to": "docs/matrix/gaps.json",
+ "evidence_revisions": {
+  "library": "90cfcdc720bbcd66e8bd4361c4dd4fbc1a2a57b5",
+  "kernels": "b3b3f9c16df7c4626ed3c081032a1be5a753d0b1",
+  "agent": "0f106aa",
+  "decision": "D-PM-13: agent/compatibility.json pin",
+  "repair_file_sha256": {
+   "ascriptor/passes/desugar.py": "900610ea92dcb97afd1bbea1f4abc6b306adc5fe98547bdbedde37eca34cc295",
+   "ascriptor/ir/lint.py": "c2e4662604224cb4e84522859577872b6eeb87f90ac15736c36550ecd61b3a2e"
+  }
+ },
+ "evidence_nature": "A2 真机：Ascend910B3，CANN 9.0.0，内置算子包 ascend910b + ascend910_93，ascriptor aclnn launcher，block_dim=1，每 case 5 次独立进程，逐位对 CPU float64 参考（有界二进分数输入，FP32 下精确）；另有 a2/a5 两个 profile 的 sim 与 pipesim。原始回执在 benchmarks/a2/evidence/。按 AGENTS.md §2，A2-11 之前这些只是观测记录，不构成算子结论。",
+ "gaps": {
+  "a2-splitk-fp32-cube": {
+   "add": {
+    "id": "a2-splitk-fp32-cube",
+    "title": "A2 系两次短 MMAD 写同一 L0C 时硬件不互锁（ascriptor M10-081）：FP32 split-K 已由 pin 修复，FP32 手写累加链未修",
+    "category": "correctness",
+    "severity": "P0",
+    "applies_to": [
+     "kda",
+     "gated_delta_rule"
+    ],
+    "evidence": "A2-01（#29）。ascriptor library 缺陷 M10-081（docs/defects/M10-081-a2-family-fp32-mmad-settle.md）：c220 上后一次 is_init=False 的 MMAD 可能读到前一次未落定的 L0C。pin 的修复（desugar.py:411）只在 A2 系、A/B 均为 FP32 的 split-K 展开里插 PIPE_M；手写多次 matmul 累加链只有 lint trap（lint.py:409）。910B3 真机：FP32 split-K 4 个 case（含 M10-081 原 case 与 KDA intra.py 的 M64/N64/K128/split-K64 形状）各 5/5 逐位。FP32 手写链（M16/32/64，2~3 项；M16/N64 8 项）无 barrier 时也 5/5 逐位，但那是发射节奏没有背靠背（见 a2-splitk-bf16-fp16-unsettled 的孪生对照），不是安全证据。sim / pipesim 在 a2 与 a5 两个 profile 下全部逐位、0 hazard，模型表达不了这个冒险。",
+    "impact": "25 个在用 kernel 中：KDA scores（intra.py:246-247，FP32 split-K）在 a2 上由 pin 自动 settle；KDA inverse（triangular_inverse.py:273/279/284-285）、GDN inverse（inverse.py:306/312/317-318）、GDN bwd finalize（finalize.py:205/217/226/235/244）是 FP32 手写累加链，pin 的修复够不到，前两个正是 M16 失效形状。原样派生到 a2 会有静默错误风险。A5 路径不受影响（c310）。",
+    "blocks": [
+     "A2-03",
+     "A2-11"
+    ],
+    "proposed_action": "A2-03 派生 a2 单元时，对所有 L0C 累加链在每次产生 L0C 的 MMAD 之后、下一次 is_init=False 之前显式 barrier(Pipe.M)，并以 lint 0 trap 作闸；验证按 benchmarks/a2/README.md §8 的 W2。A2-11 在真机上对派生单元的 inverse / finalize 做 FP32 逐位与真实形状验证。AGENTS.md §2 的「没解决的 split-K FP32 cube 数值缺陷」宜改为：FP32 split-K 在 pin 里已有修复候选且 910B3 实测逐位；未解决的是 FP32 手写链与 BF16/FP16（见下一条）。",
+    "status_note": "A2-01 定性完成；FP32 split-K 在 pin 下 910B3 实测逐位；手写链的修法在 A2-03 落地。",
+    "requires_kernel_change": true,
+    "kernel_change_note": "只改 A2 派生单元（A2-03 的 kernels/projects/a2/**），A5 源码不动：kda_fwd/kernels/triangular_inverse.py:273/279/284-285、gdn_fwd/kernels/inverse.py:306/312/317-318、gdn_bwd/kernels/finalize.py:205/217/226/235/244 的 FP32 is_init=False matmul 之前补 barrier(Pipe.M)；KDA recurrent.py:401、gdn_bwd/kernels/wu.py:206 的 BF16 累加同样补（不分 dtype，W4）。"
+   }
+  },
+  "a2-splitk-bf16-fp16-unsettled": {
+   "add": {
+    "id": "a2-splitk-bf16-fp16-unsettled",
+    "title": "【静默错误】A2 上 BF16/FP16 操作数的 matmul(splitk=) 缺 M 管线 settle：910B3 实测 M16 全错、M32 AI Core 异常，pin 的 M10-081 修复只覆盖 FP32",
+    "category": "correctness",
+    "severity": "P1",
+    "applies_to": [
+     "all"
+    ],
+    "evidence": "A2-01（#29，RISK silent-wrong-result）。910B3 / CANN 9.0.0，block_dim=1，逐位对 CPU float64 参考：BF16/FP16 split-K（N64，split-K16）M16 下 K32/48/64/128 全部出错，1022~1024/1024 个元素不对，max_abs_diff 最大 40.97，输出有限、不报错，卡 A/B/C 都复现；M32 每次触发 AI Core 异常（aclrtSynchronizeStream 507015，retCode 0x26），卡 B/C 都复现；M64 全部 5/5 逐位。错误输出不是任何分片或交叉分片乘积的组合（最小二乘残差约 0.97~0.99）。对照：只在该次运行的生成 CCE 里、MMAD 分支后补一行 PipeBarrier<PIPE_M>()（位置与 FP32 规则相同），M16 5/5、M32 2/2 逐位；只插注释的 sham 仍 0/5。手写孪生（8 次 K16 matmul 写同一 L0C，无 barrier）5/5 逐位，说明要 MMAD 背靠背发出才踩到。sim / pipesim 全部逐位、0 hazard。",
+    "impact": "现有 25 个在用 kernel 都不用 BF16/FP16 split-K，所以当前 A5 路径与已有算子不受影响。A2 派生单元若因 L0 容量改用 BF16/FP16 splitk（M<64），会静默出错或异常。这是 ascriptor library 的规则缺口，不在本仓修。",
+    "blocks": [
+     "A2-03"
+    ],
+    "proposed_action": "① 转 ascriptor 所有者：M10-081 的 settle 规则按 dtype 收窄在 910B3 上不成立，BF16/FP16 同样需要；M32 表现为异常的机制待其用有界探针确定。benchmarks/a2/repro_splitk_fp32.py 的 splitk_{bf16,f16}_m{16,32,64}_* 可直接复跑。② 修好之前，本仓 a2 路径不使用 M<64 的 BF16/FP16 splitk，入口按 AGENTS.md §7 报错（A2-03 派生时执行）。③ 库修复后重跑本脚本全部 splitk case，要求全部真机逐位。",
+    "status_note": "只对 910B3 / CANN 9.0.0 / library 90cfcdc 成立；A3 未测。",
+    "requires_kernel_change": false,
+    "kernel_change_note": ""
+   }
+  }
+ },
+ "summary_note": "新增两条缺口会改变 summary 的 P0/P1/total 计数，其中一条 requires_kernel_change=true 会进入 kernel_fix_queue；由 PM 按 gen_matrix.py --check 重算。"
+}

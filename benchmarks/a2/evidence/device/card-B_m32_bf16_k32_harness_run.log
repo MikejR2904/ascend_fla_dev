@@ -1,0 +1,7 @@
+# cwd <repo>/tmp/A2-01/runs_npu5_m32/build/a2/a201_splitk_bf16_m32_n64_k32_s16/aclnn_test
+# set -e
+if [ -f "<cann>/bin/setenv.bash" ]; then source "<cann>/bin/setenv.bash"; fi
+if [ -f "<repo>/tmp/A2-01/runs_npu5_m32/build/a2/a201_splitk_bf16_m32_n64_k32_s16/custom_op/vendors/customize/bin/set_env.bash" ]; then source "<repo>/tmp/A2-01/runs_npu5_m32/build/a2/a201_splitk_bf16_m32_n64_k32_s16/custom_op/vendors/customize/bin/set_env.bash"; fi
+export LD_LIBRARY_PATH="<repo>/tmp/A2-01/runs_npu5_m32/build/a2/a201_splitk_bf16_m32_n64_k32_s16/custom_op/vendors/customize/op_api/lib:${LD_LIBRARY_PATH:-}"
+./test_aclnnop .
+test.cpp:53 aclrtSynchronizeStream(stream) failed: 507015

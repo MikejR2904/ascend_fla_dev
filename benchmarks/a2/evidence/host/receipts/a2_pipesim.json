@@ -1,0 +1,3980 @@
+{
+ "case_receipts": [
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 16,
+    "N": 16,
+    "barrier": false,
+    "bias": false,
+    "dtype": "bf16",
+    "expect": "bitwise",
+    "id": "chain_bf16_m16_n16_k16_t1",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 1,
+    "why": "single MMAD control (no accumulate)"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 1,
+    "mmad_accumulate": 0,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "a0c40a19363ab4bfe13a48506b157a2dba198c77445499402be359ab8e483a81",
+   "reference_sha256": "c664d78434549d3c21ad682981f3be3583772984cda17d8dc01d50b3e03c2357",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 256,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 1102,
+     "non_finite": 0,
+     "output_sha256": "c664d78434549d3c21ad682981f3be3583772984cda17d8dc01d50b3e03c2357",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.065
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 16,
+    "N": 16,
+    "barrier": true,
+    "bias": false,
+    "dtype": "bf16",
+    "expect": "bitwise",
+    "id": "chain_bf16_m16_n16_k16_t2_bar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 2,
+    "why": "accumulate chain; 2 matmuls into one L0C, barrier(Pipe.M) between"
+   },
+   "ir": {
+    "barrier_M": 1,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "649cd126b75898a870b0e780fbac341cabc56155007ca6ce16f6ab6e36bf9775",
+   "reference_sha256": "d164a255d38efe818a9320c5074f765c25116f53ecba6fbbdd4c07c6fbd4dd38",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 256,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 1843,
+     "non_finite": 0,
+     "output_sha256": "d164a255d38efe818a9320c5074f765c25116f53ecba6fbbdd4c07c6fbd4dd38",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.092
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 16,
+    "N": 16,
+    "barrier": false,
+    "bias": false,
+    "dtype": "bf16",
+    "expect": "probe",
+    "id": "chain_bf16_m16_n16_k16_t2_nobar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 2,
+    "why": "accumulate chain; 2 matmuls into one L0C, no barrier"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "83af110921f05b7e17ac1121ec7b27bbc2da30d8bdbbf66826bee4a5a3ba2d99",
+   "reference_sha256": "0836f52338e9e9919fbea00714ba607abb85b92c50c8945e6bb3a2ce2d58a1d9",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 256,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 1843,
+     "non_finite": 0,
+     "output_sha256": "0836f52338e9e9919fbea00714ba607abb85b92c50c8945e6bb3a2ce2d58a1d9",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.096
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 16,
+    "N": 16,
+    "barrier": true,
+    "bias": false,
+    "dtype": "bf16",
+    "expect": "bitwise",
+    "id": "chain_bf16_m16_n16_k16_t3_bar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 3,
+    "why": "accumulate chain; 3 matmuls into one L0C, barrier(Pipe.M) between"
+   },
+   "ir": {
+    "barrier_M": 2,
+    "barrier_M_settle": 0,
+    "mmad": 3,
+    "mmad_accumulate": 2,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "127a3908236b907bc52c21c8bd8a23a463b795b59ed0e5c87a795e55b9ca2a67",
+   "reference_sha256": "6dd4688ad3387d8e6b2ed2a158ab515022beb9b5f7ab3c28204e60a419412542",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 256,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 2573,
+     "non_finite": 0,
+     "output_sha256": "6dd4688ad3387d8e6b2ed2a158ab515022beb9b5f7ab3c28204e60a419412542",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.125
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 16,
+    "N": 16,
+    "barrier": false,
+    "bias": false,
+    "dtype": "bf16",
+    "expect": "probe",
+    "id": "chain_bf16_m16_n16_k16_t3_nobar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 3,
+    "why": "accumulate chain; 3 matmuls into one L0C, no barrier"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 3,
+    "mmad_accumulate": 2,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "d41457096c3b917e13e3ac5fc724027368719046ac56838566dcd68acef4abe6",
+   "reference_sha256": "d1693dfc1396d70d6b513c5e1162fd1fcf5c6ac38935f4dfe34ad4979e3408c3",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 256,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 2573,
+     "non_finite": 0,
+     "output_sha256": "d1693dfc1396d70d6b513c5e1162fd1fcf5c6ac38935f4dfe34ad4979e3408c3",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.124
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 16,
+    "N": 64,
+    "barrier": true,
+    "bias": false,
+    "dtype": "bf16",
+    "expect": "bitwise",
+    "id": "chain_bf16_m16_n64_k16_t8_bar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 8,
+    "why": "split-K twin: 8 K16 matmuls into one L0C, barrier(Pipe.M) between"
+   },
+   "ir": {
+    "barrier_M": 7,
+    "barrier_M_settle": 0,
+    "mmad": 8,
+    "mmad_accumulate": 7,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "bf0f77d18a5b713f1f8f4fb09f70c4a6c3ec010b170242441fa479146f740a07",
+   "reference_sha256": "7bd69d9cc3e00905bb2cf7372fdfd1cb4ddc91ce36b7c48ccc22d651c06b2b33",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 1024,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 7131,
+     "non_finite": 0,
+     "output_sha256": "7bd69d9cc3e00905bb2cf7372fdfd1cb4ddc91ce36b7c48ccc22d651c06b2b33",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.289
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 16,
+    "N": 64,
+    "barrier": false,
+    "bias": false,
+    "dtype": "bf16",
+    "expect": "probe",
+    "id": "chain_bf16_m16_n64_k16_t8_nobar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 8,
+    "why": "split-K twin: 8 K16 matmuls into one L0C, no barrier"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 8,
+    "mmad_accumulate": 7,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "035271dc6479772a85bfa7cb6dc4d1485e211e0e76db32be8a42286f664a0406",
+   "reference_sha256": "1c1741bab66717c2682756d4730c286404b6322bc076e4d7341240a61a3dd7f3",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 1024,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 7131,
+     "non_finite": 0,
+     "output_sha256": "1c1741bab66717c2682756d4730c286404b6322bc076e4d7341240a61a3dd7f3",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.287
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 32,
+    "N": 16,
+    "barrier": true,
+    "bias": false,
+    "dtype": "bf16",
+    "expect": "bitwise",
+    "id": "chain_bf16_m32_n16_k16_t2_bar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 2,
+    "why": "accumulate chain; 2 matmuls into one L0C, barrier(Pipe.M) between"
+   },
+   "ir": {
+    "barrier_M": 1,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "3f8e4e2c1956b137fb50608e8706c478f4afd000b7d00a9f893660f16b1734bf",
+   "reference_sha256": "cca7b4e27ee2420c0ba730be642e26915bcbefe2d74c87a4f80d5f502995ac23",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 512,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 1896,
+     "non_finite": 0,
+     "output_sha256": "cca7b4e27ee2420c0ba730be642e26915bcbefe2d74c87a4f80d5f502995ac23",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.095
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 32,
+    "N": 16,
+    "barrier": false,
+    "bias": false,
+    "dtype": "bf16",
+    "expect": "probe",
+    "id": "chain_bf16_m32_n16_k16_t2_nobar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 2,
+    "why": "accumulate chain; 2 matmuls into one L0C, no barrier"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "994f5c84a8255cbb500d62976d494f149828087bfbacbe47b47db96a076dabed",
+   "reference_sha256": "a2e3785f7e8beda2a5453e92cc5cb165de155312c558295b7183109f24836638",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 512,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 1896,
+     "non_finite": 0,
+     "output_sha256": "a2e3785f7e8beda2a5453e92cc5cb165de155312c558295b7183109f24836638",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.098
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 32,
+    "N": 16,
+    "barrier": true,
+    "bias": false,
+    "dtype": "bf16",
+    "expect": "bitwise",
+    "id": "chain_bf16_m32_n16_k16_t3_bar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 3,
+    "why": "accumulate chain; 3 matmuls into one L0C, barrier(Pipe.M) between"
+   },
+   "ir": {
+    "barrier_M": 2,
+    "barrier_M_settle": 0,
+    "mmad": 3,
+    "mmad_accumulate": 2,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "cac6f4620c7a4791bd359fee33f15e4cfbe6c16ccac372aa63c6f4e652d2ae5c",
+   "reference_sha256": "c2248eb0d77425fbf792cdaf554a1c30d75a95de8a953960605324b3b33287ec",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 512,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 2639,
+     "non_finite": 0,
+     "output_sha256": "c2248eb0d77425fbf792cdaf554a1c30d75a95de8a953960605324b3b33287ec",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.124
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 32,
+    "N": 16,
+    "barrier": false,
+    "bias": false,
+    "dtype": "bf16",
+    "expect": "probe",
+    "id": "chain_bf16_m32_n16_k16_t3_nobar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 3,
+    "why": "accumulate chain; 3 matmuls into one L0C, no barrier"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 3,
+    "mmad_accumulate": 2,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "203513daf602819f0a8e60fcc5b7a9926b4365a91461d38b9993c3368feb1719",
+   "reference_sha256": "262ee4ca0a924cea69651ba1987a5662c00514e2c4b768b5eb7eb7383177c49e",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 512,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 2639,
+     "non_finite": 0,
+     "output_sha256": "262ee4ca0a924cea69651ba1987a5662c00514e2c4b768b5eb7eb7383177c49e",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.123
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 64,
+    "N": 16,
+    "barrier": true,
+    "bias": false,
+    "dtype": "bf16",
+    "expect": "bitwise",
+    "id": "chain_bf16_m64_n16_k16_t2_bar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 2,
+    "why": "accumulate chain; 2 matmuls into one L0C, barrier(Pipe.M) between"
+   },
+   "ir": {
+    "barrier_M": 1,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "f85f1c5a87543e8a4035ff34c628d3b83cb4438e7b1227bc490d0a658853c21e",
+   "reference_sha256": "fc867af71a6454d8b4f7a8d9a1790748d2d783bc80aa8a2d6fb8c9f4e3ef1ddc",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 1024,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 2001,
+     "non_finite": 0,
+     "output_sha256": "fc867af71a6454d8b4f7a8d9a1790748d2d783bc80aa8a2d6fb8c9f4e3ef1ddc",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.094
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 64,
+    "N": 16,
+    "barrier": false,
+    "bias": false,
+    "dtype": "bf16",
+    "expect": "probe",
+    "id": "chain_bf16_m64_n16_k16_t2_nobar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 2,
+    "why": "accumulate chain; 2 matmuls into one L0C, no barrier"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "7f5fa6ebba02dace8a6eaec56cc00baa03168349be8becd1f622069a65167fa9",
+   "reference_sha256": "02af3c56bfad5895c944264ca0201adcebe5c9e55c8d1ab24ad39f6fbfd2fe4d",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 1024,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 2001,
+     "non_finite": 0,
+     "output_sha256": "02af3c56bfad5895c944264ca0201adcebe5c9e55c8d1ab24ad39f6fbfd2fe4d",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.094
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 64,
+    "N": 16,
+    "barrier": true,
+    "bias": false,
+    "dtype": "bf16",
+    "expect": "bitwise",
+    "id": "chain_bf16_m64_n16_k16_t3_bar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 3,
+    "why": "accumulate chain; 3 matmuls into one L0C, barrier(Pipe.M) between"
+   },
+   "ir": {
+    "barrier_M": 2,
+    "barrier_M_settle": 0,
+    "mmad": 3,
+    "mmad_accumulate": 2,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "725ac8018a25c0c494533e97923d89a6f859c5fbd01db5d7dba8ae145c10668e",
+   "reference_sha256": "a64dff4016be88c39bd63e1bfa08ee4d40882bfafcbb0e4dd0f6fe6cc1c9716d",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 1024,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 2769,
+     "non_finite": 0,
+     "output_sha256": "a64dff4016be88c39bd63e1bfa08ee4d40882bfafcbb0e4dd0f6fe6cc1c9716d",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.12
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 64,
+    "N": 16,
+    "barrier": false,
+    "bias": false,
+    "dtype": "bf16",
+    "expect": "probe",
+    "id": "chain_bf16_m64_n16_k16_t3_nobar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 3,
+    "why": "accumulate chain; 3 matmuls into one L0C, no barrier"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 3,
+    "mmad_accumulate": 2,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "dfa2da5b2870f8d66f4451aa844b487e43dad975570eeb2f61e8536960ff05c5",
+   "reference_sha256": "9385b668b90cb07990a3745dcb2a250b5064a9596b0386eb0b82e2112cc28218",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 1024,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 2769,
+     "non_finite": 0,
+     "output_sha256": "9385b668b90cb07990a3745dcb2a250b5064a9596b0386eb0b82e2112cc28218",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.124
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 16,
+    "N": 16,
+    "barrier": false,
+    "bias": false,
+    "dtype": "f16",
+    "expect": "bitwise",
+    "id": "chain_f16_m16_n16_k16_t1",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 1,
+    "why": "single MMAD control (no accumulate)"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 1,
+    "mmad_accumulate": 0,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "35ee4788776162acd36d6d2ea4b296aaea359d4480caabd8b19fb724f643ea42",
+   "reference_sha256": "37dce6f7073683d5e5f9cf9c7f125edcdeb966bbe80f1b774ab004512ee03ef5",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 256,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 1102,
+     "non_finite": 0,
+     "output_sha256": "37dce6f7073683d5e5f9cf9c7f125edcdeb966bbe80f1b774ab004512ee03ef5",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.063
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 16,
+    "N": 16,
+    "barrier": true,
+    "bias": false,
+    "dtype": "f16",
+    "expect": "bitwise",
+    "id": "chain_f16_m16_n16_k16_t2_bar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 2,
+    "why": "accumulate chain; 2 matmuls into one L0C, barrier(Pipe.M) between"
+   },
+   "ir": {
+    "barrier_M": 1,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "93d5e0a103207ecfe8218e1aebd3bb94bae10fdf99aabc232321ebdbed2f9b6e",
+   "reference_sha256": "01f8e6cda3e2a984889eac53f3166d98f1f1377c819b3d9f3724bebcca766673",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 256,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 1843,
+     "non_finite": 0,
+     "output_sha256": "01f8e6cda3e2a984889eac53f3166d98f1f1377c819b3d9f3724bebcca766673",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.093
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 16,
+    "N": 16,
+    "barrier": false,
+    "bias": false,
+    "dtype": "f16",
+    "expect": "probe",
+    "id": "chain_f16_m16_n16_k16_t2_nobar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 2,
+    "why": "accumulate chain; 2 matmuls into one L0C, no barrier"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "f20dfd1bd5e527e2ce77e01b7e6767ace9f2b8887835070a951d2dfae419d324",
+   "reference_sha256": "0b3f6c80e84b6f506cb3d8d56c99b23159ccb047432cbaf224e0110b8149c5d3",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 256,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 1843,
+     "non_finite": 0,
+     "output_sha256": "0b3f6c80e84b6f506cb3d8d56c99b23159ccb047432cbaf224e0110b8149c5d3",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.096
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 16,
+    "N": 16,
+    "barrier": true,
+    "bias": false,
+    "dtype": "f16",
+    "expect": "bitwise",
+    "id": "chain_f16_m16_n16_k16_t3_bar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 3,
+    "why": "accumulate chain; 3 matmuls into one L0C, barrier(Pipe.M) between"
+   },
+   "ir": {
+    "barrier_M": 2,
+    "barrier_M_settle": 0,
+    "mmad": 3,
+    "mmad_accumulate": 2,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "870bb4736ed0273127de7935f63cd3b3c00fe13d6163861ab564fd17a76d420e",
+   "reference_sha256": "8774979c1d6218daa2190ef96b13bb60b694309da68591bd2e9a145ff335c21b",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 256,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 2573,
+     "non_finite": 0,
+     "output_sha256": "8774979c1d6218daa2190ef96b13bb60b694309da68591bd2e9a145ff335c21b",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.124
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 16,
+    "N": 16,
+    "barrier": false,
+    "bias": false,
+    "dtype": "f16",
+    "expect": "probe",
+    "id": "chain_f16_m16_n16_k16_t3_nobar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 3,
+    "why": "accumulate chain; 3 matmuls into one L0C, no barrier"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 3,
+    "mmad_accumulate": 2,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "c8ec4acb0064c4d127a402a13ec024e77aa45851cc56bf156181cf5618f080b1",
+   "reference_sha256": "10512ec7f318bf5867694f0cd3da06b9cb7f995260b8c23f457ccf4b0b2d3197",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 256,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 2573,
+     "non_finite": 0,
+     "output_sha256": "10512ec7f318bf5867694f0cd3da06b9cb7f995260b8c23f457ccf4b0b2d3197",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.122
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 16,
+    "N": 64,
+    "barrier": true,
+    "bias": false,
+    "dtype": "f16",
+    "expect": "bitwise",
+    "id": "chain_f16_m16_n64_k16_t8_bar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 8,
+    "why": "split-K twin: 8 K16 matmuls into one L0C, barrier(Pipe.M) between"
+   },
+   "ir": {
+    "barrier_M": 7,
+    "barrier_M_settle": 0,
+    "mmad": 8,
+    "mmad_accumulate": 7,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "0d659fb3869a8676944609c3de5954ff64212ca9cece16a8ec0b5b2fb44286e5",
+   "reference_sha256": "e19b2f095109ca5dd72078b7e8774a0aefaa8a6c580dd9d9a1ea93fb7d805843",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 1024,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 7131,
+     "non_finite": 0,
+     "output_sha256": "e19b2f095109ca5dd72078b7e8774a0aefaa8a6c580dd9d9a1ea93fb7d805843",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.29
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 16,
+    "N": 64,
+    "barrier": false,
+    "bias": false,
+    "dtype": "f16",
+    "expect": "probe",
+    "id": "chain_f16_m16_n64_k16_t8_nobar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 8,
+    "why": "split-K twin: 8 K16 matmuls into one L0C, no barrier"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 8,
+    "mmad_accumulate": 7,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "cee15075fd5d98ccd6205ace021a3bee2df0e85a239f5a8cb011403c320deb98",
+   "reference_sha256": "ceb7233f250987657dfd04ac39502676fa609f3551577d88f6d6eaac45f525d1",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 1024,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 7131,
+     "non_finite": 0,
+     "output_sha256": "ceb7233f250987657dfd04ac39502676fa609f3551577d88f6d6eaac45f525d1",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.279
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 32,
+    "N": 16,
+    "barrier": true,
+    "bias": false,
+    "dtype": "f16",
+    "expect": "bitwise",
+    "id": "chain_f16_m32_n16_k16_t2_bar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 2,
+    "why": "accumulate chain; 2 matmuls into one L0C, barrier(Pipe.M) between"
+   },
+   "ir": {
+    "barrier_M": 1,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "64c3db4cc947ec9d331013113e6f672c8fdbee03af153c09e70f394e70e4090e",
+   "reference_sha256": "fda5e7cf95a5debab40a2790637a67093557879443f8f62d2f0f4d3a091be557",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 512,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 1896,
+     "non_finite": 0,
+     "output_sha256": "fda5e7cf95a5debab40a2790637a67093557879443f8f62d2f0f4d3a091be557",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.092
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 32,
+    "N": 16,
+    "barrier": false,
+    "bias": false,
+    "dtype": "f16",
+    "expect": "probe",
+    "id": "chain_f16_m32_n16_k16_t2_nobar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 2,
+    "why": "accumulate chain; 2 matmuls into one L0C, no barrier"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "681d5656aa0ec8ab96658835dd070d738ff99d7b5fb72e7f953bd97c8b671967",
+   "reference_sha256": "19c31be4cba81cec28d618b58ecdad3343af9c02e586290446f8dfdd0c0c5f32",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 512,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 1896,
+     "non_finite": 0,
+     "output_sha256": "19c31be4cba81cec28d618b58ecdad3343af9c02e586290446f8dfdd0c0c5f32",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.095
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 32,
+    "N": 16,
+    "barrier": true,
+    "bias": false,
+    "dtype": "f16",
+    "expect": "bitwise",
+    "id": "chain_f16_m32_n16_k16_t3_bar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 3,
+    "why": "accumulate chain; 3 matmuls into one L0C, barrier(Pipe.M) between"
+   },
+   "ir": {
+    "barrier_M": 2,
+    "barrier_M_settle": 0,
+    "mmad": 3,
+    "mmad_accumulate": 2,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "c307f653de266a26a3c068c8ebd50a7edc0471fe31babf8ae66164816b3a1cb1",
+   "reference_sha256": "de8443a3b59f3f3d557d84c59b68fe0abb80f9f5f430cdf1f501d7d5aeca8c6d",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 512,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 2639,
+     "non_finite": 0,
+     "output_sha256": "de8443a3b59f3f3d557d84c59b68fe0abb80f9f5f430cdf1f501d7d5aeca8c6d",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.121
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 32,
+    "N": 16,
+    "barrier": false,
+    "bias": false,
+    "dtype": "f16",
+    "expect": "probe",
+    "id": "chain_f16_m32_n16_k16_t3_nobar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 3,
+    "why": "accumulate chain; 3 matmuls into one L0C, no barrier"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 3,
+    "mmad_accumulate": 2,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "fdf0eedac2733116cf433a0c0c429011b15f5cd7667054564bfeedd6c05381d9",
+   "reference_sha256": "0c9504ac3b83f982360fccf69a0a72d31230f11bea36a9b331453201674c73d9",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 512,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 2639,
+     "non_finite": 0,
+     "output_sha256": "0c9504ac3b83f982360fccf69a0a72d31230f11bea36a9b331453201674c73d9",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.119
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 64,
+    "N": 16,
+    "barrier": true,
+    "bias": false,
+    "dtype": "f16",
+    "expect": "bitwise",
+    "id": "chain_f16_m64_n16_k16_t2_bar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 2,
+    "why": "accumulate chain; 2 matmuls into one L0C, barrier(Pipe.M) between"
+   },
+   "ir": {
+    "barrier_M": 1,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "ffb8a8ad4db1010fb881aba56edd1f5d550e97c9a7c134eac9e6facc011151f0",
+   "reference_sha256": "3ab4eca82f5f020e15f7aa4c9a6b73274995e399ab8ad65026a73d67c07053a8",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 1024,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 2001,
+     "non_finite": 0,
+     "output_sha256": "3ab4eca82f5f020e15f7aa4c9a6b73274995e399ab8ad65026a73d67c07053a8",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.092
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 64,
+    "N": 16,
+    "barrier": false,
+    "bias": false,
+    "dtype": "f16",
+    "expect": "probe",
+    "id": "chain_f16_m64_n16_k16_t2_nobar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 2,
+    "why": "accumulate chain; 2 matmuls into one L0C, no barrier"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "cc1df933f6f8b60da56419c8cafb0cf3e99f70c11e12170709243b1230a8c009",
+   "reference_sha256": "cdb67ffaacdcad55ddd1b25a278123f121ea6ba2336baf7af533a92d7f38cdc2",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 1024,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 2001,
+     "non_finite": 0,
+     "output_sha256": "cdb67ffaacdcad55ddd1b25a278123f121ea6ba2336baf7af533a92d7f38cdc2",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.091
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 64,
+    "N": 16,
+    "barrier": true,
+    "bias": false,
+    "dtype": "f16",
+    "expect": "bitwise",
+    "id": "chain_f16_m64_n16_k16_t3_bar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 3,
+    "why": "accumulate chain; 3 matmuls into one L0C, barrier(Pipe.M) between"
+   },
+   "ir": {
+    "barrier_M": 2,
+    "barrier_M_settle": 0,
+    "mmad": 3,
+    "mmad_accumulate": 2,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "c5d823827f37178e834a559b82f09f8e302123cf6d542b551c94ce3e2ddf75ae",
+   "reference_sha256": "8cc5c421b425e9079796aadc3647da323c969b475eb066010be84d46dd39f125",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 1024,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 2769,
+     "non_finite": 0,
+     "output_sha256": "8cc5c421b425e9079796aadc3647da323c969b475eb066010be84d46dd39f125",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.121
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 64,
+    "N": 16,
+    "barrier": false,
+    "bias": false,
+    "dtype": "f16",
+    "expect": "probe",
+    "id": "chain_f16_m64_n16_k16_t3_nobar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 3,
+    "why": "accumulate chain; 3 matmuls into one L0C, no barrier"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 3,
+    "mmad_accumulate": 2,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "3a7a0d2eca26e7609df1c1caa221a107010d48b9e38ca7cb038ea84c8c30baaa",
+   "reference_sha256": "6ce81b69849187e0dc964ecdca174d34eb78401db0a7af43582962cebd3fb9a9",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 1024,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 2769,
+     "non_finite": 0,
+     "output_sha256": "6ce81b69849187e0dc964ecdca174d34eb78401db0a7af43582962cebd3fb9a9",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.119
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 16,
+    "N": 16,
+    "barrier": false,
+    "bias": false,
+    "dtype": "f32",
+    "expect": "bitwise",
+    "id": "chain_f32_m16_n16_k16_t1",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 1,
+    "why": "single MMAD control (no accumulate)"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 1,
+    "mmad_accumulate": 0,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "7423e2cedde5709615483ec87f466a16b0c43d5f645edc77152fd5bc9c3f6599",
+   "reference_sha256": "43700f3830f721ffc410ba8f30392b97f8f347bfd18208dc9df092fd34fb2101",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 256,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 1138,
+     "non_finite": 0,
+     "output_sha256": "43700f3830f721ffc410ba8f30392b97f8f347bfd18208dc9df092fd34fb2101",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.065
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 16,
+    "N": 16,
+    "barrier": true,
+    "bias": false,
+    "dtype": "f32",
+    "expect": "bitwise",
+    "id": "chain_f32_m16_n16_k16_t2_bar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 2,
+    "why": "KDA/GDN triangular-inverse construct; 2 matmuls into one L0C, barrier(Pipe.M) between"
+   },
+   "ir": {
+    "barrier_M": 1,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "5d6b4f3135d557da1da2a771aa23c8285d372d1b9ff43a7f41b7848a05165ed0",
+   "reference_sha256": "44237e65a68c3865dbdfe75ba33f1fe1d65c945903c3468b3f5fbb5d83ce8d43",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 256,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 1905,
+     "non_finite": 0,
+     "output_sha256": "44237e65a68c3865dbdfe75ba33f1fe1d65c945903c3468b3f5fbb5d83ce8d43",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.092
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 16,
+    "N": 16,
+    "barrier": false,
+    "bias": false,
+    "dtype": "f32",
+    "expect": "probe",
+    "id": "chain_f32_m16_n16_k16_t2_nobar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 2,
+    "why": "KDA/GDN triangular-inverse construct; 2 matmuls into one L0C, no barrier"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": [
+     "_a2_family_unsettled_fp32_mmad: fp32 MMAD accumulation reads %l0c after an earlier MMAD on at least one path with no PIPE_M/PIPE_ALL barrier between them"
+    ]
+   },
+   "kernel_source_sha256": "c9d84b16d02b2dd934456982c0e0fb373f22a57f434ec1aca37915104e87ba6e",
+   "reference_sha256": "0b1dbcfcd44549a09aadb13ff7bc14c99361d48011ef7bbab8373071d0a7d71f",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 256,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 1905,
+     "non_finite": 0,
+     "output_sha256": "0b1dbcfcd44549a09aadb13ff7bc14c99361d48011ef7bbab8373071d0a7d71f",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.092
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 16,
+    "N": 16,
+    "barrier": true,
+    "bias": false,
+    "dtype": "f32",
+    "expect": "bitwise",
+    "id": "chain_f32_m16_n16_k16_t3_bar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 3,
+    "why": "KDA/GDN triangular-inverse construct; 3 matmuls into one L0C, barrier(Pipe.M) between"
+   },
+   "ir": {
+    "barrier_M": 2,
+    "barrier_M_settle": 0,
+    "mmad": 3,
+    "mmad_accumulate": 2,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "cd06dc6c00cff885503c551930ad5683122f494e6b3568f21d2b8b959e423a3a",
+   "reference_sha256": "459f9c82b38877c49b2db702aba13995e6ef32b6e2e2c2ef9e10c630382e970f",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 256,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 2661,
+     "non_finite": 0,
+     "output_sha256": "459f9c82b38877c49b2db702aba13995e6ef32b6e2e2c2ef9e10c630382e970f",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.12
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 16,
+    "N": 16,
+    "barrier": false,
+    "bias": false,
+    "dtype": "f32",
+    "expect": "probe",
+    "id": "chain_f32_m16_n16_k16_t3_nobar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 3,
+    "why": "KDA/GDN triangular-inverse construct; 3 matmuls into one L0C, no barrier"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 3,
+    "mmad_accumulate": 2,
+    "trap_lints": [
+     "_a2_family_unsettled_fp32_mmad: fp32 MMAD accumulation reads %l0c after an earlier MMAD on at least one path with no PIPE_M/PIPE_ALL barrier between them"
+    ]
+   },
+   "kernel_source_sha256": "9f4079eab93b454b111246f65e91d268b394ddc2cfc10a6c73d34b198fccfda2",
+   "reference_sha256": "13d972ae5583ee9eb0282fb670dec49b39950ea25d0556cd9d14afa00d9e5b4c",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 256,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 2661,
+     "non_finite": 0,
+     "output_sha256": "13d972ae5583ee9eb0282fb670dec49b39950ea25d0556cd9d14afa00d9e5b4c",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.119
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 16,
+    "N": 64,
+    "barrier": true,
+    "bias": false,
+    "dtype": "f32",
+    "expect": "bitwise",
+    "id": "chain_f32_m16_n64_k16_t8_bar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 8,
+    "why": "split-K twin: 8 K16 matmuls into one L0C, barrier(Pipe.M) between"
+   },
+   "ir": {
+    "barrier_M": 7,
+    "barrier_M_settle": 0,
+    "mmad": 8,
+    "mmad_accumulate": 7,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "5b1b3134d6675ab72fbe032d34e28764fae15dcaabccf310d042c1b9c5194c11",
+   "reference_sha256": "8b0ceb5ae52e5ddd7bcff4e0c440fa40ffaee22d49b38eaab7ff37aa75b4ecee",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 1024,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 7995,
+     "non_finite": 0,
+     "output_sha256": "8b0ceb5ae52e5ddd7bcff4e0c440fa40ffaee22d49b38eaab7ff37aa75b4ecee",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.287
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 16,
+    "N": 64,
+    "barrier": false,
+    "bias": false,
+    "dtype": "f32",
+    "expect": "probe",
+    "id": "chain_f32_m16_n64_k16_t8_nobar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 8,
+    "why": "split-K twin: 8 K16 matmuls into one L0C, no barrier"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 8,
+    "mmad_accumulate": 7,
+    "trap_lints": [
+     "_a2_family_unsettled_fp32_mmad: fp32 MMAD accumulation reads %l0c after an earlier MMAD on at least one path with no PIPE_M/PIPE_ALL barrier between them"
+    ]
+   },
+   "kernel_source_sha256": "f535669c6d65d70eb72147587c8c0ba8b4f18e3a153c6d3958f2c2887e22fc63",
+   "reference_sha256": "52dc672145f958a04794e46f560b105e1eefe305e74eddd952095e36be63c934",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 1024,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 7995,
+     "non_finite": 0,
+     "output_sha256": "52dc672145f958a04794e46f560b105e1eefe305e74eddd952095e36be63c934",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.28
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 32,
+    "N": 16,
+    "barrier": true,
+    "bias": false,
+    "dtype": "f32",
+    "expect": "bitwise",
+    "id": "chain_f32_m32_n16_k16_t2_bar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 2,
+    "why": "accumulate chain; 2 matmuls into one L0C, barrier(Pipe.M) between"
+   },
+   "ir": {
+    "barrier_M": 1,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "642e9bbcc1b03a8619994c25bf53623483cacbfcbef4dba040cee2d58bb6ade5",
+   "reference_sha256": "4e0655b648d4266ab5f37865c56cc5b20ddc02c76e7b34a06814b09bb177a7cf",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 512,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 1988,
+     "non_finite": 0,
+     "output_sha256": "4e0655b648d4266ab5f37865c56cc5b20ddc02c76e7b34a06814b09bb177a7cf",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.093
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 32,
+    "N": 16,
+    "barrier": false,
+    "bias": false,
+    "dtype": "f32",
+    "expect": "probe",
+    "id": "chain_f32_m32_n16_k16_t2_nobar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 2,
+    "why": "accumulate chain; 2 matmuls into one L0C, no barrier"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": [
+     "_a2_family_unsettled_fp32_mmad: fp32 MMAD accumulation reads %l0c after an earlier MMAD on at least one path with no PIPE_M/PIPE_ALL barrier between them"
+    ]
+   },
+   "kernel_source_sha256": "23553f83b8cc9d7b3b1e2929288013608995ee551347b96e3291b921cee2db44",
+   "reference_sha256": "94c2814c8157757dbd7818cb6cdf73a9377a943103dc98e1533f2199dd6d22c2",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 512,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 1988,
+     "non_finite": 0,
+     "output_sha256": "94c2814c8157757dbd7818cb6cdf73a9377a943103dc98e1533f2199dd6d22c2",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.091
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 32,
+    "N": 16,
+    "barrier": true,
+    "bias": false,
+    "dtype": "f32",
+    "expect": "bitwise",
+    "id": "chain_f32_m32_n16_k16_t3_bar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 3,
+    "why": "accumulate chain; 3 matmuls into one L0C, barrier(Pipe.M) between"
+   },
+   "ir": {
+    "barrier_M": 2,
+    "barrier_M_settle": 0,
+    "mmad": 3,
+    "mmad_accumulate": 2,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "38fc9fe3e59b9d83c0af5514766187b08099d8d6f2dad0b27c41f6f58c646a5f",
+   "reference_sha256": "1b74deb3d8dcd9825b51dc5c84a47299280e9a9e01e9438f5c1ee4e29b9c0642",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 512,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 2769,
+     "non_finite": 0,
+     "output_sha256": "1b74deb3d8dcd9825b51dc5c84a47299280e9a9e01e9438f5c1ee4e29b9c0642",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.123
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 32,
+    "N": 16,
+    "barrier": false,
+    "bias": false,
+    "dtype": "f32",
+    "expect": "probe",
+    "id": "chain_f32_m32_n16_k16_t3_nobar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 3,
+    "why": "accumulate chain; 3 matmuls into one L0C, no barrier"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 3,
+    "mmad_accumulate": 2,
+    "trap_lints": [
+     "_a2_family_unsettled_fp32_mmad: fp32 MMAD accumulation reads %l0c after an earlier MMAD on at least one path with no PIPE_M/PIPE_ALL barrier between them"
+    ]
+   },
+   "kernel_source_sha256": "fcaea5903804e633ba802f0cbf25bb5b3ef94166ee67d02d0edf05db88cd7dd7",
+   "reference_sha256": "e452cdb60a9121a562822d550442df0609170f944d67900eb208b1288c989c2d",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 512,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 2769,
+     "non_finite": 0,
+     "output_sha256": "e452cdb60a9121a562822d550442df0609170f944d67900eb208b1288c989c2d",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.121
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 64,
+    "N": 16,
+    "barrier": true,
+    "bias": false,
+    "dtype": "f32",
+    "expect": "bitwise",
+    "id": "chain_f32_m64_n16_k16_t2_bar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 2,
+    "why": "accumulate chain; 2 matmuls into one L0C, barrier(Pipe.M) between"
+   },
+   "ir": {
+    "barrier_M": 1,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "23abb0ee03a5b7be24ac682d9c338c309227b3138196c94f9ab0ba4122313631",
+   "reference_sha256": "f3fb99d56a2753db0ab24911719508fe3e6db3fa5afff1fc5740bc330482e455",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 1024,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 2157,
+     "non_finite": 0,
+     "output_sha256": "f3fb99d56a2753db0ab24911719508fe3e6db3fa5afff1fc5740bc330482e455",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.095
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 64,
+    "N": 16,
+    "barrier": false,
+    "bias": false,
+    "dtype": "f32",
+    "expect": "probe",
+    "id": "chain_f32_m64_n16_k16_t2_nobar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 2,
+    "why": "accumulate chain; 2 matmuls into one L0C, no barrier"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": [
+     "_a2_family_unsettled_fp32_mmad: fp32 MMAD accumulation reads %l0c after an earlier MMAD on at least one path with no PIPE_M/PIPE_ALL barrier between them"
+    ]
+   },
+   "kernel_source_sha256": "229bf71cb6d7605cdcd4c72a23ec43586687a2e6fcda7538195fe06e2aaadcbe",
+   "reference_sha256": "21f7d0a8c21b9bcec2d3fa26c34db31f66e7379934d5df3c87672f916b88efdf",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 1024,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 2157,
+     "non_finite": 0,
+     "output_sha256": "21f7d0a8c21b9bcec2d3fa26c34db31f66e7379934d5df3c87672f916b88efdf",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.092
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 64,
+    "N": 16,
+    "barrier": true,
+    "bias": false,
+    "dtype": "f32",
+    "expect": "bitwise",
+    "id": "chain_f32_m64_n16_k16_t3_bar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 3,
+    "why": "accumulate chain; 3 matmuls into one L0C, barrier(Pipe.M) between"
+   },
+   "ir": {
+    "barrier_M": 2,
+    "barrier_M_settle": 0,
+    "mmad": 3,
+    "mmad_accumulate": 2,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "592444858b268f7c3a0eae52b722743446cf5eb2ad048af5eebeb26c960f0d39",
+   "reference_sha256": "39825ef09f8d0aedd11c25a761f32ea8c9f6f609a6be043107bc3198baed51e7",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 1024,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 2989,
+     "non_finite": 0,
+     "output_sha256": "39825ef09f8d0aedd11c25a761f32ea8c9f6f609a6be043107bc3198baed51e7",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.251
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 16,
+    "M": 64,
+    "N": 16,
+    "barrier": false,
+    "bias": false,
+    "dtype": "f32",
+    "expect": "probe",
+    "id": "chain_f32_m64_n16_k16_t3_nobar",
+    "kind": "chain",
+    "splitk": 0,
+    "terms": 3,
+    "why": "accumulate chain; 3 matmuls into one L0C, no barrier"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 3,
+    "mmad_accumulate": 2,
+    "trap_lints": [
+     "_a2_family_unsettled_fp32_mmad: fp32 MMAD accumulation reads %l0c after an earlier MMAD on at least one path with no PIPE_M/PIPE_ALL barrier between them"
+    ]
+   },
+   "kernel_source_sha256": "834e2ed5017a5a1add8401d4138c4ae13cd9fc55903e9c48d12c3c3c4ca0e05f",
+   "reference_sha256": "30926d1324397ed200dd64174a018e77d26fb6999c247f03613544c8e9f31467",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 1024,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 2989,
+     "non_finite": 0,
+     "output_sha256": "30926d1324397ed200dd64174a018e77d26fb6999c247f03613544c8e9f31467",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.119
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 128,
+    "M": 16,
+    "N": 64,
+    "barrier": false,
+    "bias": false,
+    "dtype": "bf16",
+    "expect": "probe",
+    "id": "splitk_bf16_m16_n64_k128_s16",
+    "kind": "splitk",
+    "splitk": 16,
+    "terms": 1,
+    "why": "BF16 operands: the settle rule is FP32-only, so no barrier is inserted"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "515379e2eba4f8964f921207c35bc4a8a3c0f6b3a13255a8ce76da0672f88433",
+   "reference_sha256": "ab27c067dd712d4fabc25d3f0101baa05a17cf1e2b1829989b9bbfea3984a2f4",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 1024,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 2002,
+     "non_finite": 0,
+     "output_sha256": "ab27c067dd712d4fabc25d3f0101baa05a17cf1e2b1829989b9bbfea3984a2f4",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.114
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 32,
+    "M": 16,
+    "N": 64,
+    "barrier": false,
+    "bias": false,
+    "dtype": "bf16",
+    "expect": "probe",
+    "id": "splitk_bf16_m16_n64_k32_s16",
+    "kind": "splitk",
+    "splitk": 16,
+    "terms": 1,
+    "why": "bf16 split-K sweep: 2 K fragments, M16"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "2e2bfd77b3442d38bc7a9abbc4b13f1dc04426a7139af8ca660bf7dda0336f3c",
+   "reference_sha256": "928e043033f806e9f7046d072213263801aa46ec5ecacc5137c0b6bd5ac21900",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 1024,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 1366,
+     "non_finite": 0,
+     "output_sha256": "928e043033f806e9f7046d072213263801aa46ec5ecacc5137c0b6bd5ac21900",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.094
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 48,
+    "M": 16,
+    "N": 64,
+    "barrier": false,
+    "bias": false,
+    "dtype": "bf16",
+    "expect": "probe",
+    "id": "splitk_bf16_m16_n64_k48_s16",
+    "kind": "splitk",
+    "splitk": 16,
+    "terms": 1,
+    "why": "bf16 split-K sweep: 3 K fragments, M16"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "2d34e2ebe33febeaf5aae6ec59ee4ffa8ef0f7494d122745353689b1332a40a8",
+   "reference_sha256": "0b863b80b230f59d5744c608d325c495d3ddc53774523ea5a8cf467fbd06e25a",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 1024,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 1472,
+     "non_finite": 0,
+     "output_sha256": "0b863b80b230f59d5744c608d325c495d3ddc53774523ea5a8cf467fbd06e25a",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.099
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 64,
+    "M": 16,
+    "N": 64,
+    "barrier": false,
+    "bias": false,
+    "dtype": "bf16",
+    "expect": "probe",
+    "id": "splitk_bf16_m16_n64_k64_s16",
+    "kind": "splitk",
+    "splitk": 16,
+    "terms": 1,
+    "why": "bf16 split-K sweep: 4 K fragments, M16"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "2e314f8db7f2d1b7d4fe18744fafc01156a8c89bfbe1ac26f2df6e1ff0566a22",
+   "reference_sha256": "5eee91c5d14307c98c2f19330aee3fd3d0acb2cc9fed33efaa73d264359f4c9a",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 1024,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 1578,
+     "non_finite": 0,
+     "output_sha256": "5eee91c5d14307c98c2f19330aee3fd3d0acb2cc9fed33efaa73d264359f4c9a",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.108
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 128,
+    "M": 32,
+    "N": 64,
+    "barrier": false,
+    "bias": false,
+    "dtype": "bf16",
+    "expect": "probe",
+    "id": "splitk_bf16_m32_n64_k128_s16",
+    "kind": "splitk",
+    "splitk": 16,
+    "terms": 1,
+    "why": "bf16 split-K sweep: 8 K fragments, M32"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "8dc29f90293b675f3cf5f048b0acbce1361238339709fd7be0deca373e00f47c",
+   "reference_sha256": "ef1fe6484b607387a03e3e9cd6fc9c8c0ae64163b1b75f95f440dc36fd6edda5",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 2048,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 2248,
+     "non_finite": 0,
+     "output_sha256": "ef1fe6484b607387a03e3e9cd6fc9c8c0ae64163b1b75f95f440dc36fd6edda5",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.117
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 32,
+    "M": 32,
+    "N": 64,
+    "barrier": false,
+    "bias": false,
+    "dtype": "bf16",
+    "expect": "probe",
+    "id": "splitk_bf16_m32_n64_k32_s16",
+    "kind": "splitk",
+    "splitk": 16,
+    "terms": 1,
+    "why": "bf16 split-K sweep: 2 K fragments, M32"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "dee56da86d61cd074c759251a52a1fa3b08e7a47644939c503366194fa197e82",
+   "reference_sha256": "f204df99d30d86bb5b01a5081ccce50412c2b4a07003a396249be03b8c9517fe",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 2048,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 1510,
+     "non_finite": 0,
+     "output_sha256": "f204df99d30d86bb5b01a5081ccce50412c2b4a07003a396249be03b8c9517fe",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.092
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 48,
+    "M": 32,
+    "N": 64,
+    "barrier": false,
+    "bias": false,
+    "dtype": "bf16",
+    "expect": "probe",
+    "id": "splitk_bf16_m32_n64_k48_s16",
+    "kind": "splitk",
+    "splitk": 16,
+    "terms": 1,
+    "why": "bf16 split-K sweep: 3 K fragments, M32"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "e958375e583668c4d21317c52f3c3294b8803a8f99fe04d597a0b690ffc7cabe",
+   "reference_sha256": "9f1dcd815dd4477623bbd7af891433dc7200f6ed129fd4c4e4563b204c017e63",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 2048,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 1634,
+     "non_finite": 0,
+     "output_sha256": "9f1dcd815dd4477623bbd7af891433dc7200f6ed129fd4c4e4563b204c017e63",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.098
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 64,
+    "M": 32,
+    "N": 64,
+    "barrier": false,
+    "bias": false,
+    "dtype": "bf16",
+    "expect": "probe",
+    "id": "splitk_bf16_m32_n64_k64_s16",
+    "kind": "splitk",
+    "splitk": 16,
+    "terms": 1,
+    "why": "bf16 split-K sweep: 4 K fragments, M32"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "5f0320b01d4c14c8be6360659414c9ce0dac21316b06ef444749a01bb26aedf0",
+   "reference_sha256": "fe5e528a0abb64ea62a96079d0f6d3c912426afc62e29ae93f761147a0d9005b",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 2048,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 1756,
+     "non_finite": 0,
+     "output_sha256": "fe5e528a0abb64ea62a96079d0f6d3c912426afc62e29ae93f761147a0d9005b",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.1
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 128,
+    "M": 64,
+    "N": 64,
+    "barrier": false,
+    "bias": false,
+    "dtype": "bf16",
+    "expect": "probe",
+    "id": "splitk_bf16_m64_n64_k128_s16",
+    "kind": "splitk",
+    "splitk": 16,
+    "terms": 1,
+    "why": "bf16 split-K sweep: 8 K fragments, M64"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "2d09841919bd05e8c02d1b402276d887c83504fde36b6b71723b6a2ef03a3dfd",
+   "reference_sha256": "643f08de08d1db0c457bf0675628a88bcb4043a84c22b5b7b7857e967f87975c",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 4096,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 2745,
+     "non_finite": 0,
+     "output_sha256": "643f08de08d1db0c457bf0675628a88bcb4043a84c22b5b7b7857e967f87975c",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.117
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 32,
+    "M": 64,
+    "N": 64,
+    "barrier": false,
+    "bias": false,
+    "dtype": "bf16",
+    "expect": "probe",
+    "id": "splitk_bf16_m64_n64_k32_s16",
+    "kind": "splitk",
+    "splitk": 16,
+    "terms": 1,
+    "why": "bf16 split-K sweep: 2 K fragments, M64"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "c85f87d5b49296433db870e256d6a0a166899cbc8f49b6b6d7e157566783ca38",
+   "reference_sha256": "48a3d04cc181fe29b1456319001e649be3a3c16e4d56bf80c1e4fcdaf82b52fb",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 4096,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 1799,
+     "non_finite": 0,
+     "output_sha256": "48a3d04cc181fe29b1456319001e649be3a3c16e4d56bf80c1e4fcdaf82b52fb",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.096
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 48,
+    "M": 64,
+    "N": 64,
+    "barrier": false,
+    "bias": false,
+    "dtype": "bf16",
+    "expect": "probe",
+    "id": "splitk_bf16_m64_n64_k48_s16",
+    "kind": "splitk",
+    "splitk": 16,
+    "terms": 1,
+    "why": "bf16 split-K sweep: 3 K fragments, M64"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "c17f70b95e88a18111db613763e51f450da1084305d117820f11bf159e359f79",
+   "reference_sha256": "2e5b6dc8278b7c49fc29500be5567fc369ba563c70be20ec67188e44e5ececa8",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 4096,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 1958,
+     "non_finite": 0,
+     "output_sha256": "2e5b6dc8278b7c49fc29500be5567fc369ba563c70be20ec67188e44e5ececa8",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.096
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 64,
+    "M": 64,
+    "N": 64,
+    "barrier": false,
+    "bias": false,
+    "dtype": "bf16",
+    "expect": "probe",
+    "id": "splitk_bf16_m64_n64_k64_s16",
+    "kind": "splitk",
+    "splitk": 16,
+    "terms": 1,
+    "why": "bf16 split-K sweep: 4 K fragments, M64"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "4e47a1b1354f3e850b350f486c36990899436090a40e74e87a0b2749e0e68479",
+   "reference_sha256": "14ed65bf7ee26b5de7dbe147c4b64e3c226e44e19d23d222e8af163b88c8ef21",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 4096,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 2115,
+     "non_finite": 0,
+     "output_sha256": "14ed65bf7ee26b5de7dbe147c4b64e3c226e44e19d23d222e8af163b88c8ef21",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.102
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 128,
+    "M": 16,
+    "N": 64,
+    "barrier": false,
+    "bias": false,
+    "dtype": "f16",
+    "expect": "probe",
+    "id": "splitk_f16_m16_n64_k128_s16",
+    "kind": "splitk",
+    "splitk": 16,
+    "terms": 1,
+    "why": "FP16 operands: the settle rule is FP32-only, so no barrier is inserted"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "7c36d5321f7cfdad3a40faf64e9173a9d85df6b86eaa7a838e693d3c8275b983",
+   "reference_sha256": "b0773ee0d6b35d320fece577181ae9b262c92a3de6c386906b9b846621c6995c",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 1024,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 2002,
+     "non_finite": 0,
+     "output_sha256": "b0773ee0d6b35d320fece577181ae9b262c92a3de6c386906b9b846621c6995c",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.117
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 32,
+    "M": 16,
+    "N": 64,
+    "barrier": false,
+    "bias": false,
+    "dtype": "f16",
+    "expect": "probe",
+    "id": "splitk_f16_m16_n64_k32_s16",
+    "kind": "splitk",
+    "splitk": 16,
+    "terms": 1,
+    "why": "f16 split-K sweep: 2 K fragments, M16"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "a22f80364c1a3724c81356e1e988a0aa27aa147a20425a34c9c277cd65015ba4",
+   "reference_sha256": "b5a46ee99af1d755f8a815d010b997750ec6ed3b677b398adb706b5d58db5bfc",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 1024,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 1366,
+     "non_finite": 0,
+     "output_sha256": "b5a46ee99af1d755f8a815d010b997750ec6ed3b677b398adb706b5d58db5bfc",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.092
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 48,
+    "M": 16,
+    "N": 64,
+    "barrier": false,
+    "bias": false,
+    "dtype": "f16",
+    "expect": "probe",
+    "id": "splitk_f16_m16_n64_k48_s16",
+    "kind": "splitk",
+    "splitk": 16,
+    "terms": 1,
+    "why": "f16 split-K sweep: 3 K fragments, M16"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "00b0a8fe8108502895eca77b52bbd6dfd24185ddeca2ae50981a8d764b67dafc",
+   "reference_sha256": "9966bd71e9b3a62f247450f02ae0f177cdced03453b3e52e30bebd7e3b462f55",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 1024,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 1472,
+     "non_finite": 0,
+     "output_sha256": "9966bd71e9b3a62f247450f02ae0f177cdced03453b3e52e30bebd7e3b462f55",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.095
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 64,
+    "M": 16,
+    "N": 64,
+    "barrier": false,
+    "bias": false,
+    "dtype": "f16",
+    "expect": "probe",
+    "id": "splitk_f16_m16_n64_k64_s16",
+    "kind": "splitk",
+    "splitk": 16,
+    "terms": 1,
+    "why": "f16 split-K sweep: 4 K fragments, M16"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "15606289758e2f1b95db7ec38419525b06d25663e8957fd44aa6150433104fe6",
+   "reference_sha256": "01b321877aa36eb988ab9000a24313a2807dd63fe6a0039c0341e16344325f51",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 1024,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 1578,
+     "non_finite": 0,
+     "output_sha256": "01b321877aa36eb988ab9000a24313a2807dd63fe6a0039c0341e16344325f51",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.099
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 128,
+    "M": 32,
+    "N": 64,
+    "barrier": false,
+    "bias": false,
+    "dtype": "f16",
+    "expect": "probe",
+    "id": "splitk_f16_m32_n64_k128_s16",
+    "kind": "splitk",
+    "splitk": 16,
+    "terms": 1,
+    "why": "f16 split-K sweep: 8 K fragments, M32"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "31e7efe94acd9d9042c7626b2ceed3fc1d390b7b70d8b624fa8ee696eb8da64c",
+   "reference_sha256": "eb44b7c0859b9b890fa7649da42d14077f5f1cc4de24f5e3f5687724bcc15631",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 2048,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 2248,
+     "non_finite": 0,
+     "output_sha256": "eb44b7c0859b9b890fa7649da42d14077f5f1cc4de24f5e3f5687724bcc15631",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.113
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 32,
+    "M": 32,
+    "N": 64,
+    "barrier": false,
+    "bias": false,
+    "dtype": "f16",
+    "expect": "probe",
+    "id": "splitk_f16_m32_n64_k32_s16",
+    "kind": "splitk",
+    "splitk": 16,
+    "terms": 1,
+    "why": "f16 split-K sweep: 2 K fragments, M32"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "bcb54d760a2a189b0fa89c70b0066bd2b6d4664d95b1649e38098fc468c605cf",
+   "reference_sha256": "c6e613002af48108ffc2106bab3930505b41d7eeddeddc6c8ddd961174cb44d7",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 2048,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 1510,
+     "non_finite": 0,
+     "output_sha256": "c6e613002af48108ffc2106bab3930505b41d7eeddeddc6c8ddd961174cb44d7",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.092
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 48,
+    "M": 32,
+    "N": 64,
+    "barrier": false,
+    "bias": false,
+    "dtype": "f16",
+    "expect": "probe",
+    "id": "splitk_f16_m32_n64_k48_s16",
+    "kind": "splitk",
+    "splitk": 16,
+    "terms": 1,
+    "why": "f16 split-K sweep: 3 K fragments, M32"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "b3102210f4b2bc49fa1e3919dadc6e9be44483e73713f29730269a9f5a98bd1e",
+   "reference_sha256": "66d81198f6f50a6179f9f18f3d93c7d34381c4e11a561ea25517e6ee651ded1e",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 2048,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 1634,
+     "non_finite": 0,
+     "output_sha256": "66d81198f6f50a6179f9f18f3d93c7d34381c4e11a561ea25517e6ee651ded1e",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.094
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 64,
+    "M": 32,
+    "N": 64,
+    "barrier": false,
+    "bias": false,
+    "dtype": "f16",
+    "expect": "probe",
+    "id": "splitk_f16_m32_n64_k64_s16",
+    "kind": "splitk",
+    "splitk": 16,
+    "terms": 1,
+    "why": "f16 split-K sweep: 4 K fragments, M32"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "8182aec38a5f6cdfea25a7ac576d646ef0a51310fb521d86ab0ece19dd3460de",
+   "reference_sha256": "ff17749d69d357bab03fc6f35f1277bf38f039b7f3901bc690670216a2b1ce56",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 2048,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 1756,
+     "non_finite": 0,
+     "output_sha256": "ff17749d69d357bab03fc6f35f1277bf38f039b7f3901bc690670216a2b1ce56",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.104
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 128,
+    "M": 64,
+    "N": 64,
+    "barrier": false,
+    "bias": false,
+    "dtype": "f16",
+    "expect": "probe",
+    "id": "splitk_f16_m64_n64_k128_s16",
+    "kind": "splitk",
+    "splitk": 16,
+    "terms": 1,
+    "why": "f16 split-K sweep: 8 K fragments, M64"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "71850cd68d82198489b41a28db57f4c27146627469c5ae5ede25f1159a6017bc",
+   "reference_sha256": "c0fe00946b675fb1eeeab0f6bdb4de2990e2b4d216334af95364e7faae5fb581",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 4096,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 2745,
+     "non_finite": 0,
+     "output_sha256": "c0fe00946b675fb1eeeab0f6bdb4de2990e2b4d216334af95364e7faae5fb581",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.123
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 32,
+    "M": 64,
+    "N": 64,
+    "barrier": false,
+    "bias": false,
+    "dtype": "f16",
+    "expect": "probe",
+    "id": "splitk_f16_m64_n64_k32_s16",
+    "kind": "splitk",
+    "splitk": 16,
+    "terms": 1,
+    "why": "f16 split-K sweep: 2 K fragments, M64"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "b5d669e0d91577303f5c376ff080501bacabdb80c5b73a9b748a87e483441f77",
+   "reference_sha256": "f65013e79301c2b2b800dab7a275e5176189f4cb80c76e595b13a7fa55d14891",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 4096,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 1799,
+     "non_finite": 0,
+     "output_sha256": "f65013e79301c2b2b800dab7a275e5176189f4cb80c76e595b13a7fa55d14891",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.093
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 48,
+    "M": 64,
+    "N": 64,
+    "barrier": false,
+    "bias": false,
+    "dtype": "f16",
+    "expect": "probe",
+    "id": "splitk_f16_m64_n64_k48_s16",
+    "kind": "splitk",
+    "splitk": 16,
+    "terms": 1,
+    "why": "f16 split-K sweep: 3 K fragments, M64"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "bac59dc7787b118700d155eb0fdb82d406bf71ef884ff42dd7f49e6bccc6a48e",
+   "reference_sha256": "1063b6ab31f3cf3153779690f50f24f49112b5c9872df4b9415f530e29f522b1",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 4096,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 1958,
+     "non_finite": 0,
+     "output_sha256": "1063b6ab31f3cf3153779690f50f24f49112b5c9872df4b9415f530e29f522b1",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.092
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 64,
+    "M": 64,
+    "N": 64,
+    "barrier": false,
+    "bias": false,
+    "dtype": "f16",
+    "expect": "probe",
+    "id": "splitk_f16_m64_n64_k64_s16",
+    "kind": "splitk",
+    "splitk": 16,
+    "terms": 1,
+    "why": "f16 split-K sweep: 4 K fragments, M64"
+   },
+   "ir": {
+    "barrier_M": 0,
+    "barrier_M_settle": 0,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "f1b5cf8a9e77fbd537127eef3ceb77fdf8c0ff07bb4281b413d95bbd653d5e5b",
+   "reference_sha256": "44e3dd4a5e3e9b09ff523ea4d984bac7b87ad7903aa2e4d48257b2003df4a769",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 4096,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 2115,
+     "non_finite": 0,
+     "output_sha256": "44e3dd4a5e3e9b09ff523ea4d984bac7b87ad7903aa2e4d48257b2003df4a769",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.102
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 128,
+    "M": 16,
+    "N": 64,
+    "barrier": false,
+    "bias": false,
+    "dtype": "f32",
+    "expect": "bitwise",
+    "id": "splitk_f32_m16_n64_k128_s16",
+    "kind": "splitk",
+    "splitk": 16,
+    "terms": 1,
+    "why": "original shape without bias (also runs on the a5 profile)"
+   },
+   "ir": {
+    "barrier_M": 1,
+    "barrier_M_settle": 1,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "8720ccc69ceb5bab9a824e26582e711869bc2123343c371ed686c65598cccdf1",
+   "reference_sha256": "1f92875aec85114e3061362b030207c2f9f1563f5313ea7c640a84a331460a62",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 1024,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 2699,
+     "non_finite": 0,
+     "output_sha256": "1f92875aec85114e3061362b030207c2f9f1563f5313ea7c640a84a331460a62",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.117
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 128,
+    "M": 16,
+    "N": 64,
+    "barrier": false,
+    "bias": true,
+    "dtype": "f32",
+    "expect": "bitwise",
+    "id": "splitk_f32_m16_n64_k128_s16_bias",
+    "kind": "splitk",
+    "splitk": 16,
+    "terms": 1,
+    "why": "original M10-081 case (8 K fragments + bias); a2: settled by the pinned desugar rule"
+   },
+   "ir": {
+    "barrier_M": 1,
+    "barrier_M_settle": 1,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "5ee75c5d514b90eb573e40146eb52d7aa41ce7d3fe79ed26127d32d8b9b08969",
+   "reference_sha256": "dd9925e181274d1db1d90ff248576dd4098f9be627477b849cfcc5300c6b57da",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 1024,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 2737,
+     "non_finite": 0,
+     "output_sha256": "dd9925e181274d1db1d90ff248576dd4098f9be627477b849cfcc5300c6b57da",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.177
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 32,
+    "M": 16,
+    "N": 64,
+    "barrier": false,
+    "bias": false,
+    "dtype": "f32",
+    "expect": "bitwise",
+    "id": "splitk_f32_m16_n64_k32_s16",
+    "kind": "splitk",
+    "splitk": 16,
+    "terms": 1,
+    "why": "M10-081 isolation shape: two K fragments"
+   },
+   "ir": {
+    "barrier_M": 1,
+    "barrier_M_settle": 1,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "c94c161a118154c8a274d9b5d74f5fcaf0cc85832fef36d5c593acb147d72ac9",
+   "reference_sha256": "8ce4a0b9cf6f0ec708d06c3f84a2d0e7bd482f5fc719f4530c7346afd67bb0fe",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 1024,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 1559,
+     "non_finite": 0,
+     "output_sha256": "8ce4a0b9cf6f0ec708d06c3f84a2d0e7bd482f5fc719f4530c7346afd67bb0fe",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.09
+    }
+   ]
+  },
+  {
+   "all_bitwise": true,
+   "case": {
+    "K": 128,
+    "M": 64,
+    "N": 64,
+    "barrier": false,
+    "bias": false,
+    "dtype": "f32",
+    "expect": "bitwise",
+    "id": "splitk_f32_m64_n64_k128_s64",
+    "kind": "splitk",
+    "splitk": 64,
+    "terms": 1,
+    "why": "KDA kda_fwd(_stable)/intra.py shape: FP32 [64,128]x[64,128]^T, split-K 64"
+   },
+   "ir": {
+    "barrier_M": 1,
+    "barrier_M_settle": 1,
+    "mmad": 2,
+    "mmad_accumulate": 1,
+    "trap_lints": []
+   },
+   "kernel_source_sha256": "5a1423e99aab9a51fdc07b61174415d314f6cf964eba19de0b26ee51406d304d",
+   "reference_sha256": "f1b0b9afd2568662f444f6519610d5873bfab1cd4ed2b99870f85e297a6a181b",
+   "runs": [
+    {
+     "bitwise": true,
+     "deadlock": false,
+     "elements": 4096,
+     "event_balance": [],
+     "hazard_samples": [],
+     "hazards": 0,
+     "max_abs_diff": 0.0,
+     "mismatched": 0,
+     "model_cycles": 4419,
+     "non_finite": 0,
+     "output_sha256": "f1b0b9afd2568662f444f6519610d5873bfab1cd4ed2b99870f85e297a6a181b",
+     "poison_left": 0,
+     "rel_l2": 0.0,
+     "run": 1,
+     "wall_s": 0.096
+    }
+   ]
+  }
+ ],
+ "cases": [
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "bitwise",
+   "id": "splitk_f32_m16_n64_k128_s16_bias",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "bitwise",
+   "id": "splitk_f32_m16_n64_k128_s16",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "bitwise",
+   "id": "splitk_f32_m16_n64_k32_s16",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "bitwise",
+   "id": "splitk_f32_m64_n64_k128_s64",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "probe",
+   "id": "splitk_bf16_m16_n64_k128_s16",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "probe",
+   "id": "splitk_f16_m16_n64_k128_s16",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "probe",
+   "id": "splitk_bf16_m16_n64_k32_s16",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "probe",
+   "id": "splitk_bf16_m16_n64_k48_s16",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "probe",
+   "id": "splitk_bf16_m16_n64_k64_s16",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "probe",
+   "id": "splitk_bf16_m32_n64_k32_s16",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "probe",
+   "id": "splitk_bf16_m32_n64_k48_s16",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "probe",
+   "id": "splitk_bf16_m32_n64_k64_s16",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "probe",
+   "id": "splitk_bf16_m32_n64_k128_s16",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "probe",
+   "id": "splitk_bf16_m64_n64_k32_s16",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "probe",
+   "id": "splitk_bf16_m64_n64_k48_s16",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "probe",
+   "id": "splitk_bf16_m64_n64_k64_s16",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "probe",
+   "id": "splitk_bf16_m64_n64_k128_s16",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "probe",
+   "id": "splitk_f16_m16_n64_k32_s16",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "probe",
+   "id": "splitk_f16_m16_n64_k48_s16",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "probe",
+   "id": "splitk_f16_m16_n64_k64_s16",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "probe",
+   "id": "splitk_f16_m32_n64_k32_s16",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "probe",
+   "id": "splitk_f16_m32_n64_k48_s16",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "probe",
+   "id": "splitk_f16_m32_n64_k64_s16",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "probe",
+   "id": "splitk_f16_m32_n64_k128_s16",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "probe",
+   "id": "splitk_f16_m64_n64_k32_s16",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "probe",
+   "id": "splitk_f16_m64_n64_k48_s16",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "probe",
+   "id": "splitk_f16_m64_n64_k64_s16",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "probe",
+   "id": "splitk_f16_m64_n64_k128_s16",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "probe",
+   "id": "chain_f32_m16_n64_k16_t8_nobar",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "bitwise",
+   "id": "chain_f32_m16_n64_k16_t8_bar",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "probe",
+   "id": "chain_bf16_m16_n64_k16_t8_nobar",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "bitwise",
+   "id": "chain_bf16_m16_n64_k16_t8_bar",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "probe",
+   "id": "chain_f16_m16_n64_k16_t8_nobar",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "bitwise",
+   "id": "chain_f16_m16_n64_k16_t8_bar",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "bitwise",
+   "id": "chain_f32_m16_n16_k16_t1",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "probe",
+   "id": "chain_f32_m16_n16_k16_t2_nobar",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "bitwise",
+   "id": "chain_f32_m16_n16_k16_t2_bar",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "probe",
+   "id": "chain_f32_m16_n16_k16_t3_nobar",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "bitwise",
+   "id": "chain_f32_m16_n16_k16_t3_bar",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "probe",
+   "id": "chain_f32_m32_n16_k16_t2_nobar",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "bitwise",
+   "id": "chain_f32_m32_n16_k16_t2_bar",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "probe",
+   "id": "chain_f32_m32_n16_k16_t3_nobar",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "bitwise",
+   "id": "chain_f32_m32_n16_k16_t3_bar",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "probe",
+   "id": "chain_f32_m64_n16_k16_t2_nobar",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "bitwise",
+   "id": "chain_f32_m64_n16_k16_t2_bar",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "probe",
+   "id": "chain_f32_m64_n16_k16_t3_nobar",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "bitwise",
+   "id": "chain_f32_m64_n16_k16_t3_bar",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "bitwise",
+   "id": "chain_bf16_m16_n16_k16_t1",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "probe",
+   "id": "chain_bf16_m16_n16_k16_t2_nobar",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "bitwise",
+   "id": "chain_bf16_m16_n16_k16_t2_bar",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "probe",
+   "id": "chain_bf16_m16_n16_k16_t3_nobar",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "bitwise",
+   "id": "chain_bf16_m16_n16_k16_t3_bar",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "probe",
+   "id": "chain_bf16_m32_n16_k16_t2_nobar",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "bitwise",
+   "id": "chain_bf16_m32_n16_k16_t2_bar",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "probe",
+   "id": "chain_bf16_m32_n16_k16_t3_nobar",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "bitwise",
+   "id": "chain_bf16_m32_n16_k16_t3_bar",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "probe",
+   "id": "chain_bf16_m64_n16_k16_t2_nobar",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "bitwise",
+   "id": "chain_bf16_m64_n16_k16_t2_bar",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "probe",
+   "id": "chain_bf16_m64_n16_k16_t3_nobar",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "bitwise",
+   "id": "chain_bf16_m64_n16_k16_t3_bar",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "bitwise",
+   "id": "chain_f16_m16_n16_k16_t1",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "probe",
+   "id": "chain_f16_m16_n16_k16_t2_nobar",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "bitwise",
+   "id": "chain_f16_m16_n16_k16_t2_bar",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "probe",
+   "id": "chain_f16_m16_n16_k16_t3_nobar",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "bitwise",
+   "id": "chain_f16_m16_n16_k16_t3_bar",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "probe",
+   "id": "chain_f16_m32_n16_k16_t2_nobar",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "bitwise",
+   "id": "chain_f16_m32_n16_k16_t2_bar",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "probe",
+   "id": "chain_f16_m32_n16_k16_t3_nobar",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "bitwise",
+   "id": "chain_f16_m32_n16_k16_t3_bar",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "probe",
+   "id": "chain_f16_m64_n16_k16_t2_nobar",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "bitwise",
+   "id": "chain_f16_m64_n16_k16_t2_bar",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "probe",
+   "id": "chain_f16_m64_n16_k16_t3_nobar",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  },
+  {
+   "all_bitwise": true,
+   "bitwise_runs": 1,
+   "error": null,
+   "expect": "bitwise",
+   "id": "chain_f16_m64_n16_k16_t3_bar",
+   "max_abs_diff": 0.0,
+   "runs": 1
+  }
+ ],
+ "comparison": "bitwise vs CPU float64 reference rounded once to FP32 (exact domain)",
+ "device": null,
+ "failed_expectation": [],
+ "finished_at": "2026-09-19T15:57:30Z",
+ "launcher": "pipesim",
+ "profile": "a2",
+ "repeat": 1,
+ "schema": "a2-01.repro/1",
+ "started_at": "2026-09-19T15:57:14Z",
+ "versions": {
+  "ascriptor_commit": "90cfcdc720bbcd66e8bd4361c4dd4fbc1a2a57b5",
+  "ascriptor_desugar_sha256": "900610ea92dcb97afd1bbea1f4abc6b306adc5fe98547bdbedde37eca34cc295",
+  "ascriptor_lint_sha256": "c2e4662604224cb4e84522859577872b6eeb87f90ac15736c36550ecd61b3a2e",
+  "ascriptor_version": "0.1.0",
+  "numpy": "1.26.4",
+  "python": "3.11.15",
+  "torch": "2.10.0+cpu"
+ }
+}
