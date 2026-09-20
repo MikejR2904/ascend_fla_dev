@@ -272,6 +272,13 @@
       "by": "pm",
       "decision": "BF-06（KDA decode 原生 BF16）的三条裁定：(1) raw flags=True 分支保持 A2-44 现状，作为「已登记的存量例外 → BF-07」单列审计、不扩大、不宣称合规，默认 flags=False 路径必须完全合规；(2) 入口只接 BF16 q/k/v + FP32 g / beta / state 或全 FP32，FP16 / FP64 / 混用 dtype 显式报错；(3) block_dim 不收窄，原 FP32 的 {1,2,4,8,16,28} 全保持，BF16 做不到某个 bd 先问用户。",
       "risk": "(1) 这是 PM 对「D-PM-37 vs 规格里的 raw flags 存量例外」的读法（用户可纠正）：不给新代码开例外——BF-06 自己写的入口与 kernel 一处 host 转换 / 算术都不能有；存量的 host 预处理（chunk.py::_prepare_inputs 的 normalize / softplus / exp / sigmoid 与 .to(qk_dtype)）在 BF-07 落地前仍在，BF-07 要改已有派生单元 kda_fwd_stable 的 kernel，属 kernel 批次，只有用户能批准——这条 RISK 说明 BF-07 是 KDA decode / chunk 路径上最后一块 host 算术，建议用户尽早定。(2) dtype 域收窄是 D-PM-37 的直接后果，但确实让原先「收 FP16 / FP64 / 混用 dtype」的入口变成显式报错，PM 已要求申领人发现仓里有依赖时先发 RISK；用户若不同意可推翻，代价是这些 dtype 要有 kernel 侧的支持。(3) block_dim 维持原支持是为了避免 BF16 路径比 FP32 路径的域更窄（D-PM-35：BF16 门控域比 FP32 窄属域变化要先问用户）。"
+    },
+    {
+      "id": "D-PM-41",
+      "date": "2026-09-20",
+      "by": "pm",
+      "decision": "BF-06 的 prefill→decode 比较口径：三层分别报告——① decode 自身（从实际状态起算两个独立 CPU FP32 oracle，o ≤ min(1e-2, 3F)、state ≤ 1e-5）；② 16 token 与 16 次单 token 逐位相同；③ 端到端对两个全序列 CPU FP32 oracle，通过线 min(1e-2, 3·E_oneshot)（E_oneshot 为同次运行里一次性 stable 长前向对同一 oracle 的相对 L2），前缀 / 后缀单列。不采用 BF16 chunk 契约的 0.05。",
+      "risk": "规格原来只写「对得上」没有数，这条是 PM 给的新预算（不是放宽既有预算，比契约的 0.05 严约 5 倍）：(1) 3·E_oneshot 自校准，E_oneshot 的下界是 BF16 舍入地板 F，所以 ≥ 3F，不会因一次侥幸的小误差误杀；(2) 但 1e-2 与 3·E_oneshot 都是 PM 的取法，没有 A5 真机的前缀 + decode 链数据支持——申领人在真机上跑出结果后如实报数，若系统性地过不了要发 RISK 讨论口径，用户可以纠正；(3) 前缀段是 chunk 路径自己的误差，BF-06 不为它负责，但要单列报告，让「链的退化」和「chunk 本来的误差」分开。"
     }
   ],
   "gated_epics": [
@@ -890,7 +897,7 @@
       },
       "spec": "docs/pm/tasks/BF-06.md",
       "issue": 105,
-      "pr": null,
+      "pr": 114,
       "assignee": "limjiunnbin",
       "assignee_caps": {
         "agent": "Codex，KDA/PKDA session（自述）",
@@ -938,6 +945,22 @@
         {
           "at": "2026-09-20T01:07",
           "summary": "PM 预批准写集扩展（核实成立：该 8 个用例断言的正是旧 host ABI，与 D-PM-37 直接矛盾；文件与保留路径、其他在飞任务的写集都不相交）：仅限这 8 个用例——保留全部 8 个组合、零容差、独立 raw-input 参考，改成核对新 ABI（token-major、原 dtype、未预乘 scale 的 q/k/g/beta 与 kernel 收到的 scale 标量）；不删、不跳过、不放宽别的用例，不为测试加生产分支，_prepare_inputs 原样；发现别的测试文件也断言旧 ABI 先发 RISK。规格已补一节，#105 已回复。dtype 域裁定（D-PM-40）没有实际代价：仓里没有 FP16 / FP64 decode 调用方。"
+        },
+        {
+          "at": "2026-09-20T01:19",
+          "summary": "RISK contradicts-handoff（01:19Z，自述）：在跑 prefill→decode 硬判据前确认口径——BF-06 要求 stable BF16 chunk 的 final_state 接 decode 并与一次性长前向一致，同时给 decode 的 FP32 final_state 相对 L2 ≤ 1e-5；但现有 kda_fwd_stable 契约的 BF16 chunk 比较是 rtol=atol=0.02、relative L2 ≤ 0.05，状态已经历 BF16 WY / cube 中间量，不能当成全序列 CPU FP32 精确前缀状态。此时还没跑新候选的真机 prefill 测量，是在结果出来前确认契约、不是因失败调预算。提议分层：① 每次 decode 从实际收到的硬件 prefill / 前一 decode 状态起算两个独立 CPU FP32 oracle，严格 o ≤ min(.01, 3F)、state ≤ 1e-5；② 一次 16 token 与 16 次单 token 串接逐位相同；③ prefill 64 / 128 + decode 64 的完整输出 / 末态，对同输入一次性 stable 长前向与全序列两个 CPU FP32 oracle 分别报告，请明确 ③ 的预算（沿用 0.02 / 0.05 并单列前缀 / 后缀误差，还是更严）。状态：主机全量 768 passed / 5 skipped，两个新 decode vendor 在 bd4 编译通过，17 项依赖（含九个 backward）仍在顺序构建，首次完整原生执行尚未开始，无 DONE。"
+        },
+        {
+          "at": "2026-09-20T01:22",
+          "summary": "PM 裁定（D-PM-41，实现前 / 运行前定死）：三层全部保留、分别报告——① decode 自身，从实际收到的状态起算两个独立 CPU FP32 oracle，o ≤ min(1e-2, 3F)、state ≤ 1e-5，不放宽；② 一次 16 token 与 16 次单 token 串接逐位相同；③ 端到端（prefill 64 / 128 + decode 64 对一次性 stable 长前向），o 与 final_state 对两个全序列 CPU FP32 oracle 分别报告，通过线 = min(1e-2, 3·E_oneshot)（E_oneshot = 同次真机运行里一次性长前向对同一 oracle 的相对 L2，自校准），不采用契约里 0.05 的宽线；前缀段与后缀段各自单列、各自也过同一条线，链对一次性长前向的相对 L2 单列作参考、不设门槛。层 3 的线现在定死，过不了要如实报数并发 RISK，不得改线。规格已补一节，#105 已回复。"
+        },
+        {
+          "at": "2026-09-20T01:25",
+          "summary": "STATUS（01:25Z，自述）+ draft PR #114（提交 e7ad827 / 3f09bd2 / c842662）：实现两条 native token-major decode 路径——kernel 内做 BF16 widen、FP32 q*scale、GVA addressing、BF16 RNE 输出，状态始终 FP32；原 FP32 单元与 _prepare_inputs 不改；PM 预批准的 8 个 raw-flags 用例已适配新 ABI（零容差、独立参考保留）。默认入口主机代理审计只有两次 empty；源码发射检查发现隐式跨头 DMA 行间隔为 0，改用 owner 契约的显式 padded-DMA 参数，符号 view 在选定库里明确被拒（未改库 / 生成代码），初始失败生成物保留；两个新 entry 降级、event balance、CCE emission 通过。CPU 精度 82/82，BF16 内部 state 负对照 81/82 被拒（预算在 kernel 实现前已提交）；全量主机 pytest 768 passed / 5 skipped；独立单元 CPU reference 83 passed（不导入 DSL / kernel / simulator）；两个新 vendor 在 bd4 编译通过，17 项依赖（含九个 backward）先编完再首次执行。blockers: prefill 全链口径待 RISK 裁定（不阻塞其他网格）。"
+        },
+        {
+          "at": "2026-09-20T01:29",
+          "summary": "STATUS（01:29Z，自述）：首次完整硬件 workload（B2 / T16 / H4 / HV32、非零 state、bd4）BF16 与 FP32 都通过，17 项 vendor 含九个 backward 全部在首次自定义 kernel 前编完注册；FP32 新路径与只读原实现的 o / state 逐位相同。CPU FP32 双 oracle（喂 BF16 实际舍入输入）结果一致：BF16 o 相对 L2 1.6565e-3（F = 1.6565e-3，预算 4.970e-3）、max_abs 5.63e-5，final_state 1.53e-7（预算 1e-5）；新 FP32 o 1.94e-7，原 FP32 o / state 逐位相同；两 dtype 默认实际公共入口 host 审计通过、输入未修改、NaN 预填全覆盖。其余验收（bd1/2/4 完整网格、bd8/16/28 完整 workload + 边界、跨 bd 哈希、raw-flags 单列审计、prefill 链、三轮性能、Torch NPU 基线）在进行，不因 vendor 或这一组 native 通过提交 DONE。blockers: prefill 全链预算待裁定（PM 已在 01:22Z 裁定，评论 5746672559，见 D-PM-41；已在 #105 再指一次）。PM 对 draft PR #114 只做早期扫描（非评审）：15 个文件（13 新增 2 修改）全在写集内、无保留路径 / .github / pyproject / 二进制、新增行无 IP / 用户目录 / UUID / 令牌；DONE 前不审。"
         }
       ],
       "result": null,
