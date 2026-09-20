@@ -1,7 +1,7 @@
 # GDN grouped BF16 backward
 
 Status: both complete native grids pass, 276/276 records with exact cross-bd
-bytes. Same-card timing and the isolated runtime-warning control are pending.
+bytes. Same-card timing and the isolated runtime-warning qualification also pass.
 
 Task BF-02, issue #101; assigned session gdn-series-20260919T115559Z-29cb31d7.
 Base e10e477b8b6fd6234a63f0aa9a7692c766699d63; original FP32 unit remains read-only.
@@ -99,7 +99,7 @@ in ignored task scratch. A host regression now lowers all three typed stages.
 
 The focused public ABI, mixed-dtype rejection, independent-reference,
 zero-floor, negative-control and lowering suite passes 88 tests. Native
-same-card timing and isolated startup-warning qualification remain pending; no model or CUDA/Triton result
+isolated startup-warning qualification also passes; no model or CUDA/Triton result
 is used as device evidence.
 
 CPU-isolated repository suite: 763 passed, 9 skipped, 5 existing importorskip
@@ -186,3 +186,75 @@ library's `g_coreType` fallback, including for the unchanged FP32 checkpoint.
 No pin, generated bundle or vendor source was patched. This secondary vendor
 build remains unqualified; complete failure logs and the exact located cause
 are in `evidence/secondary-build-failure.md` and accompanying JSON/logs.
+
+## Same-card timing
+
+Both T1024 and T4096 passed three complete original-FP32 / new-BF16 /
+original-FP32 sandwiches on the same selected card, block_dim2,
+B1/H=HV8/K=V128 with both cotangents. Each segment uses ten warmups and
+50 samples; every invocation is synchronized before and after. All 900
+measured samples and 180 warmups are retained, with independent B checks
+before/after each workload and unchanged input bytes.
+
+The baseline is the unchanged original **complete public backward**, including
+checkpoint creation, replay, reverse adjoint, group reduction, output
+allocation and dispatch. It receives the same BF16-rounded operand values
+stored as FP32. The candidate uses true BF16 q/k/v/do storage and its complete
+public entrypoint. Compilation and reference/input generation are outside
+the timed calls.
+
+For each round, baseline is the midpoint of its before/after segment medians.
+The table reports the median across three rounds; ratios are the median of
+per-round baseline/candidate ratios. Full per-segment samples and medians
+remain in `evidence/timing-v1-bd2.json` and `timing-summary.json`.
+
+| T | Original FP32 baseline (ms) | BF16 candidate (ms) | Baseline / candidate |
+| --- | ---: | ---: | ---: |
+| 1024 | 160.43135 | 171.00913 | 0.938100 |
+| 4096 | 647.66286 | 691.93777 | 0.936018 |
+
+The BF16 candidate is approximately 6.6% / 6.8% slower for these workloads.
+There is no speed acceptance threshold. These are Vector implementations
+with FP32 internal arithmetic; no BF16 Cube throughput or CUDA/Triton
+comparison is claimed. No optimization or numerical relaxation was made to
+improve this measured result.
+
+The whole-run occupancy audit has 244 samples, 228 positively matching the
+exact compute child in both registries, no foreign context, and empty
+before/after registries. Health passes after the run. See
+`evidence/timing-v1-bd2-occupancy.json` and the environment/source receipt.
+
+## Runtime warnings and retained diagnostic failure
+
+All 28 task-owned runtime log files are retained after redaction, 1,604 lines
+in total, with 12 startup warnings and no ERROR/FATAL/CRITICAL. There are two
+classes: the plugin-policy query takes its explicit non-forced-update
+fallback, and a TensorFlow framework preload is unavailable. The exact
+missing-library cause of that TensorFlow preload is not identified; no
+TensorFlow backend support is claimed.
+
+A fresh control subprocess imports only Torch/torch_npu, transfers 128 FP32
+values, computes multiply/add on NPU, returns them to CPU and synchronizes.
+Its results are exact. Both warning classes reproduce without importing any
+task kernel, and scheduler initialization succeeds. The completed BF-02
+returned-array evidence independently qualifies the actual CCE/Torch NPU
+path. No warning was suppressed or filtered.
+
+The initial control's five-second hold gave 18 occupancy samples but only five
+positive observations in both registries, below the unchanged requirement
+of more than five. Its numerical result passed; its occupancy qualification
+failed and is preserved in `startup-control-occupancy-insufficient.json`.
+The same control was rerun under a fresh lock with a 20-second hold. It has
+25 samples, 12 positive observations matching the exact compute child,
+no foreign context, empty before/after registries and healthy completion.
+The accepted control is `startup-control-v2`; all original logs remain.
+See `evidence/runtime/runtime-review.json`, its raw logs, control source and
+`startup-control-v2-occupancy.json`.
+
+The contract's support/measured annotation changes only after this evidence
+exists; its ABI, cases, seeds, domain and comparison budgets remain identical
+to the exact runtime snapshot. Native in-process execution, source emission
+and vendor compilation are recorded separately from unexecuted canonical
+board/simulation stages. Fifteen implementation/reference/runtime Python
+sources match the tested snapshot; the two post-run summary tools are listed
+separately in `source-identity-review.json`.

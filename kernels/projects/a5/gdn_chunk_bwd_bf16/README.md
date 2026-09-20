@@ -28,7 +28,9 @@ BF16 / original-FP32 sandwiches on one card, including backward checkpoints.
 Status: 88 focused host tests pass; all three entries lower with balanced
 events and emit CCE. Both complete grids pass 276/276 native records against A/B and
 independent leaves/composition; all 138 cross-bd case/dtype pairs match exactly.
-Same-card timing and the isolated runtime-warning control are pending. Calibration
+Same-card timing passes (FP32/BF16: 160.43/171.01 ms at T1024,
+647.66/691.94 ms at T4096). The isolated runtime-warning qualification
+also passes; its first insufficient sampling window is retained explicitly. Calibration
 JSON files are pre-implementation CPU evidence, not device results.
 
 CPU-isolated repository suite: 763 passed, 9 skipped, 5 existing importorskip
@@ -44,3 +46,11 @@ Complete grid records, receipts and occupancy are in `evidence/grid-v1-bd*`;
 `native-grid-summary.json` and `public-gradient-metrics.json` contain the aggregates.
 `summarize_native.py` rechecks both final grids and every cross-block hash;
 `summarize_timing.py` recomputes all retained same-card sample medians.
+
+`evidence/runtime/runtime-review.json` covers all 28 unfiltered redacted runtime
+logs (1,604 lines, 12 known startup warnings, no error/fatal/critical), with a
+fresh no-task-kernel control. The accepted 20-second control is
+`startup-control-v2`; the initial five-second control lacked sufficient
+positive occupancy samples and remains recorded as that diagnostic failure.
+`contract-status-annotation.json` proves that only evidence/status sections
+were changed after execution; no case, seed, ABI or budget was altered.
