@@ -1,0 +1,405 @@
+{
+  "prefill": {
+    "passed": true,
+    "block_dims": [
+      1,
+      2,
+      4,
+      8,
+      16,
+      28
+    ],
+    "runs": [
+      {
+        "block_dim": 1,
+        "chains": 21,
+        "local_decode_calls": 1428,
+        "worst": {
+          "local_o": 0.001971448407338597,
+          "local_state": 1.4645194693683235e-07,
+          "global_o": 0.003663001964088213,
+          "global_state": 0.0024705663187917465,
+          "prefix_o": 0.003959366909519157,
+          "suffix_o": 0.003267164114049665
+        }
+      },
+      {
+        "block_dim": 2,
+        "chains": 21,
+        "local_decode_calls": 1428,
+        "worst": {
+          "local_o": 0.001971448407338597,
+          "local_state": 1.4645194693683235e-07,
+          "global_o": 0.003663001964088213,
+          "global_state": 0.0024705663187917465,
+          "prefix_o": 0.003959366909519157,
+          "suffix_o": 0.003267164114049665
+        }
+      },
+      {
+        "block_dim": 4,
+        "chains": 21,
+        "local_decode_calls": 1428,
+        "worst": {
+          "local_o": 0.001971448407338597,
+          "local_state": 1.4645194693683235e-07,
+          "global_o": 0.003663001964088213,
+          "global_state": 0.0024705663187917465,
+          "prefix_o": 0.003959366909519157,
+          "suffix_o": 0.003267164114049665
+        }
+      },
+      {
+        "block_dim": 8,
+        "chains": 21,
+        "local_decode_calls": 1428,
+        "worst": {
+          "local_o": 0.001971448407338597,
+          "local_state": 1.4645194693683235e-07,
+          "global_o": 0.003663001964088213,
+          "global_state": 0.0024705663187917465,
+          "prefix_o": 0.003959366909519157,
+          "suffix_o": 0.003267164114049665
+        }
+      },
+      {
+        "block_dim": 16,
+        "chains": 21,
+        "local_decode_calls": 1428,
+        "worst": {
+          "local_o": 0.001971448407338597,
+          "local_state": 1.4645194693683235e-07,
+          "global_o": 0.003663001964088213,
+          "global_state": 0.0024705663187917465,
+          "prefix_o": 0.003959366909519157,
+          "suffix_o": 0.003267164114049665
+        }
+      },
+      {
+        "block_dim": 28,
+        "chains": 21,
+        "local_decode_calls": 1428,
+        "worst": {
+          "local_o": 0.001971448407338597,
+          "local_state": 1.4645194693683235e-07,
+          "global_o": 0.003663001964088213,
+          "global_state": 0.0024705663187917465,
+          "prefix_o": 0.003959366909519157,
+          "suffix_o": 0.003267164114049665
+        }
+      }
+    ],
+    "cross_bd_bitwise": true,
+    "complete": true
+  },
+  "performance": {
+    "passed": true,
+    "cases": [
+      {
+        "shape": {
+          "B": 1,
+          "T": 1,
+          "H": 32,
+          "G": 1,
+          "state": true
+        },
+        "comparisons": {
+          "original_fp32": {
+            "round_speedups": [
+              1.02896196806866,
+              1.0267213284598355,
+              1.018021812260225
+            ],
+            "round_medians": [
+              {
+                "baseline_us": 673.9047499999999,
+                "candidate_us": 654.9365
+              },
+              {
+                "baseline_us": 673.87725,
+                "candidate_us": 656.3389999999999
+              },
+              {
+                "baseline_us": 670.16325,
+                "candidate_us": 658.2995000000001
+              }
+            ],
+            "median_speedup": 1.0267213284598355
+          },
+          "torch_npu": {
+            "round_speedups": [
+              2.5452834380219804,
+              1.368185181376714,
+              1.751460608304029
+            ],
+            "round_medians": [
+              {
+                "baseline_us": 1667.05375,
+                "candidate_us": 654.958
+              },
+              {
+                "baseline_us": 884.81425,
+                "candidate_us": 646.7065
+              },
+              {
+                "baseline_us": 1135.577,
+                "candidate_us": 648.3599999999999
+              }
+            ],
+            "median_speedup": 1.751460608304029
+          }
+        }
+      },
+      {
+        "shape": {
+          "B": 1,
+          "T": 2,
+          "H": 32,
+          "G": 1,
+          "state": true
+        },
+        "comparisons": {
+          "original_fp32": {
+            "round_speedups": [
+              1.4003218501838826,
+              1.7830401360180534,
+              3.3065943468931334
+            ],
+            "round_medians": [
+              {
+                "baseline_us": 939.3485000000001,
+                "candidate_us": 670.809
+              },
+              {
+                "baseline_us": 1183.99125,
+                "candidate_us": 664.0295
+              },
+              {
+                "baseline_us": 2625.8062499999996,
+                "candidate_us": 794.112
+              }
+            ],
+            "median_speedup": 1.7830401360180534
+          },
+          "torch_npu": {
+            "round_speedups": [
+              2.620984255194873,
+              2.63956632132851,
+              2.649190927659907
+            ],
+            "round_medians": [
+              {
+                "baseline_us": 2382.71975,
+                "candidate_us": 909.0935
+              },
+              {
+                "baseline_us": 2381.69125,
+                "candidate_us": 902.304
+              },
+              {
+                "baseline_us": 2370.2245,
+                "candidate_us": 894.6975
+              }
+            ],
+            "median_speedup": 2.63956632132851
+          }
+        }
+      },
+      {
+        "shape": {
+          "B": 1,
+          "T": 16,
+          "H": 32,
+          "G": 1,
+          "state": true
+        },
+        "comparisons": {
+          "original_fp32": {
+            "round_speedups": [
+              0.8140672445105136,
+              0.988346753912406,
+              0.7480153393756411
+            ],
+            "round_medians": [
+              {
+                "baseline_us": 2247.9775,
+                "candidate_us": 2761.415
+              },
+              {
+                "baseline_us": 2579.0784999999996,
+                "candidate_us": 2609.4875
+              },
+              {
+                "baseline_us": 2045.56875,
+                "candidate_us": 2734.6615
+              }
+            ],
+            "median_speedup": 0.8140672445105136
+          },
+          "torch_npu": {
+            "round_speedups": [
+              3.9605203533200366,
+              3.8379106732700774,
+              3.603902044613783
+            ],
+            "round_medians": [
+              {
+                "baseline_us": 10256.415,
+                "candidate_us": 2589.6634999999997
+              },
+              {
+                "baseline_us": 9685.526,
+                "candidate_us": 2523.6454999999996
+              },
+              {
+                "baseline_us": 8948.00225,
+                "candidate_us": 2482.865
+              }
+            ],
+            "median_speedup": 3.8379106732700774
+          }
+        }
+      },
+      {
+        "shape": {
+          "B": 2,
+          "T": 16,
+          "H": 4,
+          "G": 8,
+          "state": true
+        },
+        "comparisons": {
+          "original_fp32": {
+            "round_speedups": [
+              1.2534575318530585,
+              1.013100923482011,
+              0.8556268653949539
+            ],
+            "round_medians": [
+              {
+                "baseline_us": 5991.5715,
+                "candidate_us": 4780.0355
+              },
+              {
+                "baseline_us": 4780.262000000001,
+                "candidate_us": 4718.446
+              },
+              {
+                "baseline_us": 4038.5694999999996,
+                "candidate_us": 4720.0125
+              }
+            ],
+            "median_speedup": 1.013100923482011
+          },
+          "torch_npu": {
+            "round_speedups": [
+              2.006843411341944,
+              1.7981354531751286,
+              2.311279548002621
+            ],
+            "round_medians": [
+              {
+                "baseline_us": 9641.389500000001,
+                "candidate_us": 4804.255999999999
+              },
+              {
+                "baseline_us": 8633.0515,
+                "candidate_us": 4801.112999999999
+              },
+              {
+                "baseline_us": 11189.9305,
+                "candidate_us": 4841.4439999999995
+              }
+            ],
+            "median_speedup": 2.006843411341944
+          }
+        }
+      }
+    ],
+    "fixed_cost": {
+      "method": "T1/T16 linear intercept; estimate includes bridge and device fixed costs",
+      "enqueue_note": "CPU wall time until API returns; may include runtime waits, not pure CPU instruction cost",
+      "rounds": [
+        {
+          "original_fp32_before": {
+            "one_token_us": 675.828,
+            "one_token_enqueue_us": 571.4665,
+            "marginal_us_per_token": 100.64100000000002,
+            "estimated_fixed_us": 575.1869999999999
+          },
+          "native_bf16": {
+            "one_token_us": 654.9365,
+            "one_token_enqueue_us": 374.03099999999995,
+            "marginal_us_per_token": 140.4319,
+            "estimated_fixed_us": 514.5046
+          },
+          "original_fp32_after": {
+            "one_token_us": 671.9815,
+            "one_token_enqueue_us": 564.3325,
+            "marginal_us_per_token": 109.23536666666665,
+            "estimated_fixed_us": 562.7461333333333
+          },
+          "native_fp32": {
+            "one_token_us": 650.9235,
+            "one_token_enqueue_us": 375.854,
+            "marginal_us_per_token": 145.06730000000002,
+            "estimated_fixed_us": 505.85619999999994
+          }
+        },
+        {
+          "original_fp32_before": {
+            "one_token_us": 675.6610000000001,
+            "one_token_enqueue_us": 570.344,
+            "marginal_us_per_token": 160.64923333333334,
+            "estimated_fixed_us": 515.0117666666667
+          },
+          "native_bf16": {
+            "one_token_us": 656.3389999999999,
+            "one_token_enqueue_us": 377.75250000000005,
+            "marginal_us_per_token": 130.2099,
+            "estimated_fixed_us": 526.1290999999999
+          },
+          "original_fp32_after": {
+            "one_token_us": 672.0935,
+            "one_token_enqueue_us": 565.6115,
+            "marginal_us_per_token": 93.37759999999999,
+            "estimated_fixed_us": 578.7158999999999
+          },
+          "native_fp32": {
+            "one_token_us": 649.1089999999999,
+            "one_token_enqueue_us": 373.62350000000004,
+            "marginal_us_per_token": 140.21743333333333,
+            "estimated_fixed_us": 508.89156666666656
+          }
+        },
+        {
+          "original_fp32_before": {
+            "one_token_us": 673.3164999999999,
+            "one_token_enqueue_us": 567.578,
+            "marginal_us_per_token": 93.4134,
+            "estimated_fixed_us": 579.9030999999999
+          },
+          "native_bf16": {
+            "one_token_us": 658.2995000000001,
+            "one_token_enqueue_us": 376.4045,
+            "marginal_us_per_token": 138.42413333333334,
+            "estimated_fixed_us": 519.8753666666668
+          },
+          "original_fp32_after": {
+            "one_token_us": 667.01,
+            "one_token_enqueue_us": 564.7529999999999,
+            "marginal_us_per_token": 89.97399999999999,
+            "estimated_fixed_us": 577.0360000000001
+          },
+          "native_fp32": {
+            "one_token_us": 655.822,
+            "one_token_enqueue_us": 374.967,
+            "marginal_us_per_token": 139.17779999999996,
+            "estimated_fixed_us": 516.6442000000001
+          }
+        }
+      ]
+    },
+    "speed_gate": "None; report all measured results, including slowdowns."
+  }
+}
