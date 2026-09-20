@@ -14,6 +14,11 @@ unchanged, per chunk and value head (gates are log2, hence the ln2 scaling befor
 A2 form: no ``@vf``; one tile op per row per term, the three reductions via a two-stage ``cadd`` plus a scalar
 read, and the per-token ``beta``/``dbeta`` scalars through ``Var``. Public ``q``/``k``/``v``/``beta`` and the
 public gradients are token-major 2-D views; the chain caches stay chunk-major.
+
+The chunk's ten per-row inputs stay in UB as BF16 and are cast one row at a time, and the chunk is loaded in
+two halves of 32 rows: b3 has 192 KB of UB, and a whole 64-row chunk of FP32 inputs does not fit. ``dg`` is
+the exception that stays resident for all 64 rows, because its last row takes a correction that is only
+complete once every row of the chunk has contributed to ``term2``.
 """
 
 import math
@@ -23,6 +28,8 @@ from ascriptor.a2 import *
 L = 64
 
 D = 128
+
+HALF_L = L // 2
 
 LN2 = math.log(2.0)
 
@@ -53,26 +60,37 @@ def inverse_epilogue_a2_kernel(
     HV: i32,
     C: i32,
 ):
-    src_b_ub = Tensor(DT.bfloat16, [L, D], Position.UB)
-    g_ub = Tensor(DT.float, [L, D], Position.UB)
-    q_ub = Tensor(DT.float, [L, D], Position.UB)
-    k_ub = Tensor(DT.float, [L, D], Position.UB)
-    v_ub = Tensor(DT.float, [L, D], Position.UB)
-    dqg_ub = Tensor(DT.float, [L, D], Position.UB)
-    dkg_ub = Tensor(DT.float, [L, D], Position.UB)
-    dvb_ub = Tensor(DT.float, [L, D], Position.UB)
-    dkbg_ub = Tensor(DT.float, [L, D], Position.UB)
-    dq_f_ub = Tensor(DT.float, [L, D], Position.UB)
-    dk_f_ub = Tensor(DT.float, [L, D], Position.UB)
-    dv_f_ub = Tensor(DT.float, [L, D], Position.UB)
+    g_b_ub = Tensor(DT.bfloat16, [HALF_L, D], Position.UB)
+    q_b_ub = Tensor(DT.bfloat16, [HALF_L, D], Position.UB)
+    k_b_ub = Tensor(DT.bfloat16, [HALF_L, D], Position.UB)
+    v_b_ub = Tensor(DT.bfloat16, [HALF_L, D], Position.UB)
+    dqg_b_ub = Tensor(DT.bfloat16, [HALF_L, D], Position.UB)
+    dkg_b_ub = Tensor(DT.bfloat16, [HALF_L, D], Position.UB)
+    dvb_b_ub = Tensor(DT.bfloat16, [HALF_L, D], Position.UB)
+    dkbg_b_ub = Tensor(DT.bfloat16, [HALF_L, D], Position.UB)
+    dq_out_ub = Tensor(DT.bfloat16, [HALF_L, D], Position.UB)
+    dk_out_ub = Tensor(DT.bfloat16, [HALF_L, D], Position.UB)
+    dv_out_ub = Tensor(DT.bfloat16, [HALF_L, D], Position.UB)
+    kexp_out_ub = Tensor(DT.bfloat16, [HALF_L, D], Position.UB)
     dg_f_ub = Tensor(DT.float, [L, D], Position.UB)
-    kexp_f_ub = Tensor(DT.float, [L, D], Position.UB)
-    out_b_ub = Tensor(DT.bfloat16, [L, D], Position.UB)
+    dg_b_ub = Tensor(DT.bfloat16, [L, D], Position.UB)
     dbeta_f_ub = Tensor(DT.float, [L, 8], Position.UB)
+    glast_b_ub = Tensor(DT.bfloat16, [1, D], Position.UB)
+    glast_ub = Tensor(DT.float, [1, D], Position.UB)
     hrow_b_ub = Tensor(DT.bfloat16, [1, D], Position.UB)
     dhrow_b_ub = Tensor(DT.bfloat16, [1, D], Position.UB)
     hrow_ub = Tensor(DT.float, [1, D], Position.UB)
     dhrow_ub = Tensor(DT.float, [1, D], Position.UB)
+    grow_ub = Tensor(DT.float, [1, D], Position.UB)
+    qrow_ub = Tensor(DT.float, [1, D], Position.UB)
+    krow_ub = Tensor(DT.float, [1, D], Position.UB)
+    vrow_ub = Tensor(DT.float, [1, D], Position.UB)
+    dqgrow_ub = Tensor(DT.float, [1, D], Position.UB)
+    dkgrow_ub = Tensor(DT.float, [1, D], Position.UB)
+    dvbrow_ub = Tensor(DT.float, [1, D], Position.UB)
+    dkbgrow_ub = Tensor(DT.float, [1, D], Position.UB)
+    dqrow_ub = Tensor(DT.float, [1, D], Position.UB)
+    kexprow_ub = Tensor(DT.float, [1, D], Position.UB)
     expg_ub = Tensor(DT.float, [1, D], Position.UB)
     explmg_ub = Tensor(DT.float, [1, D], Position.UB)
     expgl_ub = Tensor(DT.float, [1, D], Position.UB)
@@ -94,6 +112,7 @@ def inverse_epilogue_a2_kernel(
     dot_val = Var(0.0, dtype=DT.float)
     sum_val = Var(0.0, dtype=DT.float)
     n_d = L * D
+    n_hd = HALF_L * D
 
     with auto_sync():
         for work in range(work_begin, work_end):
@@ -106,25 +125,11 @@ def inverse_epilogue_a2_kernel(
             qk_col = Var(h_idx * D)
             hv_col = Var(hv_idx * D)
 
-            src_b_ub[0:L, 0:D] <<= g_cumsum[row0:row0 + L, hv_col:hv_col + D]
-            cast(g_ub[0:L, 0:D], src_b_ub[0:L, 0:D], round_mode=RoundMode.NONE, count=n_d)
-            src_b_ub[0:L, 0:D] <<= q[row0:row0 + L, qk_col:qk_col + D]
-            cast(q_ub[0:L, 0:D], src_b_ub[0:L, 0:D], round_mode=RoundMode.NONE, count=n_d)
-            src_b_ub[0:L, 0:D] <<= k[row0:row0 + L, qk_col:qk_col + D]
-            cast(k_ub[0:L, 0:D], src_b_ub[0:L, 0:D], round_mode=RoundMode.NONE, count=n_d)
-            src_b_ub[0:L, 0:D] <<= v[row0:row0 + L, hv_col:hv_col + D]
-            cast(v_ub[0:L, 0:D], src_b_ub[0:L, 0:D], round_mode=RoundMode.NONE, count=n_d)
-            src_b_ub[0:L, 0:D] <<= d_qg[b_idx, hv_idx, c_idx, 0:L, 0:D]
-            cast(dqg_ub[0:L, 0:D], src_b_ub[0:L, 0:D], round_mode=RoundMode.NONE, count=n_d)
-            src_b_ub[0:L, 0:D] <<= d_kg[b_idx, hv_idx, c_idx, 0:L, 0:D]
-            cast(dkg_ub[0:L, 0:D], src_b_ub[0:L, 0:D], round_mode=RoundMode.NONE, count=n_d)
-            src_b_ub[0:L, 0:D] <<= d_v_beta[b_idx, hv_idx, c_idx, 0:L, 0:D]
-            cast(dvb_ub[0:L, 0:D], src_b_ub[0:L, 0:D], round_mode=RoundMode.NONE, count=n_d)
-            src_b_ub[0:L, 0:D] <<= d_k_beta_g[b_idx, hv_idx, c_idx, 0:L, 0:D]
-            cast(dkbg_ub[0:L, 0:D], src_b_ub[0:L, 0:D], round_mode=RoundMode.NONE, count=n_d)
+            glast_b_ub[0:1, 0:D] <<= g_cumsum[row0 + L - 1:row0 + L, hv_col:hv_col + D]
+            cast(glast_ub[0:1, 0:D], glast_b_ub[0:1, 0:D], round_mode=RoundMode.NONE, count=D)
 
             # exp_g_last, and term1 of d_g_last = sum_D(h[row] * dh[row]) * exp_g_last[row]
-            muls(sh_ub[0:1, 0:D], g_ub[L - 1:L, 0:D], LN2, count=D)
+            muls(sh_ub[0:1, 0:D], glast_ub[0:1, 0:D], LN2, count=D)
             exp(expgl_ub[0:1, 0:D], sh_ub[0:1, 0:D], count=D)
             for gk in range(0, D):
                 hrow_b_ub[0:1, 0:D] <<= h[b_idx, c_idx, hv_idx, gk:gk + 1, 0:D]
@@ -140,63 +145,85 @@ def inverse_epilogue_a2_kernel(
                 sum_val.SetValueTo(dglast_ub[0:1, gk:gk + 1])
 
             dup(term2_ub[0:1, 0:D], 0.0, count=D)
-            for r in range(0, L):
-                muls(sh_ub[0:1, 0:D], g_ub[r:r + 1, 0:D], LN2, count=D)
-                exp(expg_ub[0:1, 0:D], sh_ub[0:1, 0:D], count=D)
-                sub(sh_ub[0:1, 0:D], g_ub[L - 1:L, 0:D], g_ub[r:r + 1, 0:D], count=D)
-                muls(sh_ub[0:1, 0:D], sh_ub[0:1, 0:D], LN2, count=D)
-                exp(explmg_ub[0:1, 0:D], sh_ub[0:1, 0:D], count=D)
-                beta_val.GetValueFrom(beta[row0 + r:row0 + r + 1, hv_idx:hv_idx + 1])
+            for half in range(0, 2):
+                r0 = Var(half * HALF_L)
+                tok = Var(row0 + r0)
 
-                # dq = d_qg * exp_g * scale
-                mul(dq_f_ub[r:r + 1, 0:D], dqg_ub[r:r + 1, 0:D], expg_ub[0:1, 0:D], count=D)
-                muls(dq_f_ub[r:r + 1, 0:D], dq_f_ub[r:r + 1, 0:D], SCALE, count=D)
-                # dk_from_kg = d_kg * exp(g_last - g) ; k_exp = k * exp_g
-                mul(dkkg_ub[0:1, 0:D], dkg_ub[r:r + 1, 0:D], explmg_ub[0:1, 0:D], count=D)
-                mul(kexp_f_ub[r:r + 1, 0:D], k_ub[r:r + 1, 0:D], expg_ub[0:1, 0:D], count=D)
-                # dv = d_v_beta * beta
-                muls(dv_f_ub[r:r + 1, 0:D], dvb_ub[r:r + 1, 0:D], beta_val, count=D)
+                g_b_ub[0:HALF_L, 0:D] <<= g_cumsum[tok:tok + HALF_L, hv_col:hv_col + D]
+                q_b_ub[0:HALF_L, 0:D] <<= q[tok:tok + HALF_L, qk_col:qk_col + D]
+                k_b_ub[0:HALF_L, 0:D] <<= k[tok:tok + HALF_L, qk_col:qk_col + D]
+                v_b_ub[0:HALF_L, 0:D] <<= v[tok:tok + HALF_L, hv_col:hv_col + D]
+                dqg_b_ub[0:HALF_L, 0:D] <<= d_qg[b_idx, hv_idx, c_idx, r0:r0 + HALF_L, 0:D]
+                dkg_b_ub[0:HALF_L, 0:D] <<= d_kg[b_idx, hv_idx, c_idx, r0:r0 + HALF_L, 0:D]
+                dvb_b_ub[0:HALF_L, 0:D] <<= d_v_beta[b_idx, hv_idx, c_idx, r0:r0 + HALF_L, 0:D]
+                dkbg_b_ub[0:HALF_L, 0:D] <<= d_k_beta_g[b_idx, hv_idx, c_idx, r0:r0 + HALF_L, 0:D]
 
-                # dbeta = sum_D(d_v_beta * v) + sum_D(d_k_beta_g * k_exp)
-                mul(tmp_ub[0:1, 0:D], dvb_ub[r:r + 1, 0:D], v_ub[r:r + 1, 0:D], count=D)
-                cadd(dot_ub[0:1, 0:2], tmp_ub[0:1, 0:D], repeat=2, count_per_rep=64)
-                cadd(dot2_ub[0:1, 0:1], dot_ub[0:1, 0:2], repeat=1, count_per_rep=2)
-                sum_val.GetValueFrom(dot2_ub[0:1, 0:1])
-                mul(tmp_ub[0:1, 0:D], dkbg_ub[r:r + 1, 0:D], kexp_f_ub[r:r + 1, 0:D], count=D)
-                cadd(dot_ub[0:1, 0:2], tmp_ub[0:1, 0:D], repeat=2, count_per_rep=64)
-                cadd(dot2_ub[0:1, 0:1], dot_ub[0:1, 0:2], repeat=1, count_per_rep=2)
-                dot_val.GetValueFrom(dot2_ub[0:1, 0:1])
-                sum_val.set(sum_val + dot_val)
-                sum_val.SetValueTo(dbeta_f_ub[r:r + 1, 0:1])
+                for r in range(0, HALF_L):
+                    cast(grow_ub[0:1, 0:D], g_b_ub[r:r + 1, 0:D], round_mode=RoundMode.NONE, count=D)
+                    cast(qrow_ub[0:1, 0:D], q_b_ub[r:r + 1, 0:D], round_mode=RoundMode.NONE, count=D)
+                    cast(krow_ub[0:1, 0:D], k_b_ub[r:r + 1, 0:D], round_mode=RoundMode.NONE, count=D)
+                    cast(vrow_ub[0:1, 0:D], v_b_ub[r:r + 1, 0:D], round_mode=RoundMode.NONE, count=D)
+                    cast(dqgrow_ub[0:1, 0:D], dqg_b_ub[r:r + 1, 0:D], round_mode=RoundMode.NONE, count=D)
+                    cast(dkgrow_ub[0:1, 0:D], dkg_b_ub[r:r + 1, 0:D], round_mode=RoundMode.NONE, count=D)
+                    cast(dvbrow_ub[0:1, 0:D], dvb_b_ub[r:r + 1, 0:D], round_mode=RoundMode.NONE, count=D)
+                    cast(dkbgrow_ub[0:1, 0:D], dkbg_b_ub[r:r + 1, 0:D], round_mode=RoundMode.NONE, count=D)
 
-                # dk = dk_from_kg + d_k_beta_g * beta * exp_g
-                muls(tmp_ub[0:1, 0:D], dkbg_ub[r:r + 1, 0:D], beta_val, count=D)
-                mul(tmp_ub[0:1, 0:D], tmp_ub[0:1, 0:D], expg_ub[0:1, 0:D], count=D)
-                add(dk_f_ub[r:r + 1, 0:D], dkkg_ub[0:1, 0:D], tmp_ub[0:1, 0:D], count=D)
+                    muls(sh_ub[0:1, 0:D], grow_ub[0:1, 0:D], LN2, count=D)
+                    exp(expg_ub[0:1, 0:D], sh_ub[0:1, 0:D], count=D)
+                    sub(sh_ub[0:1, 0:D], glast_ub[0:1, 0:D], grow_ub[0:1, 0:D], count=D)
+                    muls(sh_ub[0:1, 0:D], sh_ub[0:1, 0:D], LN2, count=D)
+                    exp(explmg_ub[0:1, 0:D], sh_ub[0:1, 0:D], count=D)
+                    beta_val.GetValueFrom(beta[tok + r:tok + r + 1, hv_idx:hv_idx + 1])
 
-                # dg = q * dq - k * dk_from_kg + d_k_beta_g * k_exp * beta
-                mul(acc_ub[0:1, 0:D], q_ub[r:r + 1, 0:D], dq_f_ub[r:r + 1, 0:D], count=D)
-                mul(tmp_ub[0:1, 0:D], k_ub[r:r + 1, 0:D], dkkg_ub[0:1, 0:D], count=D)
-                sub(acc_ub[0:1, 0:D], acc_ub[0:1, 0:D], tmp_ub[0:1, 0:D], count=D)
-                add(term2_ub[0:1, 0:D], term2_ub[0:1, 0:D], tmp_ub[0:1, 0:D], count=D)
-                mul(tmp_ub[0:1, 0:D], dkbg_ub[r:r + 1, 0:D], kexp_f_ub[r:r + 1, 0:D], count=D)
-                muls(tmp_ub[0:1, 0:D], tmp_ub[0:1, 0:D], beta_val, count=D)
-                add(dg_f_ub[r:r + 1, 0:D], acc_ub[0:1, 0:D], tmp_ub[0:1, 0:D], count=D)
+                    # dq = d_qg * exp_g * scale
+                    mul(dqrow_ub[0:1, 0:D], dqgrow_ub[0:1, 0:D], expg_ub[0:1, 0:D], count=D)
+                    muls(dqrow_ub[0:1, 0:D], dqrow_ub[0:1, 0:D], SCALE, count=D)
+                    cast(dq_out_ub[r:r + 1, 0:D], dqrow_ub[0:1, 0:D], round_mode=RoundMode.TO_EVEN, count=D)
+                    # dk_from_kg = d_kg * exp(g_last - g) ; k_exp = k * exp_g
+                    mul(dkkg_ub[0:1, 0:D], dkgrow_ub[0:1, 0:D], explmg_ub[0:1, 0:D], count=D)
+                    mul(kexprow_ub[0:1, 0:D], krow_ub[0:1, 0:D], expg_ub[0:1, 0:D], count=D)
+                    cast(kexp_out_ub[r:r + 1, 0:D], kexprow_ub[0:1, 0:D], round_mode=RoundMode.TO_EVEN, count=D)
+                    # dv = d_v_beta * beta
+                    muls(tmp_ub[0:1, 0:D], dvbrow_ub[0:1, 0:D], beta_val, count=D)
+                    cast(dv_out_ub[r:r + 1, 0:D], tmp_ub[0:1, 0:D], round_mode=RoundMode.TO_EVEN, count=D)
 
-            # dg[L-1] += term1 + term2
+                    # dbeta = sum_D(d_v_beta * v) + sum_D(d_k_beta_g * k_exp)
+                    mul(tmp_ub[0:1, 0:D], dvbrow_ub[0:1, 0:D], vrow_ub[0:1, 0:D], count=D)
+                    cadd(dot_ub[0:1, 0:2], tmp_ub[0:1, 0:D], repeat=2, count_per_rep=64)
+                    cadd(dot2_ub[0:1, 0:1], dot_ub[0:1, 0:2], repeat=1, count_per_rep=2)
+                    sum_val.GetValueFrom(dot2_ub[0:1, 0:1])
+                    mul(tmp_ub[0:1, 0:D], dkbgrow_ub[0:1, 0:D], kexprow_ub[0:1, 0:D], count=D)
+                    cadd(dot_ub[0:1, 0:2], tmp_ub[0:1, 0:D], repeat=2, count_per_rep=64)
+                    cadd(dot2_ub[0:1, 0:1], dot_ub[0:1, 0:2], repeat=1, count_per_rep=2)
+                    dot_val.GetValueFrom(dot2_ub[0:1, 0:1])
+                    sum_val.set(sum_val + dot_val)
+                    sum_val.SetValueTo(dbeta_f_ub[r0 + r:r0 + r + 1, 0:1])
+
+                    # dk = dk_from_kg + d_k_beta_g * beta * exp_g
+                    muls(tmp_ub[0:1, 0:D], dkbgrow_ub[0:1, 0:D], beta_val, count=D)
+                    mul(tmp_ub[0:1, 0:D], tmp_ub[0:1, 0:D], expg_ub[0:1, 0:D], count=D)
+                    add(tmp_ub[0:1, 0:D], dkkg_ub[0:1, 0:D], tmp_ub[0:1, 0:D], count=D)
+                    cast(dk_out_ub[r:r + 1, 0:D], tmp_ub[0:1, 0:D], round_mode=RoundMode.TO_EVEN, count=D)
+
+                    # dg = q * dq - k * dk_from_kg + d_k_beta_g * k_exp * beta
+                    mul(acc_ub[0:1, 0:D], qrow_ub[0:1, 0:D], dqrow_ub[0:1, 0:D], count=D)
+                    mul(tmp_ub[0:1, 0:D], krow_ub[0:1, 0:D], dkkg_ub[0:1, 0:D], count=D)
+                    sub(acc_ub[0:1, 0:D], acc_ub[0:1, 0:D], tmp_ub[0:1, 0:D], count=D)
+                    add(term2_ub[0:1, 0:D], term2_ub[0:1, 0:D], tmp_ub[0:1, 0:D], count=D)
+                    mul(tmp_ub[0:1, 0:D], dkbgrow_ub[0:1, 0:D], kexprow_ub[0:1, 0:D], count=D)
+                    muls(tmp_ub[0:1, 0:D], tmp_ub[0:1, 0:D], beta_val, count=D)
+                    add(dg_f_ub[r0 + r:r0 + r + 1, 0:D], acc_ub[0:1, 0:D], tmp_ub[0:1, 0:D], count=D)
+
+                dq_hv[tok:tok + HALF_L, hv_col:hv_col + D] <<= dq_out_ub[0:HALF_L, 0:D]
+                dk_hv[tok:tok + HALF_L, hv_col:hv_col + D] <<= dk_out_ub[0:HALF_L, 0:D]
+                dv[tok:tok + HALF_L, hv_col:hv_col + D] <<= dv_out_ub[0:HALF_L, 0:D]
+                k_exp[b_idx, hv_idx, c_idx, r0:r0 + HALF_L, 0:D] <<= kexp_out_ub[0:HALF_L, 0:D]
+
+            # dg[L-1] += term1 + term2 (complete only once every row has contributed)
             add(tmp_ub[0:1, 0:D], dglast_ub[0:1, 0:D], term2_ub[0:1, 0:D], count=D)
             add(dg_f_ub[L - 1:L, 0:D], dg_f_ub[L - 1:L, 0:D], tmp_ub[0:1, 0:D], count=D)
-
-            cast(out_b_ub[0:L, 0:D], dq_f_ub[0:L, 0:D], round_mode=RoundMode.TO_EVEN, count=n_d)
-            dq_hv[row0:row0 + L, hv_col:hv_col + D] <<= out_b_ub[0:L, 0:D]
-            cast(out_b_ub[0:L, 0:D], dk_f_ub[0:L, 0:D], round_mode=RoundMode.TO_EVEN, count=n_d)
-            dk_hv[row0:row0 + L, hv_col:hv_col + D] <<= out_b_ub[0:L, 0:D]
-            cast(out_b_ub[0:L, 0:D], dv_f_ub[0:L, 0:D], round_mode=RoundMode.TO_EVEN, count=n_d)
-            dv[row0:row0 + L, hv_col:hv_col + D] <<= out_b_ub[0:L, 0:D]
-            cast(out_b_ub[0:L, 0:D], dg_f_ub[0:L, 0:D], round_mode=RoundMode.TO_EVEN, count=n_d)
-            dg_core[row0:row0 + L, hv_col:hv_col + D] <<= out_b_ub[0:L, 0:D]
-            cast(out_b_ub[0:L, 0:D], kexp_f_ub[0:L, 0:D], round_mode=RoundMode.TO_EVEN, count=n_d)
-            k_exp[b_idx, hv_idx, c_idx, 0:L, 0:D] <<= out_b_ub[0:L, 0:D]
+            cast(dg_b_ub[0:L, 0:D], dg_f_ub[0:L, 0:D], round_mode=RoundMode.TO_EVEN, count=n_d)
+            dg_core[row0:row0 + L, hv_col:hv_col + D] <<= dg_b_ub[0:L, 0:D]
             ub_to_gm_pad(dbeta[row0:row0 + L, hv_idx:hv_idx + 1], dbeta_f_ub[0:L, 0:1], L, 1, 0, HV - 1)
 
     return dq_hv, dk_hv, dv, dbeta, dg_core, k_exp

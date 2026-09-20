@@ -4,7 +4,7 @@ Port of this repository's ``a5/kda_bwd_stable/kernels/inverse_mm.py`` (the A5K-0
 to the A2 (c220) facade. Products, per chunk and value head::
 
     d_vh    = dv  @ h            d_w        = -d_vh              (the negation is in-kernel here, see below)
-    d_qg    = do  @ h            d_v_beta   = Akk^T @ dv
+    d_qg    = do  @ h  (``grad_out``)            d_v_beta   = Akk^T @ dv
     d_kg    = vnew @ dh          d_k_beta_g = Akk^T @ d_w
 
 A2 differences:
@@ -33,7 +33,7 @@ HALF_L = L // 2
 
 @kernel()
 def inverse_mm_a2_kernel(
-    do: GM[bf16, ('BT', 'HVK')],
+    grad_out: GM[bf16, ('BT', 'HVK')],  # named grad_out, not do: the ACLNN API emits the name as a C++ identifier
     vnew: GM[bf16, ('BT', 'HVK')],
     dv: GM[bf16, ('BT', 'HVK')],
     h: GM[bf16, ('B', 'C', 'HV', 128, 128)],
@@ -84,7 +84,7 @@ def inverse_mm_a2_kernel(
             rowl = Var(GetSubBlockIdx() * HALF_L)
 
             l1_dv <<= dv[row0:row0 + L, hv_col:hv_col + D]
-            l1_do <<= do[row0:row0 + L, hv_col:hv_col + D]
+            l1_do <<= grad_out[row0:row0 + L, hv_col:hv_col + D]
             l1_vnew <<= vnew[row0:row0 + L, hv_col:hv_col + D]
             l1_akk <<= Akk[row0:row0 + L, l_col:l_col + L]
             l1_h <<= h[b_idx, c_idx, hv_idx, 0:D, 0:D]

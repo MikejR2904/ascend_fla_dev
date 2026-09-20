@@ -40,10 +40,11 @@ def finalize_pair_a2_kernel(
     l1_q = DBuff(DT.bfloat16, [L, D], Position.L1)
     l1_k = DBuff(DT.bfloat16, [L, D], Position.L1)
     l1_kg = DBuff(DT.bfloat16, [L, D], Position.L1)
-    l0c_dq = DBuff(DT.float, [L, D], Position.L0C)
-    l0c_dk = DBuff(DT.float, [L, D], Position.L0C)
-    l0c_s = DBuff(DT.float, [L, D], Position.L0C)
-    l0c_t = DBuff(DT.float, [L, D], Position.L0C)
+    # b3 has 128 KB of L0C, so the four [64, 128] FP32 products share one pair of accumulators: the
+    # row pair drains to GM before the column pair is issued, with an explicit barrier(Pipe.M) between
+    # the two rounds (A2-01: repeated short MMADs against one L0C block do not interlock in hardware).
+    l0c_a = Tensor(DT.float, [L, D], Position.L0C)
+    l0c_b = Tensor(DT.float, [L, D], Position.L0C)
 
     chunk_count = Var(T // L)
     work_count = B * HV * chunk_count
@@ -64,18 +65,19 @@ def finalize_pair_a2_kernel(
             l1_mqk[slot][0:L, 0:L] <<= Mqk[b_idx, hv_idx, row0:row1, 0:L]
             l1_q[slot][0:L, 0:D] <<= q_hv[b_idx, hv_idx, row0:row1, 0:D]
             l1_kg[slot][0:L, 0:D] <<= kg[b_idx, hv_idx, row0:row1, 0:D]
-            matmul(l0c_dq[slot], l1_mqk[slot], l1_kg[slot].T, m=L, n=D, k=L, splitn=D)
-            matmul(l0c_dk[slot], l1_mqk[slot].T, l1_q[slot].T, m=L, n=D, k=L, splitn=D)
-            dq_pair[b_idx, hv_idx, row0:row1, 0:D] <<= l0c_dq[slot]
-            dk_pair[b_idx, hv_idx, row0:row1, 0:D] <<= l0c_dk[slot]
+            matmul(l0c_a, l1_mqk[slot], l1_kg[slot].T, m=L, n=D, k=L, splitn=D)
+            matmul(l0c_b, l1_mqk[slot].T, l1_q[slot].T, m=L, n=D, k=L, splitn=D)
+            dq_pair[b_idx, hv_idx, row0:row1, 0:D] <<= l0c_a
+            dk_pair[b_idx, hv_idx, row0:row1, 0:D] <<= l0c_b
 
             l1_mbase[slot][0:L, 0:L] <<= Mbase[b_idx, hv_idx, row0:row1, 0:L]
             l1_mbeta[slot][0:L, 0:L] <<= Mbeta[b_idx, hv_idx, row0:row1, 0:L]
             l1_k[slot][0:L, 0:D] <<= k_hv[b_idx, hv_idx, row0:row1, 0:D]
-            matmul(l0c_s[slot], l1_mbase[slot], l1_kg[slot].T, m=L, n=D, k=L, splitn=D)
-            matmul(l0c_t[slot], l1_mbeta[slot].T, l1_k[slot].T, m=L, n=D, k=L, splitn=D)
-            s_base[b_idx, hv_idx, row0:row1, 0:D] <<= l0c_s[slot]
-            t_beta[b_idx, hv_idx, row0:row1, 0:D] <<= l0c_t[slot]
+            barrier(Pipe.M)
+            matmul(l0c_a, l1_mbase[slot], l1_kg[slot].T, m=L, n=D, k=L, splitn=D)
+            matmul(l0c_b, l1_mbeta[slot].T, l1_k[slot].T, m=L, n=D, k=L, splitn=D)
+            s_base[b_idx, hv_idx, row0:row1, 0:D] <<= l0c_a
+            t_beta[b_idx, hv_idx, row0:row1, 0:D] <<= l0c_b
             slot += 1
 
     return dq_pair, dk_pair, s_base, t_beta
