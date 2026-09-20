@@ -11,6 +11,13 @@
 
 ### 正在飞的任务（现在没有；A5K-02、PK-02、PK-03 都已于 2026-09-19 合入）
 
+> **2026-09-20T04:36Z 更新：BF-02 DONE 已评审 accept（PR #115，头 `58c56a18`），合入前请用户授权。**
+> - **BF-02（GDN chunk 反向原生 BF16，含分组，A5 真机）**：PM 从原始 JSON 复算——native 276 条全过，BF16 最紧 误差/预算 0.3334（预算 min(1e-2, 3F_g)，实现前提交 `1a3cf5a` 定死），FP32 新对原字节相同 138/138，跨 bd 3036 个哈希相同；BF16 host 算子只有 `aten.empty`；入口域与原 FP32 逐条相同（没有收窄，所以不需要为「域」问用户）；NPU-free 全量 760 / 12（= main 761 − 22 + 21）、focused 88、负对照 20 个失败。三轮三明治从 900 个原始样本重算一致。
+> - **要用户定的**：授权合入 #115（头 `58c56a18`，`--match-head-commit` 钉住）。
+> - **记录给用户知情**：BF16 反向比原 FP32 **慢 6.6–6.8%**（T1024 1.066×、T4096 1.068×，无速度门槛，记为后续性能任务起点）；FP32 缺省 cotangent 的 `zeros` / `zeros_like` 是原实现就有的常量填充（允许）；第二个 CANN 9.2.0 环境（不同 build timestamp）的构建失败记录保留、不声称通过。非阻塞：full-v4 的 source manifest 里 `unit.py` 哈希不在 PR 任何提交里（同 case 在头版下逐位复现），已请申领人在 README 补一句。
+> - **合入后**：CLOSE BF-02，按排队 APPLY 直接派 BF-03（Vector 方案，session `gdn-series-…`），随后 BF-05；BF-07 要等 FMT-02。评审复算脚本与 NPU-free 环境在 `tmp/review/BF-02/`（git-ignored）。
+> - **踩坑（评审工具）**：`pytest -q -q` 会吞掉末尾的 `N passed` 汇总行，只剩进度点——要读汇总就只用一个 `-q`；进度点数 = 收集的用例数，汇总里的 skipped 还含模块级 `importorskip` 的整文件跳过（这里 7 + 5 = 12），所以逐项对账要用 `--collect-only` 的逐文件计数。
+>
 > **2026-09-20T03:49Z 更新：用户授权合入 #114 并「其他的也放行」（D-PM-43）——BF-06 已合入（`7f8f002`，main 全量 761 passed / 12 skipped）；一批 gated 项放行；FMT-02 派给 KDA / PKDA session。**
 > - **BF-06 合入**（bot 账号、`--match-head-commit 98d75fc9`）：KDA decode 原生 BF16 / FP32；`kernel_inventory` 的 `kda_fused_recurrent` BF16 格改为原生（A5）并去掉 `dtype_fix`。入口 dtype 域收窄（BF16 q/k/v 或全 FP32，其余显式报错）与 T=16 变慢（约 1–25%）是用户知情后授权的；raw flags 分支仍是「存量例外 → BF-07」。
 > - **放行了什么（我的读法，用户可纠正，见 D-PM-43）**：`open` 了——PK-05 / GDA-04 / PK-06 / GDA-05（请求来源，已记 `approved_by_user`；**仍是骨架，PM 派单前先补全规格**，后三个还要等前置）、BF-07（kernel 批次已批准；**仍是骨架，派单前先细化规格、定写集，排在 FMT-02 之后**，因为两者写集在 `chunk.py` / `autograd.py` 重叠）、A2-10 / A2-11（**PM 补写了规格**；A2-10 前置 A2-02 没完成、A2-11 前置 A2-10，所以不可派）。**状态位仍 gated、但 gate 改成「用户已放行，待前置任务与规格」**——A2-K1、A2-12 … A2-16、A2-41、A2-43（规格没写、前置没完成，PM 在前置完成、规格写好时直接改 open，不再问用户）。
