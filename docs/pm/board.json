@@ -349,6 +349,13 @@
       "by": "user",
       "decision": "同意 BF-07 decode 近零档的比较对象方案。（用户原话：「同意BF-07 decode近零方案」，回应 PM 给出的定位结果与建议。）",
       "risk": "PM 的读法（就是 PM 报告里写的那一版，不多不少）：只限 boundary-grid 里的近零 decode 端点组（nearzero_*），该组的 final_state / o 改为 (A) 对以 candidate 实际 native-prep 输出为输入的 CPU FP32 reference 判（final_state ≤ 1e-5、o ≤ min(0.01, 3F)，数值不放宽）+ (B) prep 单步冻结预算已过 + (C) raw 与 prepared-public 逐位相同；对旧 prep 的 CPU reference 的偏差（4.31e-4）作观测如实报并写明分解。普通域 decode 与 chunk 的判据、1e-5 / 0.05 / min(0.01, 3F) 的数值、155 / 105 门控、域都不变。申领人须先补三样才能对别的 case 用这条口径：普通 decode state 判据的比较对象、普通域对旧 prep reference 的分布与近零档 ~1% q / k 差异率更高的原因、其它落在 1e-5 之上的近零 decode 切片；已写进 BF-07 规格「端点比较口径追加」第 4 条。实测（自述，申领人）：对旧 prep 的 CPU reference state 4.309e-4；对实际 native-prep 输入的双 CPU reference state 7.24e-8 / 3.96e-8、o 1.54e-3；raw 与 prepared-public 的 o / state 逐位相同；q / k 对旧 NPU prep 173 / 185 个（各 16384）BF16 元素差 1 ulp。"
+    },
+    {
+      "id": "D-PM-52",
+      "date": "2026-09-20",
+      "by": "user",
+      "decision": "批准 BF-07 剩余输出失败的处理（用户原话：「bf 07批准」，回应 PM 的三选一：A 接受为「只披露、不设通过线」的端点类（PM 建议）/ B 派生 kernel 修复批次 / C 其它）。",
+      "risk": "PM 的读法：用户批准的是 PM 建议的 A，不是 B（没有批准 kernel 批次，不改 inherited kernel）、也不是 BF-07 的合入授权（PR 还是 draft、未 DONE、未评审）。A 的内容：chunk（每 bd 16 例）与 decode（每 bd 44 例）的 nearzero 输出失败，其切片同时满足 |golden|max ≤ 32 × FP32 最小正规数（≈ 3.76e-37）且 candidate 与旧 NPU 逐位相同或差 ≤ 1 BF16 ULP（chunk）/ ≤ 4 FP32 ULP（decode）者，归入「只披露、不设通过线」的端点类——披露不是通过；逐切片表照发布、原失败与分类计数保留、附必要下界证明与范围核对（188/188 落在类内）；类外的任何失败仍是失败；普通域判据、数值预算、155 / 105 门控、域、D-PM-48 / 50 / 51 不变。依据（申领人自述，PM 逐项读过其数据）：全部失败切片输出量级 ≲ 3.2e-37；candidate = 旧 NPU（无回退），旧 host 路径同样失败；decode 148/148 与 chunk 16/40 逻辑上任何 kernel 都无法同时满足（两套 CPU 参考在 ~1e-43 量级彼此差 ~33%、或 BF16 最优舍入 L2 已超阈值）。仍待用户：BF-07 合入前的最终授权——届时把 dtype 域收窄（raw 只接 BF16 / FP32，D-PM-40 同型）与本条一并单列。若用户本意是 B 或其它，请指出，PM 更正。"
     }
   ],
   "gated_epics": [
@@ -1385,7 +1392,7 @@
       "wave": "W0",
       "soc": "a5",
       "priority": "P0",
-      "status": "blocked",
+      "status": "in_progress",
       "model": [],
       "kernel": [
         "kda_prep"
@@ -1533,6 +1540,10 @@
         {
           "at": "2026-09-20T17:36",
           "summary": "STATUS（17:33Z，自述，#106，PR #118 头仍 9b1639e，draft，blocked）：对 PM 建议的端点类做了只读范围核对，没有应用该提案、修改验收或重写原始失败——40 个 chunk 与 148 个 decode 实际失败位置逐一用保存的两套 CPU FP32 golden 复核，均落在所提「|golden|max ≤ 32 × FP32 最小正规数」范围内，candidate / 旧 NPU 满足提议的 ULP 界限；decode 的 48 个 BF16 oracle 切片比较全部与旧 NPU 字节相同，其余 142 个 FP32 比较最大 4 ULP；核查同时检查每份加载张量的原始 SHA 与 accepted CPU 环境 / 259 份依赖身份；这些只是提案范围覆盖数据，approved=false、changes_acceptance=false。另提醒（自述）：派单 5748768970 与 BF-07 规格已列明的交付说明——raw 只接受 BF16 / FP32、FP16 / FP64 显式拒绝，PM 承诺合入前向用户单列；实现和 PR 已有明确说明，请 PM 在用户决策包 / 最终审查中一并核对；申领人未改变已派定的 dtype 范围。blocker：用户端点裁定尚未到达，没有待完成的真机运行。PM 处理：已回复 #106（非协议消息）——范围核对记下，会连同用户答复一起用；dtype 域收窄（D-PM-40 同型）在最终评审 / 合入时与端点裁定一并单列给用户，不会漏。"
+        },
+        {
+          "at": "2026-09-20T22:43",
+          "summary": "用户回复「bf 07批准」（D-PM-52）——PM 读作批准 A：剩余输出失败归入「只披露、不设通过线」的端点类（类定义：切片 |golden|max ≤ 32 × FP32 最小正规数且 candidate 与旧 NPU 逐位相同或差 ≤ 1 BF16 / 4 FP32 ULP），披露不是通过，类外失败仍是失败，不改 inherited kernel、不批准 kernel 批次，普通域判据 / 门控 / 域 / D-PM-48·50·51 不变；这不是 BF-07 的合入授权。规格「端点比较口径追加」已加第 5 条；状态 blocked → in_progress；已回复 #106（非协议消息）请申领人按批准范围收尾：把逐切片表、必要下界证明与范围核对写进研究文档与 DONE，PR 转 ready 并提 DONE；BF-08 在 BF-07 CLOSE 后接续。合入前仍要把 dtype 域收窄与本条一并单列给用户做最终授权。"
         }
       ],
       "result": null,
