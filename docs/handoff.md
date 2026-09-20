@@ -11,6 +11,13 @@
 
 ### 正在飞的任务（现在没有；A5K-02、PK-02、PK-03 都已于 2026-09-19 合入）
 
+> **2026-09-20T15:07Z 更新：A2-09 推了 README 提交（头 e6a3a8a）——PM 复算发现机制解释有一处不对，已回复申领人再改一次 README；改完 PM 核对后请用户授权合入 #119。**
+> - **核对成立**：提交只动 README.md 与新增一份日志（不在 unit digest 里，digest 仍 `b4bb774d…`）；日志相对 L2 与 `aclnn.json` 逐项一致，`|ref|max` 在 CPU 上重算一致；`finalize_pre` 78 项最大 2.085e-26。
+> - **不对的一处**：README 说两处偏离是「一次 BF16 舍入落在占张量范数很大份额的元素上」。PM 用 `ulp(x)/||ref||` 在 CPU 上对参考张量复算——`gentle_decay_bd1` 的 `qk_left`：指数 −19 的元素差 1 ulp（2^-26）= 8.2960e-6，与实测 8.296e-6 五位一致（该元素是 `|ref|max` 的 2%~4%）；`grid_c2_hv4_bd1` 的 `t_beta`：指数 8 的元素差 1 ulp（=2）= 6.999e-6，与实测 7.000e-6 吻合（0.17%~0.33%）。**两处各是「一个小元素差 1 个 BF16 ulp」**；1e-5 判据的分辨率就是「有没有一次翻转」（`gentle_decay` 里中位数元素翻一次是 1.66e-5，64% 的元素翻一次就超），这两处是翻转恰好落在小元素上才过——固定种子下确定性，换种子 / 形状 / 卡可能变。六项输出梯度的预算不受影响。gaps `a2-kda-bwd-pair-checkpoint-thin-margin` 已改成这个刻画。
+> - **要申领人再改的（只改 README，不跑真机）**：机制换实数并写明分辨率；「余量 ≥95×」改「≥94×」；「其余 101 项逐元素最大 58 ulp」写明 ulp 只在 6 个 case 上测过。
+> - **下一步**：申领人推 README 提交 → PM 核对 diff 只动 README → 向用户请求 #119 的合入授权 → `--match-head-commit` 合入 → 全量测试 → CLOSE。
+> - **工具坑（本轮）**：`poll` 遇到网络超时会打印「失败：…i/o timeout」并 exit 1，**输出里仍可能带着已拿到的部分事件**——不能当成「无事件」，要重跑到 exit 0 再 `--advance`；`pm_github.py post` 也会因超时失败，要看输出里有没有「已评论」再决定是否重试（别用 `| tail && break`，管道的退出码是 tail 的）。
+>
 > **2026-09-20T14:18Z 更新：A2-09 rework 后重交 DONE（PR #119 头 276d53d）——PM 评审 accept（技术判据全过），合入前要一个只改 README 的提交；合入等用户授权。**
 > - **两条阻塞已修，均由 PM 复算确认**（`tmp/review/A2-09/v2/`，git-ignored）：所有 `.json` 可解析、数值全是有限 float；`source_id.py` 在 PR 头重算 digest = `b4bb774d…`，26 个 case 的 before / after 都是它、`started_at` 晚于最后一次源码改动；六项梯度相对 L2 从 `aclnn.json` 复算（dq ≤ 3.829e-2 / dk ≤ 1.115e-1 / dv ≤ 3.887e-3 / dbeta ≤ 7.456e-3 / dg ≤ 1.776e-1 / dh0 ≤ 5.293e-3，全在 a5 预算内，1014 项全 passed）；`run.py reference` 26/26；pipesim `gentle_decay_bd1` 通过、39 项与回执逐位相同；隐私 0 命中。代码 / 契约 / README 与上一版逐字节相同。
 > - **PM 发现的一条实质问题**：契约 `reason` 与 README 写「四个 case 实测最差相对 L2 1.06e-07，1e-5 比实测宽两个数量级」——对那四个成立、对 26 个不成立：真机 `finalize_pair.qk_left` 在 `gentle_decay` 是 8.296e-6、`t_beta` 在 `grid_c2_hv4_bd1` 是 7.000e-6（预算的 83% / 70%），sim / pipesim 在这两处是 0.0。已要求 README 改成 26 例实数、写明成因未确立（`contract.json` 的 reason 在 digest 里，留到下次动契约时同改）；记 gaps `a2-kda-bwd-pair-checkpoint-thin-margin`（P2，A2 观察）。此外 `pair_checkpoint_ulp.log` 少了 finalize_pre 三个量（contract 只给 finalize_pair 设档，ulp_stats 按 contract 枚举），DONE 没提，已要求 README 说一句。
