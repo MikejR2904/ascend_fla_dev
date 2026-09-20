@@ -1264,11 +1264,11 @@
     },
     {
       "id": "BF-07",
-      "title": "KDA 前向：q/k l2norm、门控变换、beta sigmoid 融进 kernel（BF16 路径；骨架，gated）",
+      "title": "KDA raw flags 前处理进自编译 kernel（q/k l2norm、门控变换、beta sigmoid，含梯度链），A5 真机",
       "wave": "W0",
       "soc": "a5",
       "priority": "P0",
-      "status": "open",
+      "status": "assigned",
       "model": [],
       "kernel": [
         "kda_fwd_stable"
@@ -1278,14 +1278,16 @@
       ],
       "deps": [
         "A2-44",
-        "BF-06"
+        "BF-06",
+        "FMT-02"
       ],
       "write_set": [
-        "kernels/projects/a5/kda_fwd_stable/**",
+        "kernels/projects/a5/kda_prep/**",
         "ascend_fla/ops/kda/chunk.py",
         "ascend_fla/ops/kda/autograd.py",
-        "tests/test_kda_fused_prep_kernel.py",
-        "docs/research/kda_fused_prep.md"
+        "ascend_fla/ops/kda/fused_recurrent.py",
+        "tests/test_kda_prep_kernel.py",
+        "docs/research/kda_prep_kernel.md"
       ],
       "needs": {
         "npu": true,
@@ -1295,10 +1297,21 @@
       "spec": "docs/pm/tasks/BF-07.md",
       "issue": 106,
       "pr": null,
-      "assignee": null,
-      "assignee_caps": null,
-      "branch": null,
-      "timebox_h": 16,
+      "assignee": "limjiunnbin",
+      "assignee_caps": {
+        "agent": "Codex，持续 KDA / PKDA 任务（自述）",
+        "socs": [
+          "a5"
+        ],
+        "soc_details": "自述：A5 Ascend950PR_9589、CANN 9.2.0，算子包目录 ascend950 / ascend910b / ascend910_93；每次任务重新检查健康 / 占用并使用共享锁、Docker（机器与卡归 assignee 管理，D-PM-28）",
+        "ascriptor": "library 90cfcdc720bb / kernels b3b3f9c16df7（自述）",
+        "fla": "新任务按契约选择并校验固定源码身份（自述）",
+        "fork": "limjiunnbin/ascend_fla_dev",
+        "session": "01a0b7ce-3daf-7550-a7bf-31c67eb91ca3",
+        "note": "此前持有 A5K-02、PK-02、PK-04、A2-44、BF-04、BF-06、FMT-02（均已 done）。BF-07 的排队 APPLY 在 #106（2026-09-20T06:25Z，条件：FMT-02 的 REVIEW / CLOSE 及写集释放之后），PM 回了 NO_TASK 承诺「FMT-02 CLOSE 后直接派」。"
+      },
+      "branch": "task/BF-07",
+      "timebox_h": 24,
       "reports": [
         {
           "at": "2026-09-19T15:49",
@@ -1311,6 +1324,10 @@
         {
           "at": "2026-09-20T06:40",
           "summary": "排队 APPLY（06:25Z，session 01a0b7ce-…，同 FMT-02 的申领人；a5：CANN 9.1.0-beta.1 / compiler 20260509_173000235、opp 含 ascend910_93 / ascend910b / ascend950；ascriptor 90cfcdc / kernels b3b3；fla v0.5.2 CPU FP32 golden）：请在 FMT-02 的 REVIEW / CLOSE 及写集释放后派 BF-07，不并发改重叠 wrapper；只接 KDA / PKDA，D-PM-44 的 scan 缺陷不自行纳入。另有只读预检评论（06:27Z，#106 下 5748124336）三条：梯度链（_prepare_inputs 在 Function.apply 之外保留计算图，移入 kernel 后必须给对应链式反向，不能丢梯度）、dtype 边界（raw q/k/g/beta/A_log/dt_bias 的输入 / 输出 dtype 与 decode 复用同一 helper）、数学细节（gate = -exp(A_log)·softplus(g+dt_bias) FP32、softplus threshold=20、q/k 加性 epsilon 1e-6；先冻结预算再验 kernel 舍入）。PM 处置：写进 BF-07 规格「预检输入」一节，细化规格时逐条回答；回 NO_TASK（排在 FMT-02 CLOSE 之后，PM 直接按这条 APPLY 派单，不需重新申领）；不放行任何东西（BF-07 已由用户 D-PM-43 放行，仍是骨架，规格与写集细化在 FMT-02 收尾前由 PM 做）。"
+        },
+        {
+          "at": "2026-09-20T08:48",
+          "summary": "PM 细化规格并派单（FMT-02 已 CLOSE，写集重叠已消除）：新单元 kernels/projects/a5/kda_prep（首选，不改 kda_fwd_stable / kda_bwd_stable / kda_layout 的 kernel），写集 = kda_prep/** + chunk.py / autograd.py / fused_recurrent.py + tests/test_kda_prep_kernel.py + docs/research/kda_prep_kernel.md；现有 tests/test_kda_domain_checks.py 只在「第一个 STATUS 列清单、PM 确认」后才动。范围：_prepare_inputs 的三步（gate = −exp(A_log)·softplus(g+dt_bias)、q/k l2norm 加性 epsilon 1e-6、beta sigmoid），dtype 域裁定为 raw 量只接 BF16 / FP32（FP16 / FP64 显式报错——从「任意 floating」收窄，D-PM-40 同型，合入前单列给用户）；阶段 1 = 前向 / 推理 / decode，阶段 2 = 梯度链（新 autograd Function + 自编译 backward kernel，A_log / dt_bias 的 (B,T) 归约确定性且与 bd 无关），阶段 2 可经 PM 拆成 BF-08（同批次，不另问用户）。预算由申领人先校准、第一个提交冻结（PM 不预设数字，核对不比地板 3 倍更松、事后不放宽）；门控闸 155 / 105 不变，在 {0, 100.8, 105, 155} 上量化前后差；量程列表逐处判；FP32 / 无 flag 路径逐位不变、bd 间逐位相同。吸收 FMT-02 经验（大 tile、每份原始回执自带环境行、汇总在前明细分目录、PR 任一提交无 >5 MB blob、协议头格式）。预检三条（梯度链 / dtype 边界 / 数学细节）已逐条回答在规格里。24h 首轮，第一个 STATUS 给两阶段的按 kernel 估计，PM 据此调时限或拆分。"
         }
       ],
       "result": null,

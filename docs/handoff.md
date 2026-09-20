@@ -11,6 +11,10 @@
 
 ### 正在飞的任务（现在没有；A5K-02、PK-02、PK-03 都已于 2026-09-19 合入）
 
+> **2026-09-20T08:48Z 更新：BF-07 规格已细化并派单（session `01a0b7ce-…`，新单元 `kda_prep`，阶段 1 前向 / decode + 阶段 2 梯度链，24h 首轮）。**
+> - **规格要点**（`docs/pm/tasks/BF-07.md`）：`_prepare_inputs` 三步（gate、q/k l2norm、beta sigmoid）进自编译 kernel；**dtype 域收窄成 raw 量只接 BF16 / FP32**（FP16 / FP64 显式报错，D-PM-40 同型，**合入前要单列给用户**）；阶段 2 必须给链式反向（`A_log` / `dt_bias` 的 (B,T) 归约确定性且与 `bd` 无关），可经 PM 拆成 BF-08；预算申领人先校准、第一个提交冻结；现有 `tests/test_kda_domain_checks.py` 只在「列清单、PM 确认」后才动；门控闸 155 / 105 不变；FMT-02 的性能与证据规则（大 tile、每份回执自带环境行、PR 任一提交无 >5 MB blob）已写进规格与 ASSIGN。
+> - **当前在飞**：BF-03（session `gdn-series-…`）、BF-07（session `01a0b7ce-…`）、A2-09（session `a2-09-bwd-1`），三个 session 不同、写集互不相交。BF-05 仍排在 BF-03 之后；PK-05 的近零判据我派前自裁。
+>
 > **2026-09-20T08:39Z 更新：用户授权「#115授权 #116授权」，两个 PR 已合入（D-PM-45）——BF-02 与 FMT-02 都 done；BF-03 已派；main 全量 877 passed / 12 skipped。**
 > - **合入**（bot 账号、`--match-head-commit` 钉住审过的头）：#115 BF-02（头 `b5c8c2e6` → `15c8ede`）、#116 FMT-02（头 `343ebfd5` → `0c7c74a`）。合入后在 main 上复跑全量（NPU-free）：**877 passed / 12 skipped = 762 + BF-02 的 21 + FMT-02 的 94**（与预测一致；762 = 761 + 我加的 1 个 PM 测试）。`kernel_inventory`：`gdn_bwd` 去掉 BF16 `dtype_fix`，新增 `kda_layout` 单元，`kda_fwd_stable` / `kda_bwd_stable` 的说明记了 layout / dtype 转换已改走 kda_layout。用户是在被告知 #116 的五件事（D-PM-44 读法、两处公开域变化、前向 1.67–2.32×、CANN 9.1.0-beta.1、dev-A 基线缺陷）后授权的，D-PM-44 由「PM 裁定」转为「用户已接受」。
 > - **合入后我才注意到的一件事（评审汇报里没有单列，已记 D-PM-45 (3) 与 gaps）**：#116 删了 CPU 绕行（`_resolve_layout` 恒 False），所以在缺 ascend950 算子包的机器上，默认的门控跨度检查（device 上 cumsum）、带缓存前向 / 反向里的 `_scan_states`、`dw` 取负、`log2(eg)` 分支这些存量 host 算术不再有 CPU 兜底，会失败；布局 / 转换 / 零填充本身不依赖内置算子，纯前向在 `check_gate_range=False` 时可用。AGENTS.md §5 里「layout_device=auto 会自动探测并绕路」一句因此过时——**要用户同意我才改 AGENTS.md**。规格里我事先写过「缺算子包的机器不是验收项」，所以不算违规，只是没在汇报里说清。
