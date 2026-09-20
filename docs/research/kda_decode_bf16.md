@@ -69,3 +69,28 @@ cases, with old/new FP32 byte comparisons at all six dimensions.
 Every native run must record SoC, CANN version and OPP package directories
 in its original receipt. Public evidence is text; the previous task's binary
 archive exception does not apply here.
+
+## Implementation and static checks
+
+The new BF16 and FP32 entries directly address token-major GM. Each vector
+participant owns a whole FP32 state for each assigned head, with no cross-core
+communication. The BF16 entry uses 123392 bytes of UB; the FP32 entry uses
+107008 bytes. Both keep the original increasing-K accumulation order.
+An absent initial state is initialized in the kernel. BF16 widening, q scaling,
+GVA head selection and output conversion all execute inside the custom kernel.
+
+Initial source inspection caught an implicit DMA inference problem: slicing
+`q[b, 0:T, h, 0:128]` emitted zero row gap despite the intervening head axis.
+The selected library rejects symbolic-shaped `.view()` composition. The final
+source therefore uses the documented explicit padded-DMA APIs with T bursts,
+128 payload elements, GM gaps `(H-1)*128` or `(HV-1)*128` elements, and zero UB
+gaps. Generated pointers and byte-scaled gaps were inspected for both entries.
+The scalar beta rows have 32-byte UB pitch and consume only the initialized
+first scalar. Neither library nor generated code was modified.
+
+Both entries pass IR lowering, event-balance checks and CCE source emission.
+The default public wrapper passes a CPU proxy audit containing only two empty
+allocations, with actual returned buffers, unchanged input pointers and dtype
+checks. Together with the existing decode and raw-input regressions, 99 host
+tests pass. These are static and host checks; vendor builds and NPU acceptance
+remain separate requirements.

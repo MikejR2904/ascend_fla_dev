@@ -125,7 +125,7 @@ def test_raw_preparation_keeps_all_six_gradient_paths():
 
 
 @pytest.mark.parametrize('flags', list(itertools.product((False, True), repeat=3)))
-def test_public_decode_flags_reach_the_existing_fp32_abi(monkeypatch, flags):
+def test_public_decode_flags_reach_the_native_token_major_abi(monkeypatch, flags):
     from ascend_fla.ops.kda import fused_recurrent as decode
     q, k, g, beta, a, bias = inputs()
     raw = [q[:, :2].contiguous(), k[:, :2].contiguous(), g[:, :2].contiguous(), beta[:, :2].contiguous()]
@@ -137,6 +137,7 @@ def test_public_decode_flags_reach_the_existing_fp32_abi(monkeypatch, flags):
 
     def kernel(ins, scalars, outs):
         captured.update(ins)
+        captured['scale'] = scalars['scale']
         for x in outs.values():
             x.zero_()
 
@@ -144,12 +145,11 @@ def test_public_decode_flags_reach_the_existing_fp32_abi(monkeypatch, flags):
     decode.fused_recurrent_kda(selected[0], selected[1], v, selected[2], selected[3],
                                A_log=a, dt_bias=bias, use_qk_l2norm_in_kernel=flags[0],
                                use_gate_in_kernel=flags[1], use_beta_sigmoid_in_kernel=flags[2])
-    # Existing decode scale multiplication rounds in q's dtype BEFORE FP32 layout conversion.
-    expected_q = (expected[0].repeat_interleave(2, dim=2) * (128**-.5)).float().permute(0, 2, 1, 3)
-    torch.testing.assert_close(captured['qs'], expected_q, rtol=0, atol=0)
-    torch.testing.assert_close(captured['k'], expected[1].repeat_interleave(2, dim=2).float().permute(0, 2, 1, 3), rtol=0, atol=0)
-    torch.testing.assert_close(captured['g'], expected[2].permute(0, 2, 1, 3), rtol=0, atol=0)
-    torch.testing.assert_close(captured['beta'], expected[3].permute(0, 2, 1).reshape(1, 2, 1, 2), rtol=0, atol=0)
+    # The unchanged raw-input helper reaches the native token-major ABI;
+    # scaling and GVA addressing now happen inside the custom kernel.
+    for name, want in zip(('q', 'k', 'g', 'beta'), expected):
+        torch.testing.assert_close(captured[name], want, rtol=0, atol=0)
+    assert captured['scale'] == 128**-.5
 
 
 @pytest.mark.parametrize('check_domain', [True, False])

@@ -1,27 +1,14 @@
-"""KDA 的 decode 路径（逐 token 递推）。
+"""Token-major KDA decode, T=1..16, native BF16 or FP32 with FP32 state.
 
-**状态：探路原型。** kernel 是本仓自写的（`kernels/projects/a5/kda_fused_recurrent`），
-不是 ascriptor 资产的改写 —— 那边整族没有 recurrent 单元（`gaps.json` 的
-`fused-recurrent-missing`）。语义基准是 `fla.ops.kda.fused_recurrent_kda`，
-本仓的 oracle 是 `reference/kda.py` 的 `kda_recurrent_ref`。
-
-**什么时候用它、什么时候用 chunk**：这条路把 T 个 token 逐个推，state 常驻 UB，
-所以代价与 T 成正比但与"对齐到 64"无关。chunk 那条把 64 个 token 批成矩阵乘，
-单位 token 便宜得多，但 T 必须是 64 的倍数（`no-tail-path`）。所以：
-
-* T=1（纯 decode）、T=2~8（投机解码）→ 本路径。chunk 在 T=1 时要补到 64，白做 64 倍。
-* T≥64 且是 64 的倍数 → chunk 路径。
-
-**ABI 与 chunk 路径的差别**（刻意的）：本 kernel 收 **BHV-major** 的
-``[B,HV,T,128]`` 而不是 token-major，且全部 fp32。理由：decode 的 q/k/v/g 合计才
-几 KB，而 state 是 64KB/头 —— 省 cast 和省跨步读比省那几 KB 带宽重要。
-布局转换与 GQA 的头扩展在 host 侧做一次。
+The custom kernel addresses GVA heads and performs scaling/conversion directly.
+Default flags=False uses only host metadata, output allocation and launch.
+The unchanged A2-44 raw-flags helper is a registered legacy exception pending
+BF-07; its preprocessing is audited separately, without a conformance claim.
 """
 from __future__ import annotations
 
 import functools
 import pathlib
-import sys
 from typing import Any
 
 import torch
@@ -49,11 +36,26 @@ def kda_fused_recurrent_kernel() -> Any:
 
 
 @functools.lru_cache(maxsize=None)
-def _compiled(device: str, block_dim: int) -> Any:
+def _compiled_pair(device: str, block_dim: int) -> dict:
     from ...runtime.compile import compile_kernel
+    return {dtype: compile_kernel(_native_kernel(dtype), device=device,
+                                  block_dim=block_dim)
+            for dtype in (torch.float32, torch.bfloat16)}
 
-    return compile_kernel(kda_fused_recurrent_kernel(), device=device,
-                          block_dim=block_dim)
+
+@functools.lru_cache(maxsize=2)
+def _native_kernel(dtype: torch.dtype) -> Any:
+    root = pathlib.Path(__file__).resolve().parents[3]
+    directory = root / "kernels/projects/a5/kda_fused_recurrent_bf16/kernels"
+    suffix = "bf16" if dtype == torch.bfloat16 else "fp32"
+    return _load_kernel("fr_native", directory, "step", f"kda_decode_{suffix}_kernel")
+
+
+@functools.lru_cache(maxsize=None)
+def _compiled(device: str, block_dim: int, dtype: torch.dtype = torch.float32) -> Any:
+    # prepare(decode=True) retains its existing two-argument call and registers
+    # BOTH dtype vendors before the first custom execution in the process.
+    return _compiled_pair(device, block_dim)[dtype]
 
 
 def _check(q, k, v, g, beta, initial_state, block_dim) -> tuple[int, int, int, int]:
@@ -64,10 +66,16 @@ def _check(q, k, v, g, beta, initial_state, block_dim) -> tuple[int, int, int, i
             f"本单元只用向量核（GetVecNum() == 2*block_dim，物理 56 个），"
             f"但超过物理核数会在硬件 barrier 死锁"
         )
+    for name, value, rank in (("q", q, 4), ("k", k, 4), ("v", v, 4),
+                              ("g", g, 4), ("beta", beta, 3)):
+        if not isinstance(value, torch.Tensor) or value.dim() != rank:
+            raise ValueError(f"{name} must be a rank-{rank} tensor")
     if q.dim() != 4:
         raise ValueError(f"q 应为 4 维 [B,T,H,D]，收到 {tuple(q.shape)}")
     b, t, h, kd = q.shape
     hv, vd = v.shape[2], v.shape[3]
+    if min(b, t, h, hv) < 1:
+        raise ValueError("B, T, H and HV must all be positive")
     if kd != HEAD_DIM or vd != VALUE_DIM:
         raise ValueError(f"定尺要求 K=V={HEAD_DIM}，收到 K={kd} V={vd}")
     if hv % h:
@@ -95,6 +103,23 @@ def _check(q, k, v, g, beta, initial_state, block_dim) -> tuple[int, int, int, i
             f"更长的序列请走 chunk 路径，或自己按 {T_MAX} 分批并串接 state"
         )
     return b, t, h, hv
+
+
+def _check_types(q, k, v, g, beta, initial_state):
+    if v.dtype not in (torch.float32, torch.bfloat16):
+        raise ValueError("decode q/k/v must be all FP32 or all BF16; FP16/FP64 are unsupported")
+    if q.dtype != v.dtype or k.dtype != v.dtype:
+        raise ValueError("decode q/k/v must share one dtype: FP32 or BF16")
+    for name, value in (("q", q), ("k", k), ("v", v), ("g", g),
+                         ("beta", beta), ("initial_state", initial_state)):
+        if value is None:
+            continue
+        if name in ("g", "beta", "initial_state") and value.dtype != torch.float32:
+            raise ValueError(f"{name} must be FP32 for native decode")
+        if value.device != q.device:
+            raise ValueError(f"{name} must be on the same device as q")
+        if not value.is_contiguous():
+            raise ValueError(f"{name} must be contiguous for native token-major decode")
 
 
 #: 与 ``kernels/.../step.py`` 里流式缓冲的行数一致。改那边要同时改这里 ——
@@ -125,8 +150,8 @@ def fused_recurrent_kda(
 
     Args:
         q, k: ``[B,T,H,128]``；v, g: ``[B,T,HV,128]``；beta: ``[B,T,HV]``。
-            dtype 任意浮点 —— 内部统一升到 fp32（decode 的量很小，见模块文档）。
-        scale: q 的缩放，默认 ``128 ** -0.5``。**在 host 侧预乘进 q**。
+            q/k/v 全 BF16 或全 FP32；g/beta 为 FP32，所有输入连续且同设备。
+        scale: q 的缩放，默认 ``128 ** -0.5``，在 kernel 内以 FP32 相乘。
         initial_state: ``[B,HV,128,128]`` float32，K 在前。
         A_log, dt_bias: Raw-gate parameters with shapes ``[HV]`` and ``[HV*K]``;
             both are required when ``use_gate_in_kernel=True``.
@@ -134,7 +159,8 @@ def fused_recurrent_kda(
             squared epsilon 1e-6, then round to v.dtype before the existing ABI.
         use_gate_in_kernel: Apply ``-exp(A_log)*softplus(g+dt_bias)`` in FP32.
         use_beta_sigmoid_in_kernel: Apply sigmoid to raw beta logits in FP32.
-            These flags select host-op preparation, not fused kernel execution.
+            These flags retain the registered A2-44 host preparation exception
+            pending BF-07. They are not claimed to satisfy the default-path audit.
         check_domain: Accepted for API symmetry; heuristic domain checks run
             only in chunk mode, never on each decode step. Shape checks remain.
 
@@ -150,29 +176,17 @@ def fused_recurrent_kda(
         use_beta_sigmoid_in_kernel=use_beta_sigmoid_in_kernel,
         qk_dtype=v.dtype,
     )
-    out_dtype = v.dtype
+    _check_types(q, k, v, g, beta, initial_state)
     sc = HEAD_DIM ** -0.5 if scale is None else float(scale)
-    groups = hv // h
     dev = q.device
-
-    def bhv(x: torch.Tensor) -> torch.Tensor:
-        """``[B,T,HV,D] -> [B,HV,T,D]``，fp32 连续。"""
-        return x.to(torch.float32).permute(0, 2, 1, 3).contiguous()
-
-    qs = bhv(q.repeat_interleave(groups, dim=2) * sc) if groups > 1 else bhv(q * sc)
-    kk = bhv(k.repeat_interleave(groups, dim=2)) if groups > 1 else bhv(k)
-    vv, gg = bhv(v), bhv(g)
-    bb = beta.to(torch.float32).permute(0, 2, 1).contiguous().view(b, hv, 1, t)
-    state0 = (initial_state if initial_state is not None
-              else torch.zeros(b, hv, HEAD_DIM, VALUE_DIM, dtype=torch.float32,
-                               device="cpu").to(dev))
-
-    o_bhv = torch.empty(b, hv, t, VALUE_DIM, dtype=torch.float32, device=dev)
+    o = torch.empty(b, t, hv, VALUE_DIM, dtype=v.dtype, device=dev)
     final_state = torch.empty(b, hv, HEAD_DIM, VALUE_DIM, dtype=torch.float32, device=dev)
-    _compiled(device, block_dim)(
-        {"qs": qs, "k": kk, "v": vv, "g": gg, "beta": bb, "initial_state": state0},
-        {"B": b, "HV": hv, "T": t, "head_dim": HEAD_DIM, "value_dim": VALUE_DIM},
-        {"o": o_bhv, "final_state": final_state},
+    # The absent initial-state pointer is never read: initialization is in VF.
+    state0 = initial_state if initial_state is not None else final_state
+    _compiled(device, block_dim, v.dtype)(
+        {"q": q, "k": k, "v": v, "g": g, "beta": beta, "initial_state": state0},
+        {"B": b, "HV": hv, "H": h, "T": t,
+         "has_initial": int(initial_state is not None), "scale": sc},
+        {"o": o, "final_state": final_state},
     )
-    o = o_bhv.permute(0, 2, 1, 3).contiguous().to(out_dtype)
     return o, (final_state if output_final_state else None)

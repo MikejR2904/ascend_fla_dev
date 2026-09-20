@@ -1,0 +1,40 @@
+{
+  "schema": "ascriptor.kernel-unit/1",
+  "id": "a5.kda_fused_recurrent_bf16",
+  "kind": "project",
+  "owner": "ascend_fla",
+  "domain": {
+    "B": "positive",
+    "T": "1..16",
+    "H": "positive",
+    "HV": "positive multiple of H",
+    "K": 128,
+    "V": 128,
+    "block_dim": [1, 2, 4, 8, 16, 28],
+    "qkv_dtype": ["bfloat16", "float32"],
+    "g_beta_state_dtype": "float32",
+    "layout": "contiguous token-major, state K-first",
+    "raw_flags": "unchanged A2-44 host preparation; registered legacy exception pending BF-07"
+  },
+  "entries": ["kda_decode_bf16_kernel", "kda_decode_fp32_kernel"],
+  "comparison": {
+    "references": ["FLA v0.5.2 CPU FP32 KDA naive", "ascend_fla.reference.kda.kda_recurrent_ref CPU FP32"],
+    "bf16_output_relative_l2": 0.01,
+    "bf16_output_floor_multiplier": 3,
+    "fp32_final_state_relative_l2": 0.00001,
+    "fp32_output_relative_l2": 0.00001,
+    "original_fp32_equivalence": "bitwise",
+    "cross_block_dim_equivalence": "bitwise"
+  },
+  "qualification": {
+    "cpu_precision": "passed",
+    "source_emission": "passed",
+    "vendor_compilation": "untested",
+    "native_full_workload": "untested",
+    "native_grid": "untested",
+    "prefill_decode": "untested",
+    "performance": "untested",
+    "sim": "untested",
+    "pipesim": "untested"
+  }
+}
