@@ -590,7 +590,7 @@
       "wave": "W0",
       "soc": "a5",
       "priority": "P0",
-      "status": "assigned",
+      "status": "in_progress",
       "model": [],
       "kernel": [
         "gdn_bwd"
@@ -648,6 +648,14 @@
         {
           "at": "2026-09-20T00:32",
           "summary": "派给 limjiunnbin（GDN 系列 session gdn-series-…），24h，分支 task/BF-02；BF-01 已 CLOSE，按它在 #101 的排队 APPLY 直接派。写集已预批准补上 tests/test_gdn_chunk_bwd.py（只改 test_bf16_rejected_before_preparation 里全 BF16 一律拒绝的那一处，见规格）。申领人的 BF-02 CPU 预检（138/138 case，A/B 最大相对 L2 5.6e-7）只是预检，不计入验收"
+        },
+        {
+          "at": "2026-09-20T01:44",
+          "summary": "ACK（01:44Z，eta 24h，自述）：已核实 BF-01 CLOSE、BF-02 ASSIGN 与当前看板 session，按五项写集实施，旧 FP32 单元只读；实现前冻结 ABI、A/B 参考、误差地板与预算——指出 ASSIGN 写 1e-2 / 3F 而任务文档仍写 2e-2 / 4F，采用更严格的 min(1e-2, 3F)（同时满足两者，不放宽）；新 BF16 checkpoint / replay / group-reduce 三阶段，转换与缺省 cotangent 零填充在 kernel，FP32 公共结果逐位不变，窄范围更新获批的旧拒绝测试；新核完整 workload 先真机，再全网格 / 三种 cotangent / NaN 预填 / 跨 bd / host 审计 / 同卡三轮，每轮核对环境、设备健康与共享锁，原始文本证据脱敏后入 PR；PR 用 Refs #101；BF-03 / BF-05 按排队顺序续接。基线 main e10e477。状态 assigned→in_progress"
+        },
+        {
+          "at": "2026-09-20T01:53",
+          "summary": "PM 回复 ACK：预算不一致成立（ASSIGN 的 1e-2 / 3F 抄自通则，规格验收里留着旧的 2e-2 / 4F_g），以申领人采用的 min(1e-2, 3F_g) 为准（更严、与通则一致，不算放宽），BF-02.md 的验收行已改；校准后若证明不可达先发 RISK 报数、不得单方面退回 2e-2 / 4F_g。"
         }
       ],
       "result": null,
@@ -961,6 +969,10 @@
         {
           "at": "2026-09-20T01:29",
           "summary": "STATUS（01:29Z，自述）：首次完整硬件 workload（B2 / T16 / H4 / HV32、非零 state、bd4）BF16 与 FP32 都通过，17 项 vendor 含九个 backward 全部在首次自定义 kernel 前编完注册；FP32 新路径与只读原实现的 o / state 逐位相同。CPU FP32 双 oracle（喂 BF16 实际舍入输入）结果一致：BF16 o 相对 L2 1.6565e-3（F = 1.6565e-3，预算 4.970e-3）、max_abs 5.63e-5，final_state 1.53e-7（预算 1e-5）；新 FP32 o 1.94e-7，原 FP32 o / state 逐位相同；两 dtype 默认实际公共入口 host 审计通过、输入未修改、NaN 预填全覆盖。其余验收（bd1/2/4 完整网格、bd8/16/28 完整 workload + 边界、跨 bd 哈希、raw-flags 单列审计、prefill 链、三轮性能、Torch NPU 基线）在进行，不因 vendor 或这一组 native 通过提交 DONE。blockers: prefill 全链预算待裁定（PM 已在 01:22Z 裁定，评论 5746672559，见 D-PM-41；已在 #105 再指一次）。PM 对 draft PR #114 只做早期扫描（非评审）：15 个文件（13 新增 2 修改）全在写集内、无保留路径 / .github / pyproject / 二进制、新增行无 IP / 用户目录 / UUID / 令牌；DONE 前不审。"
+        },
+        {
+          "at": "2026-09-20T01:40",
+          "summary": "STATUS（01:40Z，自述）：已读到 PM 在 01:22Z 的裁定（评论 5746672559）与 main 规格新增节，按三层口径执行——decode 严格 min(.01, 3F) / state 1e-5；16 vs 16×1 逐位；全链、前缀、后缀分别对双 oracle 用同次一次性长前向定出的 min(.01, 3E_oneshot)，不采用旧 .05 线；先前 STATUS 误写「待裁定」是切到新 PR 监控时初次快照没显示已存在的新评论，已修正。bd4 完整网格 136 个数值案例 + 57 个附加检查全部 native 通过（含原 8 个未舍入 FP32 形状、两 dtype / 两 state 的分段逐位对照、16 个 raw-flags 组合、metadata 拒绝）；短暂的外来设备上下文触发拒绝后，自动队列取得健康空闲窗口继续，未干预其他任务。完整 native 之后 BF16 T1/G1/state0 与 T2/G4/state1 的 sim + pipesim 全部通过（pipesim 0 hazard / event balance 空 / 无 deadlock），FP32 T2/G4/state0 功能 sim 通过。bd1/2 与 8/16/28 继续独立进程；prefill 验收接着实现，等当前批次完成后同步运行，保持正在构建 / 执行的源码不变。blockers: 实现无阻塞，其余硬件验收进行中。PR #114 仍 draft（头 9295de2e，PM 不审）。"
         }
       ],
       "result": null,
