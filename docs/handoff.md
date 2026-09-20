@@ -11,6 +11,12 @@
 
 ### 正在飞的任务（现在没有；A5K-02、PK-02、PK-03 都已于 2026-09-19 合入）
 
+> **2026-09-20T08:39Z 更新：用户授权「#115授权 #116授权」，两个 PR 已合入（D-PM-45）——BF-02 与 FMT-02 都 done；BF-03 已派；main 全量 877 passed / 12 skipped。**
+> - **合入**（bot 账号、`--match-head-commit` 钉住审过的头）：#115 BF-02（头 `b5c8c2e6` → `15c8ede`）、#116 FMT-02（头 `343ebfd5` → `0c7c74a`）。合入后在 main 上复跑全量（NPU-free）：**877 passed / 12 skipped = 762 + BF-02 的 21 + FMT-02 的 94**（与预测一致；762 = 761 + 我加的 1 个 PM 测试）。`kernel_inventory`：`gdn_bwd` 去掉 BF16 `dtype_fix`，新增 `kda_layout` 单元，`kda_fwd_stable` / `kda_bwd_stable` 的说明记了 layout / dtype 转换已改走 kda_layout。用户是在被告知 #116 的五件事（D-PM-44 读法、两处公开域变化、前向 1.67–2.32×、CANN 9.1.0-beta.1、dev-A 基线缺陷）后授权的，D-PM-44 由「PM 裁定」转为「用户已接受」。
+> - **合入后我才注意到的一件事（评审汇报里没有单列，已记 D-PM-45 (3) 与 gaps）**：#116 删了 CPU 绕行（`_resolve_layout` 恒 False），所以在缺 ascend950 算子包的机器上，默认的门控跨度检查（device 上 cumsum）、带缓存前向 / 反向里的 `_scan_states`、`dw` 取负、`log2(eg)` 分支这些存量 host 算术不再有 CPU 兜底，会失败；布局 / 转换 / 零填充本身不依赖内置算子，纯前向在 `check_gate_range=False` 时可用。AGENTS.md §5 里「layout_device=auto 会自动探测并绕路」一句因此过时——**要用户同意我才改 AGENTS.md**。规格里我事先写过「缺算子包的机器不是验收项」，所以不算违规，只是没在汇报里说清。
+> - **BF-03 已派**（session `gdn-series-…`，24h，分支 `task/BF-03`）：ASSIGN 点明 Cube 澄清、写集预批准（`tests/test_pgdn_chunk_fwd.py` 仅一个函数）、预算 min(1e-2, 3F) 先校准后写 kernel、PK-05 的近零判据不在本任务、原始回执自带环境行、PR 任一提交不含 >5 MB blob、协议头格式。BF-05 仍排在 BF-03 之后。
+> - **待办**：**BF-07 规格与写集要 PM 细化**（session `01a0b7ce-…` 已空闲、排队 APPLY 在 #106，预检输入见 BF-07.md）；FMT-02 / BF-02 的 CLOSE 已发。**仍在飞**：A2-09（session a2-09-bwd-1）。**仍未决 / 要用户**：kernel 批次里上游 scan_fused 的 dh0 不确定性（gaps `kda-bwd-scan-dh0-nondeterministic`）先定位再批、AGENTS.md §5 的过时句、「校验类」暂定裁定、BF16 的 k 范数闸、PK-05 近零判据（PM 派前自裁）。
+>
 > **2026-09-20T08:10Z 更新：FMT-02 DONE（PR #116，头 `343ebfd5`）已评审 accept（技术），合入要先问用户；#115 仍等用户（未重试）。**
 > - **FMT-02 评审（PM 从原始 JSON 自己复算）**：464 案例 × 19 项输出对旧路径逐位 8816 次 0 失败，预算未动（最紧 dg 0.1646 / 0.25），跨 bd 9396 哈希全同，host 审计 unexpected 空、例外按 D-PM-42 单列，D-PM-44 基线（dev-A 旧 3 哈希 9/2/1、候选 10/1/1；dev-B 12/12 同哈希 d88e1911…）、96 次同张量转换逐位全过、种子输入 16/16 重建一致、性能六个三明治与归因求和逐项一致；NPU-free 全量 855 / 12（main 761 / 12 + 94），负对照成立；PR 只有 1 个提交、最大 blob 0.95 MB、2348 个证据 SHA 全对、无隐私命中。
 > - **合入前要问用户的五件事**：(1) D-PM-44 对「逐位相同」的读法；(2) 公开域变化——`layout_device='cpu'` 显式报错、`runtime.cast/move` 只接 BF16 / FP32（autograd 不受影响，PM 判断未测）；(3) 前向 1.7–2.3× 变慢（T1024 plain 1.670× / cached 2.255×；T4096 1.854× / 2.316×；backward 1.003–1.014×；相对 Torch NPU 组合基线快 25–49×）；(4) 环境是 CANN 9.1.0-beta.1（不是 9.2.0）；(5) dev-A 的 h0 基线缺陷不资格。合入后 main 预期 856 passed / 12 skipped（855 + 我加的 1 个 PM 测试），合入用 `--match-head-commit 343ebfd558a9b088f4e3c807d4d380480d4e4398`。

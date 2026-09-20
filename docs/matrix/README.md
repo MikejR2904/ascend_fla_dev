@@ -574,6 +574,8 @@ PM 在权威 workspace 上独立跑了 `benchmarks/diag_c1_multihead.py`，**上
   同一块张量按 C=1 切（`[:, 127::128]`，只取一行）→ 两种写法**都一致**，因为切片等效连续。
 这条 C=1/C≥2 的分界正好解释了一次真实失败：`chunk_kda_bwd` 里 `g_last = g_cumsum[:, 63::64]` 绕 CPU 时，single_chunk 与 grouped_idle_cores（都是 C=1）通过，multi_chunk / grouped_heads / gentle_decay（都是 C≥2）全挂。**是硬报错不是静默出错** —— 我最初写成「静默给出错误数据」，最小复现证伪了。修法：先整块 D2H 再在 CPU 上切。
 - **影响** 选机器决定能做什么：装了 ascend950 算子包的机器上 torch_npu 基线与 layer 级验证都可做；没装的机器上只能跑自编译 kernel（empty/H2D/D2H/data_ptr/stream 可用，计算算子全不可用）。runtime 桥在两种机器上都工作 —— 这正是它的价值。 【2026-09-11 修正】「runtime 桥在两种机器上都工作」只对**前向**成立。训练路径要在 host 侧补三个反向检查点（`fwd-caches-not-emitted`），那一段是 torch 算子 —— 在缺算子包的机器上原本直接失败。已加 CPU 绕行；层级验证仍然只能在有 ascend950 算子包的机器上做（层里的投影/卷积/softplus/RMSNorm 全是 torch_npu 算子）。 另外：算子入口现在**要求输入连续**并在不满足时报错（`chunk.py` 与 `chunk_bwd.py` 的 `_check`）。在这种机器上「悄悄 .contiguous() 一下」根本做不到 —— device 上要 d2d copy，跨步 D2H 要 Slice，两条都缺，所以只能报错。
+
+**2026-09-20（FMT-02 已合入，#116）**：`layout_device="cpu"` 与「探测内置 d2d copy 后自动绕 CPU」的路径已删除（D-PM-37 不许 host CPU 布局转换），`_resolve_layout` 恒返回 False。所以缺 ascend950 算子包的机器上：布局 / dtype 转换 / 零填充本身不再依赖内置算子（改走自编译 kernel），纯前向在 `check_gate_range=False` 时可用；但**默认的门控跨度检查（device 上的 cumsum / 规约）、带缓存前向与反向里的 `_scan_states`（Cast / matmul）、`dw = -d_vh`（Neg）、`log2(eg)` 分支**这些存量 host 算术没有 CPU 兜底了，会因缺内置算子而失败——这是 D-PM-42（存量例外保留）叠加 D-PM-37 的后果，要等 BF-07 / kernel 批次把它们搬进 kernel 才消除；`AGENTS.md` §5 里「layout_device=auto 会自动探测并绕路」一句因此已过时（等用户同意再改）。
 - **建议** 三条路：① 性能基线改用 ascriptor 自己的 profile 子命令 + 自编译 kernel 之间的对比；② 在有完整算子包的机器上做 torch_npu 基线（a2/910B3 有 ascend910b）；③ 确认是否存在 950PR 的算子包可安装。选哪条取决于基线要回答的问题 —— 要对比 ascriptor vs torch_npu 就必须有内置算子，换机器是最直接的。
 
 #### `fixed-kv-128` — K=V=128 固定，不支持其他 head_dim
@@ -605,6 +607,8 @@ PM 在权威 workspace 上独立跑了 `benchmarks/diag_c1_multihead.py`，**上
 **修正先前的判断**：我曾写它是"反向链的性能瓶颈"，实测不是 —— kimi_linear_layer / bd=4 下它占 21%，而九个反向 kernel 占 53%（2.690ms / 5.069ms）。它是一笔确定的、值得收的账，但不是主因。**真正要紧的是它不随核数缩短**：block_dim 上限若被抬高（block-dim-ceiling），kernel 侧会继续变快而这一段不会，占比会继续涨。
 **2026-09-11 新发现的第二个后果：它让训练路径依赖内置算子包，而纯前向路径不依赖。**`_scan_states` 与检查点的降 bf16 用的是 Cast / bmm / stack，在只装了 910 算子包的机器上全部不可用 —— 实测表现为 `copy_d2d_baseformat_opapi … error code is 561103` + `Cast ADD_TO_LAUNCHER_LIST_AICORE failed`。这推翻了「我们自己编译的 kernel 在两种机器上都不受影响」这句话的适用范围：它对**前向**成立，对**训练**不成立，因为训练要补的三项检查点不在 kernel 里。已加 `on_cpu` 绕行（`_scan_states(on_cpu=)`、`chunk_kda_bwd` 的 `layout_device`），把检查点生产和那一次 strided `contiguous()` 整段搬到 CPU —— 这是**可用性**开关不是性能开关。把三项挪进 kernel 之后这些绕行可以删掉。
 **2026-09-11 顺带修掉的一条**：`chunk_kda` 此前**无条件**走 autograd.Function，于是`no_grad` 下的推理也照样产那九个检查点（纯浪费，占训练步的 21%），而且被**反向**那条更严的门控闸（stable 下 100）挡着 —— 推理本来只受前向的 155 约束。现在不需要梯度时直接走 `chunk_kda_fwd`；`o` / `final_state` 逐位相同（共用同一次 kernel 调用），钉在 tests/test_kda_gating.py::test_chunk_kda_skips_caches_when_no_grad_is_needed。
+
+**2026-09-20（FMT-02 已合入，#116）**：`_scan_states(on_cpu=)` 与 `chunk_kda_bwd(layout_device=)` 的 CPU 绕行随之失效（`_resolve_layout` 恒返回 False）——检查点降 BF16 与布局搬运已在 kernel 里，但 h / v_new 的 host 复算仍在（D-PM-42 存量例外），所以训练路径在缺内置算子包的机器上现在不可用，直到这三个检查点搬进 kernel（本条的 kernel 批次）。
 - **建议** 按 AGENTS.md §3 在本仓 kernels/ 下建自己的单元：做一个 kda_sub45_fused_kernel 的变体，额外写出 h 与 v_new（两个 GM 输出 + store，内部量已有），再做一个 gate 变体直接写 g_cumsum。改 ascriptor 仓是不允许的。优先级排在 block-dim-ceiling 之后 —— 先抬核数上限，那一项的收益更大，而且抬完之后这一项的占比才真正凸显。
 做完之后顺带删掉 `_scan_states(on_cpu=…)` 与 `chunk_kda_bwd(layout_device=…)` 两处绕行。
 
