@@ -616,7 +616,7 @@
       },
       "spec": "docs/pm/tasks/BF-02.md",
       "issue": 101,
-      "pr": null,
+      "pr": 115,
       "assignee": "limjiunnbin",
       "assignee_caps": {
         "agent": "Codex；GDN / PGDN 序列的续接 session（自述）",
@@ -656,6 +656,10 @@
         {
           "at": "2026-09-20T01:53",
           "summary": "PM 回复 ACK：预算不一致成立（ASSIGN 的 1e-2 / 3F 抄自通则，规格验收里留着旧的 2e-2 / 4F_g），以申领人采用的 min(1e-2, 3F_g) 为准（更严、与通则一致，不算放宽），BF-02.md 的验收行已改；校准后若证明不可达先发 RISK 报数、不得单方面退回 2e-2 / 4F_g。"
+        },
+        {
+          "at": "2026-09-20T02:15",
+          "summary": "STATUS（02:15Z，自述）+ draft PR #115：ABI / 预算先行提交 1a3cf5a，实现提交 4095f57，五项获批写集内；三个 BF16 kernel 与 FP32 分组累加 / 最终窄化、kernel 内缺省 cotangent 零初始化已实现，旧 FP32 单元无改动。88 个 focused tests；CPU 隔离全仓 763 passed / 9 skipped（首次全仓命令隔离不足而触发无关 KDA NPU 测试，已中断并保留错误，按 handoff 的 CPU import 隔离后重跑通过，不作设备验收）；三个入口完整 lowering / balance / CCE emit 通过，lowering 捕获的临时 dq / dk dtype 错误在上机前修复，失败源码 / 日志保留。冻结 min(1e-2, 3F_g)，未放宽；预实现校准 138 记录仅为 CPU 证据，不充作设备验收。接着：首个完整 B1 / T4096 / H=HV8 workload 在独立目录构建 / 验证，再全网格、两 dtype 公共 host 审计、原 FP32 对照、跨 bd 逐位、同卡三轮。blockers: draft，尚无 BF-02 native pass；前两次启动被共享锁 / 退出中的设备上下文检查拦下，另一次被基线 manifest 把 pycache 当源码拦下（已改为基线提交的 tracked files），均未运行 BF-02 kernel。PM 对 draft PR #115 只做早期扫描（非评审）：25 个文件（23 新增 2 修改）全在写集内、无保留路径 / .github / pyproject / 二进制、新增行无 IP / 用户目录 / UUID / 令牌；DONE 前不审。"
         }
       ],
       "result": null,
