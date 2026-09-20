@@ -880,7 +880,8 @@
         "kernels/projects/a5/kda_fused_recurrent_bf16/**",
         "ascend_fla/ops/kda/fused_recurrent.py",
         "tests/test_kda_decode_bf16.py",
-        "docs/research/kda_decode_bf16.md"
+        "docs/research/kda_decode_bf16.md",
+        "tests/test_kda_domain_checks.py"
       ],
       "needs": {
         "npu": true,
@@ -929,6 +930,14 @@
         {
           "at": "2026-09-20T00:45",
           "summary": "PM 裁定（RISK 核实成立，矛盾是 PM 规格里写的，D-PM-40）：(1) raw flags=True 分支 = 存量例外，围起来单列、不改 _prepare_inputs、不新增 host 操作、不宣称合规、留 BF-07（要用户的 kernel 批次批准）；默认 flags=False 路径必须完全合规（真机审计只有 aten.empty / aten.view）。(2) dtype 域 = BF16 q/k/v + FP32 g / beta / state 或全 FP32，其余（FP16 / FP64 / 混用）显式报错——原 wrapper 的任意浮点 dtype 全靠 host .to(float32)，正是 D-PM-37 禁的，是直接后果、不是数值域收窄；仓里若有测试 / layer 依赖 FP16 / FP64 decode，先发 RISK。(3) block_dim 不收窄：原 FP32 的 {1,2,4,8,16,28} 全保持，bd 1/2/4 完整网格、bd 8/16/28 完整 workload + 边界 case，FP32 改前改后六个 bd 都逐位对照；BF16 若在某个 bd 做不到先问用户。规格已补「2026-09-20 裁定」一节，验收的 bd 一行同步；在 #105 回复。"
+        },
+        {
+          "at": "2026-09-20T00:56",
+          "summary": "RISK write-set-expansion（00:56Z，自述）：请求仅增加 tests/test_kda_domain_checks.py 中 decode ABI 回归的写集。第 128-152 行的 8 个 raw-flags 组合用例 test_public_decode_flags_reach_the_existing_fp32_abi 断言 captured[qs] 是 host GVA 复制、BF16 q*scale 舍入、FP32 转换和 BHV 重排后的张量，k / g / beta 也是旧 BHV 布局，恰好要求保留 D-PM-37 要删除的 host 转换。提议仅把这 8 个用例改为核对同一独立 raw-input 参考的 token-major q/k/g/beta、原 dtype、未预乘 scale 的 q 与传入 kernel 的 scale 标量，保留全部 8 组合与零容差，不删用例。同时报告：库内 FP16 / FP64 搜索只命中 CPU 参考校准，没有实际 decode 调用方使用这两种 dtype；CPU 校准 82/82 通过，非零 F 范围 1.616e-3 ~ 1.885e-3，最大 o 相对 L2 1.885e-3、state 1.03e-7，BF16 内部 state 负对照 81/82 被拒；两个新 entry 的 IR 降级与 event balance 为空、CCE 源码发射通过，尚未声称 vendor 编译或真机通过。"
+        },
+        {
+          "at": "2026-09-20T01:07",
+          "summary": "PM 预批准写集扩展（核实成立：该 8 个用例断言的正是旧 host ABI，与 D-PM-37 直接矛盾；文件与保留路径、其他在飞任务的写集都不相交）：仅限这 8 个用例——保留全部 8 个组合、零容差、独立 raw-input 参考，改成核对新 ABI（token-major、原 dtype、未预乘 scale 的 q/k/g/beta 与 kernel 收到的 scale 标量）；不删、不跳过、不放宽别的用例，不为测试加生产分支，_prepare_inputs 原样；发现别的测试文件也断言旧 ABI 先发 RISK。规格已补一节，#105 已回复。dtype 域裁定（D-PM-40）没有实际代价：仓里没有 FP16 / FP64 decode 调用方。"
         }
       ],
       "result": null,
