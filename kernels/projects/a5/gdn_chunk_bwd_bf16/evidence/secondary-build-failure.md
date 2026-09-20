@@ -22,7 +22,16 @@ the actual compiler error `redefinition of 'g_coreType'`.
 The CANN compiler package reports timestamp `20260909_000323409`. Its actual
 header SHA256 is
 `8ab88268cc820b7580da708b783ca35e12ba55a2f1baac2d343e3248fc365982`.
-A read-only toolkit inventory found one installed toolkit; the other names
+The passing primary environment reports compiler/OPP timestamp
+`20260805_101249091`; its actual `impl/utils/sys_macros.h:15-16` defines
+`IMPL_UTILS_SYS_MACROS_H`, matching the library fallback guard. Both primary
+header hashes and all 205 tracked runtime package/resource hashes were
+verified freshly against the clean pinned checkout and are retained in
+`library-toolkit-identity.json`. The common 9.2.0 label alone is insufficient
+to distinguish these toolkit interfaces.
+
+A read-only toolkit inventory on the secondary environment found one installed
+toolkit; the other names
 resolve to that same tree. No alternate toolkit was selected, library pin
 changed, generated bundle patched, or vendor header modified. This mismatch
 belongs to the pinned library/vendor-header interface. It remains unresolved

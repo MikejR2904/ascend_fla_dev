@@ -26,8 +26,9 @@ cross-block hashes. `measure.py` measures three complete original-FP32 / new
 BF16 / original-FP32 sandwiches on one card, including backward checkpoints.
 
 Status: 88 focused host tests pass; all three entries lower with balanced
-events and emit CCE. The complete bd2 grid passes 138/138 native records against A/B and
-independent leaves/composition. The bd1 grid and timing are pending. Calibration
+events and emit CCE. Both complete grids pass 276/276 native records against A/B and
+independent leaves/composition; all 138 cross-bd case/dtype pairs match exactly.
+Same-card timing and the isolated runtime-warning control are pending. Calibration
 JSON files are pre-implementation CPU evidence, not device results.
 
 CPU-isolated repository suite: 763 passed, 9 skipped, 5 existing importorskip
@@ -38,6 +39,8 @@ is retained in ignored scratch; no test, requirement or tolerance was relaxed.
 
 First native evidence: `evidence/full-v4-bd2.json`, its unfiltered redacted log,
 source manifest, receipt and occupancy record. Canonical CPU reference passed
-all138cases; six bd2 vendor build logs and artifact hashes are retained.
+all138cases; all twelve bd1/bd2 vendor build logs and artifact hashes are retained.
+Complete grid records, receipts and occupancy are in `evidence/grid-v1-bd*`;
+`native-grid-summary.json` and `public-gradient-metrics.json` contain the aggregates.
 `summarize_native.py` rechecks both final grids and every cross-block hash;
 `summarize_timing.py` recomputes all retained same-card sample medians.
