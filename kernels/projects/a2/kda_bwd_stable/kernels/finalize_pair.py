@@ -48,6 +48,12 @@ def finalize_pair_a2_kernel(
     l0c_s = Tensor(DT.float, [L, D], Position.L0C)
     l0c_t = Tensor(DT.float, [L, D], Position.L0C)
 
+    # Explicit L1 load fence. auto_sync did not list every L1 buffer in this kernel's MTE2 -> MTE1
+    # ready guard on the pinned library, so a matmul could read a tile before its GM load landed;
+    # on the device that showed up as the second chunk's product being wrong by whole units while
+    # the functional simulator was exact.
+    l1_ready = DEvent(Pipe.MTE2, Pipe.MTE1)
+
     chunk_count = Var(T // L)
     work_count = B * HV * chunk_count
     work_per_cube = CeilDiv(work_count, GetCubeNum())
@@ -67,6 +73,8 @@ def finalize_pair_a2_kernel(
             l1_mqk[slot][0:L, 0:L] <<= Mqk[b_idx, hv_idx, row0:row1, 0:L]
             l1_q[slot][0:L, 0:D] <<= q_hv[b_idx, hv_idx, row0:row1, 0:D]
             l1_kg[slot][0:L, 0:D] <<= kg[b_idx, hv_idx, row0:row1, 0:D]
+            l1_ready.set()
+            l1_ready.wait()
             matmul(l0c_dq, l1_mqk[slot], l1_kg[slot].T, m=L, n=D, k=L, splitn=D)
             matmul(l0c_dk, l1_mqk[slot].T, l1_q[slot].T, m=L, n=D, k=L, splitn=D)
             dq_pair[b_idx, hv_idx, row0:row1, 0:D] <<= l0c_dq
@@ -75,10 +83,17 @@ def finalize_pair_a2_kernel(
             l1_mbase[slot][0:L, 0:L] <<= Mbase[b_idx, hv_idx, row0:row1, 0:L]
             l1_mbeta[slot][0:L, 0:L] <<= Mbeta[b_idx, hv_idx, row0:row1, 0:L]
             l1_k[slot][0:L, 0:D] <<= k_hv[b_idx, hv_idx, row0:row1, 0:D]
+            l1_ready.set()
+            l1_ready.wait()
             matmul(l0c_s, l1_mbase[slot], l1_kg[slot].T, m=L, n=D, k=L, splitn=D)
             matmul(l0c_t, l1_mbeta[slot].T, l1_k[slot].T, m=L, n=D, k=L, splitn=D)
             s_base[b_idx, hv_idx, row0:row1, 0:D] <<= l0c_s
             t_beta[b_idx, hv_idx, row0:row1, 0:D] <<= l0c_t
+            # The four accumulators are reused by the next chunk. auto_sync did not order the next MMAD
+            # against this chunk's fixpipe drain: on the device the second chunk's qk_right came back with
+            # a max absolute error of 8.0 while the simulator was exact. bar_all closes the whole cube
+            # pipeline at the chunk boundary, which is what the A5 kernel's _phase_matmul does per matmul.
+            bar_all()
             slot += 1
 
     return dq_pair, dk_pair, s_base, t_beta

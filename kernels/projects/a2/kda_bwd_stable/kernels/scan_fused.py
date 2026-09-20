@@ -106,6 +106,12 @@ def scan_fused_a2_kernel(
     glast_b_ub = Tensor(DT.bfloat16, [1, HALF_D], Position.UB)
     expg_ub = Tensor(DT.float, [1, HALF_D], Position.UB)
 
+    # Explicit L1 load fence. auto_sync did not list every L1 buffer in this kernel's MTE2 -> MTE1
+    # ready guard on the pinned library, so a matmul could read a tile before its GM load landed;
+    # on the device that showed up as the second chunk's product being wrong by whole units while
+    # the functional simulator was exact.
+    l1_ready = DEvent(Pipe.MTE2, Pipe.MTE1)
+
     bhv_count = B * HV
     bhv_per_cube = CeilDiv(bhv_count, GetCubeNum())
     bhv_begin = Var(bhv_per_cube * GetCubeIdx())
@@ -152,6 +158,8 @@ def scan_fused_a2_kernel(
                 l1_aqk <<= Aqk[ctok0:ctok0 + L, l_col:l_col + L]
                 l1_vnew <<= v_new[ctok0:ctok0 + L, hv_col:hv_col + D]
                 l1_kg <<= kg[ctok0:ctok0 + L, hv_col:hv_col + D]
+                l1_ready.set()
+                l1_ready.wait()
 
                 matmul(l0c_dd, l1_qg.T, l1_do.T, m=D, n=D, k=L, splitn=SPLIT_N)
                 matmul(l0c_ld, l1_aqk.T, l1_do.T, m=L, n=D, k=L, splitn=SPLIT_N)
@@ -166,6 +174,8 @@ def scan_fused_a2_kernel(
                 state_mx.wait()
                 l1_dstate <<= state_ws[beat][0:D, 0:D]
                 state_mx.free()
+                l1_ready.set()
+                l1_ready.wait()
                 barrier(Pipe.M)
                 matmul(l0c_ld, l1_kg, l1_dstate.T, m=L, n=D, k=D, splitn=SPLIT_N)
                 dvd_mx.lock()
@@ -197,6 +207,8 @@ def scan_fused_a2_kernel(
                 dv_mx.wait()
                 l1_dv <<= dv_ws[beat][0:L, 0:D]
                 dv_mx.free()
+                l1_ready.set()
+                l1_ready.wait()
                 barrier(Pipe.M)
                 matmul(l0c_dd, l1_w.T, l1_dv.T, m=D, n=D, k=L, splitn=SPLIT_N)
                 corr_mx.lock()

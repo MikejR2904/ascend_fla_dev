@@ -65,6 +65,12 @@ def inverse_mm_a2_kernel(
     dvh_f_ub = Tensor(DT.float, [HALF_L, D], Position.UB)
     dw_b_ub = Tensor(DT.bfloat16, [HALF_L, D], Position.UB)
 
+    # Explicit L1 load fence. auto_sync did not list every L1 buffer in this kernel's MTE2 -> MTE1
+    # ready guard on the pinned library, so a matmul could read a tile before its GM load landed;
+    # on the device that showed up as the second chunk's product being wrong by whole units while
+    # the functional simulator was exact.
+    l1_ready = DEvent(Pipe.MTE2, Pipe.MTE1)
+
     work_count = B * HV * C
     work_per_cube = CeilDiv(work_count, GetCubeNum())
     work_begin = Var(work_per_cube * GetCubeIdx())
@@ -89,6 +95,8 @@ def inverse_mm_a2_kernel(
             l1_akk <<= Akk[row0:row0 + L, l_col:l_col + L]
             l1_h <<= h[b_idx, c_idx, hv_idx, 0:D, 0:D]
             l1_dh <<= dh[b_idx, c_idx, hv_idx, 0:D, 0:D]
+            l1_ready.set()
+            l1_ready.wait()
 
             # d_qg = do @ h
             matmul(l0c[l0c_cnt], l1_do, l1_h, m=L, n=D, k=D, splitn=D)
@@ -124,6 +132,8 @@ def inverse_mm_a2_kernel(
             dw_mx.wait()
             l1_dw <<= dw_ws[work][0:L, 0:D]
             dw_mx.free()
+            l1_ready.set()
+            l1_ready.wait()
             matmul(l0c[l0c_cnt], l1_akk.T, l1_dw.T, m=L, n=D, k=L, splitn=D)
             d_k_beta_g[b_idx, hv_idx, c_idx, 0:L, 0:D] <<= l0c[l0c_cnt]
             l0c_cnt += 1

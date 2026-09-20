@@ -549,6 +549,57 @@
     "max_relative_l2": 0.25,
     "reason": "a5.kda_bwd's relaxation, kept: the BF16 cumulative-gate cache alone gives relative L2 0.115-0.183 against unrounded autograd at deep decay."
    }
+  },
+  "stage_outputs": {
+   "finalize_pair.qk_left": {
+    "mode": "allclose",
+    "rtol": 0.0078125,
+    "atol": 0.001,
+    "max_relative_l2": 0.001,
+    "reason": "BF16 checkpoint carrying the un-anchored pairwise decay: values reach 7e+07 while the mean is 1e+04, so one BF16 ulp is far above the 1e-3 default. Measured on a 910B3: a single element of 16384 differs from the CPU reference by 1.45 ulp (1408 vs 1416), which is FP32 accumulation order before the BF16 store, and the relative L2 is 1.1e-07. The budget is two BF16 ulp (rtol 2^-7). These checkpoints are only meaningful once multiplied by the matching row or column scale, which finalize_post does; the outputs keep the default budget."
+   },
+   "finalize_pair.qk_right": {
+    "mode": "allclose",
+    "rtol": 0.0078125,
+    "atol": 0.001,
+    "max_relative_l2": 0.001,
+    "reason": "BF16 checkpoint carrying the un-anchored pairwise decay: values reach 7e+07 while the mean is 1e+04, so one BF16 ulp is far above the 1e-3 default. Measured on a 910B3: a single element of 16384 differs from the CPU reference by 1.45 ulp (1408 vs 1416), which is FP32 accumulation order before the BF16 store, and the relative L2 is 1.1e-07. The budget is two BF16 ulp (rtol 2^-7). These checkpoints are only meaningful once multiplied by the matching row or column scale, which finalize_post does; the outputs keep the default budget."
+   },
+   "finalize_pair.s_base": {
+    "mode": "allclose",
+    "rtol": 0.0078125,
+    "atol": 0.001,
+    "max_relative_l2": 0.001,
+    "reason": "BF16 checkpoint carrying the un-anchored pairwise decay: values reach 7e+07 while the mean is 1e+04, so one BF16 ulp is far above the 1e-3 default. Measured on a 910B3: a single element of 16384 differs from the CPU reference by 1.45 ulp (1408 vs 1416), which is FP32 accumulation order before the BF16 store, and the relative L2 is 1.1e-07. The budget is two BF16 ulp (rtol 2^-7). These checkpoints are only meaningful once multiplied by the matching row or column scale, which finalize_post does; the outputs keep the default budget."
+   },
+   "finalize_pair.t_beta": {
+    "mode": "allclose",
+    "rtol": 0.0078125,
+    "atol": 0.001,
+    "max_relative_l2": 0.001,
+    "reason": "BF16 checkpoint carrying the un-anchored pairwise decay: values reach 7e+07 while the mean is 1e+04, so one BF16 ulp is far above the 1e-3 default. Measured on a 910B3: a single element of 16384 differs from the CPU reference by 1.45 ulp (1408 vs 1416), which is FP32 accumulation order before the BF16 store, and the relative L2 is 1.1e-07. The budget is two BF16 ulp (rtol 2^-7). These checkpoints are only meaningful once multiplied by the matching row or column scale, which finalize_post does; the outputs keep the default budget."
+   },
+   "finalize_pre.q_scaled": {
+    "mode": "allclose",
+    "rtol": 0.0078125,
+    "atol": 0.001,
+    "max_relative_l2": 0.001,
+    "reason": "BF16 checkpoint carrying the un-anchored pairwise decay: values reach 7e+07 while the mean is 1e+04, so one BF16 ulp is far above the 1e-3 default. Measured on a 910B3: a single element of 16384 differs from the CPU reference by 1.45 ulp (1408 vs 1416), which is FP32 accumulation order before the BF16 store, and the relative L2 is 1.1e-07. The budget is two BF16 ulp (rtol 2^-7). These checkpoints are only meaningful once multiplied by the matching row or column scale, which finalize_post does; the outputs keep the default budget."
+   },
+   "finalize_pre.k_scaled": {
+    "mode": "allclose",
+    "rtol": 0.0078125,
+    "atol": 0.001,
+    "max_relative_l2": 0.001,
+    "reason": "BF16 checkpoint carrying the un-anchored pairwise decay: values reach 7e+07 while the mean is 1e+04, so one BF16 ulp is far above the 1e-3 default. Measured on a 910B3: a single element of 16384 differs from the CPU reference by 1.45 ulp (1408 vs 1416), which is FP32 accumulation order before the BF16 store, and the relative L2 is 1.1e-07. The budget is two BF16 ulp (rtol 2^-7). These checkpoints are only meaningful once multiplied by the matching row or column scale, which finalize_post does; the outputs keep the default budget."
+   },
+   "finalize_pre.kg": {
+    "mode": "allclose",
+    "rtol": 0.0078125,
+    "atol": 0.001,
+    "max_relative_l2": 0.001,
+    "reason": "BF16 checkpoint carrying the un-anchored pairwise decay: values reach 7e+07 while the mean is 1e+04, so one BF16 ulp is far above the 1e-3 default. Measured on a 910B3: a single element of 16384 differs from the CPU reference by 1.45 ulp (1408 vs 1416), which is FP32 accumulation order before the BF16 store, and the relative L2 is 1.1e-07. The budget is two BF16 ulp (rtol 2^-7). These checkpoints are only meaningful once multiplied by the matching row or column scale, which finalize_post does; the outputs keep the default budget."
+   }
   }
  },
  "domain": {
