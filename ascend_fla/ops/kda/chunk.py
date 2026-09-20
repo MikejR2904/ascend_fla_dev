@@ -8,7 +8,7 @@
     wy        WY 表示 -> w, u, qg, kg                  ~ kda/wy_fast
     recurrent chunk 递推 -> o, final_state              ~ ops/common/chunk_delta_h
 
-公开 ABI 与 fla ``fla.ops.kda.chunk_kda`` 一致（token-major），内部自行 permute 到
+公开 ABI 与 fla ``fla.ops.kda.chunk_kda`` 一致（token-major），内部由自编译布局 kernel 转到
 kernel 的 BHCLD 布局 —— 与 ascriptor 单元 ``composition.chunked()`` 的做法相同。
 
 硬约束（不满足直接报错，不静默降级，见 AGENTS.md §7）：
@@ -224,6 +224,7 @@ def _compiled_chain(device: str, block_dim: int, impl: str = "stable") -> dict[s
     """
     from ...runtime.compile import compile_kernel
 
+    _layout_runtime().prepare(device, block_dim)
     return {name: compile_kernel(fn, device=device, block_dim=block_dim)
             for name, fn in kda_fwd_kernels(impl).items()}
 
@@ -313,52 +314,47 @@ def _check_recurrent_heads(b: int, hv: int, c: int, block_dim: int, impl: str) -
 
 
 @functools.lru_cache(maxsize=1)
-def _npu_supports_d2d_copy() -> bool:
-    """NPU 上的 ``permute().contiguous()``（device-to-device copy）是否可用。
-
-    它走 torch_npu 的内置 copy 算子；内置算子包不覆盖当前 SoC 时会失败
-    （见 docs/matrix/gaps.json 的 ``npu-builtin-ops-missing``）。探测一次并缓存。
-    """
-    try:
-        probe = torch.arange(8, dtype=torch.float32).reshape(2, 4).to("npu")
-        probe.permute(1, 0).contiguous()
-        torch.npu.synchronize()
-        return True
-    except Exception:
-        return False
+def _layout_runtime():
+    """Load the owned layout unit once; warm dispatch is an O(1) cache lookup."""
+    path = pathlib.Path(__file__).resolve().parents[3] / "kernels/projects/a5/kda_layout/runtime.py"
+    spec = importlib.util.spec_from_file_location("_afla_kda_layout_runtime", path)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
 
 
-def _to_bhcld(x: torch.Tensor, heads: int, *, on_cpu: bool) -> torch.Tensor:
-    """token-major → kernel 的 BHCLD 布局。
-
-    * 4 维 ``[B,T,heads,D] -> [B,heads,C,64,D]``
-    * 3 维 ``[B,T,heads]   -> [B,heads,C,64]``
-
-    ``on_cpu=True`` 时先 D2H、在 CPU 上重排、再 H2D —— 这条路只为绕开
-    ``npu-builtin-ops-missing``，数值语义完全相同，但多两次主机往返，
-    **不要用它的计时当性能数据**。
-    """
-    dev = x.device
-    src = x.cpu() if on_cpu else x
-    b, t = src.shape[0], src.shape[1]
+def _to_bhcld(x: torch.Tensor, heads: int, *, on_cpu: bool = False,
+              device="a5", block_dim=1) -> torch.Tensor:
+    """Token-major → head/chunk-major, entirely in the owned layout kernel."""
+    if on_cpu:
+        raise ValueError("CPU layout conversion is prohibited by D-PM-37")
+    b, t = x.shape[:2]
     c = t // L_PER_CHUNK
-    if src.dim() == 3:
-        out = src.reshape(b, c, L_PER_CHUNK, heads).permute(0, 3, 1, 2).contiguous()
-    elif src.dim() == 4:
-        last = src.shape[3]
-        out = src.reshape(b, c, L_PER_CHUNK, heads, last).permute(0, 3, 1, 2, 4).contiguous()
-    else:
-        raise ValueError(f"_to_bhcld 期望 3 或 4 维，收到 {tuple(src.shape)}")
-    return out.to(dev) if on_cpu else out
+    if x.dim() == 3:
+        shape = (b, heads, c, 1, L_PER_CHUNK)
+        strides = (t*heads, 1, L_PER_CHUNK*heads, 0, heads)
+        result = _layout_runtime().move(x, shape, strides, device=device, block_dim=block_dim)
+        return result.view(b, heads, c, L_PER_CHUNK)
+    if x.dim() != 4:
+        raise ValueError(f"_to_bhcld requires rank3/4, got {tuple(x.shape)}")
+    d = x.shape[-1]
+    return _layout_runtime().move(
+        x, (b, heads, c, L_PER_CHUNK, d),
+        (t*heads*d, d, L_PER_CHUNK*heads*d, heads*d, 1),
+        device=device, block_dim=block_dim)
 
 
-def _from_bhcld(x: torch.Tensor, *, on_cpu: bool) -> torch.Tensor:
-    """``[B,HV,C,64,D] -> [B,C*64,HV,D]``，与 :func:`_to_bhcld` 对称。"""
-    dev = x.device
-    src = x.cpu() if on_cpu else x
-    b, hv, c, l, d = src.shape
-    out = src.permute(0, 2, 3, 1, 4).reshape(b, c * l, hv, d).contiguous()
-    return out.to(dev) if on_cpu else out
+def _from_bhcld(x: torch.Tensor, *, on_cpu: bool = False, dtype=None,
+                device="a5", block_dim=1, multiply=False, factor=1.0) -> torch.Tensor:
+    """Head/chunk-major → token-major, optionally narrowing in the same launch."""
+    if on_cpu:
+        raise ValueError("CPU layout conversion is prohibited by D-PM-37")
+    b, hv, c, l, d = x.shape
+    result = _layout_runtime().move(
+        x, (b, c, l, hv, d), (hv*c*l*d, l*d, d, c*l*d, 1),
+        dtype=dtype, device=device, block_dim=block_dim, multiply=multiply, factor=factor)
+    return result.view(b, c*l, hv, d)
 
 
 #: chunk 内门控跨度的上限，按 **实现 × 跑哪条链** 两维。
@@ -444,10 +440,12 @@ def _check_gate_range(g: torch.Tensor, c: int, *, on_cpu: bool, impl: str,
 
 
 def _resolve_layout(layout_device: str) -> bool:
-    """``layout_device`` → 是否把重排绕到 CPU 上做。"""
-    if layout_device not in ("auto", "npu", "cpu"):
-        raise ValueError(f"layout_device 只能是 auto/npu/cpu，收到 {layout_device!r}")
-    return (layout_device == "cpu") or (layout_device == "auto" and not _npu_supports_d2d_copy())
+    """Deprecated auto/npu aliases both select kernel-side layout conversion."""
+    if layout_device == "cpu":
+        raise ValueError("layout_device='cpu' is prohibited by D-PM-37; use auto/npu for kernel-side conversion")
+    if layout_device not in ("auto", "npu"):
+        raise ValueError(f"layout_device must be auto/npu, got {layout_device!r}")
+    return False
 
 
 def _run_chain(q, k, v, g, beta, scale, initial_state, *, device, block_dim,
@@ -465,12 +463,12 @@ def _run_chain(q, k, v, g, beta, scale, initial_state, *, device, block_dim,
     def empty(shape, dtype):
         return torch.empty(*shape, dtype=dtype, device=dev)
 
-    qc, kc = _to_bhcld(q, h, on_cpu=on_cpu), _to_bhcld(k, h, on_cpu=on_cpu)
-    vc, gc = _to_bhcld(v, hv, on_cpu=on_cpu), _to_bhcld(g, hv, on_cpu=on_cpu)
-    bc = _to_bhcld(beta, hv, on_cpu=on_cpu)
-    # torch.zeros 在内置算子缺失的 SoC 上不可用，所以在 CPU 上造零再 H2D
-    state0 = initial_state if initial_state is not None else torch.zeros(
-        b, hv, HEAD_DIM, VALUE_DIM, dtype=torch.float32, device="cpu").to(dev)
+    qc, kc = _to_bhcld(q, h, device=device, block_dim=block_dim), _to_bhcld(k, h, device=device, block_dim=block_dim)
+    vc, gc = _to_bhcld(v, hv, device=device, block_dim=block_dim), _to_bhcld(g, hv, device=device, block_dim=block_dim)
+    bc = _to_bhcld(beta, hv, device=device, block_dim=block_dim)
+    state0 = initial_state if initial_state is not None else _layout_runtime().zeros(
+        (b, hv, HEAD_DIM, VALUE_DIM), torch.float32, dev,
+        device=device, block_dim=block_dim)
 
     bhc = (b, hv, c, L_PER_CHUNK, HEAD_DIM)
     sq = (b, hv, c, L_PER_CHUNK, L_PER_CHUNK)
@@ -559,9 +557,8 @@ def chunk_kda_fwd(
             所以这个值直接决定并行度 —— ``block_dim=1`` 只用到 2 个向量核。
             契约只覆盖到 4；Ascend950PR 物理上有 28 cube / 56 vec，但超过物理核数
             会在硬件 barrier 死锁。
-        layout_device: token-major ↔ BHCLD 的重排在哪做。``"npu"`` 最快但需要
-            内置 copy 算子；``"cpu"`` 绕主机往返（数值相同，计时不可用于性能结论）；
-            ``"auto"``（默认）探测一次后自行选择。
+        layout_device: deprecated ``"auto"`` / ``"npu"`` aliases; both select
+            the owned device layout kernel. ``"cpu"`` raises under D-PM-37.
         check_gate_range: 是否校验 chunk 内门控跨度不超过
             :data:`MAX_GATE_SPAN` ``[impl]["forward"]``。默认开 —— 超限时 kernel 会静默吐
             NaN，那比报错糟得多。代价是对 ``g`` 做一次 cumsum + 两次规约。
@@ -585,7 +582,7 @@ def chunk_kda_fwd(
     scale = HEAD_DIM ** -0.5 if scale is None else float(scale)
     chain = _run_chain(q, k, v, g, beta, scale, initial_state, device=device,
                        block_dim=block_dim, on_cpu=on_cpu, b=b, h=h, hv=hv, c=c, impl=impl)
-    o = _from_bhcld(chain["o"], on_cpu=on_cpu)
+    o = _from_bhcld(chain["o"], device=device, block_dim=block_dim)
     return o, (chain["final_state"] if output_final_state else None)
 
 
@@ -702,23 +699,19 @@ def chunk_kda_fwd_with_caches(
 
     h_states, v_new = _scan_states(chain["w"], chain["u"], chain["kg"], chain["eg"],
                                    chain["initial_state"], b=b, hv=hv, c=c, on_cpu=on_cpu)
-    # 布局重排 + 降 bf16。``on_cpu`` 时两步都在 CPU 上做，最后一次 H2D —— 顺序要紧：
-    # 先 D2H 再 cast，反过来会在缺内置算子包的机器上因为 Cast 失败（AGENTS.md §5）。
-    dev = q.device
+    def tok(x: torch.Tensor, *, multiply=False) -> torch.Tensor:
+        return _from_bhcld(x, dtype=torch.bfloat16, device=device, block_dim=block_dim,
+                           multiply=multiply, factor=1.0 / math.log(2.0))
 
-    def tok(x: torch.Tensor) -> torch.Tensor:
-        out = _from_bhcld(x.cpu() if on_cpu else x, on_cpu=False).bfloat16()
-        return out.to(dev) if on_cpu else out
-
-    # kda_bwd 的 g_cumsum 是 **log2** 空间的（ref/forward.py 里 cumsum * RCP_LN2）。
-    # stable 实现的 gate kernel 直接写出自然底的 cumsum，换底即可 —— 比 log2(eg) 更准，
-    # 而且在 eg 已经下溢到 0 的深衰减下，log2(eg) 会给 -inf，那条路根本不可用。
-    src_g = chain["g_cumsum"] if chain["g_cumsum"] is not None else chain["eg"]
-    base = src_g.cpu() if on_cpu else src_g
-    g_cum_log2 = (base * (1.0 / math.log(2.0))) if chain["g_cumsum"] is not None \
-        else base.log2()
+    # D-PM-42: stable's existing single FP32 multiply is fused with layout/cast,
+    # preserving its rounded constant and materialization before BF16 RNE.
+    # Upstream log2 remains a registered legacy arithmetic exception.
+    if chain["g_cumsum"] is not None:
+        g_cum_log2 = tok(chain["g_cumsum"], multiply=True)
+    else:
+        g_cum_log2 = tok(chain["eg"].log2())
     caches = {
-        "g_cumsum": tok(g_cum_log2),
+        "g_cumsum": g_cum_log2,
         "Aqk": tok(chain["Aqk"]),
         "Akk": tok(chain["Akk"]),
         "w": tok(chain["w"]),
@@ -731,5 +724,5 @@ def chunk_kda_fwd_with_caches(
     missing = set(BWD_CACHE_NAMES) ^ set(caches)
     if missing:
         raise RuntimeError(f"检查点名字与 kda_bwd 的声明不符，差异 {sorted(missing)}")
-    o = _from_bhcld(chain["o"], on_cpu=on_cpu)
+    o = _from_bhcld(chain["o"], device=device, block_dim=block_dim)
     return o, chain["final_state"], caches

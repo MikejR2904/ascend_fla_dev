@@ -1,0 +1,414 @@
+{
+  "schema": "ascriptor.kernel-unit/1",
+  "id": "a5.kda_layout",
+  "kind": "kernel",
+  "description": "Bit-preserving KDA layout movement, BF16/FP32 casts and default zero fill",
+  "inputs": {
+    "source": {
+      "description": "BF16 or FP32 storage span selected explicitly by each case source parameter; ignored for zero fill"
+    }
+  },
+  "outputs": {
+    "destination": {
+      "shape": [
+        1,
+        "N"
+      ],
+      "description": "dtype equals each case destination parameter; reference and actual dtype, shape and all bytes must match"
+    }
+  },
+  "domain": {
+    "block_dim": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "layout": "five positive logical dimensions with final dimension a multiple of64; nonnegative element strides; disjoint contiguous destination",
+    "ownership": "GetVecNum=2bd; disjoint contiguous output tiles up to4096 elements, last logical dimension multiple64; read-only source; five-loop NDDMA; cached shape metadata.",
+    "precision": "same-dtype copies preserve bits; BF16 widening exact; FP32->BF16 ties-to-even; optional existing FP32 gate multiplier has no FMA",
+    "public_scope": "unchanged chunk K/V128,L64,gate155/105; registered DPM42 arithmetic exceptions remain outside this unit"
+  },
+  "dependencies": {
+    "python": ">=3.10",
+    "ascriptor": "==0.1.0",
+    "host": [
+      "torch>=2.9.1",
+      "numpy"
+    ]
+  },
+  "comparison": {
+    "default": {
+      "mode": "bitwise",
+      "reason": "exact predecessor layout and cast boundary, no error tolerance"
+    }
+  },
+  "cases": [
+    {
+      "id": "to_head_bf16_bf16",
+      "seed": 20602,
+      "block_dim": 1,
+      "parameters": {
+        "kind": "to_head",
+        "source": "bf16",
+        "destination": "bf16",
+        "N": 147456
+      }
+    },
+    {
+      "id": "to_head_bf16_f32",
+      "seed": 20602,
+      "block_dim": 1,
+      "parameters": {
+        "kind": "to_head",
+        "source": "bf16",
+        "destination": "f32",
+        "N": 147456
+      }
+    },
+    {
+      "id": "to_head_f32_bf16",
+      "seed": 20602,
+      "block_dim": 1,
+      "parameters": {
+        "kind": "to_head",
+        "source": "f32",
+        "destination": "bf16",
+        "N": 147456
+      }
+    },
+    {
+      "id": "to_head_f32_f32",
+      "seed": 20602,
+      "block_dim": 1,
+      "parameters": {
+        "kind": "to_head",
+        "source": "f32",
+        "destination": "f32",
+        "N": 147456
+      }
+    },
+    {
+      "id": "to_token_bf16_bf16",
+      "seed": 20602,
+      "block_dim": 1,
+      "parameters": {
+        "kind": "to_token",
+        "source": "bf16",
+        "destination": "bf16",
+        "N": 73728
+      }
+    },
+    {
+      "id": "to_token_bf16_f32",
+      "seed": 20602,
+      "block_dim": 1,
+      "parameters": {
+        "kind": "to_token",
+        "source": "bf16",
+        "destination": "f32",
+        "N": 73728
+      }
+    },
+    {
+      "id": "to_token_f32_bf16",
+      "seed": 20602,
+      "block_dim": 1,
+      "parameters": {
+        "kind": "to_token",
+        "source": "f32",
+        "destination": "bf16",
+        "N": 73728
+      }
+    },
+    {
+      "id": "to_token_f32_f32",
+      "seed": 20602,
+      "block_dim": 1,
+      "parameters": {
+        "kind": "to_token",
+        "source": "f32",
+        "destination": "f32",
+        "N": 73728
+      }
+    },
+    {
+      "id": "beta_bf16_bf16",
+      "seed": 20602,
+      "block_dim": 1,
+      "parameters": {
+        "kind": "beta",
+        "source": "bf16",
+        "destination": "bf16",
+        "N": 1152
+      }
+    },
+    {
+      "id": "beta_bf16_f32",
+      "seed": 20602,
+      "block_dim": 1,
+      "parameters": {
+        "kind": "beta",
+        "source": "bf16",
+        "destination": "f32",
+        "N": 1152
+      }
+    },
+    {
+      "id": "beta_f32_bf16",
+      "seed": 20602,
+      "block_dim": 1,
+      "parameters": {
+        "kind": "beta",
+        "source": "f32",
+        "destination": "bf16",
+        "N": 1152
+      }
+    },
+    {
+      "id": "beta_f32_f32",
+      "seed": 20602,
+      "block_dim": 1,
+      "parameters": {
+        "kind": "beta",
+        "source": "f32",
+        "destination": "f32",
+        "N": 1152
+      }
+    },
+    {
+      "id": "cast_bf16_bf16",
+      "seed": 20602,
+      "block_dim": 1,
+      "parameters": {
+        "kind": "cast",
+        "source": "bf16",
+        "destination": "bf16",
+        "N": 128
+      }
+    },
+    {
+      "id": "cast_bf16_f32",
+      "seed": 20602,
+      "block_dim": 1,
+      "parameters": {
+        "kind": "cast",
+        "source": "bf16",
+        "destination": "f32",
+        "N": 128
+      }
+    },
+    {
+      "id": "cast_f32_bf16",
+      "seed": 20602,
+      "block_dim": 1,
+      "parameters": {
+        "kind": "cast",
+        "source": "f32",
+        "destination": "bf16",
+        "N": 128
+      }
+    },
+    {
+      "id": "cast_f32_f32",
+      "seed": 20602,
+      "block_dim": 1,
+      "parameters": {
+        "kind": "cast",
+        "source": "f32",
+        "destination": "f32",
+        "N": 128
+      }
+    },
+    {
+      "id": "strided_bf16_bf16",
+      "seed": 20602,
+      "block_dim": 1,
+      "parameters": {
+        "kind": "strided",
+        "source": "bf16",
+        "destination": "bf16",
+        "N": 256
+      }
+    },
+    {
+      "id": "strided_bf16_f32",
+      "seed": 20602,
+      "block_dim": 1,
+      "parameters": {
+        "kind": "strided",
+        "source": "bf16",
+        "destination": "f32",
+        "N": 256
+      }
+    },
+    {
+      "id": "strided_f32_bf16",
+      "seed": 20602,
+      "block_dim": 1,
+      "parameters": {
+        "kind": "strided",
+        "source": "f32",
+        "destination": "bf16",
+        "N": 256
+      }
+    },
+    {
+      "id": "strided_f32_f32",
+      "seed": 20602,
+      "block_dim": 1,
+      "parameters": {
+        "kind": "strided",
+        "source": "f32",
+        "destination": "f32",
+        "N": 256
+      }
+    },
+    {
+      "id": "broadcast_bf16_bf16",
+      "seed": 20602,
+      "block_dim": 1,
+      "parameters": {
+        "kind": "broadcast",
+        "source": "bf16",
+        "destination": "bf16",
+        "N": 1024
+      }
+    },
+    {
+      "id": "broadcast_bf16_f32",
+      "seed": 20602,
+      "block_dim": 1,
+      "parameters": {
+        "kind": "broadcast",
+        "source": "bf16",
+        "destination": "f32",
+        "N": 1024
+      }
+    },
+    {
+      "id": "broadcast_f32_bf16",
+      "seed": 20602,
+      "block_dim": 1,
+      "parameters": {
+        "kind": "broadcast",
+        "source": "f32",
+        "destination": "bf16",
+        "N": 1024
+      }
+    },
+    {
+      "id": "broadcast_f32_f32",
+      "seed": 20602,
+      "block_dim": 1,
+      "parameters": {
+        "kind": "broadcast",
+        "source": "f32",
+        "destination": "f32",
+        "N": 1024
+      }
+    },
+    {
+      "id": "zero_bf16",
+      "seed": 20602,
+      "block_dim": 1,
+      "parameters": {
+        "kind": "zero",
+        "source": "bf16",
+        "destination": "bf16",
+        "N": 256
+      }
+    },
+    {
+      "id": "zero_f32",
+      "seed": 20602,
+      "block_dim": 1,
+      "parameters": {
+        "kind": "zero",
+        "source": "f32",
+        "destination": "f32",
+        "N": 256
+      }
+    },
+    {
+      "id": "gate_base_and_layout",
+      "seed": 20603,
+      "block_dim": 1,
+      "parameters": {
+        "kind": "to_token",
+        "source": "f32",
+        "destination": "bf16",
+        "multiply": true,
+        "N": 73728
+      }
+    }
+  ],
+  "support": [
+    {
+      "device": "a5",
+      "backend": "cce",
+      "stage": "reference",
+      "status": "passed",
+      "note": "27 independent CPU reference cases passed for the batched source."
+    },
+    {
+      "device": "a5",
+      "backend": "cce",
+      "stage": "sim",
+      "status": "passed",
+      "note": "15 bounded source-file cases at bd1, only after complete native T4096; no full-shape or multi-bd model claim."
+    },
+    {
+      "device": "a5",
+      "backend": "cce",
+      "stage": "pipesim",
+      "status": "passed",
+      "note": "15 bounded source-file cases at bd1, only after complete native T4096; exact outputs and no hazard/deadlock. No hardware/performance inference."
+    },
+    {
+      "device": "a5",
+      "backend": "cce",
+      "stage": "emit",
+      "status": "passed",
+      "note": "All six batched entries emitted IR and CCE; see evidence/emission/manifest.json."
+    },
+    {
+      "device": "a5",
+      "backend": "cce",
+      "stage": "compile",
+      "status": "passed",
+      "note": "All 22 vendors, including nine backward entries, precompiled in every fresh native process; bd1..4."
+    },
+    {
+      "device": "a5",
+      "backend": "cce",
+      "stage": "cannsim",
+      "status": "untested",
+      "note": "Not run; no CANN simulator qualification."
+    },
+    {
+      "device": "a5",
+      "backend": "cce",
+      "stage": "board",
+      "status": "passed",
+      "note": "A5/CANN9.1.0-beta.1: bd1..4 each116 complete plain/cached/backward cases,31leaf,5autograd,6gate,24stable contracts,2decode domain checks;24additional batched-tail canaries. dev-B h0 only under D-PM-44; dev-A inherited scan defect remains."
+    }
+  ],
+  "provenance": [
+    {
+      "source": "original FMT-02 implementation",
+      "baseline": "f04047737ae91de8014a74c0e44fb31f7b3fba4a",
+      "decisions": [
+        "D-PM-37",
+        "D-PM-42",
+        "D-PM-44"
+      ]
+    }
+  ],
+  "release_scope": {
+    "hardware": [
+      "a5"
+    ],
+    "note": "Batched layout source qualified on the recorded A5/CANN9.1.0-beta.1 environment. D-PM-44 limits full h0 endpoint qualification to dev-B, whose old public path is repeatable. dev-A baseline scan dh0 nondeterminism is not fixed. Original64-element evidence is historical under evidence/history/v1. No A2/A3 or CANN9.2 qualification."
+  }
+}

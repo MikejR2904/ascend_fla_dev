@@ -1,0 +1,123 @@
+{
+  "passed": true,
+  "cases": [
+    {
+      "dtype": "torch.bfloat16",
+      "measurements": {
+        "o": {
+          "relative_l2": 0.0016553002642467618,
+          "max_abs": 3.7673162296414375e-06,
+          "finite": true,
+          "budget": 0.005,
+          "bf16_rounding_floor": 0.0016553002642467618,
+          "exceeds_3F": false,
+          "passed": true
+        },
+        "final_state": {
+          "relative_l2": 3.599780384888618e-08,
+          "max_abs": 9.313225746154785e-10,
+          "finite": true,
+          "budget": 1e-05,
+          "bf16_rounding_floor": 0.0016443530330434442,
+          "exceeds_3F": false,
+          "passed": true
+        }
+      },
+      "host_operations": [
+        {
+          "category": "operator",
+          "file": "ascend_fla/ops/kda/fused_recurrent.py",
+          "line": 182,
+          "operator": "aten.empty.memory_format",
+          "count": 1
+        },
+        {
+          "category": "operator",
+          "file": "ascend_fla/ops/kda/fused_recurrent.py",
+          "line": 183,
+          "operator": "aten.empty.memory_format",
+          "count": 1
+        },
+        {
+          "category": "operator",
+          "file": "ascend_fla/ops/kda/fused_recurrent.py",
+          "line": 186,
+          "operator": "aten.empty.memory_format",
+          "count": 1
+        }
+      ],
+      "launches": [
+        {
+          "operator": "KdaDecodeBf16Kernel",
+          "signature": "4cb30b7c37e541a9",
+          "outputs": [
+            "o",
+            "final_state"
+          ],
+          "poisoned": true
+        }
+      ],
+      "input_unchanged": true,
+      "passed": true
+    },
+    {
+      "dtype": "torch.float32",
+      "measurements": {
+        "o": {
+          "relative_l2": 1.0309889120208027e-07,
+          "max_abs": 2.3283064365386963e-10,
+          "finite": true,
+          "budget": 1e-05,
+          "bf16_rounding_floor": 0.0016553002642467618,
+          "exceeds_3F": false,
+          "passed": true
+        },
+        "final_state": {
+          "relative_l2": 3.599780384888618e-08,
+          "max_abs": 9.313225746154785e-10,
+          "finite": true,
+          "budget": 1e-05,
+          "bf16_rounding_floor": 0.0016443530330434442,
+          "exceeds_3F": false,
+          "passed": true
+        }
+      },
+      "host_operations": [
+        {
+          "category": "operator",
+          "file": "ascend_fla/ops/kda/fused_recurrent.py",
+          "line": 182,
+          "operator": "aten.empty.memory_format",
+          "count": 1
+        },
+        {
+          "category": "operator",
+          "file": "ascend_fla/ops/kda/fused_recurrent.py",
+          "line": 183,
+          "operator": "aten.empty.memory_format",
+          "count": 1
+        },
+        {
+          "category": "operator",
+          "file": "ascend_fla/ops/kda/fused_recurrent.py",
+          "line": 186,
+          "operator": "aten.empty.memory_format",
+          "count": 1
+        }
+      ],
+      "launches": [
+        {
+          "operator": "KdaDecodeFp32Kernel",
+          "signature": "72ae150926198825",
+          "outputs": [
+            "o",
+            "final_state"
+          ],
+          "poisoned": true
+        }
+      ],
+      "input_unchanged": true,
+      "passed": true
+    }
+  ]
+}
