@@ -18,7 +18,7 @@ from pathlib import Path
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--block-dim', type=int, choices=(1, 2, 4, 8, 16, 28), required=True)
-    parser.add_argument('--mode', choices=('compile', 'full', 'suite', 'boundaries', 'perf'), default='full')
+    parser.add_argument('--mode', choices=('compile', 'full', 'suite', 'boundaries', 'prefill', 'perf'), default='full')
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
     assert os.environ.get('BF06_EXTERNAL_DEVICE_LOCK') == '1', 'hold both shared locks'
@@ -222,6 +222,13 @@ def main():
         if args.mode == 'perf':
             from native_perf import measure
             write('performance', measure(api, research, args.block_dim, original_fp32, to_device, fla))
+        if args.mode == 'prefill':
+            # Scaling moved from the original host wrapper into VF; cover its
+            # nondefault values explicitly in the FP32 byte-equivalence audit.
+            for scale in (0., 1., .3, -1.):
+                execute(dict(full,id=f'fp32_scale_{scale}',scale=scale),fp32=True)
+            from native_prefill import verify
+            write('prefill', verify(chunk, research, args.block_dim, public, to_device, fla, write, out))
         write('summary', dict(complete=True, passed=True, cases=rows))
         print('NATIVE_PASS', args.block_dim, len(rows), flush=True)
     except BaseException as error:

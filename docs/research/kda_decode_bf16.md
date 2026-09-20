@@ -96,3 +96,21 @@ tests pass. The subsequent full host suite passed 768 tests with 5 skips.
 The standalone unit passed all 83 CPU reference cases without importing the
 DSL, custom kernels or simulator. These are static and host checks; vendor builds and NPU acceptance
 remain separate requirements.
+
+## Prefill/decode comparison fixed before its implementation
+
+PM issue #105 comment 5746672559 defines three separate checks. Each decode
+call starts both CPU FP32 oracles from the actual state it received, retaining
+the original `min(0.01,3F)` output and `1e-5` state budgets. Every 16-token
+segment must produce identical output and state when split into sixteen
+single-token calls.
+
+For prefill64/128 followed by decode64, run the existing stable long forward
+on the same inputs in the same hardware run. Against each full-sequence oracle,
+the complete chain's output and final state must meet `min(0.01,3*E_oneshot)`,
+where each output's `E_oneshot` is that long forward's measured relative L2.
+Prefix and suffix outputs are reported separately and obey the same output
+limit. Prefix state is also checked against its own CPU prefix reference with
+the same state limit. Chain-vs-oneshot errors are reported without a separate
+threshold. The old chunk contract's 0.05 limit is not used for this acceptance.
+These rules are fixed before executing the prefill measurements.
