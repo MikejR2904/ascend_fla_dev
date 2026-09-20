@@ -660,6 +660,10 @@
         {
           "at": "2026-09-20T02:15",
           "summary": "STATUS（02:15Z，自述）+ draft PR #115：ABI / 预算先行提交 1a3cf5a，实现提交 4095f57，五项获批写集内；三个 BF16 kernel 与 FP32 分组累加 / 最终窄化、kernel 内缺省 cotangent 零初始化已实现，旧 FP32 单元无改动。88 个 focused tests；CPU 隔离全仓 763 passed / 9 skipped（首次全仓命令隔离不足而触发无关 KDA NPU 测试，已中断并保留错误，按 handoff 的 CPU import 隔离后重跑通过，不作设备验收）；三个入口完整 lowering / balance / CCE emit 通过，lowering 捕获的临时 dq / dk dtype 错误在上机前修复，失败源码 / 日志保留。冻结 min(1e-2, 3F_g)，未放宽；预实现校准 138 记录仅为 CPU 证据，不充作设备验收。接着：首个完整 B1 / T4096 / H=HV8 workload 在独立目录构建 / 验证，再全网格、两 dtype 公共 host 审计、原 FP32 对照、跨 bd 逐位、同卡三轮。blockers: draft，尚无 BF-02 native pass；前两次启动被共享锁 / 退出中的设备上下文检查拦下，另一次被基线 manifest 把 pycache 当源码拦下（已改为基线提交的 tracked files），均未运行 BF-02 kernel。PM 对 draft PR #115 只做早期扫描（非评审）：25 个文件（23 新增 2 修改）全在写集内、无保留路径 / .github / pyproject / 二进制、新增行无 IP / 用户目录 / UUID / 令牌；DONE 前不审。"
+        },
+        {
+          "at": "2026-09-20T02:21",
+          "summary": "STATUS（02:21Z，自述）：首个完整 workload B1 / T4096 / H=HV8 / K=V128、bd2，BF16 + FP32 两条实际公共路径通过新生成 A/B、NaN 预填的 composition / independent leaves、输入不变与 host 算子审计；FP32 新旧公共结果逐位一致。设备全程共享锁、202 个占用样本，其中 182 个同时正向识别 SVM / TRS 里的精确计算子进程，foreign = 0，前后为空且健康。BF16 dq / dk / dv 最大相对 L2 约 1.675e-3（BF16 舍入地板量级），各梯度均满足冻结的 min(1e-2, 3F_g)；FP32 A / B 各梯度最大相对 L2 约 2.454e-7；两 dtype 的公共 host 审计均只有 10 次 aten.empty。接着：全 69 case × 两 dtype × 两个 block_dim 的网格、缺省 cotangent poison、跨 bd 对照、同卡三轮；六个 vendor build 通过，日志 warning 正逐项归属核查。blockers: none；draft 仍待完整网格与测量，不提前 DONE。"
         }
       ],
       "result": null,
@@ -981,6 +985,10 @@
         {
           "at": "2026-09-20T02:05",
           "summary": "STATUS（02:05Z，自述）：bd = 1 / 2 / 4 各自独立进程已完成 136 个数值案例 + 57 个附加检查，均退出 0；17 项 vendor 含完整九个 backward 在各进程首次 custom 执行前编完；bd = 8 / 16 / 28 在继续。申领人下载并独立复算了 bd = 1 / 4 的原始 JSON：136 个数值案例及 40 个有输出哈希的附加案例全部跨 bd 逐位相同、输入哈希一致。最差 BF16 o 相对 L2 1.885e-3，最差 FP32 o 2.01e-7，最差全局 state 1.71e-7（逐头 1.80e-7），每个案例都按两个 CPU FP32 oracle 与既定预算逐项复算；默认 host 审计、NaN 覆盖、输入不变检查通过；原 FP32 kernel 只读。接着：完成剩余 bd 与全量跨 bd 复算后更新验收源码，执行已裁定的三层 prefill 链（原阈值，不用 0.05）与三轮同步性能，精确的旧公共 wrapper 快照已加入对照（保留完整旧入口成本），实际 Torch NPU baseline 已准备、尚未测量。blockers: none；无 DONE，PR #114 仍 draft（头 b83e7b7d，PM 不审）。"
+        },
+        {
+          "at": "2026-09-20T02:20",
+          "summary": "STATUS（02:20Z，自述，PR #114 头 56c2a2fd）：六个 bd 的真机网格全部完成并独立复算——414 个数值执行 + 342 个附加检查通过，共享案例跨 bd 输入哈希与输出字节一致；bd1 / 2 / 4 各 136 + 57，bd8 / 16 / 28 各 2 个完整 BF16 / FP32 workload + 57；17 项 vendor 含九个 backward 先编译，不声称 backward 已执行。证据在 kernels/projects/a5/kda_fused_recurrent_bf16/evidence/，全部文本（含完整未过滤运行日志仅脱敏路径、原始 JSON、逐头误差 / 预算、host 审计、全部编译项、模型 diagnostics、source hashes），干净 git archive 恢复后 77 个发布文件逐项 hash 复核、aggregate.py 六个 bd 再通过，没有二进制归档（已按 PM 的要求用文本）。接着 prefill / 性能：源码已同步并核对 3777 文件，设备队列取得新的双锁窗口，执行固定的三层 prefill 与精确旧公共 FP32 入口 / 实际 Torch NPU 三轮性能对照；边界生成器在首次执行前修为实际累计跨度精确 105 / 155 并记录 CPU / NPU 跨度。主机回归 768 passed / 5 skipped；BF16 两组 + FP32 一组 sim / pipesim 在首轮完整硬件之后通过。仍无 DONE，prefill 与性能未完成前保持 draft；contract 里 board passed 仅指已执行的 decode 单元网格，备注写明任务整体尚未验收。"
         }
       ],
       "result": null,
@@ -1575,8 +1583,8 @@
         "ascriptor": "library 90cfcdc / kernels b3b3f9c（按 agent/compatibility.json 的 pin；自述）",
         "fla": "e52dbc0e（自述）",
         "fork": "limjiunnbin/ascend_fla_dev",
-        "session": "a2-01-20260919T143510Z-35b3db2a",
-        "note": "A2-01 与 A2-03 的申领人（均已 done）；A2-03 合入后按其排队直接派 A2-09。"
+        "session": "a2-09-bwd-1",
+        "note": "A2-01 与 A2-03 的申领人（均已 done）；A2-03 合入后按其排队直接派 A2-09。 2026-09-20 起 STATUS 里自报的 session 是 a2-09-bwd-1（此前记的是 a2-01-20260919T143510Z-35b3db2a，STATUS / ACK 之前没带 session 字段），PM 按自称更新，不核实身份。"
       },
       "branch": "task/A2-09",
       "timebox_h": 16,
@@ -1600,6 +1608,10 @@
         {
           "at": "2026-09-20T00:43",
           "summary": "STATUS（00:43Z，自述）：分支 task/A2-09 已建（基于 3884c27）；三个纯向量草稿已过 ascriptor check（finalize_reduce 64 ops、finalize_pre 191、finalize_post 282，均 0 error / 0 warning），落到 kernels/projects/a2/kda_bwd_stable/ 后逐个验证。按 A2-03 的实测速度重估（A2-03：6 个 kernel 1.2h、单元与证据 2.3h，合计约 3.5h）：九个 kernel 合计约 2.2h（finalize_reduce 0.1、finalize_pre 0.2、finalize_post 0.3、inverse_epilogue 0.3、finalize_pair 0.1、inverse_mm 0.2、inverse_dainv 0.2、inverse_dakk_fused 0.2、scan_fused 0.6——最大，反向扫描 + dstate / dv 两个桥、.nz() 在 a2 上不可用要改 GM 环），bwd 单元 0.5h，六项梯度网格 + 真机 + 证据整理 1.5h，合计约 4.2h（时限 16h，误差主要在 scan_fused）。blockers: none。PM：估计有了实测口径，时限 16h 保持（约 4 倍余量，反向 kernel 比前向重），超估计 25% 走 timebox-slip"
+        },
+        {
+          "at": "2026-09-20T02:34",
+          "summary": "STATUS（02:34Z，自述；session 自报 a2-09-bwd-1）：九个反向 kernel 全部写完并过 ascriptor check（0 error / 0 warning）——混合四个：scan_fused 277 ops、inverse_mm 144、inverse_dainv 166、inverse_dakk_fused 153；其余五个：inverse_epilogue 327、finalize_pre 191、finalize_post 283、finalize_pair 95、finalize_reduce 64。bwd 单元 kernels/projects/a2/kda_bwd_stable/ 已建（unit.py / contract.json / run.py / 自带 reference.py（不 import 编译器）/ 规范 _unit_runner.py），契约 26 个 case（a5 的五个 case 各 bd1 / bd2 + (C∈{1,2})×(HV∈{1,2,4})×(bd∈{1,2}) 网格 + 一个 C=3 + 一个零初始 state + 一个 B=2），reference 26/26 通过；functional sim 单 chunk 与 grouped_heads（HV=2 C=2 bd=2）整链通过，含 33 个逐 kernel checkpoint 与六项梯度对 autograd oracle 的比对，全量 26 个 case 在跑。D-PM-37 的两处 host 操作已挪进 kernel：g_last 不再由 host 从 g_cumsum 切片、scan_fused 直接跨步读该 chunk 门控末行；inverse_mm 自己取负、直接输出 d_w；a5 折在 host 的 qg 预乘 1/sqrt(128) 也进了 scan_fused 的 seed。A2 侧形变：b3 无 dma.ub_to_l1 / dma.l0c_to_ub，七个跨侧交接全部改成两槽 GMBuff 环（一个环一个 beat 计数器、各自 mutex）；L0C 只有 128KB，scan_fused 的五个积共用三个累加器（112KB），每次复用前显式 barrier(Pipe.M)。申领人自报两个自己引入、被 sim 抓到的缺陷：inverse_dainv 的 beta 乘错方向（应按列而不是按行）；ub_to_gm_pad 的最后两个参数写反（inverse_epilogue 与 finalize_post 的 dbeta 写回），HV=1 时等价所以单头全绿、HV=2 才报 UB 越界——正是 (C, HV) 网格存在的理由。接着：全量 sim → pipesim → 910B3 真机（bd1 与 bd2 逐位对照）→ 脱敏证据 → 开 draft PR。风险：暂无新的库缺陷；契约 board stage untested、门控跨度 untested（不继承 a5 的 105）、block_dim 只声明 1 与 2。用时：约 2h 墙钟（从 00:43Z 的 STATUS 起）对估计 4.2h。"
         }
       ],
       "result": null
