@@ -54,6 +54,23 @@ FP32 公共路径继续执行原六个 kernel。公共入口移除输入输出 h
 ## 验证状态
 
 本节随新证据更新。当前未声称 BF-03 设备执行、模拟、管线模拟或性能通过。
+主机全套为 918 passed / 9 skipped / 5 warnings；其中原 PGDN 测试 104 项、
+新增 BF16 测试 38 项均通过，规范 reference 阶段 66 项通过。
+五条警告来自已有 NPU 测试在明确的 CPU 环境中遇到 `torch_npu` ImportError
+时的 pytest 弃用提示，原日志保留；这些 skip 不代表设备通过。
+
+原入口负对照为两个 BF16 marshalling case 失败、两个 FP32 case 通过；
+除获批的单个测试函数外，其余旧测试顶层 AST 不变。
+规范 reference 首次因 `reference_dtype` 元数据放错字段而拒绝；已按 runner
+契约放入 comparison rule，保留失败记录，不改计算、输入、误差指标或预算。
+
+六个 entry × bd1/2 的 lowering 与 CCE 源码生成通过，无 lint 或警告。
+从实际分配地址核对的 UB 峰值分别为 ATK 135712、prepare 217088、scores 163840、
+WY 180224、scan 229376、output 196608 字节；分配不重叠、32 字节对齐，
+生成的 get/rls 成对。它们属于静态检查，不能代替硅片上的同步验收。
+
+当前 A5 SSH 连接不稳定，原生源码同步尚未完成，vendor 编译与设备执行未开始。
+历史设备结果不用于本次资格声明；连接恢复后须重新检查健康、占用和共享锁。
 真机先执行 B1/T4096/H=HV8 的完整 workload，再完成全部网格、17 个数组的
 独立阶段与组合检查、NaN 预填、输入字节检查、FP32 改前改后与跨 bd 字节比较。
 两种 dtype 均需真实 NPU host 算子审计。

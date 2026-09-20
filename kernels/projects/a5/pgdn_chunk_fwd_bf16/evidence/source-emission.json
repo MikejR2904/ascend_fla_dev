@@ -1,0 +1,2146 @@
+[
+  {
+    "entry": "pgdn_bf03_atk",
+    "bd": 1,
+    "metadata": {
+      "backend": "cce",
+      "arch": "c310",
+      "kernel": "pgdn_bf03_atk",
+      "ir_kernel": "pgdn_bf03_atk",
+      "device": "950",
+      "mode": "mix",
+      "task_type": "KERNEL_TYPE_MIX_AIC_1_2",
+      "block_dim": 1,
+      "params": [
+        {
+          "name": "q",
+          "ir_name": "q",
+          "kind": "tensor",
+          "dtype": "bf16",
+          "dims": [
+            "B",
+            "T",
+            "H",
+            128
+          ],
+          "output": false
+        },
+        {
+          "name": "k",
+          "ir_name": "k",
+          "kind": "tensor",
+          "dtype": "bf16",
+          "dims": [
+            "B",
+            "T",
+            "H",
+            128
+          ],
+          "output": false
+        },
+        {
+          "name": "g_atk",
+          "ir_name": "g_atk",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "T",
+            "H"
+          ],
+          "output": false
+        },
+        {
+          "name": "beta_atk",
+          "ir_name": "beta_atk",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "T",
+            "H"
+          ],
+          "output": false
+        },
+        {
+          "name": "q_norm",
+          "ir_name": "q_norm",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "T",
+            "H",
+            128
+          ],
+          "output": true
+        },
+        {
+          "name": "k_read",
+          "ir_name": "k_read",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "T",
+            "H",
+            128
+          ],
+          "output": true
+        },
+        {
+          "name": "k_write",
+          "ir_name": "k_write",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "T",
+            "H",
+            128
+          ],
+          "output": true
+        },
+        {
+          "name": "final_A_state",
+          "ir_name": "final_A_state",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "H",
+            128
+          ],
+          "output": true
+        },
+        {
+          "name": "B",
+          "ir_name": "B",
+          "kind": "scalar",
+          "dtype": "i32"
+        },
+        {
+          "name": "T",
+          "ir_name": "T",
+          "kind": "scalar",
+          "dtype": "i32"
+        },
+        {
+          "name": "H",
+          "ir_name": "H",
+          "kind": "scalar",
+          "dtype": "i32"
+        },
+        {
+          "name": "N",
+          "ir_name": "N",
+          "kind": "scalar",
+          "dtype": "i32"
+        }
+      ],
+      "outputs": [
+        "q_norm",
+        "k_read",
+        "k_write",
+        "final_A_state"
+      ],
+      "workspaces": [],
+      "sides": [
+        "cube",
+        "vec"
+      ],
+      "vf": [
+        "zero_atk",
+        "widen_qk",
+        "atk_tile"
+      ],
+      "simt": {},
+      "ops": 235,
+      "files": [
+        "atk_tile.h",
+        "pgdn_bf03_atk.cpp",
+        "pgdn_bf03_atk_cube.h",
+        "pgdn_bf03_atk_vec.h",
+        "scalar_math.h",
+        "tensorutils_cce.h",
+        "widen_qk.h",
+        "zero_atk.h"
+      ],
+      "entry": "pgdn_bf03_atk.cpp"
+    },
+    "lints": "",
+    "warnings": [],
+    "sha256": {
+      "zero_atk.h": "e45df13533162f9efc5edf0e7cea46aed4a928cbe52b7de85c06f7c2d1797333",
+      "widen_qk.h": "3f91eded17eea8834b77009d86c0ffaf97caa45ea28bf13cf2d86f8d5da92623",
+      "atk_tile.h": "b27d96a9c90b8b61a1fe38fc6a29414ed08302e2b965d3ce01279a3f1c2cb70e",
+      "pgdn_bf03_atk_cube.h": "c34946a43366db99f946c2916305aa4d22e569ac1164ca7a7878e527e987e7d8",
+      "pgdn_bf03_atk_vec.h": "aaab28b41a9b0ad74716350c6100236a91456161f0528b197cd51d2baf34eaa4",
+      "pgdn_bf03_atk.cpp": "7fbd2c56abb3c4a9d37a63789f3dd0f0332908e87e8150466c193b64e9e9d4c4",
+      "tensorutils_cce.h": "73965f4ed6c9afaf1eb96724a47b6a3cca2e15c9615afc4958b05831782d2bc9",
+      "scalar_math.h": "a49ae04e54ad1999222c1ca925a1f624f36df2551ae9fed73a8b0a1461081f7e",
+      "manifest.json": "a16f05432e4bda3d21cf9bec4b4bff9a205a5bb872135fec6563452858c03b3c"
+    }
+  },
+  {
+    "entry": "pgdn_bf03_prepare",
+    "bd": 1,
+    "metadata": {
+      "backend": "cce",
+      "arch": "c310",
+      "kernel": "pgdn_bf03_prepare",
+      "ir_kernel": "pgdn_bf03_prepare",
+      "device": "950",
+      "mode": "mix",
+      "task_type": "KERNEL_TYPE_MIX_AIC_1_2",
+      "block_dim": 1,
+      "params": [
+        {
+          "name": "q_norm",
+          "ir_name": "q_norm",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "T",
+            "H",
+            128
+          ],
+          "output": false
+        },
+        {
+          "name": "k_read",
+          "ir_name": "k_read",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "T",
+            "H",
+            128
+          ],
+          "output": false
+        },
+        {
+          "name": "k_write",
+          "ir_name": "k_write",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "T",
+            "H",
+            128
+          ],
+          "output": false
+        },
+        {
+          "name": "v",
+          "ir_name": "v",
+          "kind": "tensor",
+          "dtype": "bf16",
+          "dims": [
+            "B",
+            "T",
+            "HV",
+            128
+          ],
+          "output": false
+        },
+        {
+          "name": "g",
+          "ir_name": "g",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "T",
+            "HV"
+          ],
+          "output": false
+        },
+        {
+          "name": "beta",
+          "ir_name": "beta",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "T",
+            "HV"
+          ],
+          "output": false
+        },
+        {
+          "name": "qn",
+          "ir_name": "qn",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "N",
+            "HV",
+            64,
+            128
+          ],
+          "output": true
+        },
+        {
+          "name": "kw",
+          "ir_name": "kw",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "N",
+            "HV",
+            64,
+            128
+          ],
+          "output": true
+        },
+        {
+          "name": "gc",
+          "ir_name": "gc",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "N",
+            "HV",
+            64,
+            128
+          ],
+          "output": true
+        },
+        {
+          "name": "bk",
+          "ir_name": "bk",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "N",
+            "HV",
+            64,
+            128
+          ],
+          "output": true
+        },
+        {
+          "name": "wv",
+          "ir_name": "wv",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "N",
+            "HV",
+            64,
+            128
+          ],
+          "output": true
+        },
+        {
+          "name": "B",
+          "ir_name": "B",
+          "kind": "scalar",
+          "dtype": "i32"
+        },
+        {
+          "name": "T",
+          "ir_name": "T",
+          "kind": "scalar",
+          "dtype": "i32"
+        },
+        {
+          "name": "H",
+          "ir_name": "H",
+          "kind": "scalar",
+          "dtype": "i32"
+        },
+        {
+          "name": "HV",
+          "ir_name": "HV",
+          "kind": "scalar",
+          "dtype": "i32"
+        },
+        {
+          "name": "N",
+          "ir_name": "N",
+          "kind": "scalar",
+          "dtype": "i32"
+        }
+      ],
+      "outputs": [
+        "qn",
+        "kw",
+        "gc",
+        "bk",
+        "wv"
+      ],
+      "workspaces": [],
+      "sides": [
+        "cube",
+        "vec"
+      ],
+      "vf": [
+        "widen_v",
+        "prepare_tile"
+      ],
+      "simt": {},
+      "ops": 202,
+      "files": [
+        "pgdn_bf03_prepare.cpp",
+        "pgdn_bf03_prepare_cube.h",
+        "pgdn_bf03_prepare_vec.h",
+        "prepare_tile.h",
+        "scalar_math.h",
+        "tensorutils_cce.h",
+        "widen_v.h"
+      ],
+      "entry": "pgdn_bf03_prepare.cpp"
+    },
+    "lints": "",
+    "warnings": [],
+    "sha256": {
+      "widen_v.h": "a3b4c911fb51332a1c226bbf3317f619e0e1a7e8ddcb1302d0a31881c7b252f2",
+      "prepare_tile.h": "11aaf7bc2ddad478cfafa14f805906c535cc6a84659fe00c71a170c403e6c0ec",
+      "pgdn_bf03_prepare_cube.h": "bf3135acadc6b90463dab60704ca95433484a168469b44a3e3484bf1a249985c",
+      "pgdn_bf03_prepare_vec.h": "3f3c91c9fbd4788b43a80f446252a963e6d4f23c862ecff77ba7ee02778e7796",
+      "pgdn_bf03_prepare.cpp": "5f550db0e6280b8d3a4386f36883d945d23c582f53b4d06d31a66a70cb392527",
+      "tensorutils_cce.h": "73965f4ed6c9afaf1eb96724a47b6a3cca2e15c9615afc4958b05831782d2bc9",
+      "scalar_math.h": "a49ae04e54ad1999222c1ca925a1f624f36df2551ae9fed73a8b0a1461081f7e",
+      "manifest.json": "9787327a3ee08deedde34bf0ad0758d2dc8bacff2d97a623072e894d370c8931"
+    }
+  },
+  {
+    "entry": "pgdn_bf03_scores",
+    "bd": 1,
+    "metadata": {
+      "backend": "cce",
+      "arch": "c310",
+      "kernel": "pgdn_bf03_scores",
+      "ir_kernel": "pgdn_bf03_scores",
+      "device": "950",
+      "mode": "mix",
+      "task_type": "KERNEL_TYPE_MIX_AIC_1_2",
+      "block_dim": 1,
+      "params": [
+        {
+          "name": "qn",
+          "ir_name": "qn",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "N",
+            "HV",
+            64,
+            128
+          ],
+          "output": false
+        },
+        {
+          "name": "kw",
+          "ir_name": "kw",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "N",
+            "HV",
+            64,
+            128
+          ],
+          "output": false
+        },
+        {
+          "name": "gc",
+          "ir_name": "gc",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "N",
+            "HV",
+            64,
+            128
+          ],
+          "output": false
+        },
+        {
+          "name": "bk",
+          "ir_name": "bk",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "N",
+            "HV",
+            64,
+            128
+          ],
+          "output": false
+        },
+        {
+          "name": "lower",
+          "ir_name": "lower",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "N",
+            "HV",
+            64,
+            64
+          ],
+          "output": true
+        },
+        {
+          "name": "score",
+          "ir_name": "score",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "N",
+            "HV",
+            64,
+            64
+          ],
+          "output": true
+        },
+        {
+          "name": "B",
+          "ir_name": "B",
+          "kind": "scalar",
+          "dtype": "i32"
+        },
+        {
+          "name": "T",
+          "ir_name": "T",
+          "kind": "scalar",
+          "dtype": "i32"
+        },
+        {
+          "name": "HV",
+          "ir_name": "HV",
+          "kind": "scalar",
+          "dtype": "i32"
+        },
+        {
+          "name": "N",
+          "ir_name": "N",
+          "kind": "scalar",
+          "dtype": "i32"
+        }
+      ],
+      "outputs": [
+        "lower",
+        "score"
+      ],
+      "workspaces": [],
+      "sides": [
+        "cube",
+        "vec"
+      ],
+      "vf": [
+        "scores_vf"
+      ],
+      "simt": {},
+      "ops": 146,
+      "files": [
+        "pgdn_bf03_scores.cpp",
+        "pgdn_bf03_scores_cube.h",
+        "pgdn_bf03_scores_vec.h",
+        "scalar_math.h",
+        "scores_vf.h",
+        "tensorutils_cce.h"
+      ],
+      "entry": "pgdn_bf03_scores.cpp"
+    },
+    "lints": "",
+    "warnings": [],
+    "sha256": {
+      "scores_vf.h": "eb143b218047835af2224dba88e476763e950e4093313628880e152eecc871d4",
+      "pgdn_bf03_scores_cube.h": "e90f013aaf08a2d83144282176e9f4f7066c70ff73a610c020a96c40e0f99178",
+      "pgdn_bf03_scores_vec.h": "670a7d909174f7e04f45d4de15296a6505038380a6693b4265f783fb72fd694f",
+      "pgdn_bf03_scores.cpp": "b5fd3433f6e5c1eee0f15bbd28afe9b4ce3a1dba848aff9323c463d13837d65f",
+      "tensorutils_cce.h": "73965f4ed6c9afaf1eb96724a47b6a3cca2e15c9615afc4958b05831782d2bc9",
+      "scalar_math.h": "a49ae04e54ad1999222c1ca925a1f624f36df2551ae9fed73a8b0a1461081f7e",
+      "manifest.json": "636bc66c91030ede5d72209eb3e3d8e18a48fe09fcbf3c1a1f6abe84038ab9e3"
+    }
+  },
+  {
+    "entry": "pgdn_bf03_wy",
+    "bd": 1,
+    "metadata": {
+      "backend": "cce",
+      "arch": "c310",
+      "kernel": "pgdn_bf03_wy",
+      "ir_kernel": "pgdn_bf03_wy",
+      "device": "950",
+      "mode": "mix",
+      "task_type": "KERNEL_TYPE_MIX_AIC_1_2",
+      "block_dim": 1,
+      "params": [
+        {
+          "name": "lower",
+          "ir_name": "lower",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "N",
+            "HV",
+            64,
+            64
+          ],
+          "output": false
+        },
+        {
+          "name": "gc",
+          "ir_name": "gc",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "N",
+            "HV",
+            64,
+            128
+          ],
+          "output": false
+        },
+        {
+          "name": "bk",
+          "ir_name": "bk",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "N",
+            "HV",
+            64,
+            128
+          ],
+          "output": false
+        },
+        {
+          "name": "wv",
+          "ir_name": "wv",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "N",
+            "HV",
+            64,
+            128
+          ],
+          "output": false
+        },
+        {
+          "name": "u",
+          "ir_name": "u",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "N",
+            "HV",
+            64,
+            128
+          ],
+          "output": true
+        },
+        {
+          "name": "wy",
+          "ir_name": "wy",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "N",
+            "HV",
+            64,
+            128
+          ],
+          "output": true
+        },
+        {
+          "name": "B",
+          "ir_name": "B",
+          "kind": "scalar",
+          "dtype": "i32"
+        },
+        {
+          "name": "T",
+          "ir_name": "T",
+          "kind": "scalar",
+          "dtype": "i32"
+        },
+        {
+          "name": "HV",
+          "ir_name": "HV",
+          "kind": "scalar",
+          "dtype": "i32"
+        },
+        {
+          "name": "N",
+          "ir_name": "N",
+          "kind": "scalar",
+          "dtype": "i32"
+        }
+      ],
+      "outputs": [
+        "u",
+        "wy"
+      ],
+      "workspaces": [],
+      "sides": [
+        "cube",
+        "vec"
+      ],
+      "vf": [
+        "wy_vf"
+      ],
+      "simt": {},
+      "ops": 194,
+      "files": [
+        "pgdn_bf03_wy.cpp",
+        "pgdn_bf03_wy_cube.h",
+        "pgdn_bf03_wy_vec.h",
+        "scalar_math.h",
+        "tensorutils_cce.h",
+        "wy_vf.h"
+      ],
+      "entry": "pgdn_bf03_wy.cpp"
+    },
+    "lints": "",
+    "warnings": [],
+    "sha256": {
+      "wy_vf.h": "27b5b987c75659b9d943767b7dd333f57cf5f833c2eb6df6d74d7c58657f67a0",
+      "pgdn_bf03_wy_cube.h": "688872cbcc5659c249853104347a1d8df96d3ebd979f45b1e3ca836205ce5455",
+      "pgdn_bf03_wy_vec.h": "e124e2afa7e610aa890deefa6f7959d066bf07d0a8cc69879b50108ace220cad",
+      "pgdn_bf03_wy.cpp": "5dbb076a483d9c9237c52eab167b5f2253f7e1ac8de6b0a38025dc0c7efd8c23",
+      "tensorutils_cce.h": "73965f4ed6c9afaf1eb96724a47b6a3cca2e15c9615afc4958b05831782d2bc9",
+      "scalar_math.h": "a49ae04e54ad1999222c1ca925a1f624f36df2551ae9fed73a8b0a1461081f7e",
+      "manifest.json": "f47d8d0de912a7f3a2535ed765936e9d70cc05282559efe9bab371cef31c9ca5"
+    }
+  },
+  {
+    "entry": "pgdn_bf03_scan",
+    "bd": 1,
+    "metadata": {
+      "backend": "cce",
+      "arch": "c310",
+      "kernel": "pgdn_bf03_scan",
+      "ir_kernel": "pgdn_bf03_scan",
+      "device": "950",
+      "mode": "mix",
+      "task_type": "KERNEL_TYPE_MIX_AIC_1_2",
+      "block_dim": 1,
+      "params": [
+        {
+          "name": "kw",
+          "ir_name": "kw",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "N",
+            "HV",
+            64,
+            128
+          ],
+          "output": false
+        },
+        {
+          "name": "gc",
+          "ir_name": "gc",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "N",
+            "HV",
+            64,
+            128
+          ],
+          "output": false
+        },
+        {
+          "name": "u",
+          "ir_name": "u",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "N",
+            "HV",
+            64,
+            128
+          ],
+          "output": false
+        },
+        {
+          "name": "wy",
+          "ir_name": "wy",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "N",
+            "HV",
+            64,
+            128
+          ],
+          "output": false
+        },
+        {
+          "name": "initial_state",
+          "ir_name": "initial_state",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "HV",
+            128,
+            128
+          ],
+          "output": false
+        },
+        {
+          "name": "states",
+          "ir_name": "states",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "N",
+            "HV",
+            128,
+            128
+          ],
+          "output": true
+        },
+        {
+          "name": "delta",
+          "ir_name": "delta",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "N",
+            "HV",
+            64,
+            128
+          ],
+          "output": true
+        },
+        {
+          "name": "final_state",
+          "ir_name": "final_state",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "HV",
+            128,
+            128
+          ],
+          "output": true
+        },
+        {
+          "name": "B",
+          "ir_name": "B",
+          "kind": "scalar",
+          "dtype": "i32"
+        },
+        {
+          "name": "T",
+          "ir_name": "T",
+          "kind": "scalar",
+          "dtype": "i32"
+        },
+        {
+          "name": "HV",
+          "ir_name": "HV",
+          "kind": "scalar",
+          "dtype": "i32"
+        },
+        {
+          "name": "N",
+          "ir_name": "N",
+          "kind": "scalar",
+          "dtype": "i32"
+        }
+      ],
+      "outputs": [
+        "states",
+        "delta",
+        "final_state"
+      ],
+      "workspaces": [],
+      "sides": [
+        "cube",
+        "vec"
+      ],
+      "vf": [
+        "scan_vf"
+      ],
+      "simt": {},
+      "ops": 160,
+      "files": [
+        "pgdn_bf03_scan.cpp",
+        "pgdn_bf03_scan_cube.h",
+        "pgdn_bf03_scan_vec.h",
+        "scalar_math.h",
+        "scan_vf.h",
+        "tensorutils_cce.h"
+      ],
+      "entry": "pgdn_bf03_scan.cpp"
+    },
+    "lints": "",
+    "warnings": [],
+    "sha256": {
+      "scan_vf.h": "278018dd6679be7887ccf717d9010cf2ad70fe76d0c6f0398cdfb1849ffa4b13",
+      "pgdn_bf03_scan_cube.h": "e603202763cb4bf3ee83c1a4dd606d7f3a2444f3fc724d823716fc58dc83b087",
+      "pgdn_bf03_scan_vec.h": "08d78d055f7b16c67e98fc515407d0e2a8a1c971564c50f92077832f9f8ba564",
+      "pgdn_bf03_scan.cpp": "23133f8af21a112593d7632b3daaf492bbfc977471b6784e33e58fecf71f76e0",
+      "tensorutils_cce.h": "73965f4ed6c9afaf1eb96724a47b6a3cca2e15c9615afc4958b05831782d2bc9",
+      "scalar_math.h": "a49ae04e54ad1999222c1ca925a1f624f36df2551ae9fed73a8b0a1461081f7e",
+      "manifest.json": "938221d5e904e0710d95dba3d577827095f739a9850f872c30985577db14074f"
+    }
+  },
+  {
+    "entry": "pgdn_bf03_output",
+    "bd": 1,
+    "metadata": {
+      "backend": "cce",
+      "arch": "c310",
+      "kernel": "pgdn_bf03_output",
+      "ir_kernel": "pgdn_bf03_output",
+      "device": "950",
+      "mode": "mix",
+      "task_type": "KERNEL_TYPE_MIX_AIC_1_2",
+      "block_dim": 1,
+      "params": [
+        {
+          "name": "qn",
+          "ir_name": "qn",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "N",
+            "HV",
+            64,
+            128
+          ],
+          "output": false
+        },
+        {
+          "name": "gc",
+          "ir_name": "gc",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "N",
+            "HV",
+            64,
+            128
+          ],
+          "output": false
+        },
+        {
+          "name": "score",
+          "ir_name": "score",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "N",
+            "HV",
+            64,
+            64
+          ],
+          "output": false
+        },
+        {
+          "name": "states",
+          "ir_name": "states",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "N",
+            "HV",
+            128,
+            128
+          ],
+          "output": false
+        },
+        {
+          "name": "delta",
+          "ir_name": "delta",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "N",
+            "HV",
+            64,
+            128
+          ],
+          "output": false
+        },
+        {
+          "name": "o",
+          "ir_name": "o",
+          "kind": "tensor",
+          "dtype": "bf16",
+          "dims": [
+            "B",
+            "T",
+            "HV",
+            128
+          ],
+          "output": true
+        },
+        {
+          "name": "B",
+          "ir_name": "B",
+          "kind": "scalar",
+          "dtype": "i32"
+        },
+        {
+          "name": "T",
+          "ir_name": "T",
+          "kind": "scalar",
+          "dtype": "i32"
+        },
+        {
+          "name": "HV",
+          "ir_name": "HV",
+          "kind": "scalar",
+          "dtype": "i32"
+        },
+        {
+          "name": "N",
+          "ir_name": "N",
+          "kind": "scalar",
+          "dtype": "i32"
+        }
+      ],
+      "outputs": [
+        "o"
+      ],
+      "workspaces": [],
+      "sides": [
+        "cube",
+        "vec"
+      ],
+      "vf": [
+        "output_vf"
+      ],
+      "simt": {},
+      "ops": 141,
+      "files": [
+        "output_vf.h",
+        "pgdn_bf03_output.cpp",
+        "pgdn_bf03_output_cube.h",
+        "pgdn_bf03_output_vec.h",
+        "scalar_math.h",
+        "tensorutils_cce.h"
+      ],
+      "entry": "pgdn_bf03_output.cpp"
+    },
+    "lints": "",
+    "warnings": [],
+    "sha256": {
+      "output_vf.h": "ef7a5530338ba719e86fb9faa10be8c573c7a9ff2ee25e217f01393003687a00",
+      "pgdn_bf03_output_cube.h": "70ed8e6da424d4744ef8d346fc3ef25f63a36858511b21fa4a6ee83e24ddc71e",
+      "pgdn_bf03_output_vec.h": "76c59361b7a07e2c85ac5a3ce7d9643b8f8cfb2d96c44e3ea60c8124f69068b7",
+      "pgdn_bf03_output.cpp": "dee9faf574629d15965d1e979101613505416144433c449894f2b9e6ecb45397",
+      "tensorutils_cce.h": "73965f4ed6c9afaf1eb96724a47b6a3cca2e15c9615afc4958b05831782d2bc9",
+      "scalar_math.h": "a49ae04e54ad1999222c1ca925a1f624f36df2551ae9fed73a8b0a1461081f7e",
+      "manifest.json": "ba2e4653764bbf77d525be5b4b579e364e665dadfbc90169db941bc501c1612b"
+    }
+  },
+  {
+    "entry": "pgdn_bf03_atk",
+    "bd": 2,
+    "metadata": {
+      "backend": "cce",
+      "arch": "c310",
+      "kernel": "pgdn_bf03_atk",
+      "ir_kernel": "pgdn_bf03_atk",
+      "device": "950",
+      "mode": "mix",
+      "task_type": "KERNEL_TYPE_MIX_AIC_1_2",
+      "block_dim": 2,
+      "params": [
+        {
+          "name": "q",
+          "ir_name": "q",
+          "kind": "tensor",
+          "dtype": "bf16",
+          "dims": [
+            "B",
+            "T",
+            "H",
+            128
+          ],
+          "output": false
+        },
+        {
+          "name": "k",
+          "ir_name": "k",
+          "kind": "tensor",
+          "dtype": "bf16",
+          "dims": [
+            "B",
+            "T",
+            "H",
+            128
+          ],
+          "output": false
+        },
+        {
+          "name": "g_atk",
+          "ir_name": "g_atk",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "T",
+            "H"
+          ],
+          "output": false
+        },
+        {
+          "name": "beta_atk",
+          "ir_name": "beta_atk",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "T",
+            "H"
+          ],
+          "output": false
+        },
+        {
+          "name": "q_norm",
+          "ir_name": "q_norm",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "T",
+            "H",
+            128
+          ],
+          "output": true
+        },
+        {
+          "name": "k_read",
+          "ir_name": "k_read",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "T",
+            "H",
+            128
+          ],
+          "output": true
+        },
+        {
+          "name": "k_write",
+          "ir_name": "k_write",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "T",
+            "H",
+            128
+          ],
+          "output": true
+        },
+        {
+          "name": "final_A_state",
+          "ir_name": "final_A_state",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "H",
+            128
+          ],
+          "output": true
+        },
+        {
+          "name": "B",
+          "ir_name": "B",
+          "kind": "scalar",
+          "dtype": "i32"
+        },
+        {
+          "name": "T",
+          "ir_name": "T",
+          "kind": "scalar",
+          "dtype": "i32"
+        },
+        {
+          "name": "H",
+          "ir_name": "H",
+          "kind": "scalar",
+          "dtype": "i32"
+        },
+        {
+          "name": "N",
+          "ir_name": "N",
+          "kind": "scalar",
+          "dtype": "i32"
+        }
+      ],
+      "outputs": [
+        "q_norm",
+        "k_read",
+        "k_write",
+        "final_A_state"
+      ],
+      "workspaces": [],
+      "sides": [
+        "cube",
+        "vec"
+      ],
+      "vf": [
+        "zero_atk",
+        "widen_qk",
+        "atk_tile"
+      ],
+      "simt": {},
+      "ops": 235,
+      "files": [
+        "atk_tile.h",
+        "pgdn_bf03_atk.cpp",
+        "pgdn_bf03_atk_cube.h",
+        "pgdn_bf03_atk_vec.h",
+        "scalar_math.h",
+        "tensorutils_cce.h",
+        "widen_qk.h",
+        "zero_atk.h"
+      ],
+      "entry": "pgdn_bf03_atk.cpp"
+    },
+    "lints": "",
+    "warnings": [],
+    "sha256": {
+      "zero_atk.h": "e45df13533162f9efc5edf0e7cea46aed4a928cbe52b7de85c06f7c2d1797333",
+      "widen_qk.h": "3f91eded17eea8834b77009d86c0ffaf97caa45ea28bf13cf2d86f8d5da92623",
+      "atk_tile.h": "b27d96a9c90b8b61a1fe38fc6a29414ed08302e2b965d3ce01279a3f1c2cb70e",
+      "pgdn_bf03_atk_cube.h": "c34946a43366db99f946c2916305aa4d22e569ac1164ca7a7878e527e987e7d8",
+      "pgdn_bf03_atk_vec.h": "aaab28b41a9b0ad74716350c6100236a91456161f0528b197cd51d2baf34eaa4",
+      "pgdn_bf03_atk.cpp": "7fbd2c56abb3c4a9d37a63789f3dd0f0332908e87e8150466c193b64e9e9d4c4",
+      "tensorutils_cce.h": "73965f4ed6c9afaf1eb96724a47b6a3cca2e15c9615afc4958b05831782d2bc9",
+      "scalar_math.h": "a49ae04e54ad1999222c1ca925a1f624f36df2551ae9fed73a8b0a1461081f7e",
+      "manifest.json": "6dd67d5c72f87d8e082bcce99d91c467ca9c7e0a1314a6f889b52c61d98d5aaa"
+    }
+  },
+  {
+    "entry": "pgdn_bf03_prepare",
+    "bd": 2,
+    "metadata": {
+      "backend": "cce",
+      "arch": "c310",
+      "kernel": "pgdn_bf03_prepare",
+      "ir_kernel": "pgdn_bf03_prepare",
+      "device": "950",
+      "mode": "mix",
+      "task_type": "KERNEL_TYPE_MIX_AIC_1_2",
+      "block_dim": 2,
+      "params": [
+        {
+          "name": "q_norm",
+          "ir_name": "q_norm",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "T",
+            "H",
+            128
+          ],
+          "output": false
+        },
+        {
+          "name": "k_read",
+          "ir_name": "k_read",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "T",
+            "H",
+            128
+          ],
+          "output": false
+        },
+        {
+          "name": "k_write",
+          "ir_name": "k_write",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "T",
+            "H",
+            128
+          ],
+          "output": false
+        },
+        {
+          "name": "v",
+          "ir_name": "v",
+          "kind": "tensor",
+          "dtype": "bf16",
+          "dims": [
+            "B",
+            "T",
+            "HV",
+            128
+          ],
+          "output": false
+        },
+        {
+          "name": "g",
+          "ir_name": "g",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "T",
+            "HV"
+          ],
+          "output": false
+        },
+        {
+          "name": "beta",
+          "ir_name": "beta",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "T",
+            "HV"
+          ],
+          "output": false
+        },
+        {
+          "name": "qn",
+          "ir_name": "qn",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "N",
+            "HV",
+            64,
+            128
+          ],
+          "output": true
+        },
+        {
+          "name": "kw",
+          "ir_name": "kw",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "N",
+            "HV",
+            64,
+            128
+          ],
+          "output": true
+        },
+        {
+          "name": "gc",
+          "ir_name": "gc",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "N",
+            "HV",
+            64,
+            128
+          ],
+          "output": true
+        },
+        {
+          "name": "bk",
+          "ir_name": "bk",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "N",
+            "HV",
+            64,
+            128
+          ],
+          "output": true
+        },
+        {
+          "name": "wv",
+          "ir_name": "wv",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "N",
+            "HV",
+            64,
+            128
+          ],
+          "output": true
+        },
+        {
+          "name": "B",
+          "ir_name": "B",
+          "kind": "scalar",
+          "dtype": "i32"
+        },
+        {
+          "name": "T",
+          "ir_name": "T",
+          "kind": "scalar",
+          "dtype": "i32"
+        },
+        {
+          "name": "H",
+          "ir_name": "H",
+          "kind": "scalar",
+          "dtype": "i32"
+        },
+        {
+          "name": "HV",
+          "ir_name": "HV",
+          "kind": "scalar",
+          "dtype": "i32"
+        },
+        {
+          "name": "N",
+          "ir_name": "N",
+          "kind": "scalar",
+          "dtype": "i32"
+        }
+      ],
+      "outputs": [
+        "qn",
+        "kw",
+        "gc",
+        "bk",
+        "wv"
+      ],
+      "workspaces": [],
+      "sides": [
+        "cube",
+        "vec"
+      ],
+      "vf": [
+        "widen_v",
+        "prepare_tile"
+      ],
+      "simt": {},
+      "ops": 202,
+      "files": [
+        "pgdn_bf03_prepare.cpp",
+        "pgdn_bf03_prepare_cube.h",
+        "pgdn_bf03_prepare_vec.h",
+        "prepare_tile.h",
+        "scalar_math.h",
+        "tensorutils_cce.h",
+        "widen_v.h"
+      ],
+      "entry": "pgdn_bf03_prepare.cpp"
+    },
+    "lints": "",
+    "warnings": [],
+    "sha256": {
+      "widen_v.h": "a3b4c911fb51332a1c226bbf3317f619e0e1a7e8ddcb1302d0a31881c7b252f2",
+      "prepare_tile.h": "11aaf7bc2ddad478cfafa14f805906c535cc6a84659fe00c71a170c403e6c0ec",
+      "pgdn_bf03_prepare_cube.h": "bf3135acadc6b90463dab60704ca95433484a168469b44a3e3484bf1a249985c",
+      "pgdn_bf03_prepare_vec.h": "3f3c91c9fbd4788b43a80f446252a963e6d4f23c862ecff77ba7ee02778e7796",
+      "pgdn_bf03_prepare.cpp": "5f550db0e6280b8d3a4386f36883d945d23c582f53b4d06d31a66a70cb392527",
+      "tensorutils_cce.h": "73965f4ed6c9afaf1eb96724a47b6a3cca2e15c9615afc4958b05831782d2bc9",
+      "scalar_math.h": "a49ae04e54ad1999222c1ca925a1f624f36df2551ae9fed73a8b0a1461081f7e",
+      "manifest.json": "51741dd33e394fc6060d6210fb0f0d51f98ae63cb61e32ef4f2279119b2cb9b6"
+    }
+  },
+  {
+    "entry": "pgdn_bf03_scores",
+    "bd": 2,
+    "metadata": {
+      "backend": "cce",
+      "arch": "c310",
+      "kernel": "pgdn_bf03_scores",
+      "ir_kernel": "pgdn_bf03_scores",
+      "device": "950",
+      "mode": "mix",
+      "task_type": "KERNEL_TYPE_MIX_AIC_1_2",
+      "block_dim": 2,
+      "params": [
+        {
+          "name": "qn",
+          "ir_name": "qn",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "N",
+            "HV",
+            64,
+            128
+          ],
+          "output": false
+        },
+        {
+          "name": "kw",
+          "ir_name": "kw",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "N",
+            "HV",
+            64,
+            128
+          ],
+          "output": false
+        },
+        {
+          "name": "gc",
+          "ir_name": "gc",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "N",
+            "HV",
+            64,
+            128
+          ],
+          "output": false
+        },
+        {
+          "name": "bk",
+          "ir_name": "bk",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "N",
+            "HV",
+            64,
+            128
+          ],
+          "output": false
+        },
+        {
+          "name": "lower",
+          "ir_name": "lower",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "N",
+            "HV",
+            64,
+            64
+          ],
+          "output": true
+        },
+        {
+          "name": "score",
+          "ir_name": "score",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "N",
+            "HV",
+            64,
+            64
+          ],
+          "output": true
+        },
+        {
+          "name": "B",
+          "ir_name": "B",
+          "kind": "scalar",
+          "dtype": "i32"
+        },
+        {
+          "name": "T",
+          "ir_name": "T",
+          "kind": "scalar",
+          "dtype": "i32"
+        },
+        {
+          "name": "HV",
+          "ir_name": "HV",
+          "kind": "scalar",
+          "dtype": "i32"
+        },
+        {
+          "name": "N",
+          "ir_name": "N",
+          "kind": "scalar",
+          "dtype": "i32"
+        }
+      ],
+      "outputs": [
+        "lower",
+        "score"
+      ],
+      "workspaces": [],
+      "sides": [
+        "cube",
+        "vec"
+      ],
+      "vf": [
+        "scores_vf"
+      ],
+      "simt": {},
+      "ops": 146,
+      "files": [
+        "pgdn_bf03_scores.cpp",
+        "pgdn_bf03_scores_cube.h",
+        "pgdn_bf03_scores_vec.h",
+        "scalar_math.h",
+        "scores_vf.h",
+        "tensorutils_cce.h"
+      ],
+      "entry": "pgdn_bf03_scores.cpp"
+    },
+    "lints": "",
+    "warnings": [],
+    "sha256": {
+      "scores_vf.h": "eb143b218047835af2224dba88e476763e950e4093313628880e152eecc871d4",
+      "pgdn_bf03_scores_cube.h": "e90f013aaf08a2d83144282176e9f4f7066c70ff73a610c020a96c40e0f99178",
+      "pgdn_bf03_scores_vec.h": "670a7d909174f7e04f45d4de15296a6505038380a6693b4265f783fb72fd694f",
+      "pgdn_bf03_scores.cpp": "b5fd3433f6e5c1eee0f15bbd28afe9b4ce3a1dba848aff9323c463d13837d65f",
+      "tensorutils_cce.h": "73965f4ed6c9afaf1eb96724a47b6a3cca2e15c9615afc4958b05831782d2bc9",
+      "scalar_math.h": "a49ae04e54ad1999222c1ca925a1f624f36df2551ae9fed73a8b0a1461081f7e",
+      "manifest.json": "02ea618d29621cf8945f4bba6527357485fde5d3998be0dd7e0d7bb787e752a9"
+    }
+  },
+  {
+    "entry": "pgdn_bf03_wy",
+    "bd": 2,
+    "metadata": {
+      "backend": "cce",
+      "arch": "c310",
+      "kernel": "pgdn_bf03_wy",
+      "ir_kernel": "pgdn_bf03_wy",
+      "device": "950",
+      "mode": "mix",
+      "task_type": "KERNEL_TYPE_MIX_AIC_1_2",
+      "block_dim": 2,
+      "params": [
+        {
+          "name": "lower",
+          "ir_name": "lower",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "N",
+            "HV",
+            64,
+            64
+          ],
+          "output": false
+        },
+        {
+          "name": "gc",
+          "ir_name": "gc",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "N",
+            "HV",
+            64,
+            128
+          ],
+          "output": false
+        },
+        {
+          "name": "bk",
+          "ir_name": "bk",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "N",
+            "HV",
+            64,
+            128
+          ],
+          "output": false
+        },
+        {
+          "name": "wv",
+          "ir_name": "wv",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "N",
+            "HV",
+            64,
+            128
+          ],
+          "output": false
+        },
+        {
+          "name": "u",
+          "ir_name": "u",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "N",
+            "HV",
+            64,
+            128
+          ],
+          "output": true
+        },
+        {
+          "name": "wy",
+          "ir_name": "wy",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "N",
+            "HV",
+            64,
+            128
+          ],
+          "output": true
+        },
+        {
+          "name": "B",
+          "ir_name": "B",
+          "kind": "scalar",
+          "dtype": "i32"
+        },
+        {
+          "name": "T",
+          "ir_name": "T",
+          "kind": "scalar",
+          "dtype": "i32"
+        },
+        {
+          "name": "HV",
+          "ir_name": "HV",
+          "kind": "scalar",
+          "dtype": "i32"
+        },
+        {
+          "name": "N",
+          "ir_name": "N",
+          "kind": "scalar",
+          "dtype": "i32"
+        }
+      ],
+      "outputs": [
+        "u",
+        "wy"
+      ],
+      "workspaces": [],
+      "sides": [
+        "cube",
+        "vec"
+      ],
+      "vf": [
+        "wy_vf"
+      ],
+      "simt": {},
+      "ops": 194,
+      "files": [
+        "pgdn_bf03_wy.cpp",
+        "pgdn_bf03_wy_cube.h",
+        "pgdn_bf03_wy_vec.h",
+        "scalar_math.h",
+        "tensorutils_cce.h",
+        "wy_vf.h"
+      ],
+      "entry": "pgdn_bf03_wy.cpp"
+    },
+    "lints": "",
+    "warnings": [],
+    "sha256": {
+      "wy_vf.h": "27b5b987c75659b9d943767b7dd333f57cf5f833c2eb6df6d74d7c58657f67a0",
+      "pgdn_bf03_wy_cube.h": "688872cbcc5659c249853104347a1d8df96d3ebd979f45b1e3ca836205ce5455",
+      "pgdn_bf03_wy_vec.h": "e124e2afa7e610aa890deefa6f7959d066bf07d0a8cc69879b50108ace220cad",
+      "pgdn_bf03_wy.cpp": "5dbb076a483d9c9237c52eab167b5f2253f7e1ac8de6b0a38025dc0c7efd8c23",
+      "tensorutils_cce.h": "73965f4ed6c9afaf1eb96724a47b6a3cca2e15c9615afc4958b05831782d2bc9",
+      "scalar_math.h": "a49ae04e54ad1999222c1ca925a1f624f36df2551ae9fed73a8b0a1461081f7e",
+      "manifest.json": "7eba5de0cbdb1d60b7f763bf8c19798a427ff5b0d5321f7a7b5acac805c39b07"
+    }
+  },
+  {
+    "entry": "pgdn_bf03_scan",
+    "bd": 2,
+    "metadata": {
+      "backend": "cce",
+      "arch": "c310",
+      "kernel": "pgdn_bf03_scan",
+      "ir_kernel": "pgdn_bf03_scan",
+      "device": "950",
+      "mode": "mix",
+      "task_type": "KERNEL_TYPE_MIX_AIC_1_2",
+      "block_dim": 2,
+      "params": [
+        {
+          "name": "kw",
+          "ir_name": "kw",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "N",
+            "HV",
+            64,
+            128
+          ],
+          "output": false
+        },
+        {
+          "name": "gc",
+          "ir_name": "gc",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "N",
+            "HV",
+            64,
+            128
+          ],
+          "output": false
+        },
+        {
+          "name": "u",
+          "ir_name": "u",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "N",
+            "HV",
+            64,
+            128
+          ],
+          "output": false
+        },
+        {
+          "name": "wy",
+          "ir_name": "wy",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "N",
+            "HV",
+            64,
+            128
+          ],
+          "output": false
+        },
+        {
+          "name": "initial_state",
+          "ir_name": "initial_state",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "HV",
+            128,
+            128
+          ],
+          "output": false
+        },
+        {
+          "name": "states",
+          "ir_name": "states",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "N",
+            "HV",
+            128,
+            128
+          ],
+          "output": true
+        },
+        {
+          "name": "delta",
+          "ir_name": "delta",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "N",
+            "HV",
+            64,
+            128
+          ],
+          "output": true
+        },
+        {
+          "name": "final_state",
+          "ir_name": "final_state",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "HV",
+            128,
+            128
+          ],
+          "output": true
+        },
+        {
+          "name": "B",
+          "ir_name": "B",
+          "kind": "scalar",
+          "dtype": "i32"
+        },
+        {
+          "name": "T",
+          "ir_name": "T",
+          "kind": "scalar",
+          "dtype": "i32"
+        },
+        {
+          "name": "HV",
+          "ir_name": "HV",
+          "kind": "scalar",
+          "dtype": "i32"
+        },
+        {
+          "name": "N",
+          "ir_name": "N",
+          "kind": "scalar",
+          "dtype": "i32"
+        }
+      ],
+      "outputs": [
+        "states",
+        "delta",
+        "final_state"
+      ],
+      "workspaces": [],
+      "sides": [
+        "cube",
+        "vec"
+      ],
+      "vf": [
+        "scan_vf"
+      ],
+      "simt": {},
+      "ops": 160,
+      "files": [
+        "pgdn_bf03_scan.cpp",
+        "pgdn_bf03_scan_cube.h",
+        "pgdn_bf03_scan_vec.h",
+        "scalar_math.h",
+        "scan_vf.h",
+        "tensorutils_cce.h"
+      ],
+      "entry": "pgdn_bf03_scan.cpp"
+    },
+    "lints": "",
+    "warnings": [],
+    "sha256": {
+      "scan_vf.h": "278018dd6679be7887ccf717d9010cf2ad70fe76d0c6f0398cdfb1849ffa4b13",
+      "pgdn_bf03_scan_cube.h": "e603202763cb4bf3ee83c1a4dd606d7f3a2444f3fc724d823716fc58dc83b087",
+      "pgdn_bf03_scan_vec.h": "08d78d055f7b16c67e98fc515407d0e2a8a1c971564c50f92077832f9f8ba564",
+      "pgdn_bf03_scan.cpp": "23133f8af21a112593d7632b3daaf492bbfc977471b6784e33e58fecf71f76e0",
+      "tensorutils_cce.h": "73965f4ed6c9afaf1eb96724a47b6a3cca2e15c9615afc4958b05831782d2bc9",
+      "scalar_math.h": "a49ae04e54ad1999222c1ca925a1f624f36df2551ae9fed73a8b0a1461081f7e",
+      "manifest.json": "5ef3d8b196617600ca4b1c9ce555d07711f09f319de262bfbe0f3984fb36f18e"
+    }
+  },
+  {
+    "entry": "pgdn_bf03_output",
+    "bd": 2,
+    "metadata": {
+      "backend": "cce",
+      "arch": "c310",
+      "kernel": "pgdn_bf03_output",
+      "ir_kernel": "pgdn_bf03_output",
+      "device": "950",
+      "mode": "mix",
+      "task_type": "KERNEL_TYPE_MIX_AIC_1_2",
+      "block_dim": 2,
+      "params": [
+        {
+          "name": "qn",
+          "ir_name": "qn",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "N",
+            "HV",
+            64,
+            128
+          ],
+          "output": false
+        },
+        {
+          "name": "gc",
+          "ir_name": "gc",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "N",
+            "HV",
+            64,
+            128
+          ],
+          "output": false
+        },
+        {
+          "name": "score",
+          "ir_name": "score",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "N",
+            "HV",
+            64,
+            64
+          ],
+          "output": false
+        },
+        {
+          "name": "states",
+          "ir_name": "states",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "N",
+            "HV",
+            128,
+            128
+          ],
+          "output": false
+        },
+        {
+          "name": "delta",
+          "ir_name": "delta",
+          "kind": "tensor",
+          "dtype": "f32",
+          "dims": [
+            "B",
+            "N",
+            "HV",
+            64,
+            128
+          ],
+          "output": false
+        },
+        {
+          "name": "o",
+          "ir_name": "o",
+          "kind": "tensor",
+          "dtype": "bf16",
+          "dims": [
+            "B",
+            "T",
+            "HV",
+            128
+          ],
+          "output": true
+        },
+        {
+          "name": "B",
+          "ir_name": "B",
+          "kind": "scalar",
+          "dtype": "i32"
+        },
+        {
+          "name": "T",
+          "ir_name": "T",
+          "kind": "scalar",
+          "dtype": "i32"
+        },
+        {
+          "name": "HV",
+          "ir_name": "HV",
+          "kind": "scalar",
+          "dtype": "i32"
+        },
+        {
+          "name": "N",
+          "ir_name": "N",
+          "kind": "scalar",
+          "dtype": "i32"
+        }
+      ],
+      "outputs": [
+        "o"
+      ],
+      "workspaces": [],
+      "sides": [
+        "cube",
+        "vec"
+      ],
+      "vf": [
+        "output_vf"
+      ],
+      "simt": {},
+      "ops": 141,
+      "files": [
+        "output_vf.h",
+        "pgdn_bf03_output.cpp",
+        "pgdn_bf03_output_cube.h",
+        "pgdn_bf03_output_vec.h",
+        "scalar_math.h",
+        "tensorutils_cce.h"
+      ],
+      "entry": "pgdn_bf03_output.cpp"
+    },
+    "lints": "",
+    "warnings": [],
+    "sha256": {
+      "output_vf.h": "ef7a5530338ba719e86fb9faa10be8c573c7a9ff2ee25e217f01393003687a00",
+      "pgdn_bf03_output_cube.h": "70ed8e6da424d4744ef8d346fc3ef25f63a36858511b21fa4a6ee83e24ddc71e",
+      "pgdn_bf03_output_vec.h": "76c59361b7a07e2c85ac5a3ce7d9643b8f8cfb2d96c44e3ea60c8124f69068b7",
+      "pgdn_bf03_output.cpp": "dee9faf574629d15965d1e979101613505416144433c449894f2b9e6ecb45397",
+      "tensorutils_cce.h": "73965f4ed6c9afaf1eb96724a47b6a3cca2e15c9615afc4958b05831782d2bc9",
+      "scalar_math.h": "a49ae04e54ad1999222c1ca925a1f624f36df2551ae9fed73a8b0a1461081f7e",
+      "manifest.json": "43ca3d3ff1762bdec578641603b8af1ac41a44845080559978eb9f6221023384"
+    }
+  }
+]

@@ -220,16 +220,19 @@ def test_public_dtype_state_visibility_and_graph_with_reference_launch(monkeypat
     widened = {n: x.float() for n, x in inputs.items()}
     expected = ref.reference_stages(widened)
     seen = []
-    graph = public._pipeline().GRAPH
+    pipeline = public._bf16_pipeline() if dtype == torch.bfloat16 else public._pipeline()
+    graph = pipeline.GRAPH
+    entry_names = [entry.name for entry in pipeline.entries()]
     class ReferenceLaunch:
         def __init__(self, entry, **kwargs):
-            self.index = [name for name, _, _ in graph].index(entry.name.removeprefix('pgdn_chunk_'))
+            self.index = entry_names.index(entry.name)
         def __call__(self, *args):
             _, names, outputs = graph[self.index]
             for name, value in zip(names, args):
-                compare(value, widened[name] if name in widened else expected[name])
+                compare(value, inputs[name] if name in inputs else expected[name])
             seen.append(self.index)
-            results = tuple(expected[name].clone() for name in outputs)
+            buffers = args[len(names):len(names)+len(outputs)]
+            results = tuple(expected[name].to(buffer.dtype).clone() for name, buffer in zip(outputs, buffers))
             return results[0] if len(results) == 1 else results
     monkeypatch.setattr(ascriptor.runtime, 'OpExec', ReferenceLaunch)
     o, state, a = call(inputs, output_final_state=final)

@@ -23,7 +23,8 @@
         "atol": 2e-05,
         "rtol": 0.01,
         "max_relative_l2": 0.01,
-        "reason": "BF16 output rounding; execute additionally enforces fixed min(1e-2,3F)."
+        "reason": "BF16 output rounding; execute additionally enforces fixed min(1e-2,3F).",
+        "reference_dtype": "float32"
       }
     },
     "stage_outputs": {
@@ -32,7 +33,8 @@
         "atol": 2e-05,
         "rtol": 0.01,
         "max_relative_l2": 0.01,
-        "reason": "BF16 output rounding; execute additionally enforces fixed min(1e-2,3F)."
+        "reason": "BF16 output rounding; execute additionally enforces fixed min(1e-2,3F).",
+        "reference_dtype": "float32"
       }
     }
   },
@@ -126,8 +128,7 @@
         "HV",
         128
       ],
-      "initialization": "NaN poison; every element must be overwritten.",
-      "reference_dtype": "float32"
+      "initialization": "NaN poison; every element must be overwritten."
     },
     "final_state": {
       "dtype": "float32",
@@ -268,8 +269,7 @@
         "HV",
         128
       ],
-      "initialization": "NaN poison; every element must be overwritten.",
-      "reference_dtype": "float32"
+      "initialization": "NaN poison; every element must be overwritten."
     },
     "final_state": {
       "dtype": "float32",
@@ -1241,8 +1241,77 @@
       "device": "a5",
       "backend": "cce",
       "stage": "reference",
-      "status": "untested",
-      "note": "No inherited qualification from the FP32 parent."
+      "status": "passed",
+      "note": "CPU reference only; no device qualification.",
+      "cases": [
+        "grid_r1_c1_bd1",
+        "grid_r1_c1_bd2",
+        "grid_r1_c2_bd1",
+        "grid_r1_c2_bd2",
+        "grid_r1_c3_bd1",
+        "grid_r1_c3_bd2",
+        "full_r1_bd1",
+        "full_r1_bd2",
+        "grid_r2_c1_bd1",
+        "grid_r2_c1_bd2",
+        "grid_r2_c2_bd1",
+        "grid_r2_c2_bd2",
+        "grid_r2_c3_bd1",
+        "grid_r2_c3_bd2",
+        "full_r2_bd1",
+        "full_r2_bd2",
+        "grid_r4_c1_bd1",
+        "grid_r4_c1_bd2",
+        "grid_r4_c2_bd1",
+        "grid_r4_c2_bd2",
+        "grid_r4_c3_bd1",
+        "grid_r4_c3_bd2",
+        "full_r4_bd1",
+        "full_r4_bd2",
+        "grid_r8_c1_bd1",
+        "grid_r8_c1_bd2",
+        "grid_r8_c2_bd1",
+        "grid_r8_c2_bd2",
+        "grid_r8_c3_bd1",
+        "grid_r8_c3_bd2",
+        "full_r8_bd1",
+        "full_r8_bd2",
+        "batch2_c3_r4_bd1",
+        "batch2_c3_r4_bd2",
+        "pgdn340m_bd1",
+        "pgdn340m_bd2",
+        "pgdn1b_bd1",
+        "pgdn1b_bd2",
+        "norm_zero_bd1",
+        "norm_zero_bd2",
+        "norm_tiny_bd1",
+        "norm_tiny_bd2",
+        "norm_nearzero_bd1",
+        "norm_nearzero_bd2",
+        "norm_small_bd1",
+        "norm_small_bd2",
+        "gzero_bd1",
+        "gzero_bd2",
+        "gweak_bd1",
+        "gweak_bd2",
+        "gstrong_bd1",
+        "gstrong_bd2",
+        "atk_beta0_bd1",
+        "atk_beta0_bd2",
+        "atk_beta1_bd1",
+        "atk_beta1_bd2",
+        "beta0_bd1",
+        "beta0_bd2",
+        "beta1_bd1",
+        "beta1_bd2",
+        "clamp_0_bd1",
+        "clamp_0_bd2",
+        "clamp_1_bd1",
+        "clamp_1_bd2",
+        "clamp_2_bd1",
+        "clamp_2_bd2"
+      ],
+      "evidence": "evidence/canonical-reference-v2.log"
     },
     {
       "device": "a5",
@@ -1262,8 +1331,9 @@
       "device": "a5",
       "backend": "cce",
       "stage": "emit",
-      "status": "untested",
-      "note": "No inherited qualification from the FP32 parent."
+      "status": "passed",
+      "note": "6 entries \u00d7 block_dim1/2, no lint/warnings; vendor compilation remains unexecuted.",
+      "evidence": "evidence/source-emission.json"
     },
     {
       "device": "a5",
