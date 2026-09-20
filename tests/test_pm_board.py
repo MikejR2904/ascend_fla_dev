@@ -385,6 +385,17 @@ class TestHardwareVerificationRule(_Tmp):
 class TestKernelDtypeStatus(unittest.TestCase):
     """用户 2026-09-19：首页进展表要按 kernel 列出 BF16 / FP32 现状，不能只有一个「涉及任务」计数。"""
 
+    @staticmethod
+    def _rendered_board(dtype_status, dtype_fix=None):
+        """只够渲染首页 kernel 表的最小看板：一个算子族、一个 kernel（不依赖实时看板的当下状态）。"""
+        kernel = {"id": "kx", "family": "fx", "track": "agent", "note_zh": "说明", "note_en": "note",
+                  "dtype_status": dtype_status}
+        if dtype_fix:
+            kernel["dtype_fix"] = dtype_fix
+        return {"repo": "", "tasks": [], "kernel_inventory": {"kernels": [kernel]},
+                "family_inventory": {"families": [{"id": "fx", "label_zh": "族", "label_en": "family", "track": "agent",
+                                                   "note_zh": "族说明", "note_en": "family note"}]}}
+
     def test_bad_state_is_rejected(self):
         board = {"tasks": [], "kernel_inventory": {"kernels": [
             {"id": "k", "family": "f", "track": "agent", "dtype_status": {"bf16": "native@mars", "fp32": "maybe"}}]}}
@@ -400,13 +411,16 @@ class TestKernelDtypeStatus(unittest.TestCase):
         for k in pm_board.load()["kernel_inventory"]["kernels"]:
             self.assertEqual(sorted(k.get("dtype_status", {})), ["bf16", "fp32"], k["id"])
 
-    def test_readme_shows_the_dtype_columns_and_pkda_rejects_bf16(self):
+    def test_readme_shows_the_dtype_columns_and_rejected_bf16(self):
+        # 用合成看板测「拒绝 / 原生」两种格子的渲染：PKDA 的 BF16 曾是 reject、BF-04 合入后变成原生，
+        # 测试不该跟着实时看板的数据走。
+        board = self._rendered_board({"bf16": "reject", "fp32": "native@a5"})
         for lang, head in (("zh", "| kernel | 归属 | BF16 | FP32 | 进度 | 下一步 |"),
                            ("en", "| kernel | track | BF16 | FP32 | progress | next |")):
-            text = pm_board.render_readme_block(pm_board.load(), lang)
+            text = pm_board.render_readme_block(board, lang)
             self.assertIn(head, text)
-            row = next(line for line in text.splitlines() if line.startswith("| `pkda_chunk_fwd`"))
-            self.assertIn("⛔", row)      # PKDA 公共入口显式拒绝 BF16
+            row = next(line for line in text.splitlines() if line.startswith("| `kx`"))
+            self.assertIn("⛔", row)      # 公共入口显式拒绝 BF16
             self.assertIn("✅", row)      # FP32 原生、A5 真机
 
     def test_dtype_fix_must_name_an_existing_task_and_is_rendered(self):
@@ -416,10 +430,13 @@ class TestKernelDtypeStatus(unittest.TestCase):
         self.assertTrue(any("dtype_fix" in p for p in pm_board.check(board)))
         board["kernel_inventory"]["kernels"][0]["dtype_fix"] = {"bf16": "BF-X"}
         self.assertFalse(any("dtype_fix" in p for p in pm_board.check(board)))
-        committed = pm_board.load()
-        row = next(line for line in pm_board.render_readme_block(committed, "zh").splitlines()
-                   if line.startswith("| `gdn_chunk_fwd_a5`"))
-        self.assertIn("→ BF-01", row)   # GDN 前向的 BF16 现在是 host 加宽，BF-01 改正它
+        # 渲染：加宽（不合规）的格子要带出改正它的任务；改正任务合入、格子变成原生之后不再显示「→ 任务」。
+        # 同样用合成看板，不依赖实时看板的当下状态。
+        def row_of(board):
+            return next(line for line in pm_board.render_readme_block(board, "zh").splitlines()
+                        if line.startswith("| `kx`"))
+        self.assertIn("→ BF-X", row_of(self._rendered_board({"bf16": "widen@a5", "fp32": "native@a5"}, {"bf16": "BF-X"})))
+        self.assertNotIn("→ BF-X", row_of(self._rendered_board({"bf16": "native@a5", "fp32": "native@a5"})))
 
     def test_dtype_cell_words(self):
         self.assertEqual(pm_board.dtype_cell("native@a5", "zh"), "✅ 原生 · A5 真机")

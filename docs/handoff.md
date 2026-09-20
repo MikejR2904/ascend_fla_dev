@@ -11,6 +11,13 @@
 
 ### 正在飞的任务（现在没有；A5K-02、PK-02、PK-03 都已于 2026-09-19 合入）
 
+> **2026-09-20T00:40Z 更新：用户授权合入 #110 / #111 / #113，三个都已合入（D-PM-39）；BF-06 / BF-02 / A2-09 已按各自的排队申请直接派单。main 全量 739 passed / 12 skipped。**
+> - **合入**（都经 bot 账号、`--match-head-commit` 钉住审过的头，用户原话「#110授权 #111授权 #113授权」）：#110 BF-04（头 `2d9e4068` → `b3e6e7a`）、#111 BF-01（头 `c5ddd293` → `4670730`）、#113 A2-03（头 `de893f2e` → `3884c27`）。合入后在 main 上复跑全量（NPU-free 环境）：**739 passed / 12 skipped = 669 + BF-04 的 32 + BF-01 的 38**（A2-03 不改测试），与逐个 PR 上的预期完全相同。
+> - **看板**：三个任务 done；`kernel_inventory` 里 `pkda_chunk_fwd` 与 `gdn_chunk_fwd_a5` 的 BF16 格改为「原生（A5）」并去掉对应 `dtype_fix`（首页 kernel × dtype 表随之更新）；`kda_fwd_stable` / `kda_fused_recurrent` 的说明里记了 a2 派生单元已合入（真机数字只作观测）。`ops.json` 没动：A2-03 申领人建议记两个 a2 单元，但矩阵还没有按 SoC 分维，等 A2-06。
+> - **一次性例外**：#110 的证据是 tar.gz（PROTOCOL §4.9 禁二进制）。用户在被告知后授权合入，PM 按「这一次」处理、没改 §4.9，新的 ASSIGN 里已要求申领人以后用文本证据、每次运行的原始回执自带 SoC / CANN / 算子包一行。**仍未决**：「校验类」暂定裁定、BF16 的 k 范数闸（沿用 1+1e-5，比 BF16 分辨率紧）——用户没有另外回答，按暂定 / 未决处理。
+> - **新派单**（都是排队 APPLY 承诺过的，不需要重新申领）：**BF-06**（KDA decode 原生 BF16，session `01a0b7ce-…`，16h）、**BF-02**（GDN 反向 BF16，session `gdn-series-…`，24h，写集已含预批准的 `tests/test_gdn_chunk_bwd.py`）、**A2-09**（KDA 反向 a2 单元，session `a2-01-…`，16h，第一个 STATUS 按实测速度重估）。BF-03（BF-02 之后）、BF-05（BF-03 之后，规格已澄清 B=1）仍是排队。
+> - **仍在等用户的**（同前）：「校验类」暂定裁定、BF16 k 范数闸、FMT-02 做法、BF-07 / A2-K1 批次、A2-10 / A2-11 放行、PK-05 / GDA-04 / PK-06 / GDA-05 放行。
+>
 > **2026-09-19T20:32Z 更新：A2-03 DONE 已评审（技术 accept，A2 上的 PR 等用户授权）；BF-05 排队 APPLY 回 NO_TASK 并澄清了规格。**
 > - **A2-03（PR #113，头 `de893f2e`）**：前向 5 个 kernel + decode 共 6 个 a2 kernel、两个单元（`kda_fwd_stable` 20 case、`kda_fused_recurrent` 8 case），实际耗时约 3.5h（估计 60h）。**PM 无 A2 真机，真机部分只对原始回执复算**：fwd o rel_l2 [2.96e-3, 3.45e-3]、decode o [1.37e-3, 1.73e-3]，网格 12 格与自述逐格一致，每个 case 的执行证据都是 aclnn / board / a2 / backend_executed；**PM 在本机对钉住的库独立复跑 CPU 的 reference / sim，60 + 16 个数字与申领人的 sim.json 逐位相同**，pipesim 抽查通过，6 个 kernel 的 ascriptor check 与 op 数完全一致；所有 `is_init=False` 的 matmul 紧邻 `barrier(Pipe.M)`、无 BF16 / FP16 splitk（A2-01 结论落实）；契约 board stage untested、门控跨度闸与 block_dim 上限都不继承 A5；全量 669 passed / 12 skipped 与 main 基线相同。**REVIEW accept 已发在 #113，合入等用户（A2 结论 A2-11 之前不算数）。**
 > - **BF-05 排队 APPLY（#104）**：预检发现验收里的「多 batch」与 GDN-2 入口的 B=1 公共域矛盾。PM 裁定：公共域与 GD2-01 相同（B=1、H∈{1,16}），BF16 不扩域不收窄，B≥2 显式报错；「多 batch」验收项已从 BF-05 规格删去并加了澄清一节，扩域另立项。回 NO_TASK：BF-02 → BF-03 → BF-05。
