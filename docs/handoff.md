@@ -11,6 +11,13 @@
 
 ### 正在飞的任务（现在没有；A5K-02、PK-02、PK-03 都已于 2026-09-19 合入）
 
+> **2026-09-20T03:18Z 更新：BF-06 DONE 已评审 accept（PR #114，头 `98d75fc9`），合入前先问用户（入口 dtype 域收窄）；FMT-02 的范围已裁定（D-PM-42）；BF-02 / A2-09 在跑。**
+> - **BF-06（KDA decode 原生 BF16 / FP32，token-major 直读直写，A5 真机）**：PM 从原始回执自己复算——414 条数值记录 + 342 个附加检查全过，BF16 最紧 误差/预算 0.333，跨 bd 2068 个哈希相同，FP32 新对原实现逐位 159/159；**D-PM-41 的三层 prefill 口径**（预算运行前定死）126 条链 / 8568 次局部 decode 全过，层 3 最紧 0.396，没有改线；host 审计只有 `aten.empty`（PM 代理审计每次恰好 2 个）；无 NPU 全量 761 passed / 12 skipped（main 739 + 22），入口换回 base 后 30 个失败。**REVIEW accept 已发在 #114。**
+> - **要用户定的**：授权合入 #114（头 `98d75fc9`）。**为什么要问**：入口 dtype 域从「任意浮点（host 加宽）」收窄成 BF16 q/k/v 或全 FP32（FP16 / FP64 / 混用显式报错）——这是 D-PM-40 里我裁的 D-PM-37 直接后果，仓里查无调用方，但属域改动，D-PM-33 要先问。**记录给用户知情**：B1/T16/H32 上新 kernel 比旧 wrapper + 旧 kernel 慢约 1–25%（BF16 速度比 0.814 / 0.988 / 0.748，FP32 新路径 0.795 / 0.937 / 0.746；T=1 持平、T=2 更快），无速度门槛，我记为后续性能任务的起点。
+> - **FMT-02（排队，BF-06 CLOSE 后派）范围裁定（D-PM-42）**：申领人核对源码发现 `chunk.py::_scan_states`（h / v_new 的 host 复算：bmm / 减 / 乘 / stack，夹着 FP32 Cast）、`log2(eg)` 分支、`dw` 取负、域 / 门控校验都不是纯 layout / dtype。裁定：FMT-02 = D-PM-37 字面（dtype / 布局转换进新 kda_layout 单元，逐位不变）；`_scan_states` 整体、`log2(eg)`、只读校验是「已登记的存量算术例外」（审计单列、不宣称合规、不搬进新单元）；位精确的 dw 取负与 g_cumsum × 1/ln2 可选并进同一 launch（逐位相同才并）；验收口径改为推理前向与 decode 完全干净、带缓存前向与反向在例外之外无 host 转换算子。**后果**：训练路径（带缓存前向）在 kernel 批次前**不可能完全没有 host 算子**；消除 `_scan_states` 要让前向 kernel 导出 h / v_new（`fwd-caches-not-emitted`，P2，kernel 批次，只有用户能批）——建议与 BF-07 一起批。
+> - **BF-02（PR #115 draft）**：首个完整 workload 通过（BF16 dq/dk/dv 最大相对 L2 约 1.675e-3，FP32 新旧逐位一致，两 dtype host 审计只有 10 次 aten.empty），bd2 完整网格 135/138 记录已过，自述。**A2-09（session 自报 a2-09-bwd-1）**：九个反向 kernel 写完并过 ascriptor check，bwd 单元 26 个 case reference 全过，functional sim 单 chunk / grouped_heads 通过，D-PM-37 的两处 host 操作已挪进 kernel。
+> - **观察**：BF-02 的第二验证环境里「同为 CANN 9.2.0」的不同小版本头文件布局不同（`IMPL_UTILS_SYS_MACROS_H` 与 `..._IMPL_H`、`g_coreType` 重定义），所以评审要的 CANN 标识应带 inner / compiler 时间戳（BF-06 的回执已带，BF-04 没有）。
+>
 > **2026-09-20T00:40Z 更新：用户授权合入 #110 / #111 / #113，三个都已合入（D-PM-39）；BF-06 / BF-02 / A2-09 已按各自的排队申请直接派单。main 全量 739 passed / 12 skipped。**
 > - **合入**（都经 bot 账号、`--match-head-commit` 钉住审过的头，用户原话「#110授权 #111授权 #113授权」）：#110 BF-04（头 `2d9e4068` → `b3e6e7a`）、#111 BF-01（头 `c5ddd293` → `4670730`）、#113 A2-03（头 `de893f2e` → `3884c27`）。合入后在 main 上复跑全量（NPU-free 环境）：**739 passed / 12 skipped = 669 + BF-04 的 32 + BF-01 的 38**（A2-03 不改测试），与逐个 PR 上的预期完全相同。
 > - **看板**：三个任务 done；`kernel_inventory` 里 `pkda_chunk_fwd` 与 `gdn_chunk_fwd_a5` 的 BF16 格改为「原生（A5）」并去掉对应 `dtype_fix`（首页 kernel × dtype 表随之更新）；`kda_fwd_stable` / `kda_fused_recurrent` 的说明里记了 a2 派生单元已合入（真机数字只作观测）。`ops.json` 没动：A2-03 申领人建议记两个 a2 单元，但矩阵还没有按 SoC 分维，等 A2-06。
