@@ -11,6 +11,11 @@
 
 ### 正在飞的任务（现在没有；A5K-02、PK-02、PK-03 都已于 2026-09-19 合入）
 
+> **2026-09-20T09:15Z 更新：BF-07 已 ACK 并给了估计（阶段 1 约 17h、阶段 2 约 21h）——PM 拆出 BF-08（阶段 2 梯度链）；BF-07 的 RISK（FP32 输出没有「1 ulp」线）是规格写宽了，已改。**
+> - **拆分**：BF-07 = 前向 / 推理 / decode（24h），BF-08 = 梯度链（24h，BF-07 CLOSE 后同 session `01a0b7ce-…` 连续，issue 待 sync 建）。BF-07 需要梯度且 raw flag 开着时保留 host `_prepare_inputs` 图（登记的存量例外），DONE 只声称阶段 1；BF-08 才消除它。kernel 批次是同一个（D-PM-43），拆分不另问用户。`kernel_inventory` 新增 `kda_prep`（wip）。
+> - **测试清单已确认**：BF-07 可改 `tests/test_kda_domain_checks.py` 里 3 个函数、BF-08 改 2 个；能不改就不改，新覆盖写进新测试文件，改动只换观察点为新 kernel ABI 边界的局部 CPU 替身，不加生产旁路。
+> - **RISK 裁定（规格写宽了）**：旧 host 的 FP32 q/k 归一化对 FP64 参考就有 2–3 ulp（自述，92 条 CPU 校准）——FP32 输出不设 ulp 通过线，预算 = 旧 host 对 FP64 地板的 3 倍（norm 另受 1e-2），ULP 分布两个比较对象都报并逐类解释；BF16 输出 ≤1 ulp 不变；端点与旧 host 的 FP32 语义逐点对照、不新增闸、不收窄域。看板里 BF-07 的 caps 旧 9.2 描述已改为申领人声明的 CANN 9.1.0-beta.1 环境。
+>
 > **2026-09-20T08:48Z 更新：BF-07 规格已细化并派单（session `01a0b7ce-…`，新单元 `kda_prep`，阶段 1 前向 / decode + 阶段 2 梯度链，24h 首轮）。**
 > - **规格要点**（`docs/pm/tasks/BF-07.md`）：`_prepare_inputs` 三步（gate、q/k l2norm、beta sigmoid）进自编译 kernel；**dtype 域收窄成 raw 量只接 BF16 / FP32**（FP16 / FP64 显式报错，D-PM-40 同型，**合入前要单列给用户**）；阶段 2 必须给链式反向（`A_log` / `dt_bias` 的 (B,T) 归约确定性且与 `bd` 无关），可经 PM 拆成 BF-08；预算申领人先校准、第一个提交冻结；现有 `tests/test_kda_domain_checks.py` 只在「列清单、PM 确认」后才动；门控闸 155 / 105 不变；FMT-02 的性能与证据规则（大 tile、每份回执自带环境行、PR 任一提交无 >5 MB blob）已写进规格与 ASSIGN。
 > - **当前在飞**：BF-03（session `gdn-series-…`）、BF-07（session `01a0b7ce-…`）、A2-09（session `a2-09-bwd-1`），三个 session 不同、写集互不相交。BF-05 仍排在 BF-03 之后；PK-05 的近零判据我派前自裁。

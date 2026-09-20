@@ -1264,14 +1264,14 @@
     },
     {
       "id": "BF-07",
-      "title": "KDA raw flags 前处理进自编译 kernel（q/k l2norm、门控变换、beta sigmoid，含梯度链），A5 真机",
+      "title": "KDA raw flags 前处理进自编译 kernel（阶段 1：q/k l2norm、门控变换、beta sigmoid 的前向 / 推理 / decode；梯度链归 BF-08），A5 真机",
       "wave": "W0",
       "soc": "a5",
       "priority": "P0",
-      "status": "assigned",
+      "status": "in_progress",
       "model": [],
       "kernel": [
-        "kda_fwd_stable"
+        "kda_prep"
       ],
       "dtype": [
         "bf16"
@@ -1303,7 +1303,7 @@
         "socs": [
           "a5"
         ],
-        "soc_details": "自述：A5 Ascend950PR_9589、CANN 9.2.0，算子包目录 ascend950 / ascend910b / ascend910_93；每次任务重新检查健康 / 占用并使用共享锁、Docker（机器与卡归 assignee 管理，D-PM-28）",
+        "soc_details": "自述（APPLY 06:25Z）：a5，CANN 9.1.0-beta.1、compiler 20260509_173000235，OPP 含 ascend910_93 / ascend910b / ascend950；独立健康 / 占用检查、双共享锁、Docker 隔离（机器与卡归 assignee 管理，D-PM-28）；结论只对实际验证的那一套环境成立",
         "ascriptor": "library 90cfcdc720bb / kernels b3b3f9c16df7（自述）",
         "fla": "新任务按契约选择并校验固定源码身份（自述）",
         "fork": "limjiunnbin/ascend_fla_dev",
@@ -1328,6 +1328,10 @@
         {
           "at": "2026-09-20T08:48",
           "summary": "PM 细化规格并派单（FMT-02 已 CLOSE，写集重叠已消除）：新单元 kernels/projects/a5/kda_prep（首选，不改 kda_fwd_stable / kda_bwd_stable / kda_layout 的 kernel），写集 = kda_prep/** + chunk.py / autograd.py / fused_recurrent.py + tests/test_kda_prep_kernel.py + docs/research/kda_prep_kernel.md；现有 tests/test_kda_domain_checks.py 只在「第一个 STATUS 列清单、PM 确认」后才动。范围：_prepare_inputs 的三步（gate = −exp(A_log)·softplus(g+dt_bias)、q/k l2norm 加性 epsilon 1e-6、beta sigmoid），dtype 域裁定为 raw 量只接 BF16 / FP32（FP16 / FP64 显式报错——从「任意 floating」收窄，D-PM-40 同型，合入前单列给用户）；阶段 1 = 前向 / 推理 / decode，阶段 2 = 梯度链（新 autograd Function + 自编译 backward kernel，A_log / dt_bias 的 (B,T) 归约确定性且与 bd 无关），阶段 2 可经 PM 拆成 BF-08（同批次，不另问用户）。预算由申领人先校准、第一个提交冻结（PM 不预设数字，核对不比地板 3 倍更松、事后不放宽）；门控闸 155 / 105 不变，在 {0, 100.8, 105, 155} 上量化前后差；量程列表逐处判；FP32 / 无 flag 路径逐位不变、bd 间逐位相同。吸收 FMT-02 经验（大 tile、每份原始回执自带环境行、汇总在前明细分目录、PR 任一提交无 >5 MB blob、协议头格式）。预检三条（梯度链 / dtype 边界 / 数学细节）已逐条回答在规格里。24h 首轮，第一个 STATUS 给两阶段的按 kernel 估计，PM 据此调时限或拆分。"
+        },
+        {
+          "at": "2026-09-20T09:15",
+          "summary": "ACK（08:50Z，自述）：读了 AGENTS / handoff / PROTOCOL / START / BF-07 / bf16-kernel-side / kda_layout_kernel / BF-06；分支 task/BF-07（base c09a80ed），ETA 24h；计划：钉住前任三入口副本先做 CPU 精度校准并在第一个提交冻结逐量预算、preflight 成本 / 精度 / 归约顺序契约、阶段 1 kernel 与推理 / decode 接线、每 bd 独立进程完整 Kimi T4096 flags 全开先上真机、同卡三轮与设备事件归因、回执自带原始环境行；继续使用已申报的 CANN 9.1.0-beta.1 替代环境并逐次实测身份 / 健康 / 占用。STATUS（08:51Z，自述）：已 ACK，正做实现前 CPU FP64 校准与前任入口副本，尚未写 kernel。按 kernel 估计：阶段 1 约 17h（l2norm 约 3h、gate 约 4h、beta sigmoid 约 2h、预算 / 单元 / 三入口接线 / 审计约 3h、完整真机与网格与三轮性能归因证据约 5h）；阶段 2 约 21h（l2norm backward 3h、beta backward 2h、gate backward 与固定分块局部贡献 4h、A_log / dt_bias 两级确定性归约 4h、autograd 接线 / 仅参数训练 / 部分梯度覆盖 3h、真机网格审计性能证据 5h）；合计约 38h；建议阶段 2 拆 BF-08、同 session 连续执行，未裁前仍按两阶段都必做管理。现有测试函数清单（5 个）：test_raw_flags_compose_and_preserve_disabled_inputs、test_raw_preparation_keeps_all_six_gradient_paths、test_public_decode_flags_reach_the_native_token_major_abi、test_public_chunk_flags_reach_prepared_boundary、test_public_chunk_routes_gate_parameter_only_gradients_to_autograd，各附保留语义与替身放置。RISK contradicts-handoff（08:59Z，自述）：实现前 CPU 校准 92 条（Torch 2.10.0+cpu、种子 7007、含 Kimi B1/T4096/H32/K128，尚无 candidate kernel）显示旧 host 的 FP32 q/k 输出对 FP64 参考舍入到 FP32 就已有 2–3 ulp（norm BF16→FP32：relL2 6.30e-08、逐元素相对误差 1.81e-07、对正确舍入 FP32 最大 ULP=3；FP32→FP32：5.30e-08 / 1.76e-07 / ULP=2；BF16 输出两条路最多 1 ulp），规格「1 ulp」须明确比较对象。提议：常规预算 = 对应实测地板的 3 倍（norm 另受 1e-2）、ULP 对 FP64 正确舍入与对旧 host 都报、BF16 输出最多 1 ulp、FP32 输出以 1 ulp 为检查线但超过的逐类解释、不擅自写成自动通过阈值；旧 host x² 溢出使 norm 归零、exp(A_log) 先溢出使 gate 为 -inf 等端点保持为语义对照，不新增数值闸、不收窄域；完整 92 条原始记录随第一个预算提交。PM 裁定（已回复 #106）：(1) 采纳拆分——BF-07 = 阶段 1（约 17h，时限 24h 不变），阶段 2 拆成新任务 BF-08（约 21h，24h，同批次不另问用户，BF-07 CLOSE 后同 session 连续执行）；BF-07 需要梯度且 raw flag 开着时保留 host 前处理图（登记例外）、DONE 只声称阶段 1。(2) 测试清单逐条确认：BF-07 可改 3 个（raw_flags_compose、public_decode_flags、public_chunk_flags_reach_prepared_boundary）、BF-08 改 2 个（六梯度路径、仅参数梯度）；能不改就不改，新覆盖优先写 tests/test_kda_prep_kernel.py，改动只换观察点为新 kernel ABI 边界的局部 CPU 替身，不加生产旁路。(3) RISK 是规格写宽了：BF16 输出 ≤1 ulp 不变；FP32 输出不设 ulp 通过线、预算 = 旧 host 对 FP64 地板的 3 倍（norm 另受 1e-2）、ULP 分布两个比较对象都报并逐类解释；端点与旧 host FP32 语义逐点对照、不新增闸、不收窄域；预算与 92 条校准随第一个提交冻结。看板 caps 的旧 9.2 描述已改为申领人声明的 CANN 9.1.0-beta.1 环境。"
         }
       ],
       "result": null,
@@ -4379,6 +4383,54 @@
         "by": "limjiunnbin",
         "approved_by_user": true
       }
+    },
+    {
+      "id": "BF-08",
+      "title": "KDA raw flags 前处理的梯度链进自编译 kernel（BF-07 的阶段 2），A5 真机",
+      "wave": "W0",
+      "soc": "a5",
+      "priority": "P0",
+      "status": "open",
+      "model": [],
+      "kernel": [
+        "kda_prep"
+      ],
+      "dtype": [
+        "bf16"
+      ],
+      "deps": [
+        "BF-07"
+      ],
+      "write_set": [
+        "kernels/projects/a5/kda_prep/**",
+        "ascend_fla/ops/kda/autograd.py",
+        "ascend_fla/ops/kda/chunk.py",
+        "tests/test_kda_prep_backward.py",
+        "docs/research/kda_prep_backward.md"
+      ],
+      "needs": {
+        "npu": true,
+        "ascriptor": true,
+        "fla": true
+      },
+      "spec": "docs/pm/tasks/BF-08.md",
+      "issue": null,
+      "pr": null,
+      "assignee": null,
+      "assignee_caps": null,
+      "branch": null,
+      "timebox_h": 24,
+      "reports": [
+        {
+          "at": "2026-09-20T09:15",
+          "summary": "PM 从 BF-07 拆出（依 BF-07 申领人第一个 STATUS 的按 kernel 估计：阶段 1 约 17h、阶段 2 约 21h，合计 38h > 24h；BF-07 规格已写明阶段 2 可经 PM 拆成 BF-08、同一 kernel 批次内不另问用户，D-PM-43）。范围：新 autograd Function + 自编译 backward kernel（l2norm / gate / beta 的反向、A_log / dt_bias 的 (B,T) 两级确定性归约、与 bd 无关、无原子加），消除 BF-07 保留的「需要梯度且 raw flag 开着时走 host 图」的登记例外；写集 kda_prep/** + autograd.py + chunk.py + 新测试与文档，现有 tests/test_kda_domain_checks.py 里 PM 已确认的两个函数。BF-07 合入并 CLOSE 后按申领人的建议直接派给同一 session（01a0b7ce-…），不需要重新申领。"
+        }
+      ],
+      "result": null,
+      "origin": {
+        "kind": "user",
+        "note": "用户 2026-09-19 直接指令（D-PM-35）：BF16 必须 kernel 侧；kernel 批次 D-PM-43 已批准；PM 2026-09-20 从 BF-07 拆出的阶段 2"
+      }
     }
   ],
   "label_github_login": "ascend-fla-pm-bot",
@@ -4404,7 +4456,9 @@
       "pkda_chunk_fwd",
       "pgdn_chunk_fwd",
       "pgdn_chunk_bwd",
-      "pgdn_fused_recurrent"
+      "pgdn_fused_recurrent",
+      "kda_layout",
+      "kda_prep"
     ],
     "dtype": [
       "bf16",
@@ -4712,6 +4766,17 @@
         "dtype_status": {
           "bf16": "native@a5",
           "fp32": "native@a5"
+        }
+      },
+      {
+        "id": "kda_prep",
+        "family": "kda",
+        "track": "agent",
+        "note_zh": "本仓自写的 raw flags 前处理单元（BF-07 / BF-08，进行中）：q/k l2norm、门控变换 −exp(A_log)·softplus(g+dt_bias)、beta sigmoid 进自编译 kernel；BF-07 = 前向 / 推理 / decode，BF-08 = 梯度链",
+        "note_en": "In-repo raw-flags preprocessing unit (BF-07 / BF-08, in progress): q/k L2 norm, gate transform -exp(A_log)*softplus(g+dt_bias) and beta sigmoid as self-compiled kernels; BF-07 = forward/inference/decode, BF-08 = gradient chain",
+        "dtype_status": {
+          "bf16": "wip",
+          "fp32": "wip"
         }
       }
     ]
