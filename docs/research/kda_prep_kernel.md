@@ -15,9 +15,9 @@ entries to CCE. All50 vendors compile at bd1,2,3,4. The complete Kimi T4096 all-
 workload passes at each of bd1,2,3,4. All17 returned outputs, caches and gradients
 are bitwise identical across those four runs. After that hardware
 run, all14 bounded source cases pass sim and pipesim at bd1. Ordinary chunk grids, regression and training checks, fresh scan repeatability, and
-synchronized performance measurements have also completed. All required grid populations have now executed. Nearzero state and output
-failures, their unresolved acceptance boundary, and the final delivery archive
-still block BF-07 acceptance. Endpoint reachability, high-bd leaf checks and
+synchronized performance measurements have also completed. All required grid populations have now executed. Remaining nearzero output
+failures and their unresolved acceptance boundary still block BF-07 acceptance. The source/evidence delivery snapshot has
+completed a separate fresh restoration. Endpoint reachability, high-bd leaf checks and
 metric-comparison reruns have completed. The task and PR remain incomplete.
 FP64 is used for preprocessing error studies and reliable norm accumulation; the independent
 and pinned FLA end-to-end KDA goldens remain **Torch CPU FP32**.
@@ -149,8 +149,8 @@ In the isolated three-entry base swap, the52 public dtype/routing checks yield
 44 expected failures and8 retained training passes. These are host ABI evidence,
 not numerical kernel validation. All stable/layout kernel sources remain intact.
 
-Remaining completion requires resolution of retained nearzero failures
-and a verified fresh restore of the final source and evidence archive. Completed
+Remaining completion requires resolution of retained nearzero output failures.
+The source/evidence archive has now passed a separate fresh restore. Completed
 regression, repeatability and timing stages are recorded separately below.
 
 
@@ -422,7 +422,8 @@ See `native/saved-endpoint-classification-v2`, the raw nearzero shards, and
 
 ## Remaining output failures: complete decision table
 
-`native/remaining-output-failure-table.json` contains every failing output slice,
+`native/remaining-output-failure-table.json` and the compact
+`native/remaining-output-failure-slices.csv` contain every failing output slice,
 its CPU-normal subset error, zero/subnormal classifications (including exact
 nonzero values separately), old-NPU byte equality and maximum ULP difference.
 Chunk uses the original old-prep CPU FP32 references; decode uses the approved
@@ -501,5 +502,18 @@ all originals. No archived source is executed by this utility.
 python evidence_archive.py verify evidence/native/grid-v2/grid-v2-chunk-bd1 --restore tmp/restored-grid
 ```
 
-A completed evidence-only round trip does not substitute for the still-pending
-final delivery archive and source restoration, or any remaining hardware gate.
+The7af5124 complete source/evidence snapshot includes259 accepted runtime
+files and restores all5341 entries with matching SHA256. The archive is
+178018750 bytes, SHA256
+`0c7cff89a4298f8de32b1a82f90c7f879fe971b154c29910dc39655bd6854206`.
+Every repository blob was checked against that Git commit before packaging;
+private machine controllers/configuration and raw tensor backups stay external.
+`host/delivery-7af5124-restore.json` records this result. The final metadata
+addition publishes that receipt, the source-sync proof and a CSV projection of
+the unchanged failure table; it changes no mathematical artifact or native result.
+
+The remote source/documents were synchronized only after confirming no active
+task compile/run. All473 source files and259 accepted dependencies match their
+manifests; six production mathematical files retain the exact tested bytes.
+The previous source generation remains separately archived. Archive restoration
+and source synchronization do not satisfy the remaining numerical acceptance.
