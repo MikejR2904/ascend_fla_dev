@@ -1,0 +1,365 @@
+{
+  "stage": "Offline inspection of saved native tensors; native CPU FP32 goldens retained, no regenerated inputs or new hardware claim",
+  "environment": {
+    "python": "3.11.15",
+    "torch": "2.10.0+cpu"
+  },
+  "cases": {
+    "chunk": {
+      "case": "nearzero_c2_g2_rbf16_vbf16_flags010",
+      "saved_tensor_sha256": "6a39b38fb02c83965b7fe092037a38c50d87b801ca672c3fd01421ea5015f583",
+      "saved_input_output_hashes_match_native": true,
+      "actual_nonzero": 0,
+      "references": {
+        "independent": {
+          "expected_max_abs": 7.847271400218976e-44,
+          "expected_nonzero": 7476,
+          "bf16_minimum_subnormal": 9.183549615799121e-41,
+          "rounded_nonzero": 0,
+          "actual_equals_correct_bf16_rounding": true,
+          "relative_l2": 1.0
+        },
+        "fla": {
+          "expected_max_abs": 7.847271400218976e-44,
+          "expected_nonzero": 7392,
+          "bf16_minimum_subnormal": 9.183549615799121e-41,
+          "rounded_nonzero": 0,
+          "actual_equals_correct_bf16_rounding": true,
+          "relative_l2": 1.0
+        }
+      }
+    },
+    "decode": {
+      "case": "nearzero_c2_g1_rbf16_vbf16_flags110",
+      "saved_tensor_sha256": "546bb165adaf7a472e66afd8cbfa0b2fd87f7713fade6783bf6de42568c5468a",
+      "saved_input_output_hashes_match_native": true,
+      "native_prep_comparison": {
+        "q": {
+          "dtype": "torch.bfloat16",
+          "differing_elements": 173,
+          "total": 16384,
+          "max_abs": 1.0842021724855044e-19,
+          "samples": [
+            {
+              "index": [
+                0,
+                1,
+                0,
+                126
+              ],
+              "candidate": 1.0191500421363742e-17,
+              "old_npu": 1.0137290312739466e-17,
+              "raw": 1.0164395367051604e-20
+            },
+            {
+              "index": [
+                0,
+                2,
+                0,
+                78
+              ],
+              "candidate": 2.5478751053409354e-18,
+              "old_npu": 2.5343225781848666e-18,
+              "raw": 2.541098841762901e-21
+            },
+            {
+              "index": [
+                0,
+                4,
+                0,
+                25
+              ],
+              "candidate": 1.0191500421363742e-17,
+              "old_npu": 1.0137290312739466e-17,
+              "raw": 1.0164395367051604e-20
+            },
+            {
+              "index": [
+                0,
+                4,
+                0,
+                46
+              ],
+              "candidate": 5.095750210681871e-18,
+              "old_npu": 5.068645156369733e-18,
+              "raw": 5.082197683525802e-21
+            },
+            {
+              "index": [
+                0,
+                4,
+                0,
+                55
+              ],
+              "candidate": -2.5478751053409354e-18,
+              "old_npu": -2.5343225781848666e-18,
+              "raw": -2.541098841762901e-21
+            },
+            {
+              "index": [
+                0,
+                4,
+                0,
+                70
+              ],
+              "candidate": -1.0191500421363742e-17,
+              "old_npu": -1.0137290312739466e-17,
+              "raw": -1.0164395367051604e-20
+            },
+            {
+              "index": [
+                0,
+                6,
+                0,
+                19
+              ],
+              "candidate": 5.095750210681871e-18,
+              "old_npu": 5.068645156369733e-18,
+              "raw": 5.082197683525802e-21
+            },
+            {
+              "index": [
+                0,
+                7,
+                0,
+                95
+              ],
+              "candidate": 5.095750210681871e-18,
+              "old_npu": 5.068645156369733e-18,
+              "raw": 5.082197683525802e-21
+            }
+          ]
+        },
+        "k": {
+          "dtype": "torch.bfloat16",
+          "differing_elements": 185,
+          "total": 16384,
+          "max_abs": 1.0842021724855044e-19,
+          "samples": [
+            {
+              "index": [
+                0,
+                0,
+                0,
+                65
+              ],
+              "candidate": 1.0191500421363742e-17,
+              "old_npu": 1.0137290312739466e-17,
+              "raw": 1.0164395367051604e-20
+            },
+            {
+              "index": [
+                0,
+                1,
+                0,
+                36
+              ],
+              "candidate": -1.0191500421363742e-17,
+              "old_npu": -1.0137290312739466e-17,
+              "raw": -1.0164395367051604e-20
+            },
+            {
+              "index": [
+                0,
+                1,
+                0,
+                65
+              ],
+              "candidate": 1.0191500421363742e-17,
+              "old_npu": 1.0137290312739466e-17,
+              "raw": 1.0164395367051604e-20
+            },
+            {
+              "index": [
+                0,
+                1,
+                0,
+                105
+              ],
+              "candidate": -1.0191500421363742e-17,
+              "old_npu": -1.0137290312739466e-17,
+              "raw": -1.0164395367051604e-20
+            },
+            {
+              "index": [
+                0,
+                3,
+                0,
+                52
+              ],
+              "candidate": 1.0191500421363742e-17,
+              "old_npu": 1.0137290312739466e-17,
+              "raw": 1.0164395367051604e-20
+            },
+            {
+              "index": [
+                0,
+                3,
+                0,
+                57
+              ],
+              "candidate": -2.5478751053409354e-18,
+              "old_npu": -2.5343225781848666e-18,
+              "raw": -2.541098841762901e-21
+            },
+            {
+              "index": [
+                0,
+                4,
+                0,
+                49
+              ],
+              "candidate": 1.0191500421363742e-17,
+              "old_npu": 1.0137290312739466e-17,
+              "raw": 1.0164395367051604e-20
+            },
+            {
+              "index": [
+                0,
+                5,
+                0,
+                12
+              ],
+              "candidate": 5.095750210681871e-18,
+              "old_npu": 5.068645156369733e-18,
+              "raw": 5.082197683525802e-21
+            }
+          ]
+        },
+        "g": {
+          "dtype": "torch.float32",
+          "differing_elements": 6877,
+          "total": 16384,
+          "max_abs": 1.1920928955078125e-07,
+          "samples": [
+            {
+              "index": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "candidate": -0.46249857544898987,
+              "old_npu": -0.46249863505363464,
+              "raw": 0.023681640625
+            },
+            {
+              "index": [
+                0,
+                0,
+                0,
+                2
+              ],
+              "candidate": -0.4687405526638031,
+              "old_npu": -0.4687405228614807,
+              "raw": 0.039306640625
+            },
+            {
+              "index": [
+                0,
+                0,
+                0,
+                4
+              ],
+              "candidate": -0.45974433422088623,
+              "old_npu": -0.459744393825531,
+              "raw": 0.010009765625
+            },
+            {
+              "index": [
+                0,
+                0,
+                0,
+                7
+              ],
+              "candidate": -0.448976069688797,
+              "old_npu": -0.4489760994911194,
+              "raw": -0.0247802734375
+            },
+            {
+              "index": [
+                0,
+                0,
+                0,
+                8
+              ],
+              "candidate": -0.4548686444759369,
+              "old_npu": -0.4548686146736145,
+              "raw": -0.009765625
+            },
+            {
+              "index": [
+                0,
+                0,
+                0,
+                9
+              ],
+              "candidate": -0.4556785225868225,
+              "old_npu": -0.4556785821914673,
+              "raw": -0.0093994140625
+            },
+            {
+              "index": [
+                0,
+                0,
+                0,
+                21
+              ],
+              "candidate": -0.44514957070350647,
+              "old_npu": -0.4451495110988617,
+              "raw": -0.057373046875
+            },
+            {
+              "index": [
+                0,
+                0,
+                0,
+                22
+              ],
+              "candidate": -0.5925461053848267,
+              "old_npu": -0.5925461649894714,
+              "raw": 0.326171875
+            }
+          ]
+        },
+        "beta": {
+          "dtype": "torch.float32",
+          "differing_elements": 0,
+          "total": 128,
+          "max_abs": 0.0,
+          "samples": []
+        }
+      },
+      "located_actual_preparation_references": {
+        "independent": {
+          "o": {
+            "relative_l2": 0.0015407726222361167,
+            "max_abs": 3.0237328797934504e-22,
+            "finite": true
+          },
+          "final_state": {
+            "relative_l2": 7.236930542391908e-08,
+            "max_abs": 1.0339757656912846e-25,
+            "finite": true
+          }
+        },
+        "fla": {
+          "o": {
+            "relative_l2": 0.0015407522060089814,
+            "max_abs": 3.0234743858520276e-22,
+            "finite": true
+          },
+          "final_state": {
+            "relative_l2": 3.964137038079415e-08,
+            "max_abs": 1.0339757656912846e-25,
+            "finite": true
+          }
+        }
+      },
+      "raw_vs_actual_prepared_public_bitwise": {
+        "o": true,
+        "final_state": true
+      }
+    }
+  }
+}

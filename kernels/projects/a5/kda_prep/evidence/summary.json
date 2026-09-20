@@ -23,12 +23,11 @@
     "after_native": true
   },
   "pending": [
-    "fullAPIgrid",
-    "endpointsandgates",
-    "DPM44oldpathrepeatability",
-    "trainingregressions",
-    "samecardperformance",
-    "archivefreshrestore"
+    "decode_high_bd_receipt_retrieval_and_cross_bd",
+    "expanded_nonfinite_comparison_contract",
+    "public_nearzero_failures_and_remaining_boundary_grid",
+    "decode_leaf_high_bd",
+    "final_source_and_evidence_archive_fresh_restore"
   ],
   "full_native_block_dims": [
     1,
@@ -55,5 +54,79 @@
     "endpoint_mismatch_per_run": 52,
     "all_input_and_guards_unchanged": true,
     "qualified": false
+  },
+  "ordinary_grid": {
+    "chunk": {
+      "block_dims": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "cases_per_bd": 1620,
+      "passed": true,
+      "all_output_cache_prep_cross_bd_bitwise": true
+    },
+    "decode": {
+      "retrieved_block_dims": [
+        1,
+        2,
+        4
+      ],
+      "cases_per_bd": 3240,
+      "passed": true,
+      "cross_bd_bitwise": true,
+      "higher_block_dims": "receipt retrieval pending; not claimed"
+    }
+  },
+  "regressions": {
+    "block_dims": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "backward_cases_per_bd": 10,
+    "gate_cases_per_bd": 6,
+    "training_combinations_per_bd": 30,
+    "passed": true,
+    "training_host_exception_retained": true
+  },
+  "repeatability": {
+    "receipt": "native/repeat-v1-bd4",
+    "public_calls": 24,
+    "direct_scan_replays": 12,
+    "passed": true,
+    "scope": "measured device/input only; inherited scan defect not fixed"
+  },
+  "performance": {
+    "receipt": "native/perf-v1-bd4",
+    "rounds": 3,
+    "same_card": true,
+    "candidate_to_predecessor_ratios": {
+      "T1024_plain": 1.1219159,
+      "T1024_cached": 1.0655321,
+      "T4096_plain": 1.1178109,
+      "T4096_cached": 1.061396
+    },
+    "torch_npu_baselines_measured": true
+  },
+  "leaf_v3": {
+    "block_dims": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "cases_per_bd": 200,
+    "ordinary_per_bd": 120,
+    "qualified_endpoint_per_bd": 80,
+    "cross_bd_namespace_bitwise": true,
+    "expanded_cross_products_qualified": false
+  },
+  "unresolved": {
+    "risk": "https://github.com/ddddwee1/ascend_fla_dev/issues/106#issuecomment-5750600450",
+    "nonfinite_cross_products": "native/endpoint-v2-bd4/downstream.json",
+    "nearzero_failures": "native/boundary-diagnosis"
   }
 }

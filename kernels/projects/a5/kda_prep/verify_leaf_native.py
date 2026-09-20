@@ -28,9 +28,15 @@ def main():
     args=parser.parse_args();bd=args.block_dim;dbd=args.decode_block_dim or (4 if bd==3 else bd)
     assert os.environ.get('BF07_EXTERNAL_DEVICE_LOCK')=='1'
     assert platform.python_version()=='3.12.14' and torch.__version__=='2.12.0+cu130' and torch_npu.__version__=='2.12.0'
-    assert Path(ascriptor.__file__).is_relative_to(Path(os.environ['BF07_NATIVE_ROOT'])/'library')
+    root=Path(os.environ['BF07_NATIVE_ROOT'])
+    assert ascriptor.__version__=='0.1.0'
+    assert Path(ascriptor.__file__).is_relative_to(root/'library')
+    source_manifest=(root/'accepted-source-manifest.json').read_bytes()
+    for name,sha in json.loads(source_manifest).items():
+        assert hashlib.sha256((root/name).read_bytes()).hexdigest()==sha,name
     torch.set_num_threads(1);args.output.mkdir(parents=True,exist_ok=False)
     environment=native_environment.collect()
+    environment['accepted_source_manifest_sha256']=hashlib.sha256(source_manifest).hexdigest()
     environment['driver_source_sha256']={Path(p).name:hashlib.sha256(Path(p).read_bytes()).hexdigest()
                                         for p in (__file__,unit.__file__,native_cases.__file__)}
     environment['source_sha256']={str(p.relative_to(unit.ROOT)):hashlib.sha256(p.read_bytes()).hexdigest()

@@ -14,9 +14,10 @@ any candidate kernel source. The candidate now emits all28 typed chunk/decode
 entries to CCE. All50 vendors compile at bd1,2,3,4. The complete Kimi T4096 all-flags
 workload passes at each of bd1,2,3,4. All17 returned outputs, caches and gradients
 are bitwise identical across those four runs. After that hardware
-run, all14 bounded source cases pass sim and pipesim at bd1. Remaining native
-grids, decode block dimensions, endpoints, repeatability and performance are pending;
-this is not completed BF-07 acceptance.
+run, all14 bounded source cases pass sim and pipesim at bd1. Ordinary chunk grids, regression and training checks, fresh scan repeatability, and
+synchronized performance measurements have also completed. The remaining decode
+dimensions, special-value grid failures and final archive restore still block
+BF-07 acceptance. The task and PR remain incomplete.
 FP64 is used only to measure preprocessing numerical error; the independent
 and pinned FLA end-to-end KDA goldens remain **Torch CPU FP32**.
 
@@ -120,7 +121,8 @@ to32 token rows for one head. Norm reduces each K128 row as two64-lane cadds,
 then adds the partial sums, additive1e-6, sqrt and division in that fixed order.
 BF16 stores round to nearest even. Gate implements compensated log1p(exp(u))
 and the strict u>20 branch without clipping exp(A_log). Sigmoid uses FP32
-1/(1+exp(-x)). Native endpoint behavior remains to be measured, not inferred.
+1/(1+exp(-x)). Native endpoint behavior is measured below; expanded nonfinite
+cross-products remain unresolved.
 
 All flags enabled add four preparation launches: gate, q, k and beta. Disabled
 routes retain the input object and launch nothing. Host work is metadata,
@@ -134,7 +136,7 @@ always selects kernel preparation; decode always selects the inference path.
 The original `_prepare_inputs` remains differentiable and is a **noncompliant
 training exception pending BF-08**. D-PM-42 and D-PM-44 retain their scope.
 
-## Host checks and pending native evidence
+## Host checks
 
 The new117 host cases check typed launch arguments, eight flag combinations,
 BF16/FP32 input and output pairs, both namespaces, disabled identity, unchanged
@@ -146,11 +148,10 @@ In the isolated three-entry base swap, the52 public dtype/routing checks yield
 44 expected failures and8 retained training passes. These are host ABI evidence,
 not numerical kernel validation. All stable/layout kernel sources remain intact.
 
-Remaining native completion requires the full dtype/flag/shape and gate endpoint
-grids, repeatability and training checks, decode block dimensions, cross-bd
-comparison of the entire grid, and three same-card old/new/old timing rounds
-with Torch NPU baseline,
-and a verified fresh restore of the final evidence archive.
+Remaining native completion requires the higher decode block dimensions,
+resolution and completion of special-value grids, their full cross-bd comparison,
+and a verified fresh restore of the final source and evidence archive. Completed
+regression, repeatability and timing stages are recorded separately below.
 
 
 ## First complete native workload
@@ -180,7 +181,7 @@ cases and per-file counts in `evidence/host/summary.json`. The declared14 bounde
 reference cases pass; sim and pipesim each pass14 only after the full hardware
 run, with pipe evidence retaining balance, hazard and deadlock fields.
 
-## Native endpoint investigation (not yet qualified)
+## Native endpoint investigation and remaining failures
 
 Two leaf runs each execute100 cases in both chunk/decode namespaces at bd4.
 All120 ordinary finite cases meet the frozen budgets; all200 input hashes and
@@ -198,8 +199,9 @@ the candidate returns−1.3474764119981045e−38; CPU FP32 returns
 candidate result is normal FP32. This requires a located operation comparison
 and explicit endpoint review, not a wider tolerance, new gate, or replacement
 of the CPU reference. Large finite norm rows show the already declared fixed
-reduction rounding difference; exponent overflow masks agree with both actual
-predecessors. Full range qualification remains open.
+reduction rounding difference. Exponent overflow masks agree with both actual
+predecessors in this initial population only; the expanded cross-products below
+expose disagreements. Full range qualification remains open.
 
 The retained allocator notice comes from the package-reported
 [AddPadSize owner source](https://github.com/Ascend/pytorch/blob/fa0f83fe49d309dcbc31e264e9e6ed6e5dc49d2d/torch_npu/csrc/core/npu/NPUCachingAllocator.cpp#L179).
@@ -217,4 +219,137 @@ CPU1.1253516873921399e−7. The observed softplus values match the cancellation
 boundary of `ln(1+exp(x))`; this is an inference from operation results, not
 a claim about unavailable vendor implementation source. The candidate's
 compensated branch retains the independent CPU/FP64 value within the frozen
-ordinary threshold-case budgets. Endpoint owner review remains pending.
+ordinary threshold-case budgets. The owner subsequently clarified that native
+underflow/saturation behavior is recorded explicitly, with no CPU-subnormal
+bitwise requirement. Ordinary budgets and domains remain fixed. The new
+cross-product conflicts below require further clarification.
+
+
+## Completed ordinary grids and regressions
+
+The ordinary public Cartesian grid covers C1/2/3, HV/H1/2/4/8, all eight flags
+and independent supported input dtype combinations. Chunk has1620 cases per
+block dimension; bd1/2/3/4 all pass and every output, all nine caches and every
+preparation tensor has identical hashes across those runs. Decode has3240 cases
+per dimension, including BF16 and FP32 v. Retrieved bd1/2/4 runs all pass and
+are bitwise identical. Additional high-bd runs are not claimed here until their
+complete receipts are retrieved and compared. Decode uses legal16-token public
+calls and carries the returned FP32 state through each C*64-token sequence.
+Every process registers all50 vendors, including all nine backward entries,
+before executing a custom kernel. These counts exclude failed boundary cases.
+
+`native/regression-v1-bd{1,2,3,4}` records10 backward cases per dimension:
+the five original cases, T1024 with H32/HV32 and H16/HV32, and gate spans
+0/100.8/105. All retain the existing six gradient budgets. The six gate tests
+at0/100.8/105/155/105.001/155.001 preserve the public forward155 and cached
+backward105 boundaries. Thirty training combinations per dimension include
+both raw dtypes, all flags, and A_log-only / bias-only gradients. Retained host
+training outputs and gradients are bitwise identical to the predecessor. This
+verifies preserved training semantics, not custom preprocessing backward support;
+that noncompliant host graph remains assigned to BF-08.
+
+`native/repeat-v1-bd4` is a fresh D-PM-44 population qualification:
+B2/H2/HV4/C3/span46/seed2026,12 predecessor calls and12 candidate calls with
+the original poison pattern and no inserted internal barriers. All eight
+returned tensors have one hash across24 calls, with dh0 relative-L2
+0.0023368734400719404 against both CPU FP32 references. Eight separately
+captured scan inputs match, and12 direct scan replays are identical. This is
+limited to the measured device/input window; the inherited scan defect is not
+claimed fixed.
+
+The third leaf series runs200 cases at each of bd1/2/3/4. Its120 ordinary
+numerical cases and80 qualified range cases pass the clarified criteria.
+All100 input populations are byte-identical across the eight combinations of
+run and chunk/decode namespace. The expanded cross-products below are separate
+unresolved cases, so this leaf result does not qualify the entire input range.
+
+## Expanded range failures retained for review
+
+The48 actual cross-products in `native/endpoint-v2-bd4/downstream.json` retain
+candidate, predecessor NPU, CPU FP32 and FP64 gate values, plus actual NPU
+exp(g). Explicit IEEE bits distinguish JSON null values representing NaN/Inf.
+Representative downstream observations are:
+
+| A_log | u | Candidate NPU exp(g) | Predecessor NPU exp(g) | Difference |
+|---:|---:|---:|---:|---:|
+| -0.2 | -87 | 1 | 1 | 0 ULP |
+| -0.2 | -16 | 0.9999999403953552 | 0.9999998807907104 | 1 ULP |
+| 2.7 | -16 | 0.9999983310699463 | 0.9999982118606567 | 2 ULP |
+| 80 | -87 | 0.9990885257720947 | 1 | 15292 ULP |
+| 80 | -20 | 0 | 1 | Different limiting decay |
+
+The last rows show why softplus cancellation cannot be called universally
+negligible. The public chunk span check rejects the very large processed-gate
+case; a leaf result does not override that existing gate.
+
+For A_log89/100 and u=-100/-90/-88, candidate and predecessor NPU produce
+NaN while CPU FP32 produces -Inf. For those A_log values and u=-87/-40/-20,
+candidate agrees with CPU FP32 (-Inf) while the predecessor NPU produces NaN.
+The independent FP64 gate remains finite. Matching both predecessor masks is
+impossible for these combinations. No production repair, reassociation,
+new input gate or accepted exception has been inferred from this discovery.
+
+Two public boundary failures are retained in `native/boundary-diagnosis`:
+
+- Chunk `nearzero_c2_g2_rbf16_vbf16_flags010`: q/k scaled by1e-20;
+  second chunk/head1 CPU FP32 o has magnitude at most approximately7.85e-44,
+  below BF16's smallest subnormal. Returned BF16 o is zero. Relative-L2 is1,
+  above0.05, although global o/state pass. The verifier accumulates norms in
+  FP64 to avoid FP32 underflow masking this failure; the golden is CPU FP32.
+- Decode `nearzero_c2_g1_rbf16_vbf16_flags110`: all enabled preparations meet
+  their frozen budgets, but final_state relative-L2 is0.0004308748 against the
+  predecessor-CPU-prepared golden, above the retained BF-06 limit1e-5. The
+  state is normal FP32, around1e-17. The located rerun uses actual-native-preparation inputs for both CPU
+  references: state relative-L2 is7.23693e-8 /3.96414e-8. Raw and directly
+  prepared public calls are bitwise identical. This locates the discrepancy
+  before the recurrence, at the preparation/composition comparison boundary.
+  The original1e-5 failure is retained; neither the limit nor its acceptance
+  reference has been changed. See `boundary-probe-v2-decode-bd1` alongside
+  the original failures.
+
+These are open acceptance failures, reported in
+[the located boundary RISK](https://github.com/ddddwee1/ascend_fla_dev/issues/106#issuecomment-5750600450).
+They are not counted as passing grid cases.
+
+## Synchronized performance: slower than the predecessor
+
+`native/perf-v1-bd4` records three same-device predecessor/candidate/predecessor
+rounds, with synchronization, one warmup per phase and raw preparation included.
+The selected medians are end-to-end wall times; compilation is excluded.
+
+| T | Public path | Predecessor ms | Candidate ms | Candidate / predecessor |
+|---:|---|---:|---:|---:|
+| 1024 | plain | 6.054806 | 6.792983 | 1.121916 |
+| 1024 | cached | 11.158003 | 11.889210 | 1.065532 |
+| 4096 | plain | 24.696192 | 27.605673 | 1.117811 |
+| 4096 | cached | 45.938957 | 48.759425 | 1.061396 |
+
+All flags add four custom preparation launches: plain11 to15, cached19 to23.
+The clean measurements show approximately12% slower plain forward and6% slower
+cached forward. There is no speed acceptance threshold, and no speedup over
+the predecessor is claimed.
+
+Actual Torch NPU vectorized baselines take9.835303/30.416977ms at
+T1024/T4096, versus candidate6.841035/27.622619ms in those corresponding
+sandwiches. Actual Torch NPU recurrent baselines take122.81136/492.48823ms,
+versus candidate7.380494/27.878302ms. Every measured output passes its comparison
+and inputs remain unchanged. Separate instrumented device-event and host-dispatch
+records are diagnostic attribution; they are not pure kernel time and are not
+added together to explain clean wall time.
+
+## Lossless text evidence and restoration
+
+`evidence_archive.py` packs each completed grid run into bounded JSONL text
+shards. Each line contains a complete original receipt, including its own raw
+environment; no numerical, dispatch or provenance fields are dropped. The
+adjacent manifest maps original filenames to shard/line, byte length and SHA256.
+Verification reconstructs the original pretty-printed JSON bytes and checks
+those hashes. Fresh restoration additionally compares all restored files to
+all originals. No archived source is executed by this utility.
+
+```bash
+python evidence_archive.py verify evidence/native/grid-v2/grid-v2-chunk-bd1 --restore tmp/restored-grid
+```
+
+A completed evidence-only round trip does not substitute for the still-pending
+final delivery archive and source restoration, or any remaining hardware gate.
