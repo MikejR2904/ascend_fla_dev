@@ -1913,6 +1913,10 @@
         {
           "at": "2026-09-20T11:32",
           "summary": "PM 抽样复跑（补上一条 REVIEW 里说的「pipesim 抽样结果出来再补」）：在 NPU-free 环境用 PR 头 63606545 的最终源码、ascriptor pin 90cfcdc 跑 `run.py check --launcher pipesim --case grid_c2_hv4_bd1`（HV=4 / C=2，正是撤 bar_all() 时 pipesim 报 temporal flag hazard 的形状），passed: true、1 个 case——与申领人「恢复 bar_all() 后 pipesim 通过」一致；单个 case 约 5 分钟。这只是 pipesim（模型）层面的独立确认，不构成真机结论；REVIEW rework 的两条阻塞（脱敏破坏原始回执、回执不带源码身份）不变。"
+        },
+        {
+          "at": "2026-09-20T11:51",
+          "summary": "STATUS（11:43Z，自述，回应 PM REVIEW rework）：两条阻塞项都认。根因：脱敏脚本里有一条 re.sub(r\"\\b\\d{10,}\\b\", \"<serial>\", text)（本意挡序列号），把 0.0074564833344733525 这种普通小数的数字串也换掉了，毁的恰好是最该留的数；且自己的检查只查「有没有泄漏」、没查「JSON 还能不能解析、数值有没有被改坏」（检查只朝一个方向做）。修法 1（脱敏）：重写为只替换路径形状的串、账号名、主机名、芯片 UUID，删掉长数字串启发式（本任务不再采集 npu-smi 的 board 面板）；新增两条验收检查写进 evidence/drivers/——每个 .json 必须能 json.load 回来、遍历解析后的对象 relative_l2_error / max_abs_error / rtol / atol / max_relative_l2 / 各 *_sha 字段里不得出现占位符，任一条不过不出包。修法 2（源码身份）：按 PM 建议的 (a)——26 个 case 在最终源码上全部复跑（四张空闲卡上跑中），每个 case 运行前后各记一次 source_id.json（九个 kernel + unit / reference / contract / _unit_runner / run 的逐文件 sha256、逐文件「去注释代码 sha256」、合并 digest unit_source_sha256），回执带 unit_source_sha256_before_run 与 ..._after_run，environment.repo_sha 也重新取（rebase 后的提交）；reference 与 sim 已在最终源码上重跑完各 26/26，pipesim 在跑；逐文件 code_sha256 在 evidence/unit_source.json 里可自己复算。修法 3（缺的项）：bar_all() 的 pipesim A/B 原文已补，一次一个变量（同源码、同 case grid_c2_hv4_bd1、只差那一处 bar_all()）：ab_bar_all_without.log 是报错原文「temporal flag hazard on core0/cube/event ev_m_fix_ready_1: sync.set #191 (loc finalize_pair.py:82:12) completes at cycle 19120 with 2 token(s) still outstanding (capacity 2)」，ab_bar_all_with.log 是恢复后的通过回执；复跑 case 的标注由「全部同一份源码、同一批次」取代。补完后同一个头继续推，DONE 里写明每份证据替代哪一份。PM 处置：态度与做法都对（含「检查只朝一个方向做」的自我诊断），无需回复；等新 DONE 后从新回执复算六项梯度相对 L2、核每份回执的 unit_source_sha256 与 PR 头源码一致、核 json 可解析与无占位符，并自己再抽样跑 reference / pipesim。"
         }
       ],
       "result": null
