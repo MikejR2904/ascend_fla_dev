@@ -11,6 +11,9 @@
 
 ### 正在飞的任务（现在没有；A5K-02、PK-02、PK-03 都已于 2026-09-19 合入）
 
+> **2026-09-20T13:44Z 更新：用户回「改」——AGENTS.md §5 的两处过时措辞已改（D-PM-47）。**
+> - 改了：`layout_device="auto"` 自动探测绕路那句（FMT-02 后已删）、⚠️ 段里「已加绕行 `_scan_states(on_cpu=)` / `chunk_kda_bwd(layout_device=)`」那句（同样失效，现写明缺 ascend950 算子包的机器上默认门控检查、`_scan_states`、`dw` 取负、`log2(eg)` 分支会失败，纯前向在 `check_gate_range=False` 时可用）。不改任何规则；`CLAUDE.md` 是软链，只改 AGENTS.md 一处。
+>
 > **2026-09-20T13:27Z 更新：用户回复「scan fused 需要定位。agent.md 修改是啥」（D-PM-46）——scan_fused 立项 A5K-03（只定位）；AGENTS.md 的改动已把新旧文对照给用户、等确认。**
 > - **A5K-03**（`docs/pm/tasks/A5K-03.md`，P0，open，24h 首轮）：只定位 `kda_bwd/kernels/scan_fused.py` 的 dh0 不确定性，**不批准 kernel 批次、不改 scan**；方法 = 机制 + 可证伪预测 + 干预实验（实验性派生单元 `kda_scan_diag`，不接公开调度，一次一个变量，N≥50 重放，负对照，跨卡 / 跨 CANN 对照），回答四问（kernel 竞态还是环境 / 卡？源码行与事件？预测被干预证实？影响面与「为什么只有 dh0」）；写集 = `kda_scan_diag/**` + 研究文档 + 诊断测试。修复要在定位后由用户另批。**排队**：因「一个 agent 一次一个任务」排在在飞任务之后，建议 BF-07（阶段 1）CLOSE 后由发现者 session `01a0b7ce-…` 接手、BF-08 顺延；用户若要插队请说。gaps `kda-bwd-scan-dh0-nondeterministic` 已注明。
 > - **AGENTS.md（未改，等用户确认）**：只是 §5 两处过时措辞——`layout_device="auto"` 自动探测绕路（FMT-02 后已删）、以及「已加绕行 `_scan_states(on_cpu=)` / `chunk_kda_bwd(layout_device=)`」（同样失效）；不改任何规则或纪律，新旧文对照在给用户的回复里。

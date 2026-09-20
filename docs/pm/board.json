@@ -314,6 +314,13 @@
       "by": "user",
       "decision": "上游 kda_bwd scan_fused 的 dh0 不确定性要定位（只定位、不修）。（用户原话：「scan fused 需要定位。」，同一条消息还问「agent.md 修改是啥」——见下。）",
       "risk": "PM 的读法（用户可纠正）：(1) 这是对 PM 一直挂着的问题「要先定位再决定进不进 kernel 批次」的回答：批准立项一个**只做定位**的任务（A5K-03），不批准 kernel 批次、不批准任何 scan 的修改——修复仍要在定位出精确机制之后由用户另批（AGENTS §6.5：先定位到确切原因、不是症状规律）。(2) 任务范围：机制 + 可证伪预测 + 干预实验；写集限于新的实验性派生单元 kda_scan_diag / 研究文档 / 诊断测试，不改上游只读 scan_fused、不改 kda_bwd_stable / kda_layout、不接公开调度；结论可能是「kernel 竞态」也可能是「环境 / 卡问题」，两种都不宣称修复。(3) 排队：优先级 P0（用户直接指令），因「一个 agent 一次一个任务」排在在飞任务之后——建议在 BF-07（阶段 1）CLOSE 后由发现者 session（01a0b7ce-…，有复现设备与证据）接手、BF-08 顺延；用户若要它插在别的位置请说。(4) 用户同一条消息里问的「agent.md 修改是啥」尚未批准——PM 已把新旧文对照给用户，用户确认前不改 AGENTS.md。"
+    },
+    {
+      "id": "D-PM-47",
+      "date": "2026-09-20",
+      "by": "user",
+      "decision": "同意修改 AGENTS.md §5 的两处过时措辞（用户原话：「改」，回应 PM 给出的新旧文对照）。",
+      "risk": "PM 的读法：(1) 只改 §5 的两处事实性措辞，不改任何规则或纪律——「layout_device=\"auto\" 会自动探测并绕路」改成 FMT-02 后的实际情况（布局 / dtype 转换 / 零填充在自编译 kernel 里，layout_device 只接 auto / npu、cpu 显式报错，「先 D2H 再做」只对测试 / 诊断脚本里的 host 代码有效）；⚠️ 一段里「已加绕行」改成「已随 FMT-02 删除」并写明缺 ascend950 算子包的机器上哪些存量 host 算术会失败、纯前向在 check_gate_range=False 时可用。(2) CLAUDE.md 是指向 AGENTS.md 的软链，所以只改 AGENTS.md 一处；PM 工具测试 86 个仍全过。(3) D-PM-45 (3) 里「等用户同意再改」的那一项由此关闭。"
     }
   ],
   "gated_epics": [

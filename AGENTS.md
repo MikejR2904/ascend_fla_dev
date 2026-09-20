@@ -188,7 +188,9 @@ CANN 9.1.0 的机器**只有** 910 系列。这是算子包安装差异，不是
 
 **实践后果**（仅在缺 `ascend950` 的机器上）：取值、比较、layout 重排一律**先 D2H
 再做**（`t.cpu().float()`，不是 `t.float().cpu()`）。造零张量在 CPU 上造再 H2D。
-`ops/kda/chunk.py` 的 `layout_device="auto"` 会自动探测并绕路。
+（2026-09-20 起）`ops/kda` 的布局 / dtype 转换 / 零填充已在自编译 kernel 里，不再依赖内置算子；
+`layout_device` 只接受 `auto` / `npu`（等价），`cpu` 显式报错（D-PM-37 不许 host 侧 CPU 布局转换）。
+上面「先 D2H 再做」只对测试 / 诊断脚本里的 host 代码有效，不再是 ops 层的绕行办法。
 
 **还有一条更隐蔽的：跨步视图的 D2H 也不可用**，它要走 NPU 侧的 `Slice`。
 
@@ -212,9 +214,13 @@ dev.cpu()[:, 63::64]   # ✅ 整块 D2H 是纯 memcpy，切和 contiguous 都在
 > `g_cumsum` / `h` / `v_new` 当前在 host 侧用 torch 补（`fwd-caches-not-emitted`），
 > 那一段是 Cast / bmm / stack —— 缺算子包的机器上全不可用，报
 > `copy_d2d_baseformat_opapi … 561103` + `Cast ADD_TO_LAUNCHER_LIST_AICORE failed`。
-> 已加绕行（`_scan_states(on_cpu=)`、`chunk_kda_bwd(layout_device=)`），但这是**可用性**
-> 补丁不是性能补丁。**层级验证在这种机器上做不了**（投影/卷积/softplus/RMSNorm 全是
-> torch_npu 算子），要换有 `ascend950` 算子包的机器。
+> 这些 CPU 绕行（`_scan_states(on_cpu=)`、`chunk_kda_bwd(layout_device=)`）已随 FMT-02
+> （2026-09-20，D-PM-37）删除：缺 `ascend950` 算子包的机器上，默认的门控跨度检查
+> （device 上的 cumsum）、带缓存前向与反向里的 `_scan_states`（Cast / matmul）、`dw`
+> 取负、`log2(eg)` 分支这些存量 host 算术（D-PM-42 登记的例外）会因缺内置算子而失败，
+> 训练路径在这类机器上不可用；纯前向在 `check_gate_range=False` 时可用。要等 BF-07 /
+> kernel 批次把它们搬进 kernel 才消除。**层级验证在这种机器上做不了**（投影/卷积/softplus/RMSNorm
+> 全是 torch_npu 算子），要换有 `ascend950` 算子包的机器。
 >
 > 一般教训：**「我们的计算都在自编译 kernel 里」这种论断，要按调用链逐段核对，**
 > 不能从"主算子是自编译的"推出"整条链不依赖内置算子"。
