@@ -1,0 +1,1137 @@
+{
+  "scope": "Selected BF-01 A5 CCE artifact and frozen complete-64-token-chunk ABI only; warnings remain visible in unfiltered build logs.",
+  "library_pin": "90cfcdc720bbcd66e8bd4361c4dd4fbc1a2a57b5",
+  "categories": [
+    {
+      "category": "CCE vector-loop condition operand types",
+      "locations": [
+        {
+          "entry": "gdn_bf01_scores",
+          "block_dim": 1,
+          "file": "project/op_kernel/scores_vf.h",
+          "line": 30,
+          "sha256": "1c76f4cd5de9ede83737375083b044f4be397c31e63e3302180f7c413cca11f4",
+          "snippet": [
+            {
+              "line": 28,
+              "text": "            vsts((vector_u32&)z, (__ubuf__ uint32_t*)view_1, 0, NORM_B32, pset_b8(PAT_ALL));  // #63"
+            },
+            {
+              "line": 29,
+              "text": "        }"
+            },
+            {
+              "line": 30,
+              "text": "        for (uint16_t i_1 = 0; i_1 < count; i_1 += 1) {  // #64"
+            },
+            {
+              "line": 31,
+              "text": "            const int32_t add_2 = i_1 + 1;  // #65"
+            },
+            {
+              "line": 32,
+              "text": "            __ubuf__ float* view_2 = (__ubuf__ float*)((__ubuf__ uint8_t*)q + (((i_1 * 128) * 4)));  // #67"
+            }
+          ]
+        },
+        {
+          "entry": "gdn_bf01_scores",
+          "block_dim": 1,
+          "file": "project/op_kernel/scores_vf.h",
+          "line": 41,
+          "sha256": "1c76f4cd5de9ede83737375083b044f4be397c31e63e3302180f7c413cca11f4",
+          "snippet": [
+            {
+              "line": 39,
+              "text": "            vlds((vector_u32&)br_0, (__ubuf__ uint32_t*)view_4, 0, NORM);  // #78"
+            },
+            {
+              "line": 40,
+              "text": "            vlds((vector_u32&)br_1, (__ubuf__ uint32_t*)view_4, 64, NORM);  // #79"
+            },
+            {
+              "line": 41,
+              "text": "            for (uint16_t j = 0; j < add_2; j += 1) {  // #81"
+            },
+            {
+              "line": 42,
+              "text": "                __ubuf__ float* view_5 = (__ubuf__ float*)((__ubuf__ uint8_t*)k + (((j * 128) * 4)));  // #84"
+            },
+            {
+              "line": 43,
+              "text": "                vlds((vector_u32&)kr_0, (__ubuf__ uint32_t*)view_5, 0, NORM);  // #85"
+            }
+          ]
+        },
+        {
+          "entry": "gdn_bf01_wy",
+          "block_dim": 1,
+          "file": "project/op_kernel/wy_vf.h",
+          "line": 38,
+          "sha256": "350fa06d332f10904cc34e9e13fcf9aabb52fd3d5090514f3461890c5921af8e",
+          "snippet": [
+            {
+              "line": 36,
+              "text": "        }"
+            },
+            {
+              "line": 37,
+              "text": "        mem_bar(VST_VLD);  // #71"
+            },
+            {
+              "line": 38,
+              "text": "        for (uint16_t i_1 = 0; i_1 < count; i_1 += 2) {  // #72"
+            },
+            {
+              "line": 39,
+              "text": "            const int32_t add_2 = i_1 + 1;  // #73"
+            },
+            {
+              "line": 40,
+              "text": "            __ubuf__ float* view_2 = (__ubuf__ float*)((__ubuf__ uint8_t*)v + (((i_1 * 128) * 4)));  // #75"
+            }
+          ]
+        },
+        {
+          "entry": "gdn_bf01_scan",
+          "block_dim": 1,
+          "file": "project/op_kernel/scan_vf.h",
+          "line": 28,
+          "sha256": "e7444ec5ab74d5693bf05f01f5e417b3c34e3623d91f50583554ea43ebeb7599",
+          "snippet": [
+            {
+              "line": 26,
+              "text": "        }"
+            },
+            {
+              "line": 27,
+              "text": "        mem_bar(VST_VLD);  // #68"
+            },
+            {
+              "line": 28,
+              "text": "        for (uint16_t i_1 = 0; i_1 < count; i_1 += 1) {  // #69"
+            },
+            {
+              "line": 29,
+              "text": "            __ubuf__ float* view_1 = (__ubuf__ float*)((__ubuf__ uint8_t*)u + (((i_1 * 128) * 4)));  // #72"
+            },
+            {
+              "line": 30,
+              "text": "            vlds((vector_u32&)acc_0, (__ubuf__ uint32_t*)view_1, 0, NORM);  // #73"
+            }
+          ]
+        },
+        {
+          "entry": "gdn_bf01_scan",
+          "block_dim": 1,
+          "file": "project/op_kernel/scan_vf.h",
+          "line": 51,
+          "sha256": "e7444ec5ab74d5693bf05f01f5e417b3c34e3623d91f50583554ea43ebeb7599",
+          "snippet": [
+            {
+              "line": 49,
+              "text": "        vlds((vector_u32&)acc_0, (__ubuf__ uint32_t*)view_5, 0, NORM);  // #98"
+            },
+            {
+              "line": 50,
+              "text": "        vlds((vector_u32&)acc_1, (__ubuf__ uint32_t*)view_5, 64, NORM);  // #99"
+            },
+            {
+              "line": 51,
+              "text": "        for (uint16_t i_2 = 0; i_2 < count; i_2 += 1) {  // #100"
+            },
+            {
+              "line": 52,
+              "text": "            __ubuf__ float* view_6 = (__ubuf__ float*)((__ubuf__ uint8_t*)g + (((i_2 * 128) * 4)));  // #103"
+            },
+            {
+              "line": 53,
+              "text": "            vlds((vector_u32&)row_0, (__ubuf__ uint32_t*)view_6, 0, NORM);  // #104"
+            }
+          ]
+        },
+        {
+          "entry": "gdn_bf01_scan",
+          "block_dim": 1,
+          "file": "project/op_kernel/scan_vf.h",
+          "line": 78,
+          "sha256": "e7444ec5ab74d5693bf05f01f5e417b3c34e3623d91f50583554ea43ebeb7599",
+          "snippet": [
+            {
+              "line": 76,
+              "text": "            vmul(row_0, row_0, decay, pset_b8(PAT_ALL), MODE_ZEROING);  // #134"
+            },
+            {
+              "line": 77,
+              "text": "            vmul(row_1, row_1, decay, pset_b8(PAT_ALL), MODE_ZEROING);  // #135"
+            },
+            {
+              "line": 78,
+              "text": "            for (uint16_t i_3 = 0; i_3 < count; i_3 += 1) {  // #136"
+            },
+            {
+              "line": 79,
+              "text": "                __ubuf__ float* view_11 = (__ubuf__ float*)((__ubuf__ uint8_t*)k + ((((i_3 * 128) + d_1) * 4)));  // #141"
+            },
+            {
+              "line": 80,
+              "text": "                vlds((vector_u32&)weight, (__ubuf__ uint32_t*)view_11, 0, BRC_B32);  // #142"
+            }
+          ]
+        },
+        {
+          "entry": "gdn_bf01_output_f32",
+          "block_dim": 1,
+          "file": "project/op_kernel/output_vf.h",
+          "line": 14,
+          "sha256": "a8100d36fe5b1e87c250ff83c88e5c32449d382795d211834ec4b2b7e5dafc7c",
+          "snippet": [
+            {
+              "line": 12,
+              "text": "        vector_f32 row_1;  // #45"
+            },
+            {
+              "line": 13,
+              "text": "        vector_f32 weight;  // #46"
+            },
+            {
+              "line": 14,
+              "text": "        for (uint16_t i = 0; i < count; i += 1) {  // #47"
+            },
+            {
+              "line": 15,
+              "text": "            __ubuf__ float* view = (__ubuf__ float*)((__ubuf__ uint8_t*)q + (((i * 128) * 4)));  // #50"
+            },
+            {
+              "line": 16,
+              "text": "            vlds((vector_u32&)acc_0, (__ubuf__ uint32_t*)view, 0, NORM);  // #51"
+            }
+          ]
+        },
+        {
+          "entry": "gdn_bf01_output_f32",
+          "block_dim": 1,
+          "file": "project/op_kernel/output_vf.h",
+          "line": 30,
+          "sha256": "a8100d36fe5b1e87c250ff83c88e5c32449d382795d211834ec4b2b7e5dafc7c",
+          "snippet": [
+            {
+              "line": 28,
+              "text": "        }"
+            },
+            {
+              "line": 29,
+              "text": "        mem_bar(VST_VLD);  // #67"
+            },
+            {
+              "line": 30,
+              "text": "        for (uint16_t i_1 = 0; i_1 < count; i_1 += 1) {  // #68"
+            },
+            {
+              "line": 31,
+              "text": "            vbr(acc_0, (float)(0.0f));  // #69"
+            },
+            {
+              "line": 32,
+              "text": "            vbr(acc_1, (float)(0.0f));  // #70"
+            }
+          ]
+        },
+        {
+          "entry": "gdn_bf01_output_f32",
+          "block_dim": 1,
+          "file": "project/op_kernel/output_vf.h",
+          "line": 45,
+          "sha256": "a8100d36fe5b1e87c250ff83c88e5c32449d382795d211834ec4b2b7e5dafc7c",
+          "snippet": [
+            {
+              "line": 43,
+              "text": "            }"
+            },
+            {
+              "line": 44,
+              "text": "            const int32_t add_6 = i_1 + 1;  // #87"
+            },
+            {
+              "line": 45,
+              "text": "            for (uint16_t j = 0; j < add_6; j += 1) {  // #88"
+            },
+            {
+              "line": 46,
+              "text": "                __ubuf__ float* view_5 = (__ubuf__ float*)((__ubuf__ uint8_t*)score + ((((i_1 * 64) + j) * 4)));  // #93"
+            },
+            {
+              "line": 47,
+              "text": "                vlds((vector_u32&)weight, (__ubuf__ uint32_t*)view_5, 0, BRC_B32);  // #94"
+            }
+          ]
+        },
+        {
+          "entry": "gdn_bf01_output_bf16",
+          "block_dim": 1,
+          "file": "project/op_kernel/output_vf.h",
+          "line": 14,
+          "sha256": "926860557033667cb9953020432c255f22c92e2a39c68710c61538d385a6dc5a",
+          "snippet": [
+            {
+              "line": 12,
+              "text": "        vector_f32 row_1;  // #45"
+            },
+            {
+              "line": 13,
+              "text": "        vector_f32 weight;  // #46"
+            },
+            {
+              "line": 14,
+              "text": "        for (uint16_t i = 0; i < count; i += 1) {  // #47"
+            },
+            {
+              "line": 15,
+              "text": "            __ubuf__ float* view = (__ubuf__ float*)((__ubuf__ uint8_t*)q + (((i * 128) * 4)));  // #50"
+            },
+            {
+              "line": 16,
+              "text": "            vlds((vector_u32&)acc_0, (__ubuf__ uint32_t*)view, 0, NORM);  // #51"
+            }
+          ]
+        },
+        {
+          "entry": "gdn_bf01_output_bf16",
+          "block_dim": 1,
+          "file": "project/op_kernel/output_vf.h",
+          "line": 30,
+          "sha256": "926860557033667cb9953020432c255f22c92e2a39c68710c61538d385a6dc5a",
+          "snippet": [
+            {
+              "line": 28,
+              "text": "        }"
+            },
+            {
+              "line": 29,
+              "text": "        mem_bar(VST_VLD);  // #67"
+            },
+            {
+              "line": 30,
+              "text": "        for (uint16_t i_1 = 0; i_1 < count; i_1 += 1) {  // #68"
+            },
+            {
+              "line": 31,
+              "text": "            vbr(acc_0, (float)(0.0f));  // #69"
+            },
+            {
+              "line": 32,
+              "text": "            vbr(acc_1, (float)(0.0f));  // #70"
+            }
+          ]
+        },
+        {
+          "entry": "gdn_bf01_output_bf16",
+          "block_dim": 1,
+          "file": "project/op_kernel/output_vf.h",
+          "line": 45,
+          "sha256": "926860557033667cb9953020432c255f22c92e2a39c68710c61538d385a6dc5a",
+          "snippet": [
+            {
+              "line": 43,
+              "text": "            }"
+            },
+            {
+              "line": 44,
+              "text": "            const int32_t add_6 = i_1 + 1;  // #87"
+            },
+            {
+              "line": 45,
+              "text": "            for (uint16_t j = 0; j < add_6; j += 1) {  // #88"
+            },
+            {
+              "line": 46,
+              "text": "                __ubuf__ float* view_5 = (__ubuf__ float*)((__ubuf__ uint8_t*)score + ((((i_1 * 64) + j) * 4)));  // #93"
+            },
+            {
+              "line": 47,
+              "text": "                vlds((vector_u32&)weight, (__ubuf__ uint32_t*)view_5, 0, BRC_B32);  // #94"
+            }
+          ]
+        },
+        {
+          "entry": "gdn_bf01_scores",
+          "block_dim": 2,
+          "file": "project/op_kernel/scores_vf.h",
+          "line": 30,
+          "sha256": "1c76f4cd5de9ede83737375083b044f4be397c31e63e3302180f7c413cca11f4",
+          "snippet": [
+            {
+              "line": 28,
+              "text": "            vsts((vector_u32&)z, (__ubuf__ uint32_t*)view_1, 0, NORM_B32, pset_b8(PAT_ALL));  // #63"
+            },
+            {
+              "line": 29,
+              "text": "        }"
+            },
+            {
+              "line": 30,
+              "text": "        for (uint16_t i_1 = 0; i_1 < count; i_1 += 1) {  // #64"
+            },
+            {
+              "line": 31,
+              "text": "            const int32_t add_2 = i_1 + 1;  // #65"
+            },
+            {
+              "line": 32,
+              "text": "            __ubuf__ float* view_2 = (__ubuf__ float*)((__ubuf__ uint8_t*)q + (((i_1 * 128) * 4)));  // #67"
+            }
+          ]
+        },
+        {
+          "entry": "gdn_bf01_scores",
+          "block_dim": 2,
+          "file": "project/op_kernel/scores_vf.h",
+          "line": 41,
+          "sha256": "1c76f4cd5de9ede83737375083b044f4be397c31e63e3302180f7c413cca11f4",
+          "snippet": [
+            {
+              "line": 39,
+              "text": "            vlds((vector_u32&)br_0, (__ubuf__ uint32_t*)view_4, 0, NORM);  // #78"
+            },
+            {
+              "line": 40,
+              "text": "            vlds((vector_u32&)br_1, (__ubuf__ uint32_t*)view_4, 64, NORM);  // #79"
+            },
+            {
+              "line": 41,
+              "text": "            for (uint16_t j = 0; j < add_2; j += 1) {  // #81"
+            },
+            {
+              "line": 42,
+              "text": "                __ubuf__ float* view_5 = (__ubuf__ float*)((__ubuf__ uint8_t*)k + (((j * 128) * 4)));  // #84"
+            },
+            {
+              "line": 43,
+              "text": "                vlds((vector_u32&)kr_0, (__ubuf__ uint32_t*)view_5, 0, NORM);  // #85"
+            }
+          ]
+        },
+        {
+          "entry": "gdn_bf01_wy",
+          "block_dim": 2,
+          "file": "project/op_kernel/wy_vf.h",
+          "line": 38,
+          "sha256": "350fa06d332f10904cc34e9e13fcf9aabb52fd3d5090514f3461890c5921af8e",
+          "snippet": [
+            {
+              "line": 36,
+              "text": "        }"
+            },
+            {
+              "line": 37,
+              "text": "        mem_bar(VST_VLD);  // #71"
+            },
+            {
+              "line": 38,
+              "text": "        for (uint16_t i_1 = 0; i_1 < count; i_1 += 2) {  // #72"
+            },
+            {
+              "line": 39,
+              "text": "            const int32_t add_2 = i_1 + 1;  // #73"
+            },
+            {
+              "line": 40,
+              "text": "            __ubuf__ float* view_2 = (__ubuf__ float*)((__ubuf__ uint8_t*)v + (((i_1 * 128) * 4)));  // #75"
+            }
+          ]
+        },
+        {
+          "entry": "gdn_bf01_scan",
+          "block_dim": 2,
+          "file": "project/op_kernel/scan_vf.h",
+          "line": 28,
+          "sha256": "e7444ec5ab74d5693bf05f01f5e417b3c34e3623d91f50583554ea43ebeb7599",
+          "snippet": [
+            {
+              "line": 26,
+              "text": "        }"
+            },
+            {
+              "line": 27,
+              "text": "        mem_bar(VST_VLD);  // #68"
+            },
+            {
+              "line": 28,
+              "text": "        for (uint16_t i_1 = 0; i_1 < count; i_1 += 1) {  // #69"
+            },
+            {
+              "line": 29,
+              "text": "            __ubuf__ float* view_1 = (__ubuf__ float*)((__ubuf__ uint8_t*)u + (((i_1 * 128) * 4)));  // #72"
+            },
+            {
+              "line": 30,
+              "text": "            vlds((vector_u32&)acc_0, (__ubuf__ uint32_t*)view_1, 0, NORM);  // #73"
+            }
+          ]
+        },
+        {
+          "entry": "gdn_bf01_scan",
+          "block_dim": 2,
+          "file": "project/op_kernel/scan_vf.h",
+          "line": 51,
+          "sha256": "e7444ec5ab74d5693bf05f01f5e417b3c34e3623d91f50583554ea43ebeb7599",
+          "snippet": [
+            {
+              "line": 49,
+              "text": "        vlds((vector_u32&)acc_0, (__ubuf__ uint32_t*)view_5, 0, NORM);  // #98"
+            },
+            {
+              "line": 50,
+              "text": "        vlds((vector_u32&)acc_1, (__ubuf__ uint32_t*)view_5, 64, NORM);  // #99"
+            },
+            {
+              "line": 51,
+              "text": "        for (uint16_t i_2 = 0; i_2 < count; i_2 += 1) {  // #100"
+            },
+            {
+              "line": 52,
+              "text": "            __ubuf__ float* view_6 = (__ubuf__ float*)((__ubuf__ uint8_t*)g + (((i_2 * 128) * 4)));  // #103"
+            },
+            {
+              "line": 53,
+              "text": "            vlds((vector_u32&)row_0, (__ubuf__ uint32_t*)view_6, 0, NORM);  // #104"
+            }
+          ]
+        },
+        {
+          "entry": "gdn_bf01_scan",
+          "block_dim": 2,
+          "file": "project/op_kernel/scan_vf.h",
+          "line": 78,
+          "sha256": "e7444ec5ab74d5693bf05f01f5e417b3c34e3623d91f50583554ea43ebeb7599",
+          "snippet": [
+            {
+              "line": 76,
+              "text": "            vmul(row_0, row_0, decay, pset_b8(PAT_ALL), MODE_ZEROING);  // #134"
+            },
+            {
+              "line": 77,
+              "text": "            vmul(row_1, row_1, decay, pset_b8(PAT_ALL), MODE_ZEROING);  // #135"
+            },
+            {
+              "line": 78,
+              "text": "            for (uint16_t i_3 = 0; i_3 < count; i_3 += 1) {  // #136"
+            },
+            {
+              "line": 79,
+              "text": "                __ubuf__ float* view_11 = (__ubuf__ float*)((__ubuf__ uint8_t*)k + ((((i_3 * 128) + d_1) * 4)));  // #141"
+            },
+            {
+              "line": 80,
+              "text": "                vlds((vector_u32&)weight, (__ubuf__ uint32_t*)view_11, 0, BRC_B32);  // #142"
+            }
+          ]
+        },
+        {
+          "entry": "gdn_bf01_output_f32",
+          "block_dim": 2,
+          "file": "project/op_kernel/output_vf.h",
+          "line": 14,
+          "sha256": "a8100d36fe5b1e87c250ff83c88e5c32449d382795d211834ec4b2b7e5dafc7c",
+          "snippet": [
+            {
+              "line": 12,
+              "text": "        vector_f32 row_1;  // #45"
+            },
+            {
+              "line": 13,
+              "text": "        vector_f32 weight;  // #46"
+            },
+            {
+              "line": 14,
+              "text": "        for (uint16_t i = 0; i < count; i += 1) {  // #47"
+            },
+            {
+              "line": 15,
+              "text": "            __ubuf__ float* view = (__ubuf__ float*)((__ubuf__ uint8_t*)q + (((i * 128) * 4)));  // #50"
+            },
+            {
+              "line": 16,
+              "text": "            vlds((vector_u32&)acc_0, (__ubuf__ uint32_t*)view, 0, NORM);  // #51"
+            }
+          ]
+        },
+        {
+          "entry": "gdn_bf01_output_f32",
+          "block_dim": 2,
+          "file": "project/op_kernel/output_vf.h",
+          "line": 30,
+          "sha256": "a8100d36fe5b1e87c250ff83c88e5c32449d382795d211834ec4b2b7e5dafc7c",
+          "snippet": [
+            {
+              "line": 28,
+              "text": "        }"
+            },
+            {
+              "line": 29,
+              "text": "        mem_bar(VST_VLD);  // #67"
+            },
+            {
+              "line": 30,
+              "text": "        for (uint16_t i_1 = 0; i_1 < count; i_1 += 1) {  // #68"
+            },
+            {
+              "line": 31,
+              "text": "            vbr(acc_0, (float)(0.0f));  // #69"
+            },
+            {
+              "line": 32,
+              "text": "            vbr(acc_1, (float)(0.0f));  // #70"
+            }
+          ]
+        },
+        {
+          "entry": "gdn_bf01_output_f32",
+          "block_dim": 2,
+          "file": "project/op_kernel/output_vf.h",
+          "line": 45,
+          "sha256": "a8100d36fe5b1e87c250ff83c88e5c32449d382795d211834ec4b2b7e5dafc7c",
+          "snippet": [
+            {
+              "line": 43,
+              "text": "            }"
+            },
+            {
+              "line": 44,
+              "text": "            const int32_t add_6 = i_1 + 1;  // #87"
+            },
+            {
+              "line": 45,
+              "text": "            for (uint16_t j = 0; j < add_6; j += 1) {  // #88"
+            },
+            {
+              "line": 46,
+              "text": "                __ubuf__ float* view_5 = (__ubuf__ float*)((__ubuf__ uint8_t*)score + ((((i_1 * 64) + j) * 4)));  // #93"
+            },
+            {
+              "line": 47,
+              "text": "                vlds((vector_u32&)weight, (__ubuf__ uint32_t*)view_5, 0, BRC_B32);  // #94"
+            }
+          ]
+        },
+        {
+          "entry": "gdn_bf01_output_bf16",
+          "block_dim": 2,
+          "file": "project/op_kernel/output_vf.h",
+          "line": 14,
+          "sha256": "926860557033667cb9953020432c255f22c92e2a39c68710c61538d385a6dc5a",
+          "snippet": [
+            {
+              "line": 12,
+              "text": "        vector_f32 row_1;  // #45"
+            },
+            {
+              "line": 13,
+              "text": "        vector_f32 weight;  // #46"
+            },
+            {
+              "line": 14,
+              "text": "        for (uint16_t i = 0; i < count; i += 1) {  // #47"
+            },
+            {
+              "line": 15,
+              "text": "            __ubuf__ float* view = (__ubuf__ float*)((__ubuf__ uint8_t*)q + (((i * 128) * 4)));  // #50"
+            },
+            {
+              "line": 16,
+              "text": "            vlds((vector_u32&)acc_0, (__ubuf__ uint32_t*)view, 0, NORM);  // #51"
+            }
+          ]
+        },
+        {
+          "entry": "gdn_bf01_output_bf16",
+          "block_dim": 2,
+          "file": "project/op_kernel/output_vf.h",
+          "line": 30,
+          "sha256": "926860557033667cb9953020432c255f22c92e2a39c68710c61538d385a6dc5a",
+          "snippet": [
+            {
+              "line": 28,
+              "text": "        }"
+            },
+            {
+              "line": 29,
+              "text": "        mem_bar(VST_VLD);  // #67"
+            },
+            {
+              "line": 30,
+              "text": "        for (uint16_t i_1 = 0; i_1 < count; i_1 += 1) {  // #68"
+            },
+            {
+              "line": 31,
+              "text": "            vbr(acc_0, (float)(0.0f));  // #69"
+            },
+            {
+              "line": 32,
+              "text": "            vbr(acc_1, (float)(0.0f));  // #70"
+            }
+          ]
+        },
+        {
+          "entry": "gdn_bf01_output_bf16",
+          "block_dim": 2,
+          "file": "project/op_kernel/output_vf.h",
+          "line": 45,
+          "sha256": "926860557033667cb9953020432c255f22c92e2a39c68710c61538d385a6dc5a",
+          "snippet": [
+            {
+              "line": 43,
+              "text": "            }"
+            },
+            {
+              "line": 44,
+              "text": "            const int32_t add_6 = i_1 + 1;  // #87"
+            },
+            {
+              "line": 45,
+              "text": "            for (uint16_t j = 0; j < add_6; j += 1) {  // #88"
+            },
+            {
+              "line": 46,
+              "text": "                __ubuf__ float* view_5 = (__ubuf__ float*)((__ubuf__ uint8_t*)score + ((((i_1 * 64) + j) * 4)));  // #93"
+            },
+            {
+              "line": 47,
+              "text": "                vlds((vector_u32&)weight, (__ubuf__ uint32_t*)view_5, 0, BRC_B32);  // #94"
+            }
+          ]
+        }
+      ],
+      "owner": "ascriptor/backends/cce/emit.py:1461-1476 emits uint16_t induction variables and preserves scalar upper-bound types.",
+      "cause": "The count and i+1 scalar bounds are int32_t while the induction variable is uint16_t. The four shared VF function ASTs are identical to the original FP32 helpers; changing BF16 storage does not change those scalar loops.",
+      "domain_proof": "For every accepted T=64*N and 0<=cc<N, count=min(64,T-64*cc)=64. Every i+1 bound is in [1,64]. Steps are positive 1 or 2; maximum induction value on exit is 64 (128 for fixed feature loops). No negative bound or uint16_t wraparound is reachable. WY paired rows access i=0,2,...,62 and i+1<=63.",
+      "diagnostic": "Bothbd full native grids passed poisoned composition and independent-leaf checks, exercising every possible bound value and every row.728 stage-array pairs are byte-identical acrossbd;112FP32 original/new public-array pairs match. Actual compiled header hashes match the local emitted source at all24warning sites. Models are not used to qualify vendor compiler lowering.",
+      "disposition": "Resolved for this frozen complete-chunk domain by source/bound proof and direct native coverage; warnings retained without suppression. No claim for arbitrary count/tail domains."
+    },
+    {
+      "category": "CMake unused CMAKE_CROSS_PLATFORM_COMPILER",
+      "cause": "Template passes an unused cross-platform variable to the native x86_64 host build.",
+      "disposition": "Native host g++ and CCE target builds completed and actual compiled entry execution passed; this setting does not select the kernel arithmetic or synchronization."
+    },
+    {
+      "category": "Vendor GE header deprecation notes",
+      "cause": "CANN external GE headers include ge_error_codes.h/ge_api_types.h with deprecation messages.",
+      "disposition": "Vendor header migration notice; not a kernel correctness/synchronization diagnostic. Kept visible; selected installed SDK is unchanged."
+    },
+    {
+      "category": "Vendor Python SyntaxWarning invalid escape sequence",
+      "source": {
+        "tokens": [
+          {
+            "kind": "STRING",
+            "start": [
+              154,
+              11
+            ],
+            "end": [
+              211,
+              3
+            ],
+            "prefix": "'''\n@tbe_register.register_operator(\"{}\", trans_bool_to_s8=False)\n@para_check.check_op_params({})\ndef {}({}, kernel_name"
+          }
+        ],
+        "file": "ascendc_impl_build.py",
+        "sha256": "ec9f69a86e2d3a9da17dedab13716fa1ffad80140ea88a74cbdb8ead035ec385",
+        "lines": [
+          {
+            "line": 173,
+            "text": "    options.append(\"-I\" + os.path.join(tikcpp_path, \"..\", \"..\", \"include\"))"
+          },
+          {
+            "line": 174,
+            "text": "    options.append(\"-I\" + os.path.join(tikcpp_path, \"..\", \"..\", \"include\", \"ascendc\"))"
+          },
+          {
+            "line": 175,
+            "text": "    options.append(\"-I\" + os.path.join(tikcpp_path, \"tikcfw\"))"
+          },
+          {
+            "line": 176,
+            "text": "    options.append(\"-I\" + os.path.join(tikcpp_path, \"tikcfw\", \"impl\"))"
+          },
+          {
+            "line": 177,
+            "text": "    options.append(\"-I\" + os.path.join(tikcpp_path, \"tikcfw\", \"interface\"))"
+          },
+          {
+            "line": 178,
+            "text": "    options.append(\"-I\" + os.path.join(tikcpp_path, \"..\", \"ascendc\", \"act\"))"
+          },
+          {
+            "line": 179,
+            "text": "    options.append(\"-I\" + os.path.join(PYF_PATH, \"..\", \"ascendc\", \"common\"))"
+          },
+          {
+            "line": 180,
+            "text": "    if \"impl_mode\" in locals():"
+          },
+          {
+            "line": 181,
+            "text": "        if impl_mode == \"high_performance\":"
+          },
+          {
+            "line": 182,
+            "text": "            options.append(\"-DHIGH_PERFORMANCE=1\")"
+          },
+          {
+            "line": 183,
+            "text": "        elif impl_mode == \"high_precision\":"
+          },
+          {
+            "line": 184,
+            "text": "            options.append(\"-DHIGH_PRECISION=1\")"
+          },
+          {
+            "line": 185,
+            "text": "        elif \"high_precision\" in impl_mode and \"high_performance\" in impl_mode:"
+          },
+          {
+            "line": 186,
+            "text": "            options.append(\"-DHIGH_PRECISION=1 -DHIGH_PERFORMANCE=1\")"
+          },
+          {
+            "line": 187,
+            "text": "    if get_current_build_config(\"enable_deterministic_mode\") == 1:"
+          },
+          {
+            "line": 188,
+            "text": "        options.append(\"-DDETERMINISTIC_MODE=1\")"
+          },
+          {
+            "line": 189,
+            "text": "    else:"
+          },
+          {
+            "line": 190,
+            "text": "        options.append(\"-DDETERMINISTIC_MODE=0\")"
+          },
+          {
+            "line": 191,
+            "text": "    ascendc_api_version_header_path = os.path.join(tikcpp_path, \"tikcfw/lib/ascendc_api_version.h\")"
+          },
+          {
+            "line": 192,
+            "text": "    if os.path.exists(ascendc_api_version_header_path):"
+          },
+          {
+            "line": 193,
+            "text": "        with open(ascendc_api_version_header_path, \"r\") as ascendc_api_version_file:"
+          },
+          {
+            "line": 194,
+            "text": "            ascendc_api_version = re.findall(r\"#define ASCENDC_API_VERSION (\\d+)\", ascendc_api_version_file.read())"
+          },
+          {
+            "line": 195,
+            "text": "            if ascendc_api_version:"
+          },
+          {
+            "line": 196,
+            "text": "                options.append(f\"-DASCENDC_API_VERSION={{ascendc_api_version[0]}}\")"
+          },
+          {
+            "line": 197,
+            "text": "    custom_compile_options = {},"
+          },
+          {
+            "line": 198,
+            "text": "    custom_all_compile_options = {},"
+          },
+          {
+            "line": 199,
+            "text": "    soc_version = get_soc_spec(\"SOC_VERSION\")"
+          },
+          {
+            "line": 200,
+            "text": "    soc_short = get_soc_spec(\"SHORT_SOC_VERSION\").lower()"
+          },
+          {
+            "line": 201,
+            "text": "    custom_compile_options_soc = get_shortsoc_compile_option(custom_compile_options[0], soc_short)"
+          },
+          {
+            "line": 202,
+            "text": "    custom_all_compile_options_soc = get_shortsoc_compile_option(custom_all_compile_options[0], soc_short)"
+          },
+          {
+            "line": 203,
+            "text": "    options += custom_all_compile_options_soc"
+          }
+        ]
+      },
+      "cause": "The apparent raw-regex line194 is text inside the non-raw outer template string spanning154-211. Python warns while parsing that outer string.",
+      "disposition": "Current generated template tokenization identifies the exact owner. The regex digit escape remains intact in the generated source and vendor compilation succeeds; no suppression or vendor file modification."
+    }
+  ],
+  "original_fp32_timing_baseline": {
+    "locations": [
+      {
+        "entry": "gdn_chunk_scores",
+        "block_dim": 2,
+        "file": "project/op_kernel/scores_vf.h",
+        "line": 30,
+        "sha256": "1c76f4cd5de9ede83737375083b044f4be397c31e63e3302180f7c413cca11f4",
+        "snippet": [
+          {
+            "line": 28,
+            "text": "            vsts((vector_u32&)z, (__ubuf__ uint32_t*)view_1, 0, NORM_B32, pset_b8(PAT_ALL));  // #63"
+          },
+          {
+            "line": 29,
+            "text": "        }"
+          },
+          {
+            "line": 30,
+            "text": "        for (uint16_t i_1 = 0; i_1 < count; i_1 += 1) {  // #64"
+          },
+          {
+            "line": 31,
+            "text": "            const int32_t add_2 = i_1 + 1;  // #65"
+          },
+          {
+            "line": 32,
+            "text": "            __ubuf__ float* view_2 = (__ubuf__ float*)((__ubuf__ uint8_t*)q + (((i_1 * 128) * 4)));  // #67"
+          }
+        ]
+      },
+      {
+        "entry": "gdn_chunk_scores",
+        "block_dim": 2,
+        "file": "project/op_kernel/scores_vf.h",
+        "line": 41,
+        "sha256": "1c76f4cd5de9ede83737375083b044f4be397c31e63e3302180f7c413cca11f4",
+        "snippet": [
+          {
+            "line": 39,
+            "text": "            vlds((vector_u32&)br_0, (__ubuf__ uint32_t*)view_4, 0, NORM);  // #78"
+          },
+          {
+            "line": 40,
+            "text": "            vlds((vector_u32&)br_1, (__ubuf__ uint32_t*)view_4, 64, NORM);  // #79"
+          },
+          {
+            "line": 41,
+            "text": "            for (uint16_t j = 0; j < add_2; j += 1) {  // #81"
+          },
+          {
+            "line": 42,
+            "text": "                __ubuf__ float* view_5 = (__ubuf__ float*)((__ubuf__ uint8_t*)k + (((j * 128) * 4)));  // #84"
+          },
+          {
+            "line": 43,
+            "text": "                vlds((vector_u32&)kr_0, (__ubuf__ uint32_t*)view_5, 0, NORM);  // #85"
+          }
+        ]
+      },
+      {
+        "entry": "gdn_chunk_wy",
+        "block_dim": 2,
+        "file": "project/op_kernel/wy_vf.h",
+        "line": 38,
+        "sha256": "350fa06d332f10904cc34e9e13fcf9aabb52fd3d5090514f3461890c5921af8e",
+        "snippet": [
+          {
+            "line": 36,
+            "text": "        }"
+          },
+          {
+            "line": 37,
+            "text": "        mem_bar(VST_VLD);  // #71"
+          },
+          {
+            "line": 38,
+            "text": "        for (uint16_t i_1 = 0; i_1 < count; i_1 += 2) {  // #72"
+          },
+          {
+            "line": 39,
+            "text": "            const int32_t add_2 = i_1 + 1;  // #73"
+          },
+          {
+            "line": 40,
+            "text": "            __ubuf__ float* view_2 = (__ubuf__ float*)((__ubuf__ uint8_t*)v + (((i_1 * 128) * 4)));  // #75"
+          }
+        ]
+      },
+      {
+        "entry": "gdn_chunk_scan",
+        "block_dim": 2,
+        "file": "project/op_kernel/scan_vf.h",
+        "line": 28,
+        "sha256": "7dae71738543f4b56cfca77a77b3ed3da4366d01f2bac8258ab714f6112712f5",
+        "snippet": [
+          {
+            "line": 26,
+            "text": "        }"
+          },
+          {
+            "line": 27,
+            "text": "        mem_bar(VST_VLD);  // #58"
+          },
+          {
+            "line": 28,
+            "text": "        for (uint16_t i_1 = 0; i_1 < count; i_1 += 1) {  // #59"
+          },
+          {
+            "line": 29,
+            "text": "            __ubuf__ float* view_1 = (__ubuf__ float*)((__ubuf__ uint8_t*)u + (((i_1 * 128) * 4)));  // #62"
+          },
+          {
+            "line": 30,
+            "text": "            vlds((vector_u32&)acc_0, (__ubuf__ uint32_t*)view_1, 0, NORM);  // #63"
+          }
+        ]
+      },
+      {
+        "entry": "gdn_chunk_scan",
+        "block_dim": 2,
+        "file": "project/op_kernel/scan_vf.h",
+        "line": 51,
+        "sha256": "7dae71738543f4b56cfca77a77b3ed3da4366d01f2bac8258ab714f6112712f5",
+        "snippet": [
+          {
+            "line": 49,
+            "text": "        vlds((vector_u32&)acc_0, (__ubuf__ uint32_t*)view_5, 0, NORM);  // #88"
+          },
+          {
+            "line": 50,
+            "text": "        vlds((vector_u32&)acc_1, (__ubuf__ uint32_t*)view_5, 64, NORM);  // #89"
+          },
+          {
+            "line": 51,
+            "text": "        for (uint16_t i_2 = 0; i_2 < count; i_2 += 1) {  // #90"
+          },
+          {
+            "line": 52,
+            "text": "            __ubuf__ float* view_6 = (__ubuf__ float*)((__ubuf__ uint8_t*)g + (((i_2 * 128) * 4)));  // #93"
+          },
+          {
+            "line": 53,
+            "text": "            vlds((vector_u32&)row_0, (__ubuf__ uint32_t*)view_6, 0, NORM);  // #94"
+          }
+        ]
+      },
+      {
+        "entry": "gdn_chunk_scan",
+        "block_dim": 2,
+        "file": "project/op_kernel/scan_vf.h",
+        "line": 78,
+        "sha256": "7dae71738543f4b56cfca77a77b3ed3da4366d01f2bac8258ab714f6112712f5",
+        "snippet": [
+          {
+            "line": 76,
+            "text": "            vmul(row_0, row_0, decay, pset_b8(PAT_ALL), MODE_ZEROING);  // #124"
+          },
+          {
+            "line": 77,
+            "text": "            vmul(row_1, row_1, decay, pset_b8(PAT_ALL), MODE_ZEROING);  // #125"
+          },
+          {
+            "line": 78,
+            "text": "            for (uint16_t i_3 = 0; i_3 < count; i_3 += 1) {  // #126"
+          },
+          {
+            "line": 79,
+            "text": "                __ubuf__ float* view_11 = (__ubuf__ float*)((__ubuf__ uint8_t*)k + ((((i_3 * 128) + d_1) * 4)));  // #131"
+          },
+          {
+            "line": 80,
+            "text": "                vlds((vector_u32&)weight, (__ubuf__ uint32_t*)view_11, 0, BRC_B32);  // #132"
+          }
+        ]
+      },
+      {
+        "entry": "gdn_chunk_output",
+        "block_dim": 2,
+        "file": "project/op_kernel/output_vf.h",
+        "line": 14,
+        "sha256": "a8100d36fe5b1e87c250ff83c88e5c32449d382795d211834ec4b2b7e5dafc7c",
+        "snippet": [
+          {
+            "line": 12,
+            "text": "        vector_f32 row_1;  // #45"
+          },
+          {
+            "line": 13,
+            "text": "        vector_f32 weight;  // #46"
+          },
+          {
+            "line": 14,
+            "text": "        for (uint16_t i = 0; i < count; i += 1) {  // #47"
+          },
+          {
+            "line": 15,
+            "text": "            __ubuf__ float* view = (__ubuf__ float*)((__ubuf__ uint8_t*)q + (((i * 128) * 4)));  // #50"
+          },
+          {
+            "line": 16,
+            "text": "            vlds((vector_u32&)acc_0, (__ubuf__ uint32_t*)view, 0, NORM);  // #51"
+          }
+        ]
+      },
+      {
+        "entry": "gdn_chunk_output",
+        "block_dim": 2,
+        "file": "project/op_kernel/output_vf.h",
+        "line": 30,
+        "sha256": "a8100d36fe5b1e87c250ff83c88e5c32449d382795d211834ec4b2b7e5dafc7c",
+        "snippet": [
+          {
+            "line": 28,
+            "text": "        }"
+          },
+          {
+            "line": 29,
+            "text": "        mem_bar(VST_VLD);  // #67"
+          },
+          {
+            "line": 30,
+            "text": "        for (uint16_t i_1 = 0; i_1 < count; i_1 += 1) {  // #68"
+          },
+          {
+            "line": 31,
+            "text": "            vbr(acc_0, (float)(0.0f));  // #69"
+          },
+          {
+            "line": 32,
+            "text": "            vbr(acc_1, (float)(0.0f));  // #70"
+          }
+        ]
+      },
+      {
+        "entry": "gdn_chunk_output",
+        "block_dim": 2,
+        "file": "project/op_kernel/output_vf.h",
+        "line": 45,
+        "sha256": "a8100d36fe5b1e87c250ff83c88e5c32449d382795d211834ec4b2b7e5dafc7c",
+        "snippet": [
+          {
+            "line": 43,
+            "text": "            }"
+          },
+          {
+            "line": 44,
+            "text": "            const int32_t add_6 = i_1 + 1;  // #87"
+          },
+          {
+            "line": 45,
+            "text": "            for (uint16_t j = 0; j < add_6; j += 1) {  // #88"
+          },
+          {
+            "line": 46,
+            "text": "                __ubuf__ float* view_5 = (__ubuf__ float*)((__ubuf__ uint8_t*)score + ((((i_1 * 64) + j) * 4)));  // #93"
+          },
+          {
+            "line": 47,
+            "text": "                vlds((vector_u32&)weight, (__ubuf__ uint32_t*)view_5, 0, BRC_B32);  // #94"
+          }
+        ]
+      }
+    ],
+    "disposition": "The immutable original FP32 timing build has the same9count/i+1 warning sites and complete64-token-chunk bounds; source hashes were reverified before timing and actual rounded-output/state checks run before/after measurement. No original source edits."
+  }
+}

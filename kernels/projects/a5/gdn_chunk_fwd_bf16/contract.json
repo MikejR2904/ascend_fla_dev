@@ -1,0 +1,1293 @@
+{
+  "schema": "ascriptor.kernel-unit/1",
+  "kind": "project",
+  "inputs": {
+    "q": {
+      "dtype": "bfloat16",
+      "shape": [
+        "B",
+        "T",
+        "H",
+        128
+      ]
+    },
+    "k": {
+      "dtype": "bfloat16",
+      "shape": [
+        "B",
+        "T",
+        "H",
+        128
+      ]
+    },
+    "v": {
+      "dtype": "bfloat16",
+      "shape": [
+        "B",
+        "T",
+        "HV",
+        128
+      ]
+    },
+    "g": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "T",
+        "HV"
+      ],
+      "note": "Nonpositive scalar log decay."
+    },
+    "beta": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "T",
+        "HV"
+      ],
+      "note": "Scalar update gate in [0,1]."
+    }
+  },
+  "outputs": {
+    "o": {
+      "dtype": "bfloat16",
+      "shape": [
+        "B",
+        "T",
+        "HV",
+        128
+      ],
+      "initialization": "NaN poison; every element must be overwritten."
+    },
+    "final_state": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "HV",
+        128,
+        128
+      ],
+      "initialization": "NaN poison; every element must be overwritten."
+    }
+  },
+  "dependencies": {
+    "python": ">=3.10",
+    "ascriptor": "==0.1.0",
+    "host": [
+      "torch>=2.9.0",
+      "numpy"
+    ]
+  },
+  "comparison": {
+    "default": {
+      "mode": "allclose",
+      "rtol": 0.0002,
+      "atol": 2e-05,
+      "max_relative_l2": 0.0001,
+      "reason": "FP32 stage accumulation budget fixed before implementation."
+    },
+    "outputs": {
+      "o": {
+        "reference_dtype": "float32",
+        "rtol": 0.01,
+        "atol": 2e-05,
+        "max_relative_l2": 0.01,
+        "reason": "BF16 storage checked in FP32; execute also enforces per-case min(1e-2,3F), zero F exact."
+      }
+    },
+    "stage_outputs": {
+      "o": {
+        "reference_dtype": "float32",
+        "rtol": 0.01,
+        "atol": 2e-05,
+        "max_relative_l2": 0.01,
+        "reason": "BF16 output leaf against independent FP32 stage target."
+      }
+    }
+  },
+  "stages": {
+    "qn": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "N",
+        "HV",
+        64,
+        128
+      ]
+    },
+    "kn": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "N",
+        "HV",
+        64,
+        128
+      ]
+    },
+    "gc": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "N",
+        "HV",
+        64,
+        128
+      ]
+    },
+    "bk": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "N",
+        "HV",
+        64,
+        128
+      ]
+    },
+    "wv": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "N",
+        "HV",
+        64,
+        128
+      ]
+    },
+    "u": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "N",
+        "HV",
+        64,
+        128
+      ]
+    },
+    "wy": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "N",
+        "HV",
+        64,
+        128
+      ]
+    },
+    "delta": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "N",
+        "HV",
+        64,
+        128
+      ]
+    },
+    "lower": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "N",
+        "HV",
+        64,
+        64
+      ]
+    },
+    "score": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "N",
+        "HV",
+        64,
+        64
+      ]
+    },
+    "states": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "N",
+        "HV",
+        128,
+        128
+      ]
+    },
+    "o": {
+      "dtype": "bfloat16",
+      "shape": [
+        "B",
+        "T",
+        "HV",
+        128
+      ],
+      "initialization": "NaN poison; every element must be overwritten."
+    },
+    "final_state": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "HV",
+        128,
+        128
+      ],
+      "initialization": "NaN poison; every element must be overwritten."
+    }
+  },
+  "domain": {
+    "layout": "token-major, contiguous; internal chunks B,N,HV,64,128",
+    "GQA": "HV is a positive multiple of H; value head j uses q/k head floor(j/(HV/H))",
+    "initial_state": "zero only",
+    "T": "positive multiple of 64, <=4096",
+    "K": 128,
+    "V": 128,
+    "block_dim": [
+      1,
+      2
+    ],
+    "scale": "128**-0.5",
+    "intermediates": "FP32; no q/k normalization",
+    "B": "positive",
+    "H": "positive",
+    "gate_domain": "finite g<=0 and beta in [0,1]"
+  },
+  "saved_state": {
+    "training": "none; forward inference only",
+    "states": "FP32 incoming state per chunk, retained for output stage"
+  },
+  "id": "a5.gdn_chunk_fwd_bf16",
+  "description": "Native BF16 GDN forward; same derived unit also implements FP32 public compatibility with device head indexing.",
+  "workspace": {
+    "N": "T/64",
+    "lifetime": "One public call; full FP32 GM edges with unique producer, launch-ordered consumers and retirement after last consumer.",
+    "group_mapping": "Kernel value_head//(HV/H); no expanded q/k allocation."
+  },
+  "provenance": {
+    "baseline": "Repository read-only gdn_chunk_fwd at f8f9eb89; same FP32 operation order, task-owned typed GM prepare/output and local zero state."
+  },
+  "support": [
+    {
+      "device": "a5",
+      "backend": "cce",
+      "stage": "reference",
+      "status": "passed",
+      "cases": [
+        "r1_c64_bd1",
+        "r1_c1_bd1",
+        "r1_c2_bd1",
+        "r1_c3_bd1",
+        "r2_c64_bd1",
+        "r2_c1_bd1",
+        "r2_c2_bd1",
+        "r2_c3_bd1",
+        "r4_c64_bd1",
+        "r4_c1_bd1",
+        "r4_c2_bd1",
+        "r4_c3_bd1",
+        "r8_c64_bd1",
+        "r8_c1_bd1",
+        "r8_c2_bd1",
+        "r8_c3_bd1",
+        "batch2_c2_bd1",
+        "batch2_c3_bd1",
+        "uneven_c1_bd1",
+        "uneven_c3_bd1",
+        "gate_zero_bd1",
+        "gate_small_bd1",
+        "gate_large_bd1",
+        "gate_underflow_bd1",
+        "beta_zero_bd1",
+        "beta_one_bd1",
+        "zero_qk_bd1",
+        "spike_bd1",
+        "r1_c64_bd2",
+        "r1_c1_bd2",
+        "r1_c2_bd2",
+        "r1_c3_bd2",
+        "r2_c64_bd2",
+        "r2_c1_bd2",
+        "r2_c2_bd2",
+        "r2_c3_bd2",
+        "r4_c64_bd2",
+        "r4_c1_bd2",
+        "r4_c2_bd2",
+        "r4_c3_bd2",
+        "r8_c64_bd2",
+        "r8_c1_bd2",
+        "r8_c2_bd2",
+        "r8_c3_bd2",
+        "batch2_c2_bd2",
+        "batch2_c3_bd2",
+        "uneven_c1_bd2",
+        "uneven_c3_bd2",
+        "gate_zero_bd2",
+        "gate_small_bd2",
+        "gate_large_bd2",
+        "gate_underflow_bd2",
+        "beta_zero_bd2",
+        "beta_one_bd2",
+        "zero_qk_bd2",
+        "spike_bd2"
+      ],
+      "evidence": "evidence/canonical-reference-summary.json"
+    },
+    {
+      "device": "a5",
+      "backend": "cce",
+      "stage": "sim",
+      "status": "untested"
+    },
+    {
+      "device": "a5",
+      "backend": "cce",
+      "stage": "pipesim",
+      "status": "untested"
+    },
+    {
+      "device": "a5",
+      "backend": "cce",
+      "stage": "emit",
+      "status": "untested"
+    },
+    {
+      "device": "a5",
+      "backend": "cce",
+      "stage": "compile",
+      "status": "untested"
+    },
+    {
+      "device": "a5",
+      "backend": "cce",
+      "stage": "board",
+      "status": "untested"
+    }
+  ],
+  "native_public_abi": {
+    "dtype": [
+      "float32",
+      "bfloat16"
+    ],
+    "o": "matches q/k/v dtype",
+    "final_state": "float32",
+    "canonical_cases": "BF16; FP32 compatibility receives a separate complete native grid and byte-baseline report."
+  },
+  "cases": [
+    {
+      "id": "r1_c64_bd1",
+      "seed": 171074,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "T": 4096,
+        "H": 8,
+        "HV": 8,
+        "gate_scale": 1.0,
+        "N": 64,
+        "dtype": "bfloat16"
+      }
+    },
+    {
+      "id": "r1_c1_bd1",
+      "seed": 171011,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "T": 64,
+        "H": 2,
+        "HV": 2,
+        "gate_scale": 1.0,
+        "N": 1,
+        "dtype": "bfloat16"
+      }
+    },
+    {
+      "id": "r1_c2_bd1",
+      "seed": 171012,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 2,
+        "HV": 2,
+        "gate_scale": 1.0,
+        "N": 2,
+        "dtype": "bfloat16"
+      }
+    },
+    {
+      "id": "r1_c3_bd1",
+      "seed": 171013,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 2,
+        "HV": 2,
+        "gate_scale": 1.0,
+        "N": 3,
+        "dtype": "bfloat16"
+      }
+    },
+    {
+      "id": "r2_c64_bd1",
+      "seed": 171084,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "T": 4096,
+        "H": 4,
+        "HV": 8,
+        "gate_scale": 1.0,
+        "N": 64,
+        "dtype": "bfloat16"
+      }
+    },
+    {
+      "id": "r2_c1_bd1",
+      "seed": 171021,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "T": 64,
+        "H": 2,
+        "HV": 4,
+        "gate_scale": 1.0,
+        "N": 1,
+        "dtype": "bfloat16"
+      }
+    },
+    {
+      "id": "r2_c2_bd1",
+      "seed": 171022,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 2,
+        "HV": 4,
+        "gate_scale": 1.0,
+        "N": 2,
+        "dtype": "bfloat16"
+      }
+    },
+    {
+      "id": "r2_c3_bd1",
+      "seed": 171023,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 2,
+        "HV": 4,
+        "gate_scale": 1.0,
+        "N": 3,
+        "dtype": "bfloat16"
+      }
+    },
+    {
+      "id": "r4_c64_bd1",
+      "seed": 171104,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "T": 4096,
+        "H": 2,
+        "HV": 8,
+        "gate_scale": 1.0,
+        "N": 64,
+        "dtype": "bfloat16"
+      }
+    },
+    {
+      "id": "r4_c1_bd1",
+      "seed": 171041,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "T": 64,
+        "H": 2,
+        "HV": 8,
+        "gate_scale": 1.0,
+        "N": 1,
+        "dtype": "bfloat16"
+      }
+    },
+    {
+      "id": "r4_c2_bd1",
+      "seed": 171042,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 2,
+        "HV": 8,
+        "gate_scale": 1.0,
+        "N": 2,
+        "dtype": "bfloat16"
+      }
+    },
+    {
+      "id": "r4_c3_bd1",
+      "seed": 171043,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 2,
+        "HV": 8,
+        "gate_scale": 1.0,
+        "N": 3,
+        "dtype": "bfloat16"
+      }
+    },
+    {
+      "id": "r8_c64_bd1",
+      "seed": 171144,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "T": 4096,
+        "H": 1,
+        "HV": 8,
+        "gate_scale": 1.0,
+        "N": 64,
+        "dtype": "bfloat16"
+      }
+    },
+    {
+      "id": "r8_c1_bd1",
+      "seed": 171081,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "T": 64,
+        "H": 2,
+        "HV": 16,
+        "gate_scale": 1.0,
+        "N": 1,
+        "dtype": "bfloat16"
+      }
+    },
+    {
+      "id": "r8_c2_bd1",
+      "seed": 171082,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 2,
+        "HV": 16,
+        "gate_scale": 1.0,
+        "N": 2,
+        "dtype": "bfloat16"
+      }
+    },
+    {
+      "id": "r8_c3_bd1",
+      "seed": 171083,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 2,
+        "HV": 16,
+        "gate_scale": 1.0,
+        "N": 3,
+        "dtype": "bfloat16"
+      }
+    },
+    {
+      "id": "batch2_c2_bd1",
+      "seed": 172000,
+      "block_dim": 1,
+      "parameters": {
+        "B": 2,
+        "T": 128,
+        "H": 3,
+        "HV": 6,
+        "gate_scale": 1.0,
+        "N": 2,
+        "dtype": "bfloat16"
+      }
+    },
+    {
+      "id": "batch2_c3_bd1",
+      "seed": 172001,
+      "block_dim": 1,
+      "parameters": {
+        "B": 2,
+        "T": 192,
+        "H": 3,
+        "HV": 12,
+        "gate_scale": 1.0,
+        "N": 3,
+        "dtype": "bfloat16"
+      }
+    },
+    {
+      "id": "uneven_c1_bd1",
+      "seed": 172002,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "T": 64,
+        "H": 1,
+        "HV": 3,
+        "gate_scale": 1.0,
+        "N": 1,
+        "dtype": "bfloat16"
+      }
+    },
+    {
+      "id": "uneven_c3_bd1",
+      "seed": 172003,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 1,
+        "HV": 3,
+        "gate_scale": 1.0,
+        "N": 3,
+        "dtype": "bfloat16"
+      }
+    },
+    {
+      "id": "gate_zero_bd1",
+      "seed": 172004,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 2,
+        "HV": 4,
+        "gate_scale": 0.0,
+        "N": 3,
+        "dtype": "bfloat16"
+      }
+    },
+    {
+      "id": "gate_small_bd1",
+      "seed": 172005,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 2,
+        "HV": 4,
+        "gate_scale": 0.03,
+        "N": 3,
+        "dtype": "bfloat16"
+      }
+    },
+    {
+      "id": "gate_large_bd1",
+      "seed": 172006,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 2,
+        "HV": 4,
+        "gate_scale": 30.0,
+        "normalized_keys": true,
+        "N": 3,
+        "dtype": "bfloat16"
+      }
+    },
+    {
+      "id": "gate_underflow_bd1",
+      "seed": 172007,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 2,
+        "HV": 4,
+        "gate_scale": 1.0,
+        "gate_constant": -1000.0,
+        "N": 3,
+        "dtype": "bfloat16"
+      }
+    },
+    {
+      "id": "beta_zero_bd1",
+      "seed": 172008,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 2,
+        "HV": 4,
+        "gate_scale": 1.0,
+        "beta_constant": 0.0,
+        "N": 3,
+        "dtype": "bfloat16"
+      }
+    },
+    {
+      "id": "beta_one_bd1",
+      "seed": 172009,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 2,
+        "HV": 4,
+        "gate_scale": 1.0,
+        "beta_constant": 1.0,
+        "normalized_keys": true,
+        "N": 3,
+        "dtype": "bfloat16"
+      }
+    },
+    {
+      "id": "zero_qk_bd1",
+      "seed": 172010,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 2,
+        "HV": 4,
+        "gate_scale": 1.0,
+        "zero_qk": true,
+        "N": 3,
+        "dtype": "bfloat16"
+      }
+    },
+    {
+      "id": "spike_bd1",
+      "seed": 172011,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 2,
+        "HV": 4,
+        "gate_scale": 1.0,
+        "spike": true,
+        "N": 3,
+        "dtype": "bfloat16"
+      }
+    },
+    {
+      "id": "r1_c64_bd2",
+      "seed": 171074,
+      "block_dim": 2,
+      "parameters": {
+        "B": 1,
+        "T": 4096,
+        "H": 8,
+        "HV": 8,
+        "gate_scale": 1.0,
+        "N": 64,
+        "dtype": "bfloat16"
+      }
+    },
+    {
+      "id": "r1_c1_bd2",
+      "seed": 171011,
+      "block_dim": 2,
+      "parameters": {
+        "B": 1,
+        "T": 64,
+        "H": 2,
+        "HV": 2,
+        "gate_scale": 1.0,
+        "N": 1,
+        "dtype": "bfloat16"
+      }
+    },
+    {
+      "id": "r1_c2_bd2",
+      "seed": 171012,
+      "block_dim": 2,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 2,
+        "HV": 2,
+        "gate_scale": 1.0,
+        "N": 2,
+        "dtype": "bfloat16"
+      }
+    },
+    {
+      "id": "r1_c3_bd2",
+      "seed": 171013,
+      "block_dim": 2,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 2,
+        "HV": 2,
+        "gate_scale": 1.0,
+        "N": 3,
+        "dtype": "bfloat16"
+      }
+    },
+    {
+      "id": "r2_c64_bd2",
+      "seed": 171084,
+      "block_dim": 2,
+      "parameters": {
+        "B": 1,
+        "T": 4096,
+        "H": 4,
+        "HV": 8,
+        "gate_scale": 1.0,
+        "N": 64,
+        "dtype": "bfloat16"
+      }
+    },
+    {
+      "id": "r2_c1_bd2",
+      "seed": 171021,
+      "block_dim": 2,
+      "parameters": {
+        "B": 1,
+        "T": 64,
+        "H": 2,
+        "HV": 4,
+        "gate_scale": 1.0,
+        "N": 1,
+        "dtype": "bfloat16"
+      }
+    },
+    {
+      "id": "r2_c2_bd2",
+      "seed": 171022,
+      "block_dim": 2,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 2,
+        "HV": 4,
+        "gate_scale": 1.0,
+        "N": 2,
+        "dtype": "bfloat16"
+      }
+    },
+    {
+      "id": "r2_c3_bd2",
+      "seed": 171023,
+      "block_dim": 2,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 2,
+        "HV": 4,
+        "gate_scale": 1.0,
+        "N": 3,
+        "dtype": "bfloat16"
+      }
+    },
+    {
+      "id": "r4_c64_bd2",
+      "seed": 171104,
+      "block_dim": 2,
+      "parameters": {
+        "B": 1,
+        "T": 4096,
+        "H": 2,
+        "HV": 8,
+        "gate_scale": 1.0,
+        "N": 64,
+        "dtype": "bfloat16"
+      }
+    },
+    {
+      "id": "r4_c1_bd2",
+      "seed": 171041,
+      "block_dim": 2,
+      "parameters": {
+        "B": 1,
+        "T": 64,
+        "H": 2,
+        "HV": 8,
+        "gate_scale": 1.0,
+        "N": 1,
+        "dtype": "bfloat16"
+      }
+    },
+    {
+      "id": "r4_c2_bd2",
+      "seed": 171042,
+      "block_dim": 2,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 2,
+        "HV": 8,
+        "gate_scale": 1.0,
+        "N": 2,
+        "dtype": "bfloat16"
+      }
+    },
+    {
+      "id": "r4_c3_bd2",
+      "seed": 171043,
+      "block_dim": 2,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 2,
+        "HV": 8,
+        "gate_scale": 1.0,
+        "N": 3,
+        "dtype": "bfloat16"
+      }
+    },
+    {
+      "id": "r8_c64_bd2",
+      "seed": 171144,
+      "block_dim": 2,
+      "parameters": {
+        "B": 1,
+        "T": 4096,
+        "H": 1,
+        "HV": 8,
+        "gate_scale": 1.0,
+        "N": 64,
+        "dtype": "bfloat16"
+      }
+    },
+    {
+      "id": "r8_c1_bd2",
+      "seed": 171081,
+      "block_dim": 2,
+      "parameters": {
+        "B": 1,
+        "T": 64,
+        "H": 2,
+        "HV": 16,
+        "gate_scale": 1.0,
+        "N": 1,
+        "dtype": "bfloat16"
+      }
+    },
+    {
+      "id": "r8_c2_bd2",
+      "seed": 171082,
+      "block_dim": 2,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 2,
+        "HV": 16,
+        "gate_scale": 1.0,
+        "N": 2,
+        "dtype": "bfloat16"
+      }
+    },
+    {
+      "id": "r8_c3_bd2",
+      "seed": 171083,
+      "block_dim": 2,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 2,
+        "HV": 16,
+        "gate_scale": 1.0,
+        "N": 3,
+        "dtype": "bfloat16"
+      }
+    },
+    {
+      "id": "batch2_c2_bd2",
+      "seed": 172000,
+      "block_dim": 2,
+      "parameters": {
+        "B": 2,
+        "T": 128,
+        "H": 3,
+        "HV": 6,
+        "gate_scale": 1.0,
+        "N": 2,
+        "dtype": "bfloat16"
+      }
+    },
+    {
+      "id": "batch2_c3_bd2",
+      "seed": 172001,
+      "block_dim": 2,
+      "parameters": {
+        "B": 2,
+        "T": 192,
+        "H": 3,
+        "HV": 12,
+        "gate_scale": 1.0,
+        "N": 3,
+        "dtype": "bfloat16"
+      }
+    },
+    {
+      "id": "uneven_c1_bd2",
+      "seed": 172002,
+      "block_dim": 2,
+      "parameters": {
+        "B": 1,
+        "T": 64,
+        "H": 1,
+        "HV": 3,
+        "gate_scale": 1.0,
+        "N": 1,
+        "dtype": "bfloat16"
+      }
+    },
+    {
+      "id": "uneven_c3_bd2",
+      "seed": 172003,
+      "block_dim": 2,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 1,
+        "HV": 3,
+        "gate_scale": 1.0,
+        "N": 3,
+        "dtype": "bfloat16"
+      }
+    },
+    {
+      "id": "gate_zero_bd2",
+      "seed": 172004,
+      "block_dim": 2,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 2,
+        "HV": 4,
+        "gate_scale": 0.0,
+        "N": 3,
+        "dtype": "bfloat16"
+      }
+    },
+    {
+      "id": "gate_small_bd2",
+      "seed": 172005,
+      "block_dim": 2,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 2,
+        "HV": 4,
+        "gate_scale": 0.03,
+        "N": 3,
+        "dtype": "bfloat16"
+      }
+    },
+    {
+      "id": "gate_large_bd2",
+      "seed": 172006,
+      "block_dim": 2,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 2,
+        "HV": 4,
+        "gate_scale": 30.0,
+        "normalized_keys": true,
+        "N": 3,
+        "dtype": "bfloat16"
+      }
+    },
+    {
+      "id": "gate_underflow_bd2",
+      "seed": 172007,
+      "block_dim": 2,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 2,
+        "HV": 4,
+        "gate_scale": 1.0,
+        "gate_constant": -1000.0,
+        "N": 3,
+        "dtype": "bfloat16"
+      }
+    },
+    {
+      "id": "beta_zero_bd2",
+      "seed": 172008,
+      "block_dim": 2,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 2,
+        "HV": 4,
+        "gate_scale": 1.0,
+        "beta_constant": 0.0,
+        "N": 3,
+        "dtype": "bfloat16"
+      }
+    },
+    {
+      "id": "beta_one_bd2",
+      "seed": 172009,
+      "block_dim": 2,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 2,
+        "HV": 4,
+        "gate_scale": 1.0,
+        "beta_constant": 1.0,
+        "normalized_keys": true,
+        "N": 3,
+        "dtype": "bfloat16"
+      }
+    },
+    {
+      "id": "zero_qk_bd2",
+      "seed": 172010,
+      "block_dim": 2,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 2,
+        "HV": 4,
+        "gate_scale": 1.0,
+        "zero_qk": true,
+        "N": 3,
+        "dtype": "bfloat16"
+      }
+    },
+    {
+      "id": "spike_bd2",
+      "seed": 172011,
+      "block_dim": 2,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 2,
+        "HV": 4,
+        "gate_scale": 1.0,
+        "spike": true,
+        "N": 3,
+        "dtype": "bfloat16"
+      }
+    }
+  ],
+  "measured": {
+    "native_inprocess": {
+      "status": "passed",
+      "cases": [
+        "r1_c64_bd1",
+        "r1_c1_bd1",
+        "r1_c2_bd1",
+        "r1_c3_bd1",
+        "r2_c64_bd1",
+        "r2_c1_bd1",
+        "r2_c2_bd1",
+        "r2_c3_bd1",
+        "r4_c64_bd1",
+        "r4_c1_bd1",
+        "r4_c2_bd1",
+        "r4_c3_bd1",
+        "r8_c64_bd1",
+        "r8_c1_bd1",
+        "r8_c2_bd1",
+        "r8_c3_bd1",
+        "batch2_c2_bd1",
+        "batch2_c3_bd1",
+        "uneven_c1_bd1",
+        "uneven_c3_bd1",
+        "gate_zero_bd1",
+        "gate_small_bd1",
+        "gate_large_bd1",
+        "gate_underflow_bd1",
+        "beta_zero_bd1",
+        "beta_one_bd1",
+        "zero_qk_bd1",
+        "spike_bd1",
+        "r1_c64_bd2",
+        "r1_c1_bd2",
+        "r1_c2_bd2",
+        "r1_c3_bd2",
+        "r2_c64_bd2",
+        "r2_c1_bd2",
+        "r2_c2_bd2",
+        "r2_c3_bd2",
+        "r4_c64_bd2",
+        "r4_c1_bd2",
+        "r4_c2_bd2",
+        "r4_c3_bd2",
+        "r8_c64_bd2",
+        "r8_c1_bd2",
+        "r8_c2_bd2",
+        "r8_c3_bd2",
+        "batch2_c2_bd2",
+        "batch2_c3_bd2",
+        "uneven_c1_bd2",
+        "uneven_c3_bd2",
+        "gate_zero_bd2",
+        "gate_small_bd2",
+        "gate_large_bd2",
+        "gate_underflow_bd2",
+        "beta_zero_bd2",
+        "beta_one_bd2",
+        "zero_qk_bd2",
+        "spike_bd2"
+      ],
+      "public_dtypes": [
+        "bfloat16",
+        "float32"
+      ],
+      "records": 112,
+      "evidence": [
+        "evidence/grid-bd1.json",
+        "evidence/grid-bd2.json",
+        "evidence/native-grid-summary.json"
+      ],
+      "byte_identity": {
+        "cross_blockdim_stage_pairs": 728,
+        "cross_blockdim_public_pairs": 112,
+        "original_new_fp32_public_pairs": 112,
+        "note": "Public o/state are already present among the13stage arrays."
+      }
+    },
+    "vendor_build": {
+      "status": "passed",
+      "scope": "Seven typed CCE entries each block_dim1/2; actual inprocess artifacts, not a canonical run.py compile/board claim.",
+      "evidence": "evidence/compiler/build-artifact-manifest.json",
+      "warnings": "evidence/compiler-warning-analysis.json"
+    },
+    "host_dispatch": {
+      "status": "passed",
+      "scope": "112actual native public calls, BF16 and FP32; only13empty allocations each; no forbidden operator.",
+      "evidence": "evidence/native-grid-summary.json"
+    },
+    "source_emission": {
+      "status": "passed",
+      "scope": "All7explicit entry symbols through accepted Ascriptor CCE compile CLI; distinct from vendor compilation.",
+      "evidence": "evidence/static-summary.json"
+    },
+    "performance": {
+      "status": "passed",
+      "scope": "B1/H=HV8/K=V128,T1024/4096,block_dim2;900samples;threebaseline/candidate/baselinesandwiches;10warmups50samplespersegment,syncbefore/aftereverycall",
+      "baseline": "Unchanged original FP32 public API on BF16-rounded FP32 input values",
+      "candidate": "Complete BF16 public API, true BF16 GM inputs/output, FP32 state",
+      "evidence": [
+        "evidence/timing-summary.json",
+        "evidence/sandwich-bd2.json",
+        "evidence/sandwich-bd2-occupancy.json"
+      ],
+      "speed_gate": "none"
+    },
+    "runtime_startup_control": {
+      "status": "passed",
+      "scope": "Fresh task-free Torch NPU transfer/multiply/add/control; exact result. Both startup notice classes reproduced;20fullruntime logs1200lines10knownwarnings and0error/fatal/critical. No TensorFlow backend claim.",
+      "evidence": [
+        "evidence/runtime/runtime-review.json",
+        "evidence/runtime/startup-control-source.txt",
+        "evidence/startup-control-occupancy.json"
+      ]
+    }
+  }
+}

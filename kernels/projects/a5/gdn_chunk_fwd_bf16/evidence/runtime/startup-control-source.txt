@@ -1,0 +1,25 @@
+"""Isolate vendor startup diagnostics without importing task kernel/runtime."""
+import argparse,hashlib,json,time,os,stat
+from pathlib import Path
+import torch
+import torch_npu
+p=argparse.ArgumentParser();p.add_argument('--output',required=True);p.add_argument('--block-dim',type=int);p.add_argument('--hold-seconds',type=int,default=0);args=p.parse_args();assert 0<=args.hold_seconds<=60
+print('CONTROL_START',time.time(),flush=True)
+assert torch.npu.device_count()==1
+torch.npu.set_device(0)
+x=torch.arange(128,dtype=torch.float32).reshape(1,128)
+y=x.npu();actual=(y*2+1).cpu();torch.npu.synchronize()
+assert torch.equal(actual,x*2+1)
+report=dict(stage='vendor_startup_control',passed=True,auditor_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),imports='torch, torch_npu; no ascriptor or task kernel import in this subprocess',operations='NPU transfer, multiply, add, CPU transfer, synchronize',expected_exact=True,cases=[dict(elements=128,passed=True)])
+Path(args.output).write_text(json.dumps(report,indent=2)+'\n')
+if args.hold_seconds:
+ fds=[]
+ for fd in Path('/proc/self/fd').iterdir():
+  try:
+   info=fd.stat()
+   if stat.S_ISCHR(info.st_mode):fds.append(dict(fd=fd.name,target=os.readlink(fd),rdev=info.st_rdev,dev=info.st_dev,inode=info.st_ino))
+  except FileNotFoundError:pass
+ Path(args.output).with_name('fd-probe.json').write_text(json.dumps(dict(pid=os.getpid(),fds=fds),indent=2)+'\n')
+ print('CONTROL_READY',time.time(),flush=True)
+ time.sleep(args.hold_seconds)
+print('CONTROL_PASS',time.time(),flush=True)
