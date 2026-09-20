@@ -1,0 +1,5472 @@
+{
+  "scope": "CPU FP64 precision study, predecessor FP32 evaluation; no candidate kernel or native execution",
+  "python": "3.11.15",
+  "torch": "2.10.0+cpu",
+  "seed": 7007,
+  "script_sha256": "d21ec73afc242b1b17e7d7f15e72c034fa0dfabda6505abe4edf74313cdb0765",
+  "predecessor": {
+    "commit": "c09a80ed8dbb96fdde7642eee21bec00d8f38e3a",
+    "files": {
+      "chunk.py": {
+        "source": "ascend_fla/ops/kda/chunk.py",
+        "sha256": "5bf75978176280c5eaf9268e7730ea00bf1581bb1ef8dddb35ad5a178ffd49d0"
+      },
+      "autograd.py": {
+        "source": "ascend_fla/ops/kda/autograd.py",
+        "sha256": "c2a535ae2ec5b7f1b7da000a42a96e985fcc84aa4b05df1421cc83b424b25903"
+      },
+      "fused_recurrent.py": {
+        "source": "ascend_fla/ops/kda/fused_recurrent.py",
+        "sha256": "1e78c50a1f15f23e9a7213d57b021b558c02164989765877b6fba92a10cf473a"
+      }
+    }
+  },
+  "groups": {
+    "norm:bf16_bf16": {
+      "cases": 9,
+      "floor_relative_l2": 0.001682628028428155,
+      "floor_max_relative": 0.003890989942832648,
+      "max_ulp": 1
+    },
+    "norm:bf16_f32": {
+      "cases": 9,
+      "floor_relative_l2": 6.297633414669069e-08,
+      "floor_max_relative": 1.807531212888719e-07,
+      "max_ulp": 3
+    },
+    "norm:f32_bf16": {
+      "cases": 9,
+      "floor_relative_l2": 0.0016684441338103556,
+      "floor_max_relative": 0.0038910482710974156,
+      "max_ulp": 1
+    },
+    "norm:f32_f32": {
+      "cases": 9,
+      "floor_relative_l2": 5.302783722396136e-08,
+      "floor_max_relative": 1.764553867963363e-07,
+      "max_ulp": 2
+    },
+    "gate:bf16_bf16_bf16": {
+      "cases": 2,
+      "floor_relative_l2": 4.619236004872823e-08,
+      "floor_max_relative": 1.7021264564218647e-07,
+      "max_ulp": 2
+    },
+    "gate:bf16_bf16_f32": {
+      "cases": 2,
+      "floor_relative_l2": 4.880421801124304e-08,
+      "floor_max_relative": 2.714880065193375e-07,
+      "max_ulp": 4
+    },
+    "gate:bf16_f32_bf16": {
+      "cases": 2,
+      "floor_relative_l2": 4.3397636520744056e-08,
+      "floor_max_relative": 1.9439547046458378e-07,
+      "max_ulp": 3
+    },
+    "gate:bf16_f32_f32": {
+      "cases": 2,
+      "floor_relative_l2": 4.578155349477261e-08,
+      "floor_max_relative": 2.4327641312120835e-07,
+      "max_ulp": 3
+    },
+    "gate:f32_bf16_bf16": {
+      "cases": 2,
+      "floor_relative_l2": 4.6196831711107435e-08,
+      "floor_max_relative": 2.804416077235849e-07,
+      "max_ulp": 4
+    },
+    "gate:f32_bf16_f32": {
+      "cases": 2,
+      "floor_relative_l2": 4.7693235988838724e-08,
+      "floor_max_relative": 2.669613706952018e-07,
+      "max_ulp": 4
+    },
+    "gate:f32_f32_bf16": {
+      "cases": 2,
+      "floor_relative_l2": 4.4600212387549e-08,
+      "floor_max_relative": 2.859312157057043e-07,
+      "max_ulp": 4
+    },
+    "gate:f32_f32_f32": {
+      "cases": 2,
+      "floor_relative_l2": 4.647234279011182e-08,
+      "floor_max_relative": 2.388974834948263e-07,
+      "max_ulp": 4
+    },
+    "beta:bf16": {
+      "cases": 3,
+      "floor_relative_l2": 3.8961949808674645e-08,
+      "floor_max_relative": 1.1810085580600678e-07,
+      "max_ulp": 2
+    },
+    "beta:f32": {
+      "cases": 3,
+      "floor_relative_l2": 3.821804457505415e-08,
+      "floor_max_relative": 1.1543336423913626e-07,
+      "max_ulp": 2
+    }
+  },
+  "cases": [
+    {
+      "op": "norm",
+      "types": "bf16_bf16",
+      "kind": "gaussian",
+      "shape": [
+        1,
+        64,
+        1,
+        128
+      ],
+      "input_sha256": [
+        "34ef60e03bffc71d6c6a29558eae9a7753d08ef7cc59fa644f734341ec8c568d"
+      ],
+      "numerical_budget_population": true,
+      "metrics": {
+        "elements": 8192,
+        "finite_pairs": 8192,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 7.999999968525975,
+        "residual_norm": 0.013166670490987855,
+        "relative_l2": 0.0016458338178486087,
+        "relative_l2_finite_pairs": 0.0016458338178486087,
+        "max_abs": 0.0009579152460639784,
+        "max_relative_nonzero": 0.0038516075488412185,
+        "relative_quantiles": [
+          0.0013395031426060612,
+          0.0026096317921447195,
+          0.0034601354989586223,
+          0.0038516075488412185
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 0,
+        "rounded_reference_over_one_ulp": 0,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "146aac0e278895ac100c3dd6c45264beef9b0607b4876ebd833c960901d32e07",
+        "reference_fp64_sha256": "c15d79d4b6addb14875e3c09bacfa1eccdb09c3ed14e763177932c55d47e66b8"
+      }
+    },
+    {
+      "op": "norm",
+      "types": "bf16_f32",
+      "kind": "gaussian",
+      "shape": [
+        1,
+        64,
+        1,
+        128
+      ],
+      "input_sha256": [
+        "34ef60e03bffc71d6c6a29558eae9a7753d08ef7cc59fa644f734341ec8c568d"
+      ],
+      "numerical_budget_population": true,
+      "metrics": {
+        "elements": 8192,
+        "finite_pairs": 8192,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 7.999999968525975,
+        "residual_norm": 3.538404919922793e-07,
+        "relative_l2": 4.423006167304717e-08,
+        "relative_l2_finite_pairs": 4.423006167304717e-08,
+        "max_abs": 3.4145723137868345e-08,
+        "max_relative_nonzero": 1.5598635509698328e-07,
+        "relative_quantiles": [
+          2.944516513282637e-08,
+          7.248676334272787e-08,
+          1.1602014802396673e-07,
+          1.5598635509698328e-07
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 2,
+        "rounded_reference_over_one_ulp": 81,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "a05e9042877354d8aeb272582436708daba7a65d130d214a36b4a9b7f7e7bd9c",
+        "reference_fp64_sha256": "c15d79d4b6addb14875e3c09bacfa1eccdb09c3ed14e763177932c55d47e66b8"
+      }
+    },
+    {
+      "op": "norm",
+      "types": "f32_bf16",
+      "kind": "gaussian",
+      "shape": [
+        1,
+        64,
+        1,
+        128
+      ],
+      "input_sha256": [
+        "d53d93c664c492aba473da0ba3b88224650f7d03d79f17199d449f24046cab1e"
+      ],
+      "numerical_budget_population": true,
+      "metrics": {
+        "elements": 8192,
+        "finite_pairs": 8192,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 7.999999968525836,
+        "residual_norm": 0.013284916223514406,
+        "relative_l2": 0.0016606145344726074,
+        "relative_l2_finite_pairs": 0.0016606145344726074,
+        "max_abs": 0.0009432161830020269,
+        "max_relative_nonzero": 0.0038844872698658153,
+        "relative_quantiles": [
+          0.0013404293467152869,
+          0.0026421740847505826,
+          0.0034402276891145017,
+          0.0038844872698658153
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 0,
+        "rounded_reference_over_one_ulp": 0,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "6b85525fdd10a8565445c428c76e70c9da94ae31ea5c5f478fe294657c204f07",
+        "reference_fp64_sha256": "3b39f6ed71510b9acb55cc8df05e650ac94bb3489c3cafb5f995d90c4f3c1f94"
+      }
+    },
+    {
+      "op": "norm",
+      "types": "f32_f32",
+      "kind": "gaussian",
+      "shape": [
+        1,
+        64,
+        1,
+        128
+      ],
+      "input_sha256": [
+        "d53d93c664c492aba473da0ba3b88224650f7d03d79f17199d449f24046cab1e"
+      ],
+      "numerical_budget_population": true,
+      "metrics": {
+        "elements": 8192,
+        "finite_pairs": 8192,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 7.999999968525836,
+        "residual_norm": 3.3998679419061786e-07,
+        "relative_l2": 4.2498349441027235e-08,
+        "relative_l2_finite_pairs": 4.2498349441027235e-08,
+        "max_abs": 2.7320568529720646e-08,
+        "max_relative_nonzero": 1.3994976033681636e-07,
+        "relative_quantiles": [
+          2.992741143977696e-08,
+          6.937251713685647e-08,
+          1.0486410563158735e-07,
+          1.3994976033681636e-07
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 2,
+        "rounded_reference_over_one_ulp": 27,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "1cc67f8fe1d3f32c41cedd1f4177bfee2b29da73f566d904f5131e91e6c4c917",
+        "reference_fp64_sha256": "3b39f6ed71510b9acb55cc8df05e650ac94bb3489c3cafb5f995d90c4f3c1f94"
+      }
+    },
+    {
+      "op": "norm",
+      "types": "bf16_bf16",
+      "kind": "gaussian",
+      "shape": [
+        2,
+        192,
+        2,
+        128
+      ],
+      "input_sha256": [
+        "54f6e4bca898206cd72eaee64941a130ebb3d52294e72377ccd48aea907fe949"
+      ],
+      "numerical_budget_population": true,
+      "metrics": {
+        "elements": 98304,
+        "finite_pairs": 98304,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 27.71281281185204,
+        "residual_norm": 0.0457422800880229,
+        "relative_l2": 0.0016505823641424133,
+        "relative_l2_finite_pairs": 0.0016505823641424133,
+        "max_abs": 0.0009725146464250045,
+        "max_relative_nonzero": 0.0038836729502281396,
+        "relative_quantiles": [
+          0.0013553416947810692,
+          0.002623204019489604,
+          0.0034587995063385477,
+          0.0038836729502281396
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 0,
+        "rounded_reference_over_one_ulp": 0,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "472b94f39b95fd7348552779aa7e55e03a834a3b44f99482278424cdc74e9276",
+        "reference_fp64_sha256": "4243cbc2ae2bc5fe452ee31d2e16bcb6dc800b5bef91cf35f955b165dcced265"
+      }
+    },
+    {
+      "op": "norm",
+      "types": "bf16_f32",
+      "kind": "gaussian",
+      "shape": [
+        2,
+        192,
+        2,
+        128
+      ],
+      "input_sha256": [
+        "54f6e4bca898206cd72eaee64941a130ebb3d52294e72377ccd48aea907fe949"
+      ],
+      "numerical_budget_population": true,
+      "metrics": {
+        "elements": 98304,
+        "finite_pairs": 98304,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 27.71281281185204,
+        "residual_norm": 1.1811742224580395e-06,
+        "relative_l2": 4.262195362402486e-08,
+        "relative_l2_finite_pairs": 4.262195362402486e-08,
+        "max_abs": 3.306522189383543e-08,
+        "max_relative_nonzero": 1.5599345788195067e-07,
+        "relative_quantiles": [
+          2.965157320267454e-08,
+          7.038663537042217e-08,
+          1.0504094874368077e-07,
+          1.5599345788195067e-07
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 2,
+        "rounded_reference_over_one_ulp": 266,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "cf77ff8d930f7d75a2d47261eead89474536fef31a646fdb04aac5b6a41742c9",
+        "reference_fp64_sha256": "4243cbc2ae2bc5fe452ee31d2e16bcb6dc800b5bef91cf35f955b165dcced265"
+      }
+    },
+    {
+      "op": "norm",
+      "types": "f32_bf16",
+      "kind": "gaussian",
+      "shape": [
+        2,
+        192,
+        2,
+        128
+      ],
+      "input_sha256": [
+        "2875b8cc8cb9e1a00a94630c186f2579ae872f050a038346e261efd0d4547164"
+      ],
+      "numerical_budget_population": true,
+      "metrics": {
+        "elements": 98304,
+        "finite_pairs": 98304,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 27.712812811853965,
+        "residual_norm": 0.04567959568322709,
+        "relative_l2": 0.0016483204355094536,
+        "relative_l2_finite_pairs": 0.0016483204355094536,
+        "max_abs": 0.000969935644538622,
+        "max_relative_nonzero": 0.0038857768599500934,
+        "relative_quantiles": [
+          0.0013549545871285578,
+          0.002625717921494951,
+          0.0034662170385002604,
+          0.0038857768599500934
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 1,
+        "rounded_reference_over_one_ulp": 0,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "1c2d8096483bf73b14dd11f707d99e60cc3d7ab76c455b16d6663517d0e391e3",
+        "reference_fp64_sha256": "d2a6561c5763707a846abde3261ee70e6a51bbfacc3de51daa5ebe77b2565fbe"
+      }
+    },
+    {
+      "op": "norm",
+      "types": "f32_f32",
+      "kind": "gaussian",
+      "shape": [
+        2,
+        192,
+        2,
+        128
+      ],
+      "input_sha256": [
+        "2875b8cc8cb9e1a00a94630c186f2579ae872f050a038346e261efd0d4547164"
+      ],
+      "numerical_budget_population": true,
+      "metrics": {
+        "elements": 98304,
+        "finite_pairs": 98304,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 27.712812811853965,
+        "residual_norm": 1.1587882019325658e-06,
+        "relative_l2": 4.1814167684808314e-08,
+        "relative_l2_finite_pairs": 4.1814167684808314e-08,
+        "max_abs": 3.4765432810335284e-08,
+        "max_relative_nonzero": 1.4637665010557065e-07,
+        "relative_quantiles": [
+          2.924531863971535e-08,
+          6.919982962750051e-08,
+          1.0283908609302676e-07,
+          1.4637665010557065e-07
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 2,
+        "rounded_reference_over_one_ulp": 198,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "958f34ab88183f5b62ec9b31896fd63a6417915126cbbc041556d35155d1e564",
+        "reference_fp64_sha256": "d2a6561c5763707a846abde3261ee70e6a51bbfacc3de51daa5ebe77b2565fbe"
+      }
+    },
+    {
+      "op": "norm",
+      "types": "bf16_bf16",
+      "kind": "gaussian",
+      "shape": [
+        1,
+        4096,
+        32,
+        128
+      ],
+      "input_sha256": [
+        "10971862eb5df7803afe6104031fea4516e371a3a724bd0d44579eccf217855c"
+      ],
+      "numerical_budget_population": true,
+      "metrics": {
+        "elements": 16777216,
+        "finite_pairs": 16777216,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 362.03867053160815,
+        "residual_norm": 0.5992724227978189,
+        "relative_l2": 0.0016552718578870674,
+        "relative_l2_finite_pairs": 0.0016552718578870674,
+        "max_abs": 0.000976531936318914,
+        "max_relative_nonzero": 0.003890989942832648,
+        "relative_quantiles": [
+          0.001353695539611961,
+          0.002626292519938836,
+          0.003462266708487539,
+          0.003890989942832648
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 1,
+        "rounded_reference_over_one_ulp": 0,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "9a336e63923c65eeaad407e127beaaf86f51201adb4a18675c81cb8e54cc0d82",
+        "reference_fp64_sha256": "26e10249fa13c843c7bd6c8a1d5a40f31fe572f86b7e03f62a4319fc6ff7cd74"
+      }
+    },
+    {
+      "op": "norm",
+      "types": "bf16_f32",
+      "kind": "gaussian",
+      "shape": [
+        1,
+        4096,
+        32,
+        128
+      ],
+      "input_sha256": [
+        "10971862eb5df7803afe6104031fea4516e371a3a724bd0d44579eccf217855c"
+      ],
+      "numerical_budget_population": true,
+      "metrics": {
+        "elements": 16777216,
+        "finite_pairs": 16777216,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 362.03867053160815,
+        "residual_norm": 1.5298129574080298e-05,
+        "relative_l2": 4.2255512516430695e-08,
+        "relative_l2_finite_pairs": 4.2255512516430695e-08,
+        "max_abs": 4.7537438874201143e-08,
+        "max_relative_nonzero": 1.807531212888719e-07,
+        "relative_quantiles": [
+          2.9472062547548753e-08,
+          6.970482125811214e-08,
+          1.0357553186499458e-07,
+          1.807531212888719e-07
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 3,
+        "rounded_reference_over_one_ulp": 41642,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "d953a37b0848bf24882ce1ea5f89e80645d4a08de017b9386676f08abac03cac",
+        "reference_fp64_sha256": "26e10249fa13c843c7bd6c8a1d5a40f31fe572f86b7e03f62a4319fc6ff7cd74"
+      }
+    },
+    {
+      "op": "norm",
+      "types": "f32_bf16",
+      "kind": "gaussian",
+      "shape": [
+        1,
+        4096,
+        32,
+        128
+      ],
+      "input_sha256": [
+        "2134663accd6d5172b0f0a19502c23bf77e66d82f98faf12c54cd635244a1d30"
+      ],
+      "numerical_budget_population": true,
+      "metrics": {
+        "elements": 16777216,
+        "finite_pairs": 16777216,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 362.03867053162054,
+        "residual_norm": 0.5994149346439304,
+        "relative_l2": 0.0016556654949697626,
+        "relative_l2_finite_pairs": 0.0016556654949697626,
+        "max_abs": 0.000976564138516045,
+        "max_relative_nonzero": 0.0038910482710974156,
+        "relative_quantiles": [
+          0.0013543124340451866,
+          0.002626238327562156,
+          0.003462744031256082,
+          0.0038910482710974156
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 1,
+        "rounded_reference_over_one_ulp": 0,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "2f93309699e01f6deeebb67eb562daa10e15210b35ed50c13cabc5b1ee55d947",
+        "reference_fp64_sha256": "11328191049e22733af7fb44c2b5a31aa005558e22f8b5ce7bb16e564e0002a9"
+      }
+    },
+    {
+      "op": "norm",
+      "types": "f32_f32",
+      "kind": "gaussian",
+      "shape": [
+        1,
+        4096,
+        32,
+        128
+      ],
+      "input_sha256": [
+        "2134663accd6d5172b0f0a19502c23bf77e66d82f98faf12c54cd635244a1d30"
+      ],
+      "numerical_budget_population": true,
+      "metrics": {
+        "elements": 16777216,
+        "finite_pairs": 16777216,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 362.03867053162054,
+        "residual_norm": 1.5139930549295487e-05,
+        "relative_l2": 4.181854531468666e-08,
+        "relative_l2_finite_pairs": 4.181854531468666e-08,
+        "max_abs": 4.671364844943682e-08,
+        "max_relative_nonzero": 1.764553867963363e-07,
+        "relative_quantiles": [
+          2.9173744147280148e-08,
+          6.900149835383484e-08,
+          1.0231348257796447e-07,
+          1.764553867963363e-07
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 2,
+        "rounded_reference_over_one_ulp": 36447,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "e9efad8ee8d81f9d38899bc6b05c7a982920b2326ef57986a1a335a447132b84",
+        "reference_fp64_sha256": "11328191049e22733af7fb44c2b5a31aa005558e22f8b5ce7bb16e564e0002a9"
+      }
+    },
+    {
+      "op": "norm",
+      "types": "bf16_bf16",
+      "kind": "scale_0",
+      "shape": [
+        1,
+        64,
+        2,
+        128
+      ],
+      "input_sha256": [
+        "1225d5e6c220d0777aa9c78b7197bf672a23db97c01dbd9bab413bc22f5d5290"
+      ],
+      "numerical_budget_population": true,
+      "metrics": {
+        "elements": 16384,
+        "finite_pairs": 16384,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 0.0,
+        "residual_norm": 0.0,
+        "relative_l2": 0.0,
+        "relative_l2_finite_pairs": 0.0,
+        "max_abs": 0.0,
+        "max_relative_nonzero": 0.0,
+        "relative_quantiles": [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 0,
+        "rounded_reference_over_one_ulp": 0,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "1225d5e6c220d0777aa9c78b7197bf672a23db97c01dbd9bab413bc22f5d5290",
+        "reference_fp64_sha256": "7ae59c9db4cd12757663031b3e2dbd7f8df25320b93a18464546fe41e87d88d2"
+      }
+    },
+    {
+      "op": "norm",
+      "types": "bf16_f32",
+      "kind": "scale_0",
+      "shape": [
+        1,
+        64,
+        2,
+        128
+      ],
+      "input_sha256": [
+        "1225d5e6c220d0777aa9c78b7197bf672a23db97c01dbd9bab413bc22f5d5290"
+      ],
+      "numerical_budget_population": true,
+      "metrics": {
+        "elements": 16384,
+        "finite_pairs": 16384,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 0.0,
+        "residual_norm": 0.0,
+        "relative_l2": 0.0,
+        "relative_l2_finite_pairs": 0.0,
+        "max_abs": 0.0,
+        "max_relative_nonzero": 0.0,
+        "relative_quantiles": [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 0,
+        "rounded_reference_over_one_ulp": 0,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "2ecbc54cb7a5f474601951e4729a5d6d50f524adb1934e65e3309d40661782fb",
+        "reference_fp64_sha256": "7ae59c9db4cd12757663031b3e2dbd7f8df25320b93a18464546fe41e87d88d2"
+      }
+    },
+    {
+      "op": "norm",
+      "types": "f32_bf16",
+      "kind": "scale_0",
+      "shape": [
+        1,
+        64,
+        2,
+        128
+      ],
+      "input_sha256": [
+        "2ecbc54cb7a5f474601951e4729a5d6d50f524adb1934e65e3309d40661782fb"
+      ],
+      "numerical_budget_population": true,
+      "metrics": {
+        "elements": 16384,
+        "finite_pairs": 16384,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 0.0,
+        "residual_norm": 0.0,
+        "relative_l2": 0.0,
+        "relative_l2_finite_pairs": 0.0,
+        "max_abs": 0.0,
+        "max_relative_nonzero": 0.0,
+        "relative_quantiles": [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 0,
+        "rounded_reference_over_one_ulp": 0,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "1225d5e6c220d0777aa9c78b7197bf672a23db97c01dbd9bab413bc22f5d5290",
+        "reference_fp64_sha256": "7ae59c9db4cd12757663031b3e2dbd7f8df25320b93a18464546fe41e87d88d2"
+      }
+    },
+    {
+      "op": "norm",
+      "types": "f32_f32",
+      "kind": "scale_0",
+      "shape": [
+        1,
+        64,
+        2,
+        128
+      ],
+      "input_sha256": [
+        "2ecbc54cb7a5f474601951e4729a5d6d50f524adb1934e65e3309d40661782fb"
+      ],
+      "numerical_budget_population": true,
+      "metrics": {
+        "elements": 16384,
+        "finite_pairs": 16384,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 0.0,
+        "residual_norm": 0.0,
+        "relative_l2": 0.0,
+        "relative_l2_finite_pairs": 0.0,
+        "max_abs": 0.0,
+        "max_relative_nonzero": 0.0,
+        "relative_quantiles": [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 0,
+        "rounded_reference_over_one_ulp": 0,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "2ecbc54cb7a5f474601951e4729a5d6d50f524adb1934e65e3309d40661782fb",
+        "reference_fp64_sha256": "7ae59c9db4cd12757663031b3e2dbd7f8df25320b93a18464546fe41e87d88d2"
+      }
+    },
+    {
+      "op": "norm",
+      "types": "bf16_bf16",
+      "kind": "scale_1e-20",
+      "shape": [
+        1,
+        64,
+        2,
+        128
+      ],
+      "input_sha256": [
+        "e02ddbcdc8db6f115a8e4fa997b62ab48bcb51053ec043f1db3be6208a5335c4"
+      ],
+      "numerical_budget_population": true,
+      "metrics": {
+        "elements": 16384,
+        "finite_pairs": 16384,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 1.2799086986975967e-15,
+        "residual_norm": 2.1405613732767146e-18,
+        "relative_l2": 0.0016724328660746635,
+        "relative_l2_finite_pairs": 0.0016724328660746635,
+        "max_abs": 1.0672615135404184e-19,
+        "max_relative_nonzero": 0.0033825503355704696,
+        "relative_quantiles": [
+          0.0013884297520661156,
+          0.0026666666666666666,
+          0.0033066666666666665,
+          0.0033825503355704696
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 1,
+        "rounded_reference_over_one_ulp": 0,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "d1b50456a429c5dc30dd3808f14c6348fa366bd71b3ca8751ee5eb02be285629",
+        "reference_fp64_sha256": "f67fa2ad198659a12cc9786a0b61f49d74aa37236467baf56ee3c9596828f5c4"
+      }
+    },
+    {
+      "op": "norm",
+      "types": "bf16_f32",
+      "kind": "scale_1e-20",
+      "shape": [
+        1,
+        64,
+        2,
+        128
+      ],
+      "input_sha256": [
+        "e02ddbcdc8db6f115a8e4fa997b62ab48bcb51053ec043f1db3be6208a5335c4"
+      ],
+      "numerical_budget_population": true,
+      "metrics": {
+        "elements": 16384,
+        "finite_pairs": 16384,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 1.2799086986975967e-15,
+        "residual_norm": 8.060395788643591e-23,
+        "relative_l2": 6.297633414669069e-08,
+        "relative_l2_finite_pairs": 6.297633414669069e-08,
+        "max_abs": 3.308722450212111e-24,
+        "max_relative_nonzero": 9.46969696969697e-08,
+        "relative_quantiles": [
+          6.677350427350428e-08,
+          8.827683615819209e-08,
+          9.412650602409638e-08,
+          9.46969696969697e-08
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 1,
+        "rounded_reference_over_one_ulp": 0,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "7c248f9ebc4a760ea069cc84f6b1a429cab8ef3ce20baab2a812f102cf34f65d",
+        "reference_fp64_sha256": "f67fa2ad198659a12cc9786a0b61f49d74aa37236467baf56ee3c9596828f5c4"
+      }
+    },
+    {
+      "op": "norm",
+      "types": "f32_bf16",
+      "kind": "scale_1e-20",
+      "shape": [
+        1,
+        64,
+        2,
+        128
+      ],
+      "input_sha256": [
+        "ae02c6b3825515a4afbdfad71ebf2b0fe9a4e70d68388dbe385d32cd67c2c76e"
+      ],
+      "numerical_budget_population": true,
+      "metrics": {
+        "elements": 16384,
+        "finite_pairs": 16384,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 1.2799920809376467e-15,
+        "residual_norm": 2.1355952787641266e-18,
+        "relative_l2": 0.0016684441338103556,
+        "relative_l2_finite_pairs": 0.0016684441338103556,
+        "max_abs": 1.074886050836626e-19,
+        "max_relative_nonzero": 0.0038657502316406652,
+        "relative_quantiles": [
+          0.0013526408365417937,
+          0.0026331784589375814,
+          0.0034579119559938016,
+          0.0038657502316406652
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 0,
+        "rounded_reference_over_one_ulp": 0,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "3553d5cc13b8bc577fdaa0b3ad425f683f6f16f123974cc535b5e5b6911078d5",
+        "reference_fp64_sha256": "bb278b7f212b3579236d49f5fbad59d7eac1ea0b20e7952f1d5d890035b28ae4"
+      }
+    },
+    {
+      "op": "norm",
+      "types": "f32_f32",
+      "kind": "scale_1e-20",
+      "shape": [
+        1,
+        64,
+        2,
+        128
+      ],
+      "input_sha256": [
+        "ae02c6b3825515a4afbdfad71ebf2b0fe9a4e70d68388dbe385d32cd67c2c76e"
+      ],
+      "numerical_budget_population": true,
+      "metrics": {
+        "elements": 16384,
+        "finite_pairs": 16384,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 1.2799920809376467e-15,
+        "residual_norm": 6.787521171592111e-23,
+        "relative_l2": 5.302783722396136e-08,
+        "relative_l2_finite_pairs": 5.302783722396136e-08,
+        "max_abs": 3.127776691216136e-24,
+        "max_relative_nonzero": 1.0651719679619428e-07,
+        "relative_quantiles": [
+          4.694488162382278e-08,
+          8.047217146174204e-08,
+          9.743109955458497e-08,
+          1.0651719679619428e-07
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 1,
+        "rounded_reference_over_one_ulp": 0,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "0af31b8302fe26cccf7a8c873c59fc14e41ce2b4b8bb1ea19e72aa30b9fbd307",
+        "reference_fp64_sha256": "bb278b7f212b3579236d49f5fbad59d7eac1ea0b20e7952f1d5d890035b28ae4"
+      }
+    },
+    {
+      "op": "norm",
+      "types": "bf16_bf16",
+      "kind": "scale_1e-08",
+      "shape": [
+        1,
+        64,
+        2,
+        128
+      ],
+      "input_sha256": [
+        "c16acc82c9ddb3051d5fc351b6a785c59e2cddb592af13cd1f70037fbb1fc118"
+      ],
+      "numerical_budget_population": true,
+      "metrics": {
+        "elements": 16384,
+        "finite_pairs": 16384,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 0.0012799862811295254,
+        "residual_norm": 2.1537407926320593e-06,
+        "relative_l2": 0.001682628028428155,
+        "relative_l2_finite_pairs": 0.001682628028428155,
+        "max_abs": 1.1175894148869435e-07,
+        "max_relative_nonzero": 0.003382558600251595,
+        "relative_quantiles": [
+          0.0013884245127462286,
+          0.00266666198587418,
+          0.0033066613162469048,
+          0.003382558600251595
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 1,
+        "rounded_reference_over_one_ulp": 0,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "938acc4ab965e642e75ea276da7eb3b8e7f52a6d3ae747f25e42aa8eb0e4b07d",
+        "reference_fp64_sha256": "f99894b3bd407c9f9341c4eea3a80bc043f8c16deafe3a41d60e558e8489e73d"
+      }
+    },
+    {
+      "op": "norm",
+      "types": "bf16_f32",
+      "kind": "scale_1e-08",
+      "shape": [
+        1,
+        64,
+        2,
+        128
+      ],
+      "input_sha256": [
+        "c16acc82c9ddb3051d5fc351b6a785c59e2cddb592af13cd1f70037fbb1fc118"
+      ],
+      "numerical_budget_population": true,
+      "metrics": {
+        "elements": 16384,
+        "finite_pairs": 16384,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 0.0012799862811295254,
+        "residual_norm": 7.426248235281164e-11,
+        "relative_l2": 5.801818616936943e-08,
+        "relative_l2_finite_pairs": 5.801818616936943e-08,
+        "max_abs": 3.3949223030775404e-12,
+        "max_relative_nonzero": 9.045104294699747e-08,
+        "relative_quantiles": [
+          6.063106336906814e-08,
+          8.213033290459495e-08,
+          8.792861918625781e-08,
+          9.045104294699747e-08
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 1,
+        "rounded_reference_over_one_ulp": 0,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "32265221a060dc3395fd77ef9d01eba182c2121ea3d3ae9c36d7fdb227dd0979",
+        "reference_fp64_sha256": "f99894b3bd407c9f9341c4eea3a80bc043f8c16deafe3a41d60e558e8489e73d"
+      }
+    },
+    {
+      "op": "norm",
+      "types": "f32_bf16",
+      "kind": "scale_1e-08",
+      "shape": [
+        1,
+        64,
+        2,
+        128
+      ],
+      "input_sha256": [
+        "2a429d6cbbf26e63b6774b8adc820ee9eda3fbb4133684f28f0251dd82e22265"
+      ],
+      "numerical_budget_population": true,
+      "metrics": {
+        "elements": 16384,
+        "finite_pairs": 16384,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 0.0012799921046670539,
+        "residual_norm": 2.0992793191427767e-06,
+        "relative_l2": 0.0016400720844202648,
+        "relative_l2_finite_pairs": 0.0016400720844202648,
+        "max_abs": 1.14371970575048e-07,
+        "max_relative_nonzero": 0.003868825403425892,
+        "relative_quantiles": [
+          0.0013394104638464088,
+          0.002624233191871126,
+          0.003443501094247204,
+          0.003868825403425892
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 0,
+        "rounded_reference_over_one_ulp": 0,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "e06ca242e6d2c457810f6a450832a938d42620151f53de8ebf647fc8cd282817",
+        "reference_fp64_sha256": "f28ead9d516a5385ddbdab0f8eea54fafc3300f4ca8f71bd235423a08514bbe0"
+      }
+    },
+    {
+      "op": "norm",
+      "types": "f32_f32",
+      "kind": "scale_1e-08",
+      "shape": [
+        1,
+        64,
+        2,
+        128
+      ],
+      "input_sha256": [
+        "2a429d6cbbf26e63b6774b8adc820ee9eda3fbb4133684f28f0251dd82e22265"
+      ],
+      "numerical_budget_population": true,
+      "metrics": {
+        "elements": 16384,
+        "finite_pairs": 16384,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 0.0012799921046670539,
+        "residual_norm": 6.143847022461433e-11,
+        "relative_l2": 4.7999100932419775e-08,
+        "relative_l2_finite_pairs": 4.7999100932419775e-08,
+        "max_abs": 3.0196521146183194e-12,
+        "max_relative_nonzero": 9.990665995960421e-08,
+        "relative_quantiles": [
+          4.074954191237733e-08,
+          7.453551520076395e-08,
+          9.131358408627805e-08,
+          9.990665995960421e-08
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 1,
+        "rounded_reference_over_one_ulp": 0,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "40fee01bb21c3540db6862b092a59c3b65379e19cd382f1ea9d2f56cc2b01256",
+        "reference_fp64_sha256": "f28ead9d516a5385ddbdab0f8eea54fafc3300f4ca8f71bd235423a08514bbe0"
+      }
+    },
+    {
+      "op": "norm",
+      "types": "bf16_bf16",
+      "kind": "scale_0.0001",
+      "shape": [
+        1,
+        64,
+        2,
+        128
+      ],
+      "input_sha256": [
+        "e74e3c8106230254e0887bda5035030116b0a88d787b432877d43a55b0fd2e1d"
+      ],
+      "numerical_budget_population": true,
+      "metrics": {
+        "elements": 16384,
+        "finite_pairs": 16384,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 8.459776785799763,
+        "residual_norm": 0.013995728136430541,
+        "relative_l2": 0.0016543850376670932,
+        "relative_l2_finite_pairs": 0.0016543850376670932,
+        "max_abs": 0.0008528686009425246,
+        "max_relative_nonzero": 0.0038640708170354335,
+        "relative_quantiles": [
+          0.0013464444601280347,
+          0.0026369740926123516,
+          0.003464167962318542,
+          0.0038640708170354335
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 0,
+        "rounded_reference_over_one_ulp": 0,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "0d26527ebdb967198b2d91c0b21213d043183f3851fb91f9d43ecec5c7b43e16",
+        "reference_fp64_sha256": "141a0920af07acc7fb21424c4d926c1a2ac030356cd3c5aec016fd3f6826c3d3"
+      }
+    },
+    {
+      "op": "norm",
+      "types": "bf16_f32",
+      "kind": "scale_0.0001",
+      "shape": [
+        1,
+        64,
+        2,
+        128
+      ],
+      "input_sha256": [
+        "e74e3c8106230254e0887bda5035030116b0a88d787b432877d43a55b0fd2e1d"
+      ],
+      "numerical_budget_population": true,
+      "metrics": {
+        "elements": 16384,
+        "finite_pairs": 16384,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 8.459776785799763,
+        "residual_norm": 3.6754983912169484e-07,
+        "relative_l2": 4.3446753788900086e-08,
+        "relative_l2_finite_pairs": 4.3446753788900086e-08,
+        "max_abs": 1.9138717971545205e-08,
+        "max_relative_nonzero": 1.3128942612408738e-07,
+        "relative_quantiles": [
+          3.1012603604119446e-08,
+          7.290261649992656e-08,
+          1.0287106133211904e-07,
+          1.3128942612408738e-07
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 2,
+        "rounded_reference_over_one_ulp": 39,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "f198aad93c00ecdbf3ba76828c671a873b9a336ec9b886e77aee304328d4098b",
+        "reference_fp64_sha256": "141a0920af07acc7fb21424c4d926c1a2ac030356cd3c5aec016fd3f6826c3d3"
+      }
+    },
+    {
+      "op": "norm",
+      "types": "f32_bf16",
+      "kind": "scale_0.0001",
+      "shape": [
+        1,
+        64,
+        2,
+        128
+      ],
+      "input_sha256": [
+        "cada9ee81631a85db2ac7cf4756547be38b998e9e5341d9f3534716e270d12e4"
+      ],
+      "numerical_budget_population": true,
+      "metrics": {
+        "elements": 16384,
+        "finite_pairs": 16384,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 8.459826319666435,
+        "residual_norm": 0.014073781567505906,
+        "relative_l2": 0.001663601714232453,
+        "relative_l2_finite_pairs": 0.001663601714232453,
+        "max_abs": 0.0009506348224868066,
+        "max_relative_nonzero": 0.00385631363358876,
+        "relative_quantiles": [
+          0.0013378250650088893,
+          0.0026348350205218887,
+          0.003470918112861797,
+          0.00385631363358876
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 0,
+        "rounded_reference_over_one_ulp": 0,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "3520d6adb3ebcdc62a5e80fd435828945aa162cb24e83e242a529128e0cb0665",
+        "reference_fp64_sha256": "8990b020ed581c4040d44ab656ed17a9e143f7d360b539804a6f4ed7ecbc0f3f"
+      }
+    },
+    {
+      "op": "norm",
+      "types": "f32_f32",
+      "kind": "scale_0.0001",
+      "shape": [
+        1,
+        64,
+        2,
+        128
+      ],
+      "input_sha256": [
+        "cada9ee81631a85db2ac7cf4756547be38b998e9e5341d9f3534716e270d12e4"
+      ],
+      "numerical_budget_population": true,
+      "metrics": {
+        "elements": 16384,
+        "finite_pairs": 16384,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 8.459826319666435,
+        "residual_norm": 3.4991015993045657e-07,
+        "relative_l2": 4.136138813122268e-08,
+        "relative_l2_finite_pairs": 4.136138813122268e-08,
+        "max_abs": 2.334536530756992e-08,
+        "max_relative_nonzero": 1.3679291770424343e-07,
+        "relative_quantiles": [
+          2.9121028501580137e-08,
+          6.905978223132412e-08,
+          1.0177329525550096e-07,
+          1.3679291770424343e-07
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 2,
+        "rounded_reference_over_one_ulp": 40,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "4aff49afcd308bbd998f7bf9667a702ed69e3d2d3e84285a5adbc638d654ad2b",
+        "reference_fp64_sha256": "8990b020ed581c4040d44ab656ed17a9e143f7d360b539804a6f4ed7ecbc0f3f"
+      }
+    },
+    {
+      "op": "norm",
+      "types": "bf16_bf16",
+      "kind": "scale_30",
+      "shape": [
+        1,
+        64,
+        2,
+        128
+      ],
+      "input_sha256": [
+        "34bbe414ac09555f0ef2cc45256cccb2689d4e64e3e57187c738d5b6d728896a"
+      ],
+      "numerical_budget_population": true,
+      "metrics": {
+        "elements": 16384,
+        "finite_pairs": 16384,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 11.313708498934812,
+        "residual_norm": 0.0184892619490537,
+        "relative_l2": 0.0016342353129209992,
+        "relative_l2_finite_pairs": 0.0016342353129209992,
+        "max_abs": 0.0009626124033671468,
+        "max_relative_nonzero": 0.003838651725606717,
+        "relative_quantiles": [
+          0.001355547095321224,
+          0.0026261946406504156,
+          0.0034776277504376387,
+          0.003838651725606717
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 0,
+        "rounded_reference_over_one_ulp": 0,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "6aa1a2717693c74a034546ebbd417d9d42625f2466e7727a05ea3ae3c0f4fcd4",
+        "reference_fp64_sha256": "9162d9e3ce645badfd02efe638444f378fbf137c2320a05930b4a3425819c2e8"
+      }
+    },
+    {
+      "op": "norm",
+      "types": "bf16_f32",
+      "kind": "scale_30",
+      "shape": [
+        1,
+        64,
+        2,
+        128
+      ],
+      "input_sha256": [
+        "34bbe414ac09555f0ef2cc45256cccb2689d4e64e3e57187c738d5b6d728896a"
+      ],
+      "numerical_budget_population": true,
+      "metrics": {
+        "elements": 16384,
+        "finite_pairs": 16384,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 11.313708498934812,
+        "residual_norm": 4.545431405032384e-07,
+        "relative_l2": 4.017631712413607e-08,
+        "relative_l2_finite_pairs": 4.017631712413607e-08,
+        "max_abs": 2.4498539141770692e-08,
+        "max_relative_nonzero": 1.2959844569314002e-07,
+        "relative_quantiles": [
+          2.8404214878243136e-08,
+          6.708125961173424e-08,
+          9.65483858366419e-08,
+          1.2959844569314002e-07
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 2,
+        "rounded_reference_over_one_ulp": 4,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "b067dfceac15189f0c06b6c71fca8cad78d6382b6e96f007a668a906c7a3a4dc",
+        "reference_fp64_sha256": "9162d9e3ce645badfd02efe638444f378fbf137c2320a05930b4a3425819c2e8"
+      }
+    },
+    {
+      "op": "norm",
+      "types": "f32_bf16",
+      "kind": "scale_30",
+      "shape": [
+        1,
+        64,
+        2,
+        128
+      ],
+      "input_sha256": [
+        "a67cafed4ee319b7200787181d7e3a5b53958324f01d7c55f8a6475c089635e9"
+      ],
+      "numerical_budget_population": true,
+      "metrics": {
+        "elements": 16384,
+        "finite_pairs": 16384,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 11.31370849893482,
+        "residual_norm": 0.018742870369203267,
+        "relative_l2": 0.0016566513421278175,
+        "relative_l2_finite_pairs": 0.0016566513421278175,
+        "max_abs": 0.0009352018374194082,
+        "max_relative_nonzero": 0.003871169979993576,
+        "relative_quantiles": [
+          0.0013618828137141653,
+          0.0026505616796441574,
+          0.003483528987581725,
+          0.003871169979993576
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 0,
+        "rounded_reference_over_one_ulp": 0,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "11dc213c747f22cda786dd12d59b6b04e3b6642fc016deaaca90f5b00877e4c9",
+        "reference_fp64_sha256": "56484fc8dcd20bfe85f47baec2bdf0fb27cf0682de728adba3aa026f2a0fab5f"
+      }
+    },
+    {
+      "op": "norm",
+      "types": "f32_f32",
+      "kind": "scale_30",
+      "shape": [
+        1,
+        64,
+        2,
+        128
+      ],
+      "input_sha256": [
+        "a67cafed4ee319b7200787181d7e3a5b53958324f01d7c55f8a6475c089635e9"
+      ],
+      "numerical_budget_population": true,
+      "metrics": {
+        "elements": 16384,
+        "finite_pairs": 16384,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 11.31370849893482,
+        "residual_norm": 4.937506758373299e-07,
+        "relative_l2": 4.364180638769474e-08,
+        "relative_l2_finite_pairs": 4.364180638769474e-08,
+        "max_abs": 3.6730581909338866e-08,
+        "max_relative_nonzero": 1.6003259652099565e-07,
+        "relative_quantiles": [
+          2.9719000650351112e-08,
+          7.17903033306862e-08,
+          1.1048602421368101e-07,
+          1.6003259652099565e-07
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 2,
+        "rounded_reference_over_one_ulp": 104,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "1b276d6a85c25cbae81965023b3dbce5e27f66b5550921c95275114f28b3ed87",
+        "reference_fp64_sha256": "56484fc8dcd20bfe85f47baec2bdf0fb27cf0682de728adba3aa026f2a0fab5f"
+      }
+    },
+    {
+      "op": "norm",
+      "types": "bf16_bf16",
+      "kind": "scale_1e+10",
+      "shape": [
+        1,
+        64,
+        2,
+        128
+      ],
+      "input_sha256": [
+        "0e43f74573dd462e524f71ba6a4c840bb9fdbf900af0e790ec1db84903ae7d4d"
+      ],
+      "numerical_budget_population": true,
+      "metrics": {
+        "elements": 16384,
+        "finite_pairs": 16384,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 11.31370849898476,
+        "residual_norm": 0.018568340058514717,
+        "relative_l2": 0.0016412248963441965,
+        "relative_l2_finite_pairs": 0.0016412248963441965,
+        "max_abs": 0.0009595809969043523,
+        "max_relative_nonzero": 0.003844177663880467,
+        "relative_quantiles": [
+          0.001361915051738926,
+          0.002636587065989305,
+          0.0034299855634996415,
+          0.003844177663880467
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 0,
+        "rounded_reference_over_one_ulp": 0,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "bb4b257c2b45477522044e8b980667410d5a417593cae57e23679687720a076a",
+        "reference_fp64_sha256": "6b36fce1ced8f76a1bdedc7d9e4eed9a6eda685c38635219d3c8de853c20b829"
+      }
+    },
+    {
+      "op": "norm",
+      "types": "bf16_f32",
+      "kind": "scale_1e+10",
+      "shape": [
+        1,
+        64,
+        2,
+        128
+      ],
+      "input_sha256": [
+        "0e43f74573dd462e524f71ba6a4c840bb9fdbf900af0e790ec1db84903ae7d4d"
+      ],
+      "numerical_budget_population": true,
+      "metrics": {
+        "elements": 16384,
+        "finite_pairs": 16384,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 11.31370849898476,
+        "residual_norm": 4.5453239452457755e-07,
+        "relative_l2": 4.0175367304661e-08,
+        "relative_l2_finite_pairs": 4.0175367304661e-08,
+        "max_abs": 3.3364730256391084e-08,
+        "max_relative_nonzero": 1.3202675738808618e-07,
+        "relative_quantiles": [
+          2.8500191976351117e-08,
+          6.636083715949367e-08,
+          9.626250017784156e-08,
+          1.3202675738808618e-07
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 2,
+        "rounded_reference_over_one_ulp": 9,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "8e25789edd70547ef57ca06f2498ceccb1bb546165c04e0038a973884081e98e",
+        "reference_fp64_sha256": "6b36fce1ced8f76a1bdedc7d9e4eed9a6eda685c38635219d3c8de853c20b829"
+      }
+    },
+    {
+      "op": "norm",
+      "types": "f32_bf16",
+      "kind": "scale_1e+10",
+      "shape": [
+        1,
+        64,
+        2,
+        128
+      ],
+      "input_sha256": [
+        "fcca1623127cbd24bb49f115f930b9a69b8bd8689485b4a120a5a355e728167d"
+      ],
+      "numerical_budget_population": true,
+      "metrics": {
+        "elements": 16384,
+        "finite_pairs": 16384,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 11.313708498984763,
+        "residual_norm": 0.018742873794191987,
+        "relative_l2": 0.0016566516448495983,
+        "relative_l2_finite_pairs": 0.0016566516448495983,
+        "max_abs": 0.0009352077937533898,
+        "max_relative_nonzero": 0.0038711694578099426,
+        "relative_quantiles": [
+          0.001361867144475986,
+          0.0026505506810176327,
+          0.0034835235352006907,
+          0.0038711694578099426
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 0,
+        "rounded_reference_over_one_ulp": 0,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "11dc213c747f22cda786dd12d59b6b04e3b6642fc016deaaca90f5b00877e4c9",
+        "reference_fp64_sha256": "233ea577d38dcf874197377570e514e44aa81767c0298f23d3dee05d0e6c750f"
+      }
+    },
+    {
+      "op": "norm",
+      "types": "f32_f32",
+      "kind": "scale_1e+10",
+      "shape": [
+        1,
+        64,
+        2,
+        128
+      ],
+      "input_sha256": [
+        "fcca1623127cbd24bb49f115f930b9a69b8bd8689485b4a120a5a355e728167d"
+      ],
+      "numerical_budget_population": true,
+      "metrics": {
+        "elements": 16384,
+        "finite_pairs": 16384,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 11.313708498984763,
+        "residual_norm": 4.651782531620941e-07,
+        "relative_l2": 4.1116337158928654e-08,
+        "relative_l2_finite_pairs": 4.1116337158928654e-08,
+        "max_abs": 2.8220946579615713e-08,
+        "max_relative_nonzero": 1.389521025999603e-07,
+        "relative_quantiles": [
+          2.822597257108093e-08,
+          6.737079251914209e-08,
+          1.0400071436085904e-07,
+          1.389521025999603e-07
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 2,
+        "rounded_reference_over_one_ulp": 43,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "aa6ad3f7505abc6b92d74b835ce39eb222b7e5013e69f13c7c4b3395835b7161",
+        "reference_fp64_sha256": "233ea577d38dcf874197377570e514e44aa81767c0298f23d3dee05d0e6c750f"
+      }
+    },
+    {
+      "op": "norm",
+      "types": "bf16_bf16",
+      "kind": "scale_1e+18",
+      "shape": [
+        1,
+        64,
+        2,
+        128
+      ],
+      "input_sha256": [
+        "ff358fcb1c41f7cb0b3df70440805cf4e20adf2f3ffe72f777c4eb7a803a11e4"
+      ],
+      "numerical_budget_population": false,
+      "metrics": {
+        "elements": 16384,
+        "finite_pairs": 16384,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 11.313708498984758,
+        "residual_norm": 0.018340957083891177,
+        "relative_l2": 0.0016211268909338626,
+        "relative_l2_finite_pairs": 0.0016211268909338626,
+        "max_abs": 0.000951385370560387,
+        "max_relative_nonzero": 0.003873827152743846,
+        "relative_quantiles": [
+          0.0013247633935855416,
+          0.002631320858950077,
+          0.003482300314907652,
+          0.003873827152743846
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 0,
+        "rounded_reference_over_one_ulp": 0,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "b9bb1a4fd50bcec842b93b30fb8ab275b2faba66094defebbae86938f42440bc",
+        "reference_fp64_sha256": "1759a675d5b353bc2af2f8e7b01412c425671a700e3ff61fd4494d8cc4334c3d"
+      }
+    },
+    {
+      "op": "norm",
+      "types": "bf16_f32",
+      "kind": "scale_1e+18",
+      "shape": [
+        1,
+        64,
+        2,
+        128
+      ],
+      "input_sha256": [
+        "ff358fcb1c41f7cb0b3df70440805cf4e20adf2f3ffe72f777c4eb7a803a11e4"
+      ],
+      "numerical_budget_population": false,
+      "metrics": {
+        "elements": 16384,
+        "finite_pairs": 16384,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 11.313708498984758,
+        "residual_norm": 5.254841193382909e-07,
+        "relative_l2": 4.644667302374332e-08,
+        "relative_l2_finite_pairs": 4.644667302374332e-08,
+        "max_abs": 3.557329558701028e-08,
+        "max_relative_nonzero": 1.605545032504187e-07,
+        "relative_quantiles": [
+          3.2184125455801435e-08,
+          7.584658260167364e-08,
+          1.1604905212922959e-07,
+          1.605545032504187e-07
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 2,
+        "rounded_reference_over_one_ulp": 140,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "c46f2b928067936485e3812bcef9a0b2f5c7ff0057ab831ac9a08625d667ee8b",
+        "reference_fp64_sha256": "1759a675d5b353bc2af2f8e7b01412c425671a700e3ff61fd4494d8cc4334c3d"
+      }
+    },
+    {
+      "op": "norm",
+      "types": "f32_bf16",
+      "kind": "scale_1e+18",
+      "shape": [
+        1,
+        64,
+        2,
+        128
+      ],
+      "input_sha256": [
+        "a61726300272b50e9b0b7e4309dd6cdfb170d1e9fce33a1210fc9830768239f1"
+      ],
+      "numerical_budget_population": false,
+      "metrics": {
+        "elements": 16384,
+        "finite_pairs": 16384,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 11.313708498984761,
+        "residual_norm": 0.018742870242424877,
+        "relative_l2": 0.0016566513309147725,
+        "relative_l2_finite_pairs": 0.0016566513309147725,
+        "max_abs": 0.0009351983365347705,
+        "max_relative_nonzero": 0.0038711692604506513,
+        "relative_quantiles": [
+          0.0013618672787733981,
+          0.0026505523074434375,
+          0.0034835481291973836,
+          0.0038711692604506513
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 0,
+        "rounded_reference_over_one_ulp": 0,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "11dc213c747f22cda786dd12d59b6b04e3b6642fc016deaaca90f5b00877e4c9",
+        "reference_fp64_sha256": "3a43d340edd61a8970bc39264fb658bd0fc8a9956efb2d878f9ff29f1fa7363e"
+      }
+    },
+    {
+      "op": "norm",
+      "types": "f32_f32",
+      "kind": "scale_1e+18",
+      "shape": [
+        1,
+        64,
+        2,
+        128
+      ],
+      "input_sha256": [
+        "a61726300272b50e9b0b7e4309dd6cdfb170d1e9fce33a1210fc9830768239f1"
+      ],
+      "numerical_budget_population": false,
+      "metrics": {
+        "elements": 16384,
+        "finite_pairs": 16384,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 11.313708498984761,
+        "residual_norm": 4.856154606187384e-07,
+        "relative_l2": 4.292274815656734e-08,
+        "relative_l2_finite_pairs": 4.292274815656734e-08,
+        "max_abs": 2.539252488831245e-08,
+        "max_relative_nonzero": 1.3410549985925056e-07,
+        "relative_quantiles": [
+          3.075660192061407e-08,
+          7.220770683888491e-08,
+          1.0095292573565313e-07,
+          1.3410549985925056e-07
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 2,
+        "rounded_reference_over_one_ulp": 23,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "1e759ef42382d235427ed025f19c00e1e9b7c0627f2be03f7a3d6f0efa9f115c",
+        "reference_fp64_sha256": "3a43d340edd61a8970bc39264fb658bd0fc8a9956efb2d878f9ff29f1fa7363e"
+      }
+    },
+    {
+      "op": "norm",
+      "types": "bf16_bf16",
+      "kind": "scale_1e+20",
+      "shape": [
+        1,
+        64,
+        2,
+        128
+      ],
+      "input_sha256": [
+        "a90ef518a109b1164d79f159026e9eb905517321bd3bee2cca1fc4927b7a3e43"
+      ],
+      "numerical_budget_population": false,
+      "metrics": {
+        "elements": 16384,
+        "finite_pairs": 16384,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 11.313708498984754,
+        "residual_norm": 11.313708498984754,
+        "relative_l2": 1.0,
+        "relative_l2_finite_pairs": 1.0,
+        "max_abs": 0.3576477947375395,
+        "max_relative_nonzero": 1.0,
+        "relative_quantiles": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 16055,
+        "rounded_reference_over_one_ulp": 16384,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "1225d5e6c220d0777aa9c78b7197bf672a23db97c01dbd9bab413bc22f5d5290",
+        "reference_fp64_sha256": "5150d0d1be5c4bd841c1476f88de318ae5fd0a70b66e49842d0c57fce00a3479"
+      }
+    },
+    {
+      "op": "norm",
+      "types": "bf16_f32",
+      "kind": "scale_1e+20",
+      "shape": [
+        1,
+        64,
+        2,
+        128
+      ],
+      "input_sha256": [
+        "a90ef518a109b1164d79f159026e9eb905517321bd3bee2cca1fc4927b7a3e43"
+      ],
+      "numerical_budget_population": false,
+      "metrics": {
+        "elements": 16384,
+        "finite_pairs": 16384,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 11.313708498984754,
+        "residual_norm": 11.313708498984754,
+        "relative_l2": 1.0,
+        "relative_l2_finite_pairs": 1.0,
+        "max_abs": 0.3576477947375395,
+        "max_relative_nonzero": 1.0,
+        "relative_quantiles": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 1052188061,
+        "rounded_reference_over_one_ulp": 16384,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "2ecbc54cb7a5f474601951e4729a5d6d50f524adb1934e65e3309d40661782fb",
+        "reference_fp64_sha256": "5150d0d1be5c4bd841c1476f88de318ae5fd0a70b66e49842d0c57fce00a3479"
+      }
+    },
+    {
+      "op": "norm",
+      "types": "f32_bf16",
+      "kind": "scale_1e+20",
+      "shape": [
+        1,
+        64,
+        2,
+        128
+      ],
+      "input_sha256": [
+        "c7270c3c7dfff2efa276a89e579f21133ada43f90778a27595038839fbad8392"
+      ],
+      "numerical_budget_population": false,
+      "metrics": {
+        "elements": 16384,
+        "finite_pairs": 16384,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 11.313708498984774,
+        "residual_norm": 11.313708498984774,
+        "relative_l2": 1.0,
+        "relative_l2_finite_pairs": 1.0,
+        "max_abs": 0.35704176433821183,
+        "max_relative_nonzero": 1.0,
+        "relative_quantiles": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 16055,
+        "rounded_reference_over_one_ulp": 16384,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "1225d5e6c220d0777aa9c78b7197bf672a23db97c01dbd9bab413bc22f5d5290",
+        "reference_fp64_sha256": "743949941d0e6528e8aa919a3ff999c0b6fc0e88d3653fcfb534cb329d159362"
+      }
+    },
+    {
+      "op": "norm",
+      "types": "f32_f32",
+      "kind": "scale_1e+20",
+      "shape": [
+        1,
+        64,
+        2,
+        128
+      ],
+      "input_sha256": [
+        "c7270c3c7dfff2efa276a89e579f21133ada43f90778a27595038839fbad8392"
+      ],
+      "numerical_budget_population": false,
+      "metrics": {
+        "elements": 16384,
+        "finite_pairs": 16384,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 11.313708498984774,
+        "residual_norm": 11.313708498984774,
+        "relative_l2": 1.0,
+        "relative_l2_finite_pairs": 1.0,
+        "max_abs": 0.35704176433821183,
+        "max_relative_nonzero": 1.0,
+        "relative_quantiles": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 1052167726,
+        "rounded_reference_over_one_ulp": 16384,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "2ecbc54cb7a5f474601951e4729a5d6d50f524adb1934e65e3309d40661782fb",
+        "reference_fp64_sha256": "743949941d0e6528e8aa919a3ff999c0b6fc0e88d3653fcfb534cb329d159362"
+      }
+    },
+    {
+      "op": "gate",
+      "types": "bf16_bf16_bf16",
+      "kind": "random",
+      "shape": [
+        2,
+        192,
+        8,
+        128
+      ],
+      "input_sha256": [
+        "4ee5f87222e88ce21d778494110cb00859570f717564e4ee22eb54a693859a29",
+        "256601ac1c690d3c45f8077c8b5145d33750316438ae43afa6f43483d5272927",
+        "6e1dfd618cdd75fe5625c587449bfb530d85c3448821821c2d49fc2045f0e48b"
+      ],
+      "numerical_budget_population": true,
+      "metrics": {
+        "elements": 393216,
+        "finite_pairs": 393216,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 3859.9367633372985,
+        "residual_norm": 0.00016346832352996405,
+        "relative_l2": 4.235000041519578e-08,
+        "relative_l2_finite_pairs": 4.235000041519578e-08,
+        "max_abs": 4.001541874742998e-06,
+        "max_relative_nonzero": 1.7021264564218647e-07,
+        "relative_quantiles": [
+          3.2359967006432996e-08,
+          7.64686045008073e-08,
+          1.1432875390367299e-07,
+          1.7021264564218647e-07
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 2,
+        "rounded_reference_over_one_ulp": 2969,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "1da1f848ebe38a663f1426823e80ef415d72bf626758d8c5ec52993b010f404c",
+        "reference_fp64_sha256": "c01b89de9af4cfa0d3fda8b92be0242519d827931cbcb9838f1c4be9ac032e7c"
+      }
+    },
+    {
+      "op": "gate",
+      "types": "bf16_bf16_bf16",
+      "kind": "threshold",
+      "shape": [
+        2,
+        192,
+        8,
+        128
+      ],
+      "input_sha256": [
+        "80907597ce51be5c5d29ffe59496f6a7ec412595b59a46240a881ad6e98522bd",
+        "256601ac1c690d3c45f8077c8b5145d33750316438ae43afa6f43483d5272927",
+        "e5a00aa9991ac8a5ee3109844d84a55583bd20572ad3ffcd42792f3c36b183ad"
+      ],
+      "numerical_budget_population": true,
+      "metrics": {
+        "elements": 393216,
+        "finite_pairs": 393216,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 111844.17507789074,
+        "residual_norm": 0.005166346404550925,
+        "relative_l2": 4.619236004872823e-08,
+        "relative_l2_finite_pairs": 4.619236004872823e-08,
+        "max_abs": 4.507670962539123e-05,
+        "max_relative_nonzero": 1.1738645340399114e-07,
+        "relative_quantiles": [
+          3.466214591680276e-08,
+          8.57367745192822e-08,
+          1.1738645340399114e-07,
+          1.1738645340399114e-07
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 1,
+        "rounded_reference_over_one_ulp": 0,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "2065453edbe49d9f81fc59c95ae7ef2ba2f12700199e19414a5893aff8166351",
+        "reference_fp64_sha256": "376b94067821f43e338b9bb886128c83a0f1e8b5f9be6f4abc814fcfc5f5c9ad"
+      }
+    },
+    {
+      "op": "gate",
+      "types": "bf16_bf16_bf16",
+      "kind": "subnormal",
+      "shape": [
+        2,
+        192,
+        8,
+        128
+      ],
+      "input_sha256": [
+        "25f3fc2a04e28cf0af626b9f5bf0e27df2a342bc62dba4deb5ef33061bf1221d",
+        "256601ac1c690d3c45f8077c8b5145d33750316438ae43afa6f43483d5272927",
+        "e5a00aa9991ac8a5ee3109844d84a55583bd20572ad3ffcd42792f3c36b183ad"
+      ],
+      "numerical_budget_population": false,
+      "metrics": {
+        "elements": 393216,
+        "finite_pairs": 393216,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 2.642493334373698e-35,
+        "residual_norm": 3.879665505676975e-42,
+        "relative_l2": 1.4681836488327419e-07,
+        "relative_l2_finite_pairs": 1.4681836488327419e-07,
+        "max_abs": 3.0472923116591276e-44,
+        "max_relative_nonzero": 1.0,
+        "relative_quantiles": [
+          0.0036092129234640688,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 22,
+        "rounded_reference_over_one_ulp": 73728,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "9f4381b504524da8c1bb5e8e26109f90247a60f506cc7be4fd3536a17ee2a595",
+        "reference_fp64_sha256": "e039d9b04e72a0bbc5b871b9f45a4c09993bff0c7e6975fb7add90dbd916c244"
+      }
+    },
+    {
+      "op": "gate",
+      "types": "bf16_bf16_f32",
+      "kind": "random",
+      "shape": [
+        2,
+        192,
+        8,
+        128
+      ],
+      "input_sha256": [
+        "7564f109f94300f4bdcfe747b6ca790203371ec2565d3289d57f4c5559ea7e27",
+        "256601ac1c690d3c45f8077c8b5145d33750316438ae43afa6f43483d5272927",
+        "f8798e4d292c0e0ae93ad89feab39c33efb750db6b33f63c364111c69a351b11"
+      ],
+      "numerical_budget_population": true,
+      "metrics": {
+        "elements": 393216,
+        "finite_pairs": 393216,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 3870.234656971331,
+        "residual_norm": 0.00018888377595349724,
+        "relative_l2": 4.880421801124304e-08,
+        "relative_l2_finite_pairs": 4.880421801124304e-08,
+        "max_abs": 5.4823318933472365e-06,
+        "max_relative_nonzero": 2.714880065193375e-07,
+        "relative_quantiles": [
+          3.512818003984887e-08,
+          8.471208174531152e-08,
+          1.3151941509524777e-07,
+          2.714880065193375e-07
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 4,
+        "rounded_reference_over_one_ulp": 7642,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "dad695d6677497271ee522cebf62956ac5b260363cc57d7c0f793c56e4668354",
+        "reference_fp64_sha256": "fd23405a1cd5c85315971e453629e74c2c850d4fd0785e94333578be6deb0f80"
+      }
+    },
+    {
+      "op": "gate",
+      "types": "bf16_bf16_f32",
+      "kind": "threshold",
+      "shape": [
+        2,
+        192,
+        8,
+        128
+      ],
+      "input_sha256": [
+        "80907597ce51be5c5d29ffe59496f6a7ec412595b59a46240a881ad6e98522bd",
+        "256601ac1c690d3c45f8077c8b5145d33750316438ae43afa6f43483d5272927",
+        "ad7facb2586fc6e966c004d7d1d16b024f5805ff7cb47c7a85dabd8b48892ca7"
+      ],
+      "numerical_budget_population": true,
+      "metrics": {
+        "elements": 393216,
+        "finite_pairs": 393216,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 111844.17507789074,
+        "residual_norm": 0.005166346404550925,
+        "relative_l2": 4.619236004872823e-08,
+        "relative_l2_finite_pairs": 4.619236004872823e-08,
+        "max_abs": 4.507670962539123e-05,
+        "max_relative_nonzero": 1.1738645340399114e-07,
+        "relative_quantiles": [
+          3.466214591680276e-08,
+          8.57367745192822e-08,
+          1.1738645340399114e-07,
+          1.1738645340399114e-07
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 1,
+        "rounded_reference_over_one_ulp": 0,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "2065453edbe49d9f81fc59c95ae7ef2ba2f12700199e19414a5893aff8166351",
+        "reference_fp64_sha256": "376b94067821f43e338b9bb886128c83a0f1e8b5f9be6f4abc814fcfc5f5c9ad"
+      }
+    },
+    {
+      "op": "gate",
+      "types": "bf16_bf16_f32",
+      "kind": "subnormal",
+      "shape": [
+        2,
+        192,
+        8,
+        128
+      ],
+      "input_sha256": [
+        "25f3fc2a04e28cf0af626b9f5bf0e27df2a342bc62dba4deb5ef33061bf1221d",
+        "256601ac1c690d3c45f8077c8b5145d33750316438ae43afa6f43483d5272927",
+        "ad7facb2586fc6e966c004d7d1d16b024f5805ff7cb47c7a85dabd8b48892ca7"
+      ],
+      "numerical_budget_population": false,
+      "metrics": {
+        "elements": 393216,
+        "finite_pairs": 393216,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 2.642493334373698e-35,
+        "residual_norm": 3.879665505676975e-42,
+        "relative_l2": 1.4681836488327419e-07,
+        "relative_l2_finite_pairs": 1.4681836488327419e-07,
+        "max_abs": 3.0472923116591276e-44,
+        "max_relative_nonzero": 1.0,
+        "relative_quantiles": [
+          0.0036092129234640688,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 22,
+        "rounded_reference_over_one_ulp": 73728,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "9f4381b504524da8c1bb5e8e26109f90247a60f506cc7be4fd3536a17ee2a595",
+        "reference_fp64_sha256": "e039d9b04e72a0bbc5b871b9f45a4c09993bff0c7e6975fb7add90dbd916c244"
+      }
+    },
+    {
+      "op": "gate",
+      "types": "bf16_f32_bf16",
+      "kind": "random",
+      "shape": [
+        2,
+        192,
+        8,
+        128
+      ],
+      "input_sha256": [
+        "244859d11a97b78c45846b2bf0d8a7b53c7131165a86addd46448bf49cf8a746",
+        "eb41e4ea052689b344bf5939ee74e45cb78c4f20bf97604aa971a0d39e0b7b07",
+        "6e1dfd618cdd75fe5625c587449bfb530d85c3448821821c2d49fc2045f0e48b"
+      ],
+      "numerical_budget_population": true,
+      "metrics": {
+        "elements": 393216,
+        "finite_pairs": 393216,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 3857.145123063447,
+        "residual_norm": 0.00016739098205846808,
+        "relative_l2": 4.3397636520744056e-08,
+        "relative_l2_finite_pairs": 4.3397636520744056e-08,
+        "max_abs": 5.057147824061303e-06,
+        "max_relative_nonzero": 1.9439547046458378e-07,
+        "relative_quantiles": [
+          3.559235768043794e-08,
+          8.42044016120784e-08,
+          1.273188430315988e-07,
+          1.9439547046458378e-07
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 3,
+        "rounded_reference_over_one_ulp": 6122,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "3e60b2814c831ef2a076c9b01d903d716233a5b0e5786a54090e9c84363f5b75",
+        "reference_fp64_sha256": "929a384fd940db07bbee00c90b341b9d71e4d05c2c5557e20cab32e36aeecc6b"
+      }
+    },
+    {
+      "op": "gate",
+      "types": "bf16_f32_bf16",
+      "kind": "threshold",
+      "shape": [
+        2,
+        192,
+        8,
+        128
+      ],
+      "input_sha256": [
+        "80907597ce51be5c5d29ffe59496f6a7ec412595b59a46240a881ad6e98522bd",
+        "eb41e4ea052689b344bf5939ee74e45cb78c4f20bf97604aa971a0d39e0b7b07",
+        "e5a00aa9991ac8a5ee3109844d84a55583bd20572ad3ffcd42792f3c36b183ad"
+      ],
+      "numerical_budget_population": true,
+      "metrics": {
+        "elements": 393216,
+        "finite_pairs": 393216,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 111617.78902026187,
+        "residual_norm": 0.0046991267750210305,
+        "relative_l2": 4.210015998586034e-08,
+        "relative_l2_finite_pairs": 4.210015998586034e-08,
+        "max_abs": 5.471243753163435e-05,
+        "max_relative_nonzero": 1.294203211931472e-07,
+        "relative_quantiles": [
+          3.6897303057184925e-08,
+          1.0334549042538247e-07,
+          1.294203211931472e-07,
+          1.294203211931472e-07
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 1,
+        "rounded_reference_over_one_ulp": 0,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "4938e096ac2a0619d97410a56768de53ca781c58eb5fac63630d7a4dcb382681",
+        "reference_fp64_sha256": "f9254d13623532a53af2dbdb2002f2577c2dd3625daeae13dc90c7516c94685e"
+      }
+    },
+    {
+      "op": "gate",
+      "types": "bf16_f32_bf16",
+      "kind": "subnormal",
+      "shape": [
+        2,
+        192,
+        8,
+        128
+      ],
+      "input_sha256": [
+        "25f3fc2a04e28cf0af626b9f5bf0e27df2a342bc62dba4deb5ef33061bf1221d",
+        "eb41e4ea052689b344bf5939ee74e45cb78c4f20bf97604aa971a0d39e0b7b07",
+        "e5a00aa9991ac8a5ee3109844d84a55583bd20572ad3ffcd42792f3c36b183ad"
+      ],
+      "numerical_budget_population": false,
+      "metrics": {
+        "elements": 393216,
+        "finite_pairs": 393216,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 2.63714460554607e-35,
+        "residual_norm": 3.992795194549729e-42,
+        "relative_l2": 1.5140600125425986e-07,
+        "relative_l2_finite_pairs": 1.5140600125425986e-07,
+        "max_abs": 3.0804108035386516e-44,
+        "max_relative_nonzero": 1.0,
+        "relative_quantiles": [
+          0.0027107017677064074,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 22,
+        "rounded_reference_over_one_ulp": 81920,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "de3ea048cf184efeb8b1301df57f720cc433a0665e45d02f05668084c2ea3207",
+        "reference_fp64_sha256": "fd4b7dff6ba8055cca43eb5adc5184eb747e8a3ab12c1231bff00f4580ee4cc4"
+      }
+    },
+    {
+      "op": "gate",
+      "types": "bf16_f32_f32",
+      "kind": "random",
+      "shape": [
+        2,
+        192,
+        8,
+        128
+      ],
+      "input_sha256": [
+        "681a2267e9092302f68c387eebb07bae80751414496042da1abbc3fd28316005",
+        "eb41e4ea052689b344bf5939ee74e45cb78c4f20bf97604aa971a0d39e0b7b07",
+        "f8798e4d292c0e0ae93ad89feab39c33efb750db6b33f63c364111c69a351b11"
+      ],
+      "numerical_budget_population": true,
+      "metrics": {
+        "elements": 393216,
+        "finite_pairs": 393216,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 3854.5355057980814,
+        "residual_norm": 0.00017646662345619527,
+        "relative_l2": 4.578155349477261e-08,
+        "relative_l2_finite_pairs": 4.578155349477261e-08,
+        "max_abs": 5.262282506635074e-06,
+        "max_relative_nonzero": 2.4327641312120835e-07,
+        "relative_quantiles": [
+          3.66349151769627e-08,
+          8.887553371285531e-08,
+          1.3758038309462473e-07,
+          2.4327641312120835e-07
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 3,
+        "rounded_reference_over_one_ulp": 10077,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "b834508b9ad3913c9112f531fa315992374f5c760fe478336e3068afe4c85f62",
+        "reference_fp64_sha256": "951b2b968e18b23c9ed753c74bb5cd81a36e2b8064e4be59b0363c7432c8a3b1"
+      }
+    },
+    {
+      "op": "gate",
+      "types": "bf16_f32_f32",
+      "kind": "threshold",
+      "shape": [
+        2,
+        192,
+        8,
+        128
+      ],
+      "input_sha256": [
+        "80907597ce51be5c5d29ffe59496f6a7ec412595b59a46240a881ad6e98522bd",
+        "eb41e4ea052689b344bf5939ee74e45cb78c4f20bf97604aa971a0d39e0b7b07",
+        "ad7facb2586fc6e966c004d7d1d16b024f5805ff7cb47c7a85dabd8b48892ca7"
+      ],
+      "numerical_budget_population": true,
+      "metrics": {
+        "elements": 393216,
+        "finite_pairs": 393216,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 111617.78902026187,
+        "residual_norm": 0.0046991267750210305,
+        "relative_l2": 4.210015998586034e-08,
+        "relative_l2_finite_pairs": 4.210015998586034e-08,
+        "max_abs": 5.471243753163435e-05,
+        "max_relative_nonzero": 1.294203211931472e-07,
+        "relative_quantiles": [
+          3.6897303057184925e-08,
+          1.0334549042538247e-07,
+          1.294203211931472e-07,
+          1.294203211931472e-07
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 1,
+        "rounded_reference_over_one_ulp": 0,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "4938e096ac2a0619d97410a56768de53ca781c58eb5fac63630d7a4dcb382681",
+        "reference_fp64_sha256": "f9254d13623532a53af2dbdb2002f2577c2dd3625daeae13dc90c7516c94685e"
+      }
+    },
+    {
+      "op": "gate",
+      "types": "bf16_f32_f32",
+      "kind": "subnormal",
+      "shape": [
+        2,
+        192,
+        8,
+        128
+      ],
+      "input_sha256": [
+        "25f3fc2a04e28cf0af626b9f5bf0e27df2a342bc62dba4deb5ef33061bf1221d",
+        "eb41e4ea052689b344bf5939ee74e45cb78c4f20bf97604aa971a0d39e0b7b07",
+        "ad7facb2586fc6e966c004d7d1d16b024f5805ff7cb47c7a85dabd8b48892ca7"
+      ],
+      "numerical_budget_population": false,
+      "metrics": {
+        "elements": 393216,
+        "finite_pairs": 393216,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 2.63714460554607e-35,
+        "residual_norm": 3.992795194549729e-42,
+        "relative_l2": 1.5140600125425986e-07,
+        "relative_l2_finite_pairs": 1.5140600125425986e-07,
+        "max_abs": 3.0804108035386516e-44,
+        "max_relative_nonzero": 1.0,
+        "relative_quantiles": [
+          0.0027107017677064074,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 22,
+        "rounded_reference_over_one_ulp": 81920,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "de3ea048cf184efeb8b1301df57f720cc433a0665e45d02f05668084c2ea3207",
+        "reference_fp64_sha256": "fd4b7dff6ba8055cca43eb5adc5184eb747e8a3ab12c1231bff00f4580ee4cc4"
+      }
+    },
+    {
+      "op": "gate",
+      "types": "f32_bf16_bf16",
+      "kind": "random",
+      "shape": [
+        2,
+        192,
+        8,
+        128
+      ],
+      "input_sha256": [
+        "fbf2c99fe6d3804722e6d94719ed0dabe6892282ee79e47b26727772b4efe171",
+        "256601ac1c690d3c45f8077c8b5145d33750316438ae43afa6f43483d5272927",
+        "6e1dfd618cdd75fe5625c587449bfb530d85c3448821821c2d49fc2045f0e48b"
+      ],
+      "numerical_budget_population": true,
+      "metrics": {
+        "elements": 393216,
+        "finite_pairs": 393216,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 3870.8546354443138,
+        "residual_norm": 0.00017126003634914834,
+        "relative_l2": 4.4243468814604646e-08,
+        "relative_l2_finite_pairs": 4.4243468814604646e-08,
+        "max_abs": 5.8889791318961215e-06,
+        "max_relative_nonzero": 2.804416077235849e-07,
+        "relative_quantiles": [
+          3.243569466410896e-08,
+          7.768730988339801e-08,
+          1.1693040587416401e-07,
+          2.804416077235849e-07
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 4,
+        "rounded_reference_over_one_ulp": 3774,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "83610e01d99026da0eef64d44187e1b46b177c7df2a07ee33e1d3442c96cda73",
+        "reference_fp64_sha256": "60bff2e981846152d041115c807be606f81e3e40bb0f23f39b9c4700b2c5b11e"
+      }
+    },
+    {
+      "op": "gate",
+      "types": "f32_bf16_bf16",
+      "kind": "threshold",
+      "shape": [
+        2,
+        192,
+        8,
+        128
+      ],
+      "input_sha256": [
+        "117bb6ae95a3b100ec556ac82a076d42738816d4debebc66991c5c7812df9b4e",
+        "256601ac1c690d3c45f8077c8b5145d33750316438ae43afa6f43483d5272927",
+        "e5a00aa9991ac8a5ee3109844d84a55583bd20572ad3ffcd42792f3c36b183ad"
+      ],
+      "numerical_budget_population": true,
+      "metrics": {
+        "elements": 393216,
+        "finite_pairs": 393216,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 111844.1750774033,
+        "residual_norm": 0.0051668465339184365,
+        "relative_l2": 4.6196831711107435e-08,
+        "relative_l2_finite_pairs": 4.6196831711107435e-08,
+        "max_abs": 4.507670962539123e-05,
+        "max_relative_nonzero": 1.1738645340399114e-07,
+        "relative_quantiles": [
+          2.950456713741045e-08,
+          7.076884579715634e-08,
+          1.1738645340399114e-07,
+          1.1738645340399114e-07
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 1,
+        "rounded_reference_over_one_ulp": 0,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "bed2cfc054f2e25a0e63e268d084404f7879828156a1e50c1f0f183b70f9ba33",
+        "reference_fp64_sha256": "21b723989f12658279987494a58012e8448d8c61615518434f34dd963a58e7b4"
+      }
+    },
+    {
+      "op": "gate",
+      "types": "f32_bf16_bf16",
+      "kind": "subnormal",
+      "shape": [
+        2,
+        192,
+        8,
+        128
+      ],
+      "input_sha256": [
+        "b12e10b2fff62083fe1cf53c5b110b7fc45cf2431341aa826235c40b01751faf",
+        "256601ac1c690d3c45f8077c8b5145d33750316438ae43afa6f43483d5272927",
+        "e5a00aa9991ac8a5ee3109844d84a55583bd20572ad3ffcd42792f3c36b183ad"
+      ],
+      "numerical_budget_population": false,
+      "metrics": {
+        "elements": 393216,
+        "finite_pairs": 393216,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 2.642493334373698e-35,
+        "residual_norm": 3.879665505676975e-42,
+        "relative_l2": 1.4681836488327419e-07,
+        "relative_l2_finite_pairs": 1.4681836488327419e-07,
+        "max_abs": 3.0472923116591276e-44,
+        "max_relative_nonzero": 1.0,
+        "relative_quantiles": [
+          0.0036092129234640688,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 22,
+        "rounded_reference_over_one_ulp": 73728,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "9f4381b504524da8c1bb5e8e26109f90247a60f506cc7be4fd3536a17ee2a595",
+        "reference_fp64_sha256": "e039d9b04e72a0bbc5b871b9f45a4c09993bff0c7e6975fb7add90dbd916c244"
+      }
+    },
+    {
+      "op": "gate",
+      "types": "f32_bf16_f32",
+      "kind": "random",
+      "shape": [
+        2,
+        192,
+        8,
+        128
+      ],
+      "input_sha256": [
+        "145ce15139876d91fd789c540d4820fe3954abb526920a2118d96146462d4160",
+        "256601ac1c690d3c45f8077c8b5145d33750316438ae43afa6f43483d5272927",
+        "f8798e4d292c0e0ae93ad89feab39c33efb750db6b33f63c364111c69a351b11"
+      ],
+      "numerical_budget_population": true,
+      "metrics": {
+        "elements": 393216,
+        "finite_pairs": 393216,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 3851.3084268195353,
+        "residual_norm": 0.00018368136166610732,
+        "relative_l2": 4.7693235988838724e-08,
+        "relative_l2_finite_pairs": 4.7693235988838724e-08,
+        "max_abs": 5.531453055596103e-06,
+        "max_relative_nonzero": 2.669613706952018e-07,
+        "relative_quantiles": [
+          3.486202139582807e-08,
+          8.394392088022712e-08,
+          1.2971870045255014e-07,
+          2.669613706952018e-07
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 4,
+        "rounded_reference_over_one_ulp": 6995,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "8f5bea0e17e581906d9e7f51042a18227abc26f73e773923b65a33d90e3179e4",
+        "reference_fp64_sha256": "59c2ffec40a151cd3880554c7283d35676f67f6d507c4d99c1f00f6e9dfbe26a"
+      }
+    },
+    {
+      "op": "gate",
+      "types": "f32_bf16_f32",
+      "kind": "threshold",
+      "shape": [
+        2,
+        192,
+        8,
+        128
+      ],
+      "input_sha256": [
+        "117bb6ae95a3b100ec556ac82a076d42738816d4debebc66991c5c7812df9b4e",
+        "256601ac1c690d3c45f8077c8b5145d33750316438ae43afa6f43483d5272927",
+        "ad7facb2586fc6e966c004d7d1d16b024f5805ff7cb47c7a85dabd8b48892ca7"
+      ],
+      "numerical_budget_population": true,
+      "metrics": {
+        "elements": 393216,
+        "finite_pairs": 393216,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 111844.1750774033,
+        "residual_norm": 0.0051668465339184365,
+        "relative_l2": 4.6196831711107435e-08,
+        "relative_l2_finite_pairs": 4.6196831711107435e-08,
+        "max_abs": 4.507670962539123e-05,
+        "max_relative_nonzero": 1.1738645340399114e-07,
+        "relative_quantiles": [
+          2.950456713741045e-08,
+          7.076884579715634e-08,
+          1.1738645340399114e-07,
+          1.1738645340399114e-07
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 1,
+        "rounded_reference_over_one_ulp": 0,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "bed2cfc054f2e25a0e63e268d084404f7879828156a1e50c1f0f183b70f9ba33",
+        "reference_fp64_sha256": "21b723989f12658279987494a58012e8448d8c61615518434f34dd963a58e7b4"
+      }
+    },
+    {
+      "op": "gate",
+      "types": "f32_bf16_f32",
+      "kind": "subnormal",
+      "shape": [
+        2,
+        192,
+        8,
+        128
+      ],
+      "input_sha256": [
+        "b12e10b2fff62083fe1cf53c5b110b7fc45cf2431341aa826235c40b01751faf",
+        "256601ac1c690d3c45f8077c8b5145d33750316438ae43afa6f43483d5272927",
+        "ad7facb2586fc6e966c004d7d1d16b024f5805ff7cb47c7a85dabd8b48892ca7"
+      ],
+      "numerical_budget_population": false,
+      "metrics": {
+        "elements": 393216,
+        "finite_pairs": 393216,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 2.642493334373698e-35,
+        "residual_norm": 3.879665505676975e-42,
+        "relative_l2": 1.4681836488327419e-07,
+        "relative_l2_finite_pairs": 1.4681836488327419e-07,
+        "max_abs": 3.0472923116591276e-44,
+        "max_relative_nonzero": 1.0,
+        "relative_quantiles": [
+          0.0036092129234640688,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 22,
+        "rounded_reference_over_one_ulp": 73728,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "9f4381b504524da8c1bb5e8e26109f90247a60f506cc7be4fd3536a17ee2a595",
+        "reference_fp64_sha256": "e039d9b04e72a0bbc5b871b9f45a4c09993bff0c7e6975fb7add90dbd916c244"
+      }
+    },
+    {
+      "op": "gate",
+      "types": "f32_f32_bf16",
+      "kind": "random",
+      "shape": [
+        2,
+        192,
+        8,
+        128
+      ],
+      "input_sha256": [
+        "3440395271e22f6f8079a9834b815cb015a34e405cdf73e4ff4a5be99bfd58b7",
+        "eb41e4ea052689b344bf5939ee74e45cb78c4f20bf97604aa971a0d39e0b7b07",
+        "6e1dfd618cdd75fe5625c587449bfb530d85c3448821821c2d49fc2045f0e48b"
+      ],
+      "numerical_budget_population": true,
+      "metrics": {
+        "elements": 393216,
+        "finite_pairs": 393216,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 3867.2047534034305,
+        "residual_norm": 0.00017247815334793203,
+        "relative_l2": 4.4600212387549e-08,
+        "relative_l2_finite_pairs": 4.4600212387549e-08,
+        "max_abs": 6.0333980087534655e-06,
+        "max_relative_nonzero": 2.859312157057043e-07,
+        "relative_quantiles": [
+          3.592936543479922e-08,
+          8.556186210891463e-08,
+          1.2954170870154332e-07,
+          2.859312157057043e-07
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 4,
+        "rounded_reference_over_one_ulp": 7396,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "d58daea621e7f5ec053ddbfe8d4a2b614581e70a8b156cf15fe57887af5bd73f",
+        "reference_fp64_sha256": "3b1daf1cd3e1db166884a12771b821f2b6e450880a2987f85e8192f834d7c05b"
+      }
+    },
+    {
+      "op": "gate",
+      "types": "f32_f32_bf16",
+      "kind": "threshold",
+      "shape": [
+        2,
+        192,
+        8,
+        128
+      ],
+      "input_sha256": [
+        "117bb6ae95a3b100ec556ac82a076d42738816d4debebc66991c5c7812df9b4e",
+        "eb41e4ea052689b344bf5939ee74e45cb78c4f20bf97604aa971a0d39e0b7b07",
+        "e5a00aa9991ac8a5ee3109844d84a55583bd20572ad3ffcd42792f3c36b183ad"
+      ],
+      "numerical_budget_population": true,
+      "metrics": {
+        "elements": 393216,
+        "finite_pairs": 393216,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 111617.78901976113,
+        "residual_norm": 0.004707137612494686,
+        "relative_l2": 4.2171930243675775e-08,
+        "relative_l2_finite_pairs": 4.2171930243675775e-08,
+        "max_abs": 5.471243753163435e-05,
+        "max_relative_nonzero": 1.294203211931472e-07,
+        "relative_quantiles": [
+          3.5439287858600624e-08,
+          9.173689406911911e-08,
+          1.294203211931472e-07,
+          1.294203211931472e-07
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 1,
+        "rounded_reference_over_one_ulp": 0,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "3ba211c7fdd3656d7c96e8f7057f322d873da4e5dcabbc9496d666cb2cadf29b",
+        "reference_fp64_sha256": "649268942e7b0f07454fb87e47ae6934c36b4d43394086be4118f136a7e4833b"
+      }
+    },
+    {
+      "op": "gate",
+      "types": "f32_f32_bf16",
+      "kind": "subnormal",
+      "shape": [
+        2,
+        192,
+        8,
+        128
+      ],
+      "input_sha256": [
+        "b12e10b2fff62083fe1cf53c5b110b7fc45cf2431341aa826235c40b01751faf",
+        "eb41e4ea052689b344bf5939ee74e45cb78c4f20bf97604aa971a0d39e0b7b07",
+        "e5a00aa9991ac8a5ee3109844d84a55583bd20572ad3ffcd42792f3c36b183ad"
+      ],
+      "numerical_budget_population": false,
+      "metrics": {
+        "elements": 393216,
+        "finite_pairs": 393216,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 2.63714460554607e-35,
+        "residual_norm": 3.992795194549729e-42,
+        "relative_l2": 1.5140600125425986e-07,
+        "relative_l2_finite_pairs": 1.5140600125425986e-07,
+        "max_abs": 3.0804108035386516e-44,
+        "max_relative_nonzero": 1.0,
+        "relative_quantiles": [
+          0.0027107017677064074,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 22,
+        "rounded_reference_over_one_ulp": 81920,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "de3ea048cf184efeb8b1301df57f720cc433a0665e45d02f05668084c2ea3207",
+        "reference_fp64_sha256": "fd4b7dff6ba8055cca43eb5adc5184eb747e8a3ab12c1231bff00f4580ee4cc4"
+      }
+    },
+    {
+      "op": "gate",
+      "types": "f32_f32_f32",
+      "kind": "random",
+      "shape": [
+        2,
+        192,
+        8,
+        128
+      ],
+      "input_sha256": [
+        "fc138532b5dec3fd7bcdb4c3a84959022ad7e89fe9f55d8562294a83e6d053ba",
+        "eb41e4ea052689b344bf5939ee74e45cb78c4f20bf97604aa971a0d39e0b7b07",
+        "f8798e4d292c0e0ae93ad89feab39c33efb750db6b33f63c364111c69a351b11"
+      ],
+      "numerical_budget_population": true,
+      "metrics": {
+        "elements": 393216,
+        "finite_pairs": 393216,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 3869.255078151596,
+        "residual_norm": 0.00017981334833424187,
+        "relative_l2": 4.647234279011182e-08,
+        "relative_l2_finite_pairs": 4.647234279011182e-08,
+        "max_abs": 5.3655157756793415e-06,
+        "max_relative_nonzero": 2.388974834948263e-07,
+        "relative_quantiles": [
+          3.6726250220289157e-08,
+          8.880433821184645e-08,
+          1.3709425938411203e-07,
+          2.388974834948263e-07
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 4,
+        "rounded_reference_over_one_ulp": 9930,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "d60f45ef10e2810004505ec4344d4ddcdc308aebcdfddd1904484cf62c50a0f3",
+        "reference_fp64_sha256": "c9ce2213981691512b338342b1e49e8895c5e99255b23d98690ff66cc3ab1514"
+      }
+    },
+    {
+      "op": "gate",
+      "types": "f32_f32_f32",
+      "kind": "threshold",
+      "shape": [
+        2,
+        192,
+        8,
+        128
+      ],
+      "input_sha256": [
+        "117bb6ae95a3b100ec556ac82a076d42738816d4debebc66991c5c7812df9b4e",
+        "eb41e4ea052689b344bf5939ee74e45cb78c4f20bf97604aa971a0d39e0b7b07",
+        "ad7facb2586fc6e966c004d7d1d16b024f5805ff7cb47c7a85dabd8b48892ca7"
+      ],
+      "numerical_budget_population": true,
+      "metrics": {
+        "elements": 393216,
+        "finite_pairs": 393216,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 111617.78901976113,
+        "residual_norm": 0.004707137612494686,
+        "relative_l2": 4.2171930243675775e-08,
+        "relative_l2_finite_pairs": 4.2171930243675775e-08,
+        "max_abs": 5.471243753163435e-05,
+        "max_relative_nonzero": 1.294203211931472e-07,
+        "relative_quantiles": [
+          3.5439287858600624e-08,
+          9.173689406911911e-08,
+          1.294203211931472e-07,
+          1.294203211931472e-07
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 1,
+        "rounded_reference_over_one_ulp": 0,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "3ba211c7fdd3656d7c96e8f7057f322d873da4e5dcabbc9496d666cb2cadf29b",
+        "reference_fp64_sha256": "649268942e7b0f07454fb87e47ae6934c36b4d43394086be4118f136a7e4833b"
+      }
+    },
+    {
+      "op": "gate",
+      "types": "f32_f32_f32",
+      "kind": "subnormal",
+      "shape": [
+        2,
+        192,
+        8,
+        128
+      ],
+      "input_sha256": [
+        "b12e10b2fff62083fe1cf53c5b110b7fc45cf2431341aa826235c40b01751faf",
+        "eb41e4ea052689b344bf5939ee74e45cb78c4f20bf97604aa971a0d39e0b7b07",
+        "ad7facb2586fc6e966c004d7d1d16b024f5805ff7cb47c7a85dabd8b48892ca7"
+      ],
+      "numerical_budget_population": false,
+      "metrics": {
+        "elements": 393216,
+        "finite_pairs": 393216,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 2.63714460554607e-35,
+        "residual_norm": 3.992795194549729e-42,
+        "relative_l2": 1.5140600125425986e-07,
+        "relative_l2_finite_pairs": 1.5140600125425986e-07,
+        "max_abs": 3.0804108035386516e-44,
+        "max_relative_nonzero": 1.0,
+        "relative_quantiles": [
+          0.0027107017677064074,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 22,
+        "rounded_reference_over_one_ulp": 81920,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "de3ea048cf184efeb8b1301df57f720cc433a0665e45d02f05668084c2ea3207",
+        "reference_fp64_sha256": "fd4b7dff6ba8055cca43eb5adc5184eb747e8a3ab12c1231bff00f4580ee4cc4"
+      }
+    },
+    {
+      "op": "gate",
+      "types": "bf16_bf16_bf16",
+      "kind": "alog_-120",
+      "shape": [
+        1,
+        1,
+        1,
+        128
+      ],
+      "input_sha256": [
+        "600b0e04679fd25e40a8a7cc505c33fd7ef9b3d1cdcc211f7c00bd881f96430d",
+        "8616080b5f073eabee0c930a6c435d1288ddc1c80ba3046816f820e8953a3b23",
+        "5341e6b2646979a70e57653007a1f310169421ec9bdd9f1a5648f75ade005af1"
+      ],
+      "numerical_budget_population": false,
+      "metrics": {
+        "elements": 128,
+        "finite_pairs": 128,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 8.996509476451887e-52,
+        "residual_norm": 8.996509476451887e-52,
+        "relative_l2": 1.0,
+        "relative_l2_finite_pairs": 1.0,
+        "max_abs": 1.6308535466819013e-52,
+        "max_relative_nonzero": 1.0,
+        "relative_quantiles": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 0,
+        "rounded_reference_over_one_ulp": 0,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "33d16b3f8b5ec5d9bfc425a722c657792f48c286b1e3767cbf1aeb4d5d803e46",
+        "reference_fp64_sha256": "c5d58d1ddd4e13d0439e97c0d69cb478aaec86c4fa728c1ff5b0e957eea13cac"
+      }
+    },
+    {
+      "op": "gate",
+      "types": "bf16_bf16_bf16",
+      "kind": "alog_-104",
+      "shape": [
+        1,
+        1,
+        1,
+        128
+      ],
+      "input_sha256": [
+        "600b0e04679fd25e40a8a7cc505c33fd7ef9b3d1cdcc211f7c00bd881f96430d",
+        "c72c5de7427bf5a3d40fdfbdbe13cd0e7e28f84f8765fb707b0161777ac656df",
+        "5341e6b2646979a70e57653007a1f310169421ec9bdd9f1a5648f75ade005af1"
+      ],
+      "numerical_budget_population": false,
+      "metrics": {
+        "elements": 128,
+        "finite_pairs": 128,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 7.994397750654788e-45,
+        "residual_norm": 7.994397750654788e-45,
+        "relative_l2": 1.0,
+        "relative_l2_finite_pairs": 1.0,
+        "max_abs": 1.449194485857762e-45,
+        "max_relative_nonzero": 1.0,
+        "relative_quantiles": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 1,
+        "rounded_reference_over_one_ulp": 0,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "33d16b3f8b5ec5d9bfc425a722c657792f48c286b1e3767cbf1aeb4d5d803e46",
+        "reference_fp64_sha256": "f30a6ba7b6dec5bcafc65547764dc1df32b4c10ed5c4e5b0a9c4b4bbf9bbd2f5"
+      }
+    },
+    {
+      "op": "gate",
+      "types": "bf16_bf16_bf16",
+      "kind": "alog_-100",
+      "shape": [
+        1,
+        1,
+        1,
+        128
+      ],
+      "input_sha256": [
+        "600b0e04679fd25e40a8a7cc505c33fd7ef9b3d1cdcc211f7c00bd881f96430d",
+        "60a12c7e607b995f42378cd7c883d813e5e06cf2578819d5511ff71cbfa08902",
+        "5341e6b2646979a70e57653007a1f310169421ec9bdd9f1a5648f75ade005af1"
+      ],
+      "numerical_budget_population": false,
+      "metrics": {
+        "elements": 128,
+        "finite_pairs": 128,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 4.36479327814881e-43,
+        "residual_norm": 8.67035805449732e-45,
+        "relative_l2": 0.01986430399328002,
+        "relative_l2_finite_pairs": 0.01986430399328002,
+        "max_abs": 1.8057304362950868e-45,
+        "max_relative_nonzero": 0.15278247944451245,
+        "relative_quantiles": [
+          0.02076360061209222,
+          0.0599297530417933,
+          0.11687521403348472,
+          0.15278247944451245
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 1,
+        "rounded_reference_over_one_ulp": 0,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "f83d77ac8819d1d31cf4d69ea9b7cded53dc884c8edbcb98a838b0232240929c",
+        "reference_fp64_sha256": "9725abe4a95810ecd095c741c5edc04a1130e90deeda504924957a1ae6408bcd"
+      }
+    },
+    {
+      "op": "gate",
+      "types": "bf16_bf16_bf16",
+      "kind": "alog_80",
+      "shape": [
+        1,
+        1,
+        1,
+        128
+      ],
+      "input_sha256": [
+        "600b0e04679fd25e40a8a7cc505c33fd7ef9b3d1cdcc211f7c00bd881f96430d",
+        "ec2fc520fbc0fa9e5d3a6f4330e6bf1ca598381c666f839144f01393c243ae05",
+        "5341e6b2646979a70e57653007a1f310169421ec9bdd9f1a5648f75ade005af1"
+      ],
+      "numerical_budget_population": false,
+      "metrics": {
+        "elements": 128,
+        "finite_pairs": 128,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 6.500854148153605e+35,
+        "residual_norm": 2.3959031912061913e+28,
+        "relative_l2": 3.685520604837264e-08,
+        "relative_l2_finite_pairs": 3.685520604837264e-08,
+        "max_abs": 8.831168746000657e+27,
+        "max_relative_nonzero": 9.04080143420797e-08,
+        "relative_quantiles": [
+          2.5383266212007842e-08,
+          6.916998391838471e-08,
+          8.685109662747279e-08,
+          9.04080143420797e-08
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 1,
+        "rounded_reference_over_one_ulp": 0,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "bad57efdb36cdb95da1fe94c55cc722a05e2901ae00b6ea32617a4630b21e840",
+        "reference_fp64_sha256": "c3382c3347233a766d38d83f45e8e3a207b93ece7bebe0e017bef2731e4f043b"
+      }
+    },
+    {
+      "op": "gate",
+      "types": "bf16_bf16_bf16",
+      "kind": "alog_88",
+      "shape": [
+        1,
+        1,
+        1,
+        128
+      ],
+      "input_sha256": [
+        "600b0e04679fd25e40a8a7cc505c33fd7ef9b3d1cdcc211f7c00bd881f96430d",
+        "e66b3ba5dfcb79e1d3b5dceb52f313916560dcecbee54fadd24ea060c929ba00",
+        "5341e6b2646979a70e57653007a1f310169421ec9bdd9f1a5648f75ade005af1"
+      ],
+      "numerical_budget_population": false,
+      "metrics": {
+        "elements": 128,
+        "finite_pairs": 125,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 3,
+        "reference_neginf": 0,
+        "reference_norm": 1.8424443869506364e+39,
+        "residual_norm": 6.726688556665616e+31,
+        "relative_l2": null,
+        "relative_l2_finite_pairs": 3.6509588046772565e-08,
+        "max_abs": 2.054349704389454e+31,
+        "max_relative_nonzero": 8.045172615672028e-08,
+        "relative_quantiles": [
+          2.4671128442627645e-08,
+          6.101008640083043e-08,
+          7.777811243221494e-08,
+          8.045172615672028e-08
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 1,
+        "rounded_reference_over_one_ulp": 0,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "b50c731afb52c1ab13fb099711e615b7da08695013c3026f53aec48cffdf5744",
+        "reference_fp64_sha256": "8844022f239276e3fc0010f1fa888d5e9dee8f581f495ab83dc9756078e19739"
+      }
+    },
+    {
+      "op": "gate",
+      "types": "bf16_bf16_bf16",
+      "kind": "alog_88.7",
+      "shape": [
+        1,
+        1,
+        1,
+        128
+      ],
+      "input_sha256": [
+        "600b0e04679fd25e40a8a7cc505c33fd7ef9b3d1cdcc211f7c00bd881f96430d",
+        "98c285aead9825e1618aeee349981ecc50b0797ad086709e25ea04e2388fc089",
+        "5341e6b2646979a70e57653007a1f310169421ec9bdd9f1a5648f75ade005af1"
+      ],
+      "numerical_budget_population": false,
+      "metrics": {
+        "elements": 128,
+        "finite_pairs": 93,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 35,
+        "reference_neginf": 0,
+        "reference_norm": 1.6455172173388645e+39,
+        "residual_norm": 9.168096468880037e+31,
+        "relative_l2": null,
+        "relative_l2_finite_pairs": 5.571559125772449e-08,
+        "max_abs": 3.1541453180308224e+31,
+        "max_relative_nonzero": 1.4708708172541535e-07,
+        "relative_quantiles": [
+          3.722348370772649e-08,
+          8.7237809414175e-08,
+          1.2953723301734583e-07,
+          1.4708708172541535e-07
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 2,
+        "rounded_reference_over_one_ulp": 3,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "a6aba35250a88bc1c94b700f786d821ff7ccb64c94d1cab86420a4c438e703cd",
+        "reference_fp64_sha256": "f123a5e9d3c86bbf8f3f25c8b7590c6ae7d3fd89b33939c588254f73ec9d3311"
+      }
+    },
+    {
+      "op": "gate",
+      "types": "bf16_bf16_bf16",
+      "kind": "alog_89",
+      "shape": [
+        1,
+        1,
+        1,
+        128
+      ],
+      "input_sha256": [
+        "600b0e04679fd25e40a8a7cc505c33fd7ef9b3d1cdcc211f7c00bd881f96430d",
+        "39e3f4b7183f474bda478ed4612b90c25af321987ea97bc7012e08bc2de3443a",
+        "5341e6b2646979a70e57653007a1f310169421ec9bdd9f1a5648f75ade005af1"
+      ],
+      "numerical_budget_population": false,
+      "metrics": {
+        "elements": 128,
+        "finite_pairs": 0,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 128,
+        "reference_neginf": 0,
+        "reference_norm": 0.0,
+        "residual_norm": 0.0,
+        "relative_l2": null,
+        "relative_l2_finite_pairs": 0.0,
+        "max_abs": null,
+        "max_relative_nonzero": 0.0,
+        "relative_quantiles": [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 0,
+        "rounded_reference_over_one_ulp": 0,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "c378072015410cbf34323f1f3c1ff85f5b6e5c8bd2601066a1c955a2aa3cc258",
+        "reference_fp64_sha256": "8b79d606a050a72217414683406591615d07720021ab08a6cb7de9c8c6a22f45"
+      }
+    },
+    {
+      "op": "gate",
+      "types": "bf16_bf16_bf16",
+      "kind": "alog_100",
+      "shape": [
+        1,
+        1,
+        1,
+        128
+      ],
+      "input_sha256": [
+        "600b0e04679fd25e40a8a7cc505c33fd7ef9b3d1cdcc211f7c00bd881f96430d",
+        "cb27a4e93dc6ec4eb88bac69f35b90881c9ba233e75aaa75ab9af31680edcf17",
+        "5341e6b2646979a70e57653007a1f310169421ec9bdd9f1a5648f75ade005af1"
+      ],
+      "numerical_budget_population": false,
+      "metrics": {
+        "elements": 128,
+        "finite_pairs": 0,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 128,
+        "reference_neginf": 0,
+        "reference_norm": 0.0,
+        "residual_norm": 0.0,
+        "relative_l2": null,
+        "relative_l2_finite_pairs": 0.0,
+        "max_abs": null,
+        "max_relative_nonzero": 0.0,
+        "relative_quantiles": [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 0,
+        "rounded_reference_over_one_ulp": 0,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "c378072015410cbf34323f1f3c1ff85f5b6e5c8bd2601066a1c955a2aa3cc258",
+        "reference_fp64_sha256": "bbd7302ab8af9b4847d088dbb7fa340b90089b1af7ead527a83ec733ed239ff8"
+      }
+    },
+    {
+      "op": "gate",
+      "types": "f32_f32_f32",
+      "kind": "alog_-120",
+      "shape": [
+        1,
+        1,
+        1,
+        128
+      ],
+      "input_sha256": [
+        "ed7c2e4b564acd530539ea7f8213334b5be35ba9f9362e2a6d579f35b75f69b1",
+        "9c993af9152408e15b3560fe5154d4793abfb2001f4f618860261649ac8a415c",
+        "076a27c79e5ace2a3d47f9dd2e83e4ff6ea8872b3c2218f66c92b89b55f36560"
+      ],
+      "numerical_budget_population": false,
+      "metrics": {
+        "elements": 128,
+        "finite_pairs": 128,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 8.996049514964333e-52,
+        "residual_norm": 8.996049514964333e-52,
+        "relative_l2": 1.0,
+        "relative_l2_finite_pairs": 1.0,
+        "max_abs": 1.6308535466819013e-52,
+        "max_relative_nonzero": 1.0,
+        "relative_quantiles": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 0,
+        "rounded_reference_over_one_ulp": 0,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "33d16b3f8b5ec5d9bfc425a722c657792f48c286b1e3767cbf1aeb4d5d803e46",
+        "reference_fp64_sha256": "30aed51e57e816845c581eb8a5601fbf08245912b71f9b0a4a04f01daf260e77"
+      }
+    },
+    {
+      "op": "gate",
+      "types": "f32_f32_f32",
+      "kind": "alog_-104",
+      "shape": [
+        1,
+        1,
+        1,
+        128
+      ],
+      "input_sha256": [
+        "ed7c2e4b564acd530539ea7f8213334b5be35ba9f9362e2a6d579f35b75f69b1",
+        "8b79200750adc3482908f1f4cf35d6f576191dbb925893d4816d429aa0980dc4",
+        "076a27c79e5ace2a3d47f9dd2e83e4ff6ea8872b3c2218f66c92b89b55f36560"
+      ],
+      "numerical_budget_population": false,
+      "metrics": {
+        "elements": 128,
+        "finite_pairs": 128,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 7.99398902379343e-45,
+        "residual_norm": 7.99398902379343e-45,
+        "relative_l2": 1.0,
+        "relative_l2_finite_pairs": 1.0,
+        "max_abs": 1.449194485857762e-45,
+        "max_relative_nonzero": 1.0,
+        "relative_quantiles": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 1,
+        "rounded_reference_over_one_ulp": 0,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "33d16b3f8b5ec5d9bfc425a722c657792f48c286b1e3767cbf1aeb4d5d803e46",
+        "reference_fp64_sha256": "45da875524fd9b7f350334aedfe9289c8b228f0506f943d05b786cc01da30e0b"
+      }
+    },
+    {
+      "op": "gate",
+      "types": "f32_f32_f32",
+      "kind": "alog_-100",
+      "shape": [
+        1,
+        1,
+        1,
+        128
+      ],
+      "input_sha256": [
+        "ed7c2e4b564acd530539ea7f8213334b5be35ba9f9362e2a6d579f35b75f69b1",
+        "a48bed9ee2950cc60ca91386a6c64a241a9ffd24bdc321bb15424ac7a7d3baed",
+        "076a27c79e5ace2a3d47f9dd2e83e4ff6ea8872b3c2218f66c92b89b55f36560"
+      ],
+      "numerical_budget_population": false,
+      "metrics": {
+        "elements": 128,
+        "finite_pairs": 128,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 4.36457012084382e-43,
+        "residual_norm": 8.818577581761704e-45,
+        "relative_l2": 0.020204916721687984,
+        "relative_l2_finite_pairs": 0.020204916721687984,
+        "max_abs": 1.8681096805074644e-45,
+        "max_relative_nonzero": 0.15251662691931495,
+        "relative_quantiles": [
+          0.021071928766132748,
+          0.06162060140122524,
+          0.11649902516928196,
+          0.15251662691931495
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 1,
+        "rounded_reference_over_one_ulp": 0,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "4ab651af8e874ab280d3c8f28419ffc055bbd7121629314cd8cc546c4cc530c9",
+        "reference_fp64_sha256": "30d7ce49464c35431e29d8511ece8491a1f45bb030637078328abda2504f5644"
+      }
+    },
+    {
+      "op": "gate",
+      "types": "f32_f32_f32",
+      "kind": "alog_80",
+      "shape": [
+        1,
+        1,
+        1,
+        128
+      ],
+      "input_sha256": [
+        "ed7c2e4b564acd530539ea7f8213334b5be35ba9f9362e2a6d579f35b75f69b1",
+        "b7ff7bad2106090072a51e7d2e79f98bebf6b97a36c17278aa57efa9513e89e6",
+        "076a27c79e5ace2a3d47f9dd2e83e4ff6ea8872b3c2218f66c92b89b55f36560"
+      ],
+      "numerical_budget_population": false,
+      "metrics": {
+        "elements": 128,
+        "finite_pairs": 128,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 6.500521781189264e+35,
+        "residual_norm": 2.788499600609635e+28,
+        "relative_l2": 4.2896550376598874e-08,
+        "relative_l2_finite_pairs": 4.2896550376598874e-08,
+        "max_abs": 1.0586022506935578e+28,
+        "max_relative_nonzero": 1.158526530310571e-07,
+        "relative_quantiles": [
+          3.098649205889411e-08,
+          7.673081529450313e-08,
+          1.087195552460516e-07,
+          1.158526530310571e-07
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 2,
+        "rounded_reference_over_one_ulp": 1,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "c78f61a8833d971acfb892aa45f59d0ad7cb49f8e9d2722ad84c1b436ccc758f",
+        "reference_fp64_sha256": "231257b1c082cf4ee6d989a63c4aaded5c223a8c65a66b9a21af137bb9d0d600"
+      }
+    },
+    {
+      "op": "gate",
+      "types": "f32_f32_f32",
+      "kind": "alog_88",
+      "shape": [
+        1,
+        1,
+        1,
+        128
+      ],
+      "input_sha256": [
+        "ed7c2e4b564acd530539ea7f8213334b5be35ba9f9362e2a6d579f35b75f69b1",
+        "0252f8f46323335b8af5d5b1aa72f45b4dfe84a35ae0f274889381483831c130",
+        "076a27c79e5ace2a3d47f9dd2e83e4ff6ea8872b3c2218f66c92b89b55f36560"
+      ],
+      "numerical_budget_population": false,
+      "metrics": {
+        "elements": 128,
+        "finite_pairs": 125,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 3,
+        "reference_neginf": 0,
+        "reference_norm": 1.842360083502412e+39,
+        "residual_norm": 7.852483571039613e+31,
+        "relative_l2": null,
+        "relative_l2_finite_pairs": 4.262187202901008e-08,
+        "max_abs": 2.292648821152619e+31,
+        "max_relative_nonzero": 9.559278615178157e-08,
+        "relative_quantiles": [
+          2.919597628446211e-08,
+          7.105324181317374e-08,
+          9.055486069481733e-08,
+          9.559278615178157e-08
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 1,
+        "rounded_reference_over_one_ulp": 0,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "f7667a8f4e35d3dca73bff36364ed1dc13e320c38589f3c0513707e5489b285d",
+        "reference_fp64_sha256": "fad5c24af865ca167506d5fea6973afce77eea51ac67e04be117f571825519cf"
+      }
+    },
+    {
+      "op": "gate",
+      "types": "f32_f32_f32",
+      "kind": "alog_88.7",
+      "shape": [
+        1,
+        1,
+        1,
+        128
+      ],
+      "input_sha256": [
+        "ed7c2e4b564acd530539ea7f8213334b5be35ba9f9362e2a6d579f35b75f69b1",
+        "1728668a4a48af0807eaae4891a9fba6c69a365145ab82cb61738907c6e34ba9",
+        "076a27c79e5ace2a3d47f9dd2e83e4ff6ea8872b3c2218f66c92b89b55f36560"
+      ],
+      "numerical_budget_population": false,
+      "metrics": {
+        "elements": 128,
+        "finite_pairs": 82,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 46,
+        "reference_neginf": 0,
+        "reference_norm": 1.5736698259742112e+39,
+        "residual_norm": 6.551585936824238e+31,
+        "relative_l2": null,
+        "relative_l2_finite_pairs": 4.163253198788602e-08,
+        "max_abs": 2.4923750024639693e+31,
+        "max_relative_nonzero": 1.2714463846901665e-07,
+        "relative_quantiles": [
+          2.7538517086539464e-08,
+          7.295824299224047e-08,
+          1.1145892724307895e-07,
+          1.2714463846901665e-07
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 1,
+        "rounded_reference_over_one_ulp": 0,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "dc35688067b7446cb082fb1e67f2995e181807eeb4f1a8d327c2a95e6777a6aa",
+        "reference_fp64_sha256": "ae65484fa68815f6f278b5c758b91c4616c43089a4e527ebb435260f32de1a53"
+      }
+    },
+    {
+      "op": "gate",
+      "types": "f32_f32_f32",
+      "kind": "alog_89",
+      "shape": [
+        1,
+        1,
+        1,
+        128
+      ],
+      "input_sha256": [
+        "ed7c2e4b564acd530539ea7f8213334b5be35ba9f9362e2a6d579f35b75f69b1",
+        "bc31bdeac0e230bf49e36e8fc659b151d23d343e0a523ec3c2d12c2f94516f68",
+        "076a27c79e5ace2a3d47f9dd2e83e4ff6ea8872b3c2218f66c92b89b55f36560"
+      ],
+      "numerical_budget_population": false,
+      "metrics": {
+        "elements": 128,
+        "finite_pairs": 0,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 128,
+        "reference_neginf": 0,
+        "reference_norm": 0.0,
+        "residual_norm": 0.0,
+        "relative_l2": null,
+        "relative_l2_finite_pairs": 0.0,
+        "max_abs": null,
+        "max_relative_nonzero": 0.0,
+        "relative_quantiles": [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 0,
+        "rounded_reference_over_one_ulp": 0,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "c378072015410cbf34323f1f3c1ff85f5b6e5c8bd2601066a1c955a2aa3cc258",
+        "reference_fp64_sha256": "14c3e7477e3349c8e09a7ef2e94bd08650da1efbdc44a62af417ed4236722bd3"
+      }
+    },
+    {
+      "op": "gate",
+      "types": "f32_f32_f32",
+      "kind": "alog_100",
+      "shape": [
+        1,
+        1,
+        1,
+        128
+      ],
+      "input_sha256": [
+        "ed7c2e4b564acd530539ea7f8213334b5be35ba9f9362e2a6d579f35b75f69b1",
+        "2238f30df488055daf5e8f362cf904e370011a172d20df193c1b7ae8e5db8e01",
+        "076a27c79e5ace2a3d47f9dd2e83e4ff6ea8872b3c2218f66c92b89b55f36560"
+      ],
+      "numerical_budget_population": false,
+      "metrics": {
+        "elements": 128,
+        "finite_pairs": 0,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 128,
+        "reference_neginf": 0,
+        "reference_norm": 0.0,
+        "residual_norm": 0.0,
+        "relative_l2": null,
+        "relative_l2_finite_pairs": 0.0,
+        "max_abs": null,
+        "max_relative_nonzero": 0.0,
+        "relative_quantiles": [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 0,
+        "rounded_reference_over_one_ulp": 0,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "c378072015410cbf34323f1f3c1ff85f5b6e5c8bd2601066a1c955a2aa3cc258",
+        "reference_fp64_sha256": "3563d287df273dce0ffbdb1ed238acb60cfe84036cb6d4d1f7e05bb601f29a95"
+      }
+    },
+    {
+      "op": "beta",
+      "types": "bf16",
+      "kind": "random",
+      "shape": [
+        2,
+        192,
+        8
+      ],
+      "input_sha256": [
+        "6cebdcc9a6f45c4ba1dba503a2171cc2543b366331ff6298a8365c2ea045edb7"
+      ],
+      "numerical_budget_population": true,
+      "metrics": {
+        "elements": 3072,
+        "finite_pairs": 3072,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 34.512218052615125,
+        "residual_norm": 1.2178870449263356e-06,
+        "relative_l2": 3.5288576441816134e-08,
+        "relative_l2_finite_pairs": 3.5288576441816134e-08,
+        "max_abs": 8.523534800186638e-08,
+        "max_relative_nonzero": 9.958823816000494e-08,
+        "relative_quantiles": [
+          2.5195047101835304e-08,
+          6.1568321074499e-08,
+          9.000128619825108e-08,
+          9.958823816000494e-08
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 2,
+        "rounded_reference_over_one_ulp": 1,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "e2dcd291f6b62b7ea5939ad33725d2a585f1336c35835f3d7582cf664af9f707",
+        "reference_fp64_sha256": "b65a17bbca2d1aab4a003f0ccc99e9bccdbf037f09baf702fc1e09bb2a660174"
+      }
+    },
+    {
+      "op": "beta",
+      "types": "bf16",
+      "kind": "full_kimi",
+      "shape": [
+        1,
+        4096,
+        32
+      ],
+      "input_sha256": [
+        "ad2d8905aa948f39086900b8ffe356ba2285d43a881a584d8b58c75f462da61f"
+      ],
+      "numerical_budget_population": true,
+      "metrics": {
+        "elements": 131072,
+        "finite_pairs": 131072,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 196.3718010972649,
+        "residual_norm": 7.651028258190675e-06,
+        "relative_l2": 3.8961949808674645e-08,
+        "relative_l2_finite_pairs": 3.8961949808674645e-08,
+        "max_abs": 7.639480803511844e-08,
+        "max_relative_nonzero": 1.1810085580600678e-07,
+        "relative_quantiles": [
+          2.855534846281631e-08,
+          6.675646277898216e-08,
+          9.540232658962464e-08,
+          1.1810085580600678e-07
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 2,
+        "rounded_reference_over_one_ulp": 362,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "f7d7fa431972f3030c58f6ee0ed8297936c386a09e068b049da83b7e398d2915",
+        "reference_fp64_sha256": "70768157b4c62f136aa4306dbe6e1b2ce2ea84cf5510c3f30af4f868e242850f"
+      }
+    },
+    {
+      "op": "beta",
+      "types": "bf16",
+      "kind": "saturation",
+      "shape": [
+        1,
+        14,
+        1
+      ],
+      "input_sha256": [
+        "68ef8dd6bc7bdd073d073980b76146abb757cbd510f9441869e1a349a8895b04"
+      ],
+      "numerical_budget_population": false,
+      "metrics": {
+        "elements": 14,
+        "finite_pairs": 14,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 2.2038094074407653,
+        "residual_norm": 2.2922048106758352e-08,
+        "relative_l2": 1.0401102758417397e-08,
+        "relative_l2_finite_pairs": 1.0401102758417397e-08,
+        "max_abs": 1.8934692369576567e-08,
+        "max_relative_nonzero": 1.0,
+        "relative_quantiles": [
+          3.2557550609858774e-08,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 584744,
+        "rounded_reference_over_one_ulp": 2,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "905234400a19bd0523f467d6b2cfaf41c3c7749b726dbad7fbf26b40a5cd2627",
+        "reference_fp64_sha256": "bc3fe8b100324413ae0fc3e63715fb899271958743c2745566699f2e91d9aa86"
+      }
+    },
+    {
+      "op": "beta",
+      "types": "bf16",
+      "kind": "zero",
+      "shape": [
+        1,
+        1,
+        1
+      ],
+      "input_sha256": [
+        "96a296d224f285c67bee93c30f8a309157f0daa35dc5b87e410b78630a09cfc7"
+      ],
+      "numerical_budget_population": true,
+      "metrics": {
+        "elements": 1,
+        "finite_pairs": 1,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 0.5,
+        "residual_norm": 0.0,
+        "relative_l2": 0.0,
+        "relative_l2_finite_pairs": 0.0,
+        "max_abs": 0.0,
+        "max_relative_nonzero": 0.0,
+        "relative_quantiles": [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 0,
+        "rounded_reference_over_one_ulp": 0,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "d99e58435243d9fef9c88273b8d553b4fba4d0baf8009d29eae74fa99e0d9f57",
+        "reference_fp64_sha256": "4cfa5b42ca669328764e67cd9a34bb8f90b16ed7ca8d85e8443783d7ccce15ed"
+      }
+    },
+    {
+      "op": "beta",
+      "types": "f32",
+      "kind": "random",
+      "shape": [
+        2,
+        192,
+        8
+      ],
+      "input_sha256": [
+        "fa2188d05d49d531cd12d1dcd2a03a87c2dd8e41c24394afda746c549d4cb949"
+      ],
+      "numerical_budget_population": true,
+      "metrics": {
+        "elements": 3072,
+        "finite_pairs": 3072,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 34.010169973111275,
+        "residual_norm": 1.2691447912685215e-06,
+        "relative_l2": 3.7316625946648256e-08,
+        "relative_l2_finite_pairs": 3.7316625946648256e-08,
+        "max_abs": 8.812051499607065e-08,
+        "max_relative_nonzero": 1.1079481597465089e-07,
+        "relative_quantiles": [
+          2.740803723965261e-08,
+          6.25095325907643e-08,
+          8.554885530199178e-08,
+          1.1079481597465089e-07
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 2,
+        "rounded_reference_over_one_ulp": 9,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "6aed536443568093cefc10d17af6efc70270350edafab198f43df1af4dc232e3",
+        "reference_fp64_sha256": "ae281406879a2873dec5cc96b14edbef53b2d3905d7646c4b08a2042923c0708"
+      }
+    },
+    {
+      "op": "beta",
+      "types": "f32",
+      "kind": "full_kimi",
+      "shape": [
+        1,
+        4096,
+        32
+      ],
+      "input_sha256": [
+        "95c84b1c7e46b5e7d89c7f8e942ab5ef5aa16b5bf269779591e719a1004dbad8"
+      ],
+      "numerical_budget_population": true,
+      "metrics": {
+        "elements": 131072,
+        "finite_pairs": 131072,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 196.14073899157728,
+        "residual_norm": 7.496115505764162e-06,
+        "relative_l2": 3.821804457505415e-08,
+        "relative_l2_finite_pairs": 3.821804457505415e-08,
+        "max_abs": 8.296524833806274e-08,
+        "max_relative_nonzero": 1.1543336423913626e-07,
+        "relative_quantiles": [
+          2.7890340648132518e-08,
+          6.419635881514348e-08,
+          9.04005280524879e-08,
+          1.1543336423913626e-07
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 2,
+        "rounded_reference_over_one_ulp": 421,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "4ffb8b66eac3d05339b829cb4c733d92a1a46cbab46beff46a7c08604969e929",
+        "reference_fp64_sha256": "6a1b14ec8dda4a3850d56301968e3f8ac66325c93b337d73278c67c006e325d1"
+      }
+    },
+    {
+      "op": "beta",
+      "types": "f32",
+      "kind": "saturation",
+      "shape": [
+        1,
+        14,
+        1
+      ],
+      "input_sha256": [
+        "a98d92fea2ac0393bb74587467561d5a7273423c4b3c1bdc52d7c3003921b371"
+      ],
+      "numerical_budget_population": false,
+      "metrics": {
+        "elements": 14,
+        "finite_pairs": 14,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 2.2038094074407653,
+        "residual_norm": 2.2922048106758352e-08,
+        "relative_l2": 1.0401102758417397e-08,
+        "relative_l2_finite_pairs": 1.0401102758417397e-08,
+        "max_abs": 1.8934692369576567e-08,
+        "max_relative_nonzero": 1.0,
+        "relative_quantiles": [
+          3.2557550609858774e-08,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 584744,
+        "rounded_reference_over_one_ulp": 2,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "905234400a19bd0523f467d6b2cfaf41c3c7749b726dbad7fbf26b40a5cd2627",
+        "reference_fp64_sha256": "bc3fe8b100324413ae0fc3e63715fb899271958743c2745566699f2e91d9aa86"
+      }
+    },
+    {
+      "op": "beta",
+      "types": "f32",
+      "kind": "zero",
+      "shape": [
+        1,
+        1,
+        1
+      ],
+      "input_sha256": [
+        "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+      ],
+      "numerical_budget_population": true,
+      "metrics": {
+        "elements": 1,
+        "finite_pairs": 1,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 0.5,
+        "residual_norm": 0.0,
+        "relative_l2": 0.0,
+        "relative_l2_finite_pairs": 0.0,
+        "max_abs": 0.0,
+        "max_relative_nonzero": 0.0,
+        "relative_quantiles": [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 0,
+        "rounded_reference_over_one_ulp": 0,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "d99e58435243d9fef9c88273b8d553b4fba4d0baf8009d29eae74fa99e0d9f57",
+        "reference_fp64_sha256": "4cfa5b42ca669328764e67cd9a34bb8f90b16ed7ca8d85e8443783d7ccce15ed"
+      }
+    },
+    {
+      "op": "norm",
+      "types": "bf16_bf16",
+      "kind": "nonfinite_signedzero",
+      "shape": [
+        1,
+        4,
+        1,
+        128
+      ],
+      "input_sha256": [
+        "6e97b95bbdcaaf68aec75947d1b200113668798a6ecea8370a7a85bce3272ddf"
+      ],
+      "numerical_budget_population": false,
+      "metrics": {
+        "elements": 512,
+        "finite_pairs": 382,
+        "actual_nan": 130,
+        "reference_nan": 130,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 0.0,
+        "residual_norm": 0.0,
+        "relative_l2": null,
+        "relative_l2_finite_pairs": 0.0,
+        "max_abs": 0.0,
+        "max_relative_nonzero": 0.0,
+        "relative_quantiles": [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 0,
+        "rounded_reference_over_one_ulp": 0,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "04f99e588a8311452cd5d754503da3d73ca58f5daa7012e86d1bd6e7d758d378",
+        "reference_fp64_sha256": "bf45d61fbab23057e975f5ea07209d30da9cb91498ce6a344d1923cb25c44b58"
+      }
+    },
+    {
+      "op": "norm",
+      "types": "bf16_f32",
+      "kind": "nonfinite_signedzero",
+      "shape": [
+        1,
+        4,
+        1,
+        128
+      ],
+      "input_sha256": [
+        "6e97b95bbdcaaf68aec75947d1b200113668798a6ecea8370a7a85bce3272ddf"
+      ],
+      "numerical_budget_population": false,
+      "metrics": {
+        "elements": 512,
+        "finite_pairs": 382,
+        "actual_nan": 130,
+        "reference_nan": 130,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 0.0,
+        "residual_norm": 0.0,
+        "relative_l2": null,
+        "relative_l2_finite_pairs": 0.0,
+        "max_abs": 0.0,
+        "max_relative_nonzero": 0.0,
+        "relative_quantiles": [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 0,
+        "rounded_reference_over_one_ulp": 0,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "664b5784d92354ba3278eaac40c957b7dfd598e18a816c29b03c359ee80c70d9",
+        "reference_fp64_sha256": "bf45d61fbab23057e975f5ea07209d30da9cb91498ce6a344d1923cb25c44b58"
+      }
+    },
+    {
+      "op": "gate",
+      "types": "bf16_bf16_bf16",
+      "kind": "nonfinite_signedzero",
+      "shape": [
+        1,
+        4,
+        1,
+        128
+      ],
+      "input_sha256": [
+        "6e97b95bbdcaaf68aec75947d1b200113668798a6ecea8370a7a85bce3272ddf",
+        "96a296d224f285c67bee93c30f8a309157f0daa35dc5b87e410b78630a09cfc7",
+        "5341e6b2646979a70e57653007a1f310169421ec9bdd9f1a5648f75ade005af1"
+      ],
+      "numerical_budget_population": false,
+      "metrics": {
+        "elements": 512,
+        "finite_pairs": 510,
+        "actual_nan": 1,
+        "reference_nan": 1,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 1,
+        "reference_neginf": 1,
+        "reference_norm": 15.638113188117224,
+        "residual_norm": 4.297096017265396e-08,
+        "relative_l2": null,
+        "relative_l2_finite_pairs": 2.747835346613674e-09,
+        "max_abs": 1.904654323148236e-09,
+        "max_relative_nonzero": 2.747835346613685e-09,
+        "relative_quantiles": [
+          2.747835346613685e-09,
+          2.747835346613685e-09,
+          2.747835346613685e-09,
+          2.747835346613685e-09
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 0,
+        "rounded_reference_over_one_ulp": 0,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "3c921cfb09d4ff32cee4a76dcaa3ac9ad25be3aefc5e09033e7352c376f10954",
+        "reference_fp64_sha256": "37da7c415247e7ed61ce823bd8052531cf65b417f4cad48f7946fcfc02fc0122"
+      }
+    },
+    {
+      "op": "beta",
+      "types": "bf16",
+      "kind": "nonfinite_signedzero",
+      "shape": [
+        1,
+        4,
+        1
+      ],
+      "input_sha256": [
+        "502b0781b0f6cdb2913aeef4fbd0504f6535de77ec69b635c0f71ccd26094442"
+      ],
+      "numerical_budget_population": false,
+      "metrics": {
+        "elements": 4,
+        "finite_pairs": 3,
+        "actual_nan": 1,
+        "reference_nan": 1,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 1.118033988749895,
+        "residual_norm": 0.0,
+        "relative_l2": null,
+        "relative_l2_finite_pairs": 0.0,
+        "max_abs": 0.0,
+        "max_relative_nonzero": 0.0,
+        "relative_quantiles": [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 0,
+        "rounded_reference_over_one_ulp": 0,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "ba8e1f37f505a42d9768821bb0da5dc1766945105201ad11a5c4cf03b0bd43d8",
+        "reference_fp64_sha256": "a3515de2a1932efcdf8c26a0fae78a7ba1709e559db6145d0e6c1420601054d7"
+      }
+    },
+    {
+      "op": "norm",
+      "types": "f32_bf16",
+      "kind": "nonfinite_signedzero",
+      "shape": [
+        1,
+        4,
+        1,
+        128
+      ],
+      "input_sha256": [
+        "54a357a0296cde13eee72598edbb7c288a594c5285b8f132105578fe825d877f"
+      ],
+      "numerical_budget_population": false,
+      "metrics": {
+        "elements": 512,
+        "finite_pairs": 382,
+        "actual_nan": 130,
+        "reference_nan": 130,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 0.0,
+        "residual_norm": 0.0,
+        "relative_l2": null,
+        "relative_l2_finite_pairs": 0.0,
+        "max_abs": 0.0,
+        "max_relative_nonzero": 0.0,
+        "relative_quantiles": [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 0,
+        "rounded_reference_over_one_ulp": 0,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "04f99e588a8311452cd5d754503da3d73ca58f5daa7012e86d1bd6e7d758d378",
+        "reference_fp64_sha256": "bf45d61fbab23057e975f5ea07209d30da9cb91498ce6a344d1923cb25c44b58"
+      }
+    },
+    {
+      "op": "norm",
+      "types": "f32_f32",
+      "kind": "nonfinite_signedzero",
+      "shape": [
+        1,
+        4,
+        1,
+        128
+      ],
+      "input_sha256": [
+        "54a357a0296cde13eee72598edbb7c288a594c5285b8f132105578fe825d877f"
+      ],
+      "numerical_budget_population": false,
+      "metrics": {
+        "elements": 512,
+        "finite_pairs": 382,
+        "actual_nan": 130,
+        "reference_nan": 130,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 0.0,
+        "residual_norm": 0.0,
+        "relative_l2": null,
+        "relative_l2_finite_pairs": 0.0,
+        "max_abs": 0.0,
+        "max_relative_nonzero": 0.0,
+        "relative_quantiles": [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 0,
+        "rounded_reference_over_one_ulp": 0,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "664b5784d92354ba3278eaac40c957b7dfd598e18a816c29b03c359ee80c70d9",
+        "reference_fp64_sha256": "bf45d61fbab23057e975f5ea07209d30da9cb91498ce6a344d1923cb25c44b58"
+      }
+    },
+    {
+      "op": "gate",
+      "types": "f32_f32_f32",
+      "kind": "nonfinite_signedzero",
+      "shape": [
+        1,
+        4,
+        1,
+        128
+      ],
+      "input_sha256": [
+        "54a357a0296cde13eee72598edbb7c288a594c5285b8f132105578fe825d877f",
+        "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+        "076a27c79e5ace2a3d47f9dd2e83e4ff6ea8872b3c2218f66c92b89b55f36560"
+      ],
+      "numerical_budget_population": false,
+      "metrics": {
+        "elements": 512,
+        "finite_pairs": 510,
+        "actual_nan": 1,
+        "reference_nan": 1,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 1,
+        "reference_neginf": 1,
+        "reference_norm": 15.638113188117224,
+        "residual_norm": 4.297096017265396e-08,
+        "relative_l2": null,
+        "relative_l2_finite_pairs": 2.747835346613674e-09,
+        "max_abs": 1.904654323148236e-09,
+        "max_relative_nonzero": 2.747835346613685e-09,
+        "relative_quantiles": [
+          2.747835346613685e-09,
+          2.747835346613685e-09,
+          2.747835346613685e-09,
+          2.747835346613685e-09
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 0,
+        "rounded_reference_over_one_ulp": 0,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "3c921cfb09d4ff32cee4a76dcaa3ac9ad25be3aefc5e09033e7352c376f10954",
+        "reference_fp64_sha256": "37da7c415247e7ed61ce823bd8052531cf65b417f4cad48f7946fcfc02fc0122"
+      }
+    },
+    {
+      "op": "beta",
+      "types": "f32",
+      "kind": "nonfinite_signedzero",
+      "shape": [
+        1,
+        4,
+        1
+      ],
+      "input_sha256": [
+        "31ea341009aa8f78863b94f9a85e3294784bac48b496c82959f1f6bb3bc349ae"
+      ],
+      "numerical_budget_population": false,
+      "metrics": {
+        "elements": 4,
+        "finite_pairs": 3,
+        "actual_nan": 1,
+        "reference_nan": 1,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 1.118033988749895,
+        "residual_norm": 0.0,
+        "relative_l2": null,
+        "relative_l2_finite_pairs": 0.0,
+        "max_abs": 0.0,
+        "max_relative_nonzero": 0.0,
+        "relative_quantiles": [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 0,
+        "rounded_reference_over_one_ulp": 0,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "ba8e1f37f505a42d9768821bb0da5dc1766945105201ad11a5c4cf03b0bd43d8",
+        "reference_fp64_sha256": "a3515de2a1932efcdf8c26a0fae78a7ba1709e559db6145d0e6c1420601054d7"
+      }
+    }
+  ],
+  "negative_controls": [
+    {
+      "op": "norm",
+      "types": "bf16_bf16",
+      "kind": "gaussian",
+      "shape": [
+        1,
+        64,
+        1,
+        128
+      ],
+      "corruption": "zero",
+      "relative_l2": 1.0,
+      "calibration_floor": 0.0016458338178486087,
+      "rejected": true
+    },
+    {
+      "op": "norm",
+      "types": "bf16_bf16",
+      "kind": "gaussian",
+      "shape": [
+        1,
+        64,
+        1,
+        128
+      ],
+      "corruption": "negated",
+      "relative_l2": 2.0000183974849226,
+      "calibration_floor": 0.0016458338178486087,
+      "rejected": true
+    },
+    {
+      "op": "norm",
+      "types": "bf16_bf16",
+      "kind": "gaussian",
+      "shape": [
+        1,
+        64,
+        1,
+        128
+      ],
+      "corruption": "scaled_1p25",
+      "relative_l2": 0.2500442123178711,
+      "calibration_floor": 0.0016458338178486087,
+      "rejected": true
+    },
+    {
+      "op": "norm",
+      "types": "bf16_f32",
+      "kind": "gaussian",
+      "shape": [
+        1,
+        64,
+        1,
+        128
+      ],
+      "corruption": "zero",
+      "relative_l2": 1.0,
+      "calibration_floor": 4.423006167304717e-08,
+      "rejected": true
+    },
+    {
+      "op": "norm",
+      "types": "bf16_f32",
+      "kind": "gaussian",
+      "shape": [
+        1,
+        64,
+        1,
+        128
+      ],
+      "corruption": "negated",
+      "relative_l2": 2.000000014020337,
+      "calibration_floor": 4.423006167304717e-08,
+      "rejected": true
+    },
+    {
+      "op": "norm",
+      "types": "bf16_f32",
+      "kind": "gaussian",
+      "shape": [
+        1,
+        64,
+        1,
+        128
+      ],
+      "corruption": "scaled_1p25",
+      "relative_l2": 0.25000001670305033,
+      "calibration_floor": 4.423006167304717e-08,
+      "rejected": true
+    },
+    {
+      "op": "norm",
+      "types": "f32_bf16",
+      "kind": "gaussian",
+      "shape": [
+        1,
+        64,
+        1,
+        128
+      ],
+      "corruption": "zero",
+      "relative_l2": 1.0,
+      "calibration_floor": 0.0016606145344726074,
+      "rejected": true
+    },
+    {
+      "op": "norm",
+      "types": "f32_bf16",
+      "kind": "gaussian",
+      "shape": [
+        1,
+        64,
+        1,
+        128
+      ],
+      "corruption": "negated",
+      "relative_l2": 2.000023650600715,
+      "calibration_floor": 0.0016606145344726074,
+      "rejected": true
+    },
+    {
+      "op": "norm",
+      "types": "f32_bf16",
+      "kind": "gaussian",
+      "shape": [
+        1,
+        64,
+        1,
+        128
+      ],
+      "corruption": "scaled_1p25",
+      "relative_l2": 0.2500170209818049,
+      "calibration_floor": 0.0016606145344726074,
+      "rejected": true
+    },
+    {
+      "op": "norm",
+      "types": "f32_f32",
+      "kind": "gaussian",
+      "shape": [
+        1,
+        64,
+        1,
+        128
+      ],
+      "corruption": "zero",
+      "relative_l2": 1.0,
+      "calibration_floor": 4.2498349441027235e-08,
+      "rejected": true
+    },
+    {
+      "op": "norm",
+      "types": "f32_f32",
+      "kind": "gaussian",
+      "shape": [
+        1,
+        64,
+        1,
+        128
+      ],
+      "corruption": "negated",
+      "relative_l2": 2.0000000083787426,
+      "calibration_floor": 4.2498349441027235e-08,
+      "rejected": true
+    },
+    {
+      "op": "norm",
+      "types": "f32_f32",
+      "kind": "gaussian",
+      "shape": [
+        1,
+        64,
+        1,
+        128
+      ],
+      "corruption": "scaled_1p25",
+      "relative_l2": 0.2500000104970506,
+      "calibration_floor": 4.2498349441027235e-08,
+      "rejected": true
+    },
+    {
+      "op": "norm",
+      "types": "bf16_bf16",
+      "kind": "gaussian",
+      "shape": [
+        2,
+        192,
+        2,
+        128
+      ],
+      "corruption": "zero",
+      "relative_l2": 1.0,
+      "calibration_floor": 0.0016505823641424133,
+      "rejected": true
+    },
+    {
+      "op": "norm",
+      "types": "bf16_bf16",
+      "kind": "gaussian",
+      "shape": [
+        2,
+        192,
+        2,
+        128
+      ],
+      "corruption": "negated",
+      "relative_l2": 1.9999969327992155,
+      "calibration_floor": 0.0016505823641424133,
+      "rejected": true
+    },
+    {
+      "op": "norm",
+      "types": "bf16_bf16",
+      "kind": "gaussian",
+      "shape": [
+        2,
+        192,
+        2,
+        128
+      ],
+      "corruption": "scaled_1p25",
+      "relative_l2": 0.24995887826838234,
+      "calibration_floor": 0.0016505823641424133,
+      "rejected": true
+    },
+    {
+      "op": "norm",
+      "types": "bf16_f32",
+      "kind": "gaussian",
+      "shape": [
+        2,
+        192,
+        2,
+        128
+      ],
+      "corruption": "zero",
+      "relative_l2": 1.0,
+      "calibration_floor": 4.262195362402486e-08,
+      "rejected": true
+    },
+    {
+      "op": "norm",
+      "types": "bf16_f32",
+      "kind": "gaussian",
+      "shape": [
+        2,
+        192,
+        2,
+        128
+      ],
+      "corruption": "negated",
+      "relative_l2": 2.0000000112036456,
+      "calibration_floor": 4.262195362402486e-08,
+      "rejected": true
+    },
+    {
+      "op": "norm",
+      "types": "bf16_f32",
+      "kind": "gaussian",
+      "shape": [
+        2,
+        192,
+        2,
+        128
+      ],
+      "corruption": "scaled_1p25",
+      "relative_l2": 0.25000001393494325,
+      "calibration_floor": 4.262195362402486e-08,
+      "rejected": true
+    },
+    {
+      "op": "norm",
+      "types": "f32_bf16",
+      "kind": "gaussian",
+      "shape": [
+        2,
+        192,
+        2,
+        128
+      ],
+      "corruption": "zero",
+      "relative_l2": 1.0,
+      "calibration_floor": 0.0016483204355094536,
+      "rejected": true
+    },
+    {
+      "op": "norm",
+      "types": "f32_bf16",
+      "kind": "gaussian",
+      "shape": [
+        2,
+        192,
+        2,
+        128
+      ],
+      "corruption": "negated",
+      "relative_l2": 2.0000015189876175,
+      "calibration_floor": 0.0016483204355094536,
+      "rejected": true
+    },
+    {
+      "op": "norm",
+      "types": "f32_bf16",
+      "kind": "gaussian",
+      "shape": [
+        2,
+        192,
+        2,
+        128
+      ],
+      "corruption": "scaled_1p25",
+      "relative_l2": 0.24996695916006167,
+      "calibration_floor": 0.0016483204355094536,
+      "rejected": true
+    },
+    {
+      "op": "norm",
+      "types": "f32_f32",
+      "kind": "gaussian",
+      "shape": [
+        2,
+        192,
+        2,
+        128
+      ],
+      "corruption": "zero",
+      "relative_l2": 1.0,
+      "calibration_floor": 4.1814167684808314e-08,
+      "rejected": true
+    },
+    {
+      "op": "norm",
+      "types": "f32_f32",
+      "kind": "gaussian",
+      "shape": [
+        2,
+        192,
+        2,
+        128
+      ],
+      "corruption": "negated",
+      "relative_l2": 2.000000004632611,
+      "calibration_floor": 4.1814167684808314e-08,
+      "rejected": true
+    },
+    {
+      "op": "norm",
+      "types": "f32_f32",
+      "kind": "gaussian",
+      "shape": [
+        2,
+        192,
+        2,
+        128
+      ],
+      "corruption": "scaled_1p25",
+      "relative_l2": 0.25000000579911935,
+      "calibration_floor": 4.1814167684808314e-08,
+      "rejected": true
+    },
+    {
+      "op": "norm",
+      "types": "bf16_bf16",
+      "kind": "gaussian",
+      "shape": [
+        1,
+        4096,
+        32,
+        128
+      ],
+      "corruption": "zero",
+      "relative_l2": 1.0,
+      "calibration_floor": 0.0016552718578870674,
+      "rejected": true
+    },
+    {
+      "op": "norm",
+      "types": "bf16_bf16",
+      "kind": "gaussian",
+      "shape": [
+        1,
+        4096,
+        32,
+        128
+      ],
+      "corruption": "negated",
+      "relative_l2": 1.999998478299399,
+      "calibration_floor": 0.0016552718578870674,
+      "rejected": true
+    },
+    {
+      "op": "norm",
+      "types": "bf16_bf16",
+      "kind": "gaussian",
+      "shape": [
+        1,
+        4096,
+        32,
+        128
+      ],
+      "corruption": "scaled_1p25",
+      "relative_l2": 0.24996008654844895,
+      "calibration_floor": 0.0016552718578870674,
+      "rejected": true
+    },
+    {
+      "op": "norm",
+      "types": "bf16_f32",
+      "kind": "gaussian",
+      "shape": [
+        1,
+        4096,
+        32,
+        128
+      ],
+      "corruption": "zero",
+      "relative_l2": 1.0,
+      "calibration_floor": 4.2255512516430695e-08,
+      "rejected": true
+    },
+    {
+      "op": "norm",
+      "types": "bf16_f32",
+      "kind": "gaussian",
+      "shape": [
+        1,
+        4096,
+        32,
+        128
+      ],
+      "corruption": "negated",
+      "relative_l2": 2.000000010034255,
+      "calibration_floor": 4.2255512516430695e-08,
+      "rejected": true
+    },
+    {
+      "op": "norm",
+      "types": "bf16_f32",
+      "kind": "gaussian",
+      "shape": [
+        1,
+        4096,
+        32,
+        128
+      ],
+      "corruption": "scaled_1p25",
+      "relative_l2": 0.2500000125466616,
+      "calibration_floor": 4.2255512516430695e-08,
+      "rejected": true
+    },
+    {
+      "op": "norm",
+      "types": "f32_bf16",
+      "kind": "gaussian",
+      "shape": [
+        1,
+        4096,
+        32,
+        128
+      ],
+      "corruption": "zero",
+      "relative_l2": 1.0,
+      "calibration_floor": 0.0016556654949697626,
+      "rejected": true
+    },
+    {
+      "op": "norm",
+      "types": "f32_bf16",
+      "kind": "gaussian",
+      "shape": [
+        1,
+        4096,
+        32,
+        128
+      ],
+      "corruption": "negated",
+      "relative_l2": 2.000000167229215,
+      "calibration_floor": 0.0016556654949697626,
+      "rejected": true
+    },
+    {
+      "op": "norm",
+      "types": "f32_bf16",
+      "kind": "gaussian",
+      "shape": [
+        1,
+        4096,
+        32,
+        128
+      ],
+      "corruption": "scaled_1p25",
+      "relative_l2": 0.249962214229762,
+      "calibration_floor": 0.0016556654949697626,
+      "rejected": true
+    },
+    {
+      "op": "norm",
+      "types": "f32_f32",
+      "kind": "gaussian",
+      "shape": [
+        1,
+        4096,
+        32,
+        128
+      ],
+      "corruption": "zero",
+      "relative_l2": 1.0,
+      "calibration_floor": 4.181854531468666e-08,
+      "rejected": true
+    },
+    {
+      "op": "norm",
+      "types": "f32_f32",
+      "kind": "gaussian",
+      "shape": [
+        1,
+        4096,
+        32,
+        128
+      ],
+      "corruption": "negated",
+      "relative_l2": 2.0000000039293946,
+      "calibration_floor": 4.181854531468666e-08,
+      "rejected": true
+    },
+    {
+      "op": "norm",
+      "types": "f32_f32",
+      "kind": "gaussian",
+      "shape": [
+        1,
+        4096,
+        32,
+        128
+      ],
+      "corruption": "scaled_1p25",
+      "relative_l2": 0.2500000049064014,
+      "calibration_floor": 4.181854531468666e-08,
+      "rejected": true
+    },
+    {
+      "op": "gate",
+      "types": "bf16_bf16_bf16",
+      "kind": "random",
+      "shape": [
+        2,
+        192,
+        8,
+        128
+      ],
+      "corruption": "zero",
+      "relative_l2": 1.0,
+      "calibration_floor": 4.235000041519578e-08,
+      "rejected": true
+    },
+    {
+      "op": "gate",
+      "types": "bf16_bf16_bf16",
+      "kind": "random",
+      "shape": [
+        2,
+        192,
+        8,
+        128
+      ],
+      "corruption": "negated",
+      "relative_l2": 2.0000000083506677,
+      "calibration_floor": 4.235000041519578e-08,
+      "rejected": true
+    },
+    {
+      "op": "gate",
+      "types": "bf16_bf16_bf16",
+      "kind": "random",
+      "shape": [
+        2,
+        192,
+        8,
+        128
+      ],
+      "corruption": "scaled_1p25",
+      "relative_l2": 0.2500000099126627,
+      "calibration_floor": 4.235000041519578e-08,
+      "rejected": true
+    },
+    {
+      "op": "gate",
+      "types": "bf16_bf16_f32",
+      "kind": "random",
+      "shape": [
+        2,
+        192,
+        8,
+        128
+      ],
+      "corruption": "zero",
+      "relative_l2": 1.0,
+      "calibration_floor": 4.880421801124304e-08,
+      "rejected": true
+    },
+    {
+      "op": "gate",
+      "types": "bf16_bf16_f32",
+      "kind": "random",
+      "shape": [
+        2,
+        192,
+        8,
+        128
+      ],
+      "corruption": "negated",
+      "relative_l2": 2.0000000131337186,
+      "calibration_floor": 4.880421801124304e-08,
+      "rejected": true
+    },
+    {
+      "op": "gate",
+      "types": "bf16_bf16_f32",
+      "kind": "random",
+      "shape": [
+        2,
+        192,
+        8,
+        128
+      ],
+      "corruption": "scaled_1p25",
+      "relative_l2": 0.2500000165808497,
+      "calibration_floor": 4.880421801124304e-08,
+      "rejected": true
+    },
+    {
+      "op": "gate",
+      "types": "bf16_f32_bf16",
+      "kind": "random",
+      "shape": [
+        2,
+        192,
+        8,
+        128
+      ],
+      "corruption": "zero",
+      "relative_l2": 1.0,
+      "calibration_floor": 4.3397636520744056e-08,
+      "rejected": true
+    },
+    {
+      "op": "gate",
+      "types": "bf16_f32_bf16",
+      "kind": "random",
+      "shape": [
+        2,
+        192,
+        8,
+        128
+      ],
+      "corruption": "negated",
+      "relative_l2": 1.9999999805446647,
+      "calibration_floor": 4.3397636520744056e-08,
+      "rejected": true
+    },
+    {
+      "op": "gate",
+      "types": "bf16_f32_bf16",
+      "kind": "random",
+      "shape": [
+        2,
+        192,
+        8,
+        128
+      ],
+      "corruption": "scaled_1p25",
+      "relative_l2": 0.24999997557276338,
+      "calibration_floor": 4.3397636520744056e-08,
+      "rejected": true
+    },
+    {
+      "op": "gate",
+      "types": "bf16_f32_f32",
+      "kind": "random",
+      "shape": [
+        2,
+        192,
+        8,
+        128
+      ],
+      "corruption": "zero",
+      "relative_l2": 1.0,
+      "calibration_floor": 4.578155349477261e-08,
+      "rejected": true
+    },
+    {
+      "op": "gate",
+      "types": "bf16_f32_f32",
+      "kind": "random",
+      "shape": [
+        2,
+        192,
+        8,
+        128
+      ],
+      "corruption": "negated",
+      "relative_l2": 1.999999985935305,
+      "calibration_floor": 4.578155349477261e-08,
+      "rejected": true
+    },
+    {
+      "op": "gate",
+      "types": "bf16_f32_f32",
+      "kind": "random",
+      "shape": [
+        2,
+        192,
+        8,
+        128
+      ],
+      "corruption": "scaled_1p25",
+      "relative_l2": 0.24999998208366067,
+      "calibration_floor": 4.578155349477261e-08,
+      "rejected": true
+    },
+    {
+      "op": "gate",
+      "types": "f32_bf16_bf16",
+      "kind": "random",
+      "shape": [
+        2,
+        192,
+        8,
+        128
+      ],
+      "corruption": "zero",
+      "relative_l2": 1.0,
+      "calibration_floor": 4.4243468814604646e-08,
+      "rejected": true
+    },
+    {
+      "op": "gate",
+      "types": "f32_bf16_bf16",
+      "kind": "random",
+      "shape": [
+        2,
+        192,
+        8,
+        128
+      ],
+      "corruption": "negated",
+      "relative_l2": 2.0000000089123953,
+      "calibration_floor": 4.4243468814604646e-08,
+      "rejected": true
+    },
+    {
+      "op": "gate",
+      "types": "f32_bf16_bf16",
+      "kind": "random",
+      "shape": [
+        2,
+        192,
+        8,
+        128
+      ],
+      "corruption": "scaled_1p25",
+      "relative_l2": 0.2500000109481854,
+      "calibration_floor": 4.4243468814604646e-08,
+      "rejected": true
+    },
+    {
+      "op": "gate",
+      "types": "f32_bf16_f32",
+      "kind": "random",
+      "shape": [
+        2,
+        192,
+        8,
+        128
+      ],
+      "corruption": "zero",
+      "relative_l2": 1.0,
+      "calibration_floor": 4.7693235988838724e-08,
+      "rejected": true
+    },
+    {
+      "op": "gate",
+      "types": "f32_bf16_f32",
+      "kind": "random",
+      "shape": [
+        2,
+        192,
+        8,
+        128
+      ],
+      "corruption": "negated",
+      "relative_l2": 2.0000000104182374,
+      "calibration_floor": 4.7693235988838724e-08,
+      "rejected": true
+    },
+    {
+      "op": "gate",
+      "types": "f32_bf16_f32",
+      "kind": "random",
+      "shape": [
+        2,
+        192,
+        8,
+        128
+      ],
+      "corruption": "scaled_1p25",
+      "relative_l2": 0.2500000132032999,
+      "calibration_floor": 4.7693235988838724e-08,
+      "rejected": true
+    },
+    {
+      "op": "gate",
+      "types": "f32_f32_bf16",
+      "kind": "random",
+      "shape": [
+        2,
+        192,
+        8,
+        128
+      ],
+      "corruption": "zero",
+      "relative_l2": 1.0,
+      "calibration_floor": 4.4600212387549e-08,
+      "rejected": true
+    },
+    {
+      "op": "gate",
+      "types": "f32_f32_bf16",
+      "kind": "random",
+      "shape": [
+        2,
+        192,
+        8,
+        128
+      ],
+      "corruption": "negated",
+      "relative_l2": 1.9999999819612582,
+      "calibration_floor": 4.4600212387549e-08,
+      "rejected": true
+    },
+    {
+      "op": "gate",
+      "types": "f32_f32_bf16",
+      "kind": "random",
+      "shape": [
+        2,
+        192,
+        8,
+        128
+      ],
+      "corruption": "scaled_1p25",
+      "relative_l2": 0.2499999775893162,
+      "calibration_floor": 4.4600212387549e-08,
+      "rejected": true
+    },
+    {
+      "op": "gate",
+      "types": "f32_f32_f32",
+      "kind": "random",
+      "shape": [
+        2,
+        192,
+        8,
+        128
+      ],
+      "corruption": "zero",
+      "relative_l2": 1.0,
+      "calibration_floor": 4.647234279011182e-08,
+      "rejected": true
+    },
+    {
+      "op": "gate",
+      "types": "f32_f32_f32",
+      "kind": "random",
+      "shape": [
+        2,
+        192,
+        8,
+        128
+      ],
+      "corruption": "negated",
+      "relative_l2": 1.9999999825256782,
+      "calibration_floor": 4.647234279011182e-08,
+      "rejected": true
+    },
+    {
+      "op": "gate",
+      "types": "f32_f32_f32",
+      "kind": "random",
+      "shape": [
+        2,
+        192,
+        8,
+        128
+      ],
+      "corruption": "scaled_1p25",
+      "relative_l2": 0.2499999782492788,
+      "calibration_floor": 4.647234279011182e-08,
+      "rejected": true
+    },
+    {
+      "op": "beta",
+      "types": "bf16",
+      "kind": "random",
+      "shape": [
+        2,
+        192,
+        8
+      ],
+      "corruption": "zero",
+      "relative_l2": 1.0,
+      "calibration_floor": 3.5288576441816134e-08,
+      "rejected": true
+    },
+    {
+      "op": "beta",
+      "types": "bf16",
+      "kind": "random",
+      "shape": [
+        2,
+        192,
+        8
+      ],
+      "corruption": "negated",
+      "relative_l2": 1.9999999995836693,
+      "calibration_floor": 3.5288576441816134e-08,
+      "rejected": true
+    },
+    {
+      "op": "beta",
+      "types": "bf16",
+      "kind": "random",
+      "shape": [
+        2,
+        192,
+        8
+      ],
+      "corruption": "scaled_1p25",
+      "relative_l2": 0.25000000081038665,
+      "calibration_floor": 3.5288576441816134e-08,
+      "rejected": true
+    },
+    {
+      "op": "beta",
+      "types": "f32",
+      "kind": "random",
+      "shape": [
+        2,
+        192,
+        8
+      ],
+      "corruption": "zero",
+      "relative_l2": 1.0,
+      "calibration_floor": 3.7316625946648256e-08,
+      "rejected": true
+    },
+    {
+      "op": "beta",
+      "types": "f32",
+      "kind": "random",
+      "shape": [
+        2,
+        192,
+        8
+      ],
+      "corruption": "negated",
+      "relative_l2": 1.9999999994600512,
+      "calibration_floor": 3.7316625946648256e-08,
+      "rejected": true
+    },
+    {
+      "op": "beta",
+      "types": "f32",
+      "kind": "random",
+      "shape": [
+        2,
+        192,
+        8
+      ],
+      "corruption": "scaled_1p25",
+      "relative_l2": 0.24999999968206107,
+      "calibration_floor": 3.7316625946648256e-08,
+      "rejected": true
+    }
+  ]
+}
