@@ -286,6 +286,13 @@
       "by": "pm",
       "decision": "FMT-02 的范围与审计口径：FMT-02 = D-PM-37 字面（host 的 dtype / 布局转换进自编译 kernel，输出逐位不变）；_scan_states 整体（h / v_new 的 host 复算）、log2(eg) 分支、只读校验是「已登记的存量算术例外」，审计单列、不宣称合规、不搬进新单元，消除 _scan_states 要改 kda_fwd_stable 的 kernel（kernel 批次，用户批准）；位精确的 dw 取负与 g_cumsum × 1/ln2 可选并进同一 launch（逐位相同才并）。验收：推理前向与 decode 完全干净，带缓存前向与反向在例外之外无 host 转换算子。",
       "risk": "这是 PM 对「FMT-02 原验收写得比现实严」的修正，方式与 D-PM-40（BF-06 的 raw flags 存量例外）相同：不给新代码开例外，存量的 host 算术在 kernel 批次之前仍在。后果：训练路径（带缓存前向）在 kernel 批次之前**不可能完全没有 host 算子**——_scan_states 里夹着 FP32 Cast 与 stack，是 D-PM-37 字面禁止的转换，但和算术缠在一起、不改前向 kernel 拆不开；PM 认为这是把存量例外老实登记，而不是放行。用户可以推翻：代价是要么现在批准一个 A5 kernel 批次（前向 kernel 导出 h / v_new，即 fwd-caches-not-emitted，P2），要么接受训练路径的存量例外。建议：这个批次与 BF-07（q/k l2norm、门控、beta sigmoid 融进前向 kernel）一起批，因为两者都要改 kda_fwd_stable 的 kernel。"
+    },
+    {
+      "id": "D-PM-43",
+      "date": "2026-09-20",
+      "by": "user",
+      "decision": "授权合入 PR #114（BF-06），并放行其余待用户决定的 gated 项。（用户原话：「#114授权」，随后「其他的也放行」。）",
+      "risk": "PM 的读法（用户可纠正）：(1)「#114授权」的授权对象是 PM 评审过的头 98d75fc9，用 --match-head-commit 钉住，经 bot 账号合入；用户是在被告知「入口 dtype 域收窄成 BF16 / 全 FP32」与「B1/T16/H32 上比旧 wrapper 慢约 1–25%」之后授权的。(2)「其他的也放行」读作：放行 PM 在「仍在等你的」清单里反复列出的 gated 项——PK-05 / GDA-04 / PK-06 / GDA-05（user-decision，来自外部需求 #89）、A2-10 / A2-11（machines:a2）、BF-07 / A2-K1（kernel 批次）——**以及与 A2-10 / A2-11 同一道 machines:a2 闸的 A2-12 … A2-16、A2-41、A2-43**（它们由依赖排序，前置没完成前动不了）。(3) 具体做法：规格已在的 → 现在改 open（BF-07、PK-05、GDA-04、PK-06、GDA-05，并给 A2-10 / A2-11 补了规格）；规格没写、前置没完成的（A2-K1、A2-12 … A2-16、A2-41、A2-43）→ 仍保持 gated 状态位、但 gate 改成「用户已放行，待前置与规格」，PM 在前置完成、规格写好时改 open，不再问用户。(4) **没有放行**（不在清单里、含义也不明确）：A2-20（GDN on A2，批准后要拆分的大 epic）、A2-42（依赖 A2-K1 的融合 kernel）、A3-00 与 A5-01 … A5-06（按波次的闸，不是等用户）、A2-06（owner-track-coordination）、G3-01（低比特 dtype，未排期）、G1 … G7 各 epic；用户若也要放行请说一声。(5) 放行不改变任何既有纪律：A2 数字在 A2-11 之前只作观测、kernel 批次里改已有 kernel 的写集由 PM 在派单时定、BF-07 与 FMT-02 写集重叠所以排在 FMT-02 之后。"
     }
   ],
   "gated_epics": [
@@ -911,7 +918,7 @@
       "wave": "W0",
       "soc": "a5",
       "priority": "P0",
-      "status": "review",
+      "status": "done",
       "model": [],
       "kernel": [
         "kda_fused_recurrent"
@@ -1020,9 +1027,26 @@
         {
           "at": "2026-09-20T03:18",
           "summary": "PM 评审 accept（REVIEW 已发在 #114，头 98d75fc9；PM 从 evidence/ 的原始 JSON 自己复算，不用申领人的 aggregate / replay 汇总）：414 条数值记录（bd1/2/4 × 136 + bd8/16/28 各 2）全过，BF16 每 case 预算逐条从 output_floor 重算为 min(1e-2, 3F)，FP32 o / state ≤ 1e-5；BF16 最差 o 1.8848e-3、FP32 最差 o 2.01e-7、最差 state 1.71e-7、逐头 state 1.80e-7 与自述完全一致，BF16 最紧 误差/预算 0.3333；FP32 新对原实现逐位标志 159/159；342 个附加检查（6 bd × 57）全过；跨 bd 2068 个哈希相同，bd8/16/28 完整 workload 与 bd1 哈希相同。prefill→decode 按 D-PM-41 三层从 prefill 回执重算：126 条链 / 8568 次局部 decode 0 失败，层 1 最差 o 1.971e-3 / state 1.46e-7（最紧 0.333），层 2 全部逐位相同，层 3 全链最差 o 3.663e-3 / state 2.471e-3、前缀 o 3.959e-3、后缀 o 3.267e-3（最紧 0.396，预算字段逐条与 E_oneshot 重算一致），门控跨度 0 / 4 / 105 / 155 覆盖，315 个跨 bd 哈希相同，没有改线。host 审计：案例内只有 aten.empty；PM 代理审计（桩掉 launch）两 dtype × 4 形状每次恰好 2 个 empty；域外（FP16 / FP64 / 混用 / 非 FP32 的 g）显式报错；raw_flags_legacy 84 条单列存量例外的算子（含 _to_copy 与算术），与 D-PM-40 一致；chunk.py / chunk_bwd.py / autograd.py 与 base 逐字节相同。预批准的 8 个用例 diff 只动了一个参数化函数，8 组合 / 零容差 / 独立参考保留；fp32-entry-before.py 与 base 入口逐字节相同、原 FP32 单元零改动。原始回执自带 CANN_VERSION_RAW（9.2.0 + 时间戳）与 OPP_DIRECTORY_RAW，device.json Ascend950PR_9589；13 个 .exit 全 0、13 个 compile.json 都是 17 项 complete；引用的日志行都在；publication.json 147 项 SHA / 行数逐项一致；173 个文件（171 新增 2 修改）全在写集内、无二进制 / 保留路径、隐私扫描 0 命中。无 NPU 环境全量 761 passed / 12 skipped（main 739 / 12，+22），入口换回 base 后 93 个用例 30 个失败（负对照）。性能三轮三明治与两个 baseline 从原始样本重算逐项一致。合入前问用户：入口 dtype 域从「任意浮点（靠 host 加宽）」收窄成 BF16 q/k/v 或全 FP32（D-PM-40 的直接后果、仓里查无调用方，但属域改动，按 D-PM-33 先问）。记录：T=16 变慢——B1/T16/H32 相对旧 FP32 公共入口 BF16 速度比 0.814 / 0.988 / 0.748，FP32 新路径 0.795 / 0.937 / 0.746（T=1 持平、T=2 更快、host enqueue 约 374–378us 对 564–572us），无速度门槛，记为后续性能任务的起点；T=2 旧基线样本波动大，速度比只读作「不慢」。"
+        },
+        {
+          "at": "2026-09-20T03:48",
+          "summary": "合入（PR #114 → 7f8f002，合入的是审过的头 98d75fc，依 D-PM-43 用户明确授权「#114授权」）：main 全量 761 passed / 12 skipped（739 + BF-06 的 22）。看板 done，kda_fused_recurrent 的 BF16 格改为原生（A5）。FMT-02 已按申领人在 #109 的排队 APPLY 直接派给同一 session。"
         }
       ],
-      "result": null,
+      "result": {
+        "commits": [
+          "98d75fc",
+          "7f8f002"
+        ],
+        "evidence": [
+          "PR #114",
+          "kernels/projects/a5/kda_fused_recurrent_bf16/evidence/",
+          "docs/research/kda_decode_bf16.md",
+          "kernels/projects/a5/kda_fused_recurrent_bf16/README.md"
+        ],
+        "numbers": "真机（A5，Ascend950PR_9589 / CANN 9.2.0，原始回执自带 CANN_VERSION_RAW 与时间戳 20260805_101249091、OPP_DIRECTORY_RAW 列出 ascend950 / ascend910b / ascend910_93；原始回执在 PR 的 evidence/ 里，PM 逐项从原始 JSON 复算）：bd1/2/4 × 136 + bd8/16/28 各 2 = 414 条数值记录全过（含完整 B2/T16/H4/HV32），BF16 每 case 预算 min(1e-2, 3F)、最紧 误差/预算 0.333、最差 o 相对 L2 1.885e-3，FP32 o / state ≤ 1e-5（最差 2.01e-7 / 1.71e-7），逐头 state 最差 1.80e-7；342 个附加检查（6 bd × 57：decode 分块 96、metadata 拒绝 78、raw flags 存量例外 84、原始未舍入 FP32 48、output_final_state=False 24、prepared_default 12）全过；跨 bd 2068 个输入 / 输出哈希相同；FP32 新路径对原实现逐位相同 159/159；prefill→decode 三层口径（D-PM-41，预算运行前定死）：126 条链 / 8568 次局部 decode 全过，层 1（从实际状态起算双 oracle）最差 o 1.971e-3 / state 1.46e-7，层 2（16 token 对 16 次单 token）逐位相同，层 3（min(1e-2, 3·E_oneshot)）全链最差 o 3.663e-3 / state 2.471e-3、前缀 o 3.959e-3、后缀 o 3.267e-3（最紧 0.396），门控跨度 0 / 4 / 105 / 155 覆盖，跨 bd 315 个哈希相同；默认公共入口 host 算子只有 aten.empty（PM 代理审计每次恰好 2 个），域外 dtype 显式报错；三轮同卡三明治（旧公共 FP32 入口 + 实际 Torch NPU 两个 baseline，PM 从原始样本重算逐项一致）BF16 相对旧 FP32：T1 1.02–1.03、T2 1.4–3.3（基线样本波动大）、B1/T16/H32 0.814 / 0.988 / 0.748（变慢）、B2/T16/H4/G8 1.253 / 1.013 / 0.856，相对 Torch NPU 中位数 1.75 / 2.64 / 3.84 / 2.01。PM 无 NPU 环境新增 22 个测试全过、入口换回 base 后 93 个用例 30 个失败；合入后 main 全量 761 passed / 12 skipped。",
+        "note": "KDA decode（fused_recurrent）原生 BF16 / FP32：kernel 内做 BF16 加宽、FP32 q*scale、GVA 寻址、BF16 RNE 输出，token-major 直读直写，host 只分配与 launch；状态 / 累加始终 FP32。**入口 dtype 域收窄**：从「任意浮点（靠 host 加宽）」改成 BF16 q/k/v 或全 FP32（g / beta / state 为 FP32），FP16 / FP64 / 混用显式报错（D-PM-40，仓里无调用方，用户知情后授权）。block_dim 不收窄（{1,2,4,8,16,28} 全保持）。raw flags=True 分支保持 A2-44 现状，是「已登记的存量例外 → BF-07」（84 条边界记录单列了它的 host 算子），不宣称合规。限制：B1/T16/H32 上新 kernel 比旧 wrapper + 旧 kernel 慢约 1–25%（FP32 新路径同样），无速度门槛，记为后续性能任务的起点；只做前向 decode，不声称 backward 执行；性能告警 23 条 / 进程原样保留（旧 forward 的 ND-to-NZ 与旧 backward 的 UB bank stride）。"
+      },
       "origin": {
         "kind": "user",
         "note": "用户 2026-09-19 直接指令（D-PM-35）：BF16 必须 kernel 侧，追加任务改正，后续 BF16 优先"
@@ -1034,7 +1058,7 @@
       "wave": "W0",
       "soc": "a5",
       "priority": "P0",
-      "status": "open",
+      "status": "assigned",
       "model": [],
       "kernel": [
         "kda_fwd_stable",
@@ -1060,9 +1084,20 @@
       "spec": "docs/pm/tasks/FMT-02.md",
       "issue": 109,
       "pr": null,
-      "assignee": null,
-      "assignee_caps": null,
-      "branch": null,
+      "assignee": "limjiunnbin",
+      "assignee_caps": {
+        "agent": "Codex，持续 KDA / PKDA 任务（自述）",
+        "socs": [
+          "a5"
+        ],
+        "soc_details": "自述：A5 Ascend950PR_9589、CANN 9.2.0，算子包目录 ascend950 / ascend910b / ascend910_93；每次任务重新检查健康 / 占用并使用共享锁、Docker（机器与卡归 assignee 管理，D-PM-28）",
+        "ascriptor": "library 90cfcdc720bb / kernels b3b3f9c16df7（自述）",
+        "fla": "新任务按契约选择并校验固定源码身份（自述）",
+        "fork": "limjiunnbin/ascend_fla_dev",
+        "session": "01a0b7ce-3daf-7550-a7bf-31c67eb91ca3",
+        "note": "此前持有 A5K-02、PK-02、PK-04、A2-44、BF-04、BF-06（均已 done）。申领于 #109（2026-09-20T02:37Z，条件：BF-06 关闭后），PM 在 #109 回了 NO_TASK 承诺「关闭后直接派」。"
+      },
+      "branch": "task/FMT-02",
       "timebox_h": 24,
       "reports": [
         {
@@ -1080,6 +1115,10 @@
         {
           "at": "2026-09-20T02:55",
           "summary": "PM 范围裁定（D-PM-42）：FMT-02 = D-PM-37 字面（dtype / 布局转换进自编译 kernel，新 kda_layout 单元，输出逐位不变）；已登记的存量算术例外（审计单列、给源码行、不宣称合规、不许搬进新单元）= _scan_states 整体（其 FP32 Cast 与算术缠在一起，消除要改 kda_fwd_stable 的 kernel 让它导出 h / v_new，属 kernel 批次 fwd-caches-not-emitted，只有用户能批）、log2(eg) 分支、只读校验（校验类）；允许可选并进：位精确的 dw 取负与 g_cumsum × 1/ln2（同一 launch、逐位相同，否则退回例外，不引入 FMA）；验收审计口径改为——推理前向与 decode 完全干净，带缓存前向与反向在例外之外不得再有 host dtype / 布局转换算子、例外逐条列出。规格已补一节并改验收行；#109 已回复 NO_TASK 与裁定。"
+        },
+        {
+          "at": "2026-09-20T03:48",
+          "summary": "派给 limjiunnbin（session 01a0b7ce-…，BF-06 的同一个 session），24h，分支 task/FMT-02；BF-06 已 CLOSE，按它在 #109 的排队 APPLY 直接派，不需要重新申领。规格含 D-PM-42 范围裁定：FMT-02 = dtype / 布局转换进新 kda_layout 单元、输出逐位不变；_scan_states 整体、log2(eg) 分支、只读校验是已登记的存量算术例外（审计单列、不搬进新单元）；dw 取负与 g_cumsum × 1/ln2 可选并进同一 launch（逐位相同才并）。"
         }
       ],
       "result": null,
@@ -1094,7 +1133,7 @@
       "wave": "W0",
       "soc": "a5",
       "priority": "P0",
-      "status": "gated",
+      "status": "open",
       "model": [],
       "kernel": [
         "kda_fwd_stable"
@@ -1129,14 +1168,17 @@
         {
           "at": "2026-09-19T15:49",
           "summary": "用户 D-PM-35 的延伸：A2-44 的 raw flags 预处理仍在 host 侧（FP32 PyTorch 算子），按「BF16 计算必须 kernel 侧」应融进 kernel；要改已有派生单元的 kernel 源码，属 kernel 批次，等用户批准（写集待定，放行后 PM 细化）"
+        },
+        {
+          "at": "2026-09-20T03:48",
+          "summary": "用户 2026-09-20 放行（D-PM-43「其他的也放行」）：gated → open。kernel 批次已批准（要改已有派生单元 kda_fwd_stable 的 kernel）；仍是骨架，PM 派单前先细化规格、定写集；写集与 FMT-02 重叠，排在 FMT-02 之后。"
         }
       ],
       "result": null,
       "origin": {
         "kind": "user",
         "note": "用户 2026-09-19 直接指令（D-PM-35）：BF16 必须 kernel 侧，追加任务改正，后续 BF16 优先"
-      },
-      "gate": "kernel-batch-approval"
+      }
     },
     {
       "id": "A2-01",
@@ -1740,8 +1782,7 @@
       "wave": "W-A2",
       "soc": "a2",
       "priority": "P0",
-      "status": "gated",
-      "gate": "machines:a2",
+      "status": "open",
       "model": [],
       "kernel": [],
       "dtype": [],
@@ -1749,21 +1790,29 @@
         "A2-02"
       ],
       "write_set": [
-        "benchmarks/a2/bringup.py"
+        "benchmarks/a2/bringup.py",
+        "benchmarks/a2/evidence/bringup/**",
+        "docs/research/a2_bringup.md",
+        "tests/test_a2_bringup.py"
       ],
       "needs": {
         "npu": true,
         "ascriptor": true,
         "fla": false
       },
-      "spec": null,
+      "spec": "docs/pm/tasks/A2-10.md",
       "issue": 37,
       "pr": null,
       "assignee": null,
       "assignee_caps": null,
       "branch": null,
       "timebox_h": 12,
-      "reports": [],
+      "reports": [
+        {
+          "at": "2026-09-20T03:48",
+          "summary": "用户 2026-09-20 放行（D-PM-43「其他的也放行」）：gated → open。machines:a2 这道闸放行；PM 补写了规格（docs/pm/tasks/A2-10.md），前置 A2-02（platform.py，open）没完成前不可派。"
+        }
+      ],
       "result": null
     },
     {
@@ -1772,8 +1821,7 @@
       "wave": "W-A2",
       "soc": "a2",
       "priority": "P0",
-      "status": "gated",
-      "gate": "machines:a2",
+      "status": "open",
       "model": [],
       "kernel": [],
       "dtype": [
@@ -1784,21 +1832,29 @@
         "A2-10"
       ],
       "write_set": [
-        "benchmarks/a2/repro_splitk_fp32.py"
+        "benchmarks/a2/repro_splitk_fp32.py",
+        "benchmarks/a2/evidence/splitk/**",
+        "docs/research/a2_splitk_gate.md",
+        "tests/test_a2_accumulate_barriers.py"
       ],
       "needs": {
         "npu": true,
         "ascriptor": true,
         "fla": false
       },
-      "spec": null,
+      "spec": "docs/pm/tasks/A2-11.md",
       "issue": 38,
       "pr": null,
       "assignee": null,
       "assignee_caps": null,
       "branch": null,
       "timebox_h": 16,
-      "reports": [],
+      "reports": [
+        {
+          "at": "2026-09-20T03:48",
+          "summary": "用户 2026-09-20 放行（D-PM-43「其他的也放行」）：gated → open。machines:a2 这道闸放行；PM 补写了规格（docs/pm/tasks/A2-11.md）；只交证据与建议，「A2 结论算数」仍是用户的决定；前置 A2-10 没完成前不可派。"
+        }
+      ],
       "result": null
     },
     {
@@ -1808,7 +1864,7 @@
       "soc": "a2",
       "priority": "P1",
       "status": "gated",
-      "gate": "machines:a2",
+      "gate": "用户已放行（D-PM-43），待前置任务与规格",
       "model": [
         "kimi-linear-48b-a3b"
       ],
@@ -1839,7 +1895,12 @@
       "assignee_caps": null,
       "branch": null,
       "timebox_h": 16,
-      "reports": [],
+      "reports": [
+        {
+          "at": "2026-09-20T03:48",
+          "summary": "用户 2026-09-20 放行（D-PM-43「其他的也放行」）：原 gate = machines:a2。规格未写、前置未完成，所以状态位仍是 gated、gate 文案改成「用户已放行，待前置任务与规格」；PM 在前置完成、规格写好时改 open，不再问用户。"
+        }
+      ],
       "result": null
     },
     {
@@ -1849,7 +1910,7 @@
       "soc": "a2",
       "priority": "P1",
       "status": "gated",
-      "gate": "machines:a2",
+      "gate": "用户已放行（D-PM-43），待前置任务与规格",
       "model": [
         "kimi-linear-48b-a3b"
       ],
@@ -1882,7 +1943,12 @@
       "assignee_caps": null,
       "branch": null,
       "timebox_h": 16,
-      "reports": [],
+      "reports": [
+        {
+          "at": "2026-09-20T03:48",
+          "summary": "用户 2026-09-20 放行（D-PM-43「其他的也放行」）：原 gate = machines:a2。规格未写、前置未完成，所以状态位仍是 gated、gate 文案改成「用户已放行，待前置任务与规格」；PM 在前置完成、规格写好时改 open，不再问用户。"
+        }
+      ],
       "result": null
     },
     {
@@ -1892,7 +1958,7 @@
       "soc": "a2",
       "priority": "P1",
       "status": "gated",
-      "gate": "machines:a2",
+      "gate": "用户已放行（D-PM-43），待前置任务与规格",
       "model": [
         "kimi-linear-48b-a3b"
       ],
@@ -1921,7 +1987,12 @@
       "assignee_caps": null,
       "branch": null,
       "timebox_h": 10,
-      "reports": [],
+      "reports": [
+        {
+          "at": "2026-09-20T03:48",
+          "summary": "用户 2026-09-20 放行（D-PM-43「其他的也放行」）：原 gate = machines:a2。规格未写、前置未完成，所以状态位仍是 gated、gate 文案改成「用户已放行，待前置任务与规格」；PM 在前置完成、规格写好时改 open，不再问用户。"
+        }
+      ],
       "result": null
     },
     {
@@ -1931,7 +2002,7 @@
       "soc": "a2",
       "priority": "P1",
       "status": "gated",
-      "gate": "machines:a2",
+      "gate": "用户已放行（D-PM-43），待前置任务与规格",
       "model": [
         "kimi-linear-48b-a3b"
       ],
@@ -1965,7 +2036,12 @@
       "assignee_caps": null,
       "branch": null,
       "timebox_h": 16,
-      "reports": [],
+      "reports": [
+        {
+          "at": "2026-09-20T03:48",
+          "summary": "用户 2026-09-20 放行（D-PM-43「其他的也放行」）：原 gate = machines:a2。规格未写、前置未完成，所以状态位仍是 gated、gate 文案改成「用户已放行，待前置任务与规格」；PM 在前置完成、规格写好时改 open，不再问用户。"
+        }
+      ],
       "result": null
     },
     {
@@ -1975,7 +2051,7 @@
       "soc": "a2",
       "priority": "P1",
       "status": "gated",
-      "gate": "machines:a2",
+      "gate": "用户已放行（D-PM-43），待前置任务与规格",
       "model": [
         "kimi-linear-48b-a3b"
       ],
@@ -2008,7 +2084,12 @@
       "assignee_caps": null,
       "branch": null,
       "timebox_h": 24,
-      "reports": [],
+      "reports": [
+        {
+          "at": "2026-09-20T03:48",
+          "summary": "用户 2026-09-20 放行（D-PM-43「其他的也放行」）：原 gate = machines:a2。规格未写、前置未完成，所以状态位仍是 gated、gate 文案改成「用户已放行，待前置任务与规格」；PM 在前置完成、规格写好时改 open，不再问用户。"
+        }
+      ],
       "result": null
     },
     {
@@ -2018,7 +2099,7 @@
       "soc": "a2",
       "priority": "P1",
       "status": "gated",
-      "gate": "kernel-batch-approval",
+      "gate": "用户已放行（D-PM-43），待前置任务与规格",
       "model": [
         "kimi-linear-48b-a3b",
         "qwen3-next-80b-a3b"
@@ -2054,7 +2135,12 @@
       "assignee_caps": null,
       "branch": null,
       "timebox_h": 40,
-      "reports": [],
+      "reports": [
+        {
+          "at": "2026-09-20T03:48",
+          "summary": "用户 2026-09-20 放行（D-PM-43「其他的也放行」）：原 gate = kernel-batch-approval。规格未写、前置未完成，所以状态位仍是 gated、gate 文案改成「用户已放行，待前置任务与规格」；PM 在前置完成、规格写好时改 open，不再问用户。"
+        }
+      ],
       "result": null
     },
     {
@@ -2472,10 +2558,14 @@
         {
           "at": "2026-09-19T10:05",
           "summary": "用户决定（D-PM-30）：A2-11 总闸不对纯向量单元放宽，维持 AGENTS.md §2 原文（A2-11 之前 A2 上任何算子结论都不算数，不分 cube/vector）。本任务的 machines:a2 闸与对 A2-11 的依赖不变"
+        },
+        {
+          "at": "2026-09-20T03:48",
+          "summary": "用户 2026-09-20 放行（D-PM-43「其他的也放行」）：原 gate = machines:a2。规格未写、前置未完成，所以状态位仍是 gated、gate 文案改成「用户已放行，待前置任务与规格」；PM 在前置完成、规格写好时改 open，不再问用户。"
         }
       ],
       "result": null,
-      "gate": "machines:a2"
+      "gate": "用户已放行（D-PM-43），待前置任务与规格"
     },
     {
       "id": "A2-42",
@@ -2549,9 +2639,14 @@
       "assignee_caps": null,
       "branch": null,
       "timebox_h": 16,
-      "reports": [],
+      "reports": [
+        {
+          "at": "2026-09-20T03:48",
+          "summary": "用户 2026-09-20 放行（D-PM-43「其他的也放行」）：原 gate = machines:a2。规格未写、前置未完成，所以状态位仍是 gated、gate 文案改成「用户已放行，待前置任务与规格」；PM 在前置完成、规格写好时改 open，不再问用户。"
+        }
+      ],
       "result": null,
-      "gate": "machines:a2"
+      "gate": "用户已放行（D-PM-43），待前置任务与规格"
     },
     {
       "id": "G3-01",
@@ -3864,7 +3959,7 @@
       "wave": "W0",
       "soc": "a5",
       "priority": "-",
-      "status": "gated",
+      "status": "open",
       "model": [],
       "kernel": [
         "pgdn_chunk_bwd"
@@ -3911,14 +4006,18 @@
         {
           "at": "2026-09-19T16:10",
           "summary": "GDN 系列 session 在 #93 申请 PK-05（条件：GDA-03 关闭且规格冻结后正式 ASSIGN）。PK-05 仍 gated（外部需求，放行是用户的事）且依赖 GDA-03；回 NO_TASK。按 D-PM-35，这个 session 在 GDA-03 关闭后的下一个是 BF-01（P0、可派、在它的 GDN 工作线内）。申请里的预研要点（PGDN naive 有四处 FP32 物化、1e-12 钳位边界要覆盖 below/at/above、三路 cotangent 子集）留给规格细化时采纳"
+        },
+        {
+          "at": "2026-09-20T03:48",
+          "summary": "用户 2026-09-20 放行（D-PM-43「其他的也放行」）：gated → open。来自外部需求 #89，用户批准；仍是骨架，PM 派单前先补全规格（GDA-04 / PK-06 / GDA-05 还要等各自的前置）。"
         }
       ],
       "result": null,
-      "gate": "user-decision",
       "origin": {
         "kind": "request",
         "issue": 89,
-        "by": "limjiunnbin"
+        "by": "limjiunnbin",
+        "approved_by_user": true
       }
     },
     {
@@ -3927,7 +4026,7 @@
       "wave": "W0",
       "soc": "a5",
       "priority": "-",
-      "status": "gated",
+      "status": "open",
       "model": [],
       "kernel": [
         "gdn_fused_recurrent"
@@ -3969,14 +4068,18 @@
         {
           "at": "2026-09-19T15:49",
           "summary": "用户 D-PM-35：规格加「BF16 显式拒绝、不 host 加宽」，BF16 kernel 侧另有 BF 系列任务。仍 gated"
+        },
+        {
+          "at": "2026-09-20T03:48",
+          "summary": "用户 2026-09-20 放行（D-PM-43「其他的也放行」）：gated → open。来自外部需求 #89，用户批准；仍是骨架，PM 派单前先补全规格（GDA-04 / PK-06 / GDA-05 还要等各自的前置）。"
         }
       ],
       "result": null,
-      "gate": "user-decision",
       "origin": {
         "kind": "request",
         "issue": 89,
-        "by": "limjiunnbin"
+        "by": "limjiunnbin",
+        "approved_by_user": true
       }
     },
     {
@@ -3985,7 +4088,7 @@
       "wave": "W0",
       "soc": "a5",
       "priority": "-",
-      "status": "gated",
+      "status": "open",
       "model": [],
       "kernel": [
         "pgdn_fused_recurrent"
@@ -4028,14 +4131,18 @@
         {
           "at": "2026-09-19T15:49",
           "summary": "用户 D-PM-35：规格加「BF16 显式拒绝、不 host 加宽」，BF16 kernel 侧另有 BF 系列任务。仍 gated"
+        },
+        {
+          "at": "2026-09-20T03:48",
+          "summary": "用户 2026-09-20 放行（D-PM-43「其他的也放行」）：gated → open。来自外部需求 #89，用户批准；仍是骨架，PM 派单前先补全规格（GDA-04 / PK-06 / GDA-05 还要等各自的前置）。"
         }
       ],
       "result": null,
-      "gate": "user-decision",
       "origin": {
         "kind": "request",
         "issue": 89,
-        "by": "limjiunnbin"
+        "by": "limjiunnbin",
+        "approved_by_user": true
       }
     },
     {
@@ -4044,7 +4151,7 @@
       "wave": "W0",
       "soc": "a5",
       "priority": "-",
-      "status": "gated",
+      "status": "open",
       "model": [],
       "kernel": [
         "gdn_fwd",
@@ -4075,14 +4182,18 @@
         {
           "at": "2026-09-19T12:16",
           "summary": "分诊：采纳需求（issue #89，提案人 limjiunnbin）为 gated 任务，等用户放行；来源是外部需求，用户批准前不能是 open。只写了骨架规格，细化与放行在前置任务完成后由 PM 做（D-PM-22：逐个排）。范围在 D-PM-22 的 GDN/PGDN 序列之内，不含 GDN-2、Qwen3-Next、A2 与 #80 被否决的'GDN 全族推进'。"
+        },
+        {
+          "at": "2026-09-20T03:48",
+          "summary": "用户 2026-09-20 放行（D-PM-43「其他的也放行」）：gated → open。来自外部需求 #89，用户批准；仍是骨架，PM 派单前先补全规格（GDA-04 / PK-06 / GDA-05 还要等各自的前置）。"
         }
       ],
       "result": null,
-      "gate": "user-decision",
       "origin": {
         "kind": "request",
         "issue": 89,
-        "by": "limjiunnbin"
+        "by": "limjiunnbin",
+        "approved_by_user": true
       }
     }
   ],
@@ -4175,14 +4286,11 @@
         "id": "kda_fused_recurrent",
         "family": "kda",
         "track": "agent",
-        "note_zh": "本仓自写的 decode kernel；a2 派生单元已合入（A2-03，kernels/projects/a2/，Ascend910B3 真机数字只作观测，A2-11 之前不构成结论）",
-        "note_en": "Written in-repo, decode path; a2 derived unit merged (A2-03, kernels/projects/a2/; Ascend910B3 numbers are observations only until A2-11)",
+        "note_zh": "本仓自写的 decode kernel；a2 派生单元已合入（A2-03，kernels/projects/a2/，Ascend910B3 真机数字只作观测，A2-11 之前不构成结论）；BF16 / FP32 均为 token-major 直读直写的原生 kernel（BF-06 已合入；raw flags 的 host 预处理是已登记的存量例外 → BF-07）",
+        "note_en": "Written in-repo, decode path; a2 derived unit merged (A2-03, kernels/projects/a2/; Ascend910B3 numbers are observations only until A2-11); BF16 / FP32 are native token-major read/write kernels (BF-06 merged; raw-flags host preprocessing is a registered legacy exception → BF-07)",
         "dtype_status": {
-          "bf16": "widen@a5",
+          "bf16": "native@a5",
           "fp32": "native@a5"
-        },
-        "dtype_fix": {
-          "bf16": "BF-06"
         }
       },
       {

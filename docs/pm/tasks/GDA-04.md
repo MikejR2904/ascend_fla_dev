@@ -1,5 +1,7 @@
 # GDA-04 GDN decode（fused recurrent）：A5 真机验收（骨架，细化在 PK-05 完成后由 PM 补）
 
+- **2026-09-20 用户放行（D-PM-43）。仍是骨架，且依赖 PK-05——PM 在 PK-05 完成后细化规格再派单。**
+
 - 波次 / SoC：W0 / a5。**真机验收是必须项**。合入需要用户明确授权
 - 优先级：`-` · 时限：16h · 依赖：`PK-05`（按 D-PM-22 的"backward → decode → 性能"顺序；**PK-05 完成后 PM 才会补全本规格并放行**）
 - 写集：`kernels/projects/a5/gdn_fused_recurrent/**`、`ascend_fla/ops/gdn_fused_recurrent.py`、
