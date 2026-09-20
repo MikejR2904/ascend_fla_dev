@@ -1416,6 +1416,10 @@
         {
           "at": "2026-09-20T15:31",
           "summary": "STATUS（15:19Z，自述，#106，PR #118 头 0d0e5c4，仍 draft、未 DONE）：decode nearzero_c2_g1_rbf16_vbf16_flags110 定位：原失败仍在（old-CPU-prep state 相对 L2 = 4.3087e-4 > 1e-5）；以 candidate 实际 native-prep 输入为输入的双 CPU FP32 reference：state 相对 L2 = 7.2369e-8 / 3.9641e-8，o = 1.5408e-3 / 1.5408e-3；raw 与直接 prepared-public 的 o / state 逐位相同；保存张量哈希与原回执一致；q / k 相对旧 NPU prep 分别 173 / 185 个 BF16 元素不同（各共 16384），单步 prep 冻结预算已过；beta 逐位一致，gate 最大差 1.19e-7。结论（自述）：落在 prep 舍入 / composition 的比较边界，不是 decode 递推多出的误差；未改 1e-5 或验收参考。chunk 原失败切片：实际全 0；两份 CPU FP32 golden 最大 7.8472714e-44，对 BF16 正确舍入全 0，实际与正确舍入逐位相同；原相对 L2 = 1 保留。普通 decode bd8 / 16 / 28 各 3240 例远端完成、exit 0，正在跨六 bd 逐位对账；高 bd 叶子队列启动前重核健康 / 空闲 / 双锁。7 组普通网格 32421 份回执均自带环境，JSONL 每个 blob <2.5 MB、fresh restore 与全部原始 SHA 逐份一致（非最终归档声明）。下一步（自述）：按 PM 裁定分类扩展非有限端点四列并核查公开入口对非有限 gate 的行为；增加「BF16 正确舍入后整片为 0」的端点比较；普通常规指标同时记 FP32 旧值与 FP64 累积值并保留旧判定的合取，冻结 budgets.json 逐字节未变。blocker：decode composition 的比较对象裁定。PM 处理：chunk 近零与端点执行都符合 D-PM-48；decode 近零的比较对象改的是冻结判据的比较对象，不自行裁，交用户决定（见 handoff），在此之前要求申领人保持现状（不改 1e-5、不改验收参考、不把失败改成通过）；已回复 #106（非协议消息）并请其补三样：普通 decode state 1e-5 的比较对象是旧 prep 还是实际 prep 输出的 reference；若前者，普通域 state 对旧 prep reference 的相对 L2 分布与近零档差异率（约 1%）更高的原因（哪一步公式与旧 host 不同）；是否还有别的近零 decode 切片落在 1e-5 之上。PM 粗算（未验证）：约 1% 的 q / k 元素差 1 个 BF16 ulp ≈ q / k 相对 L2 4e-4~6e-4，state 对 k 线性，与 4.31e-4 同量级。"
+        },
+        {
+          "at": "2026-09-20T15:45",
+          "summary": "STATUS 更正（15:24Z，自述，#106）：对 15:19Z 里「chunk 近零切片实际与正确舍入逐位相同」的更正——原检查用 torch.equal，会忽略 +0 / −0，所以「逐位相同」不成立：与独立 / FLA CPU golden 的 BF16 正确舍入相比，原失败切片分别有 3991 / 3670 个零的符号位不同，两者都没有非零 BF16 元素；按数值 ULP 距离 +0 / −0 都是 0 步；今后同时记 bitwise=false 与符号差计数，不再称逐位相同，正在更正已发布字段。跨 block_dim 的逐位比较用的是真实字节 SHA（不用 torch.equal），普通网格六个 decode / fourchunk 的逐位结论不受影响。另核对到旧 decode 指标本身已用 FP64 累积、但分母 clamp_min(1e-30)；FP32 norm 下溢的问题来自 chunk 指标，文档与新回执会区分两者。PM 处理：认这条自我更正。D-PM-48 (2) 的判据本来就是「对 golden 正确舍入的数值 ULP ≤ 1」（不是逐位），+0 / −0 数值上 0 步，符号差按观测如实报，不需要另行裁定，也不改变该口径；PM 在 #106 回复里沿用的「逐位相同」措辞以更正为准。等已发布字段的更正提交。"
         }
       ],
       "result": null,
@@ -1879,7 +1883,7 @@
       "wave": "W0",
       "soc": "a2",
       "priority": "P1",
-      "status": "in_progress",
+      "status": "review",
       "model": [],
       "kernel": [
         "kda_bwd_stable"
@@ -1981,6 +1985,10 @@
         {
           "at": "2026-09-20T15:07",
           "summary": "STATUS（14:45Z，自述，头 e6a3a8a，在 276d53d 之上）：推了一个提交，动两个文件——README.md（「预算」一节按 26 例实数重写、写明 pair_checkpoint_ulp.log 为什么只剩四行一组与 finalize_pre 的 78 项最大 2.085e-26）与新增 evidence/measurements/pair_checkpoint_ulp_deviating_cases.log（对 gentle_decay_bd1 / grid_c2_hv4_bd1 补跑 ulp_stats.py，两处均「逐元素最多 1 ulp、超 1 ulp 占 0%」）；contract.json 的 reason 按 PM 的处置保留旧措辞。PM 核对：两个文件都不在 unit_source_sha256 里（digest 仍 b4bb774d…；kernels/、unit.py、reference.py、contract.json、_unit_runner.py、run.py 与 276d53d 逐字节相同）；新日志的相对 L2 与 aclnn.json 逐项一致；日志里的 |ref|max（9.298e-05、1.546e+05）用 reference_stages 在 CPU 上重算一致；finalize_pre 78 项最大 2.085e-26、104 = 26×4 都对得上；隐私 0 命中。PM 复算发现 README 的新机制解释有一处不对：对这两个 case 的参考张量算「单个元素差 1 个 BF16 ulp 的相对 L2」= ulp(x)/||ref||——gentle_decay_bd1 的 qk_left：||ref||=1.796191e-3，指数 −19 的元素（2548 个，|x| 为 |ref|max 的 2.05%~4.09%）差 1 ulp = 2^-26，得 8.2960e-6，与实测 8.296e-6 五位一致；grid_c2_hv4_bd1 的 t_beta：||ref||=2.857535e5，指数 8 的元素（276 个，为 |ref|max 的 0.17%~0.33%）差 1 ulp = 2，得 6.999e-6，与实测 7.000e-6 吻合（相对差 1.4e-4）。即两处偏离各是「一个元素差 1 个 BF16 ulp，且是小元素」，不是 README 说的「占张量范数很大份额的元素」，9.3e-05 的量级与相对 L2 无关。更要紧的是判据分辨率：gentle_decay 的 qk_left（N=16384）里中位数元素差 1 ulp 就是 1.66e-5，64% 的元素单独差 1 ulp 就超 1e-5；t_beta（N=65536）只有 0.62% 的元素会超——1e-5 的分辨率就是「有没有翻转」，这两处是翻转恰好落在小元素上才过，不是「余量 1.2×/1.4×」那种连续余量；固定种子下确定性（bd1 = bd2），换种子 / 形状 / 卡可能变。六项输出梯度的预算不受影响。已回复申领人（非协议消息，#112）：请再推一个只改 README.md 的提交（不再跑真机、不动 contract）——(1) 机制换成上面的实数并写明判据分辨率 ≈ 一次翻转，「求和顺序」那半句保留为未确立；(2) 「余量 ≥95×」改「≥94×」（1e-5/1.056e-7=94.7）；(3) 「其余 101 项逐元素最大 58 ulp」写明 ulp 只在 6 个 case 上测过。核对只动 README 后向用户请求 #119 的合入授权。"
+        },
+        {
+          "at": "2026-09-20T15:45",
+          "summary": "STATUS（15:30Z，自述，头 6bd9c95，在 e6a3a8a 之上）：只动 README.md 一个文件（+20 −7），没重跑真机、没动 contract.json / evidence/，unit_source_sha256 仍 b4bb774d…。三处按 PM 15:06Z 回复改：(1) 机制换成实数——两处各是「恰好一个小元素差一个 BF16 ulp」（gentle_decay_bd1 的 qk_left：||ref||=1.796191e-3、指数 −19 的元素、1 ulp=2^-26、ulp/||ref||=8.2960e-6，实测 8.296e-6；grid_c2_hv4_bd1 的 t_beta：||ref||=2.857535e5、指数 8、1 ulp=2、6.999e-6，实测 7.000e-6），并写明判据分辨率 = 「有没有多翻一次」（gentle_decay 的 qk_left 中位数元素翻一次 1.66e-5、64% 的元素翻一次即超 1e-5；t_beta 只有 0.62%），固定种子下确定性、换种子 / 形状 / 卡可能越界；「求和顺序」保留为未确立；(2) 余量「≥95×」改「≥94×」；(3)「逐元素最大 58 ulp」写明只在 6 个 case 上测过。申领人自己承认机制说错了第二版（前一次样本选窄当全量，这一次把与缩放无关的量当成与量级有关）。PM 核对（NPU-free）：compare e6a3a8a…6bd9c95 = 1 个提交、只改 README.md（+20 −7）；README 里的数（||ref||、指数、2^-26、8.2960e-6 / 6.999e-6、1.66e-5、64% / 0.62%、N=16384 / 65536、94.7×）与 PM 自己在 CPU 参考张量上的复算逐项一致；README 隐私 0 命中。PR 整体：14 个提交、46 个文件（全在 kernels/projects/a2/kda_bwd_stable/** 内、0 删除、无二进制、最大文件 1.75 MB），14 条提交信息隐私扫描仅命中「hostname」一词（描述检查项，不是主机名）；base 0be2509，只新增文件，无冲突面；PR 仍是 draft（合入前需转 ready）。contract.json 的 reason 仍留旧措辞「宽两个数量级」（它在 unit digest 里，改一句要重跑 26 例；README 已写明并更正，留到下次因别的原因动契约时同改）。结论：技术判据全过，评审 accept 成立；A2 PR 合入要用户授权（A2-11 之前 A2 结论不算数，D-PM-33），已向用户请求 #119（头 6bd9c95）的合入授权；status in_progress → review。"
         }
       ],
       "result": null

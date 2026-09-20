@@ -11,6 +11,10 @@
 
 ### 正在飞的任务（现在没有；A5K-02、PK-02、PK-03 都已于 2026-09-19 合入）
 
+> **2026-09-20T15:45Z 更新：A2-09 的 README 修正提交到了（头 6bd9c95，只改 README）——PM 核对成立，已向用户请求 #119 的合入授权（待答）；BF-07 自我更正了一处「逐位相同」。**
+> - **A2-09 / #119**：`compare e6a3a8a…6bd9c95` = 1 个提交、只改 README.md；README 里的实数与 PM 在 CPU 参考张量上的复算逐项一致；PR 14 个提交、46 个文件全在写集内、0 删除、无二进制、最大 1.75 MB，隐私 0 命中（提交信息只命中「hostname」一词，是在描述检查项）。技术评审 accept；A2 PR 合入要用户授权（A2-11 之前 A2 结论不算数）。**合入步骤**：用户授权后 → PR 仍是 draft，需先转 ready → `gh pr merge 119 --merge --match-head-commit 6bd9c950fc8d81767eb0842040cf0a41df941941` → 在 main 上复跑全量（NPU-free）→ 记看板 / CLOSE。`contract.json` 的 reason 还留着旧措辞（在 digest 里），README 已更正，下次动契约时同改。A2-09 status 改为 review。
+> - **BF-07 自我更正**：15:19Z 的「近零切片与正确舍入逐位相同」不成立（torch.equal 忽略 +0 / −0；符号位不同的零有 3991 / 3670 个，没有非零元素）；D-PM-48 (2) 的判据是数值 ULP ≤ 1（不是逐位），+0 / −0 是 0 步，不改变该口径，符号差如实报。
+>
 > **2026-09-20T15:31Z 更新：BF-05 派给新 session（bf05-gdn2-bf16-a5-1）；BF-07 的 decode 近零比较对象交用户决定（待答）；BF-03 报了第一个 STATUS。**
 > - **BF-05**：15:21Z 新 session 的 APPLY（如实说明手上的 A2-09 还没 CLOSE）；PM 现在就派（只依赖 GD2-01；session 值与 A2-09 不同，符合 PROTOCOL §3.1；用户 D-PM-35 后续 BF16 优先），24h，分支 task/BF-05；ASSIGN 要求先推掉 A2-09 欠的只改 README 的提交、校准先行并冻结预算、证据机械检查、`tests/test_gdn2_chunk_fwd.py` 不在写集（要改先 RISK write-set-expansion）。BF-03 CLOSE 后**不会**再给 BF-03 的 session 派 BF-05（它自己取消了）。
 > - **BF-07 decode 近零（待用户）**：`nearzero_c2_g1_rbf16_vbf16_flags110` 的 final_state 对旧 prep 的 CPU reference 是 4.31e-4（冻结判据 1e-5）；对 candidate 实际 native-prep 输入的双 CPU reference 是 7.24e-8 / 3.96e-8（o 1.54e-3）；raw 与 prepared-public 的 o / state 逐位相同；q / k 对旧 NPU prep 分别 173 / 185 个 BF16 元素（各共 16384，约 1%）差 1 ulp，prep 单步冻结预算已过。定位：偏差来自 prep 的 BF16 舍入位置，不是 decode 递推。申领人请求裁定比较对象——这改的是冻结判据的比较对象，PM 不自行裁，问用户；已要求申领人补三样（普通域比较对象与分布、近零差异率更高的原因、其它落在 1e-5 之上的近零切片）。chunk 近零与端点执行都符合 D-PM-48。
