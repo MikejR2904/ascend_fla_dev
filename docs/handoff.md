@@ -11,6 +11,13 @@
 
 ### 正在飞的任务（现在没有；A5K-02、PK-02、PK-03 都已于 2026-09-19 合入）
 
+> **2026-09-20T15:18Z 更新：BF-03 ACK（in_progress）；BF-07 报了新的端点 RISK——PM 裁定两条比较口径（D-PM-48）；BF-05 的 APPLY / WITHDRAW 按撤回处理、不派单。**
+> - **BF-03**：15:02Z ACK（距 ASSIGN 6.4h），计划与规格 / Cube 澄清 / 写集预批准一致，无需裁定；ETA 24h。
+> - **BF-07 RISK（PR #118 头 3bb0c63，仍 draft）**：扩展真机交叉端点上「同时匹配两个前任的 NaN/Inf 掩码」不可满足（u=−87/−40/−20 且 A_log=89/100：旧 NPU NaN、CPU 与 candidate −Inf；u≤−88：三者里 candidate 与旧 NPU NaN、CPU −Inf）；极小 BF16 输出（q/k×1e-20）golden 7.85e-44 小于 BF16 最小 subnormal，相对 L2=1；decode nearzero 的 final_state 4.31e-4 > 1e-5（定位中）。**PM 裁定**：CPU FP32 是语义权威，端点不设掩码相等通过线、四列报并分类写明、不改 candidate；golden 舍入后整片为零的切片按「对 golden 正确舍入 ≤1 ulp」判（相对 L2 照报、原失败保留、不删判据、范围只限此类）；decode 的 1e-5 不放宽，定位后若要改比较对象 / 冻结判据问用户。预算数值、155/105 门控、域都没动。PM 猜测机制（未验证）：u=−87/−88 恰在 FP32 最小正规数两侧，是 subnormal 被冲成 0 后 Inf×0。
+> - **评审提醒**：BF-07 评审时对 PR **全部提交**做隐私扫描（applicant 自述曾把私有运行目录路径带进公开 fork，已用 force-with-lease 替换最新提交，头因此从 81444c0a 变成 3bb0c63）；要求把 traceback / 日志路径脱敏加进出包前机械检查；对常规域证明 FP64 累积指标与旧指标一致 / 只更小。
+> - **BF-05**：新 session 的 APPLY（15:07Z）与 WITHDRAW（15:09Z）——用户要求停掉这个 gdn2 session、已在别处另开；PM 不派单，BF-05 open 无人申领；主 session 的旧排队 APPLY 按其取消不再自动派（BF-03 CLOSE 后不会派给它），用户另开的 session 走自己的 APPLY。
+> - **A2-09**：仍在等申领人推「只改 README」的提交（头仍 e6a3a8a）；BF-08 / A5K-03 仍待 BF-07 CLOSE。
+>
 > **2026-09-20T15:07Z 更新：A2-09 推了 README 提交（头 e6a3a8a）——PM 复算发现机制解释有一处不对，已回复申领人再改一次 README；改完 PM 核对后请用户授权合入 #119。**
 > - **核对成立**：提交只动 README.md 与新增一份日志（不在 unit digest 里，digest 仍 `b4bb774d…`）；日志相对 L2 与 `aclnn.json` 逐项一致，`|ref|max` 在 CPU 上重算一致；`finalize_pre` 78 项最大 2.085e-26。
 > - **不对的一处**：README 说两处偏离是「一次 BF16 舍入落在占张量范数很大份额的元素上」。PM 用 `ulp(x)/||ref||` 在 CPU 上对参考张量复算——`gentle_decay_bd1` 的 `qk_left`：指数 −19 的元素差 1 ulp（2^-26）= 8.2960e-6，与实测 8.296e-6 五位一致（该元素是 `|ref|max` 的 2%~4%）；`grid_c2_hv4_bd1` 的 `t_beta`：指数 8 的元素差 1 ulp（=2）= 6.999e-6，与实测 7.000e-6 吻合（0.17%~0.33%）。**两处各是「一个小元素差 1 个 BF16 ulp」**；1e-5 判据的分辨率就是「有没有一次翻转」（`gentle_decay` 里中位数元素翻一次是 1.66e-5，64% 的元素翻一次就超），这两处是翻转恰好落在小元素上才过——固定种子下确定性，换种子 / 形状 / 卡可能变。六项输出梯度的预算不受影响。gaps `a2-kda-bwd-pair-checkpoint-thin-margin` 已改成这个刻画。

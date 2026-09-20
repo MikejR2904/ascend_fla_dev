@@ -295,7 +295,7 @@ _权威来源已确立（2026-09-17，见 docs/research/pkda_semantics.md）：�
 | 任务 | issue | SoC | dtype | 状态 | 说明 |
 |---|---|---|---|---|---|
 | PK-03 | [#69](https://github.com/ddddwee1/ascend_fla_dev/issues/69) | `a5` | bf16、fp32 | ✅ done | ★ 起点 |
-| BF-03 | [#102](https://github.com/ddddwee1/ascend_fla_dev/issues/102) | `a5` | bf16 | 🔵 assigned |  |
+| BF-03 | [#102](https://github.com/ddddwee1/ascend_fla_dev/issues/102) | `a5` | bf16 | 🔵 in_progress |  |
 | GDA-05 | [#96](https://github.com/ddddwee1/ascend_fla_dev/issues/96) | `a5` | bf16、fp32 | ⬜ open |  |
 
 </details>

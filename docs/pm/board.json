@@ -321,6 +321,13 @@
       "by": "user",
       "decision": "同意修改 AGENTS.md §5 的两处过时措辞（用户原话：「改」，回应 PM 给出的新旧文对照）。",
       "risk": "PM 的读法：(1) 只改 §5 的两处事实性措辞，不改任何规则或纪律——「layout_device=\"auto\" 会自动探测并绕路」改成 FMT-02 后的实际情况（布局 / dtype 转换 / 零填充在自编译 kernel 里，layout_device 只接 auto / npu、cpu 显式报错，「先 D2H 再做」只对测试 / 诊断脚本里的 host 代码有效）；⚠️ 一段里「已加绕行」改成「已随 FMT-02 删除」并写明缺 ascend950 算子包的机器上哪些存量 host 算术会失败、纯前向在 check_gate_range=False 时可用。(2) CLAUDE.md 是指向 AGENTS.md 的软链，所以只改 AGENTS.md 一处；PM 工具测试 86 个仍全过。(3) D-PM-45 (3) 里「等用户同意再改」的那一项由此关闭。"
+    },
+    {
+      "id": "D-PM-48",
+      "date": "2026-09-20",
+      "by": "pm",
+      "decision": "BF-07 的 RISK comparison-contract-boundary（15:03Z）里两个端点比较口径的裁定：(1) 扩展非有限交叉端点：CPU FP32 为语义权威，旧 NPU 是前任行为观测；不设 NaN/Inf 掩码相等的通过线，每个点位报 candidate / 旧 NPU / CPU FP32 / FP64 四列并分三类（candidate=CPU；candidate=旧 NPU≠CPU；旧 NPU≠candidate=CPU）写明机制与影响，不写成「必须相等」的断言，不改 candidate。(2) 极小 BF16 输出：golden 对 BF16 正确舍入后整个 (head, chunk) 切片为零的，按「对 golden 正确舍入 ≤1 ulp」（此处 0 ulp）判，相对 L2 照报、原失败保留、不删逐头 / 逐 chunk 判据、列出这类切片；范围只限这一类，正常可表示切片仍按冻结的 min(1e-2, 3F)。(3) decode nearzero 的 final_state 1e-5 不放宽；待申领人定位（双 CPU reference + prepared-public 逐位对照），改比较对象或冻结判据须问用户。",
+      "risk": "PM 的读法：(1)(2) 是把规格「端点逐点对照、差异逐类写明、不新增数值闸、不收窄域、常规地板与端点分开」在两个新出现的端点类上落实，不是放宽——预算数值、155 / 105 门控、域都没有动，常规切片的判据不变；(2) 里 relative L2 在「可表示部分全零」的切片上没有定义，才换成 ulp 判据。风险：(2) 的口径有被读成「事后改判据」的可能——已限定范围、保留原失败与逐头 / 逐 chunk 判据；若用户认为它已属改判据，请指出，PM 撤回并改为问用户。(3) 是 PM 明确不裁、留给定位结果与用户。"
     }
   ],
   "gated_epics": [
@@ -761,7 +768,7 @@
       "wave": "W0",
       "soc": "a5",
       "priority": "P0",
-      "status": "assigned",
+      "status": "in_progress",
       "model": [],
       "kernel": [
         "pgdn_chunk_fwd"
@@ -827,6 +834,10 @@
         {
           "at": "2026-09-20T08:39",
           "summary": "派给 limjiunnbin（session gdn-series-20260919T115559Z-29cb31d7，BF-02 的同一个 session），24h，分支 task/BF-03；BF-02 已 CLOSE（#115 合入），按它在 #102 的排队 APPLY 直接派，不需要重新申领。ASSIGN 里点明：Cube 澄清、写集预批准（tests/test_pgdn_chunk_fwd.py 仅一个函数）、预算 min(1e-2, 3F) 先校准后写 kernel、PK-05 的近零判据不在本任务、原始回执自带环境行、PR 任一提交不含 >5 MB blob、协议头格式。BF-05 仍排在 BF-03 之后。"
+        },
+        {
+          "at": "2026-09-20T15:18",
+          "summary": "ACK（15:02Z，自述，#102，距 ASSIGN 6.4h，在 24h 内）：session gdn-series-20260919T115559Z-29cb31d7（与 ASSIGN 一致），ETA 24h；已读 AGENTS / handoff / PROTOCOL / START / BF-03 / bf16-kernel-side / pkda_semantics。计划（自述）：(1) main ee4a1a1 基线先冻结 PK-03 同域 ABI、独立 A/B、按实际 BF16 输入舍入后的 F 与 min(1e-2, 3F)，FP32 及 ATK 仍 1e-4、零预算严格相等；(2) 新建独立六阶段 Vector BF16 单元，q/k/v 真 BF16 进 kernel，FP32 归一化 / ATK / 读写 key / 递推中间边，o 直接 BF16、两类状态 FP32，旧 FP32 单元只读、公共结果逐位不变；(3) 按预批准只改旧测试的单个 ReferenceLaunch 函数，保留 4 项 / 6 阶段 / 输入值与 dtype / 输出逐位 / 状态断言，其余顶层定义 AST 不变，两 dtype 均无 host 转换并真机审计；(4) 每 job 重核来源 / 环境 / 健康 / 占用 / 共享锁，完整 B1/T4096/H=HV8 先真机，再全部旧网格与归一化 clamp 边界、NaN composition / 独立 leaves、跨 bd 字节与原 FP32 对照，所有 vendor 先编完、每 bd 独立进程；(5) 同卡原 FP32 / 新 BF16 / 原 FP32 三轮测量，如实报数无速度门槛，每份原始回执自带 CANN / compiler timestamp / opp 信息，单 blob < 5 MB，文本原始证据脱敏入 task/BF-03 PR，全项完成后 DONE。PM 核对：计划与 BF-03 规格、Cube 澄清、写集预批准（仅 test_public_dtype_state_visibility_and_graph_with_reference_launch）一致，无需裁定。状态 assigned → in_progress。说明：ACK 的 note 里说「按 BF-03 → BF-05 续接」，但随后 15:09Z 的 WITHDRAW 又说主 session 的 BF-05 排队意向取消、做完 PGDN 就停——以后者为准，见 BF-05。"
         }
       ],
       "result": null,
@@ -985,6 +996,10 @@
         {
           "at": "2026-09-19T19:59",
           "summary": "APPLY（19:59Z，自述，#104）：条件申请，BF-02 与 BF-03 都 CLOSE 之后才派（session gdn-series-…，排队请求，不预占 BF-05）；已读 BF-05 规格与通则。预检发现规格与现有入口矛盾：验收里的「多 batch」与 gdn2_chunk_fwd.py:62 / GD2-01 单元 ref/reference.py 的 B=1 公共域冲突，请 PM 在规格里定。PM 裁定：公共域与 GD2-01 完全相同（B=1、H∈{1,16}），BF16 不扩域不收窄，B≥2 显式报错；「多 batch」验收项删去（规格已加澄清一节），扩域另立项。PM 回 NO_TASK：按 BF-02 → BF-03 → BF-05 的序，BF-03 CLOSE 后直接按这条 APPLY 派单，不需要重新申领。"
+        },
+        {
+          "at": "2026-09-20T15:18",
+          "summary": "事件（15:07Z APPLY、15:09Z WITHDRAW，自述，#104）：一个新 session（gdn2-bf05-20260920T1510Z-worker，自述「Codex 独立 GDN-2 worker，由 BF-03 主 agent 协调」）在 15:07Z 申领 BF-05，并请求撤销主 session（gdn-series-…）在本 issue 的旧排队 APPLY（19:59Z）；15:09Z 同一 session 撤回自己的 APPLY，理由是用户要求把 gdn2 的 session 停下来、用户已在另一个 session 开始（自述）；同时说明主 session 的 BF-05 排队意向也维持取消、BF-03 完成后不申请后续任务。poll 对该 WITHDRAW 给了警告（BF-05 无 assignee，不采信）——本来也没有被撤销的分派。PM 处理：不派单；BF-05 仍 open、无人申领。19:59Z 那条排队 APPLY 我原先答应「BF-03 CLOSE 后直接派」，现按申领人自己的取消不再自动派，要做的话重新 APPLY；用户另开的 GDN-2 session 走它自己的 APPLY。已在 #104 回复（非协议消息）。规格与公共域裁定（B=1、H∈{1,16}）不变。"
         }
       ],
       "result": null,
@@ -1374,6 +1389,10 @@
         {
           "at": "2026-09-20T10:52",
           "summary": "PR #118（draft）头更新为 81444c0a（第 5 个提交 \"retain regression timing and expanded boundary evidence\"，10:48Z，无 STATUS / DONE 消息）：相对 a5cce49 多 222 个文件（216 个在 kda_prep/evidence/、其余是 native_grid / verify_* 脚本），全部在写集内、无保留路径；PR 现 5 个提交、740 个文件；kda_prep/ 树 731 个 blob 合计约 18.6 MB、最大 1.9 MB（无 >5 MB blob，历史卫生满足）。等 DONE 再评审；无需回复。"
+        },
+        {
+          "at": "2026-09-20T15:18",
+          "summary": "RISK comparison-contract-boundary（15:03Z，自述，#106，PR #118 头 3bb0c63，仍 draft、未 DONE；生产 kernel 与预算均未修改）：(1) 扩展真机交叉端点：u=−100/−90/−88 且 A_log=89/100，candidate 与旧 NPU 都是 NaN，CPU FP32 是 −Inf；u=−87/−40/−20 且 A_log=89/100，candidate 与 CPU 是 −Inf，旧 NPU 是 NaN——「同时匹配两个前任的 NaN/Inf 掩码」无法满足；downstream exp(g) 差：A_log=−0.2,u=−16 差 1 ULP、A_log=2.7,u=−16 差 2 ULP、A_log=80,u=−87 新 0.9990885258 / 旧 1.0 差 15292 ULP。(2) boundary-v1-chunk-bd4 的 nearzero_c2_g2_rbf16_vbf16_flags010（q/k×1e-20）：第二 chunk / head1 的 CPU FP32 o 最大约 7.85e-44、小于 BF16 最小 subnormal，BF16 o 为零、相对 L2=1；改用 FP64 累积误差指标避免 FP32 norm 下溢伪零，原失败保留。(3) boundary-v1-decode-bd1 的 nearzero_c2_g1_rbf16_vbf16_flags110：q/k/g prep 过冻结预算，CPU old-prep reference 的 final_state 相对 L2=4.309e-4 > 沿用 BF-06 的 1e-5（state ≈ 1e-17），o 过 3F/0.01；正在独立重跑实际 native-prep 输入的双 CPU reference + prepared-public 逐位对照，未下结论；不自行放宽。进度（自述）：四个 bd 完整 workload、五个反向案例、真实形状 / 门控回归通过；fresh D-PM-44 12 旧 + 12 新 + 12 直接扫描重放通过；3 轮同步性能 plain 约慢 12%、cached 约慢 6%（如实保留）；chunk 普通网格四个 bd 各 1620 全过，decode 高 bd 仍在检查。卫生：两份 failure traceback 曾带入私有运行目录路径，已脱敏并用精确远端 SHA 的 force-with-lease 仅替换本人最新提交（这就是头从 81444c0a 变成 3bb0c63 的原因），原回执私下留存，不声称旧公开 Git 对象已清除（自述）。PM 裁定（D-PM-48，已回复 #106，非协议消息）：(1) CPU FP32 是语义权威（AGENTS §6 双 oracle），旧 NPU 是前任行为观测；扩展非有限交叉端点不设掩码相等的通过线，四列（candidate / 旧 NPU / CPU FP32 / FP64）报并分三类写明，机制请核实（PM 猜测：u=−87 给 −Inf、u=−88 给 NaN 恰在 FP32 最小正规数 ln(1.18e-38)≈−87.3 两侧，与 subnormal 被冲成 0 再 Inf×0 一致），写可达性与公开入口对非有限 gate 的实际行为；不改 candidate。(2) golden 对 BF16 正确舍入后整个切片为零的 (head, chunk) 按 BF16 对 golden 正确舍入 ≤1 ulp（此处 0 ulp）判，相对 L2 照报、原失败保留、不删判据、列出这类切片；范围只限此类，常规预算不动；FP64 累积指标认可，但要证明常规域上新旧指标数值一致 / 只更小。(3) decode final_state 1e-5 不放宽；先定位（双 CPU reference + 逐位对照），结果出来前 PM 不裁；如需改比较对象或冻结判据，PM 问用户。(4) 评审时对 PR 全部提交与最终文件树做隐私扫描；请把 traceback / 日志路径脱敏加进出包前机械检查。"
         }
       ],
       "result": null,
