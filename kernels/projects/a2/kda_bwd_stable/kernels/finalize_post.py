@@ -91,8 +91,21 @@ def finalize_post_a2_kernel(
     run_ub = Tensor(DT.float, [1, D], Position.UB)
     dot_ub = Tensor(DT.float, [1, 64], Position.UB)
     dot2_ub = Tensor(DT.float, [1, 64], Position.UB)
-    dbeta_f_ub = Tensor(DT.float, [L, 8], Position.UB)      # per-token scalar column, 32-byte row pack
+    # beta is staged through UB and cast on the vector unit: a scalar load straight out of BF16 memory
+    # needs a scalar bf16 -> float cast, which the device compiler rejects ("not support bf16 type cast").
+    # The 32-byte row pack is what gm_to_ub_pad produces for a strided single-element column.
+    beta_b_ub = Tensor(DT.bfloat16, [L, 16], Position.UB)
+    beta_f_ub = Tensor(DT.float, [L, 16], Position.UB)
+    dbeta_f_ub = Tensor(DT.float, [L, 16], Position.UB)     # per-token scalar column, 32-byte row pack
     dbeta_b_ub = Tensor(DT.bfloat16, [L, 16], Position.UB)
+
+    # Explicit store fences. On this pinned library auto_sync did not emit the V -> MTE3 (read-after-write)
+    # or MTE3 -> V (write-after-read) guards for every output staging buffer of this kernel: the generated
+    # c220 code carried them for some buffers and not others, and the unguarded ones came back partly
+    # unwritten on the device while the functional simulator was exact. These two fences order the whole
+    # store group against the vector work on either side of it.
+    store_ready = DEvent(Pipe.V, Pipe.MTE3)
+    store_done = DEvent(Pipe.MTE3, Pipe.V)
 
     group = Var(HV // H)
     work_count = B * HV * C
@@ -115,6 +128,13 @@ def finalize_post_a2_kernel(
             qk_col = Var(h_idx * D)
             hv_col = Var(hv_idx * D)
 
+            gm_to_ub_pad(beta_b_ub[0:L, 0:1], beta[row0:row0 + L, hv_idx:hv_idx + 1], L, 1, HV - 1, 0)
+            # one cast per packed row. A single whole-tile cast over the pack lowers to a vconv with a zero
+            # source block stride on c220, which replicates row 0's block into every row: on the device every
+            # token then carried beta[0]. The functional simulator does not model the block strides.
+            for pack_row in range(0, L):
+                cast(beta_f_ub[pack_row:pack_row + 1, 0:1], beta_b_ub[pack_row:pack_row + 1, 0:1],
+                     round_mode=RoundMode.NONE, count=1)
             glast_b_ub[0:1, 0:D] <<= g_cumsum[row0 + L - 1:row0 + L, hv_col:hv_col + D]
             cast(gmid_ub[0:1, 0:D], glast_b_ub[0:1, 0:D], round_mode=RoundMode.NONE, count=D)
             muls(gmid_ub[0:1, 0:D], gmid_ub[0:1, 0:D], MID, count=D)
@@ -156,7 +176,7 @@ def finalize_post_a2_kernel(
                     mul(colc_ub[0:1, 0:D], cs_ub[0:1, 0:D], tmp_ub[0:1, 0:D], count=D)
                     cast(qrow_ub[0:1, 0:D], qhv_b_ub[r:r + 1, 0:D], round_mode=RoundMode.NONE, count=D)
                     cast(krow_ub[0:1, 0:D], khv_b_ub[r:r + 1, 0:D], round_mode=RoundMode.NONE, count=D)
-                    beta_val.GetValueFrom(beta[tok + r:tok + r + 1, hv_idx:hv_idx + 1])
+                    beta_val.GetValueFrom(beta_f_ub[r0 + r:r0 + r + 1, 0:1])
 
                     # dg_qk = q_hv*dq_pair - k_hv*dk_pair
                     mul(acc_ub[0:1, 0:D], qrow_ub[0:1, 0:D], dqp_ub[0:1, 0:D], count=D)
@@ -197,9 +217,13 @@ def finalize_post_a2_kernel(
                     muls(dg_f_ub[r:r + 1, 0:D], run_ub[0:1, 0:D], 1.0, count=D)  # exact copy of the running sum
 
                 cast(dg_b_ub[0:HALF_L, 0:D], dg_f_ub[0:HALF_L, 0:D], round_mode=RoundMode.TO_EVEN, count=n_hd)
+                store_ready.set()
+                store_ready.wait()
                 dg_out[tok:tok + HALF_L, hv_col:hv_col + D] <<= dg_b_ub[0:HALF_L, 0:D]
                 dq_hv_out[b_idx, hv_idx, c_idx, r0:r0 + HALF_L, 0:D] <<= dq_out_ub[0:HALF_L, 0:D]
                 dk_hv_out[b_idx, hv_idx, c_idx, r0:r0 + HALF_L, 0:D] <<= dk_out_ub[0:HALF_L, 0:D]
+                store_done.set()
+                store_done.wait()
 
             for r in range(0, L):  # one cast per packed row: the column is 32-byte strided, not contiguous
                 cast(dbeta_b_ub[r:r + 1, 0:1], dbeta_f_ub[r:r + 1, 0:1], round_mode=RoundMode.TO_EVEN, count=1)

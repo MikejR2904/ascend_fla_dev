@@ -58,8 +58,17 @@ def inverse_dainv_a2_kernel(
     out_ub = Tensor(DT.bfloat16, [HALF_L, L], Position.UB)
     col_ub = Tensor(DT.float, [1, L], Position.UB)
     zero_ub = Tensor(DT.float, [1, L], Position.UB)
+    # beta is staged through UB and cast on the vector unit: a scalar load straight out of BF16 memory
+    # needs a scalar bf16 -> float cast, which the device compiler rejects ("not support bf16 type cast").
+    # The 32-byte row pack is what gm_to_ub_pad produces for a strided single-element column.
+    beta_b_ub = Tensor(DT.bfloat16, [L, 16], Position.UB)
+    beta_f_ub = Tensor(DT.float, [L, 16], Position.UB)
     beta_ub = Tensor(DT.float, [1, L], Position.UB)
     pred_ub = Tensor(DT.uint8, [1, 32], Position.UB)
+
+    # auto_sync emitted the V -> S guard for beta_f_ub and the V -> S write-after-read guard for
+    # beta_ub, but not the S -> V read-after-write guard that the vector mul below needs.
+    beta_ready = DEvent(Pipe.S, Pipe.V)
 
     work_count = B * HV * C
     work_per_cube = CeilDiv(work_count, GetCubeNum())
@@ -106,10 +115,19 @@ def inverse_dainv_a2_kernel(
             b_ub[0:HALF_L, 0:L] <<= b_ws[work][row_begin:row_end, 0:L]
             cvmutex.free()
             add(a_ub[0:HALF_L, 0:L], a_ub[0:HALF_L, 0:L], b_ub[0:HALF_L, 0:L], count=HALF_L * L)
+            gm_to_ub_pad(beta_b_ub[0:L, 0:1], beta[chunk_tok:chunk_tok + L, hv_idx:hv_idx + 1], L, 1, HV - 1, 0)
+            # one cast per packed row. A single whole-tile cast over the pack lowers to a vconv with a zero
+            # source block stride on c220, which replicates row 0's block into every row: on the device every
+            # token then carried beta[0]. The functional simulator does not model the block strides.
+            for pack_row in range(0, L):
+                cast(beta_f_ub[pack_row:pack_row + 1, 0:1], beta_b_ub[pack_row:pack_row + 1, 0:1],
+                     round_mode=RoundMode.NONE, count=1)
             with vec_scope():
                 for j in range(0, L):
-                    beta_val.GetValueFrom(beta[chunk_tok + j:chunk_tok + j + 1, hv_idx:hv_idx + 1])
+                    beta_val.GetValueFrom(beta_f_ub[j:j + 1, 0:1])
                     beta_val.SetValueTo(beta_ub[0:1, j:j + 1])
+            beta_ready.set()
+            beta_ready.wait()
             row_val.set(row_begin)
             for r in range(0, HALF_L):
                 mul(a_ub[r:r + 1, 0:L], a_ub[r:r + 1, 0:L], beta_ub[0:1, 0:L], count=L)
