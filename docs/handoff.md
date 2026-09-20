@@ -11,6 +11,13 @@
 
 ### 正在飞的任务（现在没有；A5K-02、PK-02、PK-03 都已于 2026-09-19 合入）
 
+> **2026-09-20T05:00Z 更新：BF-02 新头 `b5c8c2e6`（只多 README +5 行），合入仍等用户；A2-09 报静默错误类 RISK 已记账；BF-03 写集预批准；PK-05 有一条待裁；修了 poll 的一个盲区。**
+> - **BF-02**：申领人按非阻塞意见 a 补了 README 并推送 `b5c8c2e6`（PM 用 compare 复核：只改新单元 README +5 行，评审结论对新头成立，合入要钉 `--match-head-commit b5c8c2e68330a0757d2cbeeda90d8fd078821383`）。申领人要求 PM 依 D-PM-33 自行合入；我试了一次，**自动模式的拦截仍要求用户对该具体 PR 的明确授权**（同 #110 / #111 / #113 / #114），没有绕行，已请用户授权 #115。
+> - **A2-09 的 RISK `sim-device-divergence`（severity high，静默错误类，自述）**：c220 上对 32 字节行包的列整块 cast 被降解成 `srcBlk=0` 的 vconv，真机整块拿到第 0 行而 sim / pipesim 全绿；另外 BF16 GM 标量读编译期失败、功能模拟器不校验物理地址分配。已记 `gaps.json` 两条（`a2-cast-blkstride-sim-blind` P1、`a2-sim-vs-toolchain-blind-spots` P2），A2-09 规格加三条硬约束（sim 不再是通过依据、逐行 cast、最小复现随 DONE），A2 数字仍只作观测。PM 无 A2 真机、没复现，只核了发射器里 block stride 由 IR 属性决定。
+> - **BF-03**：之前漏处理了申领人在 #102 的写集预批准请求（`tests/test_pgdn_chunk_fwd.py` 的一个函数，靠生产入口 `.to(q.dtype)` 才过）——已核实成立并补批，条件写在 BF-03 规格。**PK-05**：排队申领人的近零范数发现（oracle 在近零真实导数区本身是 FP32 相消噪声）要 PM 在派单前裁定判据 / 预算口径，规格里已列四问。**FMT-02** STATUS：接线完成、主机回归通过，真机因守卫拒绝窗口在等（D-PM-28，只记录）。
+> - **踩坑（poll 盲区，已修）**：agent 把风险类别写进 RISK 头（`[FLA-PM] RISK A2-09 sim-device-divergence from=…`，协议头只有 TYPE / ID / from），头解析失败，而 `cmd_poll` 对 PM 账号自己发的评论把「type 为 None」也跳过——所以这条静默错误类的 RISK **poll 里一片空白**。改成 `skip_own_comment()`：只跳过无头的普通评论与 PM 类型，头格式不对的露出来并附「首行格式不对」警告；加了回归测试（PM 工具测试 86 个）。**仍要每轮匿名读 issue 评论**（普通评论仍会被跳过，上面 BF-03 的预批准请求就是这么漏的）。
+> - **踩坑（分类器）**：被拦的合入之后，有几条无关的 Bash（用 `python3` 读 `docs/matrix/gaps.json`）也被同一个理由拦了；换 Read 工具读文件、`git` / `pm_*` 命令照常。不要为此绕开，做别的事、最后把要用户定的说清楚。
+>
 > **2026-09-20T04:36Z 更新：BF-02 DONE 已评审 accept（PR #115，头 `58c56a18`），合入前请用户授权。**
 > - **BF-02（GDN chunk 反向原生 BF16，含分组，A5 真机）**：PM 从原始 JSON 复算——native 276 条全过，BF16 最紧 误差/预算 0.3334（预算 min(1e-2, 3F_g)，实现前提交 `1a3cf5a` 定死），FP32 新对原字节相同 138/138，跨 bd 3036 个哈希相同；BF16 host 算子只有 `aten.empty`；入口域与原 FP32 逐条相同（没有收窄，所以不需要为「域」问用户）；NPU-free 全量 760 / 12（= main 761 − 22 + 21）、focused 88、负对照 20 个失败。三轮三明治从 900 个原始样本重算一致。
 > - **要用户定的**：授权合入 #115（头 `58c56a18`，`--match-head-commit` 钉住）。

@@ -159,11 +159,19 @@ class TestPollSkipRule(unittest.TestCase):
     """
 
     def skipped(self, body, author, pm_login="fla-pm-bot"):
-        """复刻 cmd_poll 里的跳过判断。"""
-        if author != pm_login:
-            return False
-        parsed = pm_github.parse_message(body)
-        return not parsed or parsed.get("type") in pm_github.PM_TYPES or parsed.get("type") is None
+        """cmd_poll 里的跳过判断（直接用真函数，不再复刻）。"""
+        return author == pm_login and pm_github.skip_own_comment(body)
+
+    def test_malformed_header_from_pm_account_is_not_skipped(self):
+        """agent 把风险类别写进头里（多一个词）→ 头解析失败；共用账号时不能被当成 PM 自己的评论吞掉。"""
+        body = "[FLA-PM] RISK A2-09 sim-device-divergence from=fla-pm-bot\nseverity: high\n"
+        self.assertFalse(self.skipped(body, "fla-pm-bot"))
+        # 露出来之后由 classify_comment 附警告，内容仍按数据读
+        board = _board()
+        event = pm_github.classify_comment(
+            {"id": 1, "issue_url": "https://api.github.com/repos/o/r/issues/1", "user": "fla-pm-bot",
+             "updated_at": "2026-09-20T04:28:49Z", "body": body, "html_url": "u"}, board, "fla-pm-bot")
+        self.assertTrue(any("首行格式不对" in w for w in event["warnings"]))
 
     def test_agent_message_from_pm_account_is_not_skipped(self):
         self.assertFalse(self.skipped("[FLA-PM] APPLY A2-05 from=fla-pm-bot", "fla-pm-bot"))

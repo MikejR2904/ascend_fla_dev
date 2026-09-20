@@ -208,7 +208,7 @@ kimi_linear_layer / bd=4 的拆分（ms）：fwd_kernels 1.314 · caches_host_si
 
 ## 缺口
 
-P0 2 项 · P1 20 项 · P2 9 项 · 已解决 13 项 · 共 44 项
+P0 2 项 · P1 21 项 · P2 10 项 · 已解决 13 项 · 共 46 项
 
 **第一期里程碑**：第一期五项已全部有结论，并补齐了同机性能对比：aclnn 编译、runtime 桥、kda_fwd 接线、KDA 本地基线均实测通过；自编译算子在 block_dim=4 下比 torch_npu 组合快 4.43x（kimi_linear_layer）/ 2.38x（long_context T=4096）/ 19.7x（smoke）。过程中修掉两个自己的 bug（bridge-per-call-overhead、op-name-collision-in-process），它们先后让 block_dim 的效果被完全掩盖。当前最大的性能项是 block-dim-ceiling（已升 P1）：扩展性一路线性到契约上限 4，而硬件有 28 cube。第二期的前置障碍 kda-fwd-bwd-dtype-mismatch 已量化（降 P2）。
 
@@ -237,7 +237,7 @@ P0 2 项 · P1 20 项 · P2 9 项 · 已解决 13 项 · 共 44 项
 
 | 算子族 | P0 | P1 | P2 |
 |---|---|---|---|
-| KDA | `c1-multihead-o-corrupt`<br>`ascriptor-gm-transfer-two-slice-row-gap` | `decode-call-overhead`<br>`decode-layer-overhead`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`no-tail-path`<br>`block-dim-ceiling`<br>`qk-l2norm-not-in-kernel`<br>`state-layout-k-first`<br>`kda-bwd-inverse-mm-mutex-over-budget`<br>`a2-splitk-fp32-cube`<br>`a2-splitk-bf16-fp16-unsettled` | `kda-fwd-bwd-dtype-mismatch`<br>`npu-builtin-ops-missing`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`kernel-nd2nz-suboptimal`<br>`fwd-caches-not-emitted`<br>`modules-are-torch-not-kernels`<br>`stable-unit-no-harness`<br>`gate-span-still-bounded` |
+| KDA | `c1-multihead-o-corrupt`<br>`ascriptor-gm-transfer-two-slice-row-gap` | `decode-call-overhead`<br>`decode-layer-overhead`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`no-tail-path`<br>`block-dim-ceiling`<br>`qk-l2norm-not-in-kernel`<br>`state-layout-k-first`<br>`kda-bwd-inverse-mm-mutex-over-budget`<br>`a2-splitk-fp32-cube`<br>`a2-splitk-bf16-fp16-unsettled`<br>`a2-cast-blkstride-sim-blind` | `kda-fwd-bwd-dtype-mismatch`<br>`npu-builtin-ops-missing`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`kernel-nd2nz-suboptimal`<br>`fwd-caches-not-emitted`<br>`modules-are-torch-not-kernels`<br>`stable-unit-no-harness`<br>`gate-span-still-bounded`<br>`a2-sim-vs-toolchain-blind-spots` |
 | GDN | `ascriptor-gm-transfer-two-slice-row-gap` | `gdn-no-gqa`<br>`layout-not-token-major`<br>`nonzero-initial-state`<br>`d-initial-state-absent`<br>`state-dtype-bf16`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`scale-param-no-slot`<br>`no-tail-path`<br>`block-dim-ceiling`<br>`a2-splitk-fp32-cube`<br>`a2-splitk-bf16-fp16-unsettled` | `npu-builtin-ops-missing`<br>`fixed-kv-128`<br>`asymmetric-kv-dim` |
 | GDN-2 | `ascriptor-gm-transfer-two-slice-row-gap` | `no-varlen`<br>`no-tail-path`<br>`gdn2-abi-not-gdn`<br>`gdn2-chunk-gate-range`<br>`gdn2-decode-fragmentation` | `npu-builtin-ops-missing`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`modules-are-torch-not-kernels` |
 | DeltaNet | `ascriptor-gm-transfer-two-slice-row-gap` | `layout-not-token-major`<br>`nonzero-initial-state`<br>`d-initial-state-absent`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`scale-param-no-slot`<br>`no-tail-path` | `npu-builtin-ops-missing`<br>`fixed-kv-128`<br>`asymmetric-kv-dim` |
@@ -533,6 +533,17 @@ PM 在权威 workspace 上独立跑了 `benchmarks/diag_c1_multihead.py`，**上
 - **影响** **静默错误类**（输出有限、无报错）。本仓现有 25 个在用 kernel 都不用 BF16/FP16 split-K，A5 现有路径不受影响；KDA recurrent 与 GDN bwd wu 有 BF16 累加链（是否满足踩踏条件未定，手写孪生没踩到）；A2 派生单元（A2-03 / A2-09）若因 L0 容量改用 BF16/FP16 `splitk` 就会中招。D-PM-35 的 BF16 优先叠加 A2 优先，BF16 的 KDA 在 910B 上要先过这一关。
 - **建议** 1. 转给 ascriptor 所有者：M10-081 的 settle 规则按 dtype 收窄在 910B3 上不成立，应扩到 BF16/FP16，并修 M32 的异常。2. 本仓侧（A2-03 / A2-09 起）：a2 路径不用 M<64 的 BF16/FP16 `splitk`，入口按 `AGENTS.md` §7 显式报错；a2 派生单元对所有 L0C 累加链显式 barrier，不分 dtype。3. A2-11 真机复现（含 M32 异常）。
 
+#### `a2-cast-blkstride-sim-blind` — 【静默错误·自述】A2（c220）上对『32 字节行包』的列整块 cast 被降解成 srcBlk=0 的 vconv，真机整块拿到第 0 行；功能模拟器与 pipesim 都不建模 block stride，全绿
+
+- **类别** correctness · **适用于** KDA · **阻塞** `A2 波次：A2-09 及之后所有含 BF16 → FP32 整块 cast 的 A2 单元`
+- **依据** **来源：A2-09 的 RISK sim-device-divergence（#112，2026-09-20T04:28Z，申领人自述；PM 无 A2 真机、未复现；结论只对 910B3 / CANN 9.0.0 / ascriptor pin 90cfcdc 成立，A2-11 之前只作观测，不构成算子结论；最小复现与原始输出要随 A2-09 的 DONE 提交，届时按证据复算并更新本条。**
+- 构造（自述）：BF16 的 beta 是 `[B*T, HV]`，一个头的 64 个值在 GM 里按 HV 跨步；`gm_to_ub_pad(beta_b_ub[0:64, 0:1], beta[row0:row0+64, hv:hv+1], 64, 1, HV-1, 0)` 之后 `cast(beta_f_ub[0:64, 0:16], beta_b_ub[0:64, 0:16], count=64*16)`。生成的 c220 代码 `vconv_bf162f32(dst, src, repeat=16, dstBlk=1, srcBlk=0, dstRep=8, srcRep=4)`——`srcBlk=0` 使第 0 行那个 block 被复制到每一行，整个 chunk 的每个 token 都拿到 beta[0]。改成逐行 `count=1` 的 cast 后真机与参考逐位一致。
+- 静态（PM 核实的只有这一点）：pin 版 CCE 发射器的向量指令确实由 IR 属性 `src_blk_stride` / `dst_blk_stride` 决定 block stride（`ascriptor/backends/cce/emit_vec.py:211-212` 等），所以 srcBlk 出现在生成代码里这件事成立；具体哪种构造把它降成 0，PM 没复现。
+- 模型看不出（自述）：功能模拟器与 pipesim 都不建模 block stride，两者都判通过。
+- 影响面（自述）：A2-09 单元里 dv、D_tri、dAkk、M_base、M_beta、s_base、t_beta 以及下游六项梯度全错而 sim 全绿；`finalize_pair.s_base` 的 max_abs 一度到 6.2e+08。修完后同一台 910B3 上 33 个逐 kernel checkpoint 与 CPU 参考逐位一致，余下只是 FP32 舍入（最大相对 L2 1.2e-02，在 dg 上，预算 0.25）。
+- **影响** **静默错误类**（输出有限、无报错、sim 与 pipesim 全绿）。只在 A2（c220）上；A5 不受影响这一点没有验证，按 §6『结论不跨 SoC 继承』既不外推也不否认。A2-03 已合入的前向与 decode 单元里 beta 是 FP32，申领人称没踩到（自述）；凡是后续 A2 单元里对『跨步 / 行包』列做整块 cast 的，同样暴露。A2 上的算子结论在 A2-11 之前本来就不算数，这条是给 A2 单元的写法加一条硬约束。
+- **建议** 1. 本仓侧（A2-09 起）：a2 单元里对行包列的 cast 逐行 `count=1`（或改成不依赖 srcBlk 的写法），并在单元 README 登记每一处这类构造；A2-09 的 DONE 带上最小复现（构造、生成的 c220 行、错误版与逐行版的真机原始输出，文本）。2. 转给 ascriptor 所有者：cast 降解在行包视图上产出 `srcBlk=0` 应报错或正确展开；功能模拟器 / pipesim 应建模 block stride，或对 `srcBlk=0` 且 `repeat>1` 的向量指令给出 lint。3. A2-10 / A2-11 做真机核对时把『sim 判过而真机错』列成必查类别，A2 上 sim 通过不再作为任何单元的通过依据。
+
 ### P2
 
 #### `kda-fwd-bwd-dtype-mismatch` — kda 的 fwd 与 bwd 对同名张量声明了不同 dtype
@@ -620,3 +631,12 @@ PM 在权威 workspace 上独立跑了 `benchmarks/diag_c1_multihead.py`，**上
 ① **先查 dq 为什么是约束项**。它在跨度 46 时就已用掉 58% 预算，说明深衰减下 `dq` 的主项（`d_qg · exp(g) · scale`，见 inverse_epilogue）对 bf16 的 `g` 最敏感。若把 `g_cumsum` 检查点从 bf16 升到 fp32（kda_bwd 的 ABI 问题，见 kda-fwd-bwd-dtype-mismatch），这条曲线可能整体下移 —— **这是推测，要测**。
 ② 把 64×64 的 tile 再按行列分块，每对子块用各自的中点（等价于分块 log-sum-exp），有限性上限随分块数线性增长。但若约束是精度而不是有限性，这一项帮不上忙。
 ③ fla 的 `lower_bound` / `safe_gate`：给门控设下界。那**会改变数学**，属于模型侧决策，不能当数值修补悄悄加上（本仓目前显式拒绝这两个开关）。
+
+#### `a2-sim-vs-toolchain-blind-spots` — A2 单元『sim 通过』不等于能编译 / 放得下：BF16 GM 标量读在 bisheng 编译期失败，功能模拟器不校验物理地址分配
+
+- **类别** verification · **适用于** KDA · **阻塞** —
+- **依据** **来源：同 `a2-cast-blkstride-sim-blind`（A2-09 的 RISK，#112，自述，PM 未复现；只对 910B3 / CANN 9.0.0 / pin 90cfcdc 成立，A2-11 之前只作观测）。**
+- 从 BF16 内存直接做标量读（`Var.GetValueFrom(bf16_gm[...])`）在真机编译期失败：bisheng `fatal error: error in backend: not support bf16 type cast`；check / sim / pipesim 都不报（自述）。A2-03 的前向没踩到，因为那边 beta 是 FP32。绕行：先 `gm_to_ub_pad` 进 UB，向量侧 cast（逐行，见 `a2-cast-blkstride-sim-blind`），再从 FP32 UB 读标量。
+- 功能模拟器不校验物理地址分配；pipesim 与真机会：四个 kernel 在 sim 下全绿，换 pipesim 才报 `addr_alloc: UB overflow` / `L0C overflow`（自述：finalize_pair 要 192KB L0C，finalize_pre / finalize_post / inverse_epilogue 要 208~229KB UB）。
+- **影响** 都是『响』的失败（编译期或 pipesim / 真机报错），不是静默错误；代价是 sim 全绿会让人误以为 kernel 可用。只对 A2 系成立；A5 单元的 compile / pipesim 路径不在此列。
+- **建议** 1. 本仓侧：A2 单元报『sim 通过』之前，每个 kernel 至少跑一次 `ascriptor compile --backend cce` 与 pipesim（已写进 A2-09 的验收）；BF16 GM 不做标量读。2. 转给 ascriptor 所有者：功能模拟器校验物理地址分配、BF16 标量读在 check 阶段就报错。

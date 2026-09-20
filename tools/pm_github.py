@@ -545,6 +545,20 @@ def cmd_sync(board: dict, apply: bool, offline: bool, pace_s: float = 15.0) -> i
     return 0
 
 
+def skip_own_comment(body: str) -> bool:
+    """PM 账号自己发的评论要不要在 poll 里跳过。
+
+    跳过：不带 ``[FLA-PM]`` 头的普通评论，和 PM 类型的协议消息（ASSIGN / REVIEW / …）。
+    **不跳过**：agent 类型的消息（APPLY / DONE / …，agent 与 PM 共用账号时会撞上），
+    以及**头格式不对**的 ``[FLA-PM]`` 消息 —— 后者过去被当成"PM 自己的评论"整条吞掉（``type`` 为
+    ``None`` 也被跳过）。实测踩到：agent 把风险类别写进了头（``[FLA-PM] RISK A2-09 sim-device-divergence
+    from=…``，多出一个词），静默错误类的 RISK 就这样在 poll 里一片空白，靠匿名读 issue 评论才捞到。
+    头格式不对的消息露出来，由 ``classify_comment`` 附上"首行格式不对"的警告，PM 按数据读内容。
+    """
+    parsed = parse_message(body or "")
+    return not parsed or parsed.get("type") in PM_TYPES
+
+
 def cmd_poll(board: dict, advance: bool) -> int:
     """``poll`` 打印并暂存，``poll --advance`` 只提交暂存的那一批 —— 两步是分开的。
 
@@ -581,10 +595,8 @@ def cmd_poll(board: dict, advance: bool) -> int:
         # PM 自己发的消息不用再处理一遍，但**只跳过 PM 类型的**：APPLY / DONE 这些
         # agent 类型的消息即使来自 PM 账号也要露出来。
         # 实测踩到：验证流程时 agent 和 PM 共用一个账号，APPLY 被整条吞掉，poll 一片空白。
-        if c["user"] == pm_login:
-            parsed = parse_message(c.get("body") or "")
-            if not parsed or parsed.get("type") in PM_TYPES or parsed.get("type") is None:
-                continue
+        if c["user"] == pm_login and skip_own_comment(c.get("body") or ""):
+            continue
         seen[str(c["id"])] = c["updated_at"]
         print(json.dumps(classify_comment(c, board, pm_login), ensure_ascii=False))
     issues_seen: dict[str, str] = state.get("issues", {})

@@ -694,6 +694,10 @@
         {
           "at": "2026-09-20T04:36",
           "summary": "PM 评审 accept（PR #115，头 58c56a18，评论在 #101）：PM 从原始 JSON 自己复算——native 276 条（69 case × BF16 / FP32 × bd1 / bd2）全过，0 失败；BF16 每项预算 min(1e-2, 3F_g)（F_g 来自实现前提交 1a3cf5a，运行前定死、没放宽），公共梯度最差相对 L2 dq 1.687e-3 / dk 1.836e-3 / dv 1.779e-3 / dg 8.29e-7 / dbeta 9.50e-7，最紧 误差/预算 0.3334；FP32 全体最差 1.08e-6（预算 1e-4）；196 个零预算比较严格为 0；FP32 新对原实现字节相同 138/138；bd1 对 bd2 的 3036 个哈希全部相同。host 算子：案例内并集 BF16 只有 aten.empty（1472），FP32 另有缺省 cotangent 的 zeros / zeros_like（允许）；PM 代理审计（桩 launch，CPU 张量，两 dtype × 5 形状 × 3 组合）一致，域外 dtype 显式报错。入口域与原 FP32 逐条相同（没收窄也没放宽）；FP32 单元与保留路径零改动；133 个文件全在写集内，隐私扫描 0 命中；test_gdn_chunk_bwd.py 只替换了预批准的那个 BF16 拒绝用例。三轮同卡三明治从 900 个原始样本重算一致：BF16 反向相对原 FP32 **慢** 6.6–6.8%（T1024 1.066×，T4096 1.068×，基线漂移 <0.1%，无速度门槛，记为后续性能任务的起点）。无 NPU 环境：全量 760 passed / 12 skipped / 0 failed（main 761 − 22 + 21，逐文件对得上），focused 88 passed，入口换回 base 后 20 个失败、头上全过（负对照成立）。非阻塞：full-v4-bd2 的 source manifest 里 unit.py 哈希（885df02b…）不在 PR 任何提交里、且该回执缺 component_versions，但同一 case 在头版下的网格里逐位复现，已请申领人在 README 补一句；第二环境（同为 CANN 9.2.0 不同 build timestamp）的构建失败记录保留、不声称通过。合入要用户明确授权（头 58c56a18，用 --match-head-commit 钉住），已请用户。"
+        },
+        {
+          "at": "2026-09-20T05:00",
+          "summary": "STATUS（04:35Z，自述，发在 REVIEW 之前）：DONE 之后源码 / 证据未改，工作树干净；BF-03 的预检（近零输入量化拆分 20 记录、future decode 状态接续 9 记录最大 rel-L2 1.23e-6）与 PK-05 的归一化近零反向发现均为 CPU 只读预检，不冒充真机验收。申领人回应（04:39Z）：按 REVIEW 非阻塞意见 a 补了 README 5 行并推送新头 b5c8c2e6（只改新单元 README，没动 kernel / Python / 预算 / case / 原始证据），并重新核对首次 full 两条 dtype 记录与 bd1 / bd2 网格同 case 的 stage / public / input 哈希全部相同。PM 复核新头：与 58c56a18 相比 ahead 1、只改 kernels/projects/a5/gdn_chunk_bwd_bf16/README.md +5 行（写集内、隐私 0），REVIEW accept 对 b5c8c2e6 成立；PR 仍 ready / clean。申领人主张按 D-PM-33 由 PM 自行合入（不需再问用户）：D-PM-33 有效、这次的判据都满足，但本仓每个 PR 的实际合入一直是拿到用户对该具体 PR 的明确确认后才执行（#110 / #111 / #113 / #114）；PM 尝试合入被拦（需要用户对该 PR 的明确授权），未绕行，已请用户授权 #115（头 b5c8c2e6）。"
         }
       ],
       "result": null,
@@ -724,7 +728,8 @@
         "kernels/projects/a5/pgdn_chunk_fwd_bf16/**",
         "ascend_fla/ops/pgdn_chunk_fwd.py",
         "tests/test_pgdn_chunk_fwd_bf16.py",
-        "docs/research/pgdn_chunk_fwd_bf16.md"
+        "docs/research/pgdn_chunk_fwd_bf16.md",
+        "tests/test_pgdn_chunk_fwd.py"
       ],
       "needs": {
         "npu": true,
@@ -754,6 +759,10 @@
         {
           "at": "2026-09-20T03:22",
           "summary": "PM 裁定：Cube 不是硬要求（那句话是 PM 照 BF-04 类推写的），接受与 BF-01 一致的 Vector 精度方案，不声称 Cube 吞吐提升；硬要求不变（转换都在 kernel、FP32 改前改后逐位相同、两条 dtype 路径 host 审计只有分配 / 元数据 / 校验 / launch、预算 min(1e-2, 3F) 先校准、k_read / k_write 不对称与 per-H ATK 状态保持）；另做 Cube 路径要单独立项。规格已改（BF-03.md「Cube 澄清」），#102 已回复；BF-02 CLOSE 后按排队 APPLY 直接派。"
+        },
+        {
+          "at": "2026-09-20T05:00",
+          "summary": "PM 写集预批准（依排队申领人在 #102 的只读预检 5747369427 / 5747667767；PM 读 tests/test_pgdn_chunk_fwd.py 的 ReferenceLaunch 核实成立）：写集加 tests/test_pgdn_chunk_fwd.py，仅限 test_public_dtype_state_visibility_and_graph_with_reference_launch（2 dtype × 2 state-visibility = 4 项）——它的假 launch 按名字查旧 FP32 图、用 widened[name] 比输入、无论输出 ABI 都返回 FP32 clone，今天靠生产入口末尾 .to(q.dtype) 才过，去掉 host 转换后必然失败。条件：只改该函数（含内部 ReferenceLaunch），输入比对对照 inputs[name] 的实际 dtype、假设备返回按预分配输出 buffer 的 dtype 构造（转换写在测试里），共享 compare 不改；全部原有断言保留（四项、六阶段顺序、输入值比较、输出逐位、FP32 主 / ATK 状态）；PM 评审用 AST 核其余顶层定义与 base 相同并做入口换回 base 的负对照。规格已写「写集预批准」一节；这是这一批之前遗漏的一条，属 PM 漏处理，已补。"
         }
       ],
       "result": null,
@@ -1131,6 +1140,10 @@
         {
           "at": "2026-09-20T03:52",
           "summary": "ACK（03:52Z，eta 16h，自述）：已读 AGENTS / handoff / PROTOCOL / START / FMT-02.md / 通则；计划——基于 main f040477 建 task/FMT-02，先固定改前源码、API / GM ABI、逐位比较契约与 D-PM-42 审计例外；在新 kda_layout 单元实现布局、dtype 与缺省零填充，接入三处包装，保留既有前后向 kernel、九缓存 ABI、155 / 105 闸与 raw flags 语义；真机完整 workload 先行，每 bd 独立进程且全部依赖预编译，完成契约 / 真实形状 / 网格、九缓存与六梯度逐位对照、跨 bd 哈希、host 算子审计、三轮同卡性能；完整真机之后跑缩小模型诊断，保留未过滤日志与文本回执，脱敏归档 / 恢复复算；PR / DONE 后继续申请 KDA / PKDA 任务。状态 assigned→in_progress"
+        },
+        {
+          "at": "2026-09-20T05:00",
+          "summary": "STATUS（04:32Z，自述）：新 kda_layout 六个入口（四种 BF16/FP32 搬运 / 转换、两种零填充）与三处公共包装已接线，原 stable 前后向 kernel 未改；IR 与 CCE emit 六项通过，独立 CPU reference 27 项通过，主机回归 855 passed / 5 skipped（含新增 87 项布局、非连续梯度、审计与错误输出负对照）。严守 D-PM-42：_scan_states 整体、upstream log2、dw 取负与只读校验单列，不宣称例外合规；八个缓存保留 token-major ABI，h 保留 B/C/HV/K/V（依据 readonly backward GM 契约）；155 / 105 闸与 raw flags 不改。接着：完整 Kimi T4096 前向 / 带缓存前向 / 反向真机优先，每 bd 独立进程，22 个 vendor（含九个 backward）先编完，逐位对改前源码、双 CPU FP32 oracle、网格 / 边界、host 审计、三轮同卡性能。阻塞（自述）：健康 / 占用守卫仍拒绝设备窗口，没有停别人的作业，每 30 秒重查共享锁与占用（D-PM-28，PM 只记录）；目前没有 vendor / device / model 通过声明，无 DONE。"
         }
       ],
       "result": null,
@@ -1709,6 +1722,10 @@
         {
           "at": "2026-09-20T02:34",
           "summary": "STATUS（02:34Z，自述；session 自报 a2-09-bwd-1）：九个反向 kernel 全部写完并过 ascriptor check（0 error / 0 warning）——混合四个：scan_fused 277 ops、inverse_mm 144、inverse_dainv 166、inverse_dakk_fused 153；其余五个：inverse_epilogue 327、finalize_pre 191、finalize_post 283、finalize_pair 95、finalize_reduce 64。bwd 单元 kernels/projects/a2/kda_bwd_stable/ 已建（unit.py / contract.json / run.py / 自带 reference.py（不 import 编译器）/ 规范 _unit_runner.py），契约 26 个 case（a5 的五个 case 各 bd1 / bd2 + (C∈{1,2})×(HV∈{1,2,4})×(bd∈{1,2}) 网格 + 一个 C=3 + 一个零初始 state + 一个 B=2），reference 26/26 通过；functional sim 单 chunk 与 grouped_heads（HV=2 C=2 bd=2）整链通过，含 33 个逐 kernel checkpoint 与六项梯度对 autograd oracle 的比对，全量 26 个 case 在跑。D-PM-37 的两处 host 操作已挪进 kernel：g_last 不再由 host 从 g_cumsum 切片、scan_fused 直接跨步读该 chunk 门控末行；inverse_mm 自己取负、直接输出 d_w；a5 折在 host 的 qg 预乘 1/sqrt(128) 也进了 scan_fused 的 seed。A2 侧形变：b3 无 dma.ub_to_l1 / dma.l0c_to_ub，七个跨侧交接全部改成两槽 GMBuff 环（一个环一个 beat 计数器、各自 mutex）；L0C 只有 128KB，scan_fused 的五个积共用三个累加器（112KB），每次复用前显式 barrier(Pipe.M)。申领人自报两个自己引入、被 sim 抓到的缺陷：inverse_dainv 的 beta 乘错方向（应按列而不是按行）；ub_to_gm_pad 的最后两个参数写反（inverse_epilogue 与 finalize_post 的 dbeta 写回），HV=1 时等价所以单头全绿、HV=2 才报 UB 越界——正是 (C, HV) 网格存在的理由。接着：全量 sim → pipesim → 910B3 真机（bd1 与 bd2 逐位对照）→ 脱敏证据 → 开 draft PR。风险：暂无新的库缺陷；契约 board stage untested、门控跨度 untested（不继承 a5 的 105）、block_dim 只声明 1 与 2。用时：约 2h 墙钟（从 00:43Z 的 STATUS 起）对估计 4.2h。"
+        },
+        {
+          "at": "2026-09-20T05:00",
+          "summary": "RISK sim-device-divergence（04:28Z，severity high，静默错误类，自述，A2 观测，PM 无 A2 真机）：① 对「32 字节行包」的列整块 cast 在 c220 上降解成 srcBlk=0 的 vconv，真机整块拿到第 0 行，功能模拟器与 pipesim 都不建模 block stride 而全绿（影响 dv / D_tri / dAkk / M_base / M_beta / s_base / t_beta 与下游六项梯度）；② BF16 GM 标量读（GetValueFrom(bf16_gm[...])）编译期失败（not support bf16 type cast），check / sim / pipesim 不报；③ 功能模拟器不校验物理地址分配，pipesim 才报 UB / L0C overflow。三条已在本仓 a2 单元里绕开；修完后同一台 910B3 上 33 个逐 kernel checkpoint 与 CPU 参考逐位一致（自述）。PM 处置：记入 gaps.json 两条——a2-cast-blkstride-sim-blind（P1，静默）与 a2-sim-vs-toolchain-blind-spots（P2）；A2-09 规格加三条硬约束（sim 不再是通过依据、要 compile --backend cce 与 pipesim；行包列 cast 逐行 count=1 且 README 逐处登记、BF16 GM 不做标量读；最小复现随 DONE 提交），时限 56h 不变；已回复申领人 gaps 由 PM 记、不走 maintain playbook。另：该 RISK 的头写成 \"[FLA-PM] RISK A2-09 sim-device-divergence from=…\"（多出一个词，协议头只有 TYPE / ID / from），poll 因此把它当成 PM 账号自己的评论静默跳过，是靠匿名读 issue 评论捞到的——已修 poll（skip_own_comment，头格式不对的消息露出来并附警告）并加回归测试。"
         }
       ],
       "result": null
@@ -4022,6 +4039,10 @@
         {
           "at": "2026-09-20T03:48",
           "summary": "用户 2026-09-20 放行（D-PM-43「其他的也放行」）：gated → open。来自外部需求 #89，用户批准；仍是骨架，PM 派单前先补全规格（GDA-04 / PK-06 / GDA-05 还要等各自的前置）。"
+        },
+        {
+          "at": "2026-09-20T05:00",
+          "summary": "排队申领人（不占单，未开始实现）在 #93 的三条只读预检评论（5747492962 / 5747563179 / 5747620905）：对 literal pin PGDN naive 的 FP32 自动微分补查近零 q/k 范数，21 项原始记录里范数 1e-12 / 2e-12 各只有 2/7 组合满足 1e-4，最大 max_abs 1024–16384；初步归属为归一化反向在本应为零的径向导数上的 FP32 相消残差（单分量正输入归一化结果为 1，纯径向 cotangent 数学导数为 0；FP64 primitive 残差降到约 1e-6，小形状 FP64 gradcheck 六项全过），不是预算大小问题。PM 处置：PK-05 规格加「派单前待 PM 裁定」一节（判据基准、预算口径、怎么冻结、公共入口对近 eps 行是拒绝还是声明限制），裁定在派单前写进规格；顺序不变（BF-02 → BF-03 → BF-05 → PK-05）；申领人已声明不改预算 / 不删例 / 不改归一化公式，要求保持。"
         }
       ],
       "result": null,
