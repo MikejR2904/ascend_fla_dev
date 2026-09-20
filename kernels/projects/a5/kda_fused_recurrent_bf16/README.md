@@ -97,4 +97,4 @@ input immutability are recorded separately.
 See `docs/research/kda_decode_bf16.md` for the study fixed before implementation,
 `contract.json` for qualification by stage, and `evidence/` for public text
 receipts. Unexecuted stages remain untested; CPU or build success is not NPU
-acceptance. Hardware acceptance is still in progress in this draft.
+acceptance. The recorded decode grids, prefill integration and performance measurements are complete; performance includes regressions and has no speed pass threshold.

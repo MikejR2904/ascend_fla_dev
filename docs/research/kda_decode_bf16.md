@@ -115,7 +115,7 @@ the same state limit. Chain-vs-oneshot errors are reported without a separate
 threshold. The old chunk contract's 0.05 limit is not used for this acceptance.
 These rules are fixed before executing the prefill measurements.
 
-## Completed decode grid; integration and performance pending
+## Completed native decode grid
 
 The selected kernel source has SHA256
 `c4e341a99c005259e0c9bfb59541ba192ac177d4da648862c1a68f7c8b3cea14`.
@@ -155,8 +155,9 @@ and `aten.view.default`.
 The grid used verifier commit `492127d` and the original read-only FP32 kernel
 with its old input preparation. Subsequent prefill and performance modes use
 the exact original public-wrapper snapshot `0f517ee` as well, including its
-metadata, allocation, scaling and layout costs. Those modes remain unexecuted
-at this checkpoint and must pass before BF-06 is complete.
+metadata, allocation, scaling and layout costs. Those modes subsequently passed at verifier commit `caf75e7`; results follow
+below. Only the original wrapper's compiler loader is rebound to its already
+registered vendor, so no compilation occurs inside the timed baseline.
 
 After the first complete native workload, bounded BF16 sim/pipesim probes
 passed at T1/H1/G1 without state and T2/H1/G4 with state; the latter retains
@@ -172,3 +173,71 @@ forward-dependency ND-to-NZ transfer performance diagnostics and three
 backward-dependency UB bank-stride performance diagnostics. Their owner is
 `ascriptor/ir/lint.py`; they do not describe a new decode-kernel correctness
 or synchronization failure. Neither dependencies nor warning controls changed.
+
+
+## Completed prefill integration
+
+All six block dimensions passed 21 chains each: prefill64/128 followed by
+64 decoded tokens, grouped heads, optional state, two real shapes and exact
+cumulative gate spans 0/105/155. The boundary generator doubles the last
+increment of each 64-token chunk so that `max(cumsum)-min(cumsum)` is exactly
+the target span; both CPU and NPU measurements are recorded.
+
+The 126 chains contain 8568 locally checked decode calls. Every call uses
+both CPU FP32 references starting from its actual received NPU state. Worst
+local output relative L2 is 0.001971448407 and state 1.464519469e-7. The final
+16-token and single-token segmentation outputs/states are byte-identical,
+including each intermediate 16-token segment; all six block dimensions also
+produce identical chain, one-shot and segment hashes.
+
+Worst full-chain output relative L2 is 0.003663001964; state is
+0.002470566319; prefix output is 0.003959366910 and suffix output
+0.003267164114. These global values include the existing prefill error and
+pass the separately measured `min(0.01,3*E_oneshot)` limits. They do not replace
+the strict local decode-state `1e-5` check. The extra prefix-state check also
+passed. Exact original-wrapper FP32 comparisons, all raw-flag combinations
+and scales 0/1/0.3/-1 were rerun at each block dimension.
+
+Both native batches completed with exit 0 and healthy post-run device status;
+shared locks were released. Invalid metadata cases do not launch a kernel.
+The FP64 rejection uses a CPU FP64 tensor because this NPU cannot represent
+FP64; the other invalid tensor cases use NPU tensors.
+
+## Synchronized performance, including regressions
+
+Measurements use the same device at bd4, five warmups, 20 repetitions per
+measurement, and three independent baseline/candidate/baseline sandwiches.
+Inputs are preallocated, output allocation is included, and each sample is
+synchronized before and after the public API call. The first baseline is the
+exact old FP32 public wrapper and original FP32 custom kernel, with FP32 input
+values matching the candidate's rounded BF16 values. The second baseline is
+`kda_recurrent_ref` executing on actual Torch NPU tensors. CPU FP32 remains the
+correctness reference. This is API wall time, not isolated kernel time.
+
+| B/T/H/G | BF16 median microseconds, rounds 1/2/3 | Speed vs old FP32, rounds 1/2/3 | Median speed vs Torch NPU |
+| --- | --- | --- | ---: |
+| 1/1/32/1 | 654.94 / 656.34 / 658.30 | 1.029 / 1.027 / 1.018 | 1.751 |
+| 1/2/32/1 | 670.81 / 664.03 / 794.11 | 1.400 / 1.783 / 3.307 | 2.640 |
+| 1/16/32/1 | 2761.42 / 2609.49 / 2734.66 | **0.814 / 0.988 / 0.748** | 3.838 |
+| 2/16/4/8 | 4780.04 / 4718.45 / 4720.01 | 1.253 / 1.013 / **0.856** | 2.007 |
+
+Speed is baseline latency divided by candidate latency. The H32/T16 candidate
+is slower in all three old-FP32 comparisons: the median ratio 0.814 means
+about 23% more latency. The grouped B2 case is slower in one round. Old-FP32
+latencies vary substantially in some shapes; all samples and both surrounding
+baseline measurements remain in the receipts. There is no speed threshold,
+and these measurements do not support an across-the-board speedup claim.
+
+For T1/H32, BF16 CPU enqueue wall time is 374.0–377.8 microseconds versus
+564.3–571.5 for the old FP32 path; synchronized BF16 time is 654.9–658.3 versus
+667.0–675.8 for individual old-baseline measurements. The T1/T16 linear
+intercept estimate is 514.5–526.1 microseconds for BF16, including bridge and
+device fixed costs. Enqueue wall time can include runtime waits and is not
+pure CPU instruction cost. Warm public BF16/FP32 calls also passed the check
+that forbids recomputing a compiler signature; cache lookup remains O(1).
+
+The default BF16/FP32 entry is qualified by these runs. The unchanged raw-flags
+preprocessor remains the registered BF-07 exception; no host-conversion
+conformance is claimed for that branch. New SoCs, untested shapes beyond the
+recorded domain, backward execution and full-workload simulation are not
+qualified by this evidence.

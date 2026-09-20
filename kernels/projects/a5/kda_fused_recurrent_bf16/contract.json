@@ -1375,7 +1375,7 @@
       "backend": "cce",
       "stage": "board",
       "status": "passed",
-      "note": "Standalone decode grid passed: 136 numeric plus 57 boundary checks per bd1/2/4, full BF16/FP32 workload plus 57 boundaries per bd8/16/28. Shared outputs byte-identical across bd. Prefill integration and performance remain pending; BF-06 is not fully accepted."
+      "note": "Native decode grid passed: 136 numeric plus 57 boundary checks per bd1/2/4, full BF16/FP32 workload plus 57 boundaries per bd8/16/28. All six dimensions also passed 21 prefill/decode chains each, the exact original public FP32 wrapper comparisons and four nondefault FP32 scales. Shared outputs and states are byte-identical across bd. Synchronized performance measured at bd4, with slowdowns retained. See evidence/native-grid and evidence/native-acceptance; backward entries were compiled, not executed."
     }
   ],
   "provenance": {

@@ -1,8 +1,8 @@
 # BF-06 evidence
 
 This directory contains text evidence, not compiled vendors or machine
-configuration. The current checkpoint qualifies the standalone decode grid;
-prefill integration and performance remain pending.
+configuration. The recorded acceptance includes the standalone decode grid, prefill integration
+at all six block dimensions and synchronized performance at bd4.
 
 - `cpu-precision-initial.json`: 82-case CPU calibration fixed before kernel
   implementation, including the BF16-state negative control.
@@ -17,6 +17,9 @@ prefill integration and performance remain pending.
   CANN/OPP identification. Only private absolute path roots are replaced.
 - `native-grid/replay.json`: independently recomputed budgets, required
   backward entries, audits and byte equality between block dimensions.
+- `native-acceptance/`: 126 prefill/decode chains across six block dimensions,
+  original-wrapper FP32 comparisons, synchronized timings and their independent
+  replay. The timing receipts retain every sample and each slowdown.
 - `models/`: bounded source-based functional and pipe-model diagnostics,
   separate from vendor compilation and native execution.
 - `emitted/`: source-emission manifests and hashes; generated build source
@@ -34,9 +37,13 @@ From the repository root, independently replay the complete published grid:
 python kernels/projects/a5/kda_fused_recurrent_bf16/aggregate.py \
   --root kernels/projects/a5/kda_fused_recurrent_bf16/evidence/native-grid/receipts \
   --output tmp/bf06-replayed.json
+python kernels/projects/a5/kda_fused_recurrent_bf16/replay_acceptance.py \
+  --root kernels/projects/a5/kda_fused_recurrent_bf16/evidence/native-acceptance/receipts \
+  --output tmp/bf06-acceptance-replayed.json
 ```
 
-The native grid ran verifier commit `492127d`. Kernel and public-wrapper hashes
+The native grid ran verifier commit `492127d`; the subsequent prefill and timing
+stage ran verifier commit `caf75e7`. Kernel and public-wrapper hashes
 are recorded in each run's environment JSON. Later verifier improvements do
 not retroactively qualify unexecuted checks. Original FP32 kernel sources and
 the selected library/kernels checkouts remain unchanged.
