@@ -108,6 +108,7 @@ def main():
     allowed = {'aten.empty.memory_format', 'aten.empty_strided.default', 'aten.view.default',
                'aten.unsqueeze.default', 'aten.alias.default', 'aten.zeros.default'}
     for case in cases:
+        rounded_case = None
         for dtype_name in ('bfloat16', 'float32'):
             started = time.monotonic()
             cpu = make_inputs(dict(case, dtype=dtype_name))
@@ -166,6 +167,19 @@ def main():
                            r['operator'] for r in audit.events if r['phase'] == phase))
                            for phase in ('validation', 'production')}, forbidden_operators=forbidden,
                        seconds=time.monotonic() - started)
+            if 'norm' in case['parameters']:
+                if dtype == torch.bfloat16:
+                    rounded_case = dict(native=actual, A=a, B=b,
+                                        actual_q_first_component=cpu['q'][0, 0, 0, 0].item())
+                else:
+                    # This compares different input values; it is not device error
+                    # and does not replace either path's own fixed A/B checks.
+                    row['bf16_vs_unrounded_fp32'] = dict(
+                        actual_bf16_q_first_component=rounded_case['actual_q_first_component'],
+                        native_including_output_rounding={n: metric(rounded_case['native'][n], actual[n])
+                                                          for n in OUTPUTS},
+                        oracle_A_input_quantization={n: metric(rounded_case['A'][n], a[n]) for n in OUTPUTS},
+                        oracle_B_input_quantization={n: metric(rounded_case['B'][n], b[n]) for n in OUTPUTS})
             report['cases'].append(row)
             args.output.write_text(json.dumps(report, indent=2, allow_nan=False) + '\n')
             print('NATIVE_CASE', json.dumps(row, allow_nan=False), flush=True)
