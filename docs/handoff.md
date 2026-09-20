@@ -11,6 +11,12 @@
 
 ### 正在飞的任务（现在没有；A5K-02、PK-02、PK-03 都已于 2026-09-19 合入）
 
+> **2026-09-20T15:59Z 更新：用户授权「#119授权」（D-PM-49），PR #119（A2-09）已合入 → c2156f3，A2-09 done；main 全量 877 passed, 12 skipped, 5 warnings in 275.98s (0:04:35)。BF-05 ACK；BF-07 又报一个端点类，PM 裁定（D-PM-50）。**
+> - **合入**（bot 账号）：#119 A2-09（头 `6bd9c95` → `c2156f3`）；PR 原为 draft，先 `gh pr ready` 再 `--match-head-commit` 钉住审过的头合入；merge commit 两个父提交是 f11a2ad 与 6bd9c95。合入后在 main 上复跑全量（NPU-free）：**877 passed, 12 skipped, 5 warnings in 275.98s (0:04:35)**（本 PR 只新增 `kernels/projects/a2/kda_bwd_stable/**` 46 个文件、不含 tests/ 下的测试，计数不变，与预测一致）。`kernel_inventory`：`kda_bwd_stable` 补记 a2 派生单元已合入（A2 数字只作观测，A2-11 之前不构成结论）。用户是在被告知三点后授权的：finalize_pair 的 stage 判据（相对 L2 1e-5）是看到真机结果之后定的、分辨率 ≈ 一次 BF16 翻转、固定种子下确定性通过；`contract.json` 的 reason 仍留旧措辞（README 已更正，下次动契约时同改）；六项输出梯度预算沿用 a5 未动。
+> - **BF-05 ACK**（15:44Z，in_progress）：修订与环境自述（ascriptor 90cfcdc / b3b3f9c；fla `864a87f6`（v0.5.2-123）；CANN 9.2.0、opp 含 ascend950、compiler 2026-05-09T12:45:09+08:00、Python 3.12.14、torch / torch_npu 2.12.0、Ascend950PR）。**一处要对齐**：它的 fla 修订与 GD2-01 / PK-02 / PK-03 的 pin `e52dbc0e`（0.6.0）不同，而验收里的参考 A 是「pin 版 GDN-2 naive」——已要求用 pin 版或先证明两版 GDN-2 naive 逐字节相同（给 SHA-256），并在第一个提交里写明参考所用的 fla 修订。
+> - **BF-07 新端点类**（RISK 15:41Z）：boundary-v3 chunk bd4 第 394 例（q/k×1e-20、仅 gate flag）第二 chunk / head1 的实际 o 全 0，与旧 NPU 路径逐字节相同；CPU FP32 golden 最大 1.148e-38（全 < FP32 最小正规数），BF16 正确舍入后有 955 个非零元素，最大 125 ULP、相对 L2=1。**PM 裁定 D-PM-50**：归入既有的 native 下溢单列资格（(ii) 类），不新增闸、不收窄域，D-PM-48 (2) 的整片舍入零口径不扩到此类、保持失败、不放宽阈值；条件是该片逐元素分类（golden 正规数 → 普通判据；golden subnormal 且 candidate ±0 → flush 类报个数；其它一律失败）、旧 NPU 逐字节相同 ≠ CPU 正确性通过、写可达性、其它切片同类统计。decode 近零的比较对象仍等用户（未答）。
+> - **待用户**：BF-07 decode 近零档的比较对象（见上一块）。
+>
 > **2026-09-20T15:45Z 更新：A2-09 的 README 修正提交到了（头 6bd9c95，只改 README）——PM 核对成立，已向用户请求 #119 的合入授权（待答）；BF-07 自我更正了一处「逐位相同」。**
 > - **A2-09 / #119**：`compare e6a3a8a…6bd9c95` = 1 个提交、只改 README.md；README 里的实数与 PM 在 CPU 参考张量上的复算逐项一致；PR 14 个提交、46 个文件全在写集内、0 删除、无二进制、最大 1.75 MB，隐私 0 命中（提交信息只命中「hostname」一词，是在描述检查项）。技术评审 accept；A2 PR 合入要用户授权（A2-11 之前 A2 结论不算数）。**合入步骤**：用户授权后 → PR 仍是 draft，需先转 ready → `gh pr merge 119 --merge --match-head-commit 6bd9c950fc8d81767eb0842040cf0a41df941941` → 在 main 上复跑全量（NPU-free）→ 记看板 / CLOSE。`contract.json` 的 reason 还留着旧措辞（在 digest 里），README 已更正，下次动契约时同改。A2-09 status 改为 review。
 > - **BF-07 自我更正**：15:19Z 的「近零切片与正确舍入逐位相同」不成立（torch.equal 忽略 +0 / −0；符号位不同的零有 3991 / 3670 个，没有非零元素）；D-PM-48 (2) 的判据是数值 ULP ≤ 1（不是逐位），+0 / −0 是 0 步，不改变该口径，符号差如实报。

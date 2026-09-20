@@ -328,6 +328,20 @@
       "by": "pm",
       "decision": "BF-07 的 RISK comparison-contract-boundary（15:03Z）里两个端点比较口径的裁定：(1) 扩展非有限交叉端点：CPU FP32 为语义权威，旧 NPU 是前任行为观测；不设 NaN/Inf 掩码相等的通过线，每个点位报 candidate / 旧 NPU / CPU FP32 / FP64 四列并分三类（candidate=CPU；candidate=旧 NPU≠CPU；旧 NPU≠candidate=CPU）写明机制与影响，不写成「必须相等」的断言，不改 candidate。(2) 极小 BF16 输出：golden 对 BF16 正确舍入后整个 (head, chunk) 切片为零的，按「对 golden 正确舍入 ≤1 ulp」（此处 0 ulp）判，相对 L2 照报、原失败保留、不删逐头 / 逐 chunk 判据、列出这类切片；范围只限这一类，正常可表示切片仍按冻结的 min(1e-2, 3F)。(3) decode nearzero 的 final_state 1e-5 不放宽；待申领人定位（双 CPU reference + prepared-public 逐位对照），改比较对象或冻结判据须问用户。",
       "risk": "PM 的读法：(1)(2) 是把规格「端点逐点对照、差异逐类写明、不新增数值闸、不收窄域、常规地板与端点分开」在两个新出现的端点类上落实，不是放宽——预算数值、155 / 105 门控、域都没有动，常规切片的判据不变；(2) 里 relative L2 在「可表示部分全零」的切片上没有定义，才换成 ulp 判据。风险：(2) 的口径有被读成「事后改判据」的可能——已限定范围、保留原失败与逐头 / 逐 chunk 判据；若用户认为它已属改判据，请指出，PM 撤回并改为问用户。(3) 是 PM 明确不裁、留给定位结果与用户。"
+    },
+    {
+      "id": "D-PM-49",
+      "date": "2026-09-20",
+      "by": "user",
+      "decision": "授权合入 PR #119（A2-09，KDA 反向单元重写到 a2）。（用户原话：「#119授权」，回应 PM 给出的复核结果与三条声明限制。）",
+      "risk": "PM 的读法：(1) 合入的是审过的头 6bd9c95（相对已审头 276d53d 只加 README 一个文件，其余逐字节不变），A2 上的真机数字只作观测、A2-11 之前不构成算子结论；(2) 用户是在被告知这三点后授权的：finalize_pair 四个积的 stage 判据（相对 L2 1e-5）是看到真机结果之后定的、分辨率 ≈ 一次 BF16 翻转、固定种子下确定性通过，README 已按实数更正；contract.json 的 reason 仍留旧措辞（在源码摘要里，改它要重跑 26 例，留到下次动契约时同改）；六项输出梯度的预算沿用 a5 未动。(3) 由 PM 按 D-PM-33 用 --match-head-commit 合入并在 main 上复跑全量，事后一句话告诉用户。"
+    },
+    {
+      "id": "D-PM-50",
+      "date": "2026-09-20",
+      "by": "pm",
+      "decision": "BF-07 boundary-v3 chunk bd4 第 394 例（nearzero_c2_g4…flags010，q/k×1e-20）——「golden 整片是 FP32 subnormal、candidate 与实际旧 NPU 逐字节同为 0」这一类：归入既有的 native 下溢单列资格（规格 2026-09-20 澄清第 3 条 subnormal / 下溢端点类；D-PM-48 (1) 的第 (ii) 类「candidate = 旧 NPU ≠ CPU」），不新增数值闸、不收窄域；D-PM-48 (2) 的「整片正确舍入为 0」口径不扩到此类，保持失败、不放宽 0.05 / ULP 阈值。条件：该片逐元素分类——(a) golden 为 FP32 正规数 → 普通判据；(b) golden 为 FP32 subnormal 且 candidate 为 ±0 → flush 类（报个数）；(c) 其它一律失败；与旧 NPU 逐字节相同只表示无回退、不是 CPU 正确性通过，DONE 不得写成通过；写可达性；其它 flag / bd / decode 上同类切片按同一分类统计。",
+      "risk": "PM 的读法：这是把规格已有的端点类应用到新出现的一个 subnormal 输出类别，不是新增口径；(a)(b)(c) 的逐元素分类防止这个类别藏住别的误差。若用户认为 subnormal 输出被设备冲成 0 属于需要闸 / 收窄域的情形，那是域变化，只用户能定，PM 不提议。与 D-PM-48 (2) 一样，若用户认为口径已属改判据，PM 撤回。"
     }
   ],
   "gated_epics": [
@@ -963,7 +977,7 @@
       "wave": "W0",
       "soc": "a5",
       "priority": "P0",
-      "status": "assigned",
+      "status": "in_progress",
       "model": [],
       "kernel": [
         "gdn2_chunk_fwd"
@@ -994,9 +1008,9 @@
         "socs": [
           "a5"
         ],
-        "soc_details": "自述（APPLY 15:21Z）：A5 真机走 machine_specs 记的远端（Ascend950PR / CANN 9.2.0 / 含 ascend950 算子包），用卡前查 npu-smi 与 proc-mem、持锁、只用空闲且 Health OK 的卡；本地 910B3 只做 CPU 侧参考 / 校准 / 静态检查，不冒充 A5 数字。APPLY 没写 compiler timestamp 与 ascriptor / fla 修订，ASSIGN 要求 ACK 里补。机器与卡归 assignee 管理（D-PM-28）",
-        "ascriptor": "APPLY 未写具体修订（按 pin：library 90cfcdc / kernels b3b3f9c）；ACK 里补",
-        "fla": "APPLY 未写（按 pin e52dbc0e）；ACK 里补",
+        "soc_details": "自述（ACK 15:44Z）：A5 真机，在任务容器内执行；CANN 9.2.0（只读共享安装）、opp 含 ascend950（与 ascend910b、ascend910_93 并存，torch_npu 计算算子可用）、compiler timestamp 2026-05-09T12:45:09+08:00（clang 15.0.5，bisheng 与 ccec 同一份）、Python 3.12.14、torch 2.12.0+cu130、torch_npu 2.12.0、设备 Ascend950PR；与 BF-03 / BF-07 的机器环境不同。机器与卡归 assignee 管理（D-PM-28），结论只对其实际验证的这一套成立",
+        "ascriptor": "library 90cfcdc720bb…、kernels b3b3f9c16df7…（自述，取自 compatibility.json）",
+        "fla": "864a87f6ce5b…（v0.5.2-123-g864a87f6，自述）——与 GD2-01 / PK-02 / PK-03 的 pin e52dbc0e 不同，已要求对齐（见 reports）",
         "fork": "limjiunnbin/ascend_fla_dev",
         "session": "bf05-gdn2-bf16-a5-1",
         "note": "与 A2-09（session a2-09-bwd-1）的 session 值不同，符合 PROTOCOL §3.1 的并发条件；APPLY 如实说明 A2-09 还没 CLOSE 并请 PM 裁定「现在派还是等 CLOSE」，PM 裁定现在派（BF-05 不依赖 A2-09；用户 D-PM-35 后续 BF16 优先），并要求先推掉 A2-09 欠的那个只改 README 的提交。"
@@ -1019,6 +1033,10 @@
         {
           "at": "2026-09-20T15:31",
           "summary": "APPLY（15:21Z，自述，#104，session bf05-gdn2-bf16-a5-1）：读了 BF-05 规格（含 D-PM-37 追加与「多 batch」澄清）、通则、PROTOCOL、AGENTS §2/§3/§5/§6/§7、reserved_paths 与本 issue 的历史（15:07Z APPLY / 15:09Z WITHDRAW、主 session 排队 APPLY 已取消）；如实说明手上的 A2-09 已 accept、README 提交已推（头 e6a3a8a），剩余步骤在 PM / 用户，A2-09 未 CLOSE，请 PM 裁定现在派还是等 CLOSE；用户刚明确要求把 GDN-2 的 BF16 kernel 提到优先（自述）。计划（自述）：(1) 只读起点 GD2-01 的 FP32 单元与入口，公共域抄准（B=1、T=1..4096、H∈{1,16}、K=V=128、erase gate、w、FP32 initial_state），BF16 不扩域也不收窄域；(2) CPU 上用「BF16 输入舍入 + FP32 递推」模拟器标定 F，F 与预算（o、final_state 相对 L2 ≤ 1e-2 且 ≤ 3F）先写进 docs/research/gdn2_chunk_fwd_bf16.md 再动手；(3) 新建派生单元 kernels/projects/a5/gdn2_chunk_fwd_bf16/，FP32 单元源码不动；(4) BF16 与 FP32 两条路径的 host 转换都去掉，FP32 改前改后逐位相同单独证；(5) 真机：完整 workload 先跑，GD2-01 契约全集 + 奇偶 C + 门控跨度端点在 BF16 路径上重测（不沿用 FP32 的 1520.9），bd 间逐位相同、输入不被修改、NaN 预填；(6) host 算子审计两 dtype 各一遍、同卡三轮三明治不设门槛；(7) diff 对 reserved_paths 为空。上一任务教训（自述）：形参名避开 C++ 关键字、报 sim 通过前先 compile --backend cce、脱敏不用长数字串启发式并机械校验 JSON 可解析 / 无占位符、每份回执带源码身份、结论覆盖全部 case。PM 裁定：现在派——BF-05 只依赖 GD2-01（已完成）；两个 session 值都填了且不同，符合并发条件；用户 D-PM-35 要求后续 BF16 优先。分支 task/BF-05，24h。ASSIGN 里点明：校准先行并随第一个提交冻结预算；先推掉 A2-09 欠的只改 README 的提交（#112 15:06Z 回复的三处）；tests/test_gdn2_chunk_fwd.py 不在写集里，需要改先发 RISK write-set-expansion；证据机械检查（环境行、源码身份、JSON 可解析 / 无占位符、路径扫描、单 blob <5 MB）；ACK 里补 ascriptor / fla 修订与 A5 环境。"
+        },
+        {
+          "at": "2026-09-20T15:59",
+          "summary": "ACK（15:44Z，自述，#104，session bf05-gdn2-bf16-a5-1，分支 task/BF-05，距 ASSIGN 8 分钟）：读了 BF-05 / 通则 / PROTOCOL / AGENTS / reserved_paths 与 ASSIGN 六条硬要求，只读看了 GD2-01 单元与入口；A2-09 的 README 提交其实已推（头 6bd9c95，两条消息错开）。修订与环境（自述）：ascriptor library 90cfcdc / kernels b3b3f9c；fla 864a87f6（v0.5.2-123）；A5 = CANN 9.2.0、opp 含 ascend950、compiler timestamp 2026-05-09T12:45:09+08:00、Python 3.12.14、torch 2.12.0 / torch_npu 2.12.0、Ascend950PR。计划（自述，与 ASSIGN 一致）：第一个提交 = CPU「BF16 输入舍入 + FP32 递推」模拟器标定 F 与预算（o、final_state 对参考 A / B 各 ≤ min(1e-2, 3F)）写进 docs/research/gdn2_chunk_fwd_bf16.md 再写 kernel，之后不放宽；新建 kernels/projects/a5/gdn2_chunk_fwd_bf16/，FP32 单元零改动；域 = GD2-01（B=1、T=1..4096、H∈{1,16}、K=V=128），B≥2 显式报错；两条 dtype 路径的 host 转换都去掉、FP32 改前改后逐位相同单独证；真机完整 workload 先跑、契约全集 + 奇偶 C + 门控跨度端点在 BF16 上重测、bd 间逐位相同（一 bd 一进程）、host 算子审计两路各一遍；同卡三轮三明治不设门槛；tests/test_gdn2_chunk_fwd.py 不在写集，要改先 RISK write-set-expansion；证据机械检查（环境行、源码身份、JSON 可解析 / 无占位符、路径扫描、单 blob <5 MB）。24h 内报第一条 STATUS。PM 处理：计划与 ASSIGN 一致；状态 assigned → in_progress。一处要对齐——申领人的 fla 修订 864a87f6（v0.5.2-123）与 GD2-01 / PK-02 / PK-03 用的 pin e52dbc0e（0.6.0）不同，而验收里的参考 A 是「pin 版 GDN-2 naive」：已回复（非协议消息，#104）要求用 e52dbc0e 或先证明两版 GDN-2 naive 逐字节相同（给 SHA-256），并在第一个提交里写明参考所用的 fla 修订。环境（CANN 9.2.0 / compiler 2026-05-09T12:45:09+08:00）与 BF-03 / BF-07 不同，各自结论只对自己那一套成立。"
         }
       ],
       "result": null,
@@ -1420,6 +1438,10 @@
         {
           "at": "2026-09-20T15:45",
           "summary": "STATUS 更正（15:24Z，自述，#106）：对 15:19Z 里「chunk 近零切片实际与正确舍入逐位相同」的更正——原检查用 torch.equal，会忽略 +0 / −0，所以「逐位相同」不成立：与独立 / FLA CPU golden 的 BF16 正确舍入相比，原失败切片分别有 3991 / 3670 个零的符号位不同，两者都没有非零 BF16 元素；按数值 ULP 距离 +0 / −0 都是 0 步；今后同时记 bitwise=false 与符号差计数，不再称逐位相同，正在更正已发布字段。跨 block_dim 的逐位比较用的是真实字节 SHA（不用 torch.equal），普通网格六个 decode / fourchunk 的逐位结论不受影响。另核对到旧 decode 指标本身已用 FP64 累积、但分母 clamp_min(1e-30)；FP32 norm 下溢的问题来自 chunk 指标，文档与新回执会区分两者。PM 处理：认这条自我更正。D-PM-48 (2) 的判据本来就是「对 golden 正确舍入的数值 ULP ≤ 1」（不是逐位），+0 / −0 数值上 0 步，符号差按观测如实报，不需要另行裁定，也不改变该口径；PM 在 #106 回复里沿用的「逐位相同」措辞以更正为准。等已发布字段的更正提交。"
+        },
+        {
+          "at": "2026-09-20T15:59",
+          "summary": "RISK comparison-contract-boundary（15:41Z，自述，#106；PR #118 头 15:48Z 又更新为 1ed6a9a2，仍 draft、未 DONE）：boundary-v3 chunk bd4 第 394 例 nearzero_c2_g4_rbf16_vbf16_flags010（B1/C2/H1/HV4，q/k×1e-20，仅 gate flag）：新 gate prep 通过冻结预算，全局 o L2=2.949e-3、state=2.634e-3 通过；第二 chunk / head1 的实际 o 全 0，与实际旧 NPU 路径逐字节相同；两份 CPU FP32 golden 在该片的最大绝对值 1.14804698e-38 / 1.14804782e-38，非零值全部 < FP32 最小正规数 1.1754944e-38；每份 golden 对 BF16 正确舍入后有 955 个非零元素，实际零与正确舍入的最大距离 125 ULP、相对 L2=1；不是「整片正确舍入为 0、0 ULP」的案例，也不是放大 1-ULP prep 差的 decode 案例。私有原始 tensor 回执 SHA256 已记；失败 JSON、逐片指标与脱敏 trace 保留，完整证据随下一提交发布；现有 forward / backward / layout 源码未修改。申领人提议：保持失败，不扩大全片舍入零的定义、不放宽 0.05 / ULP 阈值、不新增范围闸；具体第一次 flush 的算子未定位，不据症状归因给某条指令；请明确「native 下溢行为单列资格」是否覆盖这个公开输出 subnormal 类别。进度（自述）：所有高 bd 叶子完成，100 输入 × 14 次 namespace / run 结果逐位一致；公开非有限可达性 96 点实测——A_log 89 / 100 的 chunk 非有限 gate 全被默认 155 检查拒绝（span 为 NaN），decode 放行，candidate 8 点 NaN、其余 40 有限，旧 NPU 14 NaN / 34 有限（A89/u=−87 candidate 有限而旧 NPU NaN，A89/u=−88 两者 NaN）；decode 独立边界分组（零 / threshold / beta 饱和）bd1 已 1152 例通过，其余 bd 继续；普通新旧指标对照已启动。任务未 DONE。PM 裁定（D-PM-50，已回复 #106，非协议消息）：这一类在已有的 native 下溢单列资格之内（规格 2026-09-20 澄清第 3 条 subnormal / 下溢端点类、D-PM-48 (1) 的第 (ii) 类），不需要新的用户决定；D-PM-48 (2) 的整片舍入零口径不扩到此类，保持失败、不放宽阈值。条件：该片逐元素分类——(a) golden 为 FP32 正规数 → 普通判据；(b) golden 为 FP32 subnormal 且 candidate 为 ±0 → flush 类（报个数）；(c) 其它一律失败；与旧 NPU 逐字节相同只表示无回退、不是 CPU 正确性通过，DONE 不得写成通过；写可达性；其它 flag / bd / decode 上同类切片按同一分类统计；不新增闸、不收窄域（要拦是域变化，只用户能定）。decode 不设门控是存量行为，本任务不改。"
         }
       ],
       "result": null,
@@ -1883,7 +1905,7 @@
       "wave": "W0",
       "soc": "a2",
       "priority": "P1",
-      "status": "review",
+      "status": "done",
       "model": [],
       "kernel": [
         "kda_bwd_stable"
@@ -1989,9 +2011,24 @@
         {
           "at": "2026-09-20T15:45",
           "summary": "STATUS（15:30Z，自述，头 6bd9c95，在 e6a3a8a 之上）：只动 README.md 一个文件（+20 −7），没重跑真机、没动 contract.json / evidence/，unit_source_sha256 仍 b4bb774d…。三处按 PM 15:06Z 回复改：(1) 机制换成实数——两处各是「恰好一个小元素差一个 BF16 ulp」（gentle_decay_bd1 的 qk_left：||ref||=1.796191e-3、指数 −19 的元素、1 ulp=2^-26、ulp/||ref||=8.2960e-6，实测 8.296e-6；grid_c2_hv4_bd1 的 t_beta：||ref||=2.857535e5、指数 8、1 ulp=2、6.999e-6，实测 7.000e-6），并写明判据分辨率 = 「有没有多翻一次」（gentle_decay 的 qk_left 中位数元素翻一次 1.66e-5、64% 的元素翻一次即超 1e-5；t_beta 只有 0.62%），固定种子下确定性、换种子 / 形状 / 卡可能越界；「求和顺序」保留为未确立；(2) 余量「≥95×」改「≥94×」；(3)「逐元素最大 58 ulp」写明只在 6 个 case 上测过。申领人自己承认机制说错了第二版（前一次样本选窄当全量，这一次把与缩放无关的量当成与量级有关）。PM 核对（NPU-free）：compare e6a3a8a…6bd9c95 = 1 个提交、只改 README.md（+20 −7）；README 里的数（||ref||、指数、2^-26、8.2960e-6 / 6.999e-6、1.66e-5、64% / 0.62%、N=16384 / 65536、94.7×）与 PM 自己在 CPU 参考张量上的复算逐项一致；README 隐私 0 命中。PR 整体：14 个提交、46 个文件（全在 kernels/projects/a2/kda_bwd_stable/** 内、0 删除、无二进制、最大文件 1.75 MB），14 条提交信息隐私扫描仅命中「hostname」一词（描述检查项，不是主机名）；base 0be2509，只新增文件，无冲突面；PR 仍是 draft（合入前需转 ready）。contract.json 的 reason 仍留旧措辞「宽两个数量级」（它在 unit digest 里，改一句要重跑 26 例；README 已写明并更正，留到下次因别的原因动契约时同改）。结论：技术判据全过，评审 accept 成立；A2 PR 合入要用户授权（A2-11 之前 A2 结论不算数，D-PM-33），已向用户请求 #119（头 6bd9c95）的合入授权；status in_progress → review。"
+        },
+        {
+          "at": "2026-09-20T15:59",
+          "summary": "合入（PR #119 → c2156f3，15:51Z；合入的是审过的头 6bd9c95，依 D-PM-49 用户明确授权「#119授权」；PR 原为 draft，先转 ready 再 `--match-head-commit` 合入；merge commit 的两个父提交是当时的 main f11a2ad 与 6bd9c95）：main 全量（NPU-free，env_main.sh）877 passed, 12 skipped, 5 warnings in 275.98s (0:04:35)——与预测一致（本 PR 只新增 kernels/projects/a2/kda_bwd_stable/** 46 个文件，不含 tests/ 下的测试，主机侧套件计数不变）。看板 done；kda_bwd_stable 的说明补记 a2 派生单元已合入（A2 数字只作观测）。"
         }
       ],
-      "result": null
+      "result": {
+        "commits": [
+          "6bd9c95",
+          "c2156f3"
+        ],
+        "evidence": [
+          "PR #119",
+          "kernels/projects/a2/kda_bwd_stable/evidence/",
+          "kernels/projects/a2/kda_bwd_stable/README.md"
+        ],
+        "numbers": "A2 上的观测（A2-11 之前不构成算子结论；申领人的 Ascend910B3 / CANN 9.0.0 真机，PM 无 A2 真机、只对原始回执复算）：九个 a2 反向 kernel（finalize_reduce / finalize_pre / finalize_post / inverse_epilogue / finalize_pair / inverse_mm / inverse_dainv / inverse_dakk_fused / scan_fused）+ bwd 单元；26 个契约 case（含 (C∈{1,2})×(HV∈{1,2,4})×(bd∈{1,2}) 网格、奇数 C=3、零初始 state、B=2）在最终源码上全部复跑，真机 26/26、reference 26/26、sim 26/26、pipesim 26/26；26×(6+33)=1014 项全 passed；六项梯度相对 L2（预算沿用 a5，一个字没动；PM 从 aclnn.json 原始回执复算）：dq 3.594e-3~3.829e-2（0.05）、dk 5.321e-3~1.115e-1（0.15）、dv 2.552e-3~3.887e-3（0.05）、dbeta 8.25e-4~7.456e-3（0.05）、dg 6.005e-3~1.776e-1（0.25）、dh0 2.552e-3~5.293e-3（0.05），最差占预算 77%（dq @ zero_initial_state）；block_dim 1 与 2 在 HV=4/C=2、C=3、B=2 三种形状上逐位相同；每份回执带源码身份（unit_source_sha256 b4bb774d…，运行前后各记一次）。已声明的限制：finalize_pair 四个积的 stage 判据（相对 L2 1e-5）是看到真机结果之后定的，分辨率 ≈ 一次 BF16 翻转（26 例里 2 处各是一个小元素差 1 ulp，sim / pipesim 为 0），固定种子下确定性通过；contract.json 的 reason 仍留旧措辞「宽两个数量级」（README 已更正）。gaps：a2-kda-bwd-pair-checkpoint-thin-margin（P2，A2 观察）。"
+      }
     },
     {
       "id": "A2-07",
@@ -4675,8 +4712,8 @@
         "id": "kda_bwd_stable",
         "family": "kda",
         "track": "agent",
-        "note_zh": "本仓派生单元，成对衰减锚点取中点；公开 wrapper 的 layout / dtype 转换与零填充已改走 kda_layout 单元（FMT-02 已合入），存量 host 算术例外（_scan_states、log2(eg)、dw 取负、只读校验）留 BF-07 / kernel 批次",
-        "note_en": "Fork of upstream, midpoint decay anchor; the public wrappers' layout / dtype conversion and zero fill now go through the kda_layout unit (FMT-02 merged); legacy host-arithmetic exceptions (_scan_states, log2(eg), dw negation, read-only checks) remain for BF-07 / the kernel batch",
+        "note_zh": "本仓派生单元，成对衰减锚点取中点；公开 wrapper 的 layout / dtype 转换与零填充已改走 kda_layout 单元（FMT-02 已合入），存量 host 算术例外（_scan_states、log2(eg)、dw 取负、只读校验）留 BF-07 / kernel 批次；a2 派生单元已合入（A2-09，kernels/projects/a2/kda_bwd_stable/，九个反向 kernel + bwd 单元，Ascend910B3 真机 26/26 只作观测，A2-11 之前不构成结论）",
+        "note_en": "Fork of upstream, midpoint decay anchor; the public wrappers' layout / dtype conversion and zero fill now go through the kda_layout unit (FMT-02 merged); legacy host-arithmetic exceptions (_scan_states, log2(eg), dw negation, read-only checks) remain for BF-07 / the kernel batch; a2 derived unit merged (A2-09, kernels/projects/a2/kda_bwd_stable/, nine backward kernels + the bwd unit; Ascend910B3 26/26 device cases are observations only until A2-11)",
         "dtype_status": {
           "bf16": "native@a5",
           "fp32": "none"
