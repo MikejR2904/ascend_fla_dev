@@ -37,13 +37,14 @@ The existing FP32 unit and its ordered arithmetic remain unchanged.
 
 Checkpoint/tape publication uses the original explicit MTE3-to-MTE2 event;
 Pipe.ALL retires each chunk before tape reuse. UB autosync protects each DMA/VF
-single slot. No Cube or mixed-pipeline overlap is introduced. Raw UB estimates
-are checkpoint 66112, reverse 133504, group reduction 2560 bytes, pending IR.
+single slot. No Cube or mixed-pipeline overlap is introduced. Lowered UB allocations
+are checkpoint 66112, reverse 133504, group reduction 2560 bytes. All three
+entries pass full lowering and event-balance checks and emit CCE source.
 
 ## Frozen numerical budget
 
-The formal ASSIGN5746479185 states 1e-2/3F; the task file still states
-2e-2/4F. This implementation adopts the stricter **min(1e-2,3F_g)** against
+The formal ASSIGN5746479185 and PM confirmation5746857760 freeze
+**min(1e-2,3F_g)** against
 each oracle, for every returned BF16-path gradient including FP32 dg/dbeta.
 F_g is relative L2 between that FP32 oracle gradient and its BF16 roundtrip.
 Each oracle supplies its own per-case floor. Zero F requires exact equality;
@@ -86,3 +87,22 @@ bytes, old/new FP32 bytes and actual public host-op audit for both dtypes.
 Same-card complete old FP32 public backward / new BF16 / old FP32 sandwich,
 T1024/4096, three rounds, 10 warmups and 50 synchronized samples per segment.
 No speed threshold; no CUDA/Triton, weights or model-validation claim.
+
+## Implementation validation
+
+The implementation preserves partial dq/dk in FP32 through the final group sum.
+Full lowering caught an initial authoring mismatch (BF16 temporary UB to FP32
+partial-gradient GM); the two temporary buffers were corrected before any
+hardware execution. The original failed source and lowering log are retained
+in ignored task scratch. A host regression now lowers all three typed stages.
+
+The focused public ABI, mixed-dtype rejection, independent-reference,
+zero-floor, negative-control and lowering suite passes 88 tests. Native
+acceptance and same-card timing remain pending; no model or CUDA/Triton result
+is used as device evidence.
+
+CPU-isolated repository suite: 763 passed, 9 skipped, 5 existing importorskip
+deprecation warnings (pytest8.3.2). Hardware tests run separately under the
+device lock; these skips are not device acceptance. The initial unisolated
+host invocation was interrupted after unrelated KDA device tests failed, and
+is retained in ignored scratch; no test, requirement or tolerance was relaxed.

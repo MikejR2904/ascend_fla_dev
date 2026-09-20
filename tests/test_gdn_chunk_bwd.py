@@ -33,18 +33,50 @@ def test_valid_modes(mode):
 
 
 @pytest.mark.parametrize('launcher', ['inprocess', 'aclnn', 'board'])
-@pytest.mark.parametrize('name', ['q', 'k', 'v', 'do', 'all'])
-def test_bf16_rejected_before_preparation(name, launcher, monkeypatch):
+@pytest.mark.parametrize('name', ['q', 'k', 'v', 'do'])
+def test_bf16_mixed_rejected_before_preparation(name, launcher, monkeypatch):
     values = valid()
-    for key in ('q', 'k', 'v', 'do') if name == 'all' else (name,):
-        values[key] = values[key].bfloat16()
-    monkeypatch.setattr(op, '_pipeline', lambda: pytest.fail('BF16 must reject before dispatch'))
+    values[name] = values[name].bfloat16()
+    monkeypatch.setattr(op, '_pipeline', lambda: pytest.fail('must reject before dispatch'))
+    monkeypatch.setattr(op, '_bf16_pipeline', lambda: pytest.fail('must reject before dispatch'))
     from torch.utils._python_dispatch import TorchDispatchMode
     class NoTensorOperation(TorchDispatchMode):
         def __torch_dispatch__(self, func, types, args=(), kwargs=None):
-            pytest.fail(f'BF16 rejection must precede tensor preparation: {func}')
-    with NoTensorOperation(), pytest.raises(ValueError, match='BF-02'):
+            pytest.fail(f'dtype rejection must precede tensor preparation: {func}')
+    with NoTensorOperation(), pytest.raises(ValueError, match='matching dtype'):
         op.chunk_gdn_bwd(**values, launcher=launcher)
+
+
+@pytest.mark.parametrize('launcher', ['inprocess', 'aclnn', 'board'])
+def test_matching_bf16_dispatch_abi(launcher, monkeypatch):
+    values = valid(torch.bfloat16)
+    if launcher == 'inprocess':
+        with pytest.raises(ValueError, match='one npu'):
+            op.chunk_gdn_bwd(**values, launcher=launcher)
+        return
+    from ascriptor import runtime
+    calls = []
+    class FakeExec:
+        def __init__(self, entry, **options):
+            self.entry = entry
+            assert options['launcher'] == launcher
+        def __call__(self, *args):
+            names = ['checkpoints', 'reverse', 'group_reduce']
+            stage = next(n for n in names if self.entry.name.endswith(n))
+            counts = dict(checkpoints=(4,2,5), reverse=(8,6,7), group_reduce=(2,2,4))
+            ni,no,ns = counts[stage]
+            assert len(args) == ni+no+ns
+            outputs = args[ni:ni+no]
+            calls.append((stage, [x.dtype for x in outputs], args[-ns:]))
+            return outputs
+    monkeypatch.setattr(runtime, 'OpExec', FakeExec)
+    monkeypatch.setattr(op, '_pipeline', lambda: pytest.fail('wrong FP32 dispatch'))
+    got = op.chunk_gdn_bwd(**values, launcher=launcher)
+    assert [x.shape for x in got] == [values[n].shape for n in ('q','k','v','g','beta')]
+    assert [x.dtype for x in got] == [torch.bfloat16]*3+[torch.float32]*2
+    assert [c[0] for c in calls] == ['checkpoints','reverse','group_reduce']
+    assert calls[1][1] == [torch.float32]*3+[torch.bfloat16]+[torch.float32]*2
+    assert calls[1][2][-2:] == (1,1)
 
 
 @pytest.mark.parametrize('opts',[

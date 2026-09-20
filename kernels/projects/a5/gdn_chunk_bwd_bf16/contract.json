@@ -1,0 +1,2262 @@
+{
+  "schema": "ascriptor.kernel-unit/1",
+  "kind": "project",
+  "id": "a5.gdn_chunk_bwd_bf16",
+  "description": "Native BF16 grouped GDN backward with FP32 checkpoint, replay and group accumulation",
+  "dependencies": {
+    "python": ">=3.10",
+    "ascriptor": "==0.1.0",
+    "host": [
+      "torch>=2.9.0",
+      "numpy"
+    ]
+  },
+  "inputs": {
+    "q": {
+      "dtype": "bfloat16",
+      "shape": [
+        "B",
+        "T",
+        "H",
+        128
+      ]
+    },
+    "k": {
+      "dtype": "bfloat16",
+      "shape": [
+        "B",
+        "T",
+        "H",
+        128
+      ]
+    },
+    "v": {
+      "dtype": "bfloat16",
+      "shape": [
+        "B",
+        "T",
+        "HV",
+        128
+      ]
+    },
+    "g": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "T",
+        "HV"
+      ]
+    },
+    "beta": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "T",
+        "HV"
+      ]
+    },
+    "do": {
+      "dtype": "bfloat16",
+      "shape": [
+        "B",
+        "T",
+        "HV",
+        128
+      ]
+    },
+    "dht": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "HV",
+        128,
+        128
+      ]
+    }
+  },
+  "outputs": {
+    "dq": {
+      "dtype": "bfloat16",
+      "shape": [
+        "B",
+        "T",
+        "H",
+        128
+      ]
+    },
+    "dk": {
+      "dtype": "bfloat16",
+      "shape": [
+        "B",
+        "T",
+        "H",
+        128
+      ]
+    },
+    "dv": {
+      "dtype": "bfloat16",
+      "shape": [
+        "B",
+        "T",
+        "HV",
+        128
+      ]
+    },
+    "dg": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "T",
+        "HV"
+      ]
+    },
+    "dbeta": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "T",
+        "HV"
+      ]
+    }
+  },
+  "stages": {
+    "dq": {
+      "dtype": "bfloat16",
+      "shape": [
+        "B",
+        "T",
+        "H",
+        128
+      ]
+    },
+    "dk": {
+      "dtype": "bfloat16",
+      "shape": [
+        "B",
+        "T",
+        "H",
+        128
+      ]
+    },
+    "dv": {
+      "dtype": "bfloat16",
+      "shape": [
+        "B",
+        "T",
+        "HV",
+        128
+      ]
+    },
+    "dg": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "T",
+        "HV"
+      ]
+    },
+    "dbeta": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "T",
+        "HV"
+      ]
+    },
+    "checkpoints": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "N",
+        "HV",
+        128,
+        128
+      ]
+    },
+    "final_state": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "HV",
+        128,
+        128
+      ]
+    },
+    "tape": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "HV",
+        64,
+        128,
+        128
+      ]
+    },
+    "dq_parts": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "T",
+        "HV",
+        128
+      ]
+    },
+    "dk_parts": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "T",
+        "HV",
+        128
+      ]
+    }
+  },
+  "cases": [
+    {
+      "id": "grid_r1_c1_do_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 64,
+        "H": 1,
+        "HV": 1,
+        "kind": "random",
+        "mode": "do",
+        "N": 1
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "grid_r1_c1_dht_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 64,
+        "H": 1,
+        "HV": 1,
+        "kind": "random",
+        "mode": "dht",
+        "N": 1
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "grid_r1_c1_both_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 64,
+        "H": 1,
+        "HV": 1,
+        "kind": "random",
+        "mode": "both",
+        "N": 1
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "grid_r2_c1_do_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 64,
+        "H": 1,
+        "HV": 2,
+        "kind": "random",
+        "mode": "do",
+        "N": 1
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "grid_r2_c1_dht_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 64,
+        "H": 1,
+        "HV": 2,
+        "kind": "random",
+        "mode": "dht",
+        "N": 1
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "grid_r2_c1_both_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 64,
+        "H": 1,
+        "HV": 2,
+        "kind": "random",
+        "mode": "both",
+        "N": 1
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "grid_r4_c1_do_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 64,
+        "H": 1,
+        "HV": 4,
+        "kind": "random",
+        "mode": "do",
+        "N": 1
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "grid_r4_c1_dht_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 64,
+        "H": 1,
+        "HV": 4,
+        "kind": "random",
+        "mode": "dht",
+        "N": 1
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "grid_r4_c1_both_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 64,
+        "H": 1,
+        "HV": 4,
+        "kind": "random",
+        "mode": "both",
+        "N": 1
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "grid_r8_c1_do_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 64,
+        "H": 1,
+        "HV": 8,
+        "kind": "random",
+        "mode": "do",
+        "N": 1
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "grid_r8_c1_dht_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 64,
+        "H": 1,
+        "HV": 8,
+        "kind": "random",
+        "mode": "dht",
+        "N": 1
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "grid_r8_c1_both_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 64,
+        "H": 1,
+        "HV": 8,
+        "kind": "random",
+        "mode": "both",
+        "N": 1
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "grid_r1_c2_do_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 1,
+        "kind": "random",
+        "mode": "do",
+        "N": 2
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "grid_r1_c2_dht_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 1,
+        "kind": "random",
+        "mode": "dht",
+        "N": 2
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "grid_r1_c2_both_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 1,
+        "kind": "random",
+        "mode": "both",
+        "N": 2
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "grid_r2_c2_do_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 2,
+        "kind": "random",
+        "mode": "do",
+        "N": 2
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "grid_r2_c2_dht_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 2,
+        "kind": "random",
+        "mode": "dht",
+        "N": 2
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "grid_r2_c2_both_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 2,
+        "kind": "random",
+        "mode": "both",
+        "N": 2
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "grid_r4_c2_do_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 4,
+        "kind": "random",
+        "mode": "do",
+        "N": 2
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "grid_r4_c2_dht_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 4,
+        "kind": "random",
+        "mode": "dht",
+        "N": 2
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "grid_r4_c2_both_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 4,
+        "kind": "random",
+        "mode": "both",
+        "N": 2
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "grid_r8_c2_do_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 8,
+        "kind": "random",
+        "mode": "do",
+        "N": 2
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "grid_r8_c2_dht_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 8,
+        "kind": "random",
+        "mode": "dht",
+        "N": 2
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "grid_r8_c2_both_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 8,
+        "kind": "random",
+        "mode": "both",
+        "N": 2
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "grid_r1_c3_do_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 1,
+        "HV": 1,
+        "kind": "random",
+        "mode": "do",
+        "N": 3
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "grid_r1_c3_dht_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 1,
+        "HV": 1,
+        "kind": "random",
+        "mode": "dht",
+        "N": 3
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "grid_r1_c3_both_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 1,
+        "HV": 1,
+        "kind": "random",
+        "mode": "both",
+        "N": 3
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "grid_r2_c3_do_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 1,
+        "HV": 2,
+        "kind": "random",
+        "mode": "do",
+        "N": 3
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "grid_r2_c3_dht_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 1,
+        "HV": 2,
+        "kind": "random",
+        "mode": "dht",
+        "N": 3
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "grid_r2_c3_both_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 1,
+        "HV": 2,
+        "kind": "random",
+        "mode": "both",
+        "N": 3
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "grid_r4_c3_do_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 1,
+        "HV": 4,
+        "kind": "random",
+        "mode": "do",
+        "N": 3
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "grid_r4_c3_dht_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 1,
+        "HV": 4,
+        "kind": "random",
+        "mode": "dht",
+        "N": 3
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "grid_r4_c3_both_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 1,
+        "HV": 4,
+        "kind": "random",
+        "mode": "both",
+        "N": 3
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "grid_r8_c3_do_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 1,
+        "HV": 8,
+        "kind": "random",
+        "mode": "do",
+        "N": 3
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "grid_r8_c3_dht_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 1,
+        "HV": 8,
+        "kind": "random",
+        "mode": "dht",
+        "N": 3
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "grid_r8_c3_both_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 1,
+        "HV": 8,
+        "kind": "random",
+        "mode": "both",
+        "N": 3
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "weak_do_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 2,
+        "T": 192,
+        "H": 2,
+        "HV": 8,
+        "kind": "weak",
+        "mode": "do",
+        "N": 3
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "weak_dht_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 2,
+        "T": 192,
+        "H": 2,
+        "HV": 8,
+        "kind": "weak",
+        "mode": "dht",
+        "N": 3
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "weak_both_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 2,
+        "T": 192,
+        "H": 2,
+        "HV": 8,
+        "kind": "weak",
+        "mode": "both",
+        "N": 3
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "zero_gate_do_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 4,
+        "kind": "zero_gate",
+        "mode": "do",
+        "N": 2
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "zero_gate_dht_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 4,
+        "kind": "zero_gate",
+        "mode": "dht",
+        "N": 2
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "zero_gate_both_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 4,
+        "kind": "zero_gate",
+        "mode": "both",
+        "N": 2
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "beta_zero_do_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 4,
+        "kind": "beta_zero",
+        "mode": "do",
+        "N": 2
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "beta_zero_dht_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 4,
+        "kind": "beta_zero",
+        "mode": "dht",
+        "N": 2
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "beta_zero_both_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 4,
+        "kind": "beta_zero",
+        "mode": "both",
+        "N": 2
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "beta_one_do_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 4,
+        "kind": "beta_one",
+        "mode": "do",
+        "N": 2
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "beta_one_dht_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 4,
+        "kind": "beta_one",
+        "mode": "dht",
+        "N": 2
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "beta_one_both_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 4,
+        "kind": "beta_one",
+        "mode": "both",
+        "N": 2
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "underflow_do_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 4,
+        "kind": "underflow",
+        "mode": "do",
+        "N": 2
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "underflow_dht_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 4,
+        "kind": "underflow",
+        "mode": "dht",
+        "N": 2
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "underflow_both_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 4,
+        "kind": "underflow",
+        "mode": "both",
+        "N": 2
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "spike_do_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 4,
+        "kind": "spike",
+        "mode": "do",
+        "N": 2
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "spike_dht_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 4,
+        "kind": "spike",
+        "mode": "dht",
+        "N": 2
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "spike_both_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 4,
+        "kind": "spike",
+        "mode": "both",
+        "N": 2
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "zero_qk_do_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 4,
+        "kind": "zero_qk",
+        "mode": "do",
+        "N": 2
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "zero_qk_dht_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 4,
+        "kind": "zero_qk",
+        "mode": "dht",
+        "N": 2
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "zero_qk_both_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 4,
+        "kind": "zero_qk",
+        "mode": "both",
+        "N": 2
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "full_r1_do_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 4096,
+        "H": 8,
+        "HV": 8,
+        "kind": "random",
+        "mode": "do",
+        "N": 64
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "full_r1_dht_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 4096,
+        "H": 8,
+        "HV": 8,
+        "kind": "random",
+        "mode": "dht",
+        "N": 64
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "full_r1_both_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 4096,
+        "H": 8,
+        "HV": 8,
+        "kind": "random",
+        "mode": "both",
+        "N": 64
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "full_r2_do_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 4096,
+        "H": 4,
+        "HV": 8,
+        "kind": "random",
+        "mode": "do",
+        "N": 64
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "full_r2_dht_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 4096,
+        "H": 4,
+        "HV": 8,
+        "kind": "random",
+        "mode": "dht",
+        "N": 64
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "full_r2_both_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 4096,
+        "H": 4,
+        "HV": 8,
+        "kind": "random",
+        "mode": "both",
+        "N": 64
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "full_r4_do_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 4096,
+        "H": 2,
+        "HV": 8,
+        "kind": "random",
+        "mode": "do",
+        "N": 64
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "full_r4_dht_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 4096,
+        "H": 2,
+        "HV": 8,
+        "kind": "random",
+        "mode": "dht",
+        "N": 64
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "full_r4_both_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 4096,
+        "H": 2,
+        "HV": 8,
+        "kind": "random",
+        "mode": "both",
+        "N": 64
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "full_r8_do_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 4096,
+        "H": 1,
+        "HV": 8,
+        "kind": "random",
+        "mode": "do",
+        "N": 64
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "full_r8_dht_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 4096,
+        "H": 1,
+        "HV": 8,
+        "kind": "random",
+        "mode": "dht",
+        "N": 64
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "full_r8_both_bd1",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 4096,
+        "H": 1,
+        "HV": 8,
+        "kind": "random",
+        "mode": "both",
+        "N": 64
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "grid_r1_c1_do_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 64,
+        "H": 1,
+        "HV": 1,
+        "kind": "random",
+        "mode": "do",
+        "N": 1
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "grid_r1_c1_dht_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 64,
+        "H": 1,
+        "HV": 1,
+        "kind": "random",
+        "mode": "dht",
+        "N": 1
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "grid_r1_c1_both_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 64,
+        "H": 1,
+        "HV": 1,
+        "kind": "random",
+        "mode": "both",
+        "N": 1
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "grid_r2_c1_do_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 64,
+        "H": 1,
+        "HV": 2,
+        "kind": "random",
+        "mode": "do",
+        "N": 1
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "grid_r2_c1_dht_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 64,
+        "H": 1,
+        "HV": 2,
+        "kind": "random",
+        "mode": "dht",
+        "N": 1
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "grid_r2_c1_both_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 64,
+        "H": 1,
+        "HV": 2,
+        "kind": "random",
+        "mode": "both",
+        "N": 1
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "grid_r4_c1_do_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 64,
+        "H": 1,
+        "HV": 4,
+        "kind": "random",
+        "mode": "do",
+        "N": 1
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "grid_r4_c1_dht_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 64,
+        "H": 1,
+        "HV": 4,
+        "kind": "random",
+        "mode": "dht",
+        "N": 1
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "grid_r4_c1_both_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 64,
+        "H": 1,
+        "HV": 4,
+        "kind": "random",
+        "mode": "both",
+        "N": 1
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "grid_r8_c1_do_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 64,
+        "H": 1,
+        "HV": 8,
+        "kind": "random",
+        "mode": "do",
+        "N": 1
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "grid_r8_c1_dht_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 64,
+        "H": 1,
+        "HV": 8,
+        "kind": "random",
+        "mode": "dht",
+        "N": 1
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "grid_r8_c1_both_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 64,
+        "H": 1,
+        "HV": 8,
+        "kind": "random",
+        "mode": "both",
+        "N": 1
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "grid_r1_c2_do_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 1,
+        "kind": "random",
+        "mode": "do",
+        "N": 2
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "grid_r1_c2_dht_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 1,
+        "kind": "random",
+        "mode": "dht",
+        "N": 2
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "grid_r1_c2_both_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 1,
+        "kind": "random",
+        "mode": "both",
+        "N": 2
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "grid_r2_c2_do_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 2,
+        "kind": "random",
+        "mode": "do",
+        "N": 2
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "grid_r2_c2_dht_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 2,
+        "kind": "random",
+        "mode": "dht",
+        "N": 2
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "grid_r2_c2_both_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 2,
+        "kind": "random",
+        "mode": "both",
+        "N": 2
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "grid_r4_c2_do_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 4,
+        "kind": "random",
+        "mode": "do",
+        "N": 2
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "grid_r4_c2_dht_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 4,
+        "kind": "random",
+        "mode": "dht",
+        "N": 2
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "grid_r4_c2_both_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 4,
+        "kind": "random",
+        "mode": "both",
+        "N": 2
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "grid_r8_c2_do_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 8,
+        "kind": "random",
+        "mode": "do",
+        "N": 2
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "grid_r8_c2_dht_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 8,
+        "kind": "random",
+        "mode": "dht",
+        "N": 2
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "grid_r8_c2_both_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 8,
+        "kind": "random",
+        "mode": "both",
+        "N": 2
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "grid_r1_c3_do_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 1,
+        "HV": 1,
+        "kind": "random",
+        "mode": "do",
+        "N": 3
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "grid_r1_c3_dht_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 1,
+        "HV": 1,
+        "kind": "random",
+        "mode": "dht",
+        "N": 3
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "grid_r1_c3_both_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 1,
+        "HV": 1,
+        "kind": "random",
+        "mode": "both",
+        "N": 3
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "grid_r2_c3_do_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 1,
+        "HV": 2,
+        "kind": "random",
+        "mode": "do",
+        "N": 3
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "grid_r2_c3_dht_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 1,
+        "HV": 2,
+        "kind": "random",
+        "mode": "dht",
+        "N": 3
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "grid_r2_c3_both_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 1,
+        "HV": 2,
+        "kind": "random",
+        "mode": "both",
+        "N": 3
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "grid_r4_c3_do_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 1,
+        "HV": 4,
+        "kind": "random",
+        "mode": "do",
+        "N": 3
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "grid_r4_c3_dht_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 1,
+        "HV": 4,
+        "kind": "random",
+        "mode": "dht",
+        "N": 3
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "grid_r4_c3_both_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 1,
+        "HV": 4,
+        "kind": "random",
+        "mode": "both",
+        "N": 3
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "grid_r8_c3_do_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 1,
+        "HV": 8,
+        "kind": "random",
+        "mode": "do",
+        "N": 3
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "grid_r8_c3_dht_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 1,
+        "HV": 8,
+        "kind": "random",
+        "mode": "dht",
+        "N": 3
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "grid_r8_c3_both_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 1,
+        "HV": 8,
+        "kind": "random",
+        "mode": "both",
+        "N": 3
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "weak_do_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 2,
+        "T": 192,
+        "H": 2,
+        "HV": 8,
+        "kind": "weak",
+        "mode": "do",
+        "N": 3
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "weak_dht_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 2,
+        "T": 192,
+        "H": 2,
+        "HV": 8,
+        "kind": "weak",
+        "mode": "dht",
+        "N": 3
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "weak_both_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 2,
+        "T": 192,
+        "H": 2,
+        "HV": 8,
+        "kind": "weak",
+        "mode": "both",
+        "N": 3
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "zero_gate_do_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 4,
+        "kind": "zero_gate",
+        "mode": "do",
+        "N": 2
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "zero_gate_dht_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 4,
+        "kind": "zero_gate",
+        "mode": "dht",
+        "N": 2
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "zero_gate_both_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 4,
+        "kind": "zero_gate",
+        "mode": "both",
+        "N": 2
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "beta_zero_do_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 4,
+        "kind": "beta_zero",
+        "mode": "do",
+        "N": 2
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "beta_zero_dht_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 4,
+        "kind": "beta_zero",
+        "mode": "dht",
+        "N": 2
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "beta_zero_both_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 4,
+        "kind": "beta_zero",
+        "mode": "both",
+        "N": 2
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "beta_one_do_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 4,
+        "kind": "beta_one",
+        "mode": "do",
+        "N": 2
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "beta_one_dht_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 4,
+        "kind": "beta_one",
+        "mode": "dht",
+        "N": 2
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "beta_one_both_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 4,
+        "kind": "beta_one",
+        "mode": "both",
+        "N": 2
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "underflow_do_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 4,
+        "kind": "underflow",
+        "mode": "do",
+        "N": 2
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "underflow_dht_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 4,
+        "kind": "underflow",
+        "mode": "dht",
+        "N": 2
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "underflow_both_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 4,
+        "kind": "underflow",
+        "mode": "both",
+        "N": 2
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "spike_do_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 4,
+        "kind": "spike",
+        "mode": "do",
+        "N": 2
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "spike_dht_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 4,
+        "kind": "spike",
+        "mode": "dht",
+        "N": 2
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "spike_both_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 4,
+        "kind": "spike",
+        "mode": "both",
+        "N": 2
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "zero_qk_do_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 4,
+        "kind": "zero_qk",
+        "mode": "do",
+        "N": 2
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "zero_qk_dht_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 4,
+        "kind": "zero_qk",
+        "mode": "dht",
+        "N": 2
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "zero_qk_both_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 4,
+        "kind": "zero_qk",
+        "mode": "both",
+        "N": 2
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "full_r1_do_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 4096,
+        "H": 8,
+        "HV": 8,
+        "kind": "random",
+        "mode": "do",
+        "N": 64
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "full_r1_dht_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 4096,
+        "H": 8,
+        "HV": 8,
+        "kind": "random",
+        "mode": "dht",
+        "N": 64
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "full_r1_both_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 4096,
+        "H": 8,
+        "HV": 8,
+        "kind": "random",
+        "mode": "both",
+        "N": 64
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "full_r2_do_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 4096,
+        "H": 4,
+        "HV": 8,
+        "kind": "random",
+        "mode": "do",
+        "N": 64
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "full_r2_dht_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 4096,
+        "H": 4,
+        "HV": 8,
+        "kind": "random",
+        "mode": "dht",
+        "N": 64
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "full_r2_both_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 4096,
+        "H": 4,
+        "HV": 8,
+        "kind": "random",
+        "mode": "both",
+        "N": 64
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "full_r4_do_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 4096,
+        "H": 2,
+        "HV": 8,
+        "kind": "random",
+        "mode": "do",
+        "N": 64
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "full_r4_dht_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 4096,
+        "H": 2,
+        "HV": 8,
+        "kind": "random",
+        "mode": "dht",
+        "N": 64
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "full_r4_both_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 4096,
+        "H": 2,
+        "HV": 8,
+        "kind": "random",
+        "mode": "both",
+        "N": 64
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "full_r8_do_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 4096,
+        "H": 1,
+        "HV": 8,
+        "kind": "random",
+        "mode": "do",
+        "N": 64
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "full_r8_dht_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 4096,
+        "H": 1,
+        "HV": 8,
+        "kind": "random",
+        "mode": "dht",
+        "N": 64
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "full_r8_both_bd2",
+      "seed": 91000,
+      "parameters": {
+        "B": 1,
+        "T": 4096,
+        "H": 1,
+        "HV": 8,
+        "kind": "random",
+        "mode": "both",
+        "N": 64
+      },
+      "block_dim": 2
+    }
+  ],
+  "comparison": {
+    "default": {
+      "mode": "allclose",
+      "atol": 2e-05,
+      "rtol": 0.0002,
+      "max_relative_l2": 0.0001,
+      "reason": "Fixed per-gradient/task intermediate FP32 relative L2 budget; elementwise bound is supplemental."
+    },
+    "outputs": {
+      "dq": {
+        "reference_dtype": "float32",
+        "rtol": 0.01,
+        "atol": 2e-05,
+        "max_relative_l2": 0.01,
+        "reason": "FP32 oracle target; execute/native harness also enforce per-gradient min(1e-2,3F), zero floor exact."
+      },
+      "dk": {
+        "reference_dtype": "float32",
+        "rtol": 0.01,
+        "atol": 2e-05,
+        "max_relative_l2": 0.01,
+        "reason": "FP32 oracle target; execute/native harness also enforce per-gradient min(1e-2,3F), zero floor exact."
+      },
+      "dv": {
+        "reference_dtype": "float32",
+        "rtol": 0.01,
+        "atol": 2e-05,
+        "max_relative_l2": 0.01,
+        "reason": "FP32 oracle target; execute/native harness also enforce per-gradient min(1e-2,3F), zero floor exact."
+      }
+    },
+    "stage_outputs": {
+      "dq": {
+        "reference_dtype": "float32",
+        "rtol": 0.01,
+        "atol": 2e-05,
+        "max_relative_l2": 0.01,
+        "reason": "FP32 oracle target; execute/native harness also enforce per-gradient min(1e-2,3F), zero floor exact."
+      },
+      "dk": {
+        "reference_dtype": "float32",
+        "rtol": 0.01,
+        "atol": 2e-05,
+        "max_relative_l2": 0.01,
+        "reason": "FP32 oracle target; execute/native harness also enforce per-gradient min(1e-2,3F), zero floor exact."
+      },
+      "dv": {
+        "reference_dtype": "float32",
+        "rtol": 0.01,
+        "atol": 2e-05,
+        "max_relative_l2": 0.01,
+        "reason": "FP32 oracle target; execute/native harness also enforce per-gradient min(1e-2,3F), zero floor exact."
+      }
+    }
+  },
+  "profile": {},
+  "support": [
+    {
+      "device": "a5",
+      "backend": "cce",
+      "stage": "reference",
+      "status": "untested"
+    },
+    {
+      "device": "a5",
+      "backend": "cce",
+      "stage": "emit",
+      "status": "untested"
+    },
+    {
+      "device": "a5",
+      "backend": "cce",
+      "stage": "compile",
+      "status": "untested"
+    },
+    {
+      "device": "a5",
+      "backend": "cce",
+      "stage": "board",
+      "status": "untested"
+    }
+  ],
+  "domain": {
+    "B": "positive",
+    "T": "multiple of64 through4096",
+    "H": "positive",
+    "HV": "positive multiple ofH",
+    "K": 128,
+    "V": 128,
+    "block_dim": [
+      1,
+      2
+    ],
+    "scale": "128**-.5",
+    "normalization": "none",
+    "initial_state": "None only",
+    "public_dtype": "Matching BF16 or FP32 q/k/v/do; dq/dk/dv match input; all other public data FP32. Canonical unit selects BF16.",
+    "gates": "finite g<=0,beta in[0,1]"
+  },
+  "workspace": {
+    "checkpoints": "FP32 chunk-start states",
+    "tape": "FP32 64-state per-value-head replay tape; last first-chunk contents returned for stage validation",
+    "ownership": "unique perB/HV recurrence; deterministic final perB/T/H sum"
+  },
+  "saved_state": {
+    "training": "Standalone explicit first derivative; no autograd connection and no dh0",
+    "precision": "BF16 operands widen in VF; FP32 checkpoint/tape/adjoint and grouped partials; final dq/dk/dv RNE to BF16. No state is exported for another unit."
+  },
+  "provenance": {
+    "task": "BF-02, issue101",
+    "formula": "Standalone derivative of pinned naive; source derives from unchanged GDA-03, with only BF16 storage boundaries and kernel cotangent initialization.",
+    "library_pin": "90cfcdc720bbcd66e8bd4361c4dd4fbc1a2a57b5",
+    "kernels_pin": "b3b3f9c16df7c4626ed3c081032a1be5a753d0b1"
+  }
+}

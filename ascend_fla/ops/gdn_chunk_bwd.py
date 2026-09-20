@@ -24,11 +24,30 @@ def _pipeline():
     return import_module(name + '.pipeline')
 
 
+@functools.lru_cache(maxsize=1)
+def _bf16_pipeline():
+    path = Path(__file__).resolve().parents[2] / 'kernels/projects/a5/gdn_chunk_bwd_bf16/kernels'
+    name = '_afla_gdn_chunk_bwd_bf16_kernels'
+    spec = importlib.util.spec_from_file_location(name, path / '__init__.py', submodule_search_locations=[str(path)])
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[name] = module
+    spec.loader.exec_module(module)
+    from importlib import import_module
+    return import_module(name + '.pipeline')
+
+
 @functools.lru_cache(maxsize=2)
 def _compiled(block_dim):
     from ..runtime.compile import compile_kernel
     return tuple(compile_kernel(e, device='a5', block_dim=block_dim, backend='cce')
                  for e in _pipeline().entries())
+
+
+@functools.lru_cache(maxsize=2)
+def _bf16_compiled(block_dim):
+    from ..runtime.compile import compile_kernel
+    return tuple(compile_kernel(e, device='a5', block_dim=block_dim, backend='cce')
+                 for e in _bf16_pipeline().entries())
 
 
 def _options(device, block_dim):
@@ -40,6 +59,7 @@ def prepare(*, device='a5', block_dim=2):
     """Compile every backward stage before the first CANN operator resolution."""
     _options(device, block_dim)
     _compiled(block_dim)
+    _bf16_compiled(block_dim)
 
 
 def _validate(q, k, v, g, beta, do, dht, *, initial_state=None, scale=SCALE,
@@ -68,11 +88,8 @@ def _validate(q, k, v, g, beta, do, dht, *, initial_state=None, scale=SCALE,
     HV = v.shape[2]
     if HV < 1 or HV % H:
         raise ValueError('HV must be a positive multiple of H')
-    for name, x in dict(q=q, k=k, v=v, do=do).items():
-        if isinstance(x, torch.Tensor) and x.dtype == torch.bfloat16:
-            raise ValueError(f'{name}: BF16 backward requires BF-02; GDA-03 supports FP32 only')
-    if q.dtype != torch.float32:
-        raise ValueError('q/k/v require float32')
+    if q.dtype not in (torch.float32, torch.bfloat16):
+        raise ValueError('q/k/v/do require matching float32 or bfloat16 dtype')
     if do is None and dht is None:
         raise ValueError('at least one of do/dht is required')
     if do is not None:
@@ -87,13 +104,17 @@ def _validate(q, k, v, g, beta, do, dht, *, initial_state=None, scale=SCALE,
             raise ValueError(f'{name} requires shape {tuple(expected[name])}')
         dtype = torch.float32 if name in ('g', 'beta', 'dht') else q.dtype
         if x.dtype != dtype:
-            raise ValueError(f'{name} requires {dtype}')
+            raise ValueError(f'{name} requires {dtype}; q/k/v/do must have matching dtype')
+    # Validate metadata for every input before any diagnostic tensor operation.
+    for name, x in tensors.items():
         if x.device != q.device or x.device.type != where:
             raise ValueError(f'{launcher} requires all tensors on one {where} device')
         if not x.is_contiguous():
             raise ValueError(f'{name} must be contiguous')
-        if where == 'cpu' and not bool(torch.isfinite(x).all()):
-            raise ValueError(f'{name} must be finite')
+    if where == 'cpu':
+        for name, x in tensors.items():
+            if not bool(torch.isfinite(x).all()):
+                raise ValueError(f'{name} must be finite')
     if where == 'cpu' and (bool((g > 0).any()) or bool(((beta < 0) | (beta > 1)).any())):
         raise ValueError('g<=0 and beta in [0,1] required')
 
@@ -106,8 +127,9 @@ def chunk_gdn_bwd(q, k, v, g, beta, do=None, dht=None, *, initial_state=None,
                   out_dir=None, timeout=600):
     """Return (dq, dk, dv, dg, dbeta) for <do,o> + <dht,final_state>.
 
-    q/k gradients sum consecutive value-head contributions. All inputs,
-    cotangents, internal math and returned gradients are FP32. BF16 requires BF-02.
+    q/k gradients sum consecutive value-head contributions in FP32. q/k/v/do
+    share FP32 or BF16 dtype; dq/dk/dv use that dtype, directly written by the
+    kernel. Gates, dht, dg/dbeta and internal math remain FP32.
     At least one cotangent is required; an absent cotangent contributes zero.
     Finite inputs/cotangents, g<=0, beta in [0,1] are NPU caller preconditions,
     checked for explicit CPU launchers. Zero initial state only, no dh0.
@@ -118,12 +140,19 @@ def chunk_gdn_bwd(q, k, v, g, beta, do=None, dht=None, *, initial_state=None,
               cu_seqlens=cu_seqlens,cp_context=cp_context,
               use_qk_l2norm_in_kernel=use_qk_l2norm_in_kernel,
               device=device,block_dim=block_dim,launcher=launcher)
-    inputs = dict(q=q,k=k,v=v,g=g,beta=beta,
-                  do=torch.zeros_like(v) if do is None else do,
-                  dht=torch.zeros(q.shape[0],v.shape[2],128,128,dtype=torch.float32,device=q.device)
-                  if dht is None else dht)
+    if q.dtype == torch.bfloat16:
+        pipeline = _bf16_pipeline()
+        inputs = dict(q=q,k=k,v=v,g=g,beta=beta,do=do,dht=dht)
+    else:
+        pipeline = _pipeline()
+        inputs = dict(q=q,k=k,v=v,g=g,beta=beta,
+                      do=torch.zeros_like(v) if do is None else do,
+                      dht=torch.zeros(q.shape[0],v.shape[2],128,128,dtype=torch.float32,device=q.device)
+                      if dht is None else dht)
     if launcher == 'inprocess':
-        compiled = dict(zip((e.name for e in _pipeline().entries()),_compiled(block_dim)))
+        prepare(device=device, block_dim=block_dim)
+        artifacts = _bf16_compiled(block_dim) if q.dtype == torch.bfloat16 else _compiled(block_dim)
+        compiled = dict(zip((e.name for e in pipeline.entries()), artifacts))
         def launch(entry, sources, outputs, scalars):
             op = compiled[entry.name]
             op(sources,{n:scalars[n] for n in op.scalar_names},outputs)
@@ -136,5 +165,5 @@ def chunk_gdn_bwd(q, k, v, g, beta, do=None, dht=None, *, initial_state=None,
                         board=board,out_dir=root,timeout=timeout)
             result = op(*(tuple(sources.values())+tuple(outputs.values())+tuple(scalars.values())))
             return dict(zip(outputs,(result,) if len(outputs)==1 else result))
-    result = _pipeline().run(inputs,launch)
+    result = pipeline.run(inputs,launch)
     return tuple(result[name] for name in ('dq', 'dk', 'dv', 'dg', 'dbeta'))
