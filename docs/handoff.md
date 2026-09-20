@@ -11,6 +11,11 @@
 
 ### 正在飞的任务（现在没有；A5K-02、PK-02、PK-03 都已于 2026-09-19 合入）
 
+> **2026-09-20T16:08Z 更新：BF-03 首个完整 workload 与 bd2 全网格真机通过（自述，未 DONE）；BF-05 校准提交已推、参考 A 待对齐 pin。**
+> - **BF-03**（头 `10e31b9`，距 ASSIGN 7.4h / 24h）：B1/T4096/H=HV8 完整 workload bd2 真机通过，BF16 o 对 A / B 相对 L2 1.659e-3 / 1.659e-3（预算 4.977e-3）；bd2 全网格 66/66（33 × 2 dtype），BF16 最大 o 1.681e-3、主 state 3.2e-6、ATK 6.0e-7；FP32 公共结果对 pristine 入口逐位相同（33 / 33）；host 算子只有 1 次 `aten.zeros.default` + 17 次 `aten.empty`（通则允许的分配）。下一步 bd1 / 跨 bd 字节 / 近零 / 三明治，此前不发 DONE。全主机测试 918 passed / 9 skipped（自述；main 是 877 / 12，评审时按 `--collect-only` 对账）。
+> - **BF-05**（头 `1ebec19`）：校准提交先行——F=1.7451e-3、预算 min(1e-2, 3F)=5.2354e-3、D(o) / D(final_state) 单列不当约束；参考 A 尚未接上（本机 fla `864a87f6` 与 pin `e52dbc0e` 的 naive SHA 对不上），申领人会取 pin 版、取不到发 RISK。**PM 提醒**：参考 A 的 F_A 与预算也要在写 kernel 之前冻结（第二个校准提交即可），不能等真机验收时 A、B 一起报再定。
+> - **待用户**（未答）：BF-07 decode 近零档的比较对象。
+>
 > **2026-09-20T15:59Z 更新：用户授权「#119授权」（D-PM-49），PR #119（A2-09）已合入 → c2156f3，A2-09 done；main 全量 877 passed, 12 skipped, 5 warnings in 275.98s (0:04:35)。BF-05 ACK；BF-07 又报一个端点类，PM 裁定（D-PM-50）。**
 > - **合入**（bot 账号）：#119 A2-09（头 `6bd9c95` → `c2156f3`）；PR 原为 draft，先 `gh pr ready` 再 `--match-head-commit` 钉住审过的头合入；merge commit 两个父提交是 f11a2ad 与 6bd9c95。合入后在 main 上复跑全量（NPU-free）：**877 passed, 12 skipped, 5 warnings in 275.98s (0:04:35)**（本 PR 只新增 `kernels/projects/a2/kda_bwd_stable/**` 46 个文件、不含 tests/ 下的测试，计数不变，与预测一致）。`kernel_inventory`：`kda_bwd_stable` 补记 a2 派生单元已合入（A2 数字只作观测，A2-11 之前不构成结论）。用户是在被告知三点后授权的：finalize_pair 的 stage 判据（相对 L2 1e-5）是看到真机结果之后定的、分辨率 ≈ 一次 BF16 翻转、固定种子下确定性通过；`contract.json` 的 reason 仍留旧措辞（README 已更正，下次动契约时同改）；六项输出梯度预算沿用 a5 未动。
 > - **BF-05 ACK**（15:44Z，in_progress）：修订与环境自述（ascriptor 90cfcdc / b3b3f9c；fla `864a87f6`（v0.5.2-123）；CANN 9.2.0、opp 含 ascend950、compiler 2026-05-09T12:45:09+08:00、Python 3.12.14、torch / torch_npu 2.12.0、Ascend950PR）。**一处要对齐**：它的 fla 修订与 GD2-01 / PK-02 / PK-03 的 pin `e52dbc0e`（0.6.0）不同，而验收里的参考 A 是「pin 版 GDN-2 naive」——已要求用 pin 版或先证明两版 GDN-2 naive 逐字节相同（给 SHA-256），并在第一个提交里写明参考所用的 fla 修订。
