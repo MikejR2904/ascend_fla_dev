@@ -24,21 +24,13 @@ from .chunk import (
     VALUE_DIM,
     _check_input_domain,
     _prepare_inputs,
+    _layout_runtime,
     chunk_kda_fwd,
     chunk_kda_fwd_with_caches,
 )
 from .chunk_bwd import chunk_kda_bwd
 
 __all__ = ["chunk_kda"]
-
-
-def _zeros_like_npu(shape, dtype, device) -> torch.Tensor:
-    """在 NPU 上造零张量。
-
-    ``torch.zeros(device="npu")`` 在内置算子包不全的机器上不可用（需要 ZerosLike），
-    所以在 CPU 上造好再 H2D —— 见 AGENTS.md §5 的可用面表。
-    """
-    return torch.zeros(*shape, dtype=dtype, device="cpu").to(device)
 
 
 class _ChunkKDA(torch.autograd.Function):
@@ -54,7 +46,8 @@ class _ChunkKDA(torch.autograd.Function):
         )
         # beta 在前向 ABI 里是 fp32、反向 ABI 里是 bf16。这一步降精度的代价已量化
         # （见 gaps.json 的 kda-fwd-bwd-dtype-mismatch），**显式**做，不当无害的类型适配。
-        ctx.save_for_backward(q, k, v, beta.bfloat16(), *(caches[n] for n in BWD_CACHE_NAMES))
+        beta_bf16 = _layout_runtime().cast(beta, torch.bfloat16, device=device, block_dim=block_dim)
+        ctx.save_for_backward(q, k, v, beta_bf16, *(caches[n] for n in BWD_CACHE_NAMES))
         ctx.bwd_options = dict(device=device, block_dim=block_dim, impl=impl)
         ctx.state_shape = (q.shape[0], v.shape[2], HEAD_DIM, VALUE_DIM)
         return o, final_state
@@ -65,12 +58,13 @@ class _ChunkKDA(torch.autograd.Function):
         caches = dict(zip(BWD_CACHE_NAMES, cache_list))
 
         # 上游梯度的 dtype/连续性都不能假定：下游算子可能升到 fp32，也可能给非连续视图
-        do = do.contiguous().bfloat16()
+        layout_options = {name: ctx.bwd_options[name] for name in ("device", "block_dim")}
+        do = _layout_runtime().cast(do, torch.bfloat16, **layout_options)
         if dht is None:
             # final_state 没参与 loss。反向 kernel 没有"省略 dht"的入口，只能喂零。
-            dht = _zeros_like_npu(ctx.state_shape, torch.bfloat16, do.device)
+            dht = _layout_runtime().zeros(ctx.state_shape, torch.bfloat16, do.device, **layout_options)
         else:
-            dht = dht.contiguous().bfloat16()
+            dht = _layout_runtime().cast(dht, torch.bfloat16, **layout_options)
 
         grads = chunk_kda_bwd(q=q, k=k, v=v, beta=beta_bf16, do=do, dht=dht,
                               caches=caches, **ctx.bwd_options)
@@ -84,10 +78,10 @@ class _ChunkKDA(torch.autograd.Function):
             grads["dq"] if need[0] else None,
             grads["dk"] if need[1] else None,
             grads["dv"] if need[2] else None,
-            grads["dg"].float() if need[3] else None,
-            grads["dbeta"].float() if need[4] else None,
+            _layout_runtime().cast(grads["dg"], torch.float32, **layout_options) if need[3] else None,
+            _layout_runtime().cast(grads["dbeta"], torch.float32, **layout_options) if need[4] else None,
             None,                                              # scale
-            grads["dh0"].float() if need[6] else None,          # initial_state
+            _layout_runtime().cast(grads["dh0"], torch.float32, **layout_options) if need[6] else None,          # initial_state
             # output_final_state / device / block_dim / layout_device /
             # check_gate_range / impl
             None, None, None, None, None, None,

@@ -1,0 +1,772 @@
+{
+  "schema": "fmt02.scan-seeded-inputs/1",
+  "generator": {
+    "file": "benchmarks/verify_real_shapes.py",
+    "entry": "make_inputs",
+    "sha256": "99f1c07b79e8911605d48108057686d9fa010655542ade49603cc82a9ec27534",
+    "parameters": {
+      "B": 2,
+      "H": 2,
+      "HV": 4,
+      "C": 3,
+      "span": 46,
+      "seed": 2026,
+      "want_grads": true
+    },
+    "acquisition_python": "3.12.14",
+    "acquisition_torch": "2.12.0+cu130"
+  },
+  "public_inputs": {
+    "beta": {
+      "dtype": "float32",
+      "sha256": "3fa3edec45fdc1a1ae14e77ea0b6b0fdc16532740e9b1dad61b39c8675b6767e",
+      "shape": [
+        2,
+        192,
+        4
+      ]
+    },
+    "dht": {
+      "dtype": "bfloat16",
+      "sha256": "c9a0e88818124655b8be6478274d0eea5235f4692b52fc5eb0dd4fbe294a4e8c",
+      "shape": [
+        2,
+        4,
+        128,
+        128
+      ]
+    },
+    "do": {
+      "dtype": "bfloat16",
+      "sha256": "7d9b0a9f5a093f930f1751999083f85ba53dc15044dd234c684ec8f2fbafad58",
+      "shape": [
+        2,
+        192,
+        4,
+        128
+      ]
+    },
+    "g": {
+      "dtype": "float32",
+      "sha256": "2af4c02fe2eb05feec1b4af75306f928cd1693c4bcba839e184bd903bdf29390",
+      "shape": [
+        2,
+        192,
+        4,
+        128
+      ]
+    },
+    "h0": {
+      "dtype": "float32",
+      "sha256": "62a74f5a08f250e4a31655fd719c3012f34ca929e52f724bec6d415513acfa2d",
+      "shape": [
+        2,
+        4,
+        128,
+        128
+      ]
+    },
+    "k": {
+      "dtype": "bfloat16",
+      "sha256": "6cbc4cce1658efa2db35fe9df2655ef1cbde67f6e49716da3f5a18a5e075a74e",
+      "shape": [
+        2,
+        192,
+        2,
+        128
+      ]
+    },
+    "q": {
+      "dtype": "bfloat16",
+      "sha256": "a8dc2800015973c44817c252b2e084b7674287b1af6958610f093b5575415164",
+      "shape": [
+        2,
+        192,
+        2,
+        128
+      ]
+    },
+    "v": {
+      "dtype": "bfloat16",
+      "sha256": "8d121856792f8878ee9a5f131ad8bfa7de585069275906cf2f4fc2b4f1b00cbc",
+      "shape": [
+        2,
+        192,
+        4,
+        128
+      ]
+    }
+  },
+  "scan_inputs": {
+    "Aqk": {
+      "dtype": "bfloat16",
+      "sha256": "9873f8d4a0f7b6fccfa42d5ad326599fb887eb74f799f4e1d7674af6a9d189e1",
+      "shape": [
+        2,
+        192,
+        4,
+        64
+      ]
+    },
+    "dht": {
+      "dtype": "bfloat16",
+      "sha256": "c9a0e88818124655b8be6478274d0eea5235f4692b52fc5eb0dd4fbe294a4e8c",
+      "shape": [
+        2,
+        4,
+        64,
+        256
+      ]
+    },
+    "g_last": {
+      "dtype": "bfloat16",
+      "sha256": "5309dac4dd05b732e4f71d101e87e32e505c2d63de7c30f3d7f916eee0ca5e56",
+      "shape": [
+        2,
+        3,
+        4,
+        128
+      ]
+    },
+    "grad_out": {
+      "dtype": "bfloat16",
+      "sha256": "7d9b0a9f5a093f930f1751999083f85ba53dc15044dd234c684ec8f2fbafad58",
+      "shape": [
+        2,
+        192,
+        4,
+        128
+      ]
+    },
+    "kg": {
+      "dtype": "bfloat16",
+      "sha256": "761198b46a07ba3388813f24bb0b6f837b0cae9e1c55700e796713bc2cd22d66",
+      "shape": [
+        2,
+        192,
+        4,
+        128
+      ]
+    },
+    "qg": {
+      "dtype": "bfloat16",
+      "sha256": "9c412e4302cc07a78cac171aae023a70172f1bbaf4a2781c8be1994735dbea85",
+      "shape": [
+        2,
+        192,
+        4,
+        128
+      ]
+    },
+    "v_new": {
+      "dtype": "bfloat16",
+      "sha256": "0b5dbc0a853f92947c8b07f07125ca9ffdea1de9c53ed3093a3a8f1f90d4fb53",
+      "shape": [
+        2,
+        192,
+        4,
+        128
+      ]
+    },
+    "w": {
+      "dtype": "bfloat16",
+      "sha256": "f7f3cada6d84c4bc750e853a1535f0c8e30167323779f2bbb91efc67e8014189",
+      "shape": [
+        2,
+        192,
+        4,
+        128
+      ]
+    }
+  },
+  "scan_outputs": {
+    "dAqk": {
+      "dtype": "bfloat16",
+      "shape": [
+        2,
+        192,
+        4,
+        64
+      ]
+    },
+    "dh": {
+      "dtype": "bfloat16",
+      "shape": [
+        2,
+        3,
+        4,
+        128,
+        128
+      ]
+    },
+    "dh0": {
+      "dtype": "bfloat16",
+      "shape": [
+        2,
+        4,
+        128,
+        128
+      ]
+    },
+    "dv": {
+      "dtype": "bfloat16",
+      "shape": [
+        2,
+        192,
+        4,
+        128
+      ]
+    }
+  },
+  "scalars": {
+    "B": 2,
+    "C": 3,
+    "HV": 4,
+    "K": 128,
+    "L": 64,
+    "T": 192,
+    "V": 128
+  },
+  "historical_bf16_dh0": {
+    "dev-A-gradient/public/before1": {
+      "dtype": "bfloat16",
+      "sha256": "bfe623a33a67cd150902a75cb83b83eb3e9cf5652ce443c7bdfa2a5ee58bc65c",
+      "shape": [
+        2,
+        4,
+        128,
+        128
+      ],
+      "elements": 131072,
+      "finite": true,
+      "minimum": -0.002777099609375,
+      "maximum": 0.0023345947265625,
+      "raw_values": "private acquisition archive; not committed"
+    },
+    "dev-A-gradient/public/before2": {
+      "dtype": "bfloat16",
+      "sha256": "bfe623a33a67cd150902a75cb83b83eb3e9cf5652ce443c7bdfa2a5ee58bc65c",
+      "shape": [
+        2,
+        4,
+        128,
+        128
+      ],
+      "elements": 131072,
+      "finite": true,
+      "minimum": -0.002777099609375,
+      "maximum": 0.0023345947265625,
+      "raw_values": "private acquisition archive; not committed"
+    },
+    "dev-A-gradient/public/candidate1": {
+      "dtype": "bfloat16",
+      "sha256": "ccfac2f051493220b3894d1f1274d89bd6efe2d03288440bb77598d11c975de8",
+      "shape": [
+        2,
+        4,
+        128,
+        128
+      ],
+      "elements": 131072,
+      "finite": true,
+      "minimum": -0.002777099609375,
+      "maximum": 0.0023345947265625,
+      "raw_values": "private acquisition archive; not committed"
+    },
+    "dev-A-gradient/public/candidate2": {
+      "dtype": "bfloat16",
+      "sha256": "bfe623a33a67cd150902a75cb83b83eb3e9cf5652ce443c7bdfa2a5ee58bc65c",
+      "shape": [
+        2,
+        4,
+        128,
+        128
+      ],
+      "elements": 131072,
+      "finite": true,
+      "minimum": -0.002777099609375,
+      "maximum": 0.0023345947265625,
+      "raw_values": "private acquisition archive; not committed"
+    },
+    "dev-A-scan/public/before1": {
+      "dtype": "bfloat16",
+      "sha256": "ba5f03d26f0a5a5dad46f430f61cc3e764a8e7f4bb17ab14a8e20d65391310ef",
+      "shape": [
+        2,
+        4,
+        128,
+        128
+      ],
+      "elements": 131072,
+      "finite": true,
+      "minimum": -0.002777099609375,
+      "maximum": 0.0023345947265625,
+      "raw_values": "private acquisition archive; not committed"
+    },
+    "dev-A-scan/public/before2": {
+      "dtype": "bfloat16",
+      "sha256": "ba5f03d26f0a5a5dad46f430f61cc3e764a8e7f4bb17ab14a8e20d65391310ef",
+      "shape": [
+        2,
+        4,
+        128,
+        128
+      ],
+      "elements": 131072,
+      "finite": true,
+      "minimum": -0.002777099609375,
+      "maximum": 0.0023345947265625,
+      "raw_values": "private acquisition archive; not committed"
+    },
+    "dev-A-scan/public/candidate1": {
+      "dtype": "bfloat16",
+      "sha256": "ba5f03d26f0a5a5dad46f430f61cc3e764a8e7f4bb17ab14a8e20d65391310ef",
+      "shape": [
+        2,
+        4,
+        128,
+        128
+      ],
+      "elements": 131072,
+      "finite": true,
+      "minimum": -0.002777099609375,
+      "maximum": 0.0023345947265625,
+      "raw_values": "private acquisition archive; not committed"
+    },
+    "dev-A-scan/public/candidate2": {
+      "dtype": "bfloat16",
+      "sha256": "ba5f03d26f0a5a5dad46f430f61cc3e764a8e7f4bb17ab14a8e20d65391310ef",
+      "shape": [
+        2,
+        4,
+        128,
+        128
+      ],
+      "elements": 131072,
+      "finite": true,
+      "minimum": -0.002777099609375,
+      "maximum": 0.0023345947265625,
+      "raw_values": "private acquisition archive; not committed"
+    },
+    "dev-A-scan/replay/0": {
+      "dtype": "bfloat16",
+      "sha256": "ba5f03d26f0a5a5dad46f430f61cc3e764a8e7f4bb17ab14a8e20d65391310ef",
+      "shape": [
+        2,
+        4,
+        128,
+        128
+      ],
+      "elements": 131072,
+      "finite": true,
+      "minimum": -0.002777099609375,
+      "maximum": 0.0023345947265625,
+      "raw_values": "private acquisition archive; not committed"
+    },
+    "dev-A-scan/replay/1": {
+      "dtype": "bfloat16",
+      "sha256": "8fea5dedc158e918cf94181e496b27eb4cc0da1611118618bb1d495f5545d447",
+      "shape": [
+        2,
+        4,
+        128,
+        128
+      ],
+      "elements": 131072,
+      "finite": true,
+      "minimum": -0.002777099609375,
+      "maximum": 0.0023345947265625,
+      "raw_values": "private acquisition archive; not committed"
+    },
+    "dev-A-scan/replay/10": {
+      "dtype": "bfloat16",
+      "sha256": "51f51863f9eea62acf201e98a1ff128903ecff12d80d936043a902ffc8aed557",
+      "shape": [
+        2,
+        4,
+        128,
+        128
+      ],
+      "elements": 131072,
+      "finite": true,
+      "minimum": -0.002777099609375,
+      "maximum": 0.0023345947265625,
+      "raw_values": "private acquisition archive; not committed"
+    },
+    "dev-A-scan/replay/11": {
+      "dtype": "bfloat16",
+      "sha256": "bfe623a33a67cd150902a75cb83b83eb3e9cf5652ce443c7bdfa2a5ee58bc65c",
+      "shape": [
+        2,
+        4,
+        128,
+        128
+      ],
+      "elements": 131072,
+      "finite": true,
+      "minimum": -0.002777099609375,
+      "maximum": 0.0023345947265625,
+      "raw_values": "private acquisition archive; not committed"
+    },
+    "dev-A-scan/replay/2": {
+      "dtype": "bfloat16",
+      "sha256": "f6f65930adb8048370eb45bb12c0fe66028a60229696c7585147ea655d72603d",
+      "shape": [
+        2,
+        4,
+        128,
+        128
+      ],
+      "elements": 131072,
+      "finite": true,
+      "minimum": -0.002777099609375,
+      "maximum": 0.0023345947265625,
+      "raw_values": "private acquisition archive; not committed"
+    },
+    "dev-A-scan/replay/3": {
+      "dtype": "bfloat16",
+      "sha256": "993caf822cf15cef50ce78715a5e17ab2b1b9f8f070a2e56e89731f8bf2d8e08",
+      "shape": [
+        2,
+        4,
+        128,
+        128
+      ],
+      "elements": 131072,
+      "finite": true,
+      "minimum": -0.002777099609375,
+      "maximum": 0.0023345947265625,
+      "raw_values": "private acquisition archive; not committed"
+    },
+    "dev-A-scan/replay/4": {
+      "dtype": "bfloat16",
+      "sha256": "86d6eec3ebde1c86bf7e8bba6db430d96994c0244131284c424936c9a27ef003",
+      "shape": [
+        2,
+        4,
+        128,
+        128
+      ],
+      "elements": 131072,
+      "finite": true,
+      "minimum": -0.002777099609375,
+      "maximum": 0.0023345947265625,
+      "raw_values": "private acquisition archive; not committed"
+    },
+    "dev-A-scan/replay/5": {
+      "dtype": "bfloat16",
+      "sha256": "bfe623a33a67cd150902a75cb83b83eb3e9cf5652ce443c7bdfa2a5ee58bc65c",
+      "shape": [
+        2,
+        4,
+        128,
+        128
+      ],
+      "elements": 131072,
+      "finite": true,
+      "minimum": -0.002777099609375,
+      "maximum": 0.0023345947265625,
+      "raw_values": "private acquisition archive; not committed"
+    },
+    "dev-A-scan/replay/6": {
+      "dtype": "bfloat16",
+      "sha256": "cbd566e4114400c2adf2379606b81d28f1c8cd199ccc58b5a0c3d1d4e0377448",
+      "shape": [
+        2,
+        4,
+        128,
+        128
+      ],
+      "elements": 131072,
+      "finite": true,
+      "minimum": -0.002777099609375,
+      "maximum": 0.0023345947265625,
+      "raw_values": "private acquisition archive; not committed"
+    },
+    "dev-A-scan/replay/7": {
+      "dtype": "bfloat16",
+      "sha256": "bfe623a33a67cd150902a75cb83b83eb3e9cf5652ce443c7bdfa2a5ee58bc65c",
+      "shape": [
+        2,
+        4,
+        128,
+        128
+      ],
+      "elements": 131072,
+      "finite": true,
+      "minimum": -0.002777099609375,
+      "maximum": 0.0023345947265625,
+      "raw_values": "private acquisition archive; not committed"
+    },
+    "dev-A-scan/replay/8": {
+      "dtype": "bfloat16",
+      "sha256": "51f51863f9eea62acf201e98a1ff128903ecff12d80d936043a902ffc8aed557",
+      "shape": [
+        2,
+        4,
+        128,
+        128
+      ],
+      "elements": 131072,
+      "finite": true,
+      "minimum": -0.002777099609375,
+      "maximum": 0.0023345947265625,
+      "raw_values": "private acquisition archive; not committed"
+    },
+    "dev-A-scan/replay/9": {
+      "dtype": "bfloat16",
+      "sha256": "bfe623a33a67cd150902a75cb83b83eb3e9cf5652ce443c7bdfa2a5ee58bc65c",
+      "shape": [
+        2,
+        4,
+        128,
+        128
+      ],
+      "elements": 131072,
+      "finite": true,
+      "minimum": -0.002777099609375,
+      "maximum": 0.0023345947265625,
+      "raw_values": "private acquisition archive; not committed"
+    },
+    "dev-B-scan/public/before1": {
+      "dtype": "bfloat16",
+      "sha256": "ba5f03d26f0a5a5dad46f430f61cc3e764a8e7f4bb17ab14a8e20d65391310ef",
+      "shape": [
+        2,
+        4,
+        128,
+        128
+      ],
+      "elements": 131072,
+      "finite": true,
+      "minimum": -0.002777099609375,
+      "maximum": 0.0023345947265625,
+      "raw_values": "private acquisition archive; not committed"
+    },
+    "dev-B-scan/public/before2": {
+      "dtype": "bfloat16",
+      "sha256": "ba5f03d26f0a5a5dad46f430f61cc3e764a8e7f4bb17ab14a8e20d65391310ef",
+      "shape": [
+        2,
+        4,
+        128,
+        128
+      ],
+      "elements": 131072,
+      "finite": true,
+      "minimum": -0.002777099609375,
+      "maximum": 0.0023345947265625,
+      "raw_values": "private acquisition archive; not committed"
+    },
+    "dev-B-scan/public/candidate1": {
+      "dtype": "bfloat16",
+      "sha256": "ba5f03d26f0a5a5dad46f430f61cc3e764a8e7f4bb17ab14a8e20d65391310ef",
+      "shape": [
+        2,
+        4,
+        128,
+        128
+      ],
+      "elements": 131072,
+      "finite": true,
+      "minimum": -0.002777099609375,
+      "maximum": 0.0023345947265625,
+      "raw_values": "private acquisition archive; not committed"
+    },
+    "dev-B-scan/public/candidate2": {
+      "dtype": "bfloat16",
+      "sha256": "ba5f03d26f0a5a5dad46f430f61cc3e764a8e7f4bb17ab14a8e20d65391310ef",
+      "shape": [
+        2,
+        4,
+        128,
+        128
+      ],
+      "elements": 131072,
+      "finite": true,
+      "minimum": -0.002777099609375,
+      "maximum": 0.0023345947265625,
+      "raw_values": "private acquisition archive; not committed"
+    },
+    "dev-B-scan/replay/0": {
+      "dtype": "bfloat16",
+      "sha256": "ba5f03d26f0a5a5dad46f430f61cc3e764a8e7f4bb17ab14a8e20d65391310ef",
+      "shape": [
+        2,
+        4,
+        128,
+        128
+      ],
+      "elements": 131072,
+      "finite": true,
+      "minimum": -0.002777099609375,
+      "maximum": 0.0023345947265625,
+      "raw_values": "private acquisition archive; not committed"
+    },
+    "dev-B-scan/replay/1": {
+      "dtype": "bfloat16",
+      "sha256": "ba5f03d26f0a5a5dad46f430f61cc3e764a8e7f4bb17ab14a8e20d65391310ef",
+      "shape": [
+        2,
+        4,
+        128,
+        128
+      ],
+      "elements": 131072,
+      "finite": true,
+      "minimum": -0.002777099609375,
+      "maximum": 0.0023345947265625,
+      "raw_values": "private acquisition archive; not committed"
+    },
+    "dev-B-scan/replay/10": {
+      "dtype": "bfloat16",
+      "sha256": "ba5f03d26f0a5a5dad46f430f61cc3e764a8e7f4bb17ab14a8e20d65391310ef",
+      "shape": [
+        2,
+        4,
+        128,
+        128
+      ],
+      "elements": 131072,
+      "finite": true,
+      "minimum": -0.002777099609375,
+      "maximum": 0.0023345947265625,
+      "raw_values": "private acquisition archive; not committed"
+    },
+    "dev-B-scan/replay/11": {
+      "dtype": "bfloat16",
+      "sha256": "ba5f03d26f0a5a5dad46f430f61cc3e764a8e7f4bb17ab14a8e20d65391310ef",
+      "shape": [
+        2,
+        4,
+        128,
+        128
+      ],
+      "elements": 131072,
+      "finite": true,
+      "minimum": -0.002777099609375,
+      "maximum": 0.0023345947265625,
+      "raw_values": "private acquisition archive; not committed"
+    },
+    "dev-B-scan/replay/2": {
+      "dtype": "bfloat16",
+      "sha256": "ba5f03d26f0a5a5dad46f430f61cc3e764a8e7f4bb17ab14a8e20d65391310ef",
+      "shape": [
+        2,
+        4,
+        128,
+        128
+      ],
+      "elements": 131072,
+      "finite": true,
+      "minimum": -0.002777099609375,
+      "maximum": 0.0023345947265625,
+      "raw_values": "private acquisition archive; not committed"
+    },
+    "dev-B-scan/replay/3": {
+      "dtype": "bfloat16",
+      "sha256": "ba5f03d26f0a5a5dad46f430f61cc3e764a8e7f4bb17ab14a8e20d65391310ef",
+      "shape": [
+        2,
+        4,
+        128,
+        128
+      ],
+      "elements": 131072,
+      "finite": true,
+      "minimum": -0.002777099609375,
+      "maximum": 0.0023345947265625,
+      "raw_values": "private acquisition archive; not committed"
+    },
+    "dev-B-scan/replay/4": {
+      "dtype": "bfloat16",
+      "sha256": "ba5f03d26f0a5a5dad46f430f61cc3e764a8e7f4bb17ab14a8e20d65391310ef",
+      "shape": [
+        2,
+        4,
+        128,
+        128
+      ],
+      "elements": 131072,
+      "finite": true,
+      "minimum": -0.002777099609375,
+      "maximum": 0.0023345947265625,
+      "raw_values": "private acquisition archive; not committed"
+    },
+    "dev-B-scan/replay/5": {
+      "dtype": "bfloat16",
+      "sha256": "ba5f03d26f0a5a5dad46f430f61cc3e764a8e7f4bb17ab14a8e20d65391310ef",
+      "shape": [
+        2,
+        4,
+        128,
+        128
+      ],
+      "elements": 131072,
+      "finite": true,
+      "minimum": -0.002777099609375,
+      "maximum": 0.0023345947265625,
+      "raw_values": "private acquisition archive; not committed"
+    },
+    "dev-B-scan/replay/6": {
+      "dtype": "bfloat16",
+      "sha256": "ba5f03d26f0a5a5dad46f430f61cc3e764a8e7f4bb17ab14a8e20d65391310ef",
+      "shape": [
+        2,
+        4,
+        128,
+        128
+      ],
+      "elements": 131072,
+      "finite": true,
+      "minimum": -0.002777099609375,
+      "maximum": 0.0023345947265625,
+      "raw_values": "private acquisition archive; not committed"
+    },
+    "dev-B-scan/replay/7": {
+      "dtype": "bfloat16",
+      "sha256": "ba5f03d26f0a5a5dad46f430f61cc3e764a8e7f4bb17ab14a8e20d65391310ef",
+      "shape": [
+        2,
+        4,
+        128,
+        128
+      ],
+      "elements": 131072,
+      "finite": true,
+      "minimum": -0.002777099609375,
+      "maximum": 0.0023345947265625,
+      "raw_values": "private acquisition archive; not committed"
+    },
+    "dev-B-scan/replay/8": {
+      "dtype": "bfloat16",
+      "sha256": "ba5f03d26f0a5a5dad46f430f61cc3e764a8e7f4bb17ab14a8e20d65391310ef",
+      "shape": [
+        2,
+        4,
+        128,
+        128
+      ],
+      "elements": 131072,
+      "finite": true,
+      "minimum": -0.002777099609375,
+      "maximum": 0.0023345947265625,
+      "raw_values": "private acquisition archive; not committed"
+    },
+    "dev-B-scan/replay/9": {
+      "dtype": "bfloat16",
+      "sha256": "ba5f03d26f0a5a5dad46f430f61cc3e764a8e7f4bb17ab14a8e20d65391310ef",
+      "shape": [
+        2,
+        4,
+        128,
+        128
+      ],
+      "elements": 131072,
+      "finite": true,
+      "minimum": -0.002777099609375,
+      "maximum": 0.0023345947265625,
+      "raw_values": "private acquisition archive; not committed"
+    }
+  }
+}

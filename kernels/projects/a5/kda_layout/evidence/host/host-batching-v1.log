@@ -1,0 +1,1041 @@
+..FFFFFFFFFFFFFFFFFFFFFFFF..F........................................... [ 80%]
+.................                                                        [100%]
+=================================== FAILURES ===================================
+___ test_portable_case_runtime_and_independent_reference[to_head_bf16_bf16] ____
+
+layout = (<module '_afla_kda_layout_runtime' from '<task>/repo/kernels/projects/a5/kda_layout/runtime.py'>, [])
+case = {'block_dim': 1, 'id': 'to_head_bf16_bf16', 'parameters': {'N': 147456, 'destination': 'bf16', 'kind': 'to_head', 'source': 'bf16'}, 'seed': 20602}
+
+    @pytest.mark.parametrize('case', CASES, ids=lambda c: c['id'])
+    def test_portable_case_runtime_and_independent_reference(layout, case):
+        runtime, calls = layout
+        x = unit.make_inputs(case)
+        original = support.digest(x['source'])
+        expected = unit.reference(x)['destination']
+>       key, shape, scalars = unit.launch_description(x)
+
+tmp/fmt02-native-01a0b7ce/repo/tests/test_kda_layout_kernel.py:101: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+inputs = {'parameters': {'N': 147456, 'destination': 'bf16', 'kind': 'to_head', 'source': 'bf16'}, 'source': tensor([[[[ 1.7188...312,  1.0000],
+          [ 0.3965, -1.3750,  0.0815,  ...,  0.1777, -0.2041,  0.2295]]]],
+       dtype=torch.bfloat16)}
+
+    def launch_description(inputs):
+        p = inputs['parameters'];kind = p['kind'];x = inputs['source']
+        options = {
+            'to_head': ((2,3,3,64,128), (192*3*128,128,64*3*128,3*128,1)),
+            'to_token': ((2,3,64,3,64), (3*3*64*64,64*64,64,3*64*64,1)),
+            'beta': ((2,3,3,1,64), (192*3,1,64*3,0,3)),
+            'cast': ((1,1,1,2,64), (0,0,0,64,1)),
+            'strided': ((1,1,1,2,128), (0,0,0,256,2)),
+            'broadcast': ((2,2,2,1,128), (0,0,0,0,0)),
+            'zero': ((1,1,1,2,128), (0,0,0,0,0)),
+        }
+        shape, strides = options[kind];n = math.prod(shape)
+        key = 'zero_'+p['destination'] if kind=='zero' else p['source']+'_'+p['destination']
+        scalars = dict(N=n)
+        if kind != 'zero':
+            scalars = dict(Storage=x.numel(), N=n, **{f'D{i}':shape[i] for i in range(1,5)},
+                           **{f'S{i}':strides[i] for i in range(5)})
+>           from runtime import tile_scalars
+E           ModuleNotFoundError: No module named 'runtime'
+
+tmp/fmt02-native-01a0b7ce/repo/kernels/projects/a5/kda_layout/unit.py:65: ModuleNotFoundError
+____ test_portable_case_runtime_and_independent_reference[to_head_bf16_f32] ____
+
+layout = (<module '_afla_kda_layout_runtime' from '<task>/repo/kernels/projects/a5/kda_layout/runtime.py'>, [])
+case = {'block_dim': 1, 'id': 'to_head_bf16_f32', 'parameters': {'N': 147456, 'destination': 'f32', 'kind': 'to_head', 'source': 'bf16'}, 'seed': 20602}
+
+    @pytest.mark.parametrize('case', CASES, ids=lambda c: c['id'])
+    def test_portable_case_runtime_and_independent_reference(layout, case):
+        runtime, calls = layout
+        x = unit.make_inputs(case)
+        original = support.digest(x['source'])
+        expected = unit.reference(x)['destination']
+>       key, shape, scalars = unit.launch_description(x)
+
+tmp/fmt02-native-01a0b7ce/repo/tests/test_kda_layout_kernel.py:101: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+inputs = {'parameters': {'N': 147456, 'destination': 'f32', 'kind': 'to_head', 'source': 'bf16'}, 'source': tensor([[[[ 1.7188,...312,  1.0000],
+          [ 0.3965, -1.3750,  0.0815,  ...,  0.1777, -0.2041,  0.2295]]]],
+       dtype=torch.bfloat16)}
+
+    def launch_description(inputs):
+        p = inputs['parameters'];kind = p['kind'];x = inputs['source']
+        options = {
+            'to_head': ((2,3,3,64,128), (192*3*128,128,64*3*128,3*128,1)),
+            'to_token': ((2,3,64,3,64), (3*3*64*64,64*64,64,3*64*64,1)),
+            'beta': ((2,3,3,1,64), (192*3,1,64*3,0,3)),
+            'cast': ((1,1,1,2,64), (0,0,0,64,1)),
+            'strided': ((1,1,1,2,128), (0,0,0,256,2)),
+            'broadcast': ((2,2,2,1,128), (0,0,0,0,0)),
+            'zero': ((1,1,1,2,128), (0,0,0,0,0)),
+        }
+        shape, strides = options[kind];n = math.prod(shape)
+        key = 'zero_'+p['destination'] if kind=='zero' else p['source']+'_'+p['destination']
+        scalars = dict(N=n)
+        if kind != 'zero':
+            scalars = dict(Storage=x.numel(), N=n, **{f'D{i}':shape[i] for i in range(1,5)},
+                           **{f'S{i}':strides[i] for i in range(5)})
+>           from runtime import tile_scalars
+E           ModuleNotFoundError: No module named 'runtime'
+
+tmp/fmt02-native-01a0b7ce/repo/kernels/projects/a5/kda_layout/unit.py:65: ModuleNotFoundError
+____ test_portable_case_runtime_and_independent_reference[to_head_f32_bf16] ____
+
+layout = (<module '_afla_kda_layout_runtime' from '<task>/repo/kernels/projects/a5/kda_layout/runtime.py'>, [])
+case = {'block_dim': 1, 'id': 'to_head_f32_bf16', 'parameters': {'N': 147456, 'destination': 'bf16', 'kind': 'to_head', 'source': 'f32'}, 'seed': 20602}
+
+    @pytest.mark.parametrize('case', CASES, ids=lambda c: c['id'])
+    def test_portable_case_runtime_and_independent_reference(layout, case):
+        runtime, calls = layout
+        x = unit.make_inputs(case)
+        original = support.digest(x['source'])
+        expected = unit.reference(x)['destination']
+>       key, shape, scalars = unit.launch_description(x)
+
+tmp/fmt02-native-01a0b7ce/repo/tests/test_kda_layout_kernel.py:101: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+inputs = {'parameters': {'N': 147456, 'destination': 'bf16', 'kind': 'to_head', 'source': 'f32'}, 'source': tensor([[[[ 1.7218,... -0.0842,  ..., -0.4179, -0.5322,  1.0026],
+          [ 0.3970, -1.3779,  0.0814,  ...,  0.1781, -0.2044,  0.2296]]]])}
+
+    def launch_description(inputs):
+        p = inputs['parameters'];kind = p['kind'];x = inputs['source']
+        options = {
+            'to_head': ((2,3,3,64,128), (192*3*128,128,64*3*128,3*128,1)),
+            'to_token': ((2,3,64,3,64), (3*3*64*64,64*64,64,3*64*64,1)),
+            'beta': ((2,3,3,1,64), (192*3,1,64*3,0,3)),
+            'cast': ((1,1,1,2,64), (0,0,0,64,1)),
+            'strided': ((1,1,1,2,128), (0,0,0,256,2)),
+            'broadcast': ((2,2,2,1,128), (0,0,0,0,0)),
+            'zero': ((1,1,1,2,128), (0,0,0,0,0)),
+        }
+        shape, strides = options[kind];n = math.prod(shape)
+        key = 'zero_'+p['destination'] if kind=='zero' else p['source']+'_'+p['destination']
+        scalars = dict(N=n)
+        if kind != 'zero':
+            scalars = dict(Storage=x.numel(), N=n, **{f'D{i}':shape[i] for i in range(1,5)},
+                           **{f'S{i}':strides[i] for i in range(5)})
+>           from runtime import tile_scalars
+E           ModuleNotFoundError: No module named 'runtime'
+
+tmp/fmt02-native-01a0b7ce/repo/kernels/projects/a5/kda_layout/unit.py:65: ModuleNotFoundError
+____ test_portable_case_runtime_and_independent_reference[to_head_f32_f32] _____
+
+layout = (<module '_afla_kda_layout_runtime' from '<task>/repo/kernels/projects/a5/kda_layout/runtime.py'>, [])
+case = {'block_dim': 1, 'id': 'to_head_f32_f32', 'parameters': {'N': 147456, 'destination': 'f32', 'kind': 'to_head', 'source': 'f32'}, 'seed': 20602}
+
+    @pytest.mark.parametrize('case', CASES, ids=lambda c: c['id'])
+    def test_portable_case_runtime_and_independent_reference(layout, case):
+        runtime, calls = layout
+        x = unit.make_inputs(case)
+        original = support.digest(x['source'])
+        expected = unit.reference(x)['destination']
+>       key, shape, scalars = unit.launch_description(x)
+
+tmp/fmt02-native-01a0b7ce/repo/tests/test_kda_layout_kernel.py:101: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+inputs = {'parameters': {'N': 147456, 'destination': 'f32', 'kind': 'to_head', 'source': 'f32'}, 'source': tensor([[[[ 1.7218, ... -0.0842,  ..., -0.4179, -0.5322,  1.0026],
+          [ 0.3970, -1.3779,  0.0814,  ...,  0.1781, -0.2044,  0.2296]]]])}
+
+    def launch_description(inputs):
+        p = inputs['parameters'];kind = p['kind'];x = inputs['source']
+        options = {
+            'to_head': ((2,3,3,64,128), (192*3*128,128,64*3*128,3*128,1)),
+            'to_token': ((2,3,64,3,64), (3*3*64*64,64*64,64,3*64*64,1)),
+            'beta': ((2,3,3,1,64), (192*3,1,64*3,0,3)),
+            'cast': ((1,1,1,2,64), (0,0,0,64,1)),
+            'strided': ((1,1,1,2,128), (0,0,0,256,2)),
+            'broadcast': ((2,2,2,1,128), (0,0,0,0,0)),
+            'zero': ((1,1,1,2,128), (0,0,0,0,0)),
+        }
+        shape, strides = options[kind];n = math.prod(shape)
+        key = 'zero_'+p['destination'] if kind=='zero' else p['source']+'_'+p['destination']
+        scalars = dict(N=n)
+        if kind != 'zero':
+            scalars = dict(Storage=x.numel(), N=n, **{f'D{i}':shape[i] for i in range(1,5)},
+                           **{f'S{i}':strides[i] for i in range(5)})
+>           from runtime import tile_scalars
+E           ModuleNotFoundError: No module named 'runtime'
+
+tmp/fmt02-native-01a0b7ce/repo/kernels/projects/a5/kda_layout/unit.py:65: ModuleNotFoundError
+___ test_portable_case_runtime_and_independent_reference[to_token_bf16_bf16] ___
+
+layout = (<module '_afla_kda_layout_runtime' from '<task>/repo/kernels/projects/a5/kda_layout/runtime.py'>, [])
+case = {'block_dim': 1, 'id': 'to_token_bf16_bf16', 'parameters': {'N': 73728, 'destination': 'bf16', 'kind': 'to_token', 'source': 'bf16'}, 'seed': 20602}
+
+    @pytest.mark.parametrize('case', CASES, ids=lambda c: c['id'])
+    def test_portable_case_runtime_and_independent_reference(layout, case):
+        runtime, calls = layout
+        x = unit.make_inputs(case)
+        original = support.digest(x['source'])
+        expected = unit.reference(x)['destination']
+>       key, shape, scalars = unit.launch_description(x)
+
+tmp/fmt02-native-01a0b7ce/repo/tests/test_kda_layout_kernel.py:101: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+inputs = {'parameters': {'N': 73728, 'destination': 'bf16', 'kind': 'to_token', 'source': 'bf16'}, 'source': tensor([[[[[ 1.718...5,  0.1914],
+           [ 0.0693,  0.2812,  0.6055,  ...,  0.4199, -0.4902,  0.2773]]]]],
+       dtype=torch.bfloat16)}
+
+    def launch_description(inputs):
+        p = inputs['parameters'];kind = p['kind'];x = inputs['source']
+        options = {
+            'to_head': ((2,3,3,64,128), (192*3*128,128,64*3*128,3*128,1)),
+            'to_token': ((2,3,64,3,64), (3*3*64*64,64*64,64,3*64*64,1)),
+            'beta': ((2,3,3,1,64), (192*3,1,64*3,0,3)),
+            'cast': ((1,1,1,2,64), (0,0,0,64,1)),
+            'strided': ((1,1,1,2,128), (0,0,0,256,2)),
+            'broadcast': ((2,2,2,1,128), (0,0,0,0,0)),
+            'zero': ((1,1,1,2,128), (0,0,0,0,0)),
+        }
+        shape, strides = options[kind];n = math.prod(shape)
+        key = 'zero_'+p['destination'] if kind=='zero' else p['source']+'_'+p['destination']
+        scalars = dict(N=n)
+        if kind != 'zero':
+            scalars = dict(Storage=x.numel(), N=n, **{f'D{i}':shape[i] for i in range(1,5)},
+                           **{f'S{i}':strides[i] for i in range(5)})
+>           from runtime import tile_scalars
+E           ModuleNotFoundError: No module named 'runtime'
+
+tmp/fmt02-native-01a0b7ce/repo/kernels/projects/a5/kda_layout/unit.py:65: ModuleNotFoundError
+___ test_portable_case_runtime_and_independent_reference[to_token_bf16_f32] ____
+
+layout = (<module '_afla_kda_layout_runtime' from '<task>/repo/kernels/projects/a5/kda_layout/runtime.py'>, [])
+case = {'block_dim': 1, 'id': 'to_token_bf16_f32', 'parameters': {'N': 73728, 'destination': 'f32', 'kind': 'to_token', 'source': 'bf16'}, 'seed': 20602}
+
+    @pytest.mark.parametrize('case', CASES, ids=lambda c: c['id'])
+    def test_portable_case_runtime_and_independent_reference(layout, case):
+        runtime, calls = layout
+        x = unit.make_inputs(case)
+        original = support.digest(x['source'])
+        expected = unit.reference(x)['destination']
+>       key, shape, scalars = unit.launch_description(x)
+
+tmp/fmt02-native-01a0b7ce/repo/tests/test_kda_layout_kernel.py:101: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+inputs = {'parameters': {'N': 73728, 'destination': 'f32', 'kind': 'to_token', 'source': 'bf16'}, 'source': tensor([[[[[ 1.7188...5,  0.1914],
+           [ 0.0693,  0.2812,  0.6055,  ...,  0.4199, -0.4902,  0.2773]]]]],
+       dtype=torch.bfloat16)}
+
+    def launch_description(inputs):
+        p = inputs['parameters'];kind = p['kind'];x = inputs['source']
+        options = {
+            'to_head': ((2,3,3,64,128), (192*3*128,128,64*3*128,3*128,1)),
+            'to_token': ((2,3,64,3,64), (3*3*64*64,64*64,64,3*64*64,1)),
+            'beta': ((2,3,3,1,64), (192*3,1,64*3,0,3)),
+            'cast': ((1,1,1,2,64), (0,0,0,64,1)),
+            'strided': ((1,1,1,2,128), (0,0,0,256,2)),
+            'broadcast': ((2,2,2,1,128), (0,0,0,0,0)),
+            'zero': ((1,1,1,2,128), (0,0,0,0,0)),
+        }
+        shape, strides = options[kind];n = math.prod(shape)
+        key = 'zero_'+p['destination'] if kind=='zero' else p['source']+'_'+p['destination']
+        scalars = dict(N=n)
+        if kind != 'zero':
+            scalars = dict(Storage=x.numel(), N=n, **{f'D{i}':shape[i] for i in range(1,5)},
+                           **{f'S{i}':strides[i] for i in range(5)})
+>           from runtime import tile_scalars
+E           ModuleNotFoundError: No module named 'runtime'
+
+tmp/fmt02-native-01a0b7ce/repo/kernels/projects/a5/kda_layout/unit.py:65: ModuleNotFoundError
+___ test_portable_case_runtime_and_independent_reference[to_token_f32_bf16] ____
+
+layout = (<module '_afla_kda_layout_runtime' from '<task>/repo/kernels/projects/a5/kda_layout/runtime.py'>, [])
+case = {'block_dim': 1, 'id': 'to_token_f32_bf16', 'parameters': {'N': 73728, 'destination': 'bf16', 'kind': 'to_token', 'source': 'f32'}, 'seed': 20602}
+
+    @pytest.mark.parametrize('case', CASES, ids=lambda c: c['id'])
+    def test_portable_case_runtime_and_independent_reference(layout, case):
+        runtime, calls = layout
+        x = unit.make_inputs(case)
+        original = support.digest(x['source'])
+        expected = unit.reference(x)['destination']
+>       key, shape, scalars = unit.launch_description(x)
+
+tmp/fmt02-native-01a0b7ce/repo/tests/test_kda_layout_kernel.py:101: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+inputs = {'parameters': {'N': 73728, 'destination': 'bf16', 'kind': 'to_token', 'source': 'f32'}, 'source': tensor([[[[[ 1.7218...1.2013,  ..., -0.3082, -1.4387,  0.1910],
+           [ 0.0692,  0.2821,  0.6053,  ...,  0.4204, -0.4902,  0.2770]]]]])}
+
+    def launch_description(inputs):
+        p = inputs['parameters'];kind = p['kind'];x = inputs['source']
+        options = {
+            'to_head': ((2,3,3,64,128), (192*3*128,128,64*3*128,3*128,1)),
+            'to_token': ((2,3,64,3,64), (3*3*64*64,64*64,64,3*64*64,1)),
+            'beta': ((2,3,3,1,64), (192*3,1,64*3,0,3)),
+            'cast': ((1,1,1,2,64), (0,0,0,64,1)),
+            'strided': ((1,1,1,2,128), (0,0,0,256,2)),
+            'broadcast': ((2,2,2,1,128), (0,0,0,0,0)),
+            'zero': ((1,1,1,2,128), (0,0,0,0,0)),
+        }
+        shape, strides = options[kind];n = math.prod(shape)
+        key = 'zero_'+p['destination'] if kind=='zero' else p['source']+'_'+p['destination']
+        scalars = dict(N=n)
+        if kind != 'zero':
+            scalars = dict(Storage=x.numel(), N=n, **{f'D{i}':shape[i] for i in range(1,5)},
+                           **{f'S{i}':strides[i] for i in range(5)})
+>           from runtime import tile_scalars
+E           ModuleNotFoundError: No module named 'runtime'
+
+tmp/fmt02-native-01a0b7ce/repo/kernels/projects/a5/kda_layout/unit.py:65: ModuleNotFoundError
+____ test_portable_case_runtime_and_independent_reference[to_token_f32_f32] ____
+
+layout = (<module '_afla_kda_layout_runtime' from '<task>/repo/kernels/projects/a5/kda_layout/runtime.py'>, [])
+case = {'block_dim': 1, 'id': 'to_token_f32_f32', 'parameters': {'N': 73728, 'destination': 'f32', 'kind': 'to_token', 'source': 'f32'}, 'seed': 20602}
+
+    @pytest.mark.parametrize('case', CASES, ids=lambda c: c['id'])
+    def test_portable_case_runtime_and_independent_reference(layout, case):
+        runtime, calls = layout
+        x = unit.make_inputs(case)
+        original = support.digest(x['source'])
+        expected = unit.reference(x)['destination']
+>       key, shape, scalars = unit.launch_description(x)
+
+tmp/fmt02-native-01a0b7ce/repo/tests/test_kda_layout_kernel.py:101: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+inputs = {'parameters': {'N': 73728, 'destination': 'f32', 'kind': 'to_token', 'source': 'f32'}, 'source': tensor([[[[[ 1.7218,...1.2013,  ..., -0.3082, -1.4387,  0.1910],
+           [ 0.0692,  0.2821,  0.6053,  ...,  0.4204, -0.4902,  0.2770]]]]])}
+
+    def launch_description(inputs):
+        p = inputs['parameters'];kind = p['kind'];x = inputs['source']
+        options = {
+            'to_head': ((2,3,3,64,128), (192*3*128,128,64*3*128,3*128,1)),
+            'to_token': ((2,3,64,3,64), (3*3*64*64,64*64,64,3*64*64,1)),
+            'beta': ((2,3,3,1,64), (192*3,1,64*3,0,3)),
+            'cast': ((1,1,1,2,64), (0,0,0,64,1)),
+            'strided': ((1,1,1,2,128), (0,0,0,256,2)),
+            'broadcast': ((2,2,2,1,128), (0,0,0,0,0)),
+            'zero': ((1,1,1,2,128), (0,0,0,0,0)),
+        }
+        shape, strides = options[kind];n = math.prod(shape)
+        key = 'zero_'+p['destination'] if kind=='zero' else p['source']+'_'+p['destination']
+        scalars = dict(N=n)
+        if kind != 'zero':
+            scalars = dict(Storage=x.numel(), N=n, **{f'D{i}':shape[i] for i in range(1,5)},
+                           **{f'S{i}':strides[i] for i in range(5)})
+>           from runtime import tile_scalars
+E           ModuleNotFoundError: No module named 'runtime'
+
+tmp/fmt02-native-01a0b7ce/repo/kernels/projects/a5/kda_layout/unit.py:65: ModuleNotFoundError
+_____ test_portable_case_runtime_and_independent_reference[beta_bf16_bf16] _____
+
+layout = (<module '_afla_kda_layout_runtime' from '<task>/repo/kernels/projects/a5/kda_layout/runtime.py'>, [])
+case = {'block_dim': 1, 'id': 'beta_bf16_bf16', 'parameters': {'N': 1152, 'destination': 'bf16', 'kind': 'beta', 'source': 'bf16'}, 'seed': 20602}
+
+    @pytest.mark.parametrize('case', CASES, ids=lambda c: c['id'])
+    def test_portable_case_runtime_and_independent_reference(layout, case):
+        runtime, calls = layout
+        x = unit.make_inputs(case)
+        original = support.digest(x['source'])
+        expected = unit.reference(x)['destination']
+>       key, shape, scalars = unit.launch_description(x)
+
+tmp/fmt02-native-01a0b7ce/repo/tests/test_kda_layout_kernel.py:101: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+inputs = {'parameters': {'N': 1152, 'destination': 'bf16', 'kind': 'beta', 'source': 'bf16'}, 'source': tensor([[[ 1.7188,  1.0...-1.3828,  0.2871],
+         [-1.6953,  2.3125, -1.5156],
+         [ 0.9141, -2.1250,  0.3008]]], dtype=torch.bfloat16)}
+
+    def launch_description(inputs):
+        p = inputs['parameters'];kind = p['kind'];x = inputs['source']
+        options = {
+            'to_head': ((2,3,3,64,128), (192*3*128,128,64*3*128,3*128,1)),
+            'to_token': ((2,3,64,3,64), (3*3*64*64,64*64,64,3*64*64,1)),
+            'beta': ((2,3,3,1,64), (192*3,1,64*3,0,3)),
+            'cast': ((1,1,1,2,64), (0,0,0,64,1)),
+            'strided': ((1,1,1,2,128), (0,0,0,256,2)),
+            'broadcast': ((2,2,2,1,128), (0,0,0,0,0)),
+            'zero': ((1,1,1,2,128), (0,0,0,0,0)),
+        }
+        shape, strides = options[kind];n = math.prod(shape)
+        key = 'zero_'+p['destination'] if kind=='zero' else p['source']+'_'+p['destination']
+        scalars = dict(N=n)
+        if kind != 'zero':
+            scalars = dict(Storage=x.numel(), N=n, **{f'D{i}':shape[i] for i in range(1,5)},
+                           **{f'S{i}':strides[i] for i in range(5)})
+>           from runtime import tile_scalars
+E           ModuleNotFoundError: No module named 'runtime'
+
+tmp/fmt02-native-01a0b7ce/repo/kernels/projects/a5/kda_layout/unit.py:65: ModuleNotFoundError
+_____ test_portable_case_runtime_and_independent_reference[beta_bf16_f32] ______
+
+layout = (<module '_afla_kda_layout_runtime' from '<task>/repo/kernels/projects/a5/kda_layout/runtime.py'>, [])
+case = {'block_dim': 1, 'id': 'beta_bf16_f32', 'parameters': {'N': 1152, 'destination': 'f32', 'kind': 'beta', 'source': 'bf16'}, 'seed': 20602}
+
+    @pytest.mark.parametrize('case', CASES, ids=lambda c: c['id'])
+    def test_portable_case_runtime_and_independent_reference(layout, case):
+        runtime, calls = layout
+        x = unit.make_inputs(case)
+        original = support.digest(x['source'])
+        expected = unit.reference(x)['destination']
+>       key, shape, scalars = unit.launch_description(x)
+
+tmp/fmt02-native-01a0b7ce/repo/tests/test_kda_layout_kernel.py:101: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+inputs = {'parameters': {'N': 1152, 'destination': 'f32', 'kind': 'beta', 'source': 'bf16'}, 'source': tensor([[[ 1.7188,  1.07...-1.3828,  0.2871],
+         [-1.6953,  2.3125, -1.5156],
+         [ 0.9141, -2.1250,  0.3008]]], dtype=torch.bfloat16)}
+
+    def launch_description(inputs):
+        p = inputs['parameters'];kind = p['kind'];x = inputs['source']
+        options = {
+            'to_head': ((2,3,3,64,128), (192*3*128,128,64*3*128,3*128,1)),
+            'to_token': ((2,3,64,3,64), (3*3*64*64,64*64,64,3*64*64,1)),
+            'beta': ((2,3,3,1,64), (192*3,1,64*3,0,3)),
+            'cast': ((1,1,1,2,64), (0,0,0,64,1)),
+            'strided': ((1,1,1,2,128), (0,0,0,256,2)),
+            'broadcast': ((2,2,2,1,128), (0,0,0,0,0)),
+            'zero': ((1,1,1,2,128), (0,0,0,0,0)),
+        }
+        shape, strides = options[kind];n = math.prod(shape)
+        key = 'zero_'+p['destination'] if kind=='zero' else p['source']+'_'+p['destination']
+        scalars = dict(N=n)
+        if kind != 'zero':
+            scalars = dict(Storage=x.numel(), N=n, **{f'D{i}':shape[i] for i in range(1,5)},
+                           **{f'S{i}':strides[i] for i in range(5)})
+>           from runtime import tile_scalars
+E           ModuleNotFoundError: No module named 'runtime'
+
+tmp/fmt02-native-01a0b7ce/repo/kernels/projects/a5/kda_layout/unit.py:65: ModuleNotFoundError
+_____ test_portable_case_runtime_and_independent_reference[beta_f32_bf16] ______
+
+layout = (<module '_afla_kda_layout_runtime' from '<task>/repo/kernels/projects/a5/kda_layout/runtime.py'>, [])
+case = {'block_dim': 1, 'id': 'beta_f32_bf16', 'parameters': {'N': 1152, 'destination': 'bf16', 'kind': 'beta', 'source': 'f32'}, 'seed': 20602}
+
+    @pytest.mark.parametrize('case', CASES, ids=lambda c: c['id'])
+    def test_portable_case_runtime_and_independent_reference(layout, case):
+        runtime, calls = layout
+        x = unit.make_inputs(case)
+        original = support.digest(x['source'])
+        expected = unit.reference(x)['destination']
+>       key, shape, scalars = unit.launch_description(x)
+
+tmp/fmt02-native-01a0b7ce/repo/tests/test_kda_layout_kernel.py:101: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+inputs = {'parameters': {'N': 1152, 'destination': 'bf16', 'kind': 'beta', 'source': 'f32'}, 'source': tensor([[[ 1.7218,  1.07....,
+         [ 0.3108, -1.3854,  0.2880],
+         [-1.6915,  2.3104, -1.5181],
+         [ 0.9124, -2.1318,  0.3008]]])}
+
+    def launch_description(inputs):
+        p = inputs['parameters'];kind = p['kind'];x = inputs['source']
+        options = {
+            'to_head': ((2,3,3,64,128), (192*3*128,128,64*3*128,3*128,1)),
+            'to_token': ((2,3,64,3,64), (3*3*64*64,64*64,64,3*64*64,1)),
+            'beta': ((2,3,3,1,64), (192*3,1,64*3,0,3)),
+            'cast': ((1,1,1,2,64), (0,0,0,64,1)),
+            'strided': ((1,1,1,2,128), (0,0,0,256,2)),
+            'broadcast': ((2,2,2,1,128), (0,0,0,0,0)),
+            'zero': ((1,1,1,2,128), (0,0,0,0,0)),
+        }
+        shape, strides = options[kind];n = math.prod(shape)
+        key = 'zero_'+p['destination'] if kind=='zero' else p['source']+'_'+p['destination']
+        scalars = dict(N=n)
+        if kind != 'zero':
+            scalars = dict(Storage=x.numel(), N=n, **{f'D{i}':shape[i] for i in range(1,5)},
+                           **{f'S{i}':strides[i] for i in range(5)})
+>           from runtime import tile_scalars
+E           ModuleNotFoundError: No module named 'runtime'
+
+tmp/fmt02-native-01a0b7ce/repo/kernels/projects/a5/kda_layout/unit.py:65: ModuleNotFoundError
+______ test_portable_case_runtime_and_independent_reference[beta_f32_f32] ______
+
+layout = (<module '_afla_kda_layout_runtime' from '<task>/repo/kernels/projects/a5/kda_layout/runtime.py'>, [])
+case = {'block_dim': 1, 'id': 'beta_f32_f32', 'parameters': {'N': 1152, 'destination': 'f32', 'kind': 'beta', 'source': 'f32'}, 'seed': 20602}
+
+    @pytest.mark.parametrize('case', CASES, ids=lambda c: c['id'])
+    def test_portable_case_runtime_and_independent_reference(layout, case):
+        runtime, calls = layout
+        x = unit.make_inputs(case)
+        original = support.digest(x['source'])
+        expected = unit.reference(x)['destination']
+>       key, shape, scalars = unit.launch_description(x)
+
+tmp/fmt02-native-01a0b7ce/repo/tests/test_kda_layout_kernel.py:101: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+inputs = {'parameters': {'N': 1152, 'destination': 'f32', 'kind': 'beta', 'source': 'f32'}, 'source': tensor([[[ 1.7218,  1.074....,
+         [ 0.3108, -1.3854,  0.2880],
+         [-1.6915,  2.3104, -1.5181],
+         [ 0.9124, -2.1318,  0.3008]]])}
+
+    def launch_description(inputs):
+        p = inputs['parameters'];kind = p['kind'];x = inputs['source']
+        options = {
+            'to_head': ((2,3,3,64,128), (192*3*128,128,64*3*128,3*128,1)),
+            'to_token': ((2,3,64,3,64), (3*3*64*64,64*64,64,3*64*64,1)),
+            'beta': ((2,3,3,1,64), (192*3,1,64*3,0,3)),
+            'cast': ((1,1,1,2,64), (0,0,0,64,1)),
+            'strided': ((1,1,1,2,128), (0,0,0,256,2)),
+            'broadcast': ((2,2,2,1,128), (0,0,0,0,0)),
+            'zero': ((1,1,1,2,128), (0,0,0,0,0)),
+        }
+        shape, strides = options[kind];n = math.prod(shape)
+        key = 'zero_'+p['destination'] if kind=='zero' else p['source']+'_'+p['destination']
+        scalars = dict(N=n)
+        if kind != 'zero':
+            scalars = dict(Storage=x.numel(), N=n, **{f'D{i}':shape[i] for i in range(1,5)},
+                           **{f'S{i}':strides[i] for i in range(5)})
+>           from runtime import tile_scalars
+E           ModuleNotFoundError: No module named 'runtime'
+
+tmp/fmt02-native-01a0b7ce/repo/kernels/projects/a5/kda_layout/unit.py:65: ModuleNotFoundError
+_____ test_portable_case_runtime_and_independent_reference[cast_bf16_bf16] _____
+
+layout = (<module '_afla_kda_layout_runtime' from '<task>/repo/kernels/projects/a5/kda_layout/runtime.py'>, [])
+case = {'block_dim': 1, 'id': 'cast_bf16_bf16', 'parameters': {'N': 128, 'destination': 'bf16', 'kind': 'cast', 'source': 'bf16'}, 'seed': 20602}
+
+    @pytest.mark.parametrize('case', CASES, ids=lambda c: c['id'])
+    def test_portable_case_runtime_and_independent_reference(layout, case):
+        runtime, calls = layout
+        x = unit.make_inputs(case)
+        original = support.digest(x['source'])
+        expected = unit.reference(x)['destination']
+>       key, shape, scalars = unit.launch_description(x)
+
+tmp/fmt02-native-01a0b7ce/repo/tests/test_kda_layout_kernel.py:101: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+inputs = {'parameters': {'N': 128, 'destination': 'bf16', 'kind': 'cast', 'source': 'bf16'}, 'source': tensor([[-0.0000, 1.0156...      1.9219, 1.9375, 1.9375, 1.9531, 1.9531, 1.9688, 1.9688, 1.9844, 1.9844,
+         2.0000]], dtype=torch.bfloat16)}
+
+    def launch_description(inputs):
+        p = inputs['parameters'];kind = p['kind'];x = inputs['source']
+        options = {
+            'to_head': ((2,3,3,64,128), (192*3*128,128,64*3*128,3*128,1)),
+            'to_token': ((2,3,64,3,64), (3*3*64*64,64*64,64,3*64*64,1)),
+            'beta': ((2,3,3,1,64), (192*3,1,64*3,0,3)),
+            'cast': ((1,1,1,2,64), (0,0,0,64,1)),
+            'strided': ((1,1,1,2,128), (0,0,0,256,2)),
+            'broadcast': ((2,2,2,1,128), (0,0,0,0,0)),
+            'zero': ((1,1,1,2,128), (0,0,0,0,0)),
+        }
+        shape, strides = options[kind];n = math.prod(shape)
+        key = 'zero_'+p['destination'] if kind=='zero' else p['source']+'_'+p['destination']
+        scalars = dict(N=n)
+        if kind != 'zero':
+            scalars = dict(Storage=x.numel(), N=n, **{f'D{i}':shape[i] for i in range(1,5)},
+                           **{f'S{i}':strides[i] for i in range(5)})
+>           from runtime import tile_scalars
+E           ModuleNotFoundError: No module named 'runtime'
+
+tmp/fmt02-native-01a0b7ce/repo/kernels/projects/a5/kda_layout/unit.py:65: ModuleNotFoundError
+_____ test_portable_case_runtime_and_independent_reference[cast_bf16_f32] ______
+
+layout = (<module '_afla_kda_layout_runtime' from '<task>/repo/kernels/projects/a5/kda_layout/runtime.py'>, [])
+case = {'block_dim': 1, 'id': 'cast_bf16_f32', 'parameters': {'N': 128, 'destination': 'f32', 'kind': 'cast', 'source': 'bf16'}, 'seed': 20602}
+
+    @pytest.mark.parametrize('case', CASES, ids=lambda c: c['id'])
+    def test_portable_case_runtime_and_independent_reference(layout, case):
+        runtime, calls = layout
+        x = unit.make_inputs(case)
+        original = support.digest(x['source'])
+        expected = unit.reference(x)['destination']
+>       key, shape, scalars = unit.launch_description(x)
+
+tmp/fmt02-native-01a0b7ce/repo/tests/test_kda_layout_kernel.py:101: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+inputs = {'parameters': {'N': 128, 'destination': 'f32', 'kind': 'cast', 'source': 'bf16'}, 'source': tensor([[-0.0000, 1.0156,...      1.9219, 1.9375, 1.9375, 1.9531, 1.9531, 1.9688, 1.9688, 1.9844, 1.9844,
+         2.0000]], dtype=torch.bfloat16)}
+
+    def launch_description(inputs):
+        p = inputs['parameters'];kind = p['kind'];x = inputs['source']
+        options = {
+            'to_head': ((2,3,3,64,128), (192*3*128,128,64*3*128,3*128,1)),
+            'to_token': ((2,3,64,3,64), (3*3*64*64,64*64,64,3*64*64,1)),
+            'beta': ((2,3,3,1,64), (192*3,1,64*3,0,3)),
+            'cast': ((1,1,1,2,64), (0,0,0,64,1)),
+            'strided': ((1,1,1,2,128), (0,0,0,256,2)),
+            'broadcast': ((2,2,2,1,128), (0,0,0,0,0)),
+            'zero': ((1,1,1,2,128), (0,0,0,0,0)),
+        }
+        shape, strides = options[kind];n = math.prod(shape)
+        key = 'zero_'+p['destination'] if kind=='zero' else p['source']+'_'+p['destination']
+        scalars = dict(N=n)
+        if kind != 'zero':
+            scalars = dict(Storage=x.numel(), N=n, **{f'D{i}':shape[i] for i in range(1,5)},
+                           **{f'S{i}':strides[i] for i in range(5)})
+>           from runtime import tile_scalars
+E           ModuleNotFoundError: No module named 'runtime'
+
+tmp/fmt02-native-01a0b7ce/repo/kernels/projects/a5/kda_layout/unit.py:65: ModuleNotFoundError
+_____ test_portable_case_runtime_and_independent_reference[cast_f32_bf16] ______
+
+layout = (<module '_afla_kda_layout_runtime' from '<task>/repo/kernels/projects/a5/kda_layout/runtime.py'>, [])
+case = {'block_dim': 1, 'id': 'cast_f32_bf16', 'parameters': {'N': 128, 'destination': 'bf16', 'kind': 'cast', 'source': 'f32'}, 'seed': 20602}
+
+    @pytest.mark.parametrize('case', CASES, ids=lambda c: c['id'])
+    def test_portable_case_runtime_and_independent_reference(layout, case):
+        runtime, calls = layout
+        x = unit.make_inputs(case)
+        original = support.digest(x['source'])
+        expected = unit.reference(x)['destination']
+>       key, shape, scalars = unit.launch_description(x)
+
+tmp/fmt02-native-01a0b7ce/repo/tests/test_kda_layout_kernel.py:101: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+inputs = {'parameters': {'N': 128, 'destination': 'bf16', 'kind': 'cast', 'source': 'f32'}, 'source': tensor([[-0.0000, 1.0117,...3, 1.9102, 1.9180,
+         1.9258, 1.9336, 1.9414, 1.9492, 1.9570, 1.9648, 1.9727, 1.9805, 1.9883,
+         1.9961]])}
+
+    def launch_description(inputs):
+        p = inputs['parameters'];kind = p['kind'];x = inputs['source']
+        options = {
+            'to_head': ((2,3,3,64,128), (192*3*128,128,64*3*128,3*128,1)),
+            'to_token': ((2,3,64,3,64), (3*3*64*64,64*64,64,3*64*64,1)),
+            'beta': ((2,3,3,1,64), (192*3,1,64*3,0,3)),
+            'cast': ((1,1,1,2,64), (0,0,0,64,1)),
+            'strided': ((1,1,1,2,128), (0,0,0,256,2)),
+            'broadcast': ((2,2,2,1,128), (0,0,0,0,0)),
+            'zero': ((1,1,1,2,128), (0,0,0,0,0)),
+        }
+        shape, strides = options[kind];n = math.prod(shape)
+        key = 'zero_'+p['destination'] if kind=='zero' else p['source']+'_'+p['destination']
+        scalars = dict(N=n)
+        if kind != 'zero':
+            scalars = dict(Storage=x.numel(), N=n, **{f'D{i}':shape[i] for i in range(1,5)},
+                           **{f'S{i}':strides[i] for i in range(5)})
+>           from runtime import tile_scalars
+E           ModuleNotFoundError: No module named 'runtime'
+
+tmp/fmt02-native-01a0b7ce/repo/kernels/projects/a5/kda_layout/unit.py:65: ModuleNotFoundError
+______ test_portable_case_runtime_and_independent_reference[cast_f32_f32] ______
+
+layout = (<module '_afla_kda_layout_runtime' from '<task>/repo/kernels/projects/a5/kda_layout/runtime.py'>, [])
+case = {'block_dim': 1, 'id': 'cast_f32_f32', 'parameters': {'N': 128, 'destination': 'f32', 'kind': 'cast', 'source': 'f32'}, 'seed': 20602}
+
+    @pytest.mark.parametrize('case', CASES, ids=lambda c: c['id'])
+    def test_portable_case_runtime_and_independent_reference(layout, case):
+        runtime, calls = layout
+        x = unit.make_inputs(case)
+        original = support.digest(x['source'])
+        expected = unit.reference(x)['destination']
+>       key, shape, scalars = unit.launch_description(x)
+
+tmp/fmt02-native-01a0b7ce/repo/tests/test_kda_layout_kernel.py:101: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+inputs = {'parameters': {'N': 128, 'destination': 'f32', 'kind': 'cast', 'source': 'f32'}, 'source': tensor([[-0.0000, 1.0117, ...3, 1.9102, 1.9180,
+         1.9258, 1.9336, 1.9414, 1.9492, 1.9570, 1.9648, 1.9727, 1.9805, 1.9883,
+         1.9961]])}
+
+    def launch_description(inputs):
+        p = inputs['parameters'];kind = p['kind'];x = inputs['source']
+        options = {
+            'to_head': ((2,3,3,64,128), (192*3*128,128,64*3*128,3*128,1)),
+            'to_token': ((2,3,64,3,64), (3*3*64*64,64*64,64,3*64*64,1)),
+            'beta': ((2,3,3,1,64), (192*3,1,64*3,0,3)),
+            'cast': ((1,1,1,2,64), (0,0,0,64,1)),
+            'strided': ((1,1,1,2,128), (0,0,0,256,2)),
+            'broadcast': ((2,2,2,1,128), (0,0,0,0,0)),
+            'zero': ((1,1,1,2,128), (0,0,0,0,0)),
+        }
+        shape, strides = options[kind];n = math.prod(shape)
+        key = 'zero_'+p['destination'] if kind=='zero' else p['source']+'_'+p['destination']
+        scalars = dict(N=n)
+        if kind != 'zero':
+            scalars = dict(Storage=x.numel(), N=n, **{f'D{i}':shape[i] for i in range(1,5)},
+                           **{f'S{i}':strides[i] for i in range(5)})
+>           from runtime import tile_scalars
+E           ModuleNotFoundError: No module named 'runtime'
+
+tmp/fmt02-native-01a0b7ce/repo/kernels/projects/a5/kda_layout/unit.py:65: ModuleNotFoundError
+___ test_portable_case_runtime_and_independent_reference[strided_bf16_bf16] ____
+
+layout = (<module '_afla_kda_layout_runtime' from '<task>/repo/kernels/projects/a5/kda_layout/runtime.py'>, [])
+case = {'block_dim': 1, 'id': 'strided_bf16_bf16', 'parameters': {'N': 256, 'destination': 'bf16', 'kind': 'strided', 'source': 'bf16'}, 'seed': 20602}
+
+    @pytest.mark.parametrize('case', CASES, ids=lambda c: c['id'])
+    def test_portable_case_runtime_and_independent_reference(layout, case):
+        runtime, calls = layout
+        x = unit.make_inputs(case)
+        original = support.digest(x['source'])
+        expected = unit.reference(x)['destination']
+>       key, shape, scalars = unit.launch_description(x)
+
+tmp/fmt02-native-01a0b7ce/repo/tests/test_kda_layout_kernel.py:101: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+inputs = {'parameters': {'N': 256, 'destination': 'bf16', 'kind': 'strided', 'source': 'bf16'}, 'source': tensor([ 1.0781, -0.2...-0.1260, -2.0469,
+         0.8398, -0.9609, -0.5156,  0.7930,  0.5820, -0.6289, -0.3066],
+       dtype=torch.bfloat16)}
+
+    def launch_description(inputs):
+        p = inputs['parameters'];kind = p['kind'];x = inputs['source']
+        options = {
+            'to_head': ((2,3,3,64,128), (192*3*128,128,64*3*128,3*128,1)),
+            'to_token': ((2,3,64,3,64), (3*3*64*64,64*64,64,3*64*64,1)),
+            'beta': ((2,3,3,1,64), (192*3,1,64*3,0,3)),
+            'cast': ((1,1,1,2,64), (0,0,0,64,1)),
+            'strided': ((1,1,1,2,128), (0,0,0,256,2)),
+            'broadcast': ((2,2,2,1,128), (0,0,0,0,0)),
+            'zero': ((1,1,1,2,128), (0,0,0,0,0)),
+        }
+        shape, strides = options[kind];n = math.prod(shape)
+        key = 'zero_'+p['destination'] if kind=='zero' else p['source']+'_'+p['destination']
+        scalars = dict(N=n)
+        if kind != 'zero':
+            scalars = dict(Storage=x.numel(), N=n, **{f'D{i}':shape[i] for i in range(1,5)},
+                           **{f'S{i}':strides[i] for i in range(5)})
+>           from runtime import tile_scalars
+E           ModuleNotFoundError: No module named 'runtime'
+
+tmp/fmt02-native-01a0b7ce/repo/kernels/projects/a5/kda_layout/unit.py:65: ModuleNotFoundError
+____ test_portable_case_runtime_and_independent_reference[strided_bf16_f32] ____
+
+layout = (<module '_afla_kda_layout_runtime' from '<task>/repo/kernels/projects/a5/kda_layout/runtime.py'>, [])
+case = {'block_dim': 1, 'id': 'strided_bf16_f32', 'parameters': {'N': 256, 'destination': 'f32', 'kind': 'strided', 'source': 'bf16'}, 'seed': 20602}
+
+    @pytest.mark.parametrize('case', CASES, ids=lambda c: c['id'])
+    def test_portable_case_runtime_and_independent_reference(layout, case):
+        runtime, calls = layout
+        x = unit.make_inputs(case)
+        original = support.digest(x['source'])
+        expected = unit.reference(x)['destination']
+>       key, shape, scalars = unit.launch_description(x)
+
+tmp/fmt02-native-01a0b7ce/repo/tests/test_kda_layout_kernel.py:101: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+inputs = {'parameters': {'N': 256, 'destination': 'f32', 'kind': 'strided', 'source': 'bf16'}, 'source': tensor([ 1.0781, -0.28...-0.1260, -2.0469,
+         0.8398, -0.9609, -0.5156,  0.7930,  0.5820, -0.6289, -0.3066],
+       dtype=torch.bfloat16)}
+
+    def launch_description(inputs):
+        p = inputs['parameters'];kind = p['kind'];x = inputs['source']
+        options = {
+            'to_head': ((2,3,3,64,128), (192*3*128,128,64*3*128,3*128,1)),
+            'to_token': ((2,3,64,3,64), (3*3*64*64,64*64,64,3*64*64,1)),
+            'beta': ((2,3,3,1,64), (192*3,1,64*3,0,3)),
+            'cast': ((1,1,1,2,64), (0,0,0,64,1)),
+            'strided': ((1,1,1,2,128), (0,0,0,256,2)),
+            'broadcast': ((2,2,2,1,128), (0,0,0,0,0)),
+            'zero': ((1,1,1,2,128), (0,0,0,0,0)),
+        }
+        shape, strides = options[kind];n = math.prod(shape)
+        key = 'zero_'+p['destination'] if kind=='zero' else p['source']+'_'+p['destination']
+        scalars = dict(N=n)
+        if kind != 'zero':
+            scalars = dict(Storage=x.numel(), N=n, **{f'D{i}':shape[i] for i in range(1,5)},
+                           **{f'S{i}':strides[i] for i in range(5)})
+>           from runtime import tile_scalars
+E           ModuleNotFoundError: No module named 'runtime'
+
+tmp/fmt02-native-01a0b7ce/repo/kernels/projects/a5/kda_layout/unit.py:65: ModuleNotFoundError
+____ test_portable_case_runtime_and_independent_reference[strided_f32_bf16] ____
+
+layout = (<module '_afla_kda_layout_runtime' from '<task>/repo/kernels/projects/a5/kda_layout/runtime.py'>, [])
+case = {'block_dim': 1, 'id': 'strided_f32_bf16', 'parameters': {'N': 256, 'destination': 'bf16', 'kind': 'strided', 'source': 'f32'}, 'seed': 20602}
+
+    @pytest.mark.parametrize('case', CASES, ids=lambda c: c['id'])
+    def test_portable_case_runtime_and_independent_reference(layout, case):
+        runtime, calls = layout
+        x = unit.make_inputs(case)
+        original = support.digest(x['source'])
+        expected = unit.reference(x)['destination']
+>       key, shape, scalars = unit.launch_description(x)
+
+tmp/fmt02-native-01a0b7ce/repo/tests/test_kda_layout_kernel.py:101: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+inputs = {'parameters': {'N': 256, 'destination': 'bf16', 'kind': 'strided', 'source': 'f32'}, 'source': tensor([ 1.0748, -0.28..., -0.4884,  0.0481,  1.9381, -0.1261, -2.0501,
+         0.8384, -0.9610, -0.5172,  0.7916,  0.5813, -0.6296, -0.3067])}
+
+    def launch_description(inputs):
+        p = inputs['parameters'];kind = p['kind'];x = inputs['source']
+        options = {
+            'to_head': ((2,3,3,64,128), (192*3*128,128,64*3*128,3*128,1)),
+            'to_token': ((2,3,64,3,64), (3*3*64*64,64*64,64,3*64*64,1)),
+            'beta': ((2,3,3,1,64), (192*3,1,64*3,0,3)),
+            'cast': ((1,1,1,2,64), (0,0,0,64,1)),
+            'strided': ((1,1,1,2,128), (0,0,0,256,2)),
+            'broadcast': ((2,2,2,1,128), (0,0,0,0,0)),
+            'zero': ((1,1,1,2,128), (0,0,0,0,0)),
+        }
+        shape, strides = options[kind];n = math.prod(shape)
+        key = 'zero_'+p['destination'] if kind=='zero' else p['source']+'_'+p['destination']
+        scalars = dict(N=n)
+        if kind != 'zero':
+            scalars = dict(Storage=x.numel(), N=n, **{f'D{i}':shape[i] for i in range(1,5)},
+                           **{f'S{i}':strides[i] for i in range(5)})
+>           from runtime import tile_scalars
+E           ModuleNotFoundError: No module named 'runtime'
+
+tmp/fmt02-native-01a0b7ce/repo/kernels/projects/a5/kda_layout/unit.py:65: ModuleNotFoundError
+____ test_portable_case_runtime_and_independent_reference[strided_f32_f32] _____
+
+layout = (<module '_afla_kda_layout_runtime' from '<task>/repo/kernels/projects/a5/kda_layout/runtime.py'>, [])
+case = {'block_dim': 1, 'id': 'strided_f32_f32', 'parameters': {'N': 256, 'destination': 'f32', 'kind': 'strided', 'source': 'f32'}, 'seed': 20602}
+
+    @pytest.mark.parametrize('case', CASES, ids=lambda c: c['id'])
+    def test_portable_case_runtime_and_independent_reference(layout, case):
+        runtime, calls = layout
+        x = unit.make_inputs(case)
+        original = support.digest(x['source'])
+        expected = unit.reference(x)['destination']
+>       key, shape, scalars = unit.launch_description(x)
+
+tmp/fmt02-native-01a0b7ce/repo/tests/test_kda_layout_kernel.py:101: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+inputs = {'parameters': {'N': 256, 'destination': 'f32', 'kind': 'strided', 'source': 'f32'}, 'source': tensor([ 1.0748, -0.289..., -0.4884,  0.0481,  1.9381, -0.1261, -2.0501,
+         0.8384, -0.9610, -0.5172,  0.7916,  0.5813, -0.6296, -0.3067])}
+
+    def launch_description(inputs):
+        p = inputs['parameters'];kind = p['kind'];x = inputs['source']
+        options = {
+            'to_head': ((2,3,3,64,128), (192*3*128,128,64*3*128,3*128,1)),
+            'to_token': ((2,3,64,3,64), (3*3*64*64,64*64,64,3*64*64,1)),
+            'beta': ((2,3,3,1,64), (192*3,1,64*3,0,3)),
+            'cast': ((1,1,1,2,64), (0,0,0,64,1)),
+            'strided': ((1,1,1,2,128), (0,0,0,256,2)),
+            'broadcast': ((2,2,2,1,128), (0,0,0,0,0)),
+            'zero': ((1,1,1,2,128), (0,0,0,0,0)),
+        }
+        shape, strides = options[kind];n = math.prod(shape)
+        key = 'zero_'+p['destination'] if kind=='zero' else p['source']+'_'+p['destination']
+        scalars = dict(N=n)
+        if kind != 'zero':
+            scalars = dict(Storage=x.numel(), N=n, **{f'D{i}':shape[i] for i in range(1,5)},
+                           **{f'S{i}':strides[i] for i in range(5)})
+>           from runtime import tile_scalars
+E           ModuleNotFoundError: No module named 'runtime'
+
+tmp/fmt02-native-01a0b7ce/repo/kernels/projects/a5/kda_layout/unit.py:65: ModuleNotFoundError
+__ test_portable_case_runtime_and_independent_reference[broadcast_bf16_bf16] ___
+
+layout = (<module '_afla_kda_layout_runtime' from '<task>/repo/kernels/projects/a5/kda_layout/runtime.py'>, [])
+case = {'block_dim': 1, 'id': 'broadcast_bf16_bf16', 'parameters': {'N': 1024, 'destination': 'bf16', 'kind': 'broadcast', 'source': 'bf16'}, 'seed': 20602}
+
+    @pytest.mark.parametrize('case', CASES, ids=lambda c: c['id'])
+    def test_portable_case_runtime_and_independent_reference(layout, case):
+        runtime, calls = layout
+        x = unit.make_inputs(case)
+        original = support.digest(x['source'])
+        expected = unit.reference(x)['destination']
+>       key, shape, scalars = unit.launch_description(x)
+
+tmp/fmt02-native-01a0b7ce/repo/tests/test_kda_layout_kernel.py:101: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+inputs = {'parameters': {'N': 1024, 'destination': 'bf16', 'kind': 'broadcast', 'source': 'bf16'}, 'source': tensor([0.2227], dtype=torch.bfloat16)}
+
+    def launch_description(inputs):
+        p = inputs['parameters'];kind = p['kind'];x = inputs['source']
+        options = {
+            'to_head': ((2,3,3,64,128), (192*3*128,128,64*3*128,3*128,1)),
+            'to_token': ((2,3,64,3,64), (3*3*64*64,64*64,64,3*64*64,1)),
+            'beta': ((2,3,3,1,64), (192*3,1,64*3,0,3)),
+            'cast': ((1,1,1,2,64), (0,0,0,64,1)),
+            'strided': ((1,1,1,2,128), (0,0,0,256,2)),
+            'broadcast': ((2,2,2,1,128), (0,0,0,0,0)),
+            'zero': ((1,1,1,2,128), (0,0,0,0,0)),
+        }
+        shape, strides = options[kind];n = math.prod(shape)
+        key = 'zero_'+p['destination'] if kind=='zero' else p['source']+'_'+p['destination']
+        scalars = dict(N=n)
+        if kind != 'zero':
+            scalars = dict(Storage=x.numel(), N=n, **{f'D{i}':shape[i] for i in range(1,5)},
+                           **{f'S{i}':strides[i] for i in range(5)})
+>           from runtime import tile_scalars
+E           ModuleNotFoundError: No module named 'runtime'
+
+tmp/fmt02-native-01a0b7ce/repo/kernels/projects/a5/kda_layout/unit.py:65: ModuleNotFoundError
+___ test_portable_case_runtime_and_independent_reference[broadcast_bf16_f32] ___
+
+layout = (<module '_afla_kda_layout_runtime' from '<task>/repo/kernels/projects/a5/kda_layout/runtime.py'>, [])
+case = {'block_dim': 1, 'id': 'broadcast_bf16_f32', 'parameters': {'N': 1024, 'destination': 'f32', 'kind': 'broadcast', 'source': 'bf16'}, 'seed': 20602}
+
+    @pytest.mark.parametrize('case', CASES, ids=lambda c: c['id'])
+    def test_portable_case_runtime_and_independent_reference(layout, case):
+        runtime, calls = layout
+        x = unit.make_inputs(case)
+        original = support.digest(x['source'])
+        expected = unit.reference(x)['destination']
+>       key, shape, scalars = unit.launch_description(x)
+
+tmp/fmt02-native-01a0b7ce/repo/tests/test_kda_layout_kernel.py:101: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+inputs = {'parameters': {'N': 1024, 'destination': 'f32', 'kind': 'broadcast', 'source': 'bf16'}, 'source': tensor([0.2227], dtype=torch.bfloat16)}
+
+    def launch_description(inputs):
+        p = inputs['parameters'];kind = p['kind'];x = inputs['source']
+        options = {
+            'to_head': ((2,3,3,64,128), (192*3*128,128,64*3*128,3*128,1)),
+            'to_token': ((2,3,64,3,64), (3*3*64*64,64*64,64,3*64*64,1)),
+            'beta': ((2,3,3,1,64), (192*3,1,64*3,0,3)),
+            'cast': ((1,1,1,2,64), (0,0,0,64,1)),
+            'strided': ((1,1,1,2,128), (0,0,0,256,2)),
+            'broadcast': ((2,2,2,1,128), (0,0,0,0,0)),
+            'zero': ((1,1,1,2,128), (0,0,0,0,0)),
+        }
+        shape, strides = options[kind];n = math.prod(shape)
+        key = 'zero_'+p['destination'] if kind=='zero' else p['source']+'_'+p['destination']
+        scalars = dict(N=n)
+        if kind != 'zero':
+            scalars = dict(Storage=x.numel(), N=n, **{f'D{i}':shape[i] for i in range(1,5)},
+                           **{f'S{i}':strides[i] for i in range(5)})
+>           from runtime import tile_scalars
+E           ModuleNotFoundError: No module named 'runtime'
+
+tmp/fmt02-native-01a0b7ce/repo/kernels/projects/a5/kda_layout/unit.py:65: ModuleNotFoundError
+___ test_portable_case_runtime_and_independent_reference[broadcast_f32_bf16] ___
+
+layout = (<module '_afla_kda_layout_runtime' from '<task>/repo/kernels/projects/a5/kda_layout/runtime.py'>, [])
+case = {'block_dim': 1, 'id': 'broadcast_f32_bf16', 'parameters': {'N': 1024, 'destination': 'bf16', 'kind': 'broadcast', 'source': 'f32'}, 'seed': 20602}
+
+    @pytest.mark.parametrize('case', CASES, ids=lambda c: c['id'])
+    def test_portable_case_runtime_and_independent_reference(layout, case):
+        runtime, calls = layout
+        x = unit.make_inputs(case)
+        original = support.digest(x['source'])
+        expected = unit.reference(x)['destination']
+>       key, shape, scalars = unit.launch_description(x)
+
+tmp/fmt02-native-01a0b7ce/repo/tests/test_kda_layout_kernel.py:101: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+inputs = {'parameters': {'N': 1024, 'destination': 'bf16', 'kind': 'broadcast', 'source': 'f32'}, 'source': tensor([0.2225])}
+
+    def launch_description(inputs):
+        p = inputs['parameters'];kind = p['kind'];x = inputs['source']
+        options = {
+            'to_head': ((2,3,3,64,128), (192*3*128,128,64*3*128,3*128,1)),
+            'to_token': ((2,3,64,3,64), (3*3*64*64,64*64,64,3*64*64,1)),
+            'beta': ((2,3,3,1,64), (192*3,1,64*3,0,3)),
+            'cast': ((1,1,1,2,64), (0,0,0,64,1)),
+            'strided': ((1,1,1,2,128), (0,0,0,256,2)),
+            'broadcast': ((2,2,2,1,128), (0,0,0,0,0)),
+            'zero': ((1,1,1,2,128), (0,0,0,0,0)),
+        }
+        shape, strides = options[kind];n = math.prod(shape)
+        key = 'zero_'+p['destination'] if kind=='zero' else p['source']+'_'+p['destination']
+        scalars = dict(N=n)
+        if kind != 'zero':
+            scalars = dict(Storage=x.numel(), N=n, **{f'D{i}':shape[i] for i in range(1,5)},
+                           **{f'S{i}':strides[i] for i in range(5)})
+>           from runtime import tile_scalars
+E           ModuleNotFoundError: No module named 'runtime'
+
+tmp/fmt02-native-01a0b7ce/repo/kernels/projects/a5/kda_layout/unit.py:65: ModuleNotFoundError
+___ test_portable_case_runtime_and_independent_reference[broadcast_f32_f32] ____
+
+layout = (<module '_afla_kda_layout_runtime' from '<task>/repo/kernels/projects/a5/kda_layout/runtime.py'>, [])
+case = {'block_dim': 1, 'id': 'broadcast_f32_f32', 'parameters': {'N': 1024, 'destination': 'f32', 'kind': 'broadcast', 'source': 'f32'}, 'seed': 20602}
+
+    @pytest.mark.parametrize('case', CASES, ids=lambda c: c['id'])
+    def test_portable_case_runtime_and_independent_reference(layout, case):
+        runtime, calls = layout
+        x = unit.make_inputs(case)
+        original = support.digest(x['source'])
+        expected = unit.reference(x)['destination']
+>       key, shape, scalars = unit.launch_description(x)
+
+tmp/fmt02-native-01a0b7ce/repo/tests/test_kda_layout_kernel.py:101: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+inputs = {'parameters': {'N': 1024, 'destination': 'f32', 'kind': 'broadcast', 'source': 'f32'}, 'source': tensor([0.2225])}
+
+    def launch_description(inputs):
+        p = inputs['parameters'];kind = p['kind'];x = inputs['source']
+        options = {
+            'to_head': ((2,3,3,64,128), (192*3*128,128,64*3*128,3*128,1)),
+            'to_token': ((2,3,64,3,64), (3*3*64*64,64*64,64,3*64*64,1)),
+            'beta': ((2,3,3,1,64), (192*3,1,64*3,0,3)),
+            'cast': ((1,1,1,2,64), (0,0,0,64,1)),
+            'strided': ((1,1,1,2,128), (0,0,0,256,2)),
+            'broadcast': ((2,2,2,1,128), (0,0,0,0,0)),
+            'zero': ((1,1,1,2,128), (0,0,0,0,0)),
+        }
+        shape, strides = options[kind];n = math.prod(shape)
+        key = 'zero_'+p['destination'] if kind=='zero' else p['source']+'_'+p['destination']
+        scalars = dict(N=n)
+        if kind != 'zero':
+            scalars = dict(Storage=x.numel(), N=n, **{f'D{i}':shape[i] for i in range(1,5)},
+                           **{f'S{i}':strides[i] for i in range(5)})
+>           from runtime import tile_scalars
+E           ModuleNotFoundError: No module named 'runtime'
+
+tmp/fmt02-native-01a0b7ce/repo/kernels/projects/a5/kda_layout/unit.py:65: ModuleNotFoundError
+__ test_portable_case_runtime_and_independent_reference[gate_base_and_layout] __
+
+layout = (<module '_afla_kda_layout_runtime' from '<task>/repo/kernels/projects/a5/kda_layout/runtime.py'>, [])
+case = {'block_dim': 1, 'id': 'gate_base_and_layout', 'parameters': {'N': 73728, 'destination': 'bf16', 'kind': 'to_token', 'multiply': True, ...}, 'seed': 20603}
+
+    @pytest.mark.parametrize('case', CASES, ids=lambda c: c['id'])
+    def test_portable_case_runtime_and_independent_reference(layout, case):
+        runtime, calls = layout
+        x = unit.make_inputs(case)
+        original = support.digest(x['source'])
+        expected = unit.reference(x)['destination']
+>       key, shape, scalars = unit.launch_description(x)
+
+tmp/fmt02-native-01a0b7ce/repo/tests/test_kda_layout_kernel.py:101: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+inputs = {'parameters': {'N': 73728, 'destination': 'bf16', 'kind': 'to_token', 'multiply': True, ...}, 'source': tensor([[[[[-...-01],
+           [ 1.4152e+00,  1.1261e+00, -1.0337e+00,  ...,  9.2550e-01,
+             4.4664e-01, -1.6215e+00]]]]])}
+
+    def launch_description(inputs):
+        p = inputs['parameters'];kind = p['kind'];x = inputs['source']
+        options = {
+            'to_head': ((2,3,3,64,128), (192*3*128,128,64*3*128,3*128,1)),
+            'to_token': ((2,3,64,3,64), (3*3*64*64,64*64,64,3*64*64,1)),
+            'beta': ((2,3,3,1,64), (192*3,1,64*3,0,3)),
+            'cast': ((1,1,1,2,64), (0,0,0,64,1)),
+            'strided': ((1,1,1,2,128), (0,0,0,256,2)),
+            'broadcast': ((2,2,2,1,128), (0,0,0,0,0)),
+            'zero': ((1,1,1,2,128), (0,0,0,0,0)),
+        }
+        shape, strides = options[kind];n = math.prod(shape)
+        key = 'zero_'+p['destination'] if kind=='zero' else p['source']+'_'+p['destination']
+        scalars = dict(N=n)
+        if kind != 'zero':
+            scalars = dict(Storage=x.numel(), N=n, **{f'D{i}':shape[i] for i in range(1,5)},
+                           **{f'S{i}':strides[i] for i in range(5)})
+>           from runtime import tile_scalars
+E           ModuleNotFoundError: No module named 'runtime'
+
+tmp/fmt02-native-01a0b7ce/repo/kernels/projects/a5/kda_layout/unit.py:65: ModuleNotFoundError
+=========================== short test summary info ============================
+FAILED tmp/fmt02-native-01a0b7ce/repo/tests/test_kda_layout_kernel.py::test_portable_case_runtime_and_independent_reference[to_head_bf16_bf16]
+FAILED tmp/fmt02-native-01a0b7ce/repo/tests/test_kda_layout_kernel.py::test_portable_case_runtime_and_independent_reference[to_head_bf16_f32]
+FAILED tmp/fmt02-native-01a0b7ce/repo/tests/test_kda_layout_kernel.py::test_portable_case_runtime_and_independent_reference[to_head_f32_bf16]
+FAILED tmp/fmt02-native-01a0b7ce/repo/tests/test_kda_layout_kernel.py::test_portable_case_runtime_and_independent_reference[to_head_f32_f32]
+FAILED tmp/fmt02-native-01a0b7ce/repo/tests/test_kda_layout_kernel.py::test_portable_case_runtime_and_independent_reference[to_token_bf16_bf16]
+FAILED tmp/fmt02-native-01a0b7ce/repo/tests/test_kda_layout_kernel.py::test_portable_case_runtime_and_independent_reference[to_token_bf16_f32]
+FAILED tmp/fmt02-native-01a0b7ce/repo/tests/test_kda_layout_kernel.py::test_portable_case_runtime_and_independent_reference[to_token_f32_bf16]
+FAILED tmp/fmt02-native-01a0b7ce/repo/tests/test_kda_layout_kernel.py::test_portable_case_runtime_and_independent_reference[to_token_f32_f32]
+FAILED tmp/fmt02-native-01a0b7ce/repo/tests/test_kda_layout_kernel.py::test_portable_case_runtime_and_independent_reference[beta_bf16_bf16]
+FAILED tmp/fmt02-native-01a0b7ce/repo/tests/test_kda_layout_kernel.py::test_portable_case_runtime_and_independent_reference[beta_bf16_f32]
+FAILED tmp/fmt02-native-01a0b7ce/repo/tests/test_kda_layout_kernel.py::test_portable_case_runtime_and_independent_reference[beta_f32_bf16]
+FAILED tmp/fmt02-native-01a0b7ce/repo/tests/test_kda_layout_kernel.py::test_portable_case_runtime_and_independent_reference[beta_f32_f32]
+FAILED tmp/fmt02-native-01a0b7ce/repo/tests/test_kda_layout_kernel.py::test_portable_case_runtime_and_independent_reference[cast_bf16_bf16]
+FAILED tmp/fmt02-native-01a0b7ce/repo/tests/test_kda_layout_kernel.py::test_portable_case_runtime_and_independent_reference[cast_bf16_f32]
+FAILED tmp/fmt02-native-01a0b7ce/repo/tests/test_kda_layout_kernel.py::test_portable_case_runtime_and_independent_reference[cast_f32_bf16]
+FAILED tmp/fmt02-native-01a0b7ce/repo/tests/test_kda_layout_kernel.py::test_portable_case_runtime_and_independent_reference[cast_f32_f32]
+FAILED tmp/fmt02-native-01a0b7ce/repo/tests/test_kda_layout_kernel.py::test_portable_case_runtime_and_independent_reference[strided_bf16_bf16]
+FAILED tmp/fmt02-native-01a0b7ce/repo/tests/test_kda_layout_kernel.py::test_portable_case_runtime_and_independent_reference[strided_bf16_f32]
+FAILED tmp/fmt02-native-01a0b7ce/repo/tests/test_kda_layout_kernel.py::test_portable_case_runtime_and_independent_reference[strided_f32_bf16]
+FAILED tmp/fmt02-native-01a0b7ce/repo/tests/test_kda_layout_kernel.py::test_portable_case_runtime_and_independent_reference[strided_f32_f32]
+FAILED tmp/fmt02-native-01a0b7ce/repo/tests/test_kda_layout_kernel.py::test_portable_case_runtime_and_independent_reference[broadcast_bf16_bf16]
+FAILED tmp/fmt02-native-01a0b7ce/repo/tests/test_kda_layout_kernel.py::test_portable_case_runtime_and_independent_reference[broadcast_bf16_f32]
+FAILED tmp/fmt02-native-01a0b7ce/repo/tests/test_kda_layout_kernel.py::test_portable_case_runtime_and_independent_reference[broadcast_f32_bf16]
+FAILED tmp/fmt02-native-01a0b7ce/repo/tests/test_kda_layout_kernel.py::test_portable_case_runtime_and_independent_reference[broadcast_f32_f32]
+FAILED tmp/fmt02-native-01a0b7ce/repo/tests/test_kda_layout_kernel.py::test_portable_case_runtime_and_independent_reference[gate_base_and_layout]
+25 failed, 64 passed in 4.79s

@@ -46,6 +46,7 @@ from .chunk import (
     SUPPORTED_BLOCK_DIM,
     _kernels_root,
     _resolve_layout,
+    _layout_runtime,
 )
 
 __all__ = ["chunk_kda_bwd", "kda_bwd_kernels"]
@@ -136,6 +137,7 @@ def _compiled_chain(device: str, block_dim: int, impl: str = "stable") -> dict[s
     """(device, block_dim, impl) → 已编译的九个 kernel。理由同前向的 ``_compiled_chain``。"""
     from ...runtime.compile import compile_kernel
 
+    _layout_runtime().prepare(device, block_dim)
     return {name: compile_kernel(fn, device=device, block_dim=block_dim)
             for name, fn in kda_bwd_kernels(impl).items()}
 
@@ -230,9 +232,8 @@ def chunk_kda_bwd(
         block_dim: 启动核组数，只接受 ``SUPPORTED_BLOCK_DIM``。
         impl: ``"stable"``（默认）或 ``"upstream"``，见 :func:`kda_bwd_kernels`。
             **要与造 caches 时用的前向 impl 一致。**
-        layout_device: 取 ``g_last`` 那一次 strided ``contiguous()`` 在哪做。``"auto"``
-            时探测内置算子包是否可用（见 ``chunk.py`` 的 ``_resolve_layout``）—— 缺算子包
-            的机器上 NPU 侧的 d2d copy 不可用，要绕 CPU。
+        layout_device: deprecated ``"auto"`` / ``"npu"`` aliases for kernel-side
+            checkpoint gathering; ``"cpu"`` raises under D-PM-37.
 
     Returns:
         ``{"dq", "dk", "dv", "dbeta", "dg", "dh0"}``，全部 bfloat16。
@@ -240,12 +241,10 @@ def chunk_kda_bwd(
         ``[B,T,HV,128]``，``dbeta`` 为 ``[B,T,HV]``，``dh0`` 为 ``[B,HV,128,128]``。
     """
     b, h, hv, c = _check(q, k, v, beta, do, dht, caches, block_dim)
+    _resolve_layout(layout_device)
     compiled = _compiled_chain(device, block_dim, impl)
     dev = q.device
     t = c * L_PER_CHUNK
-    # 本函数只有两处用到内置算子：g_last 的 strided contiguous() 与 dw 的取负。
-    # 缺算子包的机器上两处都要绕 CPU（见 chunk.py 的 _resolve_layout 与 AGENTS.md §5）。
-    on_cpu_layout = _resolve_layout(layout_device)
 
     def empty(shape, dtype=torch.bfloat16):
         return torch.empty(*shape, dtype=dtype, device=dev)
@@ -256,20 +255,13 @@ def chunk_kda_bwd(
     bhcll = (b, hv, c, L_PER_CHUNK, L_PER_CHUNK)
     state = (b, hv, HEAD_DIM, VALUE_DIM)
 
-    # ---- scan：沿 chunk 反向扫 ----
-    # g_last 取每个 chunk 的末行；dht 按 (B,HV,64,256) 看（kernel 的 GM 声明如此）。
-    # 这个 strided contiguous() 是本函数唯一一处内置算子依赖 —— 缺算子包的机器要绕 CPU。
-    # ⚠️ 绕 CPU 时必须**先整块 D2H 再切**，不能对跨步视图直接 .cpu()。
-    # 缺内置算子包的机器上，跨步视图的 D2H 要走 NPU 侧的 `Slice`，而那个算子不在包里：
-    # 实测抛 `Op Slice does not has any binary` / `errno:561000`（最小复现见
-    # gaps.json 的 npu-builtin-ops-missing）。C=1 时切片只取一行、等效连续，所以碰巧能过 ——
-    # 表现就是 single_chunk 通过而 multi_chunk / grouped_heads / gentle_decay 三个 C≥2 的
-    # case 全挂。整块 g_cumsum 本身连续，D2H 是一次纯 memcpy，切和 contiguous 都在 CPU 上做。
-    if on_cpu_layout:
-        g_last = caches["g_cumsum"].cpu()[:, L_PER_CHUNK - 1::L_PER_CHUNK] \
-            .contiguous().to(dev)
-    else:
-        g_last = caches["g_cumsum"][:, L_PER_CHUNK - 1::L_PER_CHUNK].contiguous()
+    # Gather each chunk's last gate row on-device. The source slice is metadata
+    # only; explicit strides retain the original token-major checkpoint ABI.
+    gate_source = caches["g_cumsum"].view(-1)[(L_PER_CHUNK-1)*hv*HEAD_DIM:]
+    g_last = _layout_runtime().move(
+        gate_source, (b, c, hv, 1, HEAD_DIM),
+        (t*hv*HEAD_DIM, L_PER_CHUNK*hv*HEAD_DIM, HEAD_DIM, 0, 1),
+        device=device, block_dim=block_dim).view(b, c, hv, HEAD_DIM)
     d_aqk, dh, dv_scan, dh0 = (empty(tok_l), empty((b, c, hv, HEAD_DIM, VALUE_DIM)),
                                empty(tok_d), empty(state))
     compiled["scan_fused"](
@@ -289,9 +281,9 @@ def chunk_kda_bwd(
         {"d_qg": d_qg, "d_kg": d_kg, "d_vh": d_vh,
          "d_v_beta": d_v_beta, "d_k_beta_g": d_k_beta_g},
     )
-    # ⚠️ stages.py 在 host 侧对这一项取负才得到 dw。漏掉负号不报错，只会让梯度系统性偏。
-    # Neg 也是内置算子 —— 缺算子包的机器上要绕 CPU（同 g_last 那处）。
-    dw = (-d_vh.cpu()).to(dev) if on_cpu_layout else -d_vh
+    # D-PM-42 registered legacy arithmetic: no layout/cast accompanies this
+    # negation, so it remains separately audited until the kernel batch.
+    dw = -d_vh
 
     dq_hv, dk_hv = empty(tok_d), empty(tok_d)
     dv_out, dg_core, k_exp = empty(tok_d), empty(tok_d), empty(bhcld)

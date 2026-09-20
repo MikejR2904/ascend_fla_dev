@@ -1,0 +1,36 @@
+{
+  "id": "zero_bf16",
+  "stage": "sim",
+  "block_dim": 1,
+  "parameters": {
+    "kind": "zero",
+    "source": "bf16",
+    "destination": "bf16",
+    "N": 256
+  },
+  "comparison": {
+    "destination": {
+      "passed": true,
+      "comparison": {
+        "mode": "bitwise",
+        "reason": "exact predecessor layout and cast boundary, no error tolerance"
+      },
+      "max_abs_error": 0.0
+    }
+  },
+  "evidence": [
+    {
+      "kernel": "kda_layout_zero_bf16_kernel",
+      "device": "a5",
+      "requested_backend": "cce",
+      "stage": "sim",
+      "launcher": "sim",
+      "block_dim": 1,
+      "model": "functional Surface IR",
+      "backend_executed": false,
+      "sim_processes": "threads"
+    }
+  ],
+  "input_unchanged": true,
+  "passed": true
+}

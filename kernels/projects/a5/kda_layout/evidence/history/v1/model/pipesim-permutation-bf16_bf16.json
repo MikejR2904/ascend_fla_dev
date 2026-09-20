@@ -1,0 +1,35 @@
+{
+  "id": "permutation_bf16_bf16",
+  "stage": "pipesim",
+  "block_dim": 1,
+  "N": 256,
+  "comparison": {
+    "destination": {
+      "passed": true,
+      "comparison": {
+        "mode": "bitwise",
+        "reason": "exact predecessor layout and cast boundary, no error tolerance"
+      },
+      "max_abs_error": 0.0
+    }
+  },
+  "evidence": [
+    {
+      "kernel": "kda_layout_bf16_bf16_kernel",
+      "device": "a5",
+      "requested_backend": "cce",
+      "stage": "pipesim",
+      "launcher": "pipesim",
+      "block_dim": 1,
+      "model": "lowered events and hazards",
+      "backend_executed": false,
+      "event_balance": [],
+      "hazards": [],
+      "deadlock": null,
+      "model_cycles": 2479,
+      "sim_processes": "threads"
+    }
+  ],
+  "input_unchanged": true,
+  "passed": true
+}

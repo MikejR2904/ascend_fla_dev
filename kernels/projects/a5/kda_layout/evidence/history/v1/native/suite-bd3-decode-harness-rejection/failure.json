@@ -1,0 +1,8 @@
+{
+  "type": "ValueError",
+  "error": "block_dim \u53ea\u652f\u6301 (1, 2, 4, 8, 16, 28)\uff0c\u6536\u5230 3\uff1b\u672c\u5355\u5143\u53ea\u7528\u5411\u91cf\u6838\uff08GetVecNum() == 2*block_dim\uff0c\u7269\u7406 56 \u4e2a\uff09\uff0c\u4f46\u8d85\u8fc7\u7269\u7406\u6838\u6570\u4f1a\u5728\u786c\u4ef6 barrier \u6b7b\u9501",
+  "traceback": "Traceback (most recent call last):\n  File \"<task>/repo/kernels/projects/a5/kda_layout/verify_native.py\", line 161, in main\n    write('decode_audit', native_checks.decode_audit(fused_recurrent, real, args.block_dim))\n                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<task>/repo/kernels/projects/a5/kda_layout/native_checks.py\", line 243, in decode_audit\n    got=api.fused_recurrent_kda(**data,output_final_state=True,block_dim=bd)\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<task>/repo/ascend_fla/ops/kda/fused_recurrent.py\", line 171, in fused_recurrent_kda\n    b, t, h, hv = _check(q, k, v, g, beta, initial_state, block_dim)\n                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<task>/repo/ascend_fla/ops/kda/fused_recurrent.py\", line 64, in _check\n    raise ValueError(\nValueError: block_dim \u53ea\u652f\u6301 (1, 2, 4, 8, 16, 28)\uff0c\u6536\u5230 3\uff1b\u672c\u5355\u5143\u53ea\u7528\u5411\u91cf\u6838\uff08GetVecNum() == 2*block_dim\uff0c\u7269\u7406 56 \u4e2a\uff09\uff0c\u4f46\u8d85\u8fc7\u7269\u7406\u6838\u6570\u4f1a\u5728\u786c\u4ef6 barrier \u6b7b\u9501\n",
+  "completed": [
+    "full_kimi_t4096"
+  ]
+}

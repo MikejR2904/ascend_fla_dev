@@ -1,0 +1,913 @@
+{
+  "passed": true,
+  "timing": "synchronized NPU public-call wall milliseconds; input preparation excluded",
+  "warmup": 1,
+  "rounds": 3,
+  "speed_gate": null,
+  "measurements": [
+    {
+      "tokens": 1024,
+      "scope": "plain_forward",
+      "rounds": [
+        {
+          "round": 1,
+          "samples": [
+            {
+              "phase": "baseline_before",
+              "milliseconds": 1.5814530197530985
+            },
+            {
+              "phase": "candidate",
+              "milliseconds": 2.6425260584801435
+            },
+            {
+              "phase": "baseline_after",
+              "milliseconds": 1.5822539571672678
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "samples": [
+            {
+              "phase": "baseline_before",
+              "milliseconds": 1.5796700026839972
+            },
+            {
+              "phase": "candidate",
+              "milliseconds": 2.6396310422569513
+            },
+            {
+              "phase": "baseline_after",
+              "milliseconds": 1.5813729260116816
+            }
+          ]
+        },
+        {
+          "round": 3,
+          "samples": [
+            {
+              "phase": "baseline_before",
+              "milliseconds": 1.576386159285903
+            },
+            {
+              "phase": "candidate",
+              "milliseconds": 2.635012846440077
+            },
+            {
+              "phase": "baseline_after",
+              "milliseconds": 1.5752639155834913
+            }
+          ]
+        }
+      ],
+      "launches": {
+        "baseline": {
+          "total": 5,
+          "layout": 0,
+          "operators": [
+            "KdaSub1GateStableKernel",
+            "KdaSub2ScoreStableKernel",
+            "TrilInverse64V2StrictBf16Kernel",
+            "KdaSub3WyStableKernel",
+            "KdaSub45AqkRepairedKernel"
+          ]
+        },
+        "candidate": {
+          "total": 11,
+          "layout": 6,
+          "operators": [
+            "KdaLayoutBf16Bf16Kernel",
+            "KdaLayoutBf16Bf16Kernel",
+            "KdaLayoutBf16Bf16Kernel",
+            "KdaLayoutF32F32Kernel",
+            "KdaLayoutF32F32Kernel",
+            "KdaSub1GateStableKernel",
+            "KdaSub2ScoreStableKernel",
+            "TrilInverse64V2StrictBf16Kernel",
+            "KdaSub3WyStableKernel",
+            "KdaSub45AqkRepairedKernel",
+            "KdaLayoutBf16Bf16Kernel"
+          ]
+        }
+      },
+      "serialized_layout_cost_diagnostic": [
+        {
+          "operator": "KdaLayoutBf16Bf16Kernel",
+          "milliseconds": 0.2807909622788429,
+          "output_elements": 4194304
+        },
+        {
+          "operator": "KdaLayoutBf16Bf16Kernel",
+          "milliseconds": 0.2842368558049202,
+          "output_elements": 4194304
+        },
+        {
+          "operator": "KdaLayoutBf16Bf16Kernel",
+          "milliseconds": 0.27626496739685535,
+          "output_elements": 4194304
+        },
+        {
+          "operator": "KdaLayoutF32F32Kernel",
+          "milliseconds": 0.26954500935971737,
+          "output_elements": 4194304
+        },
+        {
+          "operator": "KdaLayoutF32F32Kernel",
+          "milliseconds": 0.03278907388448715,
+          "output_elements": 32768
+        },
+        {
+          "operator": "KdaLayoutBf16Bf16Kernel",
+          "milliseconds": 0.2507059834897518,
+          "output_elements": 4194304
+        }
+      ],
+      "extra_launches": 6,
+      "candidate_median_ms": 2.6396310422569513,
+      "baseline_median_ms": 1.5805214643478394,
+      "candidate_over_baseline": 1.6701013569253396
+    },
+    {
+      "tokens": 1024,
+      "scope": "cached_forward",
+      "rounds": [
+        {
+          "round": 1,
+          "samples": [
+            {
+              "phase": "baseline_before",
+              "milliseconds": 2.388613997027278
+            },
+            {
+              "phase": "candidate",
+              "milliseconds": 5.391899961978197
+            },
+            {
+              "phase": "baseline_after",
+              "milliseconds": 2.3990001063793898
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "samples": [
+            {
+              "phase": "baseline_before",
+              "milliseconds": 2.3857499472796917
+            },
+            {
+              "phase": "candidate",
+              "milliseconds": 5.392361897975206
+            },
+            {
+              "phase": "baseline_after",
+              "milliseconds": 2.393942093476653
+            }
+          ]
+        },
+        {
+          "round": 3,
+          "samples": [
+            {
+              "phase": "baseline_before",
+              "milliseconds": 2.395905088633299
+            },
+            {
+              "phase": "candidate",
+              "milliseconds": 5.381265189498663
+            },
+            {
+              "phase": "baseline_after",
+              "milliseconds": 2.3766770027577877
+            }
+          ]
+        }
+      ],
+      "launches": {
+        "baseline": {
+          "total": 5,
+          "layout": 0,
+          "operators": [
+            "KdaSub1GateStableKernel",
+            "KdaSub2ScoreStableKernel",
+            "TrilInverse64V2StrictBf16Kernel",
+            "KdaSub3WyStableKernel",
+            "KdaSub45AqkRepairedKernel"
+          ]
+        },
+        "candidate": {
+          "total": 19,
+          "layout": 14,
+          "operators": [
+            "KdaLayoutBf16Bf16Kernel",
+            "KdaLayoutBf16Bf16Kernel",
+            "KdaLayoutBf16Bf16Kernel",
+            "KdaLayoutF32F32Kernel",
+            "KdaLayoutF32F32Kernel",
+            "KdaSub1GateStableKernel",
+            "KdaSub2ScoreStableKernel",
+            "TrilInverse64V2StrictBf16Kernel",
+            "KdaSub3WyStableKernel",
+            "KdaSub45AqkRepairedKernel",
+            "KdaLayoutF32Bf16Kernel",
+            "KdaLayoutBf16Bf16Kernel",
+            "KdaLayoutBf16Bf16Kernel",
+            "KdaLayoutBf16Bf16Kernel",
+            "KdaLayoutBf16Bf16Kernel",
+            "KdaLayoutBf16Bf16Kernel",
+            "KdaLayoutBf16Bf16Kernel",
+            "KdaLayoutBf16Bf16Kernel",
+            "KdaLayoutBf16Bf16Kernel"
+          ]
+        }
+      },
+      "serialized_layout_cost_diagnostic": [
+        {
+          "operator": "KdaLayoutBf16Bf16Kernel",
+          "milliseconds": 0.2965349704027176,
+          "output_elements": 4194304
+        },
+        {
+          "operator": "KdaLayoutBf16Bf16Kernel",
+          "milliseconds": 0.27536298148334026,
+          "output_elements": 4194304
+        },
+        {
+          "operator": "KdaLayoutBf16Bf16Kernel",
+          "milliseconds": 0.27654506266117096,
+          "output_elements": 4194304
+        },
+        {
+          "operator": "KdaLayoutF32F32Kernel",
+          "milliseconds": 0.2572759985923767,
+          "output_elements": 4194304
+        },
+        {
+          "operator": "KdaLayoutF32F32Kernel",
+          "milliseconds": 0.031027011573314667,
+          "output_elements": 32768
+        },
+        {
+          "operator": "KdaLayoutF32Bf16Kernel",
+          "milliseconds": 0.5870808381587267,
+          "output_elements": 4194304
+        },
+        {
+          "operator": "KdaLayoutBf16Bf16Kernel",
+          "milliseconds": 0.15512295067310333,
+          "output_elements": 2097152
+        },
+        {
+          "operator": "KdaLayoutBf16Bf16Kernel",
+          "milliseconds": 0.14890311285853386,
+          "output_elements": 2097152
+        },
+        {
+          "operator": "KdaLayoutBf16Bf16Kernel",
+          "milliseconds": 0.268392963334918,
+          "output_elements": 4194304
+        },
+        {
+          "operator": "KdaLayoutBf16Bf16Kernel",
+          "milliseconds": 0.2804209943860769,
+          "output_elements": 4194304
+        },
+        {
+          "operator": "KdaLayoutBf16Bf16Kernel",
+          "milliseconds": 0.27680513449013233,
+          "output_elements": 4194304
+        },
+        {
+          "operator": "KdaLayoutBf16Bf16Kernel",
+          "milliseconds": 0.28058094903826714,
+          "output_elements": 4194304
+        },
+        {
+          "operator": "KdaLayoutBf16Bf16Kernel",
+          "milliseconds": 0.2712770365178585,
+          "output_elements": 4194304
+        },
+        {
+          "operator": "KdaLayoutBf16Bf16Kernel",
+          "milliseconds": 0.2700148615986109,
+          "output_elements": 4194304
+        }
+      ],
+      "extra_launches": 14,
+      "candidate_median_ms": 5.391899961978197,
+      "baseline_median_ms": 2.3912780452519655,
+      "candidate_over_baseline": 2.2548193308946893
+    },
+    {
+      "tokens": 1024,
+      "scope": "backward_existing_caches",
+      "rounds": [
+        {
+          "round": 1,
+          "samples": [
+            {
+              "phase": "baseline_before",
+              "milliseconds": 2.47550499625504
+            },
+            {
+              "phase": "candidate",
+              "milliseconds": 2.5136121548712254
+            },
+            {
+              "phase": "baseline_after",
+              "milliseconds": 2.4770258460193872
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "samples": [
+            {
+              "phase": "baseline_before",
+              "milliseconds": 2.4781578686088324
+            },
+            {
+              "phase": "candidate",
+              "milliseconds": 2.5101969949901104
+            },
+            {
+              "phase": "baseline_after",
+              "milliseconds": 2.483006101101637
+            }
+          ]
+        },
+        {
+          "round": 3,
+          "samples": [
+            {
+              "phase": "baseline_before",
+              "milliseconds": 2.4750030133873224
+            },
+            {
+              "phase": "candidate",
+              "milliseconds": 2.508654026314616
+            },
+            {
+              "phase": "baseline_after",
+              "milliseconds": 2.475945046171546
+            }
+          ]
+        }
+      ],
+      "launches": {
+        "baseline": {
+          "total": 9,
+          "layout": 0,
+          "operators": [
+            "ScanFusedKernel",
+            "InverseMmBoundedKernel",
+            "InverseEpilogueKernel",
+            "InverseDainvKernel",
+            "InverseDakkFusedKernel",
+            "FinalizePreStableKernel",
+            "FinalizePairKernel",
+            "FinalizePostStableKernel",
+            "FinalizeReduceKernel"
+          ]
+        },
+        "candidate": {
+          "total": 10,
+          "layout": 1,
+          "operators": [
+            "KdaLayoutBf16Bf16Kernel",
+            "ScanFusedKernel",
+            "InverseMmBoundedKernel",
+            "InverseEpilogueKernel",
+            "InverseDainvKernel",
+            "InverseDakkFusedKernel",
+            "FinalizePreStableKernel",
+            "FinalizePairKernel",
+            "FinalizePostStableKernel",
+            "FinalizeReduceKernel"
+          ]
+        }
+      },
+      "serialized_layout_cost_diagnostic": [
+        {
+          "operator": "KdaLayoutBf16Bf16Kernel",
+          "milliseconds": 0.04009995609521866,
+          "output_elements": 65536
+        }
+      ],
+      "extra_launches": 1,
+      "candidate_median_ms": 2.5101969949901104,
+      "baseline_median_ms": 2.4764854460954666,
+      "candidate_over_baseline": 1.0136126577879934
+    },
+    {
+      "tokens": 1024,
+      "scope": "actual_torch_npu_fp32_reference",
+      "rounds": [
+        {
+          "round": 1,
+          "samples": [
+            {
+              "phase": "torch_npu_before",
+              "milliseconds": 67.27778213098645
+            },
+            {
+              "phase": "candidate",
+              "milliseconds": 2.702956087887287
+            },
+            {
+              "phase": "torch_npu_after",
+              "milliseconds": 67.09023099392653
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "samples": [
+            {
+              "phase": "torch_npu_before",
+              "milliseconds": 67.22184806130826
+            },
+            {
+              "phase": "candidate",
+              "milliseconds": 2.6873829774558544
+            },
+            {
+              "phase": "torch_npu_after",
+              "milliseconds": 66.77597900852561
+            }
+          ]
+        },
+        {
+          "round": 3,
+          "samples": [
+            {
+              "phase": "torch_npu_before",
+              "milliseconds": 67.2256238758564
+            },
+            {
+              "phase": "candidate",
+              "milliseconds": 2.6857100892812014
+            },
+            {
+              "phase": "torch_npu_after",
+              "milliseconds": 67.81765189953148
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tokens": 4096,
+      "scope": "plain_forward",
+      "rounds": [
+        {
+          "round": 1,
+          "samples": [
+            {
+              "phase": "baseline_before",
+              "milliseconds": 5.536668002605438
+            },
+            {
+              "phase": "candidate",
+              "milliseconds": 10.266304016113281
+            },
+            {
+              "phase": "baseline_after",
+              "milliseconds": 5.541455000638962
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "samples": [
+            {
+              "phase": "baseline_before",
+              "milliseconds": 5.519401980563998
+            },
+            {
+              "phase": "candidate",
+              "milliseconds": 10.259895119816065
+            },
+            {
+              "phase": "baseline_after",
+              "milliseconds": 5.526212975382805
+            }
+          ]
+        },
+        {
+          "round": 3,
+          "samples": [
+            {
+              "phase": "baseline_before",
+              "milliseconds": 5.532561102882028
+            },
+            {
+              "phase": "candidate",
+              "milliseconds": 10.237161070108414
+            },
+            {
+              "phase": "baseline_after",
+              "milliseconds": 5.542396102100611
+            }
+          ]
+        }
+      ],
+      "launches": {
+        "baseline": {
+          "total": 5,
+          "layout": 0,
+          "operators": [
+            "KdaSub1GateStableKernel",
+            "KdaSub2ScoreStableKernel",
+            "TrilInverse64V2StrictBf16Kernel",
+            "KdaSub3WyStableKernel",
+            "KdaSub45AqkRepairedKernel"
+          ]
+        },
+        "candidate": {
+          "total": 11,
+          "layout": 6,
+          "operators": [
+            "KdaLayoutBf16Bf16Kernel",
+            "KdaLayoutBf16Bf16Kernel",
+            "KdaLayoutBf16Bf16Kernel",
+            "KdaLayoutF32F32Kernel",
+            "KdaLayoutF32F32Kernel",
+            "KdaSub1GateStableKernel",
+            "KdaSub2ScoreStableKernel",
+            "TrilInverse64V2StrictBf16Kernel",
+            "KdaSub3WyStableKernel",
+            "KdaSub45AqkRepairedKernel",
+            "KdaLayoutBf16Bf16Kernel"
+          ]
+        }
+      },
+      "serialized_layout_cost_diagnostic": [
+        {
+          "operator": "KdaLayoutBf16Bf16Kernel",
+          "milliseconds": 1.0332500096410513,
+          "output_elements": 16777216
+        },
+        {
+          "operator": "KdaLayoutBf16Bf16Kernel",
+          "milliseconds": 0.9988090023398399,
+          "output_elements": 16777216
+        },
+        {
+          "operator": "KdaLayoutBf16Bf16Kernel",
+          "milliseconds": 0.9902662131935358,
+          "output_elements": 16777216
+        },
+        {
+          "operator": "KdaLayoutF32F32Kernel",
+          "milliseconds": 1.1094750370830297,
+          "output_elements": 16777216
+        },
+        {
+          "operator": "KdaLayoutF32F32Kernel",
+          "milliseconds": 0.08570891804993153,
+          "output_elements": 131072
+        },
+        {
+          "operator": "KdaLayoutBf16Bf16Kernel",
+          "milliseconds": 0.9864398743957281,
+          "output_elements": 16777216
+        }
+      ],
+      "extra_launches": 6,
+      "candidate_median_ms": 10.259895119816065,
+      "baseline_median_ms": 5.534614552743733,
+      "candidate_over_baseline": 1.8537686810962868
+    },
+    {
+      "tokens": 4096,
+      "scope": "cached_forward",
+      "rounds": [
+        {
+          "round": 1,
+          "samples": [
+            {
+              "phase": "baseline_before",
+              "milliseconds": 9.204071015119553
+            },
+            {
+              "phase": "candidate",
+              "milliseconds": 21.34809410199523
+            },
+            {
+              "phase": "baseline_after",
+              "milliseconds": 9.219563798978925
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "samples": [
+            {
+              "phase": "baseline_before",
+              "milliseconds": 9.222137974575162
+            },
+            {
+              "phase": "candidate",
+              "milliseconds": 21.35423314757645
+            },
+            {
+              "phase": "baseline_after",
+              "milliseconds": 9.217160986736417
+            }
+          ]
+        },
+        {
+          "round": 3,
+          "samples": [
+            {
+              "phase": "baseline_before",
+              "milliseconds": 9.204802103340626
+            },
+            {
+              "phase": "candidate",
+              "milliseconds": 21.352519979700446
+            },
+            {
+              "phase": "baseline_after",
+              "milliseconds": 9.21892304904759
+            }
+          ]
+        }
+      ],
+      "launches": {
+        "baseline": {
+          "total": 5,
+          "layout": 0,
+          "operators": [
+            "KdaSub1GateStableKernel",
+            "KdaSub2ScoreStableKernel",
+            "TrilInverse64V2StrictBf16Kernel",
+            "KdaSub3WyStableKernel",
+            "KdaSub45AqkRepairedKernel"
+          ]
+        },
+        "candidate": {
+          "total": 19,
+          "layout": 14,
+          "operators": [
+            "KdaLayoutBf16Bf16Kernel",
+            "KdaLayoutBf16Bf16Kernel",
+            "KdaLayoutBf16Bf16Kernel",
+            "KdaLayoutF32F32Kernel",
+            "KdaLayoutF32F32Kernel",
+            "KdaSub1GateStableKernel",
+            "KdaSub2ScoreStableKernel",
+            "TrilInverse64V2StrictBf16Kernel",
+            "KdaSub3WyStableKernel",
+            "KdaSub45AqkRepairedKernel",
+            "KdaLayoutF32Bf16Kernel",
+            "KdaLayoutBf16Bf16Kernel",
+            "KdaLayoutBf16Bf16Kernel",
+            "KdaLayoutBf16Bf16Kernel",
+            "KdaLayoutBf16Bf16Kernel",
+            "KdaLayoutBf16Bf16Kernel",
+            "KdaLayoutBf16Bf16Kernel",
+            "KdaLayoutBf16Bf16Kernel",
+            "KdaLayoutBf16Bf16Kernel"
+          ]
+        }
+      },
+      "serialized_layout_cost_diagnostic": [
+        {
+          "operator": "KdaLayoutBf16Bf16Kernel",
+          "milliseconds": 1.004277030006051,
+          "output_elements": 16777216
+        },
+        {
+          "operator": "KdaLayoutBf16Bf16Kernel",
+          "milliseconds": 0.9915980044752359,
+          "output_elements": 16777216
+        },
+        {
+          "operator": "KdaLayoutBf16Bf16Kernel",
+          "milliseconds": 0.9904869366437197,
+          "output_elements": 16777216
+        },
+        {
+          "operator": "KdaLayoutF32F32Kernel",
+          "milliseconds": 1.1015529744327068,
+          "output_elements": 16777216
+        },
+        {
+          "operator": "KdaLayoutF32F32Kernel",
+          "milliseconds": 0.08372589945793152,
+          "output_elements": 131072
+        },
+        {
+          "operator": "KdaLayoutF32Bf16Kernel",
+          "milliseconds": 2.1933710668236017,
+          "output_elements": 16777216
+        },
+        {
+          "operator": "KdaLayoutBf16Bf16Kernel",
+          "milliseconds": 0.5253979470580816,
+          "output_elements": 8388608
+        },
+        {
+          "operator": "KdaLayoutBf16Bf16Kernel",
+          "milliseconds": 0.530285993590951,
+          "output_elements": 8388608
+        },
+        {
+          "operator": "KdaLayoutBf16Bf16Kernel",
+          "milliseconds": 0.9958238806575537,
+          "output_elements": 16777216
+        },
+        {
+          "operator": "KdaLayoutBf16Bf16Kernel",
+          "milliseconds": 0.9879630524665117,
+          "output_elements": 16777216
+        },
+        {
+          "operator": "KdaLayoutBf16Bf16Kernel",
+          "milliseconds": 0.9892450179904699,
+          "output_elements": 16777216
+        },
+        {
+          "operator": "KdaLayoutBf16Bf16Kernel",
+          "milliseconds": 0.9905260521918535,
+          "output_elements": 16777216
+        },
+        {
+          "operator": "KdaLayoutBf16Bf16Kernel",
+          "milliseconds": 0.9869299829006195,
+          "output_elements": 16777216
+        },
+        {
+          "operator": "KdaLayoutBf16Bf16Kernel",
+          "milliseconds": 0.9912771638482809,
+          "output_elements": 16777216
+        }
+      ],
+      "extra_launches": 14,
+      "candidate_median_ms": 21.352519979700446,
+      "baseline_median_ms": 9.218042017892003,
+      "candidate_over_baseline": 2.3163834508733747
+    },
+    {
+      "tokens": 4096,
+      "scope": "backward_existing_caches",
+      "rounds": [
+        {
+          "round": 1,
+          "samples": [
+            {
+              "phase": "baseline_before",
+              "milliseconds": 9.76515281945467
+            },
+            {
+              "phase": "candidate",
+              "milliseconds": 9.794136974960566
+            },
+            {
+              "phase": "baseline_after",
+              "milliseconds": 9.772825054824352
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "samples": [
+            {
+              "phase": "baseline_before",
+              "milliseconds": 9.757671039551497
+            },
+            {
+              "phase": "candidate",
+              "milliseconds": 9.79208410717547
+            },
+            {
+              "phase": "baseline_after",
+              "milliseconds": 9.747074916958809
+            }
+          ]
+        },
+        {
+          "round": 3,
+          "samples": [
+            {
+              "phase": "baseline_before",
+              "milliseconds": 9.754447033628821
+            },
+            {
+              "phase": "candidate",
+              "milliseconds": 9.79851302690804
+            },
+            {
+              "phase": "baseline_after",
+              "milliseconds": 9.763651061803102
+            }
+          ]
+        }
+      ],
+      "launches": {
+        "baseline": {
+          "total": 9,
+          "layout": 0,
+          "operators": [
+            "ScanFusedKernel",
+            "InverseMmBoundedKernel",
+            "InverseEpilogueKernel",
+            "InverseDainvKernel",
+            "InverseDakkFusedKernel",
+            "FinalizePreStableKernel",
+            "FinalizePairKernel",
+            "FinalizePostStableKernel",
+            "FinalizeReduceKernel"
+          ]
+        },
+        "candidate": {
+          "total": 10,
+          "layout": 1,
+          "operators": [
+            "KdaLayoutBf16Bf16Kernel",
+            "ScanFusedKernel",
+            "InverseMmBoundedKernel",
+            "InverseEpilogueKernel",
+            "InverseDainvKernel",
+            "InverseDakkFusedKernel",
+            "FinalizePreStableKernel",
+            "FinalizePairKernel",
+            "FinalizePostStableKernel",
+            "FinalizeReduceKernel"
+          ]
+        }
+      },
+      "serialized_layout_cost_diagnostic": [
+        {
+          "operator": "KdaLayoutBf16Bf16Kernel",
+          "milliseconds": 0.049915164709091187,
+          "output_elements": 262144
+        }
+      ],
+      "extra_launches": 1,
+      "candidate_median_ms": 9.794136974960566,
+      "baseline_median_ms": 9.7606610506773,
+      "candidate_over_baseline": 1.0034296779807699
+    },
+    {
+      "tokens": 4096,
+      "scope": "actual_torch_npu_fp32_reference",
+      "rounds": [
+        {
+          "round": 1,
+          "samples": [
+            {
+              "phase": "torch_npu_before",
+              "milliseconds": 516.7699079029262
+            },
+            {
+              "phase": "candidate",
+              "milliseconds": 10.494396788999438
+            },
+            {
+              "phase": "torch_npu_after",
+              "milliseconds": 517.7028570324183
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "samples": [
+            {
+              "phase": "torch_npu_before",
+              "milliseconds": 511.45772682502866
+            },
+            {
+              "phase": "candidate",
+              "milliseconds": 10.577652137726545
+            },
+            {
+              "phase": "torch_npu_after",
+              "milliseconds": 512.4374958686531
+            }
+          ]
+        },
+        {
+          "round": 3,
+          "samples": [
+            {
+              "phase": "torch_npu_before",
+              "milliseconds": 511.231767013669
+            },
+            {
+              "phase": "candidate",
+              "milliseconds": 10.491062887012959
+            },
+            {
+              "phase": "torch_npu_after",
+              "milliseconds": 497.8599729947746
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1110 @@
+{
+  "passed": true,
+  "scope": "bounded 128..1024 element vector leaves; no full-workload or performance claim",
+  "native_full_sha256": "944059e97aeb1b71546663ee320e9d244d63464c2260d18cb27d764826c267fb",
+  "kernel_sha256": "d4c11fccf8182d01aa2bd1f9732583276e526785364edfbeae56ada78044b140",
+  "cases": [
+    {
+      "id": "cast_bf16_bf16",
+      "stage": "sim",
+      "block_dim": 1,
+      "parameters": {
+        "kind": "cast",
+        "source": "bf16",
+        "destination": "bf16",
+        "N": 128
+      },
+      "comparison": {
+        "destination": {
+          "passed": true,
+          "comparison": {
+            "mode": "bitwise",
+            "reason": "exact predecessor layout and cast boundary, no error tolerance"
+          },
+          "max_abs_error": 0.0
+        }
+      },
+      "evidence": [
+        {
+          "kernel": "kda_layout_bf16_bf16_kernel",
+          "device": "a5",
+          "requested_backend": "cce",
+          "stage": "sim",
+          "launcher": "sim",
+          "block_dim": 1,
+          "model": "functional Surface IR",
+          "backend_executed": false,
+          "sim_processes": "threads"
+        }
+      ],
+      "input_unchanged": true,
+      "passed": true
+    },
+    {
+      "id": "cast_bf16_f32",
+      "stage": "sim",
+      "block_dim": 1,
+      "parameters": {
+        "kind": "cast",
+        "source": "bf16",
+        "destination": "f32",
+        "N": 128
+      },
+      "comparison": {
+        "destination": {
+          "passed": true,
+          "comparison": {
+            "mode": "bitwise",
+            "reason": "exact predecessor layout and cast boundary, no error tolerance"
+          },
+          "max_abs_error": 0.0
+        }
+      },
+      "evidence": [
+        {
+          "kernel": "kda_layout_bf16_f32_kernel",
+          "device": "a5",
+          "requested_backend": "cce",
+          "stage": "sim",
+          "launcher": "sim",
+          "block_dim": 1,
+          "model": "functional Surface IR",
+          "backend_executed": false,
+          "sim_processes": "threads"
+        }
+      ],
+      "input_unchanged": true,
+      "passed": true
+    },
+    {
+      "id": "cast_f32_bf16",
+      "stage": "sim",
+      "block_dim": 1,
+      "parameters": {
+        "kind": "cast",
+        "source": "f32",
+        "destination": "bf16",
+        "N": 128
+      },
+      "comparison": {
+        "destination": {
+          "passed": true,
+          "comparison": {
+            "mode": "bitwise",
+            "reason": "exact predecessor layout and cast boundary, no error tolerance"
+          },
+          "max_abs_error": 0.0
+        }
+      },
+      "evidence": [
+        {
+          "kernel": "kda_layout_f32_bf16_kernel",
+          "device": "a5",
+          "requested_backend": "cce",
+          "stage": "sim",
+          "launcher": "sim",
+          "block_dim": 1,
+          "model": "functional Surface IR",
+          "backend_executed": false,
+          "sim_processes": "threads"
+        }
+      ],
+      "input_unchanged": true,
+      "passed": true
+    },
+    {
+      "id": "cast_f32_f32",
+      "stage": "sim",
+      "block_dim": 1,
+      "parameters": {
+        "kind": "cast",
+        "source": "f32",
+        "destination": "f32",
+        "N": 128
+      },
+      "comparison": {
+        "destination": {
+          "passed": true,
+          "comparison": {
+            "mode": "bitwise",
+            "reason": "exact predecessor layout and cast boundary, no error tolerance"
+          },
+          "max_abs_error": 0.0
+        }
+      },
+      "evidence": [
+        {
+          "kernel": "kda_layout_f32_f32_kernel",
+          "device": "a5",
+          "requested_backend": "cce",
+          "stage": "sim",
+          "launcher": "sim",
+          "block_dim": 1,
+          "model": "functional Surface IR",
+          "backend_executed": false,
+          "sim_processes": "threads"
+        }
+      ],
+      "input_unchanged": true,
+      "passed": true
+    },
+    {
+      "id": "strided_bf16_bf16",
+      "stage": "sim",
+      "block_dim": 1,
+      "parameters": {
+        "kind": "strided",
+        "source": "bf16",
+        "destination": "bf16",
+        "N": 256
+      },
+      "comparison": {
+        "destination": {
+          "passed": true,
+          "comparison": {
+            "mode": "bitwise",
+            "reason": "exact predecessor layout and cast boundary, no error tolerance"
+          },
+          "max_abs_error": 0.0
+        }
+      },
+      "evidence": [
+        {
+          "kernel": "kda_layout_bf16_bf16_kernel",
+          "device": "a5",
+          "requested_backend": "cce",
+          "stage": "sim",
+          "launcher": "sim",
+          "block_dim": 1,
+          "model": "functional Surface IR",
+          "backend_executed": false,
+          "sim_processes": "threads"
+        }
+      ],
+      "input_unchanged": true,
+      "passed": true
+    },
+    {
+      "id": "strided_f32_bf16",
+      "stage": "sim",
+      "block_dim": 1,
+      "parameters": {
+        "kind": "strided",
+        "source": "f32",
+        "destination": "bf16",
+        "N": 256
+      },
+      "comparison": {
+        "destination": {
+          "passed": true,
+          "comparison": {
+            "mode": "bitwise",
+            "reason": "exact predecessor layout and cast boundary, no error tolerance"
+          },
+          "max_abs_error": 0.0
+        }
+      },
+      "evidence": [
+        {
+          "kernel": "kda_layout_f32_bf16_kernel",
+          "device": "a5",
+          "requested_backend": "cce",
+          "stage": "sim",
+          "launcher": "sim",
+          "block_dim": 1,
+          "model": "functional Surface IR",
+          "backend_executed": false,
+          "sim_processes": "threads"
+        }
+      ],
+      "input_unchanged": true,
+      "passed": true
+    },
+    {
+      "id": "broadcast_bf16_f32",
+      "stage": "sim",
+      "block_dim": 1,
+      "parameters": {
+        "kind": "broadcast",
+        "source": "bf16",
+        "destination": "f32",
+        "N": 1024
+      },
+      "comparison": {
+        "destination": {
+          "passed": true,
+          "comparison": {
+            "mode": "bitwise",
+            "reason": "exact predecessor layout and cast boundary, no error tolerance"
+          },
+          "max_abs_error": 0.0
+        }
+      },
+      "evidence": [
+        {
+          "kernel": "kda_layout_bf16_f32_kernel",
+          "device": "a5",
+          "requested_backend": "cce",
+          "stage": "sim",
+          "launcher": "sim",
+          "block_dim": 1,
+          "model": "functional Surface IR",
+          "backend_executed": false,
+          "sim_processes": "threads"
+        }
+      ],
+      "input_unchanged": true,
+      "passed": true
+    },
+    {
+      "id": "broadcast_f32_f32",
+      "stage": "sim",
+      "block_dim": 1,
+      "parameters": {
+        "kind": "broadcast",
+        "source": "f32",
+        "destination": "f32",
+        "N": 1024
+      },
+      "comparison": {
+        "destination": {
+          "passed": true,
+          "comparison": {
+            "mode": "bitwise",
+            "reason": "exact predecessor layout and cast boundary, no error tolerance"
+          },
+          "max_abs_error": 0.0
+        }
+      },
+      "evidence": [
+        {
+          "kernel": "kda_layout_f32_f32_kernel",
+          "device": "a5",
+          "requested_backend": "cce",
+          "stage": "sim",
+          "launcher": "sim",
+          "block_dim": 1,
+          "model": "functional Surface IR",
+          "backend_executed": false,
+          "sim_processes": "threads"
+        }
+      ],
+      "input_unchanged": true,
+      "passed": true
+    },
+    {
+      "id": "zero_bf16",
+      "stage": "sim",
+      "block_dim": 1,
+      "parameters": {
+        "kind": "zero",
+        "source": "bf16",
+        "destination": "bf16",
+        "N": 256
+      },
+      "comparison": {
+        "destination": {
+          "passed": true,
+          "comparison": {
+            "mode": "bitwise",
+            "reason": "exact predecessor layout and cast boundary, no error tolerance"
+          },
+          "max_abs_error": 0.0
+        }
+      },
+      "evidence": [
+        {
+          "kernel": "kda_layout_zero_bf16_kernel",
+          "device": "a5",
+          "requested_backend": "cce",
+          "stage": "sim",
+          "launcher": "sim",
+          "block_dim": 1,
+          "model": "functional Surface IR",
+          "backend_executed": false,
+          "sim_processes": "threads"
+        }
+      ],
+      "input_unchanged": true,
+      "passed": true
+    },
+    {
+      "id": "zero_f32",
+      "stage": "sim",
+      "block_dim": 1,
+      "parameters": {
+        "kind": "zero",
+        "source": "f32",
+        "destination": "f32",
+        "N": 256
+      },
+      "comparison": {
+        "destination": {
+          "passed": true,
+          "comparison": {
+            "mode": "bitwise",
+            "reason": "exact predecessor layout and cast boundary, no error tolerance"
+          },
+          "max_abs_error": 0.0
+        }
+      },
+      "evidence": [
+        {
+          "kernel": "kda_layout_zero_f32_kernel",
+          "device": "a5",
+          "requested_backend": "cce",
+          "stage": "sim",
+          "launcher": "sim",
+          "block_dim": 1,
+          "model": "functional Surface IR",
+          "backend_executed": false,
+          "sim_processes": "threads"
+        }
+      ],
+      "input_unchanged": true,
+      "passed": true
+    },
+    {
+      "id": "bounded_gate_multiply",
+      "stage": "sim",
+      "block_dim": 1,
+      "parameters": {
+        "kind": "cast",
+        "source": "f32",
+        "destination": "bf16",
+        "N": 128,
+        "multiply": true
+      },
+      "comparison": {
+        "destination": {
+          "passed": true,
+          "comparison": {
+            "mode": "bitwise",
+            "reason": "exact predecessor layout and cast boundary, no error tolerance"
+          },
+          "max_abs_error": 0.0
+        }
+      },
+      "evidence": [
+        {
+          "kernel": "kda_layout_f32_bf16_kernel",
+          "device": "a5",
+          "requested_backend": "cce",
+          "stage": "sim",
+          "launcher": "sim",
+          "block_dim": 1,
+          "model": "functional Surface IR",
+          "backend_executed": false,
+          "sim_processes": "threads"
+        }
+      ],
+      "input_unchanged": true,
+      "passed": true
+    },
+    {
+      "id": "permutation_bf16_bf16",
+      "stage": "sim",
+      "block_dim": 1,
+      "N": 256,
+      "comparison": {
+        "destination": {
+          "passed": true,
+          "comparison": {
+            "mode": "bitwise",
+            "reason": "exact predecessor layout and cast boundary, no error tolerance"
+          },
+          "max_abs_error": 0.0
+        }
+      },
+      "evidence": [
+        {
+          "kernel": "kda_layout_bf16_bf16_kernel",
+          "device": "a5",
+          "requested_backend": "cce",
+          "stage": "sim",
+          "launcher": "sim",
+          "block_dim": 1,
+          "model": "functional Surface IR",
+          "backend_executed": false,
+          "sim_processes": "threads"
+        }
+      ],
+      "input_unchanged": true,
+      "passed": true
+    },
+    {
+      "id": "permutation_bf16_f32",
+      "stage": "sim",
+      "block_dim": 1,
+      "N": 256,
+      "comparison": {
+        "destination": {
+          "passed": true,
+          "comparison": {
+            "mode": "bitwise",
+            "reason": "exact predecessor layout and cast boundary, no error tolerance"
+          },
+          "max_abs_error": 0.0
+        }
+      },
+      "evidence": [
+        {
+          "kernel": "kda_layout_bf16_f32_kernel",
+          "device": "a5",
+          "requested_backend": "cce",
+          "stage": "sim",
+          "launcher": "sim",
+          "block_dim": 1,
+          "model": "functional Surface IR",
+          "backend_executed": false,
+          "sim_processes": "threads"
+        }
+      ],
+      "input_unchanged": true,
+      "passed": true
+    },
+    {
+      "id": "permutation_f32_bf16",
+      "stage": "sim",
+      "block_dim": 1,
+      "N": 256,
+      "comparison": {
+        "destination": {
+          "passed": true,
+          "comparison": {
+            "mode": "bitwise",
+            "reason": "exact predecessor layout and cast boundary, no error tolerance"
+          },
+          "max_abs_error": 0.0
+        }
+      },
+      "evidence": [
+        {
+          "kernel": "kda_layout_f32_bf16_kernel",
+          "device": "a5",
+          "requested_backend": "cce",
+          "stage": "sim",
+          "launcher": "sim",
+          "block_dim": 1,
+          "model": "functional Surface IR",
+          "backend_executed": false,
+          "sim_processes": "threads"
+        }
+      ],
+      "input_unchanged": true,
+      "passed": true
+    },
+    {
+      "id": "permutation_f32_f32",
+      "stage": "sim",
+      "block_dim": 1,
+      "N": 256,
+      "comparison": {
+        "destination": {
+          "passed": true,
+          "comparison": {
+            "mode": "bitwise",
+            "reason": "exact predecessor layout and cast boundary, no error tolerance"
+          },
+          "max_abs_error": 0.0
+        }
+      },
+      "evidence": [
+        {
+          "kernel": "kda_layout_f32_f32_kernel",
+          "device": "a5",
+          "requested_backend": "cce",
+          "stage": "sim",
+          "launcher": "sim",
+          "block_dim": 1,
+          "model": "functional Surface IR",
+          "backend_executed": false,
+          "sim_processes": "threads"
+        }
+      ],
+      "input_unchanged": true,
+      "passed": true
+    },
+    {
+      "id": "cast_bf16_bf16",
+      "stage": "pipesim",
+      "block_dim": 1,
+      "parameters": {
+        "kind": "cast",
+        "source": "bf16",
+        "destination": "bf16",
+        "N": 128
+      },
+      "comparison": {
+        "destination": {
+          "passed": true,
+          "comparison": {
+            "mode": "bitwise",
+            "reason": "exact predecessor layout and cast boundary, no error tolerance"
+          },
+          "max_abs_error": 0.0
+        }
+      },
+      "evidence": [
+        {
+          "kernel": "kda_layout_bf16_bf16_kernel",
+          "device": "a5",
+          "requested_backend": "cce",
+          "stage": "pipesim",
+          "launcher": "pipesim",
+          "block_dim": 1,
+          "model": "lowered events and hazards",
+          "backend_executed": false,
+          "event_balance": [],
+          "hazards": [],
+          "deadlock": null,
+          "model_cycles": 1255,
+          "sim_processes": "threads"
+        }
+      ],
+      "input_unchanged": true,
+      "passed": true
+    },
+    {
+      "id": "cast_bf16_f32",
+      "stage": "pipesim",
+      "block_dim": 1,
+      "parameters": {
+        "kind": "cast",
+        "source": "bf16",
+        "destination": "f32",
+        "N": 128
+      },
+      "comparison": {
+        "destination": {
+          "passed": true,
+          "comparison": {
+            "mode": "bitwise",
+            "reason": "exact predecessor layout and cast boundary, no error tolerance"
+          },
+          "max_abs_error": 0.0
+        }
+      },
+      "evidence": [
+        {
+          "kernel": "kda_layout_bf16_f32_kernel",
+          "device": "a5",
+          "requested_backend": "cce",
+          "stage": "pipesim",
+          "launcher": "pipesim",
+          "block_dim": 1,
+          "model": "lowered events and hazards",
+          "backend_executed": false,
+          "event_balance": [],
+          "hazards": [],
+          "deadlock": null,
+          "model_cycles": 1099,
+          "sim_processes": "threads"
+        }
+      ],
+      "input_unchanged": true,
+      "passed": true
+    },
+    {
+      "id": "cast_f32_bf16",
+      "stage": "pipesim",
+      "block_dim": 1,
+      "parameters": {
+        "kind": "cast",
+        "source": "f32",
+        "destination": "bf16",
+        "N": 128
+      },
+      "comparison": {
+        "destination": {
+          "passed": true,
+          "comparison": {
+            "mode": "bitwise",
+            "reason": "exact predecessor layout and cast boundary, no error tolerance"
+          },
+          "max_abs_error": 0.0
+        }
+      },
+      "evidence": [
+        {
+          "kernel": "kda_layout_f32_bf16_kernel",
+          "device": "a5",
+          "requested_backend": "cce",
+          "stage": "pipesim",
+          "launcher": "pipesim",
+          "block_dim": 1,
+          "model": "lowered events and hazards",
+          "backend_executed": false,
+          "event_balance": [],
+          "hazards": [],
+          "deadlock": null,
+          "model_cycles": 1101,
+          "sim_processes": "threads"
+        }
+      ],
+      "input_unchanged": true,
+      "passed": true
+    },
+    {
+      "id": "cast_f32_f32",
+      "stage": "pipesim",
+      "block_dim": 1,
+      "parameters": {
+        "kind": "cast",
+        "source": "f32",
+        "destination": "f32",
+        "N": 128
+      },
+      "comparison": {
+        "destination": {
+          "passed": true,
+          "comparison": {
+            "mode": "bitwise",
+            "reason": "exact predecessor layout and cast boundary, no error tolerance"
+          },
+          "max_abs_error": 0.0
+        }
+      },
+      "evidence": [
+        {
+          "kernel": "kda_layout_f32_f32_kernel",
+          "device": "a5",
+          "requested_backend": "cce",
+          "stage": "pipesim",
+          "launcher": "pipesim",
+          "block_dim": 1,
+          "model": "lowered events and hazards",
+          "backend_executed": false,
+          "event_balance": [],
+          "hazards": [],
+          "deadlock": null,
+          "model_cycles": 1271,
+          "sim_processes": "threads"
+        }
+      ],
+      "input_unchanged": true,
+      "passed": true
+    },
+    {
+      "id": "strided_bf16_bf16",
+      "stage": "pipesim",
+      "block_dim": 1,
+      "parameters": {
+        "kind": "strided",
+        "source": "bf16",
+        "destination": "bf16",
+        "N": 256
+      },
+      "comparison": {
+        "destination": {
+          "passed": true,
+          "comparison": {
+            "mode": "bitwise",
+            "reason": "exact predecessor layout and cast boundary, no error tolerance"
+          },
+          "max_abs_error": 0.0
+        }
+      },
+      "evidence": [
+        {
+          "kernel": "kda_layout_bf16_bf16_kernel",
+          "device": "a5",
+          "requested_backend": "cce",
+          "stage": "pipesim",
+          "launcher": "pipesim",
+          "block_dim": 1,
+          "model": "lowered events and hazards",
+          "backend_executed": false,
+          "event_balance": [],
+          "hazards": [],
+          "deadlock": null,
+          "model_cycles": 2479,
+          "sim_processes": "threads"
+        }
+      ],
+      "input_unchanged": true,
+      "passed": true
+    },
+    {
+      "id": "strided_f32_bf16",
+      "stage": "pipesim",
+      "block_dim": 1,
+      "parameters": {
+        "kind": "strided",
+        "source": "f32",
+        "destination": "bf16",
+        "N": 256
+      },
+      "comparison": {
+        "destination": {
+          "passed": true,
+          "comparison": {
+            "mode": "bitwise",
+            "reason": "exact predecessor layout and cast boundary, no error tolerance"
+          },
+          "max_abs_error": 0.0
+        }
+      },
+      "evidence": [
+        {
+          "kernel": "kda_layout_f32_bf16_kernel",
+          "device": "a5",
+          "requested_backend": "cce",
+          "stage": "pipesim",
+          "launcher": "pipesim",
+          "block_dim": 1,
+          "model": "lowered events and hazards",
+          "backend_executed": false,
+          "event_balance": [],
+          "hazards": [],
+          "deadlock": null,
+          "model_cycles": 1865,
+          "sim_processes": "threads"
+        }
+      ],
+      "input_unchanged": true,
+      "passed": true
+    },
+    {
+      "id": "broadcast_bf16_f32",
+      "stage": "pipesim",
+      "block_dim": 1,
+      "parameters": {
+        "kind": "broadcast",
+        "source": "bf16",
+        "destination": "f32",
+        "N": 1024
+      },
+      "comparison": {
+        "destination": {
+          "passed": true,
+          "comparison": {
+            "mode": "bitwise",
+            "reason": "exact predecessor layout and cast boundary, no error tolerance"
+          },
+          "max_abs_error": 0.0
+        }
+      },
+      "evidence": [
+        {
+          "kernel": "kda_layout_bf16_f32_kernel",
+          "device": "a5",
+          "requested_backend": "cce",
+          "stage": "pipesim",
+          "launcher": "pipesim",
+          "block_dim": 1,
+          "model": "lowered events and hazards",
+          "backend_executed": false,
+          "event_balance": [],
+          "hazards": [],
+          "deadlock": null,
+          "model_cycles": 6419,
+          "sim_processes": "threads"
+        }
+      ],
+      "input_unchanged": true,
+      "passed": true
+    },
+    {
+      "id": "broadcast_f32_f32",
+      "stage": "pipesim",
+      "block_dim": 1,
+      "parameters": {
+        "kind": "broadcast",
+        "source": "f32",
+        "destination": "f32",
+        "N": 1024
+      },
+      "comparison": {
+        "destination": {
+          "passed": true,
+          "comparison": {
+            "mode": "bitwise",
+            "reason": "exact predecessor layout and cast boundary, no error tolerance"
+          },
+          "max_abs_error": 0.0
+        }
+      },
+      "evidence": [
+        {
+          "kernel": "kda_layout_f32_f32_kernel",
+          "device": "a5",
+          "requested_backend": "cce",
+          "stage": "pipesim",
+          "launcher": "pipesim",
+          "block_dim": 1,
+          "model": "lowered events and hazards",
+          "backend_executed": false,
+          "event_balance": [],
+          "hazards": [],
+          "deadlock": null,
+          "model_cycles": 9951,
+          "sim_processes": "threads"
+        }
+      ],
+      "input_unchanged": true,
+      "passed": true
+    },
+    {
+      "id": "zero_bf16",
+      "stage": "pipesim",
+      "block_dim": 1,
+      "parameters": {
+        "kind": "zero",
+        "source": "bf16",
+        "destination": "bf16",
+        "N": 256
+      },
+      "comparison": {
+        "destination": {
+          "passed": true,
+          "comparison": {
+            "mode": "bitwise",
+            "reason": "exact predecessor layout and cast boundary, no error tolerance"
+          },
+          "max_abs_error": 0.0
+        }
+      },
+      "evidence": [
+        {
+          "kernel": "kda_layout_zero_bf16_kernel",
+          "device": "a5",
+          "requested_backend": "cce",
+          "stage": "pipesim",
+          "launcher": "pipesim",
+          "block_dim": 1,
+          "model": "lowered events and hazards",
+          "backend_executed": false,
+          "event_balance": [],
+          "hazards": [],
+          "deadlock": null,
+          "model_cycles": 1500,
+          "sim_processes": "threads"
+        }
+      ],
+      "input_unchanged": true,
+      "passed": true
+    },
+    {
+      "id": "zero_f32",
+      "stage": "pipesim",
+      "block_dim": 1,
+      "parameters": {
+        "kind": "zero",
+        "source": "f32",
+        "destination": "f32",
+        "N": 256
+      },
+      "comparison": {
+        "destination": {
+          "passed": true,
+          "comparison": {
+            "mode": "bitwise",
+            "reason": "exact predecessor layout and cast boundary, no error tolerance"
+          },
+          "max_abs_error": 0.0
+        }
+      },
+      "evidence": [
+        {
+          "kernel": "kda_layout_zero_f32_kernel",
+          "device": "a5",
+          "requested_backend": "cce",
+          "stage": "pipesim",
+          "launcher": "pipesim",
+          "block_dim": 1,
+          "model": "lowered events and hazards",
+          "backend_executed": false,
+          "event_balance": [],
+          "hazards": [],
+          "deadlock": null,
+          "model_cycles": 1516,
+          "sim_processes": "threads"
+        }
+      ],
+      "input_unchanged": true,
+      "passed": true
+    },
+    {
+      "id": "bounded_gate_multiply",
+      "stage": "pipesim",
+      "block_dim": 1,
+      "parameters": {
+        "kind": "cast",
+        "source": "f32",
+        "destination": "bf16",
+        "N": 128,
+        "multiply": true
+      },
+      "comparison": {
+        "destination": {
+          "passed": true,
+          "comparison": {
+            "mode": "bitwise",
+            "reason": "exact predecessor layout and cast boundary, no error tolerance"
+          },
+          "max_abs_error": 0.0
+        }
+      },
+      "evidence": [
+        {
+          "kernel": "kda_layout_f32_bf16_kernel",
+          "device": "a5",
+          "requested_backend": "cce",
+          "stage": "pipesim",
+          "launcher": "pipesim",
+          "block_dim": 1,
+          "model": "lowered events and hazards",
+          "backend_executed": false,
+          "event_balance": [],
+          "hazards": [],
+          "deadlock": null,
+          "model_cycles": 1107,
+          "sim_processes": "threads"
+        }
+      ],
+      "input_unchanged": true,
+      "passed": true
+    },
+    {
+      "id": "permutation_bf16_bf16",
+      "stage": "pipesim",
+      "block_dim": 1,
+      "N": 256,
+      "comparison": {
+        "destination": {
+          "passed": true,
+          "comparison": {
+            "mode": "bitwise",
+            "reason": "exact predecessor layout and cast boundary, no error tolerance"
+          },
+          "max_abs_error": 0.0
+        }
+      },
+      "evidence": [
+        {
+          "kernel": "kda_layout_bf16_bf16_kernel",
+          "device": "a5",
+          "requested_backend": "cce",
+          "stage": "pipesim",
+          "launcher": "pipesim",
+          "block_dim": 1,
+          "model": "lowered events and hazards",
+          "backend_executed": false,
+          "event_balance": [],
+          "hazards": [],
+          "deadlock": null,
+          "model_cycles": 2479,
+          "sim_processes": "threads"
+        }
+      ],
+      "input_unchanged": true,
+      "passed": true
+    },
+    {
+      "id": "permutation_bf16_f32",
+      "stage": "pipesim",
+      "block_dim": 1,
+      "N": 256,
+      "comparison": {
+        "destination": {
+          "passed": true,
+          "comparison": {
+            "mode": "bitwise",
+            "reason": "exact predecessor layout and cast boundary, no error tolerance"
+          },
+          "max_abs_error": 0.0
+        }
+      },
+      "evidence": [
+        {
+          "kernel": "kda_layout_bf16_f32_kernel",
+          "device": "a5",
+          "requested_backend": "cce",
+          "stage": "pipesim",
+          "launcher": "pipesim",
+          "block_dim": 1,
+          "model": "lowered events and hazards",
+          "backend_executed": false,
+          "event_balance": [],
+          "hazards": [],
+          "deadlock": null,
+          "model_cycles": 1859,
+          "sim_processes": "threads"
+        }
+      ],
+      "input_unchanged": true,
+      "passed": true
+    },
+    {
+      "id": "permutation_f32_bf16",
+      "stage": "pipesim",
+      "block_dim": 1,
+      "N": 256,
+      "comparison": {
+        "destination": {
+          "passed": true,
+          "comparison": {
+            "mode": "bitwise",
+            "reason": "exact predecessor layout and cast boundary, no error tolerance"
+          },
+          "max_abs_error": 0.0
+        }
+      },
+      "evidence": [
+        {
+          "kernel": "kda_layout_f32_bf16_kernel",
+          "device": "a5",
+          "requested_backend": "cce",
+          "stage": "pipesim",
+          "launcher": "pipesim",
+          "block_dim": 1,
+          "model": "lowered events and hazards",
+          "backend_executed": false,
+          "event_balance": [],
+          "hazards": [],
+          "deadlock": null,
+          "model_cycles": 1865,
+          "sim_processes": "threads"
+        }
+      ],
+      "input_unchanged": true,
+      "passed": true
+    },
+    {
+      "id": "permutation_f32_f32",
+      "stage": "pipesim",
+      "block_dim": 1,
+      "N": 256,
+      "comparison": {
+        "destination": {
+          "passed": true,
+          "comparison": {
+            "mode": "bitwise",
+            "reason": "exact predecessor layout and cast boundary, no error tolerance"
+          },
+          "max_abs_error": 0.0
+        }
+      },
+      "evidence": [
+        {
+          "kernel": "kda_layout_f32_f32_kernel",
+          "device": "a5",
+          "requested_backend": "cce",
+          "stage": "pipesim",
+          "launcher": "pipesim",
+          "block_dim": 1,
+          "model": "lowered events and hazards",
+          "backend_executed": false,
+          "event_balance": [],
+          "hazards": [],
+          "deadlock": null,
+          "model_cycles": 2511,
+          "sim_processes": "threads"
+        }
+      ],
+      "input_unchanged": true,
+      "passed": true
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "id": "broadcast_bf16_f32",
+  "stage": "sim",
+  "block_dim": 1,
+  "parameters": {
+    "kind": "broadcast",
+    "source": "bf16",
+    "destination": "f32",
+    "N": 1024
+  },
+  "comparison": {
+    "destination": {
+      "passed": true,
+      "comparison": {
+        "mode": "bitwise",
+        "reason": "exact predecessor layout and cast boundary, no error tolerance"
+      },
+      "max_abs_error": 0.0
+    }
+  },
+  "evidence": [
+    {
+      "kernel": "kda_layout_bf16_f32_kernel",
+      "device": "a5",
+      "requested_backend": "cce",
+      "stage": "sim",
+      "launcher": "sim",
+      "block_dim": 1,
+      "model": "functional Surface IR",
+      "backend_executed": false,
+      "sim_processes": "threads"
+    }
+  ],
+  "input_unchanged": true,
+  "passed": true
+}
