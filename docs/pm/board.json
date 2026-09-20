@@ -1529,6 +1529,10 @@
         {
           "at": "2026-09-20T17:14",
           "summary": "BLOCKED（17:11Z，自述，#106，PR #118 头 9b1639e，仍 draft、未 DONE）：waiting_for——用户对 16:31Z 完整失败表与 17:01Z 判据可满足性证明的裁定；当前判据存在无解端点，不能只靠 kernel 修复闭合全部验收。所有规定真机运行均已执行；D-PM-51 全部六个 bd 的 384 状态检查通过不变的 1e-5，输出 44 例 / bd 与 chunk 16 例 / bd 继续保留数值失败；其它已通过范围及「慢于前任的真实性能」已完整写入 PR（自述）。最终源代码 / 证据加补充包独立恢复 5348 文件（含 259 个 accepted 依赖）全部 SHA256 相同；798 份实际张量单独完整私有归档并全量恢复核验，二进制不进入 Git；最终远端 474 源文件及 259 依赖哈希匹配，计算代码仍是实际真机执行的字节；11 个可达 PR 提交 / 1326 独立 blob 隐私及大小检查通过（自述）。证据：endpoint-comparison-feasibility.json、native-tensor-backup-restore.json。下一步：持续轮询裁定，收到即按批准范围执行；用户明确要求全部验收后才正式评审 / DONE，故维持 draft；BF-08 按先前约定待 BF-07 CLOSE 后接续。PM 处理：状态 in_progress → blocked（等用户）；已回复 #106：决策包（两条 RISK + 必要下界证明）已原样交用户并附 PM 建议（A：只披露、不设通过线的端点类，类定义 |golden|max ≤ 32 × FP32 最小正规数且 candidate 与旧 NPU 逐位相同或 ≤ 1 BF16 / 4 FP32 ULP），用户尚未答复，PM 不替用户定、不把等待当成批准。PR 头 17:09Z 更新为 9b1639e，不评审，等 DONE。"
+        },
+        {
+          "at": "2026-09-20T17:36",
+          "summary": "STATUS（17:33Z，自述，#106，PR #118 头仍 9b1639e，draft，blocked）：对 PM 建议的端点类做了只读范围核对，没有应用该提案、修改验收或重写原始失败——40 个 chunk 与 148 个 decode 实际失败位置逐一用保存的两套 CPU FP32 golden 复核，均落在所提「|golden|max ≤ 32 × FP32 最小正规数」范围内，candidate / 旧 NPU 满足提议的 ULP 界限；decode 的 48 个 BF16 oracle 切片比较全部与旧 NPU 字节相同，其余 142 个 FP32 比较最大 4 ULP；核查同时检查每份加载张量的原始 SHA 与 accepted CPU 环境 / 259 份依赖身份；这些只是提案范围覆盖数据，approved=false、changes_acceptance=false。另提醒（自述）：派单 5748768970 与 BF-07 规格已列明的交付说明——raw 只接受 BF16 / FP32、FP16 / FP64 显式拒绝，PM 承诺合入前向用户单列；实现和 PR 已有明确说明，请 PM 在用户决策包 / 最终审查中一并核对；申领人未改变已派定的 dtype 范围。blocker：用户端点裁定尚未到达，没有待完成的真机运行。PM 处理：已回复 #106（非协议消息）——范围核对记下，会连同用户答复一起用；dtype 域收窄（D-PM-40 同型）在最终评审 / 合入时与端点裁定一并单列给用户，不会漏。"
         }
       ],
       "result": null,
