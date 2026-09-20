@@ -11,6 +11,11 @@
 
 ### 正在飞的任务（现在没有；A5K-02、PK-02、PK-03 都已于 2026-09-19 合入）
 
+> **2026-09-20T15:31Z 更新：BF-05 派给新 session（bf05-gdn2-bf16-a5-1）；BF-07 的 decode 近零比较对象交用户决定（待答）；BF-03 报了第一个 STATUS。**
+> - **BF-05**：15:21Z 新 session 的 APPLY（如实说明手上的 A2-09 还没 CLOSE）；PM 现在就派（只依赖 GD2-01；session 值与 A2-09 不同，符合 PROTOCOL §3.1；用户 D-PM-35 后续 BF16 优先），24h，分支 task/BF-05；ASSIGN 要求先推掉 A2-09 欠的只改 README 的提交、校准先行并冻结预算、证据机械检查、`tests/test_gdn2_chunk_fwd.py` 不在写集（要改先 RISK write-set-expansion）。BF-03 CLOSE 后**不会**再给 BF-03 的 session 派 BF-05（它自己取消了）。
+> - **BF-07 decode 近零（待用户）**：`nearzero_c2_g1_rbf16_vbf16_flags110` 的 final_state 对旧 prep 的 CPU reference 是 4.31e-4（冻结判据 1e-5）；对 candidate 实际 native-prep 输入的双 CPU reference 是 7.24e-8 / 3.96e-8（o 1.54e-3）；raw 与 prepared-public 的 o / state 逐位相同；q / k 对旧 NPU prep 分别 173 / 185 个 BF16 元素（各共 16384，约 1%）差 1 ulp，prep 单步冻结预算已过。定位：偏差来自 prep 的 BF16 舍入位置，不是 decode 递推。申领人请求裁定比较对象——这改的是冻结判据的比较对象，PM 不自行裁，问用户；已要求申领人补三样（普通域比较对象与分布、近零差异率更高的原因、其它落在 1e-5 之上的近零切片）。chunk 近零与端点执行都符合 D-PM-48。
+> - **BF-03**：15:20Z STATUS——66 条实现前校准记录与预算随第一个提交 315cb3d 冻结，六阶段 Vector BF16 单元与入口去 host cast 已实现、104 项主机测试过；尚无设备执行。
+>
 > **2026-09-20T15:18Z 更新：BF-03 ACK（in_progress）；BF-07 报了新的端点 RISK——PM 裁定两条比较口径（D-PM-48）；BF-05 的 APPLY / WITHDRAW 按撤回处理、不派单。**
 > - **BF-03**：15:02Z ACK（距 ASSIGN 6.4h），计划与规格 / Cube 澄清 / 写集预批准一致，无需裁定；ETA 24h。
 > - **BF-07 RISK（PR #118 头 3bb0c63，仍 draft）**：扩展真机交叉端点上「同时匹配两个前任的 NaN/Inf 掩码」不可满足（u=−87/−40/−20 且 A_log=89/100：旧 NPU NaN、CPU 与 candidate −Inf；u≤−88：三者里 candidate 与旧 NPU NaN、CPU −Inf）；极小 BF16 输出（q/k×1e-20）golden 7.85e-44 小于 BF16 最小 subnormal，相对 L2=1；decode nearzero 的 final_state 4.31e-4 > 1e-5（定位中）。**PM 裁定**：CPU FP32 是语义权威，端点不设掩码相等通过线、四列报并分类写明、不改 candidate；golden 舍入后整片为零的切片按「对 golden 正确舍入 ≤1 ulp」判（相对 L2 照报、原失败保留、不删判据、范围只限此类）；decode 的 1e-5 不放宽，定位后若要改比较对象 / 冻结判据问用户。预算数值、155/105 门控、域都没动。PM 猜测机制（未验证）：u=−87/−88 恰在 FP32 最小正规数两侧，是 subnormal 被冲成 0 后 Inf×0。

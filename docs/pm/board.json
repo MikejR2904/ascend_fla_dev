@@ -838,6 +838,10 @@
         {
           "at": "2026-09-20T15:18",
           "summary": "ACK（15:02Z，自述，#102，距 ASSIGN 6.4h，在 24h 内）：session gdn-series-20260919T115559Z-29cb31d7（与 ASSIGN 一致），ETA 24h；已读 AGENTS / handoff / PROTOCOL / START / BF-03 / bf16-kernel-side / pkda_semantics。计划（自述）：(1) main ee4a1a1 基线先冻结 PK-03 同域 ABI、独立 A/B、按实际 BF16 输入舍入后的 F 与 min(1e-2, 3F)，FP32 及 ATK 仍 1e-4、零预算严格相等；(2) 新建独立六阶段 Vector BF16 单元，q/k/v 真 BF16 进 kernel，FP32 归一化 / ATK / 读写 key / 递推中间边，o 直接 BF16、两类状态 FP32，旧 FP32 单元只读、公共结果逐位不变；(3) 按预批准只改旧测试的单个 ReferenceLaunch 函数，保留 4 项 / 6 阶段 / 输入值与 dtype / 输出逐位 / 状态断言，其余顶层定义 AST 不变，两 dtype 均无 host 转换并真机审计；(4) 每 job 重核来源 / 环境 / 健康 / 占用 / 共享锁，完整 B1/T4096/H=HV8 先真机，再全部旧网格与归一化 clamp 边界、NaN composition / 独立 leaves、跨 bd 字节与原 FP32 对照，所有 vendor 先编完、每 bd 独立进程；(5) 同卡原 FP32 / 新 BF16 / 原 FP32 三轮测量，如实报数无速度门槛，每份原始回执自带 CANN / compiler timestamp / opp 信息，单 blob < 5 MB，文本原始证据脱敏入 task/BF-03 PR，全项完成后 DONE。PM 核对：计划与 BF-03 规格、Cube 澄清、写集预批准（仅 test_public_dtype_state_visibility_and_graph_with_reference_launch）一致，无需裁定。状态 assigned → in_progress。说明：ACK 的 note 里说「按 BF-03 → BF-05 续接」，但随后 15:09Z 的 WITHDRAW 又说主 session 的 BF-05 排队意向取消、做完 PGDN 就停——以后者为准，见 BF-05。"
+        },
+        {
+          "at": "2026-09-20T15:31",
+          "summary": "STATUS（15:20Z，自述，#102，session gdn-series-…）：基于 main ee4a1a1 建 task/BF-03；第一个提交 315cb3d 先提交 ABI、独立参考与全部 66 条实现前校准记录，然后才开始 kernel 实现（符合「校准先行、预算随第一个提交冻结」）；保留原 30 个 shape/seed，增加 norm=1e-13 / 1e-12 / 2e-12，真实 BF16 舍入发生在近零覆盖之后；预算固定 min(1e-2, 3F)，ATK 与 FP32 仍 1e-4，零预算严格相等。已实现独立六阶段 Vector BF16 单元：q/k/v 直接 BF16 入 kernel，归一化 / ATK / 中间边 FP32，o 直接 BF16，保留独立 k_read / k_write 与 per-H ATK，旧 FP32 单元未改；公共入口移除两 dtype 的 host cast；旧测试只改预批准的那一个函数，104 项主机测试通过。新 6 个 entry × bd1/2 完成静态 lowering / CCE 源码生成，无 lint / 警告；尚未 vendor 编译或设备执行，不作真机通过声称；临时 SSH 传输失败已留证，设备作业未启动。数字（自述）：CPU 校准 66/66；A/B 最大相对 L2：o=1.892e-6、主 state=1.226e-6、ATK=3.190e-7；BF16 非零 F：o ∈ [1.639e-3, 1.680e-3]、主 state ∈ [1.529e-3, 1.863e-3]；A/B 合计各 4 项 F=0，严格精确判据。scope_update（自述）：用户最新要求完成 PGDN 后停，不再为本 session 申请后续任务；曾临时启动的 GDN-2 独立 worker 已停（APPLY 5750626721 / WITHDRAW 5750636869）；原 BF-05 排队申请 5744873468 取消，请勿在 BF-03 CLOSE 后给本 session 派 BF-05。PM 已按此处理（见 BF-05）。PM 核对：无需裁定；等 DONE 再审（预算与校准记录 315cb3d 冻结后是否被改、写集与预批准的单函数、host 审计、FP32 字节回归、每份回执环境行与 blob <5 MB）。"
         }
       ],
       "result": null,
@@ -959,7 +963,7 @@
       "wave": "W0",
       "soc": "a5",
       "priority": "P0",
-      "status": "open",
+      "status": "assigned",
       "model": [],
       "kernel": [
         "gdn2_chunk_fwd"
@@ -984,9 +988,20 @@
       "spec": "docs/pm/tasks/BF-05.md",
       "issue": 104,
       "pr": null,
-      "assignee": null,
-      "assignee_caps": null,
-      "branch": null,
+      "assignee": "limjiunnbin",
+      "assignee_caps": {
+        "agent": "自述为与 A2-09 同一 agent（APPLY 里写「我手上的 A2-09」，session 值不同）",
+        "socs": [
+          "a5"
+        ],
+        "soc_details": "自述（APPLY 15:21Z）：A5 真机走 machine_specs 记的远端（Ascend950PR / CANN 9.2.0 / 含 ascend950 算子包），用卡前查 npu-smi 与 proc-mem、持锁、只用空闲且 Health OK 的卡；本地 910B3 只做 CPU 侧参考 / 校准 / 静态检查，不冒充 A5 数字。APPLY 没写 compiler timestamp 与 ascriptor / fla 修订，ASSIGN 要求 ACK 里补。机器与卡归 assignee 管理（D-PM-28）",
+        "ascriptor": "APPLY 未写具体修订（按 pin：library 90cfcdc / kernels b3b3f9c）；ACK 里补",
+        "fla": "APPLY 未写（按 pin e52dbc0e）；ACK 里补",
+        "fork": "limjiunnbin/ascend_fla_dev",
+        "session": "bf05-gdn2-bf16-a5-1",
+        "note": "与 A2-09（session a2-09-bwd-1）的 session 值不同，符合 PROTOCOL §3.1 的并发条件；APPLY 如实说明 A2-09 还没 CLOSE 并请 PM 裁定「现在派还是等 CLOSE」，PM 裁定现在派（BF-05 不依赖 A2-09；用户 D-PM-35 后续 BF16 优先），并要求先推掉 A2-09 欠的那个只改 README 的提交。"
+      },
+      "branch": "task/BF-05",
       "timebox_h": 24,
       "reports": [
         {
@@ -1000,6 +1015,10 @@
         {
           "at": "2026-09-20T15:18",
           "summary": "事件（15:07Z APPLY、15:09Z WITHDRAW，自述，#104）：一个新 session（gdn2-bf05-20260920T1510Z-worker，自述「Codex 独立 GDN-2 worker，由 BF-03 主 agent 协调」）在 15:07Z 申领 BF-05，并请求撤销主 session（gdn-series-…）在本 issue 的旧排队 APPLY（19:59Z）；15:09Z 同一 session 撤回自己的 APPLY，理由是用户要求把 gdn2 的 session 停下来、用户已在另一个 session 开始（自述）；同时说明主 session 的 BF-05 排队意向也维持取消、BF-03 完成后不申请后续任务。poll 对该 WITHDRAW 给了警告（BF-05 无 assignee，不采信）——本来也没有被撤销的分派。PM 处理：不派单；BF-05 仍 open、无人申领。19:59Z 那条排队 APPLY 我原先答应「BF-03 CLOSE 后直接派」，现按申领人自己的取消不再自动派，要做的话重新 APPLY；用户另开的 GDN-2 session 走它自己的 APPLY。已在 #104 回复（非协议消息）。规格与公共域裁定（B=1、H∈{1,16}）不变。"
+        },
+        {
+          "at": "2026-09-20T15:31",
+          "summary": "APPLY（15:21Z，自述，#104，session bf05-gdn2-bf16-a5-1）：读了 BF-05 规格（含 D-PM-37 追加与「多 batch」澄清）、通则、PROTOCOL、AGENTS §2/§3/§5/§6/§7、reserved_paths 与本 issue 的历史（15:07Z APPLY / 15:09Z WITHDRAW、主 session 排队 APPLY 已取消）；如实说明手上的 A2-09 已 accept、README 提交已推（头 e6a3a8a），剩余步骤在 PM / 用户，A2-09 未 CLOSE，请 PM 裁定现在派还是等 CLOSE；用户刚明确要求把 GDN-2 的 BF16 kernel 提到优先（自述）。计划（自述）：(1) 只读起点 GD2-01 的 FP32 单元与入口，公共域抄准（B=1、T=1..4096、H∈{1,16}、K=V=128、erase gate、w、FP32 initial_state），BF16 不扩域也不收窄域；(2) CPU 上用「BF16 输入舍入 + FP32 递推」模拟器标定 F，F 与预算（o、final_state 相对 L2 ≤ 1e-2 且 ≤ 3F）先写进 docs/research/gdn2_chunk_fwd_bf16.md 再动手；(3) 新建派生单元 kernels/projects/a5/gdn2_chunk_fwd_bf16/，FP32 单元源码不动；(4) BF16 与 FP32 两条路径的 host 转换都去掉，FP32 改前改后逐位相同单独证；(5) 真机：完整 workload 先跑，GD2-01 契约全集 + 奇偶 C + 门控跨度端点在 BF16 路径上重测（不沿用 FP32 的 1520.9），bd 间逐位相同、输入不被修改、NaN 预填；(6) host 算子审计两 dtype 各一遍、同卡三轮三明治不设门槛；(7) diff 对 reserved_paths 为空。上一任务教训（自述）：形参名避开 C++ 关键字、报 sim 通过前先 compile --backend cce、脱敏不用长数字串启发式并机械校验 JSON 可解析 / 无占位符、每份回执带源码身份、结论覆盖全部 case。PM 裁定：现在派——BF-05 只依赖 GD2-01（已完成）；两个 session 值都填了且不同，符合并发条件；用户 D-PM-35 要求后续 BF16 优先。分支 task/BF-05，24h。ASSIGN 里点明：校准先行并随第一个提交冻结预算；先推掉 A2-09 欠的只改 README 的提交（#112 15:06Z 回复的三处）；tests/test_gdn2_chunk_fwd.py 不在写集里，需要改先发 RISK write-set-expansion；证据机械检查（环境行、源码身份、JSON 可解析 / 无占位符、路径扫描、单 blob <5 MB）；ACK 里补 ascriptor / fla 修订与 A5 环境。"
         }
       ],
       "result": null,
@@ -1393,6 +1412,10 @@
         {
           "at": "2026-09-20T15:18",
           "summary": "RISK comparison-contract-boundary（15:03Z，自述，#106，PR #118 头 3bb0c63，仍 draft、未 DONE；生产 kernel 与预算均未修改）：(1) 扩展真机交叉端点：u=−100/−90/−88 且 A_log=89/100，candidate 与旧 NPU 都是 NaN，CPU FP32 是 −Inf；u=−87/−40/−20 且 A_log=89/100，candidate 与 CPU 是 −Inf，旧 NPU 是 NaN——「同时匹配两个前任的 NaN/Inf 掩码」无法满足；downstream exp(g) 差：A_log=−0.2,u=−16 差 1 ULP、A_log=2.7,u=−16 差 2 ULP、A_log=80,u=−87 新 0.9990885258 / 旧 1.0 差 15292 ULP。(2) boundary-v1-chunk-bd4 的 nearzero_c2_g2_rbf16_vbf16_flags010（q/k×1e-20）：第二 chunk / head1 的 CPU FP32 o 最大约 7.85e-44、小于 BF16 最小 subnormal，BF16 o 为零、相对 L2=1；改用 FP64 累积误差指标避免 FP32 norm 下溢伪零，原失败保留。(3) boundary-v1-decode-bd1 的 nearzero_c2_g1_rbf16_vbf16_flags110：q/k/g prep 过冻结预算，CPU old-prep reference 的 final_state 相对 L2=4.309e-4 > 沿用 BF-06 的 1e-5（state ≈ 1e-17），o 过 3F/0.01；正在独立重跑实际 native-prep 输入的双 CPU reference + prepared-public 逐位对照，未下结论；不自行放宽。进度（自述）：四个 bd 完整 workload、五个反向案例、真实形状 / 门控回归通过；fresh D-PM-44 12 旧 + 12 新 + 12 直接扫描重放通过；3 轮同步性能 plain 约慢 12%、cached 约慢 6%（如实保留）；chunk 普通网格四个 bd 各 1620 全过，decode 高 bd 仍在检查。卫生：两份 failure traceback 曾带入私有运行目录路径，已脱敏并用精确远端 SHA 的 force-with-lease 仅替换本人最新提交（这就是头从 81444c0a 变成 3bb0c63 的原因），原回执私下留存，不声称旧公开 Git 对象已清除（自述）。PM 裁定（D-PM-48，已回复 #106，非协议消息）：(1) CPU FP32 是语义权威（AGENTS §6 双 oracle），旧 NPU 是前任行为观测；扩展非有限交叉端点不设掩码相等的通过线，四列（candidate / 旧 NPU / CPU FP32 / FP64）报并分三类写明，机制请核实（PM 猜测：u=−87 给 −Inf、u=−88 给 NaN 恰在 FP32 最小正规数 ln(1.18e-38)≈−87.3 两侧，与 subnormal 被冲成 0 再 Inf×0 一致），写可达性与公开入口对非有限 gate 的实际行为；不改 candidate。(2) golden 对 BF16 正确舍入后整个切片为零的 (head, chunk) 按 BF16 对 golden 正确舍入 ≤1 ulp（此处 0 ulp）判，相对 L2 照报、原失败保留、不删判据、列出这类切片；范围只限此类，常规预算不动；FP64 累积指标认可，但要证明常规域上新旧指标数值一致 / 只更小。(3) decode final_state 1e-5 不放宽；先定位（双 CPU reference + 逐位对照），结果出来前 PM 不裁；如需改比较对象或冻结判据，PM 问用户。(4) 评审时对 PR 全部提交与最终文件树做隐私扫描；请把 traceback / 日志路径脱敏加进出包前机械检查。"
+        },
+        {
+          "at": "2026-09-20T15:31",
+          "summary": "STATUS（15:19Z，自述，#106，PR #118 头 0d0e5c4，仍 draft、未 DONE）：decode nearzero_c2_g1_rbf16_vbf16_flags110 定位：原失败仍在（old-CPU-prep state 相对 L2 = 4.3087e-4 > 1e-5）；以 candidate 实际 native-prep 输入为输入的双 CPU FP32 reference：state 相对 L2 = 7.2369e-8 / 3.9641e-8，o = 1.5408e-3 / 1.5408e-3；raw 与直接 prepared-public 的 o / state 逐位相同；保存张量哈希与原回执一致；q / k 相对旧 NPU prep 分别 173 / 185 个 BF16 元素不同（各共 16384），单步 prep 冻结预算已过；beta 逐位一致，gate 最大差 1.19e-7。结论（自述）：落在 prep 舍入 / composition 的比较边界，不是 decode 递推多出的误差；未改 1e-5 或验收参考。chunk 原失败切片：实际全 0；两份 CPU FP32 golden 最大 7.8472714e-44，对 BF16 正确舍入全 0，实际与正确舍入逐位相同；原相对 L2 = 1 保留。普通 decode bd8 / 16 / 28 各 3240 例远端完成、exit 0，正在跨六 bd 逐位对账；高 bd 叶子队列启动前重核健康 / 空闲 / 双锁。7 组普通网格 32421 份回执均自带环境，JSONL 每个 blob <2.5 MB、fresh restore 与全部原始 SHA 逐份一致（非最终归档声明）。下一步（自述）：按 PM 裁定分类扩展非有限端点四列并核查公开入口对非有限 gate 的行为；增加「BF16 正确舍入后整片为 0」的端点比较；普通常规指标同时记 FP32 旧值与 FP64 累积值并保留旧判定的合取，冻结 budgets.json 逐字节未变。blocker：decode composition 的比较对象裁定。PM 处理：chunk 近零与端点执行都符合 D-PM-48；decode 近零的比较对象改的是冻结判据的比较对象，不自行裁，交用户决定（见 handoff），在此之前要求申领人保持现状（不改 1e-5、不改验收参考、不把失败改成通过）；已回复 #106（非协议消息）并请其补三样：普通 decode state 1e-5 的比较对象是旧 prep 还是实际 prep 输出的 reference；若前者，普通域 state 对旧 prep reference 的相对 L2 分布与近零档差异率（约 1%）更高的原因（哪一步公式与旧 host 不同）；是否还有别的近零 decode 切片落在 1e-5 之上。PM 粗算（未验证）：约 1% 的 q / k 元素差 1 个 BF16 ulp ≈ q / k 相对 L2 4e-4~6e-4，state 对 k 线性，与 4.31e-4 同量级。"
         }
       ],
       "result": null,
