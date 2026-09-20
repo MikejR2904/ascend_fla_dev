@@ -293,6 +293,13 @@
       "by": "user",
       "decision": "授权合入 PR #114（BF-06），并放行其余待用户决定的 gated 项。（用户原话：「#114授权」，随后「其他的也放行」。）",
       "risk": "PM 的读法（用户可纠正）：(1)「#114授权」的授权对象是 PM 评审过的头 98d75fc9，用 --match-head-commit 钉住，经 bot 账号合入；用户是在被告知「入口 dtype 域收窄成 BF16 / 全 FP32」与「B1/T16/H32 上比旧 wrapper 慢约 1–25%」之后授权的。(2)「其他的也放行」读作：放行 PM 在「仍在等你的」清单里反复列出的 gated 项——PK-05 / GDA-04 / PK-06 / GDA-05（user-decision，来自外部需求 #89）、A2-10 / A2-11（machines:a2）、BF-07 / A2-K1（kernel 批次）——**以及与 A2-10 / A2-11 同一道 machines:a2 闸的 A2-12 … A2-16、A2-41、A2-43**（它们由依赖排序，前置没完成前动不了）。(3) 具体做法：规格已在的 → 现在改 open（BF-07、PK-05、GDA-04、PK-06、GDA-05，并给 A2-10 / A2-11 补了规格）；规格没写、前置没完成的（A2-K1、A2-12 … A2-16、A2-41、A2-43）→ 仍保持 gated 状态位、但 gate 改成「用户已放行，待前置与规格」，PM 在前置完成、规格写好时改 open，不再问用户。(4) **没有放行**（不在清单里、含义也不明确）：A2-20（GDN on A2，批准后要拆分的大 epic）、A2-42（依赖 A2-K1 的融合 kernel）、A3-00 与 A5-01 … A5-06（按波次的闸，不是等用户）、A2-06（owner-track-coordination）、G3-01（低比特 dtype，未排期）、G1 … G7 各 epic；用户若也要放行请说一声。(5) 放行不改变任何既有纪律：A2 数字在 A2-11 之前只作观测、kernel 批次里改已有 kernel 的写集由 PM 在派单时定、BF-07 与 FMT-02 写集重叠所以排在 FMT-02 之后。"
+    },
+    {
+      "id": "D-PM-44",
+      "date": "2026-09-20",
+      "by": "pm",
+      "decision": "FMT-02 在基线自身不确定时的验收口径：① 转换边界逐位、每个样本（BF16 dh0 → 旧 host widen / 新 kernel widen / CPU FP32 转换三者逐位相同，不依赖设备是否稳定）；② 端到端逐位对旧路径：其余 7 项输出 / 梯度在每个跑过的设备上照旧，h0 梯度只在「旧路径自身重复 ≥12 次哈希全同」的设备上比，不稳定设备上的 h0 端到端结果不作通过或失败依据、只记基线缺陷；③ h0 原预算 0.05 不动；④ 候选在不稳定设备上 12 次同哈希不算修好、不许加同步掩盖；⑤ FMT-02 不承接上游 scan_fused dh0 不确定性的根因与修复（写集不变、不改 scan、不批派生 scan 文件）。",
+      "risk": "PM 的读法与边界（用户可纠正）：(1) 依据是申领人自述的基线重复（在其替代环境 CANN 9.1.0-beta.1 上：旧公共路径自己 12 次 h0 梯度 5 个哈希、4 次超 0.05；直接重放上游 scan 第一张卡 11/12 不同、另一张卡 12/12 相同），PM 无该环境、未复现。(2) 用户 D-PM-37 的原话是「移除后输出逐位相同」——本裁定没有放松候选的逐位要求，只是把「对旧路径的端到端逐位」在 dh0 上限定为旧路径自身稳定的设备，并把转换边界作为不依赖设备的硬判据；这属 D-PM-33 里「判据的读法被改动」类，**合入 FMT-02 前我先问用户**。(3) 上游 scan_fused 的不确定性（gaps：kda-bwd-scan-dh0-nondeterministic，P1，requires_kernel_change，机制未定位）修在本仓派生 scan 单元、进 kernel 批次，只有用户能批；也可能是那张卡 / 那个 CANN beta 环境的问题（申领人自己管理的机器，D-PM-28），机制未定位前不排除。"
     }
   ],
   "gated_epics": [
@@ -1160,6 +1167,10 @@
         {
           "at": "2026-09-20T05:37",
           "summary": "RISK bitwise-mismatch（05:28Z，severity high，自检发现，PR #116 draft，头 9d17abfe）：修复验收脚本的同名 unit.py 导入冲突后，bd4 完整 Kimi T4096 direct plain / cached / backward 再次通过，31 个布局 / 转换 / 零填充 / 特殊值 / guard 叶子检查通过；随后 autograd B2/T192/H2/HV4、contiguous 上游梯度案例失败：o / final_state / dq / dk / dv / dg / dbeta 与旧路径逐位相同，**只有 FP32 h0 梯度哈希不同**（candidate 5114319f… / before c9d5175d…）。原始 failure.json / 日志保留，队列在首个失败停止，未放宽判据。范围（自述）：阻塞 FMT-02 的 autograd / 整体验收，先前独立直接 backward 的通过记录只覆盖其执行案例；尚未确定差异来自 backward 输出、BF16→FP32 转换还是验收插桩，不做未验证归因。next：按原失败输入捕获转换前后张量与旧路径、CPU 位精确转换对照；修复限定在授权写集，涉及只读 kernel 先另报 RISK。无 DONE。PM 处置：记录，不上报用户（自检发现、未宣称通过、不是 main 上的静默错误）；回复了两点建议——先证明旧路径自身 h0 梯度哈希多次运行稳定（排除基线非确定），再按 D-PM-42 分界分清 h0 梯度来自新 kernel / autograd 拼装 / 存量 _scan_states；逐位相同仍是硬判据，若结论是「旧路径本身非确定」则逐位标准怎么改由 PM 裁、不由申领人自行放宽。PR 头已更新为 9d17abfe（相对 13028fb8 多 1 个提交：kda_layout/diagnostics.py 新增 82 行、native_checks.py +4/−1、tests +13，全部在写集内）。"
+        },
+        {
+          "at": "2026-09-20T05:57",
+          "summary": "RISK kernel-change-needed（05:36Z，severity high，自述）：首个差异隔离到只读上游 scan_fused 的 dh0 输出（scan_fused.py:358-362 一带，机制未定位）——固定 bd4/B2/HV4/C3 输入直接重放已编译原始 scan vendor 12 次（NaN 预填、同步），第一张卡上后 11 次 dh0 偏离第一次（1917–8184 个元素）、dAqk/dh/dv 全同；候选 / 旧路径的九缓存与八个 scan 输入逐位相同，BF16 dh0 在转换前已不同，两个 widen 各自逐位等于 CPU 转换；结论仅限 CANN 9.1.0-beta.1 / compiler 20260509_173000235 / Python 3.12.14 / Torch 2.12.0+cu130 / torch_npu 2.12.0，不跨环境。申领人边界：只许搬 dtype / layout，不改 scan、不扩写集、不加 host 同步、不放宽逐位；请 PM 定该不确定性由哪个 kernel 批次承接、是否批准派生 scan 写集。bd1 完整 116 case 通过；bd3 完整 Kimi / leaf / autograd / gates 通过，验收脚本误调 decode 不支持的 bd3，已改为显式拒绝检查、待复跑；bd4 失败仍阻塞整体验收。STATUS（05:47Z，自述，头 25c99339）：旧公共路径 12 次重复（同 B2/T192/H2/HV4、NaN 预填、无内部同步）h0 梯度 5 个哈希（频次 2/1/7/1/1），其余 7 项各 1 个；h0 对 CPU FP32 相对 L2 为 0.002337 ×7、0.008439、0.153270、0.357131、0.358643 ×2，4 次超原 0.05 预算；候选 12 次同哈希 d88e1911…（=旧路径多数哈希）、0.002337；old-public-repeats JSON SHA256 9fe65a51…，原始张量与独立 CPU 参考保留、正整理脱敏证据。跨设备：同宿主 / 同 CANN / 同 vendor / 同生成输入，另一健康空闲设备上 12 次直接重放逐位相同，第一设备 11/12 不同；更宽的 bd4 全套正在第二设备复跑，未据 12 次小样本宣称环境问题解决，也不跨设备继承；仍保留逐位硬判据与原预算，未改 scan / kernel / 同步；未 DONE。PM 处置（D-PM-44）：(1) 归属——不在 FMT-02 里修，写集不变、不批派生 scan；记 gaps.json 的 kda-bwd-scan-dh0-nondeterministic（P1，requires_kernel_change，机制未定位 §6.5），进 kernel 批次要用户批准，已请示；(2) 验收口径——转换边界逐位每样本、其余 7 项每设备逐位、h0 端到端只在旧路径自身稳定的设备上比、预算 0.05 不动、不稳定设备上候选 12 次同哈希不算修好；(3) DONE 交最小复现包（dev-A / dev-B 匿名标签）与 CANN 版本 + timestamp + opp 目录；合入 FMT-02 前先问用户（判据的读法）。PR #116 头更新为 25c99339（相对 9d17abfe 多 1 个提交，native_checks.py +14、tests +14，在写集内）。"
         }
       ],
       "result": null,
@@ -1742,6 +1753,10 @@
         {
           "at": "2026-09-20T05:00",
           "summary": "RISK sim-device-divergence（04:28Z，severity high，静默错误类，自述，A2 观测，PM 无 A2 真机）：① 对「32 字节行包」的列整块 cast 在 c220 上降解成 srcBlk=0 的 vconv，真机整块拿到第 0 行，功能模拟器与 pipesim 都不建模 block stride 而全绿（影响 dv / D_tri / dAkk / M_base / M_beta / s_base / t_beta 与下游六项梯度）；② BF16 GM 标量读（GetValueFrom(bf16_gm[...])）编译期失败（not support bf16 type cast），check / sim / pipesim 不报；③ 功能模拟器不校验物理地址分配，pipesim 才报 UB / L0C overflow。三条已在本仓 a2 单元里绕开；修完后同一台 910B3 上 33 个逐 kernel checkpoint 与 CPU 参考逐位一致（自述）。PM 处置：记入 gaps.json 两条——a2-cast-blkstride-sim-blind（P1，静默）与 a2-sim-vs-toolchain-blind-spots（P2）；A2-09 规格加三条硬约束（sim 不再是通过依据、要 compile --backend cce 与 pipesim；行包列 cast 逐行 count=1 且 README 逐处登记、BF16 GM 不做标量读；最小复现随 DONE 提交），时限 56h 不变；已回复申领人 gaps 由 PM 记、不走 maintain playbook。另：该 RISK 的头写成 \"[FLA-PM] RISK A2-09 sim-device-divergence from=…\"（多出一个词，协议头只有 TYPE / ID / from），poll 因此把它当成 PM 账号自己的评论静默跳过，是靠匿名读 issue 评论捞到的——已修 poll（skip_own_comment，头格式不对的消息露出来并附警告）并加回归测试。"
+        },
+        {
+          "at": "2026-09-20T05:57",
+          "summary": "STATUS（05:43Z，自述，A2 观测，PM 无 A2 真机）：九个 kernel 全部在 910B3 上跑通；单元 kernels/projects/a2/kda_bwd_stable/ 齐（unit / contract / run / 自带 reference / 规范 _unit_runner / README）；run.py reference 26/26、check --launcher sim 26/26（含 33 个逐 kernel checkpoint）；真机 aclnn 前 4 个 case 通过、其余在四张空闲卡上并行（各持 NPU 锁、跑前查过无他人进程），pipesim 在跑；真机逐 kernel 比对（multi_chunk_bd1，C=2）33 个 checkpoint 全对上 CPU 参考，最大相对 L2 是 finalize_post.dg 4.2e-02（预算 0.25），inverse_epilogue.dg_core 4.9e-03，其余 1e-06 量级。又抓到两件：(4) auto_sync 在生成代码里漏跨 pipe 保护（MTE2→MTE1 ready 列表里 finalize_pair 缺 l1_q、inverse_mm 缺 l1_akk / l1_dv / l1_vnew、scan_fused 缺 l1_w，几个输出暂存缓冲缺 V→MTE3），第二个 chunk 的 qk_right 整体错（max_abs 8.0），C=1 看不出、C=2 才炸，功能模拟器全绿，绕行为每个 load / store 组显式 DEvent 栅栏；(5) 七个逐 kernel checkpoint 判据从默认 1e-3 改成两个 BF16 ulp（rtol 2^-7）——finalize_pair 的四个积带未抵消的成对衰减、量级到 7e+07 均值 1e+04，实测 16384 个元素里 1 个差 1.45 ulp（相对 L2 1.1e-07），理由与数字写进契约；六项输出预算不动（a5 那套）。下一步：等 26 个真机 case + pipesim → 脱敏证据（回执带 SoC / CANN / 算子包，哈希字段统一 *_sha）→ draft PR → DONE；无新的阻塞。契约里 board stage untested、门控跨度 untested、block_dim 只声明 1 与 2。PM 处置：(4) 记 gaps.json 的 a2-autosync-missing-cross-pipe-guards（P1，静默，自述），DONE 带最小复现；(5) 是「看到结果后改的判据」，评审单列，DONE 里要给七个 checkpoint 各自的 ulp 误差分布、为什么 2 ulp、以及六项输出预算未动的证明（a2 新单元内部 checkpoint，非既有预算放宽，不必问用户但要证据）。"
         }
       ],
       "result": null

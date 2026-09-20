@@ -11,6 +11,11 @@
 
 ### 正在飞的任务（现在没有；A5K-02、PK-02、PK-03 都已于 2026-09-19 合入）
 
+> **2026-09-20T05:57Z 更新：FMT-02 的 h0 差异隔离到上游 scan_fused 的 dh0 不确定性（基线自己就不稳，环境 / 卡相关）——D-PM-44；A2-09 九个 kernel 真机跑通、又报两条；#115 仍等用户（未重试）。**
+> - **FMT-02 → D-PM-44**：旧公共路径自己重复 12 次，h0 梯度 5 个哈希、4 次超 0.05（最差相对 L2 0.36），其余 7 项各 1 个哈希；直接重放上游只读 `scan_fused`（`scan_fused.py:358-362` 一带，机制未定位）第一张卡 11/12 不同、另一张卡 12/12 相同；BF16 dh0 在转换前已不同，新旧 widen 各自逐位等于 CPU 转换；候选 12 次同哈希（等于旧路径多数哈希）。环境是 CANN 9.1.0-beta.1（自述，PM 未复现）。裁定：FMT-02 不承接根因与修复（写集不变、不批派生 scan 单元）；验收口径改读为「转换边界逐位每样本 + 其余 7 项每设备逐位 + h0 只在旧路径自身稳定的设备上端到端比 + 0.05 预算不动」；已记 gaps `kda-bwd-scan-dh0-nondeterministic`（P1，`requires_kernel_change`，进队列，**要用户批准的 kernel 批次**，机制未定位——§6.5 先定位）。**合入 FMT-02 前先问用户**（这是判据的读法）。
+> - **A2-09**：九个 kernel 在 910B3 上跑通（reference 26/26、sim 26/26、33 个 checkpoint 对上 CPU，真机 26 case 与 pipesim 在跑；自述）；又报两条：auto_sync 漏跨 pipe 保护（C=2 才炸，记 gaps `a2-autosync-missing-cross-pipe-guards`，P1）与七个 checkpoint 判据改成两个 BF16 ulp（事后调整，评审单列、要 ulp 误差分布）。gaps 现 48 条（P1 23 / P2 10）。
+> - **#115**：仍等用户「#115授权」，不重试。
+>
 > **2026-09-20T05:37Z 更新：FMT-02 报 RISK bitwise-mismatch（自检，autograd 案例只有 h0 梯度哈希不同）；#115 仍等用户（未重试）。**
 > - **FMT-02**：完整 Kimi direct plain / cached / backward 与 31 个叶子检查通过后，autograd B2/T192/H2/HV4 案例里 o / final_state / dq / dk / dv / dg / dbeta 逐位相同、FP32 h0 梯度哈希不同（自述；原始 failure.json 保留、没放宽判据）。我只记不上报（自检发现、没宣称通过、不是 main 上的静默错误），回复了建议：先证明旧路径自身 h0 梯度哈希多次运行稳定，再按 D-PM-42 分界归因；若旧路径本身非确定，逐位标准由 PM 裁。PR #116 头 `9d17abfe`（仍 draft）。
 > - **#115**：仍等用户「#115授权」，不重试。
