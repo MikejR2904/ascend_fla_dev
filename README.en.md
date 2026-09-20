@@ -63,7 +63,7 @@ _First target family; used by Kimi-Linear_
 
 | task | issue | SoC | dtype | status | note |
 |---|---|---|---|---|---|
-| FMT-02 | [#109](https://github.com/ddddwee1/ascend_fla_dev/issues/109) | `a5` | bf16 | 🔵 in_progress | ★ start |
+| FMT-02 | [#109](https://github.com/ddddwee1/ascend_fla_dev/issues/109) | `a5` | bf16 | 🔵 review | ★ start |
 | A2-04 | [#30](https://github.com/ddddwee1/ascend_fla_dev/issues/30) | `any` | bf16 | ✅ done | ★ start |
 | A2-03 | [#34](https://github.com/ddddwee1/ascend_fla_dev/issues/34) | `a2` | bf16、fp32 | ✅ done | ★ start |
 | A5-04 | [#50](https://github.com/ddddwee1/ascend_fla_dev/issues/50) | `a5` | bf16、fp32 | 🔒 gated (wave:W-A3) | ★ start |
@@ -82,7 +82,7 @@ _First target family; used by Kimi-Linear_
 
 | task | issue | SoC | dtype | status | note |
 |---|---|---|---|---|---|
-| FMT-02 | [#109](https://github.com/ddddwee1/ascend_fla_dev/issues/109) | `a5` | bf16 | 🔵 in_progress | ★ start |
+| FMT-02 | [#109](https://github.com/ddddwee1/ascend_fla_dev/issues/109) | `a5` | bf16 | 🔵 review | ★ start |
 | A2-09 | [#112](https://github.com/ddddwee1/ascend_fla_dev/issues/112) | `a2` | bf16、fp32 | 🔵 in_progress | ★ start |
 | A2-K1 | [#44](https://github.com/ddddwee1/ascend_fla_dev/issues/44) | `a2` | bf16、fp32 | 🔒 gated (用户已放行（D-PM-43），待前置任务与规格) | ★ start |
 | A5-04 | [#50](https://github.com/ddddwee1/ascend_fla_dev/issues/50) | `a5` | bf16、fp32 | 🔒 gated (wave:W-A3) | ★ start |
