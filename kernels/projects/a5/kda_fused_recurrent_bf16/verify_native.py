@@ -18,7 +18,7 @@ from pathlib import Path
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--block-dim', type=int, choices=(1, 2, 4, 8, 16, 28), required=True)
-    parser.add_argument('--mode', choices=('compile', 'full', 'suite'), default='full')
+    parser.add_argument('--mode', choices=('compile', 'full', 'suite', 'boundaries', 'perf'), default='full')
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
     assert os.environ.get('BF06_EXTERNAL_DEVICE_LOCK') == '1', 'hold both shared locks'
@@ -88,15 +88,27 @@ def main():
         def __init__(self):
             super().__init__()
             self.operations = []
+            self.categories = []
+            self.phase = 'operator'
 
         def __torch_dispatch__(self, func, types, args=(), kwargs=None):
             self.operations.append(str(func))
+            self.categories.append(dict(operator=str(func), category=self.phase))
             return func(*args, **(kwargs or {}))
 
-    def public(data):
+    def public(data, *, return_cpu=True, legacy=False):
         selected = api._compiled('a5', args.block_dim, data['v'].dtype)
         original_compiled = api._compiled
+        original_prepare = api._prepare_inputs
         poison_count = []
+        audit = Audit()
+
+        def prepare_legacy(*a, **kw):
+            audit.phase = 'registered_A2-44_legacy_exception_to_BF-07'
+            try:
+                return original_prepare(*a, **kw)
+            finally:
+                audit.phase = 'operator'
 
         def poison_call(ins, scalars, outputs):
             # Validation instrumentation only; every actual public output is
@@ -108,18 +120,25 @@ def main():
             return selected(ins, scalars, outputs)
 
         api._compiled = lambda *a: poison_call
+        if legacy:
+            assert any(data.get(n, False) for n in ('use_qk_l2norm_in_kernel', 'use_gate_in_kernel',
+                                                  'use_beta_sigmoid_in_kernel'))
+            api._prepare_inputs = prepare_legacy
         try:
-            with Audit() as audit:
+            with audit:
                 got = api.fused_recurrent_kda(**data, block_dim=args.block_dim)
         finally:
             api._compiled = original_compiled
+            api._prepare_inputs = original_prepare
         torch.npu.synchronize()
         assert poison_count == [2]
-        unexpected = set(audit.operations) - {'aten.empty.memory_format', 'aten.view.default'}
+        unexpected = {r['operator'] for r in audit.categories if r['category'] == 'operator'} - {
+            'aten.empty.memory_format', 'aten.view.default'}
         assert not unexpected, (unexpected, audit.operations)
-        return tuple(cpu(x) for x in got), audit.operations
+        public.last_categories = audit.categories
+        return (tuple(cpu(x) if x is not None else None for x in got) if return_cpu else got), audit.operations
 
-    def original_fp32(data):
+    def original_fp32(data, *, return_cpu=True):
         # Original public wrapper's FP32 preparation and output layout, with its
         # unchanged read-only kernel. This baseline intentionally includes host work.
         q, k, v, g, beta = (data[n] for n in ('q', 'k', 'v', 'g', 'beta'))
@@ -139,8 +158,10 @@ def main():
         old_op(dict(qs=qs, k=kk, v=bhv(v), g=bhv(g), beta=bb, initial_state=state),
                dict(B=b, HV=hv, T=t, head_dim=128, value_dim=128), dict(o=oo, final_state=ss))
         result = oo.permute(0, 2, 1, 3).contiguous(), ss
-        torch.npu.synchronize()
-        return tuple(cpu(x) for x in result)
+        if return_cpu:
+            torch.npu.synchronize()
+            return tuple(cpu(x) for x in result)
+        return result
 
     rows = []
 
@@ -164,15 +185,19 @@ def main():
         else:
             comparison = research.compare(got, refs)
             exact = None
+        from native_checks import per_head
+        head_metrics = per_head(got, refs, data['v'].dtype, research)
         unchanged = {n: research.digest(cpu(dev[n])) == research.digest(x)
                      for n, x in data.items() if isinstance(x, torch.Tensor)}
         row = dict(case=p, dtype='float32' if fp32 else 'bfloat16', block_dim=args.block_dim,
                    comparison=comparison, original_fp32_bitwise=exact, input_unchanged=unchanged,
+                   per_head=head_metrics,
                    host_operations=ops, poison_all_written=[bool(torch.isfinite(x).all()) for x in got],
                    input_sha256={n: research.digest(x) for n, x in data.items() if isinstance(x, torch.Tensor)},
                    output_sha256=dict(zip(('o', 'final_state'), map(research.digest, got))))
         row['passed'] = (all(c['passed'] for c in comparison.values()) and all(unchanged.values())
-                         and all(row['poison_all_written']) and (exact is None or all(exact)))
+                         and all(row['poison_all_written']) and (exact is None or all(exact))
+                         and all(h['passed'] for h in head_metrics))
         write(label, row)
         rows.append(row)
         write('summary', dict(complete=False, passed=False, cases=rows))
@@ -191,6 +216,12 @@ def main():
             for p in research.cases():
                 if p['T'] in (1, 2, 16) and p['id'].startswith(('grid_', 'real_')):
                     execute(p, fp32=True)
+        if args.mode in ('suite', 'boundaries'):
+            from native_checks import boundaries
+            write('boundaries', boundaries(api, research, args.block_dim, public, original_fp32, to_device, fla))
+        if args.mode == 'perf':
+            from native_perf import measure
+            write('performance', measure(api, research, args.block_dim, original_fp32, to_device, fla))
         write('summary', dict(complete=True, passed=True, cases=rows))
         print('NATIVE_PASS', args.block_dim, len(rows), flush=True)
     except BaseException as error:
