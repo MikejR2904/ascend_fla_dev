@@ -40,18 +40,21 @@ def finalize_pair_a2_kernel(
     l1_q = DBuff(DT.bfloat16, [L, D], Position.L1)
     l1_k = DBuff(DT.bfloat16, [L, D], Position.L1)
     l1_kg = DBuff(DT.bfloat16, [L, D], Position.L1)
-    # Four [64, 128] FP32 accumulators fill b3's 128 KB of L0C exactly. They are not shared: reusing one
-    # across two MMAD rounds, even with a barrier(Pipe.M) and the fixpipe drain in between, came back wrong
-    # on the device while the functional simulator was exact (A2-01 / ascriptor M10-081 territory).
+    # Four [64, 128] FP32 accumulators fill b3's 128 KB of L0C exactly, so nothing has to be shared. An
+    # earlier version ran the four products in two rounds against one pair; that was changed while chasing
+    # a device error which turned out to be the packed-column cast elsewhere in this unit, and the separate
+    # accumulators are kept because they fit and leave no repeated MMAD against one L0C block to reason
+    # about (A2-01 / ascriptor M10-081).
     l0c_dq = Tensor(DT.float, [L, D], Position.L0C)
     l0c_dk = Tensor(DT.float, [L, D], Position.L0C)
     l0c_s = Tensor(DT.float, [L, D], Position.L0C)
     l0c_t = Tensor(DT.float, [L, D], Position.L0C)
 
-    # Explicit L1 load fence. auto_sync did not list every L1 buffer in this kernel's MTE2 -> MTE1
-    # ready guard on the pinned library, so a matmul could read a tile before its GM load landed;
-    # on the device that showed up as the second chunk's product being wrong by whole units while
-    # the functional simulator was exact.
+    # Precautionary L1 load fence. On the pinned library auto_sync's MTE2 -> MTE1 ready guard does not
+    # name every L1 buffer of this kernel (read off the generated cube source), so in principle a matmul
+    # could read a tile before its GM load landed. A controlled A/B on a 910B3 (same case, same build,
+    # only these two fences removed) produced bitwise identical output, so no consequence has been
+    # observed; the fence is kept as insurance, not as a fix for a measured defect.
     l1_ready = DEvent(Pipe.MTE2, Pipe.MTE1)
 
     chunk_count = Var(T // L)
@@ -89,11 +92,6 @@ def finalize_pair_a2_kernel(
             matmul(l0c_t, l1_mbeta[slot].T, l1_k[slot].T, m=L, n=D, k=L, splitn=D)
             s_base[b_idx, hv_idx, row0:row1, 0:D] <<= l0c_s
             t_beta[b_idx, hv_idx, row0:row1, 0:D] <<= l0c_t
-            # The four accumulators are reused by the next chunk. auto_sync did not order the next MMAD
-            # against this chunk's fixpipe drain: on the device the second chunk's qk_right came back with
-            # a max absolute error of 8.0 while the simulator was exact. bar_all closes the whole cube
-            # pipeline at the chunk boundary, which is what the A5 kernel's _phase_matmul does per matmul.
-            bar_all()
             slot += 1
 
     return dq_pair, dk_pair, s_base, t_beta

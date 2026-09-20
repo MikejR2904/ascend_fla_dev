@@ -40,7 +40,7 @@ host 只做 NaN 预填分配与不拷贝的 `view`。
    （`scan_fused` 直接跨步读该 chunk 的门控末行），`inverse_mm` 自己取负并直接输出 `d_w`。
    a5 折在 host 的 qg 预乘 `1/sqrt(128)` 也进了 `scan_fused` 的 seed。
 
-## 真机上踩到的四件事（只在 c220 上出现，功能模拟器全绿）
+## 真机上踩到的事（只在 c220 上出现，功能模拟器全绿）
 
 这些是本单元绕行的记录，不是 ascriptor 的修复；已在任务 issue #112 报 RISK。
 
@@ -48,10 +48,12 @@ host 只做 NaN 预填分配与不拷贝的 `view`。
    bisheng 直接报 `not support bf16 type cast`。绕行：`gm_to_ub_pad` 进 UB，向量侧 cast，再读标量。
 2. **整块 cast 一个 32 字节行包会被降解成 `srcBlk=0`**，于是第 0 行的 block 被复制到每一行，
    真机上整个 chunk 的每个 token 都拿到 `beta[0]`。改成逐行 `count=1` 的 cast。
-3. **`auto_sync` 漏了若干跨 pipe 保护**：`finalize_pair` 的 `l1_q`、`inverse_mm` 的
-   `l1_akk`/`l1_dv`/`l1_vnew`、`scan_fused` 的 `l1_w` 都不在生成代码的 MTE2→MTE1 ready 列表里；
-   几个输出暂存缓冲也缺 V→MTE3。每个 load / store 组因此显式加了 `DEvent` 栅栏。
-   C=1 看不出来（没有复用），C=2 才炸。
+3. **`auto_sync` 的保护列表不完整（观测，未观察到后果）**：`finalize_pair` 的 `l1_q`、
+   `inverse_mm` 的 `l1_akk`/`l1_dv`/`l1_vnew`、`scan_fused` 的 `l1_w` 都不在生成代码的
+   MTE2→MTE1 ready 列表里；几个输出暂存缓冲也缺 V→MTE3。
+   **但受控 A/B（同一 case、同一 build，只差这两条栅栏）在 910B3 上输出逐位相同** ——
+   所以这只是生成代码的观测，不是已证实的缺陷。栅栏留着当保险，代码里按「预防」注明。
+   我一度把它当成根因，是因为同一个 commit 里还改了判据；真正的根因是第 2 条。
 4. **功能模拟器不校验物理地址分配**，pipesim 与真机会。四个 kernel 在 sim 下全绿，
    pipesim 才报 UB / L0C 溢出。**报 sim 通过之前，每个 kernel 至少跑一次
    `ascriptor compile --backend cce`。**
@@ -73,10 +75,16 @@ ASCEND_RT_VISIBLE_DEVICES=<card> PYTHONPATH=<ascriptor>/library python run.py ch
 六项输出沿用 a5 的预算：allclose rtol/atol 1e-3 加 `max_relative_l2` 0.05，`dk` 放宽到 0.15、
 `dg` 放宽到 0.25（理由见契约，是 a5 的实测理由，不是 A2 的新结论）。
 
-逐 kernel 的 33 个 checkpoint 另有一档：`finalize_pair` 的四个积与 `finalize_pre` 的三个缩放量
-带的是未抵消的成对衰减，量级到 7e+07 而均值 1e+04，1e-3 的默认预算远在一个 BF16 ulp 之下。
-它们按两个 ulp（rtol 2^-7）判。实测在 910B3 上 16384 个元素里有 1 个差 1.45 ulp（1408 对 1416），
-相对 L2 1.1e-07。
+逐 kernel 的 33 个 checkpoint 里，`finalize_pair` 的四个积单独一档。它们是 64 项的 FP32 点积，
+操作数还带着**未抵消**的成对衰减：910B3 实测操作数跨 13 个数量级（`|k_scaled|` 到 1.8e+13），
+和到 3.3e+08，项与项之间灾难性相消。真机与 torch 的求和顺序不同，于是相消附近的元素能差几十个
+BF16 ulp，而向量范数不受影响。四个 case（C=1/2/3、HV=1/2/4）实测：最大 58 ulp，
+超过 1 ulp 的元素占比 ≤ 0.41%，相对 L2 最大 1.06e-07。
+所以这四个的判据取**相对 L2 1e-5**（比实测宽两个数量级），逐元素的 rtol 取 1.0 只当粗错闸
+（58 ulp 约等于值的 0.23~0.45，1.0 是两倍余量）。`finalize_pre` 的三个缩放量**一点都不用放宽**
+（0 ulp，相对 L2 ≤ 3.7e-27），用默认预算。
+
+这一档是**看到真机结果之后定的**，如实记在这里；六项输出的预算一个字没动。
 
 ## 没有确立的
 

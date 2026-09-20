@@ -66,8 +66,9 @@ def inverse_dainv_a2_kernel(
     beta_ub = Tensor(DT.float, [1, L], Position.UB)
     pred_ub = Tensor(DT.uint8, [1, 32], Position.UB)
 
-    # auto_sync emitted the V -> S guard for beta_f_ub and the V -> S write-after-read guard for
-    # beta_ub, but not the S -> V read-after-write guard that the vector mul below needs.
+    # Precautionary: auto_sync emits the V -> S guard for beta_f_ub and the V -> S write-after-read guard
+    # for beta_ub, but no S -> V read-after-write guard for the vector mul below. No divergence was traced
+    # to this; the beta error seen on the device was the packed-column cast above.
     beta_ready = DEvent(Pipe.S, Pipe.V)
 
     work_count = B * HV * C

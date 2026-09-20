@@ -106,10 +106,11 @@ def scan_fused_a2_kernel(
     glast_b_ub = Tensor(DT.bfloat16, [1, HALF_D], Position.UB)
     expg_ub = Tensor(DT.float, [1, HALF_D], Position.UB)
 
-    # Explicit L1 load fence. auto_sync did not list every L1 buffer in this kernel's MTE2 -> MTE1
-    # ready guard on the pinned library, so a matmul could read a tile before its GM load landed;
-    # on the device that showed up as the second chunk's product being wrong by whole units while
-    # the functional simulator was exact.
+    # Precautionary L1 load fence. On the pinned library auto_sync's MTE2 -> MTE1 ready guard does not
+    # name every L1 buffer of this kernel (read off the generated cube source), so in principle a matmul
+    # could read a tile before its GM load landed. A controlled A/B on a 910B3 (same case, same build,
+    # only these two fences removed) produced bitwise identical output, so no consequence has been
+    # observed; the fence is kept as insurance, not as a fix for a measured defect.
     l1_ready = DEvent(Pipe.MTE2, Pipe.MTE1)
 
     bhv_count = B * HV

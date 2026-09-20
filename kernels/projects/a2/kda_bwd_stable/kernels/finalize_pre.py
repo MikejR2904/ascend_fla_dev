@@ -73,11 +73,11 @@ def finalize_pre_a2_kernel(
     zero_ub = Tensor(DT.float, [1, L], Position.UB)
     pred_ub = Tensor(DT.uint8, [1, 32], Position.UB)
 
-    # Explicit store fences. On this pinned library auto_sync did not emit the V -> MTE3 (read-after-write)
-    # or MTE3 -> V (write-after-read) guards for every output staging buffer of this kernel: the generated
-    # c220 code carried them for some buffers and not others, and the unguarded ones came back partly
-    # unwritten on the device while the functional simulator was exact. These two fences order the whole
-    # store group against the vector work on either side of it.
+    # Precautionary store fences. On the pinned library auto_sync emits the V -> MTE3 and MTE3 -> V guards
+    # for some of this kernel's output staging buffers and not others (read off the generated vector
+    # source). No divergence was traced to the gap: the device errors first suspected here turned out to
+    # be the packed-column cast below. These two fences order the whole store group against the vector
+    # work on either side of it, and are kept as insurance.
     store_ready = DEvent(Pipe.V, Pipe.MTE3)
     store_done = DEvent(Pipe.MTE3, Pipe.V)
 
