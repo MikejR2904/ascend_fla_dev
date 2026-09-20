@@ -265,6 +265,13 @@
       "by": "user",
       "decision": "授权合入 PR #110（BF-04）、#111（BF-01）、#113（A2-03）。（用户原话：「#110授权 #111授权 #113授权」，回复 PM 反复请示的合入授权。）",
       "risk": "PM 的读法（用户可纠正）：(1) 授权对象是 PM 评审过并在上报里写明的头：#110 = 2d9e4068（不是最初评审的 a25ba5e，头移动的差异已复核仅为证据元数据）、#111 = c5ddd293、#113 = de893f2e，合入都用 --match-head-commit 钉住这三个头，经 bot 账号。(2) #110 的证据是 1.26MB 的 tar.gz（PROTOCOL §4.9 列二进制为整体拒绝项）：用户在被告知后授权合入，PM 按「这一次的例外」处理，未改 §4.9；后续 PR 仍要求文本证据，申领人已在新的 ASSIGN 里被告知。(3) 「校验类」暂定裁定（控制字回读、FP32 只读校验器、CPU 诊断 launcher 的只读校验）与 BF16 的 k 范数闸（沿用 1+1e-5，比 BF16 分辨率紧）两个问题用户没有另外回答，仍按暂定 / 未决处理。(4) #113 是 A2 上的 PR：合入不构成 A2 算子结论，A2-11 之前 A2 真机数字只作观测（契约 board stage 仍为 untested）。"
+    },
+    {
+      "id": "D-PM-40",
+      "date": "2026-09-20",
+      "by": "pm",
+      "decision": "BF-06（KDA decode 原生 BF16）的三条裁定：(1) raw flags=True 分支保持 A2-44 现状，作为「已登记的存量例外 → BF-07」单列审计、不扩大、不宣称合规，默认 flags=False 路径必须完全合规；(2) 入口只接 BF16 q/k/v + FP32 g / beta / state 或全 FP32，FP16 / FP64 / 混用 dtype 显式报错；(3) block_dim 不收窄，原 FP32 的 {1,2,4,8,16,28} 全保持，BF16 做不到某个 bd 先问用户。",
+      "risk": "(1) 这是 PM 对「D-PM-37 vs 规格里的 raw flags 存量例外」的读法（用户可纠正）：不给新代码开例外——BF-06 自己写的入口与 kernel 一处 host 转换 / 算术都不能有；存量的 host 预处理（chunk.py::_prepare_inputs 的 normalize / softplus / exp / sigmoid 与 .to(qk_dtype)）在 BF-07 落地前仍在，BF-07 要改已有派生单元 kda_fwd_stable 的 kernel，属 kernel 批次，只有用户能批准——这条 RISK 说明 BF-07 是 KDA decode / chunk 路径上最后一块 host 算术，建议用户尽早定。(2) dtype 域收窄是 D-PM-37 的直接后果，但确实让原先「收 FP16 / FP64 / 混用 dtype」的入口变成显式报错，PM 已要求申领人发现仓里有依赖时先发 RISK；用户若不同意可推翻，代价是这些 dtype 要有 kernel 侧的支持。(3) block_dim 维持原支持是为了避免 BF16 路径比 FP32 路径的域更窄（D-PM-35：BF16 门控域比 FP32 窄属域变化要先问用户）。"
     }
   ],
   "gated_epics": [
@@ -776,6 +783,10 @@
         {
           "at": "2026-09-20T00:32",
           "summary": "合入（PR #110 → b3e6e7a，合入的是审过的头 2d9e406，依 D-PM-39 用户明确授权）：main 全量 739 passed / 12 skipped。看板 done，pkda_chunk_fwd 的 BF16 格改为原生（A5）。BF-06 已按申领人的排队 APPLY 直接派给同一 session。"
+        },
+        {
+          "at": "2026-09-20T00:37",
+          "summary": "STATUS（00:37Z，自述）：持续轮询确认 PR #110 已合入（b3e6e7a），验收头仍是 2d9e4068，真机证据与数值预算无变化；尚未看到 CLOSE 与 BF-06 ASSIGN，请按 #105 的排队 APPLY 派单。（PM 的 CLOSE 与 ASSIGN 随后在 00:3x 发出。）"
         }
       ],
       "result": {
@@ -854,7 +865,7 @@
       "wave": "W0",
       "soc": "a5",
       "priority": "P0",
-      "status": "assigned",
+      "status": "in_progress",
       "model": [],
       "kernel": [
         "kda_fused_recurrent"
@@ -869,7 +880,8 @@
         "kernels/projects/a5/kda_fused_recurrent_bf16/**",
         "ascend_fla/ops/kda/fused_recurrent.py",
         "tests/test_kda_decode_bf16.py",
-        "docs/research/kda_decode_bf16.md"
+        "docs/research/kda_decode_bf16.md",
+        "tests/test_kda_domain_checks.py"
       ],
       "needs": {
         "npu": true,
@@ -906,6 +918,26 @@
         {
           "at": "2026-09-20T00:32",
           "summary": "派给 limjiunnbin（session 01a0b7ce-…，BF-04 的同一个 session），16h（规格与看板一致），分支 task/BF-06；BF-04 已 CLOSE，按它在 #105 的排队 APPLY 直接派，不需要重新申领。ASSIGN 里点明：BF-04 评审的四条经验（每次运行的原始回执自带 SoC / CANN / 算子包一行、证据用文本不用 tar.gz、host 审计要含实际返回的公共入口、预算先校准定死）"
+        },
+        {
+          "at": "2026-09-20T00:40",
+          "summary": "ACK（00:40Z，eta 16h，自述）：已读 AGENTS / handoff / PROTOCOL / START / BF-06.md / 通则；计划——从最新 main 建 task/BF-06，先校准 CPU FP32 双参考与 BF16 输出误差地板 F，实现前固定 o ≤ 1e-2 且 ≤ 3F、state ≤ 1e-5；新建 token-major BF16 / FP32 派生单元，原 FP32 kernel 只读，去掉公共入口的 host dtype / layout 转换，FP32 改前改后逐位相同；完整 workload 先真机，再 T∈{1,2,16} × GVA∈{1,2,4,8} × 双 initial_state × 独立 bd 进程，加 prefill→decode、NaN 预填、输入不变、跨 bd 字节、公共返回值与两 dtype host 审计；同卡三轮三明治、实际 Torch NPU 基线、单步固定开销；每次原始回执自带 SoC / CANN / 算子包，公开证据全部文本。状态 assigned→in_progress"
+        },
+        {
+          "at": "2026-09-20T00:40",
+          "summary": "RISK contradicts-handoff（00:40Z，自述）：BF-06 规格的 raw flags 旧预处理例外（host FP32 预处理后 cast，融合归 BF-07，本任务不改）与 D-PM-37 追加段（两 dtype 路径无 host 转换 / 算术）冲突；chunk.py::_prepare_inputs 在 flags=True 时产出进入计算的 normalize / softplus / exp / sigmoid 张量，q/k 还 .to(qk_dtype)，不是只读校验；默认三个 flags=False 时该 helper 原样返回输入，可独立推进。另指出：原 decode wrapper 声称任意浮点 dtype，实际 kernel 契约全 FP32、靠 host 加宽；原 wrapper 的 block_dim 是 1/2/4/8/16/28，规格验收网格只列 1/2/4。提议：raw flags=True 保留明确的阶段性 host 例外、单独审计、留 BF-07，不宣称零 host 算术；FP16 / FP64 / 混合 dtype 是否保留请确认，避免把显式拒绝变成未获批准的域收窄；block_dim 保持原支持并补硬件回归。"
+        },
+        {
+          "at": "2026-09-20T00:45",
+          "summary": "PM 裁定（RISK 核实成立，矛盾是 PM 规格里写的，D-PM-40）：(1) raw flags=True 分支 = 存量例外，围起来单列、不改 _prepare_inputs、不新增 host 操作、不宣称合规、留 BF-07（要用户的 kernel 批次批准）；默认 flags=False 路径必须完全合规（真机审计只有 aten.empty / aten.view）。(2) dtype 域 = BF16 q/k/v + FP32 g / beta / state 或全 FP32，其余（FP16 / FP64 / 混用）显式报错——原 wrapper 的任意浮点 dtype 全靠 host .to(float32)，正是 D-PM-37 禁的，是直接后果、不是数值域收窄；仓里若有测试 / layer 依赖 FP16 / FP64 decode，先发 RISK。(3) block_dim 不收窄：原 FP32 的 {1,2,4,8,16,28} 全保持，bd 1/2/4 完整网格、bd 8/16/28 完整 workload + 边界 case，FP32 改前改后六个 bd 都逐位对照；BF16 若在某个 bd 做不到先问用户。规格已补「2026-09-20 裁定」一节，验收的 bd 一行同步；在 #105 回复。"
+        },
+        {
+          "at": "2026-09-20T00:56",
+          "summary": "RISK write-set-expansion（00:56Z，自述）：请求仅增加 tests/test_kda_domain_checks.py 中 decode ABI 回归的写集。第 128-152 行的 8 个 raw-flags 组合用例 test_public_decode_flags_reach_the_existing_fp32_abi 断言 captured[qs] 是 host GVA 复制、BF16 q*scale 舍入、FP32 转换和 BHV 重排后的张量，k / g / beta 也是旧 BHV 布局，恰好要求保留 D-PM-37 要删除的 host 转换。提议仅把这 8 个用例改为核对同一独立 raw-input 参考的 token-major q/k/g/beta、原 dtype、未预乘 scale 的 q 与传入 kernel 的 scale 标量，保留全部 8 组合与零容差，不删用例。同时报告：库内 FP16 / FP64 搜索只命中 CPU 参考校准，没有实际 decode 调用方使用这两种 dtype；CPU 校准 82/82 通过，非零 F 范围 1.616e-3 ~ 1.885e-3，最大 o 相对 L2 1.885e-3、state 1.03e-7，BF16 内部 state 负对照 81/82 被拒；两个新 entry 的 IR 降级与 event balance 为空、CCE 源码发射通过，尚未声称 vendor 编译或真机通过。"
+        },
+        {
+          "at": "2026-09-20T01:07",
+          "summary": "PM 预批准写集扩展（核实成立：该 8 个用例断言的正是旧 host ABI，与 D-PM-37 直接矛盾；文件与保留路径、其他在飞任务的写集都不相交）：仅限这 8 个用例——保留全部 8 个组合、零容差、独立 raw-input 参考，改成核对新 ABI（token-major、原 dtype、未预乘 scale 的 q/k/g/beta 与 kernel 收到的 scale 标量）；不删、不跳过、不放宽别的用例，不为测试加生产分支，_prepare_inputs 原样；发现别的测试文件也断言旧 ABI 先发 RISK。规格已补一节，#105 已回复。dtype 域裁定（D-PM-40）没有实际代价：仓里没有 FP16 / FP64 decode 调用方。"
         }
       ],
       "result": null,
@@ -1467,7 +1499,7 @@
       "wave": "W0",
       "soc": "a2",
       "priority": "P1",
-      "status": "assigned",
+      "status": "in_progress",
       "model": [],
       "kernel": [
         "kda_bwd_stable"
@@ -1517,6 +1549,14 @@
         {
           "at": "2026-09-20T00:32",
           "summary": "派给 limjiunnbin（session a2-01-…，A2-03 的同一个 session；唯一有 a2 真机的申领人），16h，分支 task/A2-09；A2-03 已 CLOSE，直接派，不需要重新申领。第一个 STATUS 要按 A2-03 的实测速度重新给出九个 kernel 的估计与 bwd 单元 contract / 网格 / 证据整理的估计，PM 再调时限；顺带做 A2-03 评审的两条非阻塞意见（每次运行的原始回执自带 SoC / CANN / 算子包一行、哈希字段统一 *_sha）与申领人已看出的两处 host 操作挪进 kernel（g_cumsum 每 chunk 末行的切片拷贝、inverse_mm 输出的取负，D-PM-37）；证据用文本文件；A2 数字 A2-11 之前只作观测，合入前 PM 问用户"
+        },
+        {
+          "at": "2026-09-20T00:42",
+          "summary": "ACK（00:42Z，eta 5h，自述）：已读 A2-09 / A2-03 规格与拆分裁定 / 通则 / AGENTS §2 §3 §6 §7，以及 a5 kda_bwd 的九个 kernel、composition.py / stages.py / contract.json 与本仓 kda_bwd_stable 的三个改写；计划——四个纯向量 kernel 先行（finalize_reduce / finalize_pre / finalize_post / inverse_epilogue，前三个在等派单期间已在 ignored tmp 下写了草稿，ascriptor check 各 0 error / 0 warning：64 / 191 / 282 ops），再纯 cube 的 finalize_pair，再四个混合（inverse_mm bounded、inverse_dainv、inverse_dakk_fused、scan_fused；A5 用 .nz() 的 UB→L1 在 a2 上不可用，dstate / dv 两个桥按 GM 环 + mutex 重写）；两处 host 操作按 D-PM-37 挪进 kernel（g_cumsum 每 chunk 末行改由 kernel 跨步直读、inverse_mm 输出的取负进 kernel）；bwd 单元 unit / contract / run / 自带 CPU 参考 + canonical runner，六项梯度 (C∈{1,2,3})×(HV∈{1,2,4})×(bd∈{1,2}) 网格含奇数 C；每个 kernel 依次 check / sim / pipesim / 910B3 真机（bd1 与 bd2 逐位相同），回执自带 SoC / CANN / 算子包、哈希字段统一 *_sha，draft PR 增量推送。状态 assigned→in_progress"
+        },
+        {
+          "at": "2026-09-20T00:43",
+          "summary": "STATUS（00:43Z，自述）：分支 task/A2-09 已建（基于 3884c27）；三个纯向量草稿已过 ascriptor check（finalize_reduce 64 ops、finalize_pre 191、finalize_post 282，均 0 error / 0 warning），落到 kernels/projects/a2/kda_bwd_stable/ 后逐个验证。按 A2-03 的实测速度重估（A2-03：6 个 kernel 1.2h、单元与证据 2.3h，合计约 3.5h）：九个 kernel 合计约 2.2h（finalize_reduce 0.1、finalize_pre 0.2、finalize_post 0.3、inverse_epilogue 0.3、finalize_pair 0.1、inverse_mm 0.2、inverse_dainv 0.2、inverse_dakk_fused 0.2、scan_fused 0.6——最大，反向扫描 + dstate / dv 两个桥、.nz() 在 a2 上不可用要改 GM 环），bwd 单元 0.5h，六项梯度网格 + 真机 + 证据整理 1.5h，合计约 4.2h（时限 16h，误差主要在 scan_fused）。blockers: none。PM：估计有了实测口径，时限 16h 保持（约 4 倍余量，反向 kernel 比前向重），超估计 25% 走 timebox-slip"
         }
       ],
       "result": null
