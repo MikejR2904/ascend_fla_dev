@@ -92,6 +92,11 @@ def finalize_pair_a2_kernel(
             matmul(l0c_t, l1_mbeta[slot].T, l1_k[slot].T, m=L, n=D, k=L, splitn=D)
             s_base[b_idx, hv_idx, row0:row1, 0:D] <<= l0c_s
             t_beta[b_idx, hv_idx, row0:row1, 0:D] <<= l0c_t
+            # Four independent MMAD -> fixpipe pairs per chunk overrun auto_sync's M -> FIX event, whose
+            # capacity is two tokens: pipesim reports a temporal flag hazard on ev_m_fix_ready_1 at
+            # HV=4, C=2 without this. bar_all closes the cube pipeline at the chunk boundary, which is
+            # what the A5 kernel's _phase_matmul does around every matmul.
+            bar_all()
             slot += 1
 
     return dq_pair, dk_pair, s_base, t_beta

@@ -1068,29 +1068,36 @@
    "device": "a2",
    "backend": "cce",
    "stage": "reference",
-   "status": "untested",
-   "note": "A2-09 in progress; filled from the recorded runs before delivery."
+   "status": "passed",
+   "scope": "All 26 contract cases (A2-09, pinned library 90cfcdc / kernels b3b3f9c); evidence/unit/reference.json."
   },
   {
    "device": "a2",
    "backend": "cce",
    "stage": "sim",
-   "status": "untested",
-   "note": "A2-09 in progress; filled from the recorded runs before delivery."
+   "status": "passed",
+   "scope": "All 26 contract cases including the 33 per-kernel checkpoints (A2-09, pinned library 90cfcdc / kernels b3b3f9c); evidence/unit/sim.json."
   },
   {
    "device": "a2",
    "backend": "cce",
    "stage": "pipesim",
-   "status": "untested",
-   "note": "A2-09 in progress; filled from the recorded runs before delivery."
+   "status": "passed",
+   "scope": "All 26 contract cases (A2-09, pinned library 90cfcdc / kernels b3b3f9c); evidence/unit/pipesim.json. Event balance empty, no hazard, no deadlock. pipesim also enforces the physical UB and L0C allocation, which the functional simulator does not."
   },
   {
    "device": "a2",
    "backend": "cce",
    "stage": "board",
    "status": "untested",
-   "note": "A2-09 in progress; filled from the recorded runs before delivery."
+   "note": "All 26 cases were run on an Ascend 910B3 (CANN 9.0.0, built-in op packages ascend910b and ascend910_93) through the aclnn launcher, one process per case across four idle cards, and every case matched its budget: evidence/unit/aclnn.json and evidence/measurements/. The six gradients' relative L2 across the 26 cases: dq 3.6e-03 to 3.8e-02, dk 5.3e-03 to 1.1e-01, dv 2.6e-03 to 3.9e-03, dbeta 8.3e-04 to 7.5e-03, dg 6.0e-03 to 1.8e-01, dh0 2.6e-03 to 5.3e-03. block_dim 1 and 2 are bitwise equal on three shapes (HV=4 C=2, C=3, B=2). These are recorded as observations, not as a passing stage: AGENTS.md section 2 says an A2 device number is not an operator conclusion before A2-11."
+  },
+  {
+   "device": "a2",
+   "backend": "cce",
+   "stage": "compile",
+   "status": "passed",
+   "scope": "Every kernel builds for c220 through the aclnn path (custom op project, bisheng, vendor tree). Worth running per kernel before reporting a sim pass: the functional simulator does not enforce the physical address allocation and does not reject the BF16 scalar load that the device compiler refuses."
   }
  ],
  "provenance": {
