@@ -1,0 +1,96 @@
+{
+  "passed": true,
+  "stage": "native_same_card_timing",
+  "block_dim": 2,
+  "baseline": "Unchanged complete original FP32 public chunk_gdn_bwd including checkpoint creation, replay, reverse, group reduction, allocations and dispatch; BF16-rounded FP32 operands",
+  "candidate": "Complete new public chunk_gdn_bwd on actual BF16 q/k/v/do storage; both cotangents present",
+  "synchronization": "Before and after every invocation; perf_counter_ns; milliseconds",
+  "total_measured_invocations": 900,
+  "total_warmup_invocations": 180,
+  "cases": [
+    {
+      "case": {
+        "id": "T1024",
+        "seed": 174024,
+        "parameters": {
+          "B": 1,
+          "T": 1024,
+          "H": 8,
+          "HV": 8,
+          "mode": "both"
+        }
+      },
+      "rounds": [
+        {
+          "round": 0,
+          "baseline_before_ms": 160.303125,
+          "candidate_ms": 170.97019749999998,
+          "baseline_after_ms": 160.4333995,
+          "baseline_midpoint_ms": 160.36826225,
+          "baseline_over_candidate": 0.9379895712526155
+        },
+        {
+          "round": 1,
+          "baseline_before_ms": 160.5096925,
+          "candidate_ms": 171.01729749999998,
+          "baseline_after_ms": 160.35301650000002,
+          "baseline_midpoint_ms": 160.4313545,
+          "baseline_over_candidate": 0.9381001620610921
+        },
+        {
+          "round": 2,
+          "baseline_before_ms": 160.447009,
+          "candidate_ms": 171.0091295,
+          "baseline_after_ms": 160.464379,
+          "baseline_midpoint_ms": 160.455694,
+          "baseline_over_candidate": 0.9382872976965829
+        }
+      ],
+      "median_baseline_ms": 160.4313545,
+      "median_candidate_ms": 171.0091295,
+      "median_baseline_over_candidate": 0.9381001620610921
+    },
+    {
+      "case": {
+        "id": "T4096",
+        "seed": 177096,
+        "parameters": {
+          "B": 1,
+          "T": 4096,
+          "H": 8,
+          "HV": 8,
+          "mode": "both"
+        }
+      },
+      "rounds": [
+        {
+          "round": 0,
+          "baseline_before_ms": 647.607078,
+          "candidate_ms": 691.9345335,
+          "baseline_after_ms": 647.7186425,
+          "baseline_midpoint_ms": 647.66286025,
+          "baseline_over_candidate": 0.936017540523579
+        },
+        {
+          "round": 1,
+          "baseline_before_ms": 647.5350225,
+          "candidate_ms": 691.9664545,
+          "baseline_after_ms": 647.637236,
+          "baseline_midpoint_ms": 647.58612925,
+          "baseline_over_candidate": 0.9358634729163738
+        },
+        {
+          "round": 2,
+          "baseline_before_ms": 647.8489850000001,
+          "candidate_ms": 691.937767,
+          "baseline_after_ms": 647.6442505,
+          "baseline_midpoint_ms": 647.74661775,
+          "baseline_over_candidate": 0.9361342141481924
+        }
+      ],
+      "median_baseline_ms": 647.66286025,
+      "median_candidate_ms": 691.937767,
+      "median_baseline_over_candidate": 0.936017540523579
+    }
+  ]
+}

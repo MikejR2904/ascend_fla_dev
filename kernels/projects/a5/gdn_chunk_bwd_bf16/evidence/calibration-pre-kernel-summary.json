@@ -1,0 +1,116 @@
+{
+  "scope": "Read-only pre-assignment CPU references; not BF-02 implementation or native acceptance.",
+  "source_sha256": "0d8d99ad1034e2d75fd3407941263d44f93ca2e5b05f9f91637a3922ffa3897c",
+  "cases": 138,
+  "passed": true,
+  "gradcheck": [
+    {
+      "ratio": 1,
+      "A_precision_lift": true,
+      "B_analytical": true
+    },
+    {
+      "ratio": 2,
+      "A_precision_lift": true,
+      "B_analytical": true
+    }
+  ],
+  "negative_controls": 6,
+  "by_dtype": {
+    "bfloat16": {
+      "cases": 69,
+      "per_gradient": {
+        "dq": {
+          "max_A_B_relative_l2": 2.4481430857462815e-07,
+          "max_A_B_max_abs": 3.725290298461914e-09,
+          "floor_nonzero_min": 0.001616689637556833,
+          "floor_nonzero_max": 0.001686799548109732,
+          "zero_floor_observations": 54,
+          "zero_floor_nonzero_reference": 0
+        },
+        "dk": {
+          "max_A_B_relative_l2": 0.0,
+          "max_A_B_max_abs": 0.0,
+          "floor_nonzero_min": 0.0014073490470292774,
+          "floor_nonzero_max": 0.0018356590177701143,
+          "zero_floor_observations": 8,
+          "zero_floor_nonzero_reference": 0
+        },
+        "dv": {
+          "max_A_B_relative_l2": 0.0,
+          "max_A_B_max_abs": 0.0,
+          "floor_nonzero_min": 0.0014814163708142853,
+          "floor_nonzero_max": 0.0017786550865850118,
+          "zero_floor_observations": 12,
+          "zero_floor_nonzero_reference": 0
+        },
+        "dg": {
+          "max_A_B_relative_l2": 5.599113205882739e-07,
+          "max_A_B_max_abs": 1.2479722499847412e-07,
+          "floor_nonzero_min": 0.0009126842604349329,
+          "floor_nonzero_max": 0.002930193827977581,
+          "zero_floor_observations": 18,
+          "zero_floor_nonzero_reference": 0
+        },
+        "dbeta": {
+          "max_A_B_relative_l2": 0.0,
+          "max_A_B_max_abs": 0.0,
+          "floor_nonzero_min": 0.0007786982275208372,
+          "floor_nonzero_max": 0.003235166435930245,
+          "zero_floor_observations": 6,
+          "zero_floor_nonzero_reference": 0
+        }
+      }
+    },
+    "float32": {
+      "cases": 69,
+      "per_gradient": {
+        "dq": {
+          "max_A_B_relative_l2": 2.475496450443118e-07,
+          "max_A_B_max_abs": 4.6566128730773926e-09,
+          "floor_nonzero_min": 0.0016307768864080672,
+          "floor_nonzero_max": 0.0016913977737340233,
+          "zero_floor_observations": 54,
+          "zero_floor_nonzero_reference": 0
+        },
+        "dk": {
+          "max_A_B_relative_l2": 0.0,
+          "max_A_B_max_abs": 0.0,
+          "floor_nonzero_min": 0.0014551367382329256,
+          "floor_nonzero_max": 0.0019874324894030623,
+          "zero_floor_observations": 8,
+          "zero_floor_nonzero_reference": 0
+        },
+        "dv": {
+          "max_A_B_relative_l2": 0.0,
+          "max_A_B_max_abs": 0.0,
+          "floor_nonzero_min": 0.0014915205377672217,
+          "floor_nonzero_max": 0.0017227662257311479,
+          "zero_floor_observations": 12,
+          "zero_floor_nonzero_reference": 0
+        },
+        "dg": {
+          "max_A_B_relative_l2": 4.848783522757931e-07,
+          "max_A_B_max_abs": 1.1920928955078125e-07,
+          "floor_nonzero_min": 0.0005274661893754108,
+          "floor_nonzero_max": 0.002419969871311712,
+          "zero_floor_observations": 18,
+          "zero_floor_nonzero_reference": 0
+        },
+        "dbeta": {
+          "max_A_B_relative_l2": 0.0,
+          "max_A_B_max_abs": 0.0,
+          "floor_nonzero_min": 0.0008103182874745565,
+          "floor_nonzero_max": 0.0030262190559105216,
+          "zero_floor_observations": 6,
+          "zero_floor_nonzero_reference": 0
+        }
+      }
+    }
+  },
+  "zero_reference_probe": {
+    "cases": 10,
+    "actual_zero_gradient_perturbations_rejected": 36,
+    "scope": "CPU probe only; no kernel or tolerance change"
+  }
+}

@@ -1,0 +1,1136 @@
+{
+  "scope": "Read-only pre-assignment CPU zero-reference investigation; no new kernel or device validation.",
+  "oracle_pin": "e52dbc0ea19d3a40d7ab7f9eed855d2b473994d2",
+  "oracle_sha256": "d1cf17992349fd3e94af999b22e3d3a81be4a2d1881ce5b70a3457257166e0cb",
+  "source_sha256": {
+    "reference.py": "e366a884b110775499e72762a52917051fd20dd7bc9f6d4ab542a8590fbae79d",
+    "oracle.py": "c3169d064cc3b7a200d79d98daaec4eb1255d01a8980c2bf05e058d633609f28",
+    "calibrate.py": "7816c9b3057ffbd40a7fb34e799503985e1447265bc743f9f6f59130564e9433",
+    "__init__.py": "53c3c87f2035181c06d268aec8b207e31be10a6241a00f3b5934190c189c60aa",
+    "stages.py": "8724f2e41ed3a4b66435e1bc6ac7baee7114499fa0d54bb9b4e0f698469fa396"
+  },
+  "probe_sha256": "6b254d8791dbc65fc074bd3d6b58a4adac41febd955b08b7496651a685fe7147",
+  "torch": "2.10.0+cpu",
+  "python": "3.11.15 (main, May 13 2026, 07:56:17) [GCC 11.4.0]",
+  "cases": [
+    {
+      "dtype": "bfloat16",
+      "kind": "random",
+      "mode": "dht",
+      "zero_outputs": {
+        "dq": {
+          "shape": [
+            1,
+            128,
+            1,
+            128
+          ],
+          "strides": [
+            16384,
+            128,
+            128,
+            1
+          ],
+          "perturbation_nonzero_count": 1,
+          "exact_zero": {
+            "relative_l2": 0.0,
+            "max_abs": 0.0,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "corrupted": {
+            "relative_l2": "infinity",
+            "max_abs": 9.5367431640625e-07,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "budget": 0.0,
+          "rejected": true
+        }
+      },
+      "nonzero_names": [
+        "dk",
+        "dv",
+        "dg",
+        "dbeta"
+      ]
+    },
+    {
+      "dtype": "bfloat16",
+      "kind": "beta_zero",
+      "mode": "both",
+      "zero_outputs": {
+        "dq": {
+          "shape": [
+            1,
+            128,
+            1,
+            128
+          ],
+          "strides": [
+            16384,
+            128,
+            128,
+            1
+          ],
+          "perturbation_nonzero_count": 1,
+          "exact_zero": {
+            "relative_l2": 0.0,
+            "max_abs": 0.0,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "corrupted": {
+            "relative_l2": "infinity",
+            "max_abs": 9.5367431640625e-07,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "budget": 0.0,
+          "rejected": true
+        },
+        "dk": {
+          "shape": [
+            1,
+            128,
+            1,
+            128
+          ],
+          "strides": [
+            16384,
+            128,
+            128,
+            1
+          ],
+          "perturbation_nonzero_count": 1,
+          "exact_zero": {
+            "relative_l2": 0.0,
+            "max_abs": 0.0,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "corrupted": {
+            "relative_l2": "infinity",
+            "max_abs": 9.5367431640625e-07,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "budget": 0.0,
+          "rejected": true
+        },
+        "dv": {
+          "shape": [
+            1,
+            128,
+            4,
+            128
+          ],
+          "strides": [
+            65536,
+            128,
+            16384,
+            1
+          ],
+          "perturbation_nonzero_count": 1,
+          "exact_zero": {
+            "relative_l2": 0.0,
+            "max_abs": 0.0,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "corrupted": {
+            "relative_l2": "infinity",
+            "max_abs": 9.5367431640625e-07,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "budget": 0.0,
+          "rejected": true
+        },
+        "dg": {
+          "shape": [
+            1,
+            128,
+            4
+          ],
+          "strides": [
+            512,
+            1,
+            128
+          ],
+          "perturbation_nonzero_count": 1,
+          "exact_zero": {
+            "relative_l2": 0.0,
+            "max_abs": 0.0,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "corrupted": {
+            "relative_l2": "infinity",
+            "max_abs": 9.5367431640625e-07,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "budget": 0.0,
+          "rejected": true
+        }
+      },
+      "nonzero_names": [
+        "dbeta"
+      ]
+    },
+    {
+      "dtype": "bfloat16",
+      "kind": "zero_qk",
+      "mode": "do",
+      "zero_outputs": {
+        "dq": {
+          "shape": [
+            1,
+            128,
+            1,
+            128
+          ],
+          "strides": [
+            16384,
+            128,
+            128,
+            1
+          ],
+          "perturbation_nonzero_count": 1,
+          "exact_zero": {
+            "relative_l2": 0.0,
+            "max_abs": 0.0,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "corrupted": {
+            "relative_l2": "infinity",
+            "max_abs": 9.5367431640625e-07,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "budget": 0.0,
+          "rejected": true
+        },
+        "dk": {
+          "shape": [
+            1,
+            128,
+            1,
+            128
+          ],
+          "strides": [
+            16384,
+            128,
+            128,
+            1
+          ],
+          "perturbation_nonzero_count": 1,
+          "exact_zero": {
+            "relative_l2": 0.0,
+            "max_abs": 0.0,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "corrupted": {
+            "relative_l2": "infinity",
+            "max_abs": 9.5367431640625e-07,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "budget": 0.0,
+          "rejected": true
+        },
+        "dv": {
+          "shape": [
+            1,
+            128,
+            4,
+            128
+          ],
+          "strides": [
+            65536,
+            128,
+            16384,
+            1
+          ],
+          "perturbation_nonzero_count": 1,
+          "exact_zero": {
+            "relative_l2": 0.0,
+            "max_abs": 0.0,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "corrupted": {
+            "relative_l2": "infinity",
+            "max_abs": 9.5367431640625e-07,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "budget": 0.0,
+          "rejected": true
+        },
+        "dg": {
+          "shape": [
+            1,
+            128,
+            4
+          ],
+          "strides": [
+            512,
+            1,
+            128
+          ],
+          "perturbation_nonzero_count": 1,
+          "exact_zero": {
+            "relative_l2": 0.0,
+            "max_abs": 0.0,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "corrupted": {
+            "relative_l2": "infinity",
+            "max_abs": 9.5367431640625e-07,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "budget": 0.0,
+          "rejected": true
+        },
+        "dbeta": {
+          "shape": [
+            1,
+            128,
+            4
+          ],
+          "strides": [
+            512,
+            1,
+            128
+          ],
+          "perturbation_nonzero_count": 1,
+          "exact_zero": {
+            "relative_l2": 0.0,
+            "max_abs": 0.0,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "corrupted": {
+            "relative_l2": "infinity",
+            "max_abs": 9.5367431640625e-07,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "budget": 0.0,
+          "rejected": true
+        }
+      },
+      "nonzero_names": []
+    },
+    {
+      "dtype": "bfloat16",
+      "kind": "zero_qk",
+      "mode": "dht",
+      "zero_outputs": {
+        "dq": {
+          "shape": [
+            1,
+            128,
+            1,
+            128
+          ],
+          "strides": [
+            16384,
+            128,
+            128,
+            1
+          ],
+          "perturbation_nonzero_count": 1,
+          "exact_zero": {
+            "relative_l2": 0.0,
+            "max_abs": 0.0,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "corrupted": {
+            "relative_l2": "infinity",
+            "max_abs": 9.5367431640625e-07,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "budget": 0.0,
+          "rejected": true
+        },
+        "dv": {
+          "shape": [
+            1,
+            128,
+            4,
+            128
+          ],
+          "strides": [
+            65536,
+            128,
+            16384,
+            1
+          ],
+          "perturbation_nonzero_count": 1,
+          "exact_zero": {
+            "relative_l2": 0.0,
+            "max_abs": 0.0,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "corrupted": {
+            "relative_l2": "infinity",
+            "max_abs": 9.5367431640625e-07,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "budget": 0.0,
+          "rejected": true
+        },
+        "dg": {
+          "shape": [
+            1,
+            128,
+            4
+          ],
+          "strides": [
+            512,
+            1,
+            128
+          ],
+          "perturbation_nonzero_count": 1,
+          "exact_zero": {
+            "relative_l2": 0.0,
+            "max_abs": 0.0,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "corrupted": {
+            "relative_l2": "infinity",
+            "max_abs": 9.5367431640625e-07,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "budget": 0.0,
+          "rejected": true
+        },
+        "dbeta": {
+          "shape": [
+            1,
+            128,
+            4
+          ],
+          "strides": [
+            512,
+            1,
+            128
+          ],
+          "perturbation_nonzero_count": 1,
+          "exact_zero": {
+            "relative_l2": 0.0,
+            "max_abs": 0.0,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "corrupted": {
+            "relative_l2": "infinity",
+            "max_abs": 9.5367431640625e-07,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "budget": 0.0,
+          "rejected": true
+        }
+      },
+      "nonzero_names": [
+        "dk"
+      ]
+    },
+    {
+      "dtype": "bfloat16",
+      "kind": "zero_qk",
+      "mode": "both",
+      "zero_outputs": {
+        "dq": {
+          "shape": [
+            1,
+            128,
+            1,
+            128
+          ],
+          "strides": [
+            16384,
+            128,
+            128,
+            1
+          ],
+          "perturbation_nonzero_count": 1,
+          "exact_zero": {
+            "relative_l2": 0.0,
+            "max_abs": 0.0,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "corrupted": {
+            "relative_l2": "infinity",
+            "max_abs": 9.5367431640625e-07,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "budget": 0.0,
+          "rejected": true
+        },
+        "dv": {
+          "shape": [
+            1,
+            128,
+            4,
+            128
+          ],
+          "strides": [
+            65536,
+            128,
+            16384,
+            1
+          ],
+          "perturbation_nonzero_count": 1,
+          "exact_zero": {
+            "relative_l2": 0.0,
+            "max_abs": 0.0,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "corrupted": {
+            "relative_l2": "infinity",
+            "max_abs": 9.5367431640625e-07,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "budget": 0.0,
+          "rejected": true
+        },
+        "dg": {
+          "shape": [
+            1,
+            128,
+            4
+          ],
+          "strides": [
+            512,
+            1,
+            128
+          ],
+          "perturbation_nonzero_count": 1,
+          "exact_zero": {
+            "relative_l2": 0.0,
+            "max_abs": 0.0,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "corrupted": {
+            "relative_l2": "infinity",
+            "max_abs": 9.5367431640625e-07,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "budget": 0.0,
+          "rejected": true
+        },
+        "dbeta": {
+          "shape": [
+            1,
+            128,
+            4
+          ],
+          "strides": [
+            512,
+            1,
+            128
+          ],
+          "perturbation_nonzero_count": 1,
+          "exact_zero": {
+            "relative_l2": 0.0,
+            "max_abs": 0.0,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "corrupted": {
+            "relative_l2": "infinity",
+            "max_abs": 9.5367431640625e-07,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "budget": 0.0,
+          "rejected": true
+        }
+      },
+      "nonzero_names": [
+        "dk"
+      ]
+    },
+    {
+      "dtype": "float32",
+      "kind": "random",
+      "mode": "dht",
+      "zero_outputs": {
+        "dq": {
+          "shape": [
+            1,
+            128,
+            1,
+            128
+          ],
+          "strides": [
+            16384,
+            128,
+            128,
+            1
+          ],
+          "perturbation_nonzero_count": 1,
+          "exact_zero": {
+            "relative_l2": 0.0,
+            "max_abs": 0.0,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "corrupted": {
+            "relative_l2": "infinity",
+            "max_abs": 9.5367431640625e-07,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "budget": 0.0,
+          "rejected": true
+        }
+      },
+      "nonzero_names": [
+        "dk",
+        "dv",
+        "dg",
+        "dbeta"
+      ]
+    },
+    {
+      "dtype": "float32",
+      "kind": "beta_zero",
+      "mode": "both",
+      "zero_outputs": {
+        "dq": {
+          "shape": [
+            1,
+            128,
+            1,
+            128
+          ],
+          "strides": [
+            16384,
+            128,
+            128,
+            1
+          ],
+          "perturbation_nonzero_count": 1,
+          "exact_zero": {
+            "relative_l2": 0.0,
+            "max_abs": 0.0,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "corrupted": {
+            "relative_l2": "infinity",
+            "max_abs": 9.5367431640625e-07,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "budget": 0.0,
+          "rejected": true
+        },
+        "dk": {
+          "shape": [
+            1,
+            128,
+            1,
+            128
+          ],
+          "strides": [
+            16384,
+            128,
+            128,
+            1
+          ],
+          "perturbation_nonzero_count": 1,
+          "exact_zero": {
+            "relative_l2": 0.0,
+            "max_abs": 0.0,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "corrupted": {
+            "relative_l2": "infinity",
+            "max_abs": 9.5367431640625e-07,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "budget": 0.0,
+          "rejected": true
+        },
+        "dv": {
+          "shape": [
+            1,
+            128,
+            4,
+            128
+          ],
+          "strides": [
+            65536,
+            128,
+            16384,
+            1
+          ],
+          "perturbation_nonzero_count": 1,
+          "exact_zero": {
+            "relative_l2": 0.0,
+            "max_abs": 0.0,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "corrupted": {
+            "relative_l2": "infinity",
+            "max_abs": 9.5367431640625e-07,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "budget": 0.0,
+          "rejected": true
+        },
+        "dg": {
+          "shape": [
+            1,
+            128,
+            4
+          ],
+          "strides": [
+            512,
+            1,
+            128
+          ],
+          "perturbation_nonzero_count": 1,
+          "exact_zero": {
+            "relative_l2": 0.0,
+            "max_abs": 0.0,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "corrupted": {
+            "relative_l2": "infinity",
+            "max_abs": 9.5367431640625e-07,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "budget": 0.0,
+          "rejected": true
+        }
+      },
+      "nonzero_names": [
+        "dbeta"
+      ]
+    },
+    {
+      "dtype": "float32",
+      "kind": "zero_qk",
+      "mode": "do",
+      "zero_outputs": {
+        "dq": {
+          "shape": [
+            1,
+            128,
+            1,
+            128
+          ],
+          "strides": [
+            16384,
+            128,
+            128,
+            1
+          ],
+          "perturbation_nonzero_count": 1,
+          "exact_zero": {
+            "relative_l2": 0.0,
+            "max_abs": 0.0,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "corrupted": {
+            "relative_l2": "infinity",
+            "max_abs": 9.5367431640625e-07,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "budget": 0.0,
+          "rejected": true
+        },
+        "dk": {
+          "shape": [
+            1,
+            128,
+            1,
+            128
+          ],
+          "strides": [
+            16384,
+            128,
+            128,
+            1
+          ],
+          "perturbation_nonzero_count": 1,
+          "exact_zero": {
+            "relative_l2": 0.0,
+            "max_abs": 0.0,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "corrupted": {
+            "relative_l2": "infinity",
+            "max_abs": 9.5367431640625e-07,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "budget": 0.0,
+          "rejected": true
+        },
+        "dv": {
+          "shape": [
+            1,
+            128,
+            4,
+            128
+          ],
+          "strides": [
+            65536,
+            128,
+            16384,
+            1
+          ],
+          "perturbation_nonzero_count": 1,
+          "exact_zero": {
+            "relative_l2": 0.0,
+            "max_abs": 0.0,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "corrupted": {
+            "relative_l2": "infinity",
+            "max_abs": 9.5367431640625e-07,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "budget": 0.0,
+          "rejected": true
+        },
+        "dg": {
+          "shape": [
+            1,
+            128,
+            4
+          ],
+          "strides": [
+            512,
+            1,
+            128
+          ],
+          "perturbation_nonzero_count": 1,
+          "exact_zero": {
+            "relative_l2": 0.0,
+            "max_abs": 0.0,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "corrupted": {
+            "relative_l2": "infinity",
+            "max_abs": 9.5367431640625e-07,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "budget": 0.0,
+          "rejected": true
+        },
+        "dbeta": {
+          "shape": [
+            1,
+            128,
+            4
+          ],
+          "strides": [
+            512,
+            1,
+            128
+          ],
+          "perturbation_nonzero_count": 1,
+          "exact_zero": {
+            "relative_l2": 0.0,
+            "max_abs": 0.0,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "corrupted": {
+            "relative_l2": "infinity",
+            "max_abs": 9.5367431640625e-07,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "budget": 0.0,
+          "rejected": true
+        }
+      },
+      "nonzero_names": []
+    },
+    {
+      "dtype": "float32",
+      "kind": "zero_qk",
+      "mode": "dht",
+      "zero_outputs": {
+        "dq": {
+          "shape": [
+            1,
+            128,
+            1,
+            128
+          ],
+          "strides": [
+            16384,
+            128,
+            128,
+            1
+          ],
+          "perturbation_nonzero_count": 1,
+          "exact_zero": {
+            "relative_l2": 0.0,
+            "max_abs": 0.0,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "corrupted": {
+            "relative_l2": "infinity",
+            "max_abs": 9.5367431640625e-07,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "budget": 0.0,
+          "rejected": true
+        },
+        "dv": {
+          "shape": [
+            1,
+            128,
+            4,
+            128
+          ],
+          "strides": [
+            65536,
+            128,
+            16384,
+            1
+          ],
+          "perturbation_nonzero_count": 1,
+          "exact_zero": {
+            "relative_l2": 0.0,
+            "max_abs": 0.0,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "corrupted": {
+            "relative_l2": "infinity",
+            "max_abs": 9.5367431640625e-07,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "budget": 0.0,
+          "rejected": true
+        },
+        "dg": {
+          "shape": [
+            1,
+            128,
+            4
+          ],
+          "strides": [
+            512,
+            1,
+            128
+          ],
+          "perturbation_nonzero_count": 1,
+          "exact_zero": {
+            "relative_l2": 0.0,
+            "max_abs": 0.0,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "corrupted": {
+            "relative_l2": "infinity",
+            "max_abs": 9.5367431640625e-07,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "budget": 0.0,
+          "rejected": true
+        },
+        "dbeta": {
+          "shape": [
+            1,
+            128,
+            4
+          ],
+          "strides": [
+            512,
+            1,
+            128
+          ],
+          "perturbation_nonzero_count": 1,
+          "exact_zero": {
+            "relative_l2": 0.0,
+            "max_abs": 0.0,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "corrupted": {
+            "relative_l2": "infinity",
+            "max_abs": 9.5367431640625e-07,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "budget": 0.0,
+          "rejected": true
+        }
+      },
+      "nonzero_names": [
+        "dk"
+      ]
+    },
+    {
+      "dtype": "float32",
+      "kind": "zero_qk",
+      "mode": "both",
+      "zero_outputs": {
+        "dq": {
+          "shape": [
+            1,
+            128,
+            1,
+            128
+          ],
+          "strides": [
+            16384,
+            128,
+            128,
+            1
+          ],
+          "perturbation_nonzero_count": 1,
+          "exact_zero": {
+            "relative_l2": 0.0,
+            "max_abs": 0.0,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "corrupted": {
+            "relative_l2": "infinity",
+            "max_abs": 9.5367431640625e-07,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "budget": 0.0,
+          "rejected": true
+        },
+        "dv": {
+          "shape": [
+            1,
+            128,
+            4,
+            128
+          ],
+          "strides": [
+            65536,
+            128,
+            16384,
+            1
+          ],
+          "perturbation_nonzero_count": 1,
+          "exact_zero": {
+            "relative_l2": 0.0,
+            "max_abs": 0.0,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "corrupted": {
+            "relative_l2": "infinity",
+            "max_abs": 9.5367431640625e-07,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "budget": 0.0,
+          "rejected": true
+        },
+        "dg": {
+          "shape": [
+            1,
+            128,
+            4
+          ],
+          "strides": [
+            512,
+            1,
+            128
+          ],
+          "perturbation_nonzero_count": 1,
+          "exact_zero": {
+            "relative_l2": 0.0,
+            "max_abs": 0.0,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "corrupted": {
+            "relative_l2": "infinity",
+            "max_abs": 9.5367431640625e-07,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "budget": 0.0,
+          "rejected": true
+        },
+        "dbeta": {
+          "shape": [
+            1,
+            128,
+            4
+          ],
+          "strides": [
+            512,
+            1,
+            128
+          ],
+          "perturbation_nonzero_count": 1,
+          "exact_zero": {
+            "relative_l2": 0.0,
+            "max_abs": 0.0,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "corrupted": {
+            "relative_l2": "infinity",
+            "max_abs": 9.5367431640625e-07,
+            "finite": true,
+            "reference_norm": 0.0
+          },
+          "budget": 0.0,
+          "rejected": true
+        }
+      },
+      "nonzero_names": [
+        "dk"
+      ]
+    }
+  ],
+  "passed": true
+}

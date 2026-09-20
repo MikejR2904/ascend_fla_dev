@@ -1,0 +1,252 @@
+# cwd <TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project
+# set -e
+if [ -f "<CANN>/bin/setenv.bash" ]; then source "<CANN>/bin/setenv.bash"; fi
+export ASCEND_HOME_PATH=<CANN>
+bash build.sh
+cd build_out
+for f in custom_*.run; do bash .<EXTERNAL_PATH> --install-path=<TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/custom_op; done
+using ASCEND_HOME_PATH: <CANN>
+Preset CMake variables:
+
+  ASCEND_CANN_PACKAGE_PATH:PATH="<CANN>"
+  ASCEND_COMPUTE_UNIT:STRING="ascend950"
+  ASCEND_PACK_SHARED_LIBRARY:BOOL="False"
+  ASCEND_PYTHON_EXECUTABLE:STRING="python3"
+  CMAKE_BUILD_TYPE:STRING="Release"
+  CMAKE_CROSS_PLATFORM_COMPILER:PATH="<EXTERNAL_PATH>"
+  CMAKE_INSTALL_PREFIX:PATH="<TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/build_out"
+  ENABLE_BINARY_PACKAGE:BOOL="True"
+  ENABLE_CROSS_COMPILE:BOOL="False"
+  ENABLE_SOURCE_PACKAGE:BOOL="True"
+  ENABLE_TEST:BOOL="True"
+  vendor_name:STRING="customize"
+
+-- The C compiler identification is GNU 12.3.1
+-- The CXX compiler identification is GNU 12.3.1
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: <EXTERNAL_PATH> - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: <EXTERNAL_PATH> - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Opbuild generating sources
+-- Opbuild generating sources - done
+-- Configuring done (1.7s)
+-- Generating done (0.0s)
+CMake Warning:
+  Manually-specified variables were not used by the project:
+
+    CMAKE_CROSS_PLATFORM_COMPILER
+
+
+-- Build files have been written to: <TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/build_out
+[ 33%] Generating tbe/op_info_cfg/ai_core/ascend950/aic-ascend950-ops-info.json
+
+
+==============check valid for ops info start==============
+==============check valid for ops info end================
+
+
+Compile op info cfg successfully.
+[ 33%] Built target ops_info_gen_ascend950
+[ 66%] Building CXX object op_host/CMakeFiles/cust_optiling.dir/gdn_bwd_checkpoints.cpp.o
+In file included from <CANN>/include/external/ge_common/api_error_codes.h:16,
+                 from <CANN>/include/exe_graph/runtime/continuous_vector.h:20,
+                 from <CANN>/include/exe_graph/runtime/runtime_attrs.h:16,
+                 from <CANN>/include/exe_graph/runtime/infer_shape_context.h:16,
+                 from <CANN>/include/register/op_impl_registry.h:19,
+                 from <CANN>/include/register/op_def.h:19,
+                 from <CANN>/include/register/op_def_registry.h:14,
+                 from <TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/op_host/gdn_bwd_checkpoints.cpp:2:
+<CANN>/include/external/ge_common/ge_error_codes.h:15:122: note: ‘#pragma message: Warning: ge_error_codes.h is deprecated and will be removed after 2027-06. Include "graph/error_codes.h" instead.’
+   15 |     "Warning: ge_error_codes.h is deprecated and will be removed after 2027-06. Include \"graph/error_codes.h\" instead.")
+      |                                                                                                                          ^
+In file included from <CANN>/include/external/ge_common/api_error_codes.h:17:
+<CANN>/include/external/ge_common/ge_api_types.h:15:122: note: ‘#pragma message: Warning: ge_api_types.h is deprecated and will be removed after 2027-06. Include "ge_common_api_types.h" instead.’
+   15 |     "Warning: ge_api_types.h is deprecated and will be removed after 2027-06. Include \"ge_common_api_types.h\" instead.")
+      |                                                                                                                          ^
+[100%] Linking CXX shared library libcust_opmaster_rt2.0.so
+[100%] Built target cust_optiling
+<TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/cmake/util/ascendc_impl_build.py:194: SyntaxWarning: invalid escape sequence '\d'
+  ascendc_api_version = re.findall(r"#define ASCENDC_API_VERSION (\d+)", ascendc_api_version_file.read())
+[ascend950] Generating GdnBwdCheckpoints_65a3e6f5f758cfea7f25be2b697efc58 ...
+<CANN>/python/site-packages/tbe/dsl/classifier/transdata/transdata_classifier.py:223: SyntaxWarning: invalid escape sequence '\B'
+  Return BN\BH SCH Result
+<CANN>/python/site-packages/tbe/dsl/unify_schedule/vector/transdata/common/graph/transdata_graph_info.py:146: SyntaxWarning: invalid escape sequence '\c'
+  2. In forward, tiling would not split c1 and c0, find c1\c0 based on t2.
+<CANN>/python/site-packages/tbe/dsl/unify_schedule/vector/transdata/common/graph/transdata_graph_info.py:172: SyntaxWarning: invalid escape sequence '\c'
+  1. Forward: tiling would not split c1\c0\h0, find c1\c0\h1\h0 based on t2
+In file included from <TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/build_out/op_kernel/GdnBwdCheckpoints_ascend950/kernel_0/kernel_meta_GdnBwdCheckpoints_65a3e6f5f758cfea7f25be2b697efc58/kernel_meta/GdnBwdCheckpoints_65a3e6f5f758cfea7f25be2b697efc58_4000_kernel.cpp:6:
+In file included from <TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/op_kernel/gdn_bwd_checkpoints.cpp:1:
+<TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/op_kernel/tensorutils_cce.h:146:19: error: redefinition of 'g_coreType'
+constexpr int32_t g_coreType = AscendC::AIV;
+                  ^
+<CANN>/x86_64-linux/asc/impl/utils/sys_macros_impl.h:74:19: note: previous definition is here
+constexpr int32_t g_coreType = AscendC::AIV;
+                  ^
+1 error generated.
+make[5]: *** [<TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/build_out/op_kernel/GdnBwdCheckpoints_ascend950/kernel_0/kernel_meta_GdnBwdCheckpoints_65a3e6f5f758cfea7f25be2b697efc58/kernel_meta/GdnBwdCheckpoints_65a3e6f5f758cfea7f25be2b697efc58_tmp_aiv_4000.mk:4: <TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/build_out/op_kernel/GdnBwdCheckpoints_ascend950/kernel_0/kernel_meta_GdnBwdCheckpoints_65a3e6f5f758cfea7f25be2b697efc58/kernel_meta/GdnBwdCheckpoints_65a3e6f5f758cfea7f25be2b697efc58_tmp_aiv_4000_0] Error 1
+In file included from <TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/build_out/op_kernel/GdnBwdCheckpoints_ascend950/kernel_0/kernel_meta_GdnBwdCheckpoints_65a3e6f5f758cfea7f25be2b697efc58/kernel_meta/GdnBwdCheckpoints_65a3e6f5f758cfea7f25be2b697efc58_4000_kernel.cpp:6:
+In file included from <TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/op_kernel/gdn_bwd_checkpoints.cpp:1:
+<TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/op_kernel/tensorutils_cce.h:144:19: error: redefinition of 'g_coreType'
+constexpr int32_t g_coreType = AscendC::AIC;
+                  ^
+<CANN>/x86_64-linux/asc/impl/utils/sys_macros_impl.h:72:19: note: previous definition is here
+constexpr int32_t g_coreType = AscendC::AIC;
+                  ^
+1 error generated.
+make[5]: *** [<TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/build_out/op_kernel/GdnBwdCheckpoints_ascend950/kernel_0/kernel_meta_GdnBwdCheckpoints_65a3e6f5f758cfea7f25be2b697efc58/kernel_meta/GdnBwdCheckpoints_65a3e6f5f758cfea7f25be2b697efc58_tmp_aic_4000.mk:4: <TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/build_out/op_kernel/GdnBwdCheckpoints_ascend950/kernel_0/kernel_meta_GdnBwdCheckpoints_65a3e6f5f758cfea7f25be2b697efc58/kernel_meta/GdnBwdCheckpoints_65a3e6f5f758cfea7f25be2b697efc58_tmp_aic_4000_0] Error 1
+[INFO] ATRACE(4000,python3):2026-09-20-02:45:23.555.499 [trace_recorder.c:169](tid:4000) get path by env ASCEND_WORK_PATH: <TASK_NATIVE>/work
+[INFO] RUNTIME(4000,python3):2026-09-20-02:45:23.560.878 [task_fail_callback_data_manager.cc:89] 4000 TaskFailCallBackManager: Constructor.
+[INFO] RUNTIME(4000,python3):2026-09-20-02:45:23.560.891 [xpu_task_fail_callback_data_manager.cc:59] 4000 XpuTaskFailCallBackManager: XpuTaskFailCallBackManager Constructor.
+[INFO] RUNTIME(4000,python3):2026-09-20-02:45:23.562.197 [runtime_keeper.cc:216] 4000 CreateRuntimeImpl: Open libruntime_v200.so successfully
+[INFO] RUNTIME(4000,python3):2026-09-20-02:45:23.562.659 [runtime.cc:5131] 4000 GetVisibleDevices: real deviceCnt:8 userDeviceCnt:1 isSetVisibleDev:1 ASCEND_RT_VISIBLE_DEVICES:[6] available visible devices:[6]
+[INFO] TDT(4000,python3):2026-09-20-02:45:23.563.253 [package_worker_factory.cpp:38][RegisterPackageWorkerCreator][tid:4000] Register[2] package worker was created successfully
+[INFO] TDT(4000,python3):2026-09-20-02:45:23.563.259 [package_worker_factory.cpp:38][RegisterPackageWorkerCreator][tid:4000] Register[3] package worker was created successfully
+[ERROR] TBE(4000,python3):2026-09-20-02:45:24.182.413 [repository_manager_log.py:30][log] [log_utils.py:227][repository_manager] [ascend950]  GdnBwdCheckpoints_65a3e6f5f758cfea7f25be2b697efc58 ld.lld: error: cannot open <TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/build_out/op_kernel/GdnBwdCheckpoints_ascend950/kernel_0/kernel_meta_GdnBwdCheckpoints_65a3e6f5f758cfea7f25be2b697efc58/kernel_meta/GdnBwdCheckpoints_65a3e6f5f758cfea7f25be2b697efc58_mix_aic_0.o: No such file or directory
+ld.lld: error: cannot open <TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/build_out/op_kernel/GdnBwdCheckpoints_ascend950/kernel_0/kernel_meta_GdnBwdCheckpoints_65a3e6f5f758cfea7f25be2b697efc58/kernel_meta/GdnBwdCheckpoints_65a3e6f5f758cfea7f25be2b697efc58_mix_aiv_0.o: No such file or directory
+Opc tool start working now, please wait for a moment.
+[2026-09-20 02:45:24] [ERROR] [ascend950] GdnBwdCheckpoints_65a3e6f5f758cfea7f25be2b697efc58 ld.lld: error: cannot open <TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/build_out/op_kernel/GdnBwdCheckpoints_ascend950/kernel_0/kernel_meta_GdnBwdCheckpoints_65a3e6f5f758cfea7f25be2b697efc58/kernel_meta/GdnBwdCheckpoints_65a3e6f5f758cfea7f25be2b697efc58_mix_aic_0.o: No such file or directory
+ld.lld: error: cannot open <TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/build_out/op_kernel/GdnBwdCheckpoints_ascend950/kernel_0/kernel_meta_GdnBwdCheckpoints_65a3e6f5f758cfea7f25be2b697efc58/kernel_meta/GdnBwdCheckpoints_65a3e6f5f758cfea7f25be2b697efc58_mix_aiv_0.o: No such file or directory
+
+[ERROR] TBE(4000,python3):2026-09-20-02:45:24.182.812 [op_compilation.py:344][__single_op_compile] Exception occured, An error occurred during compile phases of CompileStage.FATBIN, msg is ld.lld: error: cannot open <TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/build_out/op_kernel/GdnBwdCheckpoints_ascend950/kernel_0/kernel_meta_GdnBwdCheckpoints_65a3e6f5f758cfea7f25be2b697efc58/kernel_meta/GdnBwdCheckpoints_65a3e6f5f758cfea7f25be2b697efc58_mix_aic_0.o: No such file or directory
+ld.lld: error: cannot open <TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/build_out/op_kernel/GdnBwdCheckpoints_ascend950/kernel_0/kernel_meta_GdnBwdCheckpoints_65a3e6f5f758cfea7f25be2b697efc58/kernel_meta/GdnBwdCheckpoints_65a3e6f5f758cfea7f25be2b697efc58_mix_aiv_0.o: No such file or directory
+[ERROR] TBE(4000,python3):2026-09-20-02:45:24.185.439 [opc_common.py:232][_log_error] Traceback (most recent call last):
+  File "<CANN>/python/site-packages/opc_tool/op_compilation.py", line 336, in __single_op_compile
+    json_file_path = single_op_obj.op_compile()
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<CANN>/python/site-packages/opc_tool/single_op_compile.py", line 289, in op_compile
+    json_file_path = self.__call_op()
+                     ^^^^^^^^^^^^^^^^
+  File "<CANN>/python/site-packages/opc_tool/single_op_compile.py", line 171, in __call_op
+    op_func(*inputs, *outputs, *new_attrs, self.__op_info.get(OpcOptions.KERNEL_NAME), **kwargs)
+[ERROR] TBE(4000,python3):2026-09-20-02:45:24.185.467 [opc_common.py:232][_log_error]   File "<CANN>/python/site-packages/tbe/common/register/operation_func_mgr.py", line 214, in wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "<CANN>/python/site-packages/tbe/common/utils/para_check.py", line 548, in _in_wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "<TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/build_out/op_kernel/GdnBwdCheckpoints_ascend950/dynamic/GdnBwdCheckpoints.py", line 253, in gdn_bwd_checkpoints
+    compile_op(src, origin_func_name, op_info, options, code_channel, '{}', {'valueDepend': {}})
+[ERROR] TBE(4000,python3):2026-09-20-02:45:24.185.484 [opc_common.py:232][_log_error]   File "<CANN>/python/site-packages/tbe/tikcpp/compile_op.py", line 2266, in compile_op
+    compile_op_common_part(
+  File "<CANN>/python/site-packages/tbe/tikcpp/compile_op.py", line 2065, in compile_op_common_part
+    compile_kernel_and_meta(
+  File "<CANN>/python/site-packages/tbe/tikcpp/compile_op.py", line 1574, in compile_kernel_and_meta
+    _compile_ascendc_cce_v220_with_kernel_type(
+  File "<CANN>/python/site-packages/tbe/tikcpp/compile_op.py", line 2938, in _compile_ascendc_cce_v220_with_kernel_type
+    _compile_ascendc_cce_v220_with_kernel_type_for_dynamic(
+[ERROR] TBE(4000,python3):2026-09-20-02:45:24.185.497 [opc_common.py:232][_log_error]   File "<CANN>/python/site-packages/tbe/tikcpp/compile_op.py", line 2914, in _compile_ascendc_cce_v220_with_kernel_type_for_dynamic
+    fatbin_objs(
+  File "<CANN>/python/site-packages/tbe/tikcpp/ascendc_compile_base.py", line 157, in fatbin_objs
+    CommonUtility.run_cmd_inner(compile_cmd, CompileStage.FATBIN, compile_log_path)
+  File "<CANN>/python/site-packages/tbe/tikcpp/ascendc_common_utility.py", line 457, in run_cmd_inner
+    CommonUtility.dump_build_log(output.decode(), cmds, stage, ret_code)
+  File "<CANN>/python/site-packages/tbe/tikcpp/ascendc_common_utility.py", line 782, in dump_build_log
+    raise Exception(
+[ERROR] TBE(4000,python3):2026-09-20-02:45:24.185.510 [opc_common.py:232][_log_error] Exception: An error occurred during compile phases of CompileStage.FATBIN, msg is ld.lld: error: cannot open <TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/build_out/op_kernel/GdnBwdCheckpoints_ascend950/kernel_0/kernel_meta_GdnBwdCheckpoints_65a3e6f5f758cfea7f25be2b697efc58/kernel_meta/GdnBwdCheckpoints_65a3e6f5f758cfea7f25be2b697efc58_mix_aic_0.o: No such file or directory
+ld.lld: error: cannot open <TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/build_out/op_kernel/GdnBwdCheckpoints_ascend950/kernel_0/kernel_meta_GdnBwdCheckpoints_65a3e6f5f758cfea7f25be2b697efc58/kernel_meta/GdnBwdCheckpoints_65a3e6f5f758cfea7f25be2b697efc58_mix_aiv_0.o: No such file or directory
+
+[ERROR] TBE(4000,python3):2026-09-20-02:45:24.185.532 [op_compilation.py:214][record_compile_error_info] Op[GdnBwdCheckpoints] of index[0] compile failed, kernelName: GdnBwdCheckpoints_65a3e6f5f758cfea7f25be2b697efc58.
+[ERROR] TBE(4000,python3):2026-09-20-02:45:24.185.686 [opc_common.py:542][opc_log_full] [op_compilation.py:216][record_compile_error_info] reason is:[An error occurred during compile phases of CompileStage.FATBIN, msg is ld.lld: error: cannot open <TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/build_out/op_kernel/GdnBwdCheckpoints_ascend950/kernel_0/kernel_meta_GdnBwdCheckpoints_65a3e6f5f758cfea7f25be2b697efc58/kernel_meta/GdnBwdCheckpoints_65a3e6f5f758cfea7f25be2b697efc58_mix_aic_0.o: No such file or directory
+[ERROR] TBE(4000,python3):2026-09-20-02:45:24.185.701 [opc_common.py:542][opc_log_full] ld.lld: error: cannot open <TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/build_out/op_kernel/GdnBwdCheckpoints_ascend950/kernel_0/kernel_meta_GdnBwdCheckpoints_65a3e6f5f758cfea7f25be2b697efc58/kernel_meta/GdnBwdCheckpoints_65a3e6f5f758cfea7f25be2b697efc58_mix_aiv_0.o: No such file or directory
+].
+[ERROR] TBE(4000,python3):2026-09-20-02:45:24.187.503 [opc.py:763][main] Opc tool compile failed.
+[INFO] RUNTIME(4000,python3):2026-09-20-02:45:24.863.080 [runtime.cc:1659] 4000 WaitMonitorExit: wait monitor success, used count=0.
+[INFO] RUNTIME(4000,python3):2026-09-20-02:45:24.914.135 [xpu_task_fail_callback_data_manager.cc:64] 4000 ~XpuTaskFailCallBackManager: XpuTaskFailCallBackManager Destructor.
+[INFO] RUNTIME(4000,python3):2026-09-20-02:45:24.914.142 [task_fail_callback_data_manager.cc:91] 4000 ~TaskFailCallBackManager: Destructor.
+[INFO] ATRACE(4000,python3):2026-09-20-02:45:25.022.977 [stacktrace_signal.c:229](tid:4000) unregister all signal handlers, can not capture signal.
+<TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/build_out/op_kernel/binary/ascend950/gdn_bwd_checkpoints/GdnBwdCheckpoints_65a3e6f5f758cfea7f25be2b697efc58.json not generated!
+make[4]: *** [<TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/build_out/op_kernel/GdnBwdCheckpoints_ascend950/gdn_bwd_checkpoints.make:3: gdn_bwd_checkpoints0] Error 1
+Traceback (most recent call last):
+  File "<TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/cmake/util/ascendc_compile_kernel.py", line 219, in <module>
+    kernel_builder.ascendc_build()
+  File "<TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/cmake/util/ascendc_compile_kernel.py", line 162, in ascendc_build
+    raise RuntimeError('Kernel Compilation Error: OpType {} Kernel File {}!'.format(
+RuntimeError: Kernel Compilation Error: OpType GdnBwdCheckpoints Kernel File <TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/op_kernel/gdn_bwd_checkpoints.cpp!
+gmake[3]: *** [op_kernel/CMakeFiles/GdnBwdCheckpoints_ascend950.dir/build.make:70: op_kernel/CMakeFiles/GdnBwdCheckpoints_ascend950] Error 1
+gmake[2]: *** [CMakeFiles/Makefile2:366: op_kernel/CMakeFiles/GdnBwdCheckpoints_ascend950.dir/all] Error 2
+gmake[1]: *** [CMakeFiles/Makefile2:320: op_kernel/CMakeFiles/binary.dir/rule] Error 2
+gmake: *** [Makefile:280: binary] Error 2
+[ 10%] Generating scripts/install.sh, scripts/upgrade.sh
+[ 10%] Built target modify_vendor
+[ 10%] Built target gen_version_info
+[ 20%] Building CXX object op_host/CMakeFiles/cust_op_proto.dir/gdn_bwd_checkpoints.cpp.o
+In file included from <CANN>/include/external/ge_common/api_error_codes.h:16,
+                 from <CANN>/include/exe_graph/runtime/continuous_vector.h:20,
+                 from <CANN>/include/exe_graph/runtime/runtime_attrs.h:16,
+                 from <CANN>/include/exe_graph/runtime/infer_shape_context.h:16,
+                 from <CANN>/include/register/op_impl_registry.h:19,
+                 from <CANN>/include/register/op_def.h:19,
+                 from <CANN>/include/register/op_def_registry.h:14,
+                 from <TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/op_host/gdn_bwd_checkpoints.cpp:2:
+<CANN>/include/external/ge_common/ge_error_codes.h:15:122: note: ‘#pragma message: Warning: ge_error_codes.h is deprecated and will be removed after 2027-06. Include "graph/error_codes.h" instead.’
+   15 |     "Warning: ge_error_codes.h is deprecated and will be removed after 2027-06. Include \"graph/error_codes.h\" instead.")
+      |                                                                                                                          ^
+In file included from <CANN>/include/external/ge_common/api_error_codes.h:17:
+<CANN>/include/external/ge_common/ge_api_types.h:15:122: note: ‘#pragma message: Warning: ge_api_types.h is deprecated and will be removed after 2027-06. Include "ge_common_api_types.h" instead.’
+   15 |     "Warning: ge_api_types.h is deprecated and will be removed after 2027-06. Include \"ge_common_api_types.h\" instead.")
+      |                                                                                                                          ^
+[ 30%] Building CXX object op_host/CMakeFiles/cust_op_proto.dir/__/autogen/op_proto.cc.o
+In file included from <CANN>/include/external/ge_common/api_error_codes.h:16,
+                 from <CANN>/include/exe_graph/runtime/continuous_vector.h:20,
+                 from <CANN>/include/exe_graph/runtime/runtime_attrs.h:16,
+                 from <CANN>/include/exe_graph/runtime/infer_shape_context.h:16,
+                 from <CANN>/include/register/op_impl_registry.h:19,
+                 from <TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/build_out/autogen/op_proto.h:5,
+                 from <TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/build_out/autogen/op_proto.cc:1:
+<CANN>/include/external/ge_common/ge_error_codes.h:15:122: note: ‘#pragma message: Warning: ge_error_codes.h is deprecated and will be removed after 2027-06. Include "graph/error_codes.h" instead.’
+   15 |     "Warning: ge_error_codes.h is deprecated and will be removed after 2027-06. Include \"graph/error_codes.h\" instead.")
+      |                                                                                                                          ^
+In file included from <CANN>/include/external/ge_common/api_error_codes.h:17:
+<CANN>/include/external/ge_common/ge_api_types.h:15:122: note: ‘#pragma message: Warning: ge_api_types.h is deprecated and will be removed after 2027-06. Include "ge_common_api_types.h" instead.’
+   15 |     "Warning: ge_api_types.h is deprecated and will be removed after 2027-06. Include \"ge_common_api_types.h\" instead.")
+      |                                                                                                                          ^
+[ 40%] Linking CXX shared library libcust_opsproto_rt2.0.so
+[ 40%] Built target cust_op_proto
+[ 50%] Building CXX object op_host/CMakeFiles/cust_optiling.dir/gdn_bwd_checkpoints.cpp.o
+In file included from <CANN>/include/external/ge_common/api_error_codes.h:16,
+                 from <CANN>/include/exe_graph/runtime/continuous_vector.h:20,
+                 from <CANN>/include/exe_graph/runtime/runtime_attrs.h:16,
+                 from <CANN>/include/exe_graph/runtime/infer_shape_context.h:16,
+                 from <CANN>/include/register/op_impl_registry.h:19,
+                 from <CANN>/include/register/op_def.h:19,
+                 from <CANN>/include/register/op_def_registry.h:14,
+                 from <TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/op_host/gdn_bwd_checkpoints.cpp:2:
+<CANN>/include/external/ge_common/ge_error_codes.h:15:122: note: ‘#pragma message: Warning: ge_error_codes.h is deprecated and will be removed after 2027-06. Include "graph/error_codes.h" instead.’
+   15 |     "Warning: ge_error_codes.h is deprecated and will be removed after 2027-06. Include \"graph/error_codes.h\" instead.")
+      |                                                                                                                          ^
+In file included from <CANN>/include/external/ge_common/api_error_codes.h:17:
+<CANN>/include/external/ge_common/ge_api_types.h:15:122: note: ‘#pragma message: Warning: ge_api_types.h is deprecated and will be removed after 2027-06. Include "ge_common_api_types.h" instead.’
+   15 |     "Warning: ge_api_types.h is deprecated and will be removed after 2027-06. Include \"ge_common_api_types.h\" instead.")
+      |                                                                                                                          ^
+[ 60%] Linking CXX shared library libcust_opmaster_rt2.0.so
+[ 60%] Built target cust_optiling
+[ 70%] Building CXX object op_host/CMakeFiles/cust_opapi.dir/__/autogen/aclnn_gdn_bwd_checkpoints.cpp.o
+[ 80%] Linking CXX shared library libcust_opapi.so
+[ 80%] Built target cust_opapi
+[ 80%] Built target optiling_compat
+[ 90%] Built target ops_info_gen_ascend950
+[100%] Generating tbe/op_info_cfg/ai_core/npu_supported_ops.json
+<TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/build_out/autogen <TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/build_out/op_kernel/tbe/op_info_cfg/ai_core
+[INFO] Succed generated <TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/build_out/op_kernel/tbe/op_info_cfg/ai_core/npu_supported_ops.json
+[100%] Built target npu_supported_ops
+Run CPack packaging tool...
+CPack: Create package using External
+CPack: Install projects
+CPack: - Run preinstall target for: opp
+CPack: - Install project: opp []
+CMake Error at <TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/build_out/op_kernel/cmake_install.cmake:62 (file):
+  file INSTALL cannot find
+  "<TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/build_out/op_kernel/binary/config":
+  No such file or directory.
+Call Stack (most recent call first):
+  <TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/build_out/cmake_install.cmake:52 (include)
+
+
+CPack Error: Error when generating package: opp
+gmake: *** [Makefile:71: package] Error 1

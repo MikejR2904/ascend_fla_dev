@@ -1,0 +1,75 @@
+ENVIRONMENT {"python": "3.12.14 | packaged by Anaconda, Inc. | (main, Aug 27 2026, 14:46:43) [GCC 14.3.0]", "torch": "2.12.0+cu130", "torch_npu": "2.12.0", "ascriptor": "0.1.0", "ascriptor_path": "<LIBRARY>/ascriptor/__init__.py", "opp_path": "<CANN>/opp", "opp_packages": ["ascend910_93", "ascend910b", "config", "ascend950", "scene.info", "version.info"], "soc": "Ascend 950PR_9579 V100", "cann_home": "<CANN>", "component_versions": {"compiler/version.info": {"sha256": "549db810cdda8c536bdedaa870e46fd7da445cd2937ab75fd7524b2ae64dd8a0", "version_fields": ["Version=9.2.0", "required_package_runtime_version=\"9.2\"", "required_package_metadef_version=\"9.2\""]}, "opp/version.info": {"sha256": "3ad8a7c642e5ec505c2feb293ed327fb007b93997f3096b38842fec1f4c0fe14", "version_fields": ["Version=9.2.0", "required_package_runtime_version=\">=8.5\"", "required_package_metadef_version=\">=8.5\""]}, "x86_64-linux/ascend_toolkit_install.info": {"sha256": "d1d504d2d110c55c8db24c898d521f955e0b43d8a40ea8e773e60423f6830c8c", "version_fields": ["version=9.2.0", "innerversion=V100R001C12B106", "compatible_version=[V100R001C15],[V100R001C23],[V100R001C10],[V100R001C11],[V100R001C12]"]}}}
+<ROOT_HOME>:58: UserWarning: Warning: The <CANN> owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+<ROOT_HOME>:58: UserWarning: Warning: The <CANN>/x86_64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+<ROOT_HOME>:58: UserWarning: Warning: The <CANN> owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+<ROOT_HOME>:58: UserWarning: Warning: The <CANN>/x86_64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+BUILD_START
+Traceback (most recent call last):
+  File "<TASK_ROOT>/repo/kernels/projects/a5/gdn_chunk_bwd_bf16/benchmark.py", line 185, in <module>
+    if __name__=='__main__':main()
+                            ^^^^^^
+  File "<TASK_ROOT>/repo/kernels/projects/a5/gdn_chunk_bwd_bf16/benchmark.py", line 84, in main
+    public.prepare(block_dim=args.block_dim)
+  File "<TASK_ROOT>/repo/ascend_fla/ops/gdn_chunk_bwd.py", line 61, in prepare
+    _compiled(block_dim)
+  File "<TASK_ROOT>/repo/ascend_fla/ops/gdn_chunk_bwd.py", line 42, in _compiled
+    return tuple(compile_kernel(e, device='a5', block_dim=block_dim, backend='cce')
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<TASK_ROOT>/repo/ascend_fla/ops/gdn_chunk_bwd.py", line 42, in <genexpr>
+    return tuple(compile_kernel(e, device='a5', block_dim=block_dim, backend='cce')
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<TASK_ROOT>/repo/ascend_fla/runtime/compile.py", line 178, in compile_kernel
+    ex.build(force=force)
+  File "<LIBRARY>/ascriptor/runtime/opexec.py", line 252, in build
+    vendor = _build.build_custom_op(self.project_dir, self.cann_path, self.custom_op_path, timeout=self.timeout * 2)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<LIBRARY>/ascriptor/runtime/build.py", line 94, in build_custom_op
+    _bash(script, Path(project_dir), Path(project_dir) / "build.log", env, timeout)
+  File "<LIBRARY>/ascriptor/runtime/build.py", line 60, in _bash
+    raise BuildError(f"{script.splitlines()[-1] if script else 'command'} failed (exit {r.returncode}); log: {log}\n"
+ascriptor.runtime.build.BuildError: for f in custom_*.run; do bash .<EXTERNAL_PATH> --install-path=<TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/custom_op; done failed (exit 2); log: <TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/build.log
+                 from <CANN>/include/exe_graph/runtime/continuous_vector.h:20,
+                 from <CANN>/include/exe_graph/runtime/runtime_attrs.h:16,
+                 from <CANN>/include/exe_graph/runtime/infer_shape_context.h:16,
+                 from <CANN>/include/register/op_impl_registry.h:19,
+                 from <CANN>/include/register/op_def.h:19,
+                 from <CANN>/include/register/op_def_registry.h:14,
+                 from <TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/op_host/gdn_bwd_checkpoints.cpp:2:
+<CANN>/include/external/ge_common/ge_error_codes.h:15:122: note: ‘#pragma message: Warning: ge_error_codes.h is deprecated and will be removed after 2027-06. Include "graph/error_codes.h" instead.’
+   15 |     "Warning: ge_error_codes.h is deprecated and will be removed after 2027-06. Include \"graph/error_codes.h\" instead.")
+      |                                                                                                                          ^
+In file included from <CANN>/include/external/ge_common/api_error_codes.h:17:
+<CANN>/include/external/ge_common/ge_api_types.h:15:122: note: ‘#pragma message: Warning: ge_api_types.h is deprecated and will be removed after 2027-06. Include "ge_common_api_types.h" instead.’
+   15 |     "Warning: ge_api_types.h is deprecated and will be removed after 2027-06. Include \"ge_common_api_types.h\" instead.")
+      |                                                                                                                          ^
+[ 60%] Linking CXX shared library libcust_opmaster_rt2.0.so
+[ 60%] Built target cust_optiling
+[ 70%] Building CXX object op_host/CMakeFiles/cust_opapi.dir/__/autogen/aclnn_gdn_bwd_checkpoints.cpp.o
+[ 80%] Linking CXX shared library libcust_opapi.so
+[ 80%] Built target cust_opapi
+[ 80%] Built target optiling_compat
+[ 90%] Built target ops_info_gen_ascend950
+[100%] Generating tbe/op_info_cfg/ai_core/npu_supported_ops.json
+<TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/build_out/autogen <TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/build_out/op_kernel/tbe/op_info_cfg/ai_core
+[INFO] Succed generated <TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/build_out/op_kernel/tbe/op_info_cfg/ai_core/npu_supported_ops.json
+[100%] Built target npu_supported_ops
+Run CPack packaging tool...
+CPack: Create package using External
+CPack: Install projects
+CPack: - Run preinstall target for: opp
+CPack: - Install project: opp []
+CMake Error at <TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/build_out/op_kernel/cmake_install.cmake:62 (file):
+  file INSTALL cannot find
+  "<TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/build_out/op_kernel/binary/config":
+  No such file or directory.
+Call Stack (most recent call first):
+  <TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/build_out/cmake_install.cmake:52 (include)
+
+
+CPack Error: Error when generating package: opp
+gmake: *** [Makefile:71: package] Error 1
+[ERROR] 2026-09-20-02:45:37 (PID:3769, Device:0, RankID:-1) ERR99999 UNKNOWN applicaiton exception

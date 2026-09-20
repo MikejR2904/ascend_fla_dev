@@ -1,0 +1,197 @@
+# cwd <TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project
+# set -e
+if [ -f "<CANN>/bin/setenv.bash" ]; then source "<CANN>/bin/setenv.bash"; fi
+export ASCEND_HOME_PATH=<CANN>
+bash build.sh
+cd build_out
+for f in custom_*.run; do bash .<EXTERNAL_PATH> --install-path=<TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/custom_op; done
+using ASCEND_HOME_PATH: <CANN>
+Preset CMake variables:
+
+  ASCEND_CANN_PACKAGE_PATH:PATH="<CANN>"
+  ASCEND_COMPUTE_UNIT:STRING="ascend950"
+  ASCEND_PACK_SHARED_LIBRARY:BOOL="False"
+  ASCEND_PYTHON_EXECUTABLE:STRING="python3"
+  CMAKE_BUILD_TYPE:STRING="Release"
+  CMAKE_CROSS_PLATFORM_COMPILER:PATH="<EXTERNAL_PATH>"
+  CMAKE_INSTALL_PREFIX:PATH="<TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/build_out"
+  ENABLE_BINARY_PACKAGE:BOOL="True"
+  ENABLE_CROSS_COMPILE:BOOL="False"
+  ENABLE_SOURCE_PACKAGE:BOOL="True"
+  ENABLE_TEST:BOOL="True"
+  vendor_name:STRING="customize"
+
+-- The C compiler identification is GNU 12.3.1
+-- The CXX compiler identification is GNU 12.3.1
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: <EXTERNAL_PATH> - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: <EXTERNAL_PATH> - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Opbuild generating sources
+-- Opbuild generating sources - done
+-- Configuring done (2.6s)
+-- Generating done (0.0s)
+CMake Warning:
+  Manually-specified variables were not used by the project:
+
+    CMAKE_CROSS_PLATFORM_COMPILER
+
+
+-- Build files have been written to: <TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/build_out
+[ 33%] Generating tbe/op_info_cfg/ai_core/ascend950/aic-ascend950-ops-info.json
+
+
+==============check valid for ops info start==============
+==============check valid for ops info end================
+
+
+Compile op info cfg successfully.
+[ 33%] Built target ops_info_gen_ascend950
+[ 66%] Building CXX object op_host/CMakeFiles/cust_optiling.dir/gdn_bwd_checkpoints.cpp.o
+In file included from <CANN>/include/external/ge_common/api_error_codes.h:16,
+                 from <CANN>/include/exe_graph/runtime/continuous_vector.h:20,
+                 from <CANN>/include/exe_graph/runtime/runtime_attrs.h:16,
+                 from <CANN>/include/exe_graph/runtime/infer_shape_context.h:16,
+                 from <CANN>/include/register/op_impl_registry.h:19,
+                 from <CANN>/include/register/op_def.h:19,
+                 from <CANN>/include/register/op_def_registry.h:14,
+                 from <TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/op_host/gdn_bwd_checkpoints.cpp:2:
+<CANN>/include/external/ge_common/ge_error_codes.h:15:122: note: ‘#pragma message: Warning: ge_error_codes.h is deprecated and will be removed after 2027-06. Include "graph/error_codes.h" instead.’
+   15 |     "Warning: ge_error_codes.h is deprecated and will be removed after 2027-06. Include \"graph/error_codes.h\" instead.")
+      |                                                                                                                          ^
+In file included from <CANN>/include/external/ge_common/api_error_codes.h:17:
+<CANN>/include/external/ge_common/ge_api_types.h:15:122: note: ‘#pragma message: Warning: ge_api_types.h is deprecated and will be removed after 2027-06. Include "ge_common_api_types.h" instead.’
+   15 |     "Warning: ge_api_types.h is deprecated and will be removed after 2027-06. Include \"ge_common_api_types.h\" instead.")
+      |                                                                                                                          ^
+[100%] Linking CXX shared library libcust_opmaster_rt2.0.so
+[100%] Built target cust_optiling
+<TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/cmake/util/ascendc_impl_build.py:194: SyntaxWarning: invalid escape sequence '\d'
+  ascendc_api_version = re.findall(r"#define ASCENDC_API_VERSION (\d+)", ascendc_api_version_file.read())
+[ascend950] Generating GdnBwdCheckpoints_65a3e6f5f758cfea7f25be2b697efc58 ...
+Traceback (most recent call last):
+  File "<CANN>/python/site-packages/opc_tool/opc.py", line 25, in <module>
+    from tbe.common.utils import log as logger
+  File "<CANN>/python/site-packages/tbe/__init__.py", line 44, in <module>
+    import tvm
+  File "<CANN>/python/site-packages/tbe/tvm/__init__.py", line 41, in <module>
+    from .runtime import cce_runtime
+  File "<CANN>/python/site-packages/tbe/tvm/runtime/cce_runtime.py", line 29, in <module>
+    from ..contrib import ccec
+  File "<CANN>/python/site-packages/tbe/tvm/contrib/ccec.py", line 26, in <module>
+    from tvm.driver.cce_build_module import time_statistics
+  File "<CANN>/python/site-packages/tbe/tvm/driver/__init__.py", line 18, in <module>
+    from .build_module import lower, build
+  File "<CANN>/python/site-packages/tbe/tvm/driver/build_module.py", line 31, in <module>
+    from tvm.te import tensor
+  File "<CANN>/python/site-packages/tbe/tvm/te/__init__.py", line 42, in <module>
+    from . import hybrid
+  File "<CANN>/python/site-packages/tbe/tvm/te/hybrid/__init__.py", line 36, in <module>
+    from .module import HybridModule
+  File "<CANN>/python/site-packages/tbe/tvm/te/hybrid/module.py", line 29, in <module>
+    from .parser import source_to_op
+  File "<CANN>/python/site-packages/tbe/tvm/te/hybrid/parser.py", line 41, in <module>
+    from . import calls
+  File "<CANN>/python/site-packages/tbe/tvm/te/hybrid/calls.py", line 23, in <module>
+    from tvm.target import Target
+  File "<CANN>/python/site-packages/tbe/tvm/target/__init__.py", line 78, in <module>
+    from .generic_func import GenericFunc
+  File "<CANN>/python/site-packages/tbe/tvm/target/generic_func.py", line 22, in <module>
+    from decorator import decorate
+ModuleNotFoundError: No module named 'decorator'
+
+<TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/build_out/op_kernel/binary/ascend950/gdn_bwd_checkpoints/GdnBwdCheckpoints_65a3e6f5f758cfea7f25be2b697efc58.json not generated!
+make[4]: *** [<TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/build_out/op_kernel/GdnBwdCheckpoints_ascend950/gdn_bwd_checkpoints.make:3: gdn_bwd_checkpoints0] Error 1
+Traceback (most recent call last):
+  File "<TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/cmake/util/ascendc_compile_kernel.py", line 219, in <module>
+    kernel_builder.ascendc_build()
+  File "<TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/cmake/util/ascendc_compile_kernel.py", line 162, in ascendc_build
+    raise RuntimeError('Kernel Compilation Error: OpType {} Kernel File {}!'.format(
+RuntimeError: Kernel Compilation Error: OpType GdnBwdCheckpoints Kernel File <TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/op_kernel/gdn_bwd_checkpoints.cpp!
+gmake[3]: *** [op_kernel/CMakeFiles/GdnBwdCheckpoints_ascend950.dir/build.make:70: op_kernel/CMakeFiles/GdnBwdCheckpoints_ascend950] Error 1
+gmake[2]: *** [CMakeFiles/Makefile2:366: op_kernel/CMakeFiles/GdnBwdCheckpoints_ascend950.dir/all] Error 2
+gmake[1]: *** [CMakeFiles/Makefile2:320: op_kernel/CMakeFiles/binary.dir/rule] Error 2
+gmake: *** [Makefile:280: binary] Error 2
+[ 10%] Generating scripts/install.sh, scripts/upgrade.sh
+[ 10%] Built target modify_vendor
+[ 10%] Built target gen_version_info
+[ 20%] Building CXX object op_host/CMakeFiles/cust_op_proto.dir/gdn_bwd_checkpoints.cpp.o
+In file included from <CANN>/include/external/ge_common/api_error_codes.h:16,
+                 from <CANN>/include/exe_graph/runtime/continuous_vector.h:20,
+                 from <CANN>/include/exe_graph/runtime/runtime_attrs.h:16,
+                 from <CANN>/include/exe_graph/runtime/infer_shape_context.h:16,
+                 from <CANN>/include/register/op_impl_registry.h:19,
+                 from <CANN>/include/register/op_def.h:19,
+                 from <CANN>/include/register/op_def_registry.h:14,
+                 from <TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/op_host/gdn_bwd_checkpoints.cpp:2:
+<CANN>/include/external/ge_common/ge_error_codes.h:15:122: note: ‘#pragma message: Warning: ge_error_codes.h is deprecated and will be removed after 2027-06. Include "graph/error_codes.h" instead.’
+   15 |     "Warning: ge_error_codes.h is deprecated and will be removed after 2027-06. Include \"graph/error_codes.h\" instead.")
+      |                                                                                                                          ^
+In file included from <CANN>/include/external/ge_common/api_error_codes.h:17:
+<CANN>/include/external/ge_common/ge_api_types.h:15:122: note: ‘#pragma message: Warning: ge_api_types.h is deprecated and will be removed after 2027-06. Include "ge_common_api_types.h" instead.’
+   15 |     "Warning: ge_api_types.h is deprecated and will be removed after 2027-06. Include \"ge_common_api_types.h\" instead.")
+      |                                                                                                                          ^
+[ 30%] Building CXX object op_host/CMakeFiles/cust_op_proto.dir/__/autogen/op_proto.cc.o
+In file included from <CANN>/include/external/ge_common/api_error_codes.h:16,
+                 from <CANN>/include/exe_graph/runtime/continuous_vector.h:20,
+                 from <CANN>/include/exe_graph/runtime/runtime_attrs.h:16,
+                 from <CANN>/include/exe_graph/runtime/infer_shape_context.h:16,
+                 from <CANN>/include/register/op_impl_registry.h:19,
+                 from <TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/build_out/autogen/op_proto.h:5,
+                 from <TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/build_out/autogen/op_proto.cc:1:
+<CANN>/include/external/ge_common/ge_error_codes.h:15:122: note: ‘#pragma message: Warning: ge_error_codes.h is deprecated and will be removed after 2027-06. Include "graph/error_codes.h" instead.’
+   15 |     "Warning: ge_error_codes.h is deprecated and will be removed after 2027-06. Include \"graph/error_codes.h\" instead.")
+      |                                                                                                                          ^
+In file included from <CANN>/include/external/ge_common/api_error_codes.h:17:
+<CANN>/include/external/ge_common/ge_api_types.h:15:122: note: ‘#pragma message: Warning: ge_api_types.h is deprecated and will be removed after 2027-06. Include "ge_common_api_types.h" instead.’
+   15 |     "Warning: ge_api_types.h is deprecated and will be removed after 2027-06. Include \"ge_common_api_types.h\" instead.")
+      |                                                                                                                          ^
+[ 40%] Linking CXX shared library libcust_opsproto_rt2.0.so
+[ 40%] Built target cust_op_proto
+[ 50%] Building CXX object op_host/CMakeFiles/cust_optiling.dir/gdn_bwd_checkpoints.cpp.o
+In file included from <CANN>/include/external/ge_common/api_error_codes.h:16,
+                 from <CANN>/include/exe_graph/runtime/continuous_vector.h:20,
+                 from <CANN>/include/exe_graph/runtime/runtime_attrs.h:16,
+                 from <CANN>/include/exe_graph/runtime/infer_shape_context.h:16,
+                 from <CANN>/include/register/op_impl_registry.h:19,
+                 from <CANN>/include/register/op_def.h:19,
+                 from <CANN>/include/register/op_def_registry.h:14,
+                 from <TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/op_host/gdn_bwd_checkpoints.cpp:2:
+<CANN>/include/external/ge_common/ge_error_codes.h:15:122: note: ‘#pragma message: Warning: ge_error_codes.h is deprecated and will be removed after 2027-06. Include "graph/error_codes.h" instead.’
+   15 |     "Warning: ge_error_codes.h is deprecated and will be removed after 2027-06. Include \"graph/error_codes.h\" instead.")
+      |                                                                                                                          ^
+In file included from <CANN>/include/external/ge_common/api_error_codes.h:17:
+<CANN>/include/external/ge_common/ge_api_types.h:15:122: note: ‘#pragma message: Warning: ge_api_types.h is deprecated and will be removed after 2027-06. Include "ge_common_api_types.h" instead.’
+   15 |     "Warning: ge_api_types.h is deprecated and will be removed after 2027-06. Include \"ge_common_api_types.h\" instead.")
+      |                                                                                                                          ^
+[ 60%] Linking CXX shared library libcust_opmaster_rt2.0.so
+[ 60%] Built target cust_optiling
+[ 70%] Building CXX object op_host/CMakeFiles/cust_opapi.dir/__/autogen/aclnn_gdn_bwd_checkpoints.cpp.o
+[ 80%] Linking CXX shared library libcust_opapi.so
+[ 80%] Built target cust_opapi
+[ 80%] Built target optiling_compat
+[ 90%] Built target ops_info_gen_ascend950
+[100%] Generating tbe/op_info_cfg/ai_core/npu_supported_ops.json
+<TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/build_out/autogen <TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/build_out/op_kernel/tbe/op_info_cfg/ai_core
+[INFO] Succed generated <TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/build_out/op_kernel/tbe/op_info_cfg/ai_core/npu_supported_ops.json
+[100%] Built target npu_supported_ops
+Run CPack packaging tool...
+CPack: Create package using External
+CPack: Install projects
+CPack: - Run preinstall target for: opp
+CPack: - Install project: opp []
+CMake Error at <TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/build_out/op_kernel/cmake_install.cmake:62 (file):
+  file INSTALL cannot find
+  "<TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/build_out/op_kernel/binary/config":
+  No such file or directory.
+Call Stack (most recent call first):
+  <TASK_NATIVE>/build-bd1/gdn_bwd_checkpoints-b91f88b79393f85a/project/build_out/cmake_install.cmake:52 (include)
+
+
+CPack Error: Error when generating package: opp
+gmake: *** [Makefile:71: package] Error 1

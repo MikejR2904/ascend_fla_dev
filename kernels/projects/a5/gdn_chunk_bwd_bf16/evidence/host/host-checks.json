@@ -1,0 +1,49 @@
+{
+  "passed": true,
+  "host_environment": {
+    "python": "3.11.15",
+    "torch": "2.10.0+cpu",
+    "numpy": "1.26.4",
+    "pytest": "8.3.2",
+    "ascriptor": "0.1.0",
+    "library_pin": "90cfcdc720bbcd66e8bd4361c4dd4fbc1a2a57b5"
+  },
+  "focused": {
+    "passed": 88
+  },
+  "repository": {
+    "passed": 763,
+    "skipped": 9,
+    "warnings": 5,
+    "scope": "CPU-only host suite; explicit torch_npu import blocked by task-private ImportError module at the front of PYTHONPATH. Separate locked native jobs supply BF-02 device acceptance."
+  },
+  "checks": [
+    "gen_matrix.py --check",
+    "pm_board.py --check"
+  ],
+  "files": [
+    {
+      "file": "host-bwd-tests.log",
+      "lines": 3,
+      "sha256": "b215f59dcd57e3f7ebe0632628d6edd7ab9404b500baed860d818a2c63f7a207"
+    },
+    {
+      "file": "host-full-isolated-tests.log",
+      "lines": 59,
+      "sha256": "127f7689a02f74c3585535561298aa1a1c613078f36e958266c58a766ee08d35"
+    },
+    {
+      "file": "gen-matrix-check.log",
+      "lines": 1,
+      "sha256": "90339edbfde6ffc7f64ee6d61a7a16b30d36a2a981b7fb544d03301b0b2dcacf"
+    },
+    {
+      "file": "pm-board-check.log",
+      "lines": 1,
+      "sha256": "5eabbbfd448d95265b9100c7e2ddd31e7b79a27c5b009083fa9fddcc59260582"
+    }
+  ],
+  "warning_scope": "Five existing test modules use pytest.importorskip on unavailable torch_npu; pytest8.3.2 emits its documented deprecation notice. No warning suppressed and no unrelated tests edited.",
+  "initial_failed_run": "An earlier unisolated host invocation reached unrelated KDA NPU tests and was interrupted after failures. Unfiltered failure log and isolation diagnosis retained privately; no test/tolerance/domain relaxation. That run is not BF-02 acceptance.",
+  "redaction": "Machine source root replaced; all log lines retained."
+}
