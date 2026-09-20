@@ -49,11 +49,23 @@ def verify(chunk, research, bd, public, to_device, fla, write, output_dir):
         data = research.make_inputs(dict(p,T=p['prefix']+64),seed=6506)
         if 'span' in p:
             data['g'].fill_(-p['span']/64)
+            # max(cumsum)-min(cumsum) excludes the first increment. One
+            # double final increment makes the other 63 total exactly span;
+            # division by 64 keeps these boundary values exact in FP32.
+            data['g'][:,63::64].mul_(2.)
+        cumulative = data['g'].view(p['B'], (p['prefix']+64)//64, 64,
+                                    p['H']*p['G'], 128).cumsum(dim=2)
+        cpu_span = float((cumulative.amax(dim=2)-cumulative.amin(dim=2)).max())
+        if 'span' in p:
+            assert cpu_span == p['span'], (cpu_span, p)
         refs = research.references(data,fla)
         prefix_cpu = dict(slice_inputs(data,0,p['prefix']),initial_state=data['initial_state'],
                           scale=data['scale'],output_final_state=True)
         prefix_refs = research.references(prefix_cpu,fla)
         dev = to_device(data)
+        npu_span = chunk._gate_span(dev['g'], (p['prefix']+64)//64, on_cpu=False)
+        if 'span' in p:
+            assert npu_span == p['span'], (npu_span, p)
         one = prefill(dev)
         one_cpu = tuple(cpu(x) for x in one)
         prefix_dev = dict(slice_inputs(dev,0,p['prefix']),initial_state=dev['initial_state'],
@@ -116,6 +128,7 @@ def verify(chunk, research, bd, public, to_device, fla, write, output_dir):
         unchanged = {n:research.digest(cpu(dev[n]))==research.digest(x) for n,x in data.items()
                      if isinstance(x,torch.Tensor)}
         row = dict(case=p,block_dim=bd,chunk_block_dim=chunk_bd,decode_steps=first_layer,
+                   gate_span=dict(cpu=cpu_span,npu=npu_span),
                    sixteen_vs_single_bitwise=exact,comparison=comparison,input_unchanged=unchanged,
                    segment_hashes=segment_hashes,
                    chain_vs_oneshot=dict(o=research.metrics(chain_cpu[0],one_cpu[0]),
