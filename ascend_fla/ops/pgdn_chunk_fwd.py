@@ -24,6 +24,18 @@ def _pipeline():
     return import_module(name+'.pipeline')
 
 
+@functools.lru_cache(maxsize=1)
+def _bf16_pipeline():
+    path = Path(__file__).resolve().parents[2] / 'kernels/projects/a5/pgdn_chunk_fwd_bf16/kernels'
+    name = '_afla_pgdn_bf03_kernels'
+    spec = importlib.util.spec_from_file_location(name, path/'__init__.py', submodule_search_locations=[str(path)])
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[name] = module
+    spec.loader.exec_module(module)
+    from importlib import import_module
+    return import_module(name+'.pipeline')
+
+
 def _options(device, block_dim):
     if device != 'a5' or type(block_dim) is not int or block_dim not in (1,2):
         raise ValueError(f'requires a5 and block_dim in (1,2); got {device}/{block_dim}')
@@ -32,11 +44,12 @@ def _options(device, block_dim):
 @functools.lru_cache(maxsize=2)
 def _compiled(block_dim):
     from ..runtime.compile import compile_kernel
-    return tuple(compile_kernel(entry,device='a5',block_dim=block_dim,backend='cce') for entry in _pipeline().entries())
+    entries = (*_pipeline().entries(), *_bf16_pipeline().entries())
+    return tuple(compile_kernel(entry,device='a5',block_dim=block_dim,backend='cce') for entry in entries)
 
 
 def prepare(*, device='a5', block_dim=2):
-    """Compile all six stages before the first CANN operator resolution."""
+    """Compile both six-stage dtype paths before the first CANN resolution."""
     _options(device,block_dim)
     _compiled(block_dim)
 
@@ -121,10 +134,12 @@ def chunk_pgdn(q,k,v,g_atk,g,beta_atk,beta,*,scale=None,initial_state=None,initi
               use_qk_l2norm_in_kernel=use_qk_l2norm_in_kernel,x=x,eps=eps,log_atk_scale=log_atk_scale,
               head_first=head_first,cu_seqlens=cu_seqlens,cu_seqlens_cpu=cu_seqlens_cpu,cp_context=cp_context,
               transpose_state_layout=transpose_state_layout,device=device,block_dim=block_dim,launcher=launcher)
-    inputs = dict(q=q.float(),k=k.float(),v=v.float(),g_atk=g_atk,g=g,beta_atk=beta_atk,beta=beta,
+    inputs = dict(q=q,k=k,v=v,g_atk=g_atk,g=g,beta_atk=beta_atk,beta=beta,
                   initial_state=torch.zeros(q.shape[0],v.shape[2],128,128,dtype=torch.float32,device=q.device))
+    pipeline = _bf16_pipeline() if q.dtype == torch.bfloat16 else _pipeline()
     if launcher=='inprocess':
-        compiled = dict(zip((e.name for e in _pipeline().entries()),_compiled(block_dim)))
+        entries = (*_pipeline().entries(), *_bf16_pipeline().entries())
+        compiled = dict(zip((e.name for e in entries),_compiled(block_dim)))
         def launch(entry,sources,outputs,scalars):
             op=compiled[entry.name]
             op(sources,{name:scalars[name] for name in op.scalar_names},outputs)
@@ -137,6 +152,6 @@ def chunk_pgdn(q,k,v,g_atk,g,beta_atk,beta,*,scale=None,initial_state=None,initi
                       board=board,out_dir=root,timeout=timeout)
             result=op(*(tuple(sources.values())+tuple(outputs.values())+tuple(scalars.values())))
             return dict(zip(outputs,(result,) if len(outputs)==1 else result))
-    outputs=_pipeline().run(inputs,launch,retain_stages=False)
-    return (outputs['o'].to(q.dtype),outputs['final_state'] if output_final_state else None,
+    outputs=pipeline.run(inputs,launch,retain_stages=False)
+    return (outputs['o'],outputs['final_state'] if output_final_state else None,
             outputs['final_A_state'] if output_final_state else None)

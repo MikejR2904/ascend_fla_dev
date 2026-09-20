@@ -1,0 +1,2678 @@
+{
+  "passed": true,
+  "builds": 24,
+  "environment": {
+    "python": "3.12.13 | packaged by Anaconda, Inc. | (main, Jul  9 2026, 14:38:16) [GCC 14.3.0]",
+    "torch": "2.12.0+cpu",
+    "torch_npu": "2.12.0",
+    "ascriptor": "0.1.0",
+    "soc": "Ascend 950PR_9589 V100",
+    "cann": "9.2.0",
+    "opp": "opp/built-in/op_impl/ai_core/tbe/kernel/ascend950",
+    "component_versions": {
+      "compiler/version.info": {
+        "raw": "Version=9.2.0\nversion_dir=cann\nrequired_package_runtime_version=\"9.2\"\nrequired_package_ge-executor_version=\"9.2\"\nrequired_package_metadef_version=\"9.2\"\nrequired_package_bisheng-compiler_version=\"9.2\"\nrequired_package_tbe-tik_version=\"9.2\"\ntimestamp=20260805_101249091\n",
+        "sha256": "604198c1934cf29ad9566ba130465921b80c8a9c15c6620678498d290fdd7ce0",
+        "version_fields": [
+          "Version=9.2.0",
+          "required_package_runtime_version=\"9.2\"",
+          "required_package_metadef_version=\"9.2\""
+        ]
+      },
+      "opp/version.info": {
+        "raw": "Version=9.2.0\nversion_dir=cann\nrequired_package_runtime_version=\">=8.5\"\nrequired_package_ge-executor_version=\">=8.5\"\nrequired_package_metadef_version=\">=8.5\"\nrequired_package_asc-devkit_version=\">=8.5\"\nrequired_package_bisheng-compiler_version=\">=8.5\"\ntimestamp=20260805_101249091\n",
+        "sha256": "abd4979cb7af44675c08c3dc04bbc68589e9a388778e057e365f820273717e58",
+        "version_fields": [
+          "Version=9.2.0",
+          "required_package_runtime_version=\">=8.5\"",
+          "required_package_metadef_version=\">=8.5\""
+        ]
+      },
+      "x86_64-linux/ascend_toolkit_install.info": {
+        "raw": "package_name=Ascend-cann-toolkit\nversion=9.2.0\ninnerversion=V100R001C12B056\ncompatible_version=[V100R001C15],[V100R001C21],[V100R001C23],[V100R001C10]\narch=x86_64\nos=linux\npath=<USER_HOME>/Ascend/cann-9.2.0\n",
+        "sha256": "cca1c26d11baee0a24d0d27df3ebaf8acdb432a2e4083d7291afa5f3a3f8e239",
+        "version_fields": [
+          "version=9.2.0",
+          "innerversion=V100R001C12B056",
+          "compatible_version=[V100R001C15],[V100R001C21],[V100R001C23],[V100R001C10]"
+        ]
+      }
+    }
+  },
+  "warning_lines": 432,
+  "actual_source_sites": [
+    {
+      "entry": "pgdn_chunk_atk",
+      "block_dim": 1,
+      "template_sha256": "ec9f69a86e2d3a9da17dedab13716fa1ffad80140ea88a74cbdb8ead035ec385",
+      "cmake_sha256": "fd4330811b7720a01244b88509e39da5a5fe19ba24db0753a44361270cd7a861",
+      "matches_selected_owner": true,
+      "outer_string_start": [
+        154,
+        11
+      ],
+      "outer_string_end": [
+        211,
+        3
+      ],
+      "generated_regex": "ascendc_api_version = re.findall(r\"#define ASCENDC_API_VERSION (\\d+)\", ascendc_api_version_file.read())",
+      "native_x86_64": true,
+      "warnings": [
+        {
+          "log": "project/build.log",
+          "line": 40,
+          "kind": "unused_cross_compiler"
+        },
+        {
+          "log": "project/build.log",
+          "line": 65,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 66,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 69,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 70,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 74,
+          "kind": "python_outer_template_escape"
+        },
+        {
+          "log": "project/build.log",
+          "line": 105,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 106,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 109,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 110,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 120,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 121,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 124,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 125,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 138,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 139,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 142,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 143,
+          "kind": "vendor_header_deprecation"
+        }
+      ]
+    },
+    {
+      "entry": "pgdn_chunk_prepare",
+      "block_dim": 1,
+      "template_sha256": "ec9f69a86e2d3a9da17dedab13716fa1ffad80140ea88a74cbdb8ead035ec385",
+      "cmake_sha256": "fd4330811b7720a01244b88509e39da5a5fe19ba24db0753a44361270cd7a861",
+      "matches_selected_owner": true,
+      "outer_string_start": [
+        154,
+        11
+      ],
+      "outer_string_end": [
+        211,
+        3
+      ],
+      "generated_regex": "ascendc_api_version = re.findall(r\"#define ASCENDC_API_VERSION (\\d+)\", ascendc_api_version_file.read())",
+      "native_x86_64": true,
+      "warnings": [
+        {
+          "log": "project/build.log",
+          "line": 40,
+          "kind": "unused_cross_compiler"
+        },
+        {
+          "log": "project/build.log",
+          "line": 65,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 66,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 69,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 70,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 74,
+          "kind": "python_outer_template_escape"
+        },
+        {
+          "log": "project/build.log",
+          "line": 105,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 106,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 109,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 110,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 120,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 121,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 124,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 125,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 138,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 139,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 142,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 143,
+          "kind": "vendor_header_deprecation"
+        }
+      ]
+    },
+    {
+      "entry": "pgdn_chunk_scores",
+      "block_dim": 1,
+      "template_sha256": "ec9f69a86e2d3a9da17dedab13716fa1ffad80140ea88a74cbdb8ead035ec385",
+      "cmake_sha256": "fd4330811b7720a01244b88509e39da5a5fe19ba24db0753a44361270cd7a861",
+      "matches_selected_owner": true,
+      "outer_string_start": [
+        154,
+        11
+      ],
+      "outer_string_end": [
+        211,
+        3
+      ],
+      "generated_regex": "ascendc_api_version = re.findall(r\"#define ASCENDC_API_VERSION (\\d+)\", ascendc_api_version_file.read())",
+      "native_x86_64": true,
+      "warnings": [
+        {
+          "log": "project/build.log",
+          "line": 40,
+          "kind": "unused_cross_compiler"
+        },
+        {
+          "log": "project/build.log",
+          "line": 65,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 66,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 69,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 70,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 74,
+          "kind": "python_outer_template_escape"
+        },
+        {
+          "log": "project/build.log",
+          "line": 105,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 106,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 109,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 110,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 120,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 121,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 124,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 125,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 138,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 139,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 142,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 143,
+          "kind": "vendor_header_deprecation"
+        }
+      ]
+    },
+    {
+      "entry": "pgdn_chunk_wy",
+      "block_dim": 1,
+      "template_sha256": "ec9f69a86e2d3a9da17dedab13716fa1ffad80140ea88a74cbdb8ead035ec385",
+      "cmake_sha256": "fd4330811b7720a01244b88509e39da5a5fe19ba24db0753a44361270cd7a861",
+      "matches_selected_owner": true,
+      "outer_string_start": [
+        154,
+        11
+      ],
+      "outer_string_end": [
+        211,
+        3
+      ],
+      "generated_regex": "ascendc_api_version = re.findall(r\"#define ASCENDC_API_VERSION (\\d+)\", ascendc_api_version_file.read())",
+      "native_x86_64": true,
+      "warnings": [
+        {
+          "log": "project/build.log",
+          "line": 40,
+          "kind": "unused_cross_compiler"
+        },
+        {
+          "log": "project/build.log",
+          "line": 65,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 66,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 69,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 70,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 74,
+          "kind": "python_outer_template_escape"
+        },
+        {
+          "log": "project/build.log",
+          "line": 105,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 106,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 109,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 110,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 120,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 121,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 124,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 125,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 138,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 139,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 142,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 143,
+          "kind": "vendor_header_deprecation"
+        }
+      ]
+    },
+    {
+      "entry": "pgdn_chunk_scan",
+      "block_dim": 1,
+      "template_sha256": "ec9f69a86e2d3a9da17dedab13716fa1ffad80140ea88a74cbdb8ead035ec385",
+      "cmake_sha256": "fd4330811b7720a01244b88509e39da5a5fe19ba24db0753a44361270cd7a861",
+      "matches_selected_owner": true,
+      "outer_string_start": [
+        154,
+        11
+      ],
+      "outer_string_end": [
+        211,
+        3
+      ],
+      "generated_regex": "ascendc_api_version = re.findall(r\"#define ASCENDC_API_VERSION (\\d+)\", ascendc_api_version_file.read())",
+      "native_x86_64": true,
+      "warnings": [
+        {
+          "log": "project/build.log",
+          "line": 40,
+          "kind": "unused_cross_compiler"
+        },
+        {
+          "log": "project/build.log",
+          "line": 65,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 66,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 69,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 70,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 74,
+          "kind": "python_outer_template_escape"
+        },
+        {
+          "log": "project/build.log",
+          "line": 105,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 106,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 109,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 110,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 120,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 121,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 124,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 125,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 138,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 139,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 142,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 143,
+          "kind": "vendor_header_deprecation"
+        }
+      ]
+    },
+    {
+      "entry": "pgdn_chunk_output",
+      "block_dim": 1,
+      "template_sha256": "ec9f69a86e2d3a9da17dedab13716fa1ffad80140ea88a74cbdb8ead035ec385",
+      "cmake_sha256": "fd4330811b7720a01244b88509e39da5a5fe19ba24db0753a44361270cd7a861",
+      "matches_selected_owner": true,
+      "outer_string_start": [
+        154,
+        11
+      ],
+      "outer_string_end": [
+        211,
+        3
+      ],
+      "generated_regex": "ascendc_api_version = re.findall(r\"#define ASCENDC_API_VERSION (\\d+)\", ascendc_api_version_file.read())",
+      "native_x86_64": true,
+      "warnings": [
+        {
+          "log": "project/build.log",
+          "line": 40,
+          "kind": "unused_cross_compiler"
+        },
+        {
+          "log": "project/build.log",
+          "line": 65,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 66,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 69,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 70,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 74,
+          "kind": "python_outer_template_escape"
+        },
+        {
+          "log": "project/build.log",
+          "line": 105,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 106,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 109,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 110,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 120,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 121,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 124,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 125,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 138,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 139,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 142,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 143,
+          "kind": "vendor_header_deprecation"
+        }
+      ]
+    },
+    {
+      "entry": "pgdn_bf03_atk",
+      "block_dim": 1,
+      "template_sha256": "ec9f69a86e2d3a9da17dedab13716fa1ffad80140ea88a74cbdb8ead035ec385",
+      "cmake_sha256": "fd4330811b7720a01244b88509e39da5a5fe19ba24db0753a44361270cd7a861",
+      "matches_selected_owner": true,
+      "outer_string_start": [
+        154,
+        11
+      ],
+      "outer_string_end": [
+        211,
+        3
+      ],
+      "generated_regex": "ascendc_api_version = re.findall(r\"#define ASCENDC_API_VERSION (\\d+)\", ascendc_api_version_file.read())",
+      "native_x86_64": true,
+      "warnings": [
+        {
+          "log": "project/build.log",
+          "line": 40,
+          "kind": "unused_cross_compiler"
+        },
+        {
+          "log": "project/build.log",
+          "line": 65,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 66,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 69,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 70,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 74,
+          "kind": "python_outer_template_escape"
+        },
+        {
+          "log": "project/build.log",
+          "line": 105,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 106,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 109,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 110,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 120,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 121,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 124,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 125,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 138,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 139,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 142,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 143,
+          "kind": "vendor_header_deprecation"
+        }
+      ]
+    },
+    {
+      "entry": "pgdn_bf03_prepare",
+      "block_dim": 1,
+      "template_sha256": "ec9f69a86e2d3a9da17dedab13716fa1ffad80140ea88a74cbdb8ead035ec385",
+      "cmake_sha256": "fd4330811b7720a01244b88509e39da5a5fe19ba24db0753a44361270cd7a861",
+      "matches_selected_owner": true,
+      "outer_string_start": [
+        154,
+        11
+      ],
+      "outer_string_end": [
+        211,
+        3
+      ],
+      "generated_regex": "ascendc_api_version = re.findall(r\"#define ASCENDC_API_VERSION (\\d+)\", ascendc_api_version_file.read())",
+      "native_x86_64": true,
+      "warnings": [
+        {
+          "log": "project/build.log",
+          "line": 40,
+          "kind": "unused_cross_compiler"
+        },
+        {
+          "log": "project/build.log",
+          "line": 65,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 66,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 69,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 70,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 74,
+          "kind": "python_outer_template_escape"
+        },
+        {
+          "log": "project/build.log",
+          "line": 105,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 106,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 109,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 110,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 120,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 121,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 124,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 125,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 138,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 139,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 142,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 143,
+          "kind": "vendor_header_deprecation"
+        }
+      ]
+    },
+    {
+      "entry": "pgdn_bf03_scores",
+      "block_dim": 1,
+      "template_sha256": "ec9f69a86e2d3a9da17dedab13716fa1ffad80140ea88a74cbdb8ead035ec385",
+      "cmake_sha256": "fd4330811b7720a01244b88509e39da5a5fe19ba24db0753a44361270cd7a861",
+      "matches_selected_owner": true,
+      "outer_string_start": [
+        154,
+        11
+      ],
+      "outer_string_end": [
+        211,
+        3
+      ],
+      "generated_regex": "ascendc_api_version = re.findall(r\"#define ASCENDC_API_VERSION (\\d+)\", ascendc_api_version_file.read())",
+      "native_x86_64": true,
+      "warnings": [
+        {
+          "log": "project/build.log",
+          "line": 40,
+          "kind": "unused_cross_compiler"
+        },
+        {
+          "log": "project/build.log",
+          "line": 65,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 66,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 69,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 70,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 74,
+          "kind": "python_outer_template_escape"
+        },
+        {
+          "log": "project/build.log",
+          "line": 105,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 106,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 109,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 110,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 120,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 121,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 124,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 125,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 138,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 139,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 142,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 143,
+          "kind": "vendor_header_deprecation"
+        }
+      ]
+    },
+    {
+      "entry": "pgdn_bf03_wy",
+      "block_dim": 1,
+      "template_sha256": "ec9f69a86e2d3a9da17dedab13716fa1ffad80140ea88a74cbdb8ead035ec385",
+      "cmake_sha256": "fd4330811b7720a01244b88509e39da5a5fe19ba24db0753a44361270cd7a861",
+      "matches_selected_owner": true,
+      "outer_string_start": [
+        154,
+        11
+      ],
+      "outer_string_end": [
+        211,
+        3
+      ],
+      "generated_regex": "ascendc_api_version = re.findall(r\"#define ASCENDC_API_VERSION (\\d+)\", ascendc_api_version_file.read())",
+      "native_x86_64": true,
+      "warnings": [
+        {
+          "log": "project/build.log",
+          "line": 40,
+          "kind": "unused_cross_compiler"
+        },
+        {
+          "log": "project/build.log",
+          "line": 65,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 66,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 69,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 70,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 74,
+          "kind": "python_outer_template_escape"
+        },
+        {
+          "log": "project/build.log",
+          "line": 105,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 106,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 109,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 110,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 120,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 121,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 124,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 125,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 138,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 139,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 142,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 143,
+          "kind": "vendor_header_deprecation"
+        }
+      ]
+    },
+    {
+      "entry": "pgdn_bf03_scan",
+      "block_dim": 1,
+      "template_sha256": "ec9f69a86e2d3a9da17dedab13716fa1ffad80140ea88a74cbdb8ead035ec385",
+      "cmake_sha256": "fd4330811b7720a01244b88509e39da5a5fe19ba24db0753a44361270cd7a861",
+      "matches_selected_owner": true,
+      "outer_string_start": [
+        154,
+        11
+      ],
+      "outer_string_end": [
+        211,
+        3
+      ],
+      "generated_regex": "ascendc_api_version = re.findall(r\"#define ASCENDC_API_VERSION (\\d+)\", ascendc_api_version_file.read())",
+      "native_x86_64": true,
+      "warnings": [
+        {
+          "log": "project/build.log",
+          "line": 40,
+          "kind": "unused_cross_compiler"
+        },
+        {
+          "log": "project/build.log",
+          "line": 65,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 66,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 69,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 70,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 74,
+          "kind": "python_outer_template_escape"
+        },
+        {
+          "log": "project/build.log",
+          "line": 105,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 106,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 109,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 110,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 120,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 121,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 124,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 125,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 138,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 139,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 142,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 143,
+          "kind": "vendor_header_deprecation"
+        }
+      ]
+    },
+    {
+      "entry": "pgdn_bf03_output",
+      "block_dim": 1,
+      "template_sha256": "ec9f69a86e2d3a9da17dedab13716fa1ffad80140ea88a74cbdb8ead035ec385",
+      "cmake_sha256": "fd4330811b7720a01244b88509e39da5a5fe19ba24db0753a44361270cd7a861",
+      "matches_selected_owner": true,
+      "outer_string_start": [
+        154,
+        11
+      ],
+      "outer_string_end": [
+        211,
+        3
+      ],
+      "generated_regex": "ascendc_api_version = re.findall(r\"#define ASCENDC_API_VERSION (\\d+)\", ascendc_api_version_file.read())",
+      "native_x86_64": true,
+      "warnings": [
+        {
+          "log": "project/build.log",
+          "line": 40,
+          "kind": "unused_cross_compiler"
+        },
+        {
+          "log": "project/build.log",
+          "line": 65,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 66,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 69,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 70,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 74,
+          "kind": "python_outer_template_escape"
+        },
+        {
+          "log": "project/build.log",
+          "line": 105,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 106,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 109,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 110,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 120,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 121,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 124,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 125,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 138,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 139,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 142,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 143,
+          "kind": "vendor_header_deprecation"
+        }
+      ]
+    },
+    {
+      "entry": "pgdn_chunk_atk",
+      "block_dim": 2,
+      "template_sha256": "ec9f69a86e2d3a9da17dedab13716fa1ffad80140ea88a74cbdb8ead035ec385",
+      "cmake_sha256": "fd4330811b7720a01244b88509e39da5a5fe19ba24db0753a44361270cd7a861",
+      "matches_selected_owner": true,
+      "outer_string_start": [
+        154,
+        11
+      ],
+      "outer_string_end": [
+        211,
+        3
+      ],
+      "generated_regex": "ascendc_api_version = re.findall(r\"#define ASCENDC_API_VERSION (\\d+)\", ascendc_api_version_file.read())",
+      "native_x86_64": true,
+      "warnings": [
+        {
+          "log": "project/build.log",
+          "line": 40,
+          "kind": "unused_cross_compiler"
+        },
+        {
+          "log": "project/build.log",
+          "line": 65,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 66,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 69,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 70,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 74,
+          "kind": "python_outer_template_escape"
+        },
+        {
+          "log": "project/build.log",
+          "line": 105,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 106,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 109,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 110,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 120,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 121,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 124,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 125,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 138,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 139,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 142,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 143,
+          "kind": "vendor_header_deprecation"
+        }
+      ]
+    },
+    {
+      "entry": "pgdn_chunk_prepare",
+      "block_dim": 2,
+      "template_sha256": "ec9f69a86e2d3a9da17dedab13716fa1ffad80140ea88a74cbdb8ead035ec385",
+      "cmake_sha256": "fd4330811b7720a01244b88509e39da5a5fe19ba24db0753a44361270cd7a861",
+      "matches_selected_owner": true,
+      "outer_string_start": [
+        154,
+        11
+      ],
+      "outer_string_end": [
+        211,
+        3
+      ],
+      "generated_regex": "ascendc_api_version = re.findall(r\"#define ASCENDC_API_VERSION (\\d+)\", ascendc_api_version_file.read())",
+      "native_x86_64": true,
+      "warnings": [
+        {
+          "log": "project/build.log",
+          "line": 40,
+          "kind": "unused_cross_compiler"
+        },
+        {
+          "log": "project/build.log",
+          "line": 65,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 66,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 69,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 70,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 74,
+          "kind": "python_outer_template_escape"
+        },
+        {
+          "log": "project/build.log",
+          "line": 105,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 106,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 109,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 110,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 120,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 121,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 124,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 125,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 138,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 139,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 142,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 143,
+          "kind": "vendor_header_deprecation"
+        }
+      ]
+    },
+    {
+      "entry": "pgdn_chunk_scores",
+      "block_dim": 2,
+      "template_sha256": "ec9f69a86e2d3a9da17dedab13716fa1ffad80140ea88a74cbdb8ead035ec385",
+      "cmake_sha256": "fd4330811b7720a01244b88509e39da5a5fe19ba24db0753a44361270cd7a861",
+      "matches_selected_owner": true,
+      "outer_string_start": [
+        154,
+        11
+      ],
+      "outer_string_end": [
+        211,
+        3
+      ],
+      "generated_regex": "ascendc_api_version = re.findall(r\"#define ASCENDC_API_VERSION (\\d+)\", ascendc_api_version_file.read())",
+      "native_x86_64": true,
+      "warnings": [
+        {
+          "log": "project/build.log",
+          "line": 40,
+          "kind": "unused_cross_compiler"
+        },
+        {
+          "log": "project/build.log",
+          "line": 65,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 66,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 69,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 70,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 74,
+          "kind": "python_outer_template_escape"
+        },
+        {
+          "log": "project/build.log",
+          "line": 105,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 106,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 109,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 110,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 120,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 121,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 124,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 125,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 138,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 139,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 142,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 143,
+          "kind": "vendor_header_deprecation"
+        }
+      ]
+    },
+    {
+      "entry": "pgdn_chunk_wy",
+      "block_dim": 2,
+      "template_sha256": "ec9f69a86e2d3a9da17dedab13716fa1ffad80140ea88a74cbdb8ead035ec385",
+      "cmake_sha256": "fd4330811b7720a01244b88509e39da5a5fe19ba24db0753a44361270cd7a861",
+      "matches_selected_owner": true,
+      "outer_string_start": [
+        154,
+        11
+      ],
+      "outer_string_end": [
+        211,
+        3
+      ],
+      "generated_regex": "ascendc_api_version = re.findall(r\"#define ASCENDC_API_VERSION (\\d+)\", ascendc_api_version_file.read())",
+      "native_x86_64": true,
+      "warnings": [
+        {
+          "log": "project/build.log",
+          "line": 40,
+          "kind": "unused_cross_compiler"
+        },
+        {
+          "log": "project/build.log",
+          "line": 65,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 66,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 69,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 70,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 74,
+          "kind": "python_outer_template_escape"
+        },
+        {
+          "log": "project/build.log",
+          "line": 105,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 106,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 109,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 110,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 120,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 121,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 124,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 125,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 138,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 139,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 142,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 143,
+          "kind": "vendor_header_deprecation"
+        }
+      ]
+    },
+    {
+      "entry": "pgdn_chunk_scan",
+      "block_dim": 2,
+      "template_sha256": "ec9f69a86e2d3a9da17dedab13716fa1ffad80140ea88a74cbdb8ead035ec385",
+      "cmake_sha256": "fd4330811b7720a01244b88509e39da5a5fe19ba24db0753a44361270cd7a861",
+      "matches_selected_owner": true,
+      "outer_string_start": [
+        154,
+        11
+      ],
+      "outer_string_end": [
+        211,
+        3
+      ],
+      "generated_regex": "ascendc_api_version = re.findall(r\"#define ASCENDC_API_VERSION (\\d+)\", ascendc_api_version_file.read())",
+      "native_x86_64": true,
+      "warnings": [
+        {
+          "log": "project/build.log",
+          "line": 40,
+          "kind": "unused_cross_compiler"
+        },
+        {
+          "log": "project/build.log",
+          "line": 65,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 66,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 69,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 70,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 74,
+          "kind": "python_outer_template_escape"
+        },
+        {
+          "log": "project/build.log",
+          "line": 105,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 106,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 109,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 110,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 120,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 121,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 124,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 125,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 138,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 139,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 142,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 143,
+          "kind": "vendor_header_deprecation"
+        }
+      ]
+    },
+    {
+      "entry": "pgdn_chunk_output",
+      "block_dim": 2,
+      "template_sha256": "ec9f69a86e2d3a9da17dedab13716fa1ffad80140ea88a74cbdb8ead035ec385",
+      "cmake_sha256": "fd4330811b7720a01244b88509e39da5a5fe19ba24db0753a44361270cd7a861",
+      "matches_selected_owner": true,
+      "outer_string_start": [
+        154,
+        11
+      ],
+      "outer_string_end": [
+        211,
+        3
+      ],
+      "generated_regex": "ascendc_api_version = re.findall(r\"#define ASCENDC_API_VERSION (\\d+)\", ascendc_api_version_file.read())",
+      "native_x86_64": true,
+      "warnings": [
+        {
+          "log": "project/build.log",
+          "line": 40,
+          "kind": "unused_cross_compiler"
+        },
+        {
+          "log": "project/build.log",
+          "line": 65,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 66,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 69,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 70,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 74,
+          "kind": "python_outer_template_escape"
+        },
+        {
+          "log": "project/build.log",
+          "line": 105,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 106,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 109,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 110,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 120,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 121,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 124,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 125,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 138,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 139,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 142,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 143,
+          "kind": "vendor_header_deprecation"
+        }
+      ]
+    },
+    {
+      "entry": "pgdn_bf03_atk",
+      "block_dim": 2,
+      "template_sha256": "ec9f69a86e2d3a9da17dedab13716fa1ffad80140ea88a74cbdb8ead035ec385",
+      "cmake_sha256": "fd4330811b7720a01244b88509e39da5a5fe19ba24db0753a44361270cd7a861",
+      "matches_selected_owner": true,
+      "outer_string_start": [
+        154,
+        11
+      ],
+      "outer_string_end": [
+        211,
+        3
+      ],
+      "generated_regex": "ascendc_api_version = re.findall(r\"#define ASCENDC_API_VERSION (\\d+)\", ascendc_api_version_file.read())",
+      "native_x86_64": true,
+      "warnings": [
+        {
+          "log": "project/build.log",
+          "line": 40,
+          "kind": "unused_cross_compiler"
+        },
+        {
+          "log": "project/build.log",
+          "line": 65,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 66,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 69,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 70,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 74,
+          "kind": "python_outer_template_escape"
+        },
+        {
+          "log": "project/build.log",
+          "line": 105,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 106,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 109,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 110,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 120,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 121,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 124,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 125,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 138,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 139,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 142,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 143,
+          "kind": "vendor_header_deprecation"
+        }
+      ]
+    },
+    {
+      "entry": "pgdn_bf03_prepare",
+      "block_dim": 2,
+      "template_sha256": "ec9f69a86e2d3a9da17dedab13716fa1ffad80140ea88a74cbdb8ead035ec385",
+      "cmake_sha256": "fd4330811b7720a01244b88509e39da5a5fe19ba24db0753a44361270cd7a861",
+      "matches_selected_owner": true,
+      "outer_string_start": [
+        154,
+        11
+      ],
+      "outer_string_end": [
+        211,
+        3
+      ],
+      "generated_regex": "ascendc_api_version = re.findall(r\"#define ASCENDC_API_VERSION (\\d+)\", ascendc_api_version_file.read())",
+      "native_x86_64": true,
+      "warnings": [
+        {
+          "log": "project/build.log",
+          "line": 40,
+          "kind": "unused_cross_compiler"
+        },
+        {
+          "log": "project/build.log",
+          "line": 65,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 66,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 69,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 70,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 74,
+          "kind": "python_outer_template_escape"
+        },
+        {
+          "log": "project/build.log",
+          "line": 105,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 106,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 109,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 110,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 120,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 121,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 124,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 125,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 138,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 139,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 142,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 143,
+          "kind": "vendor_header_deprecation"
+        }
+      ]
+    },
+    {
+      "entry": "pgdn_bf03_scores",
+      "block_dim": 2,
+      "template_sha256": "ec9f69a86e2d3a9da17dedab13716fa1ffad80140ea88a74cbdb8ead035ec385",
+      "cmake_sha256": "fd4330811b7720a01244b88509e39da5a5fe19ba24db0753a44361270cd7a861",
+      "matches_selected_owner": true,
+      "outer_string_start": [
+        154,
+        11
+      ],
+      "outer_string_end": [
+        211,
+        3
+      ],
+      "generated_regex": "ascendc_api_version = re.findall(r\"#define ASCENDC_API_VERSION (\\d+)\", ascendc_api_version_file.read())",
+      "native_x86_64": true,
+      "warnings": [
+        {
+          "log": "project/build.log",
+          "line": 40,
+          "kind": "unused_cross_compiler"
+        },
+        {
+          "log": "project/build.log",
+          "line": 56,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 57,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 60,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 61,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 74,
+          "kind": "python_outer_template_escape"
+        },
+        {
+          "log": "project/build.log",
+          "line": 105,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 106,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 109,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 110,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 120,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 121,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 124,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 125,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 138,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 139,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 142,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 143,
+          "kind": "vendor_header_deprecation"
+        }
+      ]
+    },
+    {
+      "entry": "pgdn_bf03_wy",
+      "block_dim": 2,
+      "template_sha256": "ec9f69a86e2d3a9da17dedab13716fa1ffad80140ea88a74cbdb8ead035ec385",
+      "cmake_sha256": "fd4330811b7720a01244b88509e39da5a5fe19ba24db0753a44361270cd7a861",
+      "matches_selected_owner": true,
+      "outer_string_start": [
+        154,
+        11
+      ],
+      "outer_string_end": [
+        211,
+        3
+      ],
+      "generated_regex": "ascendc_api_version = re.findall(r\"#define ASCENDC_API_VERSION (\\d+)\", ascendc_api_version_file.read())",
+      "native_x86_64": true,
+      "warnings": [
+        {
+          "log": "project/build.log",
+          "line": 40,
+          "kind": "unused_cross_compiler"
+        },
+        {
+          "log": "project/build.log",
+          "line": 65,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 66,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 69,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 70,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 74,
+          "kind": "python_outer_template_escape"
+        },
+        {
+          "log": "project/build.log",
+          "line": 105,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 106,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 109,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 110,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 120,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 121,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 124,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 125,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 138,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 139,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 142,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 143,
+          "kind": "vendor_header_deprecation"
+        }
+      ]
+    },
+    {
+      "entry": "pgdn_bf03_scan",
+      "block_dim": 2,
+      "template_sha256": "ec9f69a86e2d3a9da17dedab13716fa1ffad80140ea88a74cbdb8ead035ec385",
+      "cmake_sha256": "fd4330811b7720a01244b88509e39da5a5fe19ba24db0753a44361270cd7a861",
+      "matches_selected_owner": true,
+      "outer_string_start": [
+        154,
+        11
+      ],
+      "outer_string_end": [
+        211,
+        3
+      ],
+      "generated_regex": "ascendc_api_version = re.findall(r\"#define ASCENDC_API_VERSION (\\d+)\", ascendc_api_version_file.read())",
+      "native_x86_64": true,
+      "warnings": [
+        {
+          "log": "project/build.log",
+          "line": 40,
+          "kind": "unused_cross_compiler"
+        },
+        {
+          "log": "project/build.log",
+          "line": 65,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 66,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 69,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 70,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 74,
+          "kind": "python_outer_template_escape"
+        },
+        {
+          "log": "project/build.log",
+          "line": 105,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 106,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 109,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 110,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 120,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 121,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 124,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 125,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 138,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 139,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 142,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 143,
+          "kind": "vendor_header_deprecation"
+        }
+      ]
+    },
+    {
+      "entry": "pgdn_bf03_output",
+      "block_dim": 2,
+      "template_sha256": "ec9f69a86e2d3a9da17dedab13716fa1ffad80140ea88a74cbdb8ead035ec385",
+      "cmake_sha256": "fd4330811b7720a01244b88509e39da5a5fe19ba24db0753a44361270cd7a861",
+      "matches_selected_owner": true,
+      "outer_string_start": [
+        154,
+        11
+      ],
+      "outer_string_end": [
+        211,
+        3
+      ],
+      "generated_regex": "ascendc_api_version = re.findall(r\"#define ASCENDC_API_VERSION (\\d+)\", ascendc_api_version_file.read())",
+      "native_x86_64": true,
+      "warnings": [
+        {
+          "log": "project/build.log",
+          "line": 40,
+          "kind": "unused_cross_compiler"
+        },
+        {
+          "log": "project/build.log",
+          "line": 65,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 66,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 69,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 70,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 74,
+          "kind": "python_outer_template_escape"
+        },
+        {
+          "log": "project/build.log",
+          "line": 105,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 106,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 109,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 110,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 120,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 121,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 124,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 125,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 138,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 139,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 142,
+          "kind": "vendor_header_deprecation"
+        },
+        {
+          "log": "project/build.log",
+          "line": 143,
+          "kind": "vendor_header_deprecation"
+        }
+      ]
+    }
+  ],
+  "classifications": {
+    "unused_cross_compiler": {
+      "owner": "library/ascriptor/runtime/aclnn/template/CMakeLists.txt:8-26",
+      "owner_sha256": "fd4330811b7720a01244b88509e39da5a5fe19ba24db0753a44361270cd7a861",
+      "finding": "CMAKE_CROSS_PLATFORM_COMPILER is read only when ENABLE_CROSS_COMPILE is true. Every actual build logs ENABLE_CROSS_COMPILE=False and a native x86_64 package. The unused variable is not part of the selected native compilation."
+    },
+    "vendor_header_deprecation": {
+      "owner": "CANN 9.2.0 include/external/ge_common/{ge_error_codes,ge_api_types}.h:15",
+      "finding": "Vendor pragma messages announce header removal after 2027-06. The actual host registration include chain compiles and links using the selected CANN installation; no device-kernel support or synchronization warning is reported. This is not a claim about later CANN versions."
+    },
+    "python_outer_template_escape": {
+      "owner": "library/ascriptor/runtime/aclnn/template/cmake/util/ascendc_impl_build.py:154-211",
+      "finding": "All 24 generated project templates are byte-identical to the selected library owner. Python 3.12 warns about the non-raw outer triple-quoted IMPL_API string at line194; the nested generated raw regex still contains the intended backslash-d digit class. Tokenization and literal inspection confirm the preserved expression. Every vendor compiler/package/harness completed. No template, compiler option or emitted file was patched."
+    }
+  },
+  "unresolved_kernel_warnings": [],
+  "scope": "Actual CCE vendor compilation and harness linkage for six original FP32 and six native BF16 entries at block_dim1/2. Simulation, pipe simulation and other CANN environments are not qualified by these logs."
+}

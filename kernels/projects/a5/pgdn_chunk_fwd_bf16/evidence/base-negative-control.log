@@ -1,0 +1,45 @@
+.F.F                                                                     [100%]
+=================================== FAILURES ===================================
+_ test_public_dtype_state_visibility_and_graph_with_reference_launch[False-dtype1] _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xffff78e65fd0>
+dtype = torch.bfloat16, final = False
+
+    @pytest.mark.parametrize('dtype', [torch.float32, torch.bfloat16])
+    @pytest.mark.parametrize('final', [False, True])
+    def test_public_dtype_state_visibility_and_graph_with_reference_launch(monkeypatch, dtype, final):
+        """CPU callback exercises marshaling only, never claims kernel execution."""
+        import ascriptor.runtime
+        inputs = data(128)
+        for name in ('q','k','v'): inputs[name] = inputs[name].to(dtype)
+        widened = {n: x.float() for n, x in inputs.items()}
+        expected = ref.reference_stages(widened)
+        seen = []
+>       pipeline = public._bf16_pipeline() if dtype == torch.bfloat16 else public._pipeline()
+E       AttributeError: module 'ascend_fla.ops.pgdn_chunk_fwd' has no attribute '_bf16_pipeline'
+
+tmp/GDN-series/repo/tests/test_pgdn_chunk_fwd.py:223: AttributeError
+_ test_public_dtype_state_visibility_and_graph_with_reference_launch[True-dtype1] _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xffff7a5f4e90>
+dtype = torch.bfloat16, final = True
+
+    @pytest.mark.parametrize('dtype', [torch.float32, torch.bfloat16])
+    @pytest.mark.parametrize('final', [False, True])
+    def test_public_dtype_state_visibility_and_graph_with_reference_launch(monkeypatch, dtype, final):
+        """CPU callback exercises marshaling only, never claims kernel execution."""
+        import ascriptor.runtime
+        inputs = data(128)
+        for name in ('q','k','v'): inputs[name] = inputs[name].to(dtype)
+        widened = {n: x.float() for n, x in inputs.items()}
+        expected = ref.reference_stages(widened)
+        seen = []
+>       pipeline = public._bf16_pipeline() if dtype == torch.bfloat16 else public._pipeline()
+E       AttributeError: module 'ascend_fla.ops.pgdn_chunk_fwd' has no attribute '_bf16_pipeline'
+
+tmp/GDN-series/repo/tests/test_pgdn_chunk_fwd.py:223: AttributeError
+=========================== short test summary info ============================
+FAILED tmp/GDN-series/repo/tests/test_pgdn_chunk_fwd.py::test_public_dtype_state_visibility_and_graph_with_reference_launch[False-dtype1]
+FAILED tmp/GDN-series/repo/tests/test_pgdn_chunk_fwd.py::test_public_dtype_state_visibility_and_graph_with_reference_launch[True-dtype1]
+2 failed, 2 passed in 0.47s
+EXPECTED_BASE_NEGATIVE_CONTROL_FAILURE 1
