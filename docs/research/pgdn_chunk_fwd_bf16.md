@@ -53,7 +53,7 @@ FP32 公共路径继续执行原六个 kernel。公共入口移除输入输出 h
 
 ## 验证状态
 
-本节随新证据更新。首次完整 workload 与 bd1/bd2 全网格已通过；性能验收仍在进行，
+首次完整 workload、bd1/bd2 全网格与同卡性能测量均已通过，
 未执行模拟或管线模拟。
 主机全套为 918 passed / 9 skipped / 5 warnings；其中原 PGDN 测试 104 项、
 新增 BF16 测试 38 项均通过，规范 reference 阶段 66 项通过。
@@ -109,12 +109,37 @@ NaN 预填、输入字节不变与两种 dtype 的真实 NPU host 算子审计�
 2,056 个源码/编译产物文件的字节数与 SHA256 见 `evidence/builds/`。
 432 条含 warning 的日志行均保留：CMake 未使用跨编译变量（实际选 native x86_64），
 CANN 头文件计划于 2027-06 后移除的 pragma 提示，以及 Python 3.12 对外层模板
-字符串中 `\\d` 的转义提示。逐份模板与选定 library 字节相同，嵌套生成的 raw regex
+字符串中 `\d` 的转义提示。逐份模板与选定 library 字节相同，嵌套生成的 raw regex
 保留原意；未改库、厂商文件、编译选项或生成代码。没有未解释的 kernel/同步警告。
 
-同卡测量使用 pristine main 的完整 FP32 公共入口作为 baseline，
-BF16 输入舍入值在测量外生成。T1024/4096、H8、bd2 各做三轮
-FP32/BF16/FP32，每段 warmup10/repeat50，每次调用前后同步；不设速度门槛。
+运行时完整日志共 20 份、1,310 行，没有 ERROR/FATAL/CRITICAL。
+10 条 warning 分属两类：插件升级策略查询失败后显式采用默认策略，以及 TensorFlow
+框架库预加载失败。新的独立 torch/torch_npu 进程在不导入本任务 kernel 的情况下
+复现两类提示，128 元素 NPU 传输/乘加/同步返回值精确正确，调度器初始化成功。
+证据见 `evidence/runtime/runtime-review.json` 和 `startup-control-v1*`。
+TensorFlow 库缺失的具体原因未定位，不声明该后端支持；本任务的 CCE/Torch NPU
+资格来自各条实际返回数组，不从启动对照外推。
+
+运行前校验源码，结束后再次读取哈希：两网格、性能与启动对照的完整运行源码
+与各自运行前清单相同；初次完整运行之后只更新了 benchmark 的预算字段和
+case 日志元数据，kernel/公共入口从未在运行期间修改。最终仅追加验证状态和文档，
+逐项来源见 `evidence/native-post-run-sources.json` 与交付清单。
+
+同卡测量已完成，使用 pristine main 的完整 FP32 公共入口作为 baseline，
+给它喂与 BF16 路径相同的 BF16 舍入后数值（存为 FP32），输入在测量外生成。
+B1、T1024/4096、H=HV8、K=V128、bd2 各做三轮 FP32/BF16/FP32，
+每段 warmup10/repeat50，每次调用前后同步；共 900 个样本、180 次 warmup。
+测量前后双 oracle、状态字节、BF16 舍入输出字节及输入不变检查均通过。
+下表 baseline 为每轮两段 FP32 中位数的均值再取三轮中位数；比值先逐轮求再取中位数。
+
+| T | 原 FP32 完整调用 ms | BF16 完整调用 ms | 配对 FP32/BF16 比值 |
+| --- | --- | --- | --- |
+| 1024 | 143.957737 | 144.2576425 | 0.9976654 |
+| 4096 | 566.7901335 | 567.0028915 | 0.9996248 |
+
+两种路径耗时基本持平，不设速度门槛，不作 Cube 吞吐提升声明。
+每轮中位数、baseline 前后漂移和全部原始样本见 `evidence/timing-summary.json`
+与 `sandwich-bd2-v1.json`；完整环境/源码/健康/锁回执随同保留。
 未运行的 CUDA/Triton 或权重验证不作声称。
 
 实现前校准已完成：66/66 个 CPU A/B 对照通过。最大相对 L2 分别为

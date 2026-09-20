@@ -35,6 +35,27 @@ inputs, original FP32 byte equality and host dispatch. All kernels are compiled
 before first CANN operator resolution; run each block_dim in a separate process.
 Machine selection, locks and outputs belong to external ignored configuration.
 
+After acquiring the assigned device lock and checking environment/source identity,
+run the first full workload, then the full grid in separate processes for each
+block dimension. `baseline-root` is a pristine checkout of the recorded base.
+
+```bash
+python benchmark.py --block-dim 2 --case pgdn340m_bd2 --baseline-root <pristine-base> --output <ignored-full-json>
+python benchmark.py --block-dim 2 --case all --baseline-root <pristine-base> --output <ignored-bd2-json>
+python benchmark.py --block-dim 1 --case all --baseline-root <pristine-base> --output <ignored-bd1-json>
+python measure.py --block-dim 2 --baseline-root <pristine-base> --baseline-sha <recorded-wrapper-sha256> --output <ignored-timing-json>
+```
+
+Use an isolated cache/output directory per block dimension and make only the
+selected device visible. The benchmark creates inputs and both references in the
+same native Python process; it does not import a remote reference result.
+
+The complete native grid passed 132/132 records. Across block dimensions, all
+1,122 independent stage-array hash pairs match; the 66 FP32 public results match
+the original entry byte for byte. Host tests: 918 passed, 9 skipped, 5 preexisting
+CPU-environment pytest warnings. See the [evidence index](evidence/README.md) for
+actual build, device, numerical, dispatch and source-identity receipts.
+
 The implementation preserves the FP32 Vector arithmetic; it makes no Cube
 throughput claim. Precision budgets were committed before kernel code:
 `o` and main state each use `min(1e-2,3F)` against each oracle; ATK uses `1e-4`.

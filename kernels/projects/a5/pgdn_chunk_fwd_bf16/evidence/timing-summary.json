@@ -1,0 +1,105 @@
+{
+  "passed": true,
+  "measured_samples": 900,
+  "warmup_calls": 180,
+  "block_dim": 2,
+  "baseline": "Pristine main FP32 public entry on BF16-rounded FP32 input values",
+  "scope": "All six launches, allocations and existing read-only validation/synchronizations",
+  "synchronization": "NPU synchronize before and after every call, perf_counter_ns, milliseconds",
+  "cases": [
+    {
+      "case": {
+        "id": "T1024",
+        "seed": 174024,
+        "dtype": "bfloat16",
+        "parameters": {
+          "B": 1,
+          "T": 1024,
+          "H": 8,
+          "HV": 8,
+          "N": 16
+        }
+      },
+      "rounds": [
+        {
+          "round": 0,
+          "original_fp32_before_ms": 143.926516,
+          "native_bf16_ms": 144.25764249999997,
+          "original_fp32_after_ms": 143.9152065,
+          "baseline_midpoint_ms": 143.92086125,
+          "baseline_over_candidate_ratio": 0.9976654183157058,
+          "baseline_drift_percent": -0.00785782933839796
+        },
+        {
+          "round": 1,
+          "original_fp32_before_ms": 143.827493,
+          "native_bf16_ms": 144.18167649999998,
+          "original_fp32_after_ms": 144.087981,
+          "baseline_midpoint_ms": 143.957737,
+          "baseline_over_candidate_ratio": 0.9984468241357981,
+          "baseline_drift_percent": 0.18111140962460137
+        },
+        {
+          "round": 2,
+          "original_fp32_before_ms": 144.05040100000002,
+          "native_bf16_ms": 145.965645,
+          "original_fp32_after_ms": 145.0909545,
+          "baseline_midpoint_ms": 144.57067775000002,
+          "baseline_over_candidate_ratio": 0.99044318099646,
+          "baseline_drift_percent": 0.7223537683869408
+        }
+      ],
+      "median_baseline_midpoint_ms": 143.957737,
+      "median_bf16_ms": 144.25764249999997,
+      "median_paired_baseline_over_candidate_ratio": 0.9976654183157058
+    },
+    {
+      "case": {
+        "id": "T4096",
+        "seed": 177096,
+        "dtype": "bfloat16",
+        "parameters": {
+          "B": 1,
+          "T": 4096,
+          "H": 8,
+          "HV": 8,
+          "N": 64
+        }
+      },
+      "rounds": [
+        {
+          "round": 0,
+          "original_fp32_before_ms": 566.718912,
+          "native_bf16_ms": 566.8563995,
+          "original_fp32_after_ms": 568.203447,
+          "baseline_midpoint_ms": 567.4611795000001,
+          "baseline_over_candidate_ratio": 1.0010669016007114,
+          "baseline_drift_percent": 0.26195261329129416
+        },
+        {
+          "round": 1,
+          "original_fp32_before_ms": 566.5700105000001,
+          "native_bf16_ms": 567.0557275,
+          "original_fp32_after_ms": 566.7662115,
+          "baseline_midpoint_ms": 566.6681110000001,
+          "baseline_over_candidate_ratio": 0.9993164401994337,
+          "baseline_drift_percent": 0.03462961264519837
+        },
+        {
+          "round": 2,
+          "original_fp32_before_ms": 566.86433,
+          "native_bf16_ms": 567.0028915,
+          "original_fp32_after_ms": 566.7159369999999,
+          "baseline_midpoint_ms": 566.7901334999999,
+          "baseline_over_candidate_ratio": 0.9996247673456528,
+          "baseline_drift_percent": -0.02617786869744121
+        }
+      ],
+      "median_baseline_midpoint_ms": 566.7901334999999,
+      "median_bf16_ms": 567.0028915,
+      "median_paired_baseline_over_candidate_ratio": 0.9996247673456528
+    }
+  ],
+  "source_result_sha256": "4cd798d8dd436b3e4b9b803e27aef79d2d2d4c780d5a6a03b36f4b7ddd61f9d7",
+  "no_speed_gate": true
+}
