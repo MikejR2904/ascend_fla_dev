@@ -182,7 +182,7 @@ def finalize_post_a2_kernel(
 
             for r in range(0, L):  # one cast per packed row: the column is 32-byte strided, not contiguous
                 cast(dbeta_b_ub[r:r + 1, 0:1], dbeta_f_ub[r:r + 1, 0:1], round_mode=RoundMode.TO_EVEN, count=1)
-            ub_to_gm_pad(dbeta_out[row0:row0 + L, hv_idx:hv_idx + 1], dbeta_b_ub[0:L, 0:1], L, 1, HV - 1, 0)
+            ub_to_gm_pad(dbeta_out[row0:row0 + L, hv_idx:hv_idx + 1], dbeta_b_ub[0:L, 0:1], L, 1, 0, HV - 1)
             cast(dg_b_ub[0:L, 0:D], dg_f_ub[0:L, 0:D], round_mode=RoundMode.TO_EVEN, count=n_d)
             dg_out[row0:row0 + L, hv_col:hv_col + D] <<= dg_b_ub[0:L, 0:D]
             dq_hv_out[b_idx, hv_idx, c_idx, 0:L, 0:D] <<= dq_out_ub[0:L, 0:D]

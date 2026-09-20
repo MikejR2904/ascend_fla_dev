@@ -197,6 +197,6 @@ def inverse_epilogue_a2_kernel(
             dg_core[row0:row0 + L, hv_col:hv_col + D] <<= out_b_ub[0:L, 0:D]
             cast(out_b_ub[0:L, 0:D], kexp_f_ub[0:L, 0:D], round_mode=RoundMode.TO_EVEN, count=n_d)
             k_exp[b_idx, hv_idx, c_idx, 0:L, 0:D] <<= out_b_ub[0:L, 0:D]
-            ub_to_gm_pad(dbeta[row0:row0 + L, hv_idx:hv_idx + 1], dbeta_f_ub[0:L, 0:1], L, 1, HV - 1, 0)
+            ub_to_gm_pad(dbeta[row0:row0 + L, hv_idx:hv_idx + 1], dbeta_f_ub[0:L, 0:1], L, 1, 0, HV - 1)
 
     return dq_hv, dk_hv, dv, dbeta, dg_core, k_exp
