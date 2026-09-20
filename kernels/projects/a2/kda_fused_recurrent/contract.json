@@ -1,0 +1,256 @@
+{
+ "schema": "ascriptor.kernel-unit/1",
+ "id": "a2.kda_fused_recurrent",
+ "kind": "kernel",
+ "description": "A2 (c220) KDA decode / speculative decode (T <= 16): state resident in UB, two row passes per token. Re-authored from this repository's A5 kda_fused_recurrent for the A2 facade (tile-vector ops, no @vf). Reads the public token-major BF16/FP32 tensors directly; casts, scale and the GQA head map are in-kernel.",
+ "inputs": {
+  "q": {
+   "dtype": "bfloat16",
+   "shape": [
+    "B",
+    "T",
+    "H",
+    128
+   ]
+  },
+  "k": {
+   "dtype": "bfloat16",
+   "shape": [
+    "B",
+    "T",
+    "H",
+    128
+   ]
+  },
+  "v": {
+   "dtype": "bfloat16",
+   "shape": [
+    "B",
+    "T",
+    "HV",
+    128
+   ]
+  },
+  "g": {
+   "dtype": "float32",
+   "shape": [
+    "B",
+    "T",
+    "HV",
+    128
+   ],
+   "note": "log-space per-token gate"
+  },
+  "beta": {
+   "dtype": "float32",
+   "shape": [
+    "B",
+    "T",
+    "HV"
+   ]
+  },
+  "initial_state": {
+   "dtype": "float32",
+   "shape": [
+    "B",
+    "HV",
+    128,
+    128
+   ],
+   "note": "key-major [K, V]"
+  }
+ },
+ "outputs": {
+  "o": {
+   "dtype": "bfloat16",
+   "shape": [
+    "B",
+    "T",
+    "HV",
+    128
+   ]
+  },
+  "final_state": {
+   "dtype": "float32",
+   "shape": [
+    "B",
+    "HV",
+    128,
+    128
+   ]
+  }
+ },
+ "domain": {
+  "B": "positive",
+  "H_HV": "positive; HV % H == 0",
+  "T": "1..16 (T_MAX)",
+  "K": 128,
+  "V": 128,
+  "block_dim": [
+   1,
+   2
+  ],
+  "block_dim_note": "Only 1 and 2 have been run on the A2 device; the A5 list (up to 28) is not inherited.",
+  "gate_span": "no chunk-span limit: each token uses exp(g) of that token only"
+ },
+ "dependencies": {
+  "python": ">=3.10",
+  "ascriptor": "==0.1.0 (library 90cfcdc720bbcd66e8bd4361c4dd4fbc1a2a57b5)",
+  "host": [
+   "torch",
+   "numpy"
+  ],
+  "derived_from": "a5 kda_fused_recurrent (this repository)"
+ },
+ "comparison": {
+  "default": {
+   "mode": "allclose",
+   "rtol": 1e-05,
+   "atol": 1e-06,
+   "max_relative_l2": 1e-05,
+   "reason": "final_state is FP32 end to end; the A5 decode budget is kept (A2 kernel measured 4e-8..1e-7 on device)."
+  },
+  "outputs": {
+   "o": {
+    "mode": "allclose",
+    "rtol": 0.01,
+    "atol": 0.0001,
+    "max_relative_l2": 0.005,
+    "reference_dtype": "float32",
+    "reason": "o is written in BF16 (D-PM-35); its floor is the BF16 rounding of the FP32 result, measured 1.63e-3..1.71e-3 relative L2. The budget is about 3x that floor, fixed before the unit runs."
+   }
+  }
+ },
+ "cases": [
+  {
+   "id": "single_token",
+   "seed": 2026,
+   "block_dim": 1,
+   "parameters": {
+    "B": 1,
+    "T": 1,
+    "H": 1,
+    "HV": 1
+   }
+  },
+  {
+   "id": "single_token_gva",
+   "seed": 2026,
+   "block_dim": 1,
+   "parameters": {
+    "B": 1,
+    "T": 1,
+    "H": 1,
+    "HV": 2
+   }
+  },
+  {
+   "id": "speculative_4",
+   "seed": 2026,
+   "block_dim": 1,
+   "parameters": {
+    "B": 1,
+    "T": 4,
+    "H": 1,
+    "HV": 1
+   }
+  },
+  {
+   "id": "t_max",
+   "seed": 2026,
+   "block_dim": 1,
+   "parameters": {
+    "B": 1,
+    "T": 16,
+    "H": 1,
+    "HV": 1
+   }
+  },
+  {
+   "id": "kimi_decode",
+   "seed": 7,
+   "block_dim": 2,
+   "parameters": {
+    "B": 1,
+    "T": 1,
+    "H": 32,
+    "HV": 32
+   }
+  },
+  {
+   "id": "kimi_decode_gqa",
+   "seed": 2026,
+   "block_dim": 2,
+   "parameters": {
+    "B": 1,
+    "T": 1,
+    "H": 16,
+    "HV": 32
+   }
+  },
+  {
+   "id": "batch2_spec8_gqa",
+   "seed": 11,
+   "block_dim": 1,
+   "parameters": {
+    "B": 2,
+    "T": 8,
+    "H": 4,
+    "HV": 8
+   }
+  },
+  {
+   "id": "zero_state",
+   "seed": 5,
+   "block_dim": 2,
+   "parameters": {
+    "B": 1,
+    "T": 2,
+    "H": 2,
+    "HV": 4,
+    "initial_state": "zero"
+   }
+  }
+ ],
+ "support": [
+  {
+   "device": "a2",
+   "backend": "cce",
+   "stage": "reference",
+   "status": "passed",
+   "scope": "All 8 contract cases (A2-03, pin library 90cfcdc / kernels b3b3f9c); evidence/unit/<stage>.json."
+  },
+  {
+   "device": "a2",
+   "backend": "cce",
+   "stage": "sim",
+   "status": "passed",
+   "scope": "All 8 contract cases (A2-03, pin library 90cfcdc / kernels b3b3f9c); evidence/unit/<stage>.json."
+  },
+  {
+   "device": "a2",
+   "backend": "cce",
+   "stage": "pipesim",
+   "status": "passed",
+   "scope": "All 8 contract cases (A2-03, pin library 90cfcdc / kernels b3b3f9c); evidence/unit/<stage>.json. Event balance empty, no hazard, no deadlock."
+  },
+  {
+   "device": "a2",
+   "backend": "cce",
+   "stage": "board",
+   "status": "untested",
+   "note": "All 8 cases were run on an Ascend 910B3 (CANN 9.0.0) through the aclnn launcher and matched their budgets (evidence/unit/aclnn.json). They are recorded as observations: AGENTS.md section 2 says an A2 number is not an operator conclusion before A2-11, so this row stays untested."
+  }
+ ],
+ "provenance": {
+  "derived_from": {
+   "unit": "a5 kda_fused_recurrent",
+   "repository": "this repository"
+  },
+  "changes": [
+   "No @vf on A2: one tile-vector op per state row, per-row scalars via Var.GetValueFrom, A5 accumulation order.",
+   "Public token-major BF16 q/k/v and FP32 g/beta read directly (2-D GM views); the A5 host-side fp32 cast, BHV permute, GQA repeat and scale pre-multiply are gone.",
+   "o written in BF16 with a round-to-nearest-even cast."
+  ]
+ }
+}
