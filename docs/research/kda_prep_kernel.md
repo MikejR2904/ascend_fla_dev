@@ -207,3 +207,14 @@ It reports compatibility padding, not a requested tensor-arithmetic change.
 Every native input/output guard passed; the notice was not suppressed.
 Runtime/source line numbers differ, so the reported git version alone is not
 asserted to prove an unmodified binary. See native/allocator-notice.json.
+
+The18-value native primitive trace now locates two distinct boundaries
+(`native/endpoint-v1-bd4/stages.json`). At−100/−90/−88, native `exp`
+returns0 where CPU FP32 returns subnormal values. At−87/−86/−40/−20,
+native `exp` and native `log1p(exp(x))` retain nonzero normal values, but
+native `softplus` returns0; at−16 it returns1.1920928244535389e−7 versus
+CPU1.1253516873921399e−7. The observed softplus values match the cancellation
+boundary of `ln(1+exp(x))`; this is an inference from operation results, not
+a claim about unavailable vendor implementation source. The candidate's
+compensated branch retains the independent CPU/FP64 value within the frozen
+ordinary threshold-case budgets. Endpoint owner review remains pending.
