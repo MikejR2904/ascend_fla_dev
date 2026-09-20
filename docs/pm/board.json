@@ -897,7 +897,7 @@
       },
       "spec": "docs/pm/tasks/BF-06.md",
       "issue": 105,
-      "pr": null,
+      "pr": 114,
       "assignee": "limjiunnbin",
       "assignee_caps": {
         "agent": "Codex，KDA/PKDA session（自述）",
@@ -953,6 +953,14 @@
         {
           "at": "2026-09-20T01:22",
           "summary": "PM 裁定（D-PM-41，实现前 / 运行前定死）：三层全部保留、分别报告——① decode 自身，从实际收到的状态起算两个独立 CPU FP32 oracle，o ≤ min(1e-2, 3F)、state ≤ 1e-5，不放宽；② 一次 16 token 与 16 次单 token 串接逐位相同；③ 端到端（prefill 64 / 128 + decode 64 对一次性 stable 长前向），o 与 final_state 对两个全序列 CPU FP32 oracle 分别报告，通过线 = min(1e-2, 3·E_oneshot)（E_oneshot = 同次真机运行里一次性长前向对同一 oracle 的相对 L2，自校准），不采用契约里 0.05 的宽线；前缀段与后缀段各自单列、各自也过同一条线，链对一次性长前向的相对 L2 单列作参考、不设门槛。层 3 的线现在定死，过不了要如实报数并发 RISK，不得改线。规格已补一节，#105 已回复。"
+        },
+        {
+          "at": "2026-09-20T01:25",
+          "summary": "STATUS（01:25Z，自述）+ draft PR #114（提交 e7ad827 / 3f09bd2 / c842662）：实现两条 native token-major decode 路径——kernel 内做 BF16 widen、FP32 q*scale、GVA addressing、BF16 RNE 输出，状态始终 FP32；原 FP32 单元与 _prepare_inputs 不改；PM 预批准的 8 个 raw-flags 用例已适配新 ABI（零容差、独立参考保留）。默认入口主机代理审计只有两次 empty；源码发射检查发现隐式跨头 DMA 行间隔为 0，改用 owner 契约的显式 padded-DMA 参数，符号 view 在选定库里明确被拒（未改库 / 生成代码），初始失败生成物保留；两个新 entry 降级、event balance、CCE emission 通过。CPU 精度 82/82，BF16 内部 state 负对照 81/82 被拒（预算在 kernel 实现前已提交）；全量主机 pytest 768 passed / 5 skipped；独立单元 CPU reference 83 passed（不导入 DSL / kernel / simulator）；两个新 vendor 在 bd4 编译通过，17 项依赖（含九个 backward）先编完再首次执行。blockers: prefill 全链口径待 RISK 裁定（不阻塞其他网格）。"
+        },
+        {
+          "at": "2026-09-20T01:29",
+          "summary": "STATUS（01:29Z，自述）：首次完整硬件 workload（B2 / T16 / H4 / HV32、非零 state、bd4）BF16 与 FP32 都通过，17 项 vendor 含九个 backward 全部在首次自定义 kernel 前编完注册；FP32 新路径与只读原实现的 o / state 逐位相同。CPU FP32 双 oracle（喂 BF16 实际舍入输入）结果一致：BF16 o 相对 L2 1.6565e-3（F = 1.6565e-3，预算 4.970e-3）、max_abs 5.63e-5，final_state 1.53e-7（预算 1e-5）；新 FP32 o 1.94e-7，原 FP32 o / state 逐位相同；两 dtype 默认实际公共入口 host 审计通过、输入未修改、NaN 预填全覆盖。其余验收（bd1/2/4 完整网格、bd8/16/28 完整 workload + 边界、跨 bd 哈希、raw-flags 单列审计、prefill 链、三轮性能、Torch NPU 基线）在进行，不因 vendor 或这一组 native 通过提交 DONE。blockers: prefill 全链预算待裁定（PM 已在 01:22Z 裁定，评论 5746672559，见 D-PM-41；已在 #105 再指一次）。PM 对 draft PR #114 只做早期扫描（非评审）：15 个文件（13 新增 2 修改）全在写集内、无保留路径 / .github / pyproject / 二进制、新增行无 IP / 用户目录 / UUID / 令牌；DONE 前不审。"
         }
       ],
       "result": null,
