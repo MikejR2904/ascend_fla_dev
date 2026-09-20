@@ -789,7 +789,7 @@
       "wave": "W0",
       "soc": "a5",
       "priority": "P0",
-      "status": "in_progress",
+      "status": "done",
       "model": [],
       "kernel": [
         "pgdn_chunk_fwd"
@@ -815,7 +815,7 @@
       },
       "spec": "docs/pm/tasks/BF-03.md",
       "issue": 102,
-      "pr": null,
+      "pr": 121,
       "assignee": "limjiunnbin",
       "assignee_caps": {
         "agent": "Codex；GDN / PGDN 序列的续接 session（自述）",
@@ -871,9 +871,37 @@
         {
           "at": "2026-09-20T16:25",
           "summary": "STATUS（16:11Z，自述，#102）：grid-bd1-v1 完成 66/66，与 bd2 合计 132 条原生记录（BF16 / FP32 各 66），运行前后健康；完整 workload 先行记录与网格重跑的输入 / 输出 / 17 阶段哈希相同。从实际 JSON 复算：跨 bd 66 组 case / dtype 的 17 数组共 1122 对 SHA256 一致（公共 3 输出另查 198 对）；66 个 FP32 公共结果对 pristine 入口逐位相同；132 条输入字节不变；16 项零预算严格通过；全部生产 host 算子列表相同（zeros 1 + empty 17，原校验单列）。最差相对 L2：BF16 两 oracle 合计 o = 1.6806e-3、主 state = 3.228e-6、ATK = 6.010e-7；FP32 两 oracle 合计 o = 2.455e-6、主 state = 3.202e-6、ATK = 5.814e-7；所有公共非零预算项的最大 error / budget = 0.33333；逐 case F、relL2、max_abs 与预算保留。24 个实际构建均完成，432 条含 warning 的日志行逐类保留并定位到原模板 / CANN 头文件，未发现未解释的 kernel 或同步警告，未改 library / CANN / 生成文件。下一步（自述）：同卡 bd2、B1/H=HV8、T1024 / 4096 的三轮 FP32 / BF16 / FP32 测量已启动（每段 warmup 10 / repeat 50、每次前后同步），随后独立启动对照定位两类 runtime 启动警告、整理脱敏文本证据和 PR，再 DONE。PM：无需裁定；距 ASSIGN 7.7h / 24h。"
+        },
+        {
+          "at": "2026-09-20T17:10",
+          "summary": "STATUS（16:24Z，自述，#102）：sandwich-bd2-v1 完成（B1/H=HV8/K=V128/bd2，T1024 / 4096 各三轮原 FP32 / BF16 / 原 FP32，warmup 10 / repeat 50、每次前后 NPU 同步，900 个样本、180 次 warmup，前后 A/B、舍入输出字节 / 两类状态字节及输入不变均通过）；startup-control-v1 完成（新的 torch / torch_npu 子进程不导入 task kernel，128 元素 NPU 传输 / 乘加 / 同步返回值精确正确；两类 runtime 启动 warning 复现，20 份 runtime 日志 1310 行无 ERROR / FATAL / CRITICAL，10 条 warning 全部分类，不声明 TensorFlow 支持，具体缺库原因未定位）；64 个交付 runtime 源码文件与实际运行逐字节一致，最终 contract 只追加 support / measured 元数据。"
+        },
+        {
+          "at": "2026-09-20T17:10",
+          "summary": "DONE（16:27Z，自述，PR #121 头 30183aea，8 个提交 315cb3d…30183ae，非 draft）：验收六项全勾（host 审计 zeros1 + empty17；校准先行 315cb3d 后才实现 kernel、min(1e-2, 3F) 从未放宽、16 项零预算严格；B1/T4096/H=HV8 完整 workload 先跑 + 33 个 shape/seed × 两 dtype × bd1/2 共 132 条全过、跨 bd 1122 对独立数组哈希一致、66 条 FP32 公共结果改前改后逐位相同；同卡三轮 900 样本；域 / 写集（旧测试仅改预批准函数、其余顶层 AST 逐节点相同、base 入口负对照 2 个 BF16 失败 / 2 个 FP32 通过）；预算对 A / B 逐 case 全过，最差 BF16 relL2 o 1.68059e-3、主 state 3.22841e-6、ATK 6.01047e-7，最大非零 error / budget 0.3333338）。环境（自述）：A5 Ascend950PR_9589V100、CANN 9.2.0、compiler / opp timestamp 20260805_101249091、opp 含 ascend950 / ascend910_93 / ascend910b；主机全量 918 passed / 9 skipped / 5 warnings。证据入口 kernels/projects/a5/pgdn_chunk_fwd_bf16/evidence/README.md 与 manifest.json；无 Cube 吞吐 / sim / pipesim / CUDA / Triton / 权重验证声称；用户要求 PGDN 后停，本 session 不申请后续任务，请勿派回。"
+        },
+        {
+          "at": "2026-09-20T17:10",
+          "summary": "PM 评审（accept，全部在 NPU-free 环境从原始文件独立复算）：(1) 范围与卫生：138 个文件全在写集内（含预批准的 tests/test_pgdn_chunk_fwd.py 单函数）、reserved_paths 0 命中、FP32 单元 kernels/projects/a5/pgdn_chunk_fwd/ 与 base 零 diff、无二进制、8 个提交各自新增 blob 最大 1.14 MB（<5 MB）、隐私扫描 0 命中（IP / 绝对路径 / uuid / token / 账号；提交信息也 0）、全部 JSON 可解析。小事：base-negative-control.log 有 4 行私有工作目录的相对路径片段（tmp/GDN-series/repo/…），不是绝对路径 / 主机 / 账号，不阻塞。(2) 预算先于实现：首提交 315cb3d（66 条校准 + 预算规则 + 契约 + 参考）先于 kernel 提交 28dcb15；calibration-pre-kernel.* 与 ref/* 自首提交起逐字节未变；首提交文档已声明「设备运行现场生成输入与独立参考、按同一公式重新求 F」。PM 复算：现场 F 与首提交校准 F 因 torch 2.10 → 2.12 相差 ≤ 2.0e-4（相对，两个方向各 126 项、150 项相同）；所有 402 个 BF16 公共项对首提交冻结的预算也全过（最差 0.3334）——预算没有被放宽。(3) 原始 JSON 复算（132 条网格 + 2 条完整 workload）：5360 项比较 0 超预算、全部有限；24 个零预算项全为 0；最大 relL2 与 native-summary 逐项一致（BF16 o 1.6806e-3 / 1.6806e-3、主 state 2.215e-6 / 3.228e-6、ATK 6.010e-7 / 4.789e-7；FP32 o 1.534e-6 / 2.455e-6、主 state 2.182e-6 / 3.202e-6、ATK 5.814e-7 / 4.653e-7）；最大 error / budget 0.3333338；66 个 (case, dtype) 的 bd1 vs bd2：1122 对 stage 数组 + 198 对公共输出 SHA256 全同；67 个 FP32 公共结果与 pristine 入口字节相同；134 条输入不变；host 生产算子并集只有 zeros × 1 + empty × 17（通则允许的分配）、forbidden 空。33 个 shape 覆盖 {1,2,4,8} × C{1,2,3} + C=64、B=2 / H3 / HV12、H8 与 H14、零 / 近零 norm、强 / 弱 / 零门控、beta / beta_atk 端点、clamp。(4) 三明治：900 样本从原始样本复算——T1024 143.957737 / 144.2576425 ms（BF16 / baseline 1.00234），T4096 566.7901335 / 567.0028915 ms（1.000375）；如实持平、无速度门槛（DONE 里的配对比值 0.9977 / 0.9996 是 baseline / candidate 方向，即 BF16 慢 0.23% / 0.04%）。(5) 环境与源码身份：每份回执自带 CANN 9.2.0、compiler / opp timestamp 20260805_101249091、version.info SHA256、innerversion；65 个源码哈希与提交树逐个对上 64 个，唯一不同是 contract.json（实际运行的是 28dcb15 那份 2bbb076b…，最终只追加 support / measured，语义 diff 除这两处外为空；首提交到运行版本之间只有 reference_dtype 从 outputs / stages 挪到 comparison，预算未动）；evidence manifest 118 条逐个核对无误、无未列入清单的文件。(6) 入口与测试：pgdn_chunk_fwd.py 的 diff 只有 BF16 分派与去掉 q/k/v.float() 与 o.to(dtype)（缺省 state 的 zeros 属通则允许的分配）；tests/test_pgdn_chunk_fwd.py 的 AST 34/34 顶层定义只有获批的那一个函数变了、4 条断言原样；把入口与该测试文件换回 base，新测试文件 13 failed / 25 passed（负对照成立）。(7) NPU-free 全量（PR 合并到当前 main 上预演）：915 passed, 12 skipped, 5 warnings in 324.02s (0:05:24)，预测 877 + 38 = 915 passed / 12 skipped（申领人的 918 / 9 是其环境多 3 个可跑的测试）。"
+        },
+        {
+          "at": "2026-09-20T17:10",
+          "summary": "合入（PR #121 → 96eada0，合入的是审过的头 30183aea；依 D-PM-33 PM 自行合入——真机原始证据 PM 逐项复算成立、无预算 / 闸 / 域改动、写集内只有预批准的单个测试函数、同账号非首次合入、无争议）：合入后 main 全量（NPU-free）915 passed, 12 skipped, 5 warnings in 319.81s (0:05:19)——877 + BF-03 的 38 个新测试，与预测一致。看板 done，pgdn_chunk_fwd 的 BF16 dtype_status → native@a5。"
         }
       ],
-      "result": null,
+      "result": {
+        "commits": [
+          "30183ae",
+          "96eada0"
+        ],
+        "evidence": [
+          "PR #121",
+          "kernels/projects/a5/pgdn_chunk_fwd_bf16/evidence/",
+          "docs/research/pgdn_chunk_fwd_bf16.md",
+          "kernels/projects/a5/pgdn_chunk_fwd_bf16/README.md"
+        ],
+        "numbers": "真机（A5，Ascend950PR_9589V100 / CANN 9.2.0 / compiler·opp timestamp 20260805_101249091 / 算子包 ascend950；回执自带环境与 version.info 哈希；原始回执在 PR 的 evidence/，PM 逐项从原始 JSON 复算）：132 条网格记录（33 个 shape/seed × BF16 / FP32 × bd1 / bd2）+ 2 条完整 workload 全过、0 失败、5360 项比较 0 超预算；BF16 每 case / oracle 预算 min(1e-2, 3F)，F 按首提交声明的公式现场求（与首提交校准相差 ≤ 2.0e-4 相对，对首提交冻结的预算 402 个 BF16 公共项也全过、最差 0.3334）；最差 BF16 relL2：o 1.6806e-3、主 state 3.228e-6、ATK 6.010e-7（预算 o / state ≈ 4.98e-3、ATK 1e-4）；FP32 全体最差 o 2.455e-6、state 3.202e-6、ATK 5.814e-7（预算 1e-4）；24 个零预算项严格为 0；67 个 FP32 公共结果对 pristine 入口字节相同；跨 bd 1122 对独立数组 + 198 对公共输出 SHA256 全同；134 条输入不变；host 生产算子只有 zeros × 1 + empty × 17。同卡三轮三明治（bd2，B1/H=HV8，900 样本）：T1024 BF16 / baseline 144.2576 / 143.9577 ms（1.00234）、T4096 567.0029 / 566.7901 ms（1.000375）——持平，无速度门槛；Vector 实现，不声称 Cube。"
+      },
       "origin": {
         "kind": "user",
         "note": "用户 2026-09-19 直接指令（D-PM-35）：BF16 必须 kernel 侧，追加任务改正，后续 BF16 优先"
@@ -1056,6 +1084,10 @@
         {
           "at": "2026-09-20T16:08",
           "summary": "STATUS（15:53Z，自述，#104，头 1ebec19，分支从 main f11a2ad 开出）：校准已作为第一个提交推上（docs/research/gdn2_chunk_fwd_bf16.md），12 个 GD2-01 契约 case 全跑，CPU 上「BF16 输入舍入 + FP32 递推」模拟器：F = 1.7451e-3（12 例最差，出在 t1_h1_small，其余 11 例 1.45e-3~1.69e-3；F 的定义 relL2(bf16(ref), ref)，即 o 存成 BF16 这一步的地板）；预算 = min(1e-2, 3F) = 5.2354e-3，o 与 final_state 各自对参考 A 与参考 B 判，相对 L2 与 max_abs 一起报，事后不放宽、超了先发 RISK；另单列不是对 kernel 的约束的量：BF16 公共 ABI 自身引入的偏移 D(o) 2.16e-3~2.92e-3、D(final_state) 2.14e-3~2.45e-3（两参考喂同样的舍入输入，比较里抵消）；零预算的量按位判（bd 间逐位相同、去 host 转换后 FP32 路径改前改后逐位相同）。环境同 ACK；隔离工作区已建（worktree + pin 住的 library / kernels + 私有 venv）。open item（自述）：参考 A 还没接上——GD2-01 的 ref/survey.py 按 FLA_NAIVE_SHA256 校验 pin 住的 fla naive 文件，pin 修订 e52dbc0e、本机 checkout 864a87f6、SHA 对不上；会去取 pin 修订的 naive 文件并核 SHA，取不到先发 RISK，不拿别的修订冒充。下一步：建派生单元 gdn2_chunk_fwd_bf16、入口两条 dtype 路径去 host 转换、再上真机。PM 处理：校准 / 预算 / 零预算判据与 ASSIGN 一致；申领人自己先发现了 fla 修订要对齐（与 PM 15:57Z 回复一致）。一处顺序已回复（非协议消息，#104）：预算是实现前冻结的，参考 A 也要在写 kernel 之前接上，F_A 与其预算补进校准（第二个校准提交即可，在 kernel 之前），两参考各按各自的 F 冻结，不要等真机验收时 A、B 一起报再定，那样 A 的预算成了看到结果后才定的。"
+        },
+        {
+          "at": "2026-09-20T17:10",
+          "summary": "STATUS（16:22Z，自述，#104，头 b751286，三个提交，校准在最前）：1ebec19 校准（F = 1.7451e-3、预算 5.2354e-3，已报）；f6ed5e0 派生单元 kernels/projects/a5/gdn2_chunk_fwd_bf16/——只有公共面换 dtype（q/k/v BF16 进、o BF16 出，中间仍 FP32：state、门控前缀、cube 累加是 kernel 内部精度选择，通则允许）；A5 没有 tile 级 cast（只在 vf 函数内可用），所以加宽 / 收窄写成两个 @vf 里的寄存器 load / store（widen_row / narrow_row），转换仍全在自编译 kernel 内；五个 kernel ascriptor check 全 0 error / 0 warning（prepare 190 / scores 128 / wy 199 / scan 153 / output 135 ops）；FP32 单元零改动（git diff 对 gdn2_chunk_fwd 为空）。b751286 入口去 host 转换（两条 dtype 路径）：删 q/k/v.float() 与 o.to(q.dtype)；缺省 state 原来是 torch.zeros(..., device=cpu).to(q.device)（一次 host 拷贝），改成直接在调用方设备上分配；入口按 q.dtype 分派到两个派生单元，prepare() 默认两条都编（CANN 每进程只解析一次 vendor 树）；入口里只剩通则允许的分配 / 元数据 / 只读校验 / launch。尚未做（自述）：参考 A 还没接上；单元的 unit.py / contract.json 还是从 FP32 单元拷来的；真机一步没跑，所以没有任何精度或性能数字；FP32 路径改前改后逐位相同还没证。下一步：unit.py / contract.json 改 BF16 口径、run.py reference 与 sim 先过、上真机前每个 kernel 先 compile --backend cce、再完整 workload → 契约全集 + 奇偶 C + 门控跨度端点 → bd 逐位 → FP32 逐位不变 → 两路 host 审计 → 三明治。PM 核对：无需裁定；zeros 在设备上分配属通则允许的分配。提醒（已在 15:57Z 回复，重申）：参考 A 的 F_A 与预算要在第一次真机结果之前冻结（kernel 已写但尚无任何结果，所以「预算先于结果」仍满足）。"
         }
       ],
       "result": null,
@@ -1481,6 +1513,18 @@
         {
           "at": "2026-09-20T16:25",
           "summary": "PM 处理（已回复 #106，非协议消息）：(1) D-PM-51 的三个前提认为已补齐、新 verifier 的用法符合规格「端点比较口径追加」第 4 条——普通域 state 1e-5 比较对象 = 旧 CPU-prep 输入的 golden，普通 BF16 q / k prep 与旧 CPU 值全逐位相同；近零档 ~1% 差异 = eps 主导下商恰在 BF16 中点。PM 的 CPU 复算：随机 BF16 数据 ÷ 1e-3，约 0.75%（≈ 1/128）的商恰在 BF16 中点上，与实测 1.06% / 1.13% 同量级（比例随输入尾数分布略变），支持该机制。(2) RISK 认：三类失败按 D-PM-50 (c) 就是失败，保持未验收，不能用 zero-only 的 flush 类或 D-PM-51 关闭；不改只读 kernel / 阈值 / 域；要改 inherited stable kernel 是 kernel 批次，只用户能批。(3) DONE 里对这些失败要给：每个失败切片的类别、|golden| 最大值（以 FP32 最小正规数为单位）、normal 子集 L2、各分类个数（数值恰等的非零 subnormal 单独计）、candidate 与旧 NPU 是否逐位 / 最大 ULP 差；并给一句汇总——全部失败切片的 |golden|max 上界（核实「≤ 2.6e-38」这类数）与「candidate = 旧 NPU 或差 ≤ 1 BF16 / 4 FP32 ULP」是否对全部失败切片成立；不得写成通过。BF-07 若带着这些失败 DONE，PM 把它们逐类交用户决定（D-PM-33 的验收数字超预算 / 判据范围）：可选接受为端点类（只披露、不设通过线，并给下溢区间的定义）、改 inherited kernel（kernel 批次）、或别的；PM 现在不预设。"
+        },
+        {
+          "at": "2026-09-20T17:10",
+          "summary": "STATUS（16:24Z，自述，#106，PR #118 draft，提交 f0f98e6）：D-PM-51 全部 384 个 nearzero decode 案例 × bd1/2/4/8/16/28 已在新口径下重新真机执行——每 bd 340 通过、44 输出失败；原 16 个 state 失败全部满足新批准的 A/B/C：全 384 案例 state 对实际 prep 的两套 CPU FP32 reference 均 ≤ 1e-5，最大 9.438e-7（首个 nearzero_c3_g4_rbf16_vbf16_flags000 / independent）；prep 单步预算、输入保持、raw / direct-prepared 真实 SHA 一致性全过；六个 bd 的输出 / prep / 新比较指标逐位一致，且输出和 prep 字节等于先前旧口径的真机运行（没有 kernel 修改）。旧 CPU-prep 的 4.31e-4~9.82e-4 状态偏差保留，新口径只用于这 384 个命名 nearzero 案例。已推 f0f98e6：普通 25920 例、独立特殊值 9216 例、完整 nearzero 原始失败、非有限可达 96 点、norm 舍入 48 组、FP64 范数修正 4860 例复跑与逐元素分类都公开为有界文本；全部可达 8 个 PR 提交、1254 个不同 blob 机械扫描通过（最大 2,499,938 字节，无私有路径 / IP）；详细报告 docs/research/kda_prep_kernel.md；该 head 的源码 / 证据 + 259 个 accepted-runtime 文件 fresh restore 5281 文件逐个 SHA 一致（只证明快照恢复，不冒充 hardware 验收）。"
+        },
+        {
+          "at": "2026-09-20T17:10",
+          "summary": "RISK contradicts-handoff（16:31Z，自述，#106，PR #118 头 7af5124，仍 draft、未 DONE）——剩余输出端点的完整决策包：全部规定真机案例已执行，D-PM-51 state 已闭环，仍需用户裁定未验收的输出失败。逐切片完整表 remaining-output-failure-table.json（每个失败切片有类别、|golden|max / 最小正规数、normal 子集 L2、subnormal→0 / subnormal→非零（恰等单列）/ CPU 零→非零个数、旧 NPU 字节相等与最大 ULP）；D-PM-51 全部 384 个 ID、每 bd 回执及原 16 个 state 案例列表在 dpm51-native-summary.json。实测完整范围：chunk——16 案例 / bd、40 个 head/chunk 位置、80 个 oracle 切片比较；所有失败切片 |golden|max ≤ 3.2322792e-37 = 27.4972 × FP32 最小正规数（最大位置 nearzero_c2_g8_rf32_vbf16_flags010 / FLA / chunk1 / head1）；candidate 与旧 NPU 全部逐位相等或 ≤ 1 BF16 ULP，70/80 比较逐位相同；8 个 case 的 normal 子集 > 0.05 且旧 NPU 同样失败。decode（已按 D-PM-51 用实际 prep 的 CPU golden）——44 案例 / bd、148 个 head/chunk 位置、190 个 oracle 切片比较；全部 |golden|max ≤ 1.1480480e-38 = 0.97665 × FP32 最小正规数；candidate 与旧 NPU 全部逐位相等或 ≤ 4 FP32 ULP，139/190 比较逐位相同；新参考下仍存在非零 subnormal 与 CPU 零→非零，normal 元素数为 0。数值判据失败全部保留；「无回退」≠ CPU 正确性通过；仅 D-PM-50 允许的纯 flush 类已单列、未扩大。申领人请求：把这个具体、完整的失败决策包提交用户，选择是否将精确定义的近零输出端点组「只披露、不设通过线」，或批准 inherited kernel 修复批次，或其它处理；当前不自行给出新通过线、不改域 / 阈值 / 只读 kernel。本会话用户明确要求「全部验收完成后才转正式评审并按协议提交 DONE」，所以先以 RISK 提供决策材料，PR 保持 draft。用户裁定后立即执行对应剩余工作并继续 BF-08。PM 处理：按申领人请求把决策包提交用户（见 handoff；D-PM-33 的「验收数字超预算 / 判据」范围）；PM 的建议（不替用户定）：接受为「只披露、不设通过线」的端点类，类的定义取「切片 |golden|max ≤ 32 × FP32 最小正规数（≈3.76e-37）且 candidate 与旧 NPU 逐位相同或 ≤ 1 BF16 ULP（chunk）/ ≤ 4 FP32 ULP（decode）」，逐切片表照发布、不设通过线、不改域；理由——全部失败切片的输出量级 ≲ 3.2e-37（绝对误差同量级，数值上无意义）、candidate = 旧 NPU（无回退）、旧 host 路径同样失败、BF-07 没有改 inherited kernel；改 inherited kernel 要 kernel 批次且没有明确的修法（设备对 subnormal 的处理）、收窄域是域变化，均不建议。"
+        },
+        {
+          "at": "2026-09-20T17:10",
+          "summary": "RISK contradicts-handoff（17:01Z，自述，#106，补充必要下界证明，请并入 16:31Z 的用户决策包）：剩余端点里存在「任何 kernel 都无法同时满足」的双参考 / 输出表示精度判据，单独修 kernel 不能闭合全部失败。方法（使用已保存的真实 CPU FP32 golden，不重算、不改参考，只用 FP64 累积范数）：(1) 若同一输出同时满足 ||a−r1|| ≤ t1·||r1|| 与 ||a−r2|| ≤ t2·||r2||，三角不等式要求 ||r1−r2|| ≤ t1·||r1|| + t2·||r2||，违反则两个可接受范围无交集、任何实数输出都无解；(2) CPU golden 正确舍入到输出 dtype 得到逐元素最小绝对误差与最小可能 L2，该下界若已超过原阈值，则任何此 dtype 输出都无解（已排除 D-PM-48 的整片舍入为零特例，不借此改预算）。结果（按实际失败位置去重）：decode D-PM-51 的 148 个失败 head/chunk 位置——124 个是「两套 CPU 参考的允许范围无交集」，其余 24 个是「BF16 最优舍入误差已 > 0.01」，覆盖全部 44 个失败 case，两类合计 148/148；chunk 40 个失败位置中 16 个 BF16 最优舍入 L2 > 0.05，覆盖 8 个 case（恰为 C2/3 × group8 × raw 两 dtype × flags010/011）；另外的 CPU-normal 错误仍是真实数值失败，这个下界不证明它们不可修。最大参考冲突例：decode nearzero_c3_g8_rf32_vf32_flags010 / chunk2 / head6，r1 / r2 范数 9.0848e-43 / 9.3296e-43，||r1−r2|| = 3.3019e-43，两个 1e-5 误差半径之和仅 1.8414e-47，差 17930.9 倍；表示下界例：decode nearzero_c2_g8_rbf16_vbf16_flags010 / chunk1 / head4，最接近 golden 的 BF16 输出 L2 = 0.8977254 / 0.8977334（原预算 0.01；golden 舍入后并非整个切片为零，不在 D-PM-48 特例内）。申领人提议：不修改原判据，继续保留失败；请并入用户决策包——若选派生 kernel 修复，必须先明确这些逻辑上无解的端点比较口径，否则任何修复都不可能过全部原判据；分析器、每个位置的参考 SHA / 原生 tensor 归档 SHA 与全部下界结果正在追加公开证据。本会话已向自己的用户异步呈现「批准派生 kernel 修复 / 仅表内端点作诊断保留失败」选项并在发现下界后补充说明，尚未收到答复，未把等待当作批准。PM 处理：并入用户决策包（见 handoff）。PM 的读法：两套 CPU FP32 参考（fla naive 与独立 CPU 参考）在输出量级 ~1e-43（FP32 最小 subnormal 1.4e-45 的约 70 倍、只剩 ~6 位有效位）处彼此相差 ~33%，说明这一量级上相对 L2 本身就没有确定的「正确答案」；这强化了「接受为只披露、不设通过线的端点类」的建议——派生 kernel 修复对这 124 + 24（decode）与 16（chunk）个位置在逻辑上无解，最多只能动 chunk 里其余的 CPU-normal 错误，且没有明确修法。"
         }
       ],
       "result": null,
@@ -4974,10 +5018,10 @@
         "id": "pgdn_chunk_fwd",
         "family": "pkda",
         "track": "agent",
-        "note_zh": "GDN 派生单元 + ATK 预条件，前置（GDA-02 的 GQA 支持）已满足，见 PK-03（open）",
-        "note_en": "GDN-derived unit + ATK preconditioning, prerequisite (GDA-02's GQA support) now satisfied, see PK-03 (open)",
+        "note_zh": "GDN 派生单元 + ATK 预条件，前置（GDA-02 的 GQA 支持）已满足，见 PK-03（open）；BF16 原生 Vector 前向已合入（BF-03，kernels/projects/a5/pgdn_chunk_fwd_bf16/，132 条真机记录全过，BF16 与 FP32 墙钟持平，不声称 Cube）；FP32 单元与公共 FP32 路径逐位不变，入口两条 dtype 路径都无 host 转换",
+        "note_en": "GDN-derived unit + ATK preconditioning, prerequisite (GDA-02's GQA support) now satisfied, see PK-03 (open); native BF16 Vector forward merged (BF-03, kernels/projects/a5/pgdn_chunk_fwd_bf16/, 132 device records pass, BF16 and FP32 wall-clock on par, no Cube claim); the FP32 unit and public FP32 path are bitwise unchanged and neither dtype path has a host conversion",
         "dtype_status": {
-          "bf16": "widen@a5",
+          "bf16": "native@a5",
           "fp32": "native@a5"
         },
         "dtype_fix": {
