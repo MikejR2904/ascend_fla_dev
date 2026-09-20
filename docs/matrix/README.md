@@ -208,7 +208,7 @@ kimi_linear_layer / bd=4 的拆分（ms）：fwd_kernels 1.314 · caches_host_si
 
 ## 缺口
 
-P0 2 项 · P1 23 项 · P2 10 项 · 已解决 13 项 · 共 48 项
+P0 2 项 · P1 22 项 · P2 11 项 · 已解决 13 项 · 共 48 项
 
 **第一期里程碑**：第一期五项已全部有结论，并补齐了同机性能对比：aclnn 编译、runtime 桥、kda_fwd 接线、KDA 本地基线均实测通过；自编译算子在 block_dim=4 下比 torch_npu 组合快 4.43x（kimi_linear_layer）/ 2.38x（long_context T=4096）/ 19.7x（smoke）。过程中修掉两个自己的 bug（bridge-per-call-overhead、op-name-collision-in-process），它们先后让 block_dim 的效果被完全掩盖。当前最大的性能项是 block-dim-ceiling（已升 P1）：扩展性一路线性到契约上限 4，而硬件有 28 cube。第二期的前置障碍 kda-fwd-bwd-dtype-mismatch 已量化（降 P2）。
 
@@ -237,7 +237,7 @@ P0 2 项 · P1 23 项 · P2 10 项 · 已解决 13 项 · 共 48 项
 
 | 算子族 | P0 | P1 | P2 |
 |---|---|---|---|
-| KDA | `c1-multihead-o-corrupt`<br>`ascriptor-gm-transfer-two-slice-row-gap` | `decode-call-overhead`<br>`decode-layer-overhead`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`no-tail-path`<br>`block-dim-ceiling`<br>`qk-l2norm-not-in-kernel`<br>`state-layout-k-first`<br>`kda-bwd-inverse-mm-mutex-over-budget`<br>`a2-splitk-fp32-cube`<br>`a2-splitk-bf16-fp16-unsettled`<br>`a2-cast-blkstride-sim-blind`<br>`a2-autosync-missing-cross-pipe-guards`<br>`kda-bwd-scan-dh0-nondeterministic` | `kda-fwd-bwd-dtype-mismatch`<br>`npu-builtin-ops-missing`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`kernel-nd2nz-suboptimal`<br>`fwd-caches-not-emitted`<br>`modules-are-torch-not-kernels`<br>`stable-unit-no-harness`<br>`gate-span-still-bounded`<br>`a2-sim-vs-toolchain-blind-spots` |
+| KDA | `c1-multihead-o-corrupt`<br>`ascriptor-gm-transfer-two-slice-row-gap` | `decode-call-overhead`<br>`decode-layer-overhead`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`no-tail-path`<br>`block-dim-ceiling`<br>`qk-l2norm-not-in-kernel`<br>`state-layout-k-first`<br>`kda-bwd-inverse-mm-mutex-over-budget`<br>`a2-splitk-fp32-cube`<br>`a2-splitk-bf16-fp16-unsettled`<br>`a2-cast-blkstride-sim-blind`<br>`kda-bwd-scan-dh0-nondeterministic` | `kda-fwd-bwd-dtype-mismatch`<br>`npu-builtin-ops-missing`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`kernel-nd2nz-suboptimal`<br>`fwd-caches-not-emitted`<br>`modules-are-torch-not-kernels`<br>`stable-unit-no-harness`<br>`gate-span-still-bounded`<br>`a2-sim-vs-toolchain-blind-spots`<br>`a2-autosync-missing-cross-pipe-guards` |
 | GDN | `ascriptor-gm-transfer-two-slice-row-gap` | `gdn-no-gqa`<br>`layout-not-token-major`<br>`nonzero-initial-state`<br>`d-initial-state-absent`<br>`state-dtype-bf16`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`scale-param-no-slot`<br>`no-tail-path`<br>`block-dim-ceiling`<br>`a2-splitk-fp32-cube`<br>`a2-splitk-bf16-fp16-unsettled` | `npu-builtin-ops-missing`<br>`fixed-kv-128`<br>`asymmetric-kv-dim` |
 | GDN-2 | `ascriptor-gm-transfer-two-slice-row-gap` | `no-varlen`<br>`no-tail-path`<br>`gdn2-abi-not-gdn`<br>`gdn2-chunk-gate-range`<br>`gdn2-decode-fragmentation` | `npu-builtin-ops-missing`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`modules-are-torch-not-kernels` |
 | DeltaNet | `ascriptor-gm-transfer-two-slice-row-gap` | `layout-not-token-major`<br>`nonzero-initial-state`<br>`d-initial-state-absent`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`scale-param-no-slot`<br>`no-tail-path` | `npu-builtin-ops-missing`<br>`fixed-kv-128`<br>`asymmetric-kv-dim` |
@@ -545,15 +545,6 @@ PM 在权威 workspace 上独立跑了 `benchmarks/diag_c1_multihead.py`，**上
 - **影响** **静默错误类**（输出有限、无报错、sim 与 pipesim 全绿）。只在 A2（c220）上；A5 不受影响这一点没有验证，按 §6『结论不跨 SoC 继承』既不外推也不否认。A2-03 已合入的前向与 decode 单元里 beta 是 FP32，申领人称没踩到（自述）；凡是后续 A2 单元里对『跨步 / 行包』列做整块 cast 的，同样暴露。A2 上的算子结论在 A2-11 之前本来就不算数，这条是给 A2 单元的写法加一条硬约束。
 - **建议** 1. 本仓侧（A2-09 起）：a2 单元里对行包列的 cast 逐行 `count=1`（或改成不依赖 srcBlk 的写法），并在单元 README 登记每一处这类构造；A2-09 的 DONE 带上最小复现（构造、生成的 c220 行、错误版与逐行版的真机原始输出，文本）。2. 转给 ascriptor 所有者：cast 降解在行包视图上产出 `srcBlk=0` 应报错或正确展开；功能模拟器 / pipesim 应建模 block stride，或对 `srcBlk=0` 且 `repeat>1` 的向量指令给出 lint。3. A2-10 / A2-11 做真机核对时把『sim 判过而真机错』列成必查类别，A2 上 sim 通过不再作为任何单元的通过依据。
 
-#### `a2-autosync-missing-cross-pipe-guards` — 【静默错误·自述】A2 上 auto_sync 生成的代码漏了若干跨 pipe 保护（MTE2→MTE1 ready、V→MTE3）：第二个 chunk 起数据整体错，C=1 与功能模拟器都看不出
-
-- **类别** correctness · **适用于** KDA · **阻塞** `A2 波次：A2-09 及之后所有依赖 auto_sync 的 A2 单元`
-- **依据** **来源：A2-09 的 STATUS（#112，2026-09-20T05:43Z，申领人自述；PM 无 A2 真机、未复现；只对 910B3 / CANN 9.0.0 / ascriptor pin 90cfcdc 成立，A2-11 之前只作观测；最小复现随 A2-09 的 DONE 提交后按证据复算并更新本条。**
-- 现象（自述）：生成代码里 MTE2→MTE1 的 ready 列表漏了若干项——`finalize_pair` 缺 `l1_q`、`inverse_mm` 缺 `l1_akk` / `l1_dv` / `l1_vnew`、`scan_fused` 缺 `l1_w`；几个输出暂存缓冲也缺 V→MTE3。表现：第二个 chunk 的 `qk_right` 整体错（max_abs 8.0）；**C=1 没有复用所以看不出，C=2 才炸**，功能模拟器全绿。绕行：每个 load / store 组显式加 `DEvent` 栅栏。
-- 这是 A2-09 那条 RISK 串里继 `a2-cast-blkstride-sim-blind` 之后的第四类「只在真机出现、sim 全绿」的缺陷。
-- **影响** **静默错误类**（输出有限、无报错），只在 A2 系；漏的是复用发生后（C≥2）才暴露的跨 pipe 保护，所以只扫 C=1 的验证一定漏。印证 `AGENTS.md` §6 的 (C, HV) 逐格扫：C 的奇偶与 C≥2 必须覆盖。A2 上的算子结论在 A2-11 之前本来就不算数。
-- **建议** 1. 本仓侧（A2-09 起）：a2 单元的每个 load / store 组显式 `DEvent` 栅栏，(C, HV) 网格里 C≥2 必扫；不因 sim 通过或 C=1 通过下结论。2. 转给 ascriptor 所有者：auto_sync 在 a2 系补全跨 pipe 保护（MTE2→MTE1 ready、V→MTE3），并让 sim / pipesim 能检出。3. A2-09 的 DONE 带最小复现（哪几个 kernel / 缓冲缺哪一条、生成代码、错误版与栅栏版的真机原始输出，文本）。
-
 #### `kda-bwd-scan-dh0-nondeterministic` — 【静默错误候选·自述·环境相关】KDA 反向的上游 scan_fused 在 CANN 9.1.0-beta.1 的一张卡上 dh0 输出不确定（12 次直接重放 11 次不同），旧公共路径 h0 梯度 4/12 超 0.05 预算；换一张卡 12/12 逐位相同
 
 - **类别** correctness · **适用于** KDA · **阻塞** `FMT-02 的 dh0 / h0 梯度端到端逐位验收（按 D-PM-44 改读）`
@@ -660,3 +651,13 @@ PM 在权威 workspace 上独立跑了 `benchmarks/diag_c1_multihead.py`，**上
 - 功能模拟器不校验物理地址分配；pipesim 与真机会：四个 kernel 在 sim 下全绿，换 pipesim 才报 `addr_alloc: UB overflow` / `L0C overflow`（自述：finalize_pair 要 192KB L0C，finalize_pre / finalize_post / inverse_epilogue 要 208~229KB UB）。
 - **影响** 都是『响』的失败（编译期或 pipesim / 真机报错），不是静默错误；代价是 sim 全绿会让人误以为 kernel 可用。只对 A2 系成立；A5 单元的 compile / pipesim 路径不在此列。
 - **建议** 1. 本仓侧：A2 单元报『sim 通过』之前，每个 kernel 至少跑一次 `ascriptor compile --backend cce` 与 pipesim（已写进 A2-09 的验收）；BF16 GM 不做标量读。2. 转给 ascriptor 所有者：功能模拟器校验物理地址分配、BF16 标量读在 check 阶段就报错。
+
+#### `a2-autosync-missing-cross-pipe-guards` — A2 上 auto_sync 生成的 MTE2→MTE1 ready 列表不完整（静态观察；申领人已撤回「导致 C=2 出错」的因果，未观察到后果）
+
+- **类别** verification · **适用于** KDA · **阻塞** —
+- **依据** **来源：A2-09 的 STATUS（#112，2026-09-20T05:43Z）与其后的更正 RISK（07:16Z，申领人自述；PM 无 A2 真机、未复现；只对 910B3 / CANN 9.0.0 / ascriptor pin 90cfcdc 成立，A2-11 之前只作观测）。**
+- **撤回**：申领人 05:43Z 报「auto_sync 漏跨 pipe 保护 → 第二个 chunk 的 qk_right 整体错（max_abs 8.0）」，07:16Z 撤回该因果。他按 A2-01 的 settle / sham 口径做了 A/B（同一台 910B3、同一 case `multi_chunk_bd1` 即 C=2、同一份代码，只差 `finalize_pair` 里两处 `DEvent(Pipe.MTE2, Pipe.MTE1)` 栅栏的有无，两个副本各跑一张空闲卡）：两个变体的 `finalize_pair.qk_right` 输出**逐位相同**（max_abs=8.000000e+00、rel_l2=1.056e-07，chunk 行 64–127 的 max_abs=8.0，chunk 行 0–63 为 7.6e-06），栅栏什么都没改变。max_abs=8.0 自始至终是**同一个元素**的舍入差（16384 个元素里 1 个，1408 对 1416，约 1.45 个 BF16 ulp，FP32 累加顺序），不是同步缺陷。那一轮之所以从「失败」变「通过」，是因为同一个提交里还改了逐 kernel checkpoint 的判据（加 `stage_outputs`），起作用的是判据、不是栅栏；当时没有把两个改动分开验证。
+- **仍成立的静态事实（申领人照生成的 `*_cube.h` 念的，不是推断）**：`DEvent<PIPE_MTE2, PIPE_MTE1, 0, 0, 1> ev_mte2_mte1_ready_1;  // guards l1_k, l1_kg, l1_mbase, l1_mbeta, l1_mqk` 里没有 `l1_q`；`inverse_mm` 的列表缺 `l1_akk` / `l1_dv` / `l1_vnew`，`scan_fused` 的缺 `l1_w`。**没有证据说它会导致错误结果**：26 个真机 case 没有一格因此出错，A/B 也无差异。栅栏留在代码里按「预防」注明，不再声称它修了什么。
+- 过程教训：这正是 `AGENTS.md` §6.5「按症状规律倒推根因」——同一次改动里混了两个变量就把通过归因给了其中一个。PM 要最小复现，A/B 把因果证伪了，这是证据流程按设计起作用。
+- **影响** 观察性：没有观察到错误结果。潜在风险是竞态类（生成代码的 ready 列表缺缓冲，复现概率可能依赖时序），所以留着预防性栅栏；但 PM 不再把它记成静默错误类。（对比 `a2-cast-blkstride-sim-blind`：那条有独立证据——`got/ref * beta[col]` 恒为 0.5547 = beta[0]，改逐行 cast 后逐位一致。）
+- **建议** 1. 本仓侧：a2 单元里保留栅栏作预防，单元 README 注明「预防、未观察到后果、不声称修了什么」；(C, HV) 网格里 C≥2 照扫。2. 转给 ascriptor 所有者：若确认 auto_sync 的 ready 列表本应包含这些缓冲，补全（这条只是静态观察）。3. A2-09 的 DONE 带上这次 A/B 的负结果原始输出（文本），不再为它要求「最小复现」。
