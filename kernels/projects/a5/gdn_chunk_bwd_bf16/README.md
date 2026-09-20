@@ -42,6 +42,11 @@ is retained in ignored scratch; no test, requirement or tolerance was relaxed.
 First native evidence: `evidence/full-v4-bd2.json`, its unfiltered redacted log,
 source manifest, receipt and occupancy record. Canonical CPU reference passed
 all138cases; all twelve bd1/bd2 vendor build logs and artifact hashes are retained.
+That first run's manifest records the then-uncommitted working copy of `unit.py`
+(`885df02b…`); later full grids used the committed source snapshot (`731b977d…`)
+and reproduced its full-case public, stage and input hashes exactly for both
+dtypes and block dimensions. The first receipt predates `component_versions`
+collection; the later grid/control receipts retain those component identifiers.
 Complete grid records, receipts and occupancy are in `evidence/grid-v1-bd*`;
 `native-grid-summary.json` and `public-gradient-metrics.json` contain the aggregates.
 `summarize_native.py` rechecks both final grids and every cross-block hash;
