@@ -307,6 +307,13 @@
       "by": "user",
       "decision": "授权合入 PR #115（BF-02）与 #116（FMT-02）。（用户原话：「#115授权 #116授权」。）",
       "risk": "PM 的读法（用户可纠正）：(1) 授权对象是 PM 评审过的头——#115 = b5c8c2e6、#116 = 343ebfd5，用 --match-head-commit 钉住，经 bot 账号合入（合入提交 15c8ede0 与 0c7c74a6）。(2) 用户是在被告知下列事项之后授权的：#115——BF16 反向比原 FP32 慢 6.6–6.8%（无速度门槛）；#116——D-PM-44 对「逐位相同」的读法（转换边界逐位每样本、其余 7 项每设备逐位、h0 端到端只在旧路径自身稳定的设备上比、0.05 预算不动）、两处公开域变化（layout_device=\"cpu\" 显式报错、直接调 chunk_kda_bwd 传 FP16 / FP64 上游梯度显式报错）、前向 1.67–2.32× 变慢、验证环境是 CANN 9.1.0-beta.1（不是 9.2.0）、dev-A 的 h0 基线缺陷不资格。所以这些都按「用户知情后接受」记，D-PM-44 的读法从「PM 裁定、合入前要问」转为「用户已接受」。(3) **合入后我才注意到、没有在评审汇报里单列的一点**：#116 删掉了 CPU 绕行（_resolve_layout 恒返回 False），所以在缺 ascend950 算子包的机器上，默认的门控跨度检查（device 上的 cumsum）、带缓存前向与反向里的 _scan_states（Cast / matmul）、dw 取负、log2(eg) 分支这些存量 host 算术不再有 CPU 兜底，会失败；布局 / dtype 转换 / 零填充本身不依赖内置算子。这是 D-PM-42（存量例外保留）叠加 D-PM-37（不许 host CPU 布局转换）的直接后果，规格里也写过「缺算子包的机器不是验收项」，已记进 gaps 并在下次汇报里告诉用户；AGENTS.md §5 里「layout_device=auto 会自动探测并绕路」一句因此过时，等用户同意再改。(4) 不涉及：kernel 批次批准（上游 scan_fused 的 dh0 不确定性仍未批准去修，gaps kda-bwd-scan-dh0-nondeterministic 仍开）、BF-07 的规格与写集（PM 细化后派）、其他 gated 项。"
+    },
+    {
+      "id": "D-PM-46",
+      "date": "2026-09-20",
+      "by": "user",
+      "decision": "上游 kda_bwd scan_fused 的 dh0 不确定性要定位（只定位、不修）。（用户原话：「scan fused 需要定位。」，同一条消息还问「agent.md 修改是啥」——见下。）",
+      "risk": "PM 的读法（用户可纠正）：(1) 这是对 PM 一直挂着的问题「要先定位再决定进不进 kernel 批次」的回答：批准立项一个**只做定位**的任务（A5K-03），不批准 kernel 批次、不批准任何 scan 的修改——修复仍要在定位出精确机制之后由用户另批（AGENTS §6.5：先定位到确切原因、不是症状规律）。(2) 任务范围：机制 + 可证伪预测 + 干预实验；写集限于新的实验性派生单元 kda_scan_diag / 研究文档 / 诊断测试，不改上游只读 scan_fused、不改 kda_bwd_stable / kda_layout、不接公开调度；结论可能是「kernel 竞态」也可能是「环境 / 卡问题」，两种都不宣称修复。(3) 排队：优先级 P0（用户直接指令），因「一个 agent 一次一个任务」排在在飞任务之后——建议在 BF-07（阶段 1）CLOSE 后由发现者 session（01a0b7ce-…，有复现设备与证据）接手、BF-08 顺延；用户若要它插在别的位置请说。(4) 用户同一条消息里问的「agent.md 修改是啥」尚未批准——PM 已把新旧文对照给用户，用户确认前不改 AGENTS.md。"
     }
   ],
   "gated_epics": [
@@ -4474,6 +4481,52 @@
       "origin": {
         "kind": "user",
         "note": "用户 2026-09-19 直接指令（D-PM-35）：BF16 必须 kernel 侧；kernel 批次 D-PM-43 已批准；PM 2026-09-20 从 BF-07 拆出的阶段 2"
+      }
+    },
+    {
+      "id": "A5K-03",
+      "title": "上游 kda_bwd scan_fused 的 dh0 输出不确定性：定位根因（只定位、不修），A5 真机",
+      "wave": "W0",
+      "soc": "a5",
+      "priority": "P0",
+      "status": "open",
+      "model": [],
+      "kernel": [
+        "kda_bwd_stable"
+      ],
+      "dtype": [
+        "bf16"
+      ],
+      "deps": [
+        "FMT-02"
+      ],
+      "write_set": [
+        "kernels/projects/a5/kda_scan_diag/**",
+        "docs/research/kda_scan_dh0_nondeterminism.md",
+        "tests/test_kda_scan_diag.py"
+      ],
+      "needs": {
+        "npu": true,
+        "ascriptor": true,
+        "fla": true
+      },
+      "spec": "docs/pm/tasks/A5K-03.md",
+      "issue": null,
+      "pr": null,
+      "assignee": null,
+      "assignee_caps": null,
+      "branch": null,
+      "timebox_h": 24,
+      "reports": [
+        {
+          "at": "2026-09-20T13:27",
+          "summary": "用户 2026-09-20 指示「scan fused 需要定位」（D-PM-46）→ PM 立项：只定位、不修。范围与方法见 docs/pm/tasks/A5K-03.md：机制 + 可证伪预测 + 干预实验（实验性派生单元 kda_scan_diag，不接公开调度），回答四问（kernel 竞态还是环境 / 卡？精确到源码行与事件？预测被干预证实？影响面与「为什么只有 dh0」？）；N≥50 重放、负对照、跨卡 / 跨 CANN 对照；不宣称修复，修复要用户另批 kernel 批次。排队：优先级 P0，建议 BF-07（阶段 1）CLOSE 后由发现者 session 01a0b7ce-… 接手、BF-08 顺延；其它有 A5 真机的 session 也可申领；派单由 PM 定。"
+        }
+      ],
+      "result": null,
+      "origin": {
+        "kind": "user",
+        "note": "用户 2026-09-20 直接指令（D-PM-46）：scan_fused 的 dh0 不确定性需要定位（只定位）"
       }
     }
   ],

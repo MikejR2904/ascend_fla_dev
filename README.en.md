@@ -27,7 +27,7 @@ serves only as the semantic authority during testing (`naive.py` as a CPU fp32 o
 
 | family | id | track | kernels | task progress |
 |---|---|---|---|---|
-| KDA (Kimi Delta Attention) | `kda` | open to agents | 7 | 6/21 |
+| KDA (Kimi Delta Attention) | `kda` | open to agents | 7 | 6/22 |
 | GDN (Gated DeltaNet) | `gated_delta_rule` | open to agents | 4 | 5/10 |
 | DeltaNet | `delta_rule` | no task yet | 2 | 2/2 units with validation records |
 | GDN-2 (Gated DeltaNet 2) | `gdn2` | owner track | 6 | 3/5 |
@@ -47,14 +47,14 @@ serves only as the semantic authority during testing (`naive.py` as a CPU fp32 o
 
 ### Expand for detail (family → kernel → task)
 
-<details><summary><b>KDA (Kimi Delta Attention) —— 7 kernel(s)，6/21 done</b></summary>
+<details><summary><b>KDA (Kimi Delta Attention) —— 7 kernel(s)，6/22 done</b></summary>
 
 _First target family; used by Kimi-Linear_
 
 | kernel | track | BF16 | FP32 | progress | next |
 |---|---|---|---|---|---|
 | `kda_fwd_stable` | open to agents | ✅ native · A5 hw | ⛔ rejected | 5/11 | [#30](https://github.com/ddddwee1/ascend_fla_dev/issues/30) A2-04 |
-| `kda_bwd_stable` | open to agents | ✅ native · A5 hw | — | 1/9 | [#109](https://github.com/ddddwee1/ascend_fla_dev/issues/109) FMT-02 |
+| `kda_bwd_stable` | open to agents | ✅ native · A5 hw | — | 1/10 | [#109](https://github.com/ddddwee1/ascend_fla_dev/issues/109) FMT-02 |
 | `kda_fused_recurrent` | open to agents | ✅ native · A5 hw | ✅ native · A5 hw | 2/10 | [#105](https://github.com/ddddwee1/ascend_fla_dev/issues/105) BF-06 |
 | `kda_fwd` | upstream unit | ✅ native · A5 hw | — | 5/9 passed | _Upstream unit; superseded here by kda_fwd_stable_ |
 | `kda_bwd` | upstream unit | ✅ native · A5 hw | — | 4/9 passed，1 项 gap | _Upstream unit; superseded here by kda_bwd_stable_ |
@@ -79,7 +79,7 @@ _First target family; used by Kimi-Linear_
 
 </details>
 
-<details><summary>kda_bwd_stable —— 1/9 done，start FMT-02、A2-09、A2-K1、A5-04、A5-05</summary>
+<details><summary>kda_bwd_stable —— 1/10 done，start FMT-02、A2-09、A2-K1、A5-04、A5-05</summary>
 
 | task | issue | SoC | dtype | status | note |
 |---|---|---|---|---|---|
@@ -89,6 +89,7 @@ _First target family; used by Kimi-Linear_
 | A5-04 | [#50](https://github.com/ddddwee1/ascend_fla_dev/issues/50) | `a5` | bf16、fp32 | 🔒 gated (wave:W-A3) | ★ start |
 | A5-05 | [#51](https://github.com/ddddwee1/ascend_fla_dev/issues/51) | `a5` | bf16、fp32 | 🔒 gated (wave:W-A3) | ★ start |
 | A2-13 | [#40](https://github.com/ddddwee1/ascend_fla_dev/issues/40) | `a2` | bf16、fp32 | 🔒 gated (用户已放行（D-PM-43），待前置任务与规格) |  |
+| A5K-03 | — | `a5` | bf16 | ⬜ open |  |
 | A2-15 | [#42](https://github.com/ddddwee1/ascend_fla_dev/issues/42) | `a2` | bf16、fp32 | 🔒 gated (用户已放行（D-PM-43），待前置任务与规格) |  |
 | A2-16 | [#43](https://github.com/ddddwee1/ascend_fla_dev/issues/43) | `a2` | bf16、fp32 | 🔒 gated (用户已放行（D-PM-43），待前置任务与规格) |  |
 | A5-06 | [#52](https://github.com/ddddwee1/ascend_fla_dev/issues/52) | `a5` | bf16、fp32 | 🔒 gated (wave:W-A3) |  |
@@ -361,7 +362,7 @@ _Not scheduled: gated epic G4 (narrow-slice rule — no target model, no work). 
 
 | dtype | track | tasks | note |
 |---|---|---|---|
-| `bf16` | open to agents | 43 | Current ABI: q/k/v/o and most intermediates |
+| `bf16` | open to agents | 44 | Current ABI: q/k/v/o and most intermediates |
 | `fp32` | open to agents | 43 | Current ABI: state, gate accumulation, all correctness judged in fp32 |
 | `fp16` | not scheduled (G3) | — | Explicitly rejected by the contract |
 | `int8` | not scheduled (G3) | 1 | Not scheduled; state drift needs a design first |

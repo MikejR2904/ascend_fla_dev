@@ -11,6 +11,11 @@
 
 ### 正在飞的任务（现在没有；A5K-02、PK-02、PK-03 都已于 2026-09-19 合入）
 
+> **2026-09-20T13:27Z 更新：用户回复「scan fused 需要定位。agent.md 修改是啥」（D-PM-46）——scan_fused 立项 A5K-03（只定位）；AGENTS.md 的改动已把新旧文对照给用户、等确认。**
+> - **A5K-03**（`docs/pm/tasks/A5K-03.md`，P0，open，24h 首轮）：只定位 `kda_bwd/kernels/scan_fused.py` 的 dh0 不确定性，**不批准 kernel 批次、不改 scan**；方法 = 机制 + 可证伪预测 + 干预实验（实验性派生单元 `kda_scan_diag`，不接公开调度，一次一个变量，N≥50 重放，负对照，跨卡 / 跨 CANN 对照），回答四问（kernel 竞态还是环境 / 卡？源码行与事件？预测被干预证实？影响面与「为什么只有 dh0」）；写集 = `kda_scan_diag/**` + 研究文档 + 诊断测试。修复要在定位后由用户另批。**排队**：因「一个 agent 一次一个任务」排在在飞任务之后，建议 BF-07（阶段 1）CLOSE 后由发现者 session `01a0b7ce-…` 接手、BF-08 顺延；用户若要插队请说。gaps `kda-bwd-scan-dh0-nondeterministic` 已注明。
+> - **AGENTS.md（未改，等用户确认）**：只是 §5 两处过时措辞——`layout_device="auto"` 自动探测绕路（FMT-02 后已删）、以及「已加绕行 `_scan_states(on_cpu=)` / `chunk_kda_bwd(layout_device=)`」（同样失效）；不改任何规则或纪律，新旧文对照在给用户的回复里。
+> - **工具坑**：auto 模式的分类器偶尔「暂时不可用（timed out）」会让 Bash 失败——等一会再试，读文件类操作不受影响；不要因此换别的方式硬跑。
+>
 > **2026-09-20T11:30Z 更新：A2-09 交了 DONE（PR #119 draft）——PM 评审 rework：原始回执被脱敏破坏、回执不带源码身份；技术部分成立。**
 > - **评审**（`tmp/review/A2-09/`，git-ignored）：40 个文件全在 `kernels/projects/a2/kda_bwd_stable/**`、无二进制、最大 1.7 MB，隐私 0 命中，a5 与 A2-03 的 a2 单元零改动；契约六项预算 = a5、board stage `untested`、block_dim 只声明 1 与 2、门控跨度 `untested`；无 `@vf` / splitk，`GetValueFrom` 只读 FP32；`finalize_pair` 判据（相对 L2 1e-5，实测最差 1.06e-7）与 ulp 日志（最大 58 ulp、>1 ulp 至多 0.4028 个百分点）对得上，A/B 逐位相同，bd 逐位相同；PM 在 NPU-free 环境自己跑 `run.py reference` 26/26。
 > - **两条阻塞**：① `evidence/unit/{aclnn,sim,pipesim}.json` 是坏 JSON——脱敏把「0.」后不带科学计数法的长小数替换成 `<serial>`（aclnn 490 处 / sim、pipesim 各 232 处），六项梯度相对 L2 等关键数在原始回执里被毁，只剩 `passed` 布尔，PM 只能读汇总表；② 回执不带源码身份，aclnn 26 次运行跨 05:30–09:24Z、期间源码改过（L1 栅栏、`bar_all` 删 / 恢复、判据），`repo_sha` 是 rebase 前的提交，「去注释逐字节相同」没给对照。已请修脱敏并在最终源码上复跑 26 个 case（回执记 `unit_source_sha256`）、补 `bar_all` 的 pipesim 报错原文。A2 PR 合入本来就要用户授权（A2-11 之前 A2 结论不算数）。
