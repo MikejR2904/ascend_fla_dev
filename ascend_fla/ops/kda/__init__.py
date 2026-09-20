@@ -1,10 +1,11 @@
 """KDA public token-major APIs (fixed K=V=128).
 
 ``chunk_kda`` is the differentiable entrypoint; ``fused_recurrent_kda`` serves
-forward-only decode with T<=16. Both accept explicit raw-input flags for FP32
-PyTorch preparation on the input device. These operations are not fused into the
-custom kernels. Chunk's prepared-input domain checks are heuristic and optional;
-decode omits them to avoid per-step checks. ABI/gate-span guards remain enabled.
+forward-only decode with T<=16. Explicit raw-input flags use custom ``kda_prep``
+kernels for inference and decode. When gradients are needed, enabled raw flags
+retain the differentiable host preparation graph pending BF-08. Chunk's prepared
+input domain checks are heuristic and optional; decode omits them to avoid
+per-step checks. ABI/gate-span guards remain enabled.
 
 ``chunk_kda_fwd``, ``chunk_kda_fwd_with_caches`` and ``chunk_kda_bwd`` remain
 lower-level entries requiring already prepared tensors. A process using chunk

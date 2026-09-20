@@ -135,6 +135,40 @@ def test_public_decode_flags_reach_the_native_token_major_abi(monkeypatch, flags
     v = torch.ones(1, 2, 2, 128, dtype=torch.bfloat16)
     captured = {}
 
+    # Explicit CPU substitute at the new native prep ABI, local to this test.
+    from ascend_fla.ops.kda import chunk, chunk_bwd
+    calls = []
+
+    class PrepABI:
+        @staticmethod
+        def _check_source(name, value):
+            assert value.device.type == 'cpu' and value.is_contiguous()
+            assert value.dtype in (torch.bfloat16, torch.float32)
+
+        @staticmethod
+        def norm(value, dtype, **options):
+            assert options['namespace'] == 'decode'
+            calls.append('norm')
+            x = value.float()
+            return (x / (torch.sum(x*x, -1, keepdim=True) + 1e-6).sqrt()).to(dtype)
+
+        @staticmethod
+        def gate(value, alog, dt_bias, **options):
+            assert options['namespace'] == 'decode'
+            calls.append('gate')
+            hv, kd = value.shape[-2:]
+            return -torch.exp(alog.float()).view(hv, 1) * torch.nn.functional.softplus(
+                value.float() + dt_bias.float().view(hv, kd))
+
+        @staticmethod
+        def beta(value, **options):
+            assert options['namespace'] == 'decode'
+            calls.append('beta')
+            return torch.sigmoid(value.float())
+
+    monkeypatch.setattr(chunk, '_prep_runtime', lambda: PrepABI)
+    monkeypatch.setattr(decode, '_compiled_pair', lambda *args: {})
+
     def kernel(ins, scalars, outs):
         captured.update(ins)
         captured['scale'] = scalars['scale']
@@ -145,11 +179,13 @@ def test_public_decode_flags_reach_the_native_token_major_abi(monkeypatch, flags
     decode.fused_recurrent_kda(selected[0], selected[1], v, selected[2], selected[3],
                                A_log=a, dt_bias=bias, use_qk_l2norm_in_kernel=flags[0],
                                use_gate_in_kernel=flags[1], use_beta_sigmoid_in_kernel=flags[2])
-    # The unchanged raw-input helper reaches the native token-major ABI;
+    # Native prep outputs retain the existing token-major decode ABI;
     # scaling and GVA addressing now happen inside the custom kernel.
     for name, want in zip(('q', 'k', 'g', 'beta'), expected):
         torch.testing.assert_close(captured[name], want, rtol=0, atol=0)
     assert captured['scale'] == 128**-.5
+
+    assert calls == (['gate'] if flags[1] else []) + (['norm', 'norm'] if flags[0] else []) + (['beta'] if flags[2] else [])
 
 
 @pytest.mark.parametrize('check_domain', [True, False])
@@ -186,6 +222,41 @@ def test_public_chunk_flags_reach_prepared_boundary(monkeypatch, flags):
     v = torch.zeros(1, 64, 2, 128, dtype=torch.bfloat16)
     captured = []
 
+    # Explicit CPU substitute at the new native prep ABI, local to this test.
+    from ascend_fla.ops.kda import chunk, chunk_bwd
+    calls = []
+
+    class PrepABI:
+        @staticmethod
+        def _check_source(name, value):
+            assert value.device.type == 'cpu' and value.is_contiguous()
+            assert value.dtype in (torch.bfloat16, torch.float32)
+
+        @staticmethod
+        def norm(value, dtype, **options):
+            assert options['namespace'] == 'chunk'
+            calls.append('norm')
+            x = value.float()
+            return (x / (torch.sum(x*x, -1, keepdim=True) + 1e-6).sqrt()).to(dtype)
+
+        @staticmethod
+        def gate(value, alog, dt_bias, **options):
+            assert options['namespace'] == 'chunk'
+            calls.append('gate')
+            hv, kd = value.shape[-2:]
+            return -torch.exp(alog.float()).view(hv, 1) * torch.nn.functional.softplus(
+                value.float() + dt_bias.float().view(hv, kd))
+
+        @staticmethod
+        def beta(value, **options):
+            assert options['namespace'] == 'chunk'
+            calls.append('beta')
+            return torch.sigmoid(value.float())
+
+    monkeypatch.setattr(chunk, '_prep_runtime', lambda: PrepABI)
+    monkeypatch.setattr(chunk, '_compiled_chain', lambda *args: {})
+    monkeypatch.setattr(chunk_bwd, '_compiled_chain', lambda *args: {})
+
     def boundary(q, k, value, g, beta, *args, **kwargs):
         assert value is v
         captured.extend((q, k, g, beta))
@@ -200,6 +271,8 @@ def test_public_chunk_flags_reach_prepared_boundary(monkeypatch, flags):
         torch.testing.assert_close(got, want, rtol=0, atol=0)
         if not flags[(0, 0, 1, 2)[i]]:
             assert got is selected[i]
+
+    assert calls == (['gate'] if flags[1] else []) + (['norm', 'norm'] if flags[0] else []) + (['beta'] if flags[2] else [])
 
 
 @pytest.mark.parametrize('parameter', ['A_log', 'dt_bias'])

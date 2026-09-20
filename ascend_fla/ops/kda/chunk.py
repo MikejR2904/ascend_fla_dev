@@ -44,17 +44,15 @@ def _l2norm(x: torch.Tensor) -> torch.Tensor:
 _QK_NORM_TOL = 2 ** -8
 
 
-def _prepare_inputs(q, k, g, beta, *, A_log=None, dt_bias=None,
+def _validate_raw_inputs(q, k, g, beta, *, A_log=None, dt_bias=None,
                     use_qk_l2norm_in_kernel=False, use_gate_in_kernel=False,
                     use_beta_sigmoid_in_kernel=False, qk_dtype=torch.bfloat16):
-    """Differentiable host-op preparation; never changes a disabled route.
-
-    All arithmetic is FP32. Only normalized q/k cross the requested ABI cast.
-    These flags describe input semantics; no new fusion is claimed.
-    """
+    """Shared metadata checks, completed before preparation can launch."""
     def raw_tensor(name, x):
         if not isinstance(x, torch.Tensor) or not x.is_floating_point():
             raise ValueError(f"{name} must be a floating tensor for raw-input preparation")
+        if x.dtype not in (torch.bfloat16, torch.float32):
+            raise ValueError(f"{name} raw input must be BF16 or FP32; FP16/FP64 are unsupported")
         if not x.is_contiguous():
             raise ValueError(f"{name} must be contiguous before raw-input preparation")
 
@@ -73,17 +71,93 @@ def _prepare_inputs(q, k, g, beta, *, A_log=None, dt_bias=None,
             raise ValueError(f"dt_bias must have shape [HV*K]=[{hv * kd}], got {tuple(dt_bias.shape)}")
         if A_log.device != g.device or dt_bias.device != g.device:
             raise ValueError("A_log and dt_bias must be on the same device as g")
-        g = -A_log.float().exp().view(hv, 1) * torch.nn.functional.softplus(
-            g.float() + dt_bias.float().view(hv, kd))
     if use_qk_l2norm_in_kernel:
         for name, x in (("q", q), ("k", k)):
             raw_tensor(name, x)
         if q.dim() != 4 or k.shape != q.shape:
             raise ValueError("q and k must have the same shape [B,T,H,K]")
-        q, k = _l2norm(q).to(qk_dtype), _l2norm(k).to(qk_dtype)
+        if qk_dtype not in (torch.bfloat16, torch.float32):
+            raise ValueError("normalized q/k output must be BF16 or FP32")
     if use_beta_sigmoid_in_kernel:
         raw_tensor("beta", beta)
+
+
+def _prepare_inputs(q, k, g, beta, *, A_log=None, dt_bias=None,
+                    use_qk_l2norm_in_kernel=False, use_gate_in_kernel=False,
+                    use_beta_sigmoid_in_kernel=False, qk_dtype=torch.bfloat16):
+    """Preserved differentiable training graph pending BF-08.
+
+    Inference and decode use ``_prepare_kernel_inputs``. Disabled routes retain
+    their original objects. This training arithmetic remains an audited exception.
+    """
+    _validate_raw_inputs(q, k, g, beta, A_log=A_log, dt_bias=dt_bias,
+                        use_qk_l2norm_in_kernel=use_qk_l2norm_in_kernel,
+                        use_gate_in_kernel=use_gate_in_kernel,
+                        use_beta_sigmoid_in_kernel=use_beta_sigmoid_in_kernel,
+                        qk_dtype=qk_dtype)
+    if use_gate_in_kernel:
+        hv, kd = g.shape[-2:]
+        g = -A_log.float().exp().view(hv, 1) * torch.nn.functional.softplus(
+            g.float() + dt_bias.float().view(hv, kd))
+    if use_qk_l2norm_in_kernel:
+        q, k = _l2norm(q).to(qk_dtype), _l2norm(k).to(qk_dtype)
+    if use_beta_sigmoid_in_kernel:
         beta = beta.float().sigmoid()
+    return q, k, g, beta
+
+
+@functools.lru_cache(maxsize=1)
+def _prep_runtime():
+    path = pathlib.Path(__file__).resolve().parents[3] / "kernels/projects/a5/kda_prep/runtime.py"
+    spec = importlib.util.spec_from_file_location("_afla_kda_prep_runtime", path)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+def _prepare_kernel_inputs(q, k, g, beta, *, A_log=None, dt_bias=None,
+                           use_qk_l2norm_in_kernel=False, use_gate_in_kernel=False,
+                           use_beta_sigmoid_in_kernel=False, qk_dtype=torch.bfloat16,
+                           device="a5", block_dim=1, namespace="chunk", impl="stable"):
+    """Validate, precompile dependencies, then prepare enabled inputs on NPU."""
+    _validate_raw_inputs(q, k, g, beta, A_log=A_log, dt_bias=dt_bias,
+                        use_qk_l2norm_in_kernel=use_qk_l2norm_in_kernel,
+                        use_gate_in_kernel=use_gate_in_kernel,
+                        use_beta_sigmoid_in_kernel=use_beta_sigmoid_in_kernel,
+                        qk_dtype=qk_dtype)
+    if not (use_qk_l2norm_in_kernel or use_gate_in_kernel or use_beta_sigmoid_in_kernel):
+        return q, k, g, beta
+    runtime = _prep_runtime()
+    sources = []
+    if use_qk_l2norm_in_kernel:
+        if q.shape[-1] != HEAD_DIM or min(q.shape) <= 0:
+            raise ValueError("raw q/k require positive [B,T,H,128]")
+        sources += [("q", q), ("k", k)]
+    if use_gate_in_kernel:
+        if g.shape[-1] != HEAD_DIM or min(g.shape) <= 0:
+            raise ValueError("raw g requires positive [B,T,HV,128]")
+        sources += [("g", g), ("A_log", A_log), ("dt_bias", dt_bias)]
+    if use_beta_sigmoid_in_kernel:
+        sources += [("beta", beta)]
+    for name, source in sources:
+        runtime._check_source(name, source)
+    if namespace == "chunk":
+        from .chunk_bwd import _compiled_chain as bwd_chain
+        _compiled_chain(device, block_dim, impl)
+        bwd_chain(device, block_dim, impl)
+    elif namespace == "decode":
+        from .fused_recurrent import _compiled_pair
+        _compiled_pair(device, block_dim)
+    else:
+        raise ValueError("KDA prep namespace must be chunk or decode")
+    options = dict(device=device, block_dim=block_dim, namespace=namespace)
+    if use_gate_in_kernel:
+        g = runtime.gate(g, A_log, dt_bias, **options)
+    if use_qk_l2norm_in_kernel:
+        q, k = runtime.norm(q, qk_dtype, **options), runtime.norm(k, qk_dtype, **options)
+    if use_beta_sigmoid_in_kernel:
+        beta = runtime.beta(beta, **options)
     return q, k, g, beta
 
 
@@ -225,6 +299,7 @@ def _compiled_chain(device: str, block_dim: int, impl: str = "stable") -> dict[s
     from ...runtime.compile import compile_kernel
 
     _layout_runtime().prepare(device, block_dim)
+    _prep_runtime().prepare(device, block_dim, "chunk")
     return {name: compile_kernel(fn, device=device, block_dim=block_dim)
             for name, fn in kda_fwd_kernels(impl).items()}
 

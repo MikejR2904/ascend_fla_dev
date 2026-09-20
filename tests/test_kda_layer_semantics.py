@@ -26,6 +26,41 @@ def _capture(monkeypatch):
 
 @pytest.mark.parametrize("norm", [0., 1e-4, 1e-2, 1., 30.])
 def test_layer_l2norm_uses_additive_squared_epsilon(monkeypatch, norm):
+    # Explicit CPU substitute at the new native prep ABI, local to this test.
+    from ascend_fla.ops.kda import chunk, chunk_bwd
+    calls = []
+
+    class PrepABI:
+        @staticmethod
+        def _check_source(name, value):
+            assert value.device.type == 'cpu' and value.is_contiguous()
+            assert value.dtype in (torch.bfloat16, torch.float32)
+
+        @staticmethod
+        def norm(value, dtype, **options):
+            assert options['namespace'] == 'chunk'
+            calls.append('norm')
+            x = value.float()
+            return (x / (torch.sum(x*x, -1, keepdim=True) + 1e-6).sqrt()).to(dtype)
+
+        @staticmethod
+        def gate(value, alog, dt_bias, **options):
+            assert options['namespace'] == 'chunk'
+            calls.append('gate')
+            hv, kd = value.shape[-2:]
+            return -torch.exp(alog.float()).view(hv, 1) * torch.nn.functional.softplus(
+                value.float() + dt_bias.float().view(hv, kd))
+
+        @staticmethod
+        def beta(value, **options):
+            assert options['namespace'] == 'chunk'
+            calls.append('beta')
+            return torch.sigmoid(value.float())
+
+    monkeypatch.setattr(chunk, '_prep_runtime', lambda: PrepABI)
+    monkeypatch.setattr(chunk, '_compiled_chain', lambda *args: {})
+    monkeypatch.setattr(chunk_bwd, '_compiled_chain', lambda *args: {})
+
     torch.manual_seed(244)
     layer = KimiDeltaAttention(hidden_size=128, num_heads=1, use_short_conv=True)
     # Replace only the convolution output, so this isolates normalization from
@@ -47,6 +82,41 @@ def test_layer_l2norm_uses_additive_squared_epsilon(monkeypatch, norm):
 
 @pytest.mark.parametrize("with_cache", [False, True])
 def test_layer_without_short_conv_activates_all_three_projections(monkeypatch, with_cache):
+    # Explicit CPU substitute at the new native prep ABI, local to this test.
+    from ascend_fla.ops.kda import chunk, chunk_bwd
+    calls = []
+
+    class PrepABI:
+        @staticmethod
+        def _check_source(name, value):
+            assert value.device.type == 'cpu' and value.is_contiguous()
+            assert value.dtype in (torch.bfloat16, torch.float32)
+
+        @staticmethod
+        def norm(value, dtype, **options):
+            assert options['namespace'] == 'chunk'
+            calls.append('norm')
+            x = value.float()
+            return (x / (torch.sum(x*x, -1, keepdim=True) + 1e-6).sqrt()).to(dtype)
+
+        @staticmethod
+        def gate(value, alog, dt_bias, **options):
+            assert options['namespace'] == 'chunk'
+            calls.append('gate')
+            hv, kd = value.shape[-2:]
+            return -torch.exp(alog.float()).view(hv, 1) * torch.nn.functional.softplus(
+                value.float() + dt_bias.float().view(hv, kd))
+
+        @staticmethod
+        def beta(value, **options):
+            assert options['namespace'] == 'chunk'
+            calls.append('beta')
+            return torch.sigmoid(value.float())
+
+    monkeypatch.setattr(chunk, '_prep_runtime', lambda: PrepABI)
+    monkeypatch.setattr(chunk, '_compiled_chain', lambda *args: {})
+    monkeypatch.setattr(chunk_bwd, '_compiled_chain', lambda *args: {})
+
     torch.manual_seed(244)
     layer = KimiDeltaAttention(hidden_size=128, num_heads=1, num_v_heads=2, use_short_conv=False)
     x = torch.randn(1, 64, 128)

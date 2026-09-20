@@ -2,8 +2,7 @@
 
 The custom kernel addresses GVA heads and performs scaling/conversion directly.
 Default flags=False uses only host metadata, output allocation and launch.
-The unchanged A2-44 raw-flags helper is a registered legacy exception pending
-BF-07; its preprocessing is audited separately, without a conformance claim.
+Enabled raw flags use the typed KDA preparation kernels before native decode.
 """
 from __future__ import annotations
 
@@ -13,7 +12,7 @@ from typing import Any
 
 import torch
 
-from .chunk import HEAD_DIM, VALUE_DIM, _load_kernel, _prepare_inputs
+from .chunk import HEAD_DIM, VALUE_DIM, _load_kernel, _prepare_kernel_inputs, _prep_runtime
 
 #: 本单元声明的 block_dim。**比 chunk 路径的 4 宽** —— 这个 kernel 只用向量核、
 #: 不碰 cube，而 ``GetVecNum() == 2 * block_dim``，物理上有 56 个向量核。
@@ -38,6 +37,7 @@ def kda_fused_recurrent_kernel() -> Any:
 @functools.lru_cache(maxsize=None)
 def _compiled_pair(device: str, block_dim: int) -> dict:
     from ...runtime.compile import compile_kernel
+    _prep_runtime().prepare(device, block_dim, "decode")
     return {dtype: compile_kernel(_native_kernel(dtype), device=device,
                                   block_dim=block_dim)
             for dtype in (torch.float32, torch.bfloat16)}
@@ -159,8 +159,7 @@ def fused_recurrent_kda(
             squared epsilon 1e-6, then round to v.dtype before the existing ABI.
         use_gate_in_kernel: Apply ``-exp(A_log)*softplus(g+dt_bias)`` in FP32.
         use_beta_sigmoid_in_kernel: Apply sigmoid to raw beta logits in FP32.
-            These flags retain the registered A2-44 host preparation exception
-            pending BF-07. They are not claimed to satisfy the default-path audit.
+            All three preparations execute in typed custom kernels.
         check_domain: Accepted for API symmetry; heuristic domain checks run
             only in chunk mode, never on each decode step. Shape checks remain.
 
@@ -169,12 +168,13 @@ def fused_recurrent_kda(
         ``final_state`` 为 ``[B,HV,128,128]`` float32 或 ``None``。
     """
     b, t, h, hv = _check(q, k, v, g, beta, initial_state, block_dim)
-    q, k, g, beta = _prepare_inputs(
+    q, k, g, beta = _prepare_kernel_inputs(
         q, k, g, beta, A_log=A_log, dt_bias=dt_bias,
         use_qk_l2norm_in_kernel=use_qk_l2norm_in_kernel,
         use_gate_in_kernel=use_gate_in_kernel,
         use_beta_sigmoid_in_kernel=use_beta_sigmoid_in_kernel,
         qk_dtype=v.dtype,
+        device=device, block_dim=block_dim, namespace="decode",
     )
     _check_types(q, k, v, g, beta, initial_state)
     sc = HEAD_DIM ** -0.5 if scale is None else float(scale)

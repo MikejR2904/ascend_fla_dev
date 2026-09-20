@@ -1,0 +1,398 @@
+{
+  "schema": "ascriptor.kernel-unit/1",
+  "id": "a5.kda_prep",
+  "kind": "kernel",
+  "description": "Typed raw KDA input preparation for inference and decode; training graph stays on host pending BF-08",
+  "inputs": {
+    "source": {
+      "dtype": "case-specific BF16/FP32"
+    },
+    "alog": {
+      "description": "gate-only head parameter"
+    },
+    "bias": {
+      "description": "gate-only channel parameter"
+    }
+  },
+  "outputs": {
+    "destination": {
+      "description": "norm output dtype selected by case, gate/beta FP32; CPU FP64 precision reference"
+    }
+  },
+  "domain": {
+    "chunk_block_dim": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "decode_block_dim": [
+      1,
+      2,
+      4,
+      8,
+      16,
+      28
+    ],
+    "K": 128,
+    "raw_dtypes": [
+      "bfloat16",
+      "float32"
+    ],
+    "norm": "fixed two64-lane reductions, merge, additive1e-6, sqrt, division; BF16 RNE if requested",
+    "gate": "-exp(A_log)*softplus(g+dt_bias), strict threshold20",
+    "beta": "FP32 sigmoid",
+    "ownership": "4096-element tiles; gate head x32BT rows; GetVecNum=2bd; single-slot autosync; disjoint outputs",
+    "training_exception": "Original host preparation remains differentiable; BF-08 owns removal",
+    "block_dim": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  "dependencies": {
+    "python": ">=3.10",
+    "ascriptor": "==0.1.0",
+    "host": [
+      "torch>=2.9.1",
+      "numpy"
+    ]
+  },
+  "comparison": {
+    "owner": "unit.compare",
+    "frozen_budgets": "budgets.json",
+    "rules": "Per-dtype FP64 relativeL2/perpoint <=frozen3F; normBF16 also<=1ULP to roundedFP64 and predecessorFP32. Report both ULP distributions. Endpoints compared separately against predecessor FP32 semantics; no new domain gate.",
+    "default": {
+      "mode": "allclose",
+      "atol": 0,
+      "rtol": 0.011673144813292246,
+      "max_relative_l2": 0.005047884085284465,
+      "reason": "Structural envelope only; run.py MUST apply each frozen dtype-specific limit in unit.compare plus BF16 ULP checks; this envelope alone is not acceptance."
+    },
+    "dtype_limits": {
+      "norm:bf16_bf16": {
+        "relative_l2": 0.005047884085284465,
+        "max_relative_nonzero": 0.011672969828497944
+      },
+      "norm:bf16_f32": {
+        "relative_l2": 1.8892900244007207e-07,
+        "max_relative_nonzero": 5.422593638666157e-07
+      },
+      "norm:f32_bf16": {
+        "relative_l2": 0.005005332401431067,
+        "max_relative_nonzero": 0.011673144813292246
+      },
+      "norm:f32_f32": {
+        "relative_l2": 1.5908351167188408e-07,
+        "max_relative_nonzero": 5.293661603890089e-07
+      },
+      "gate:bf16_bf16_bf16": {
+        "relative_l2": 1.385770801461847e-07,
+        "max_relative_nonzero": 5.106379369265594e-07
+      },
+      "gate:bf16_bf16_f32": {
+        "relative_l2": 1.464126540337291e-07,
+        "max_relative_nonzero": 8.144640195580126e-07
+      },
+      "gate:bf16_f32_bf16": {
+        "relative_l2": 1.3019290956223217e-07,
+        "max_relative_nonzero": 5.831864113937513e-07
+      },
+      "gate:bf16_f32_f32": {
+        "relative_l2": 1.3734466048431782e-07,
+        "max_relative_nonzero": 7.298292393636251e-07
+      },
+      "gate:f32_bf16_bf16": {
+        "relative_l2": 1.3859049513332232e-07,
+        "max_relative_nonzero": 8.413248231707547e-07
+      },
+      "gate:f32_bf16_f32": {
+        "relative_l2": 1.4307970796651619e-07,
+        "max_relative_nonzero": 8.008841120856054e-07
+      },
+      "gate:f32_f32_bf16": {
+        "relative_l2": 1.3380063716264698e-07,
+        "max_relative_nonzero": 8.577936471171129e-07
+      },
+      "gate:f32_f32_f32": {
+        "relative_l2": 1.3941702837033546e-07,
+        "max_relative_nonzero": 7.166924504844789e-07
+      },
+      "beta:bf16": {
+        "relative_l2": 1.1688584942602394e-07,
+        "max_relative_nonzero": 3.543025674180203e-07
+      },
+      "beta:f32": {
+        "relative_l2": 1.1465413372516245e-07,
+        "max_relative_nonzero": 3.463000927174088e-07
+      }
+    }
+  },
+  "cases": [
+    {
+      "id": "norm_bf16_bf16",
+      "seed": 7007,
+      "block_dim": 1,
+      "parameters": {
+        "kind": "norm",
+        "types": "bf16_bf16",
+        "shape": [
+          2,
+          65,
+          2,
+          128
+        ]
+      }
+    },
+    {
+      "id": "norm_bf16_f32",
+      "seed": 7007,
+      "block_dim": 1,
+      "parameters": {
+        "kind": "norm",
+        "types": "bf16_f32",
+        "shape": [
+          2,
+          65,
+          2,
+          128
+        ]
+      }
+    },
+    {
+      "id": "norm_f32_bf16",
+      "seed": 7007,
+      "block_dim": 1,
+      "parameters": {
+        "kind": "norm",
+        "types": "f32_bf16",
+        "shape": [
+          2,
+          65,
+          2,
+          128
+        ]
+      }
+    },
+    {
+      "id": "norm_f32_f32",
+      "seed": 7007,
+      "block_dim": 1,
+      "parameters": {
+        "kind": "norm",
+        "types": "f32_f32",
+        "shape": [
+          2,
+          65,
+          2,
+          128
+        ]
+      }
+    },
+    {
+      "id": "gate_bf16_bf16_bf16",
+      "seed": 7007,
+      "block_dim": 1,
+      "parameters": {
+        "kind": "gate",
+        "types": "bf16_bf16_bf16",
+        "shape": [
+          2,
+          65,
+          2,
+          128
+        ]
+      }
+    },
+    {
+      "id": "gate_bf16_bf16_f32",
+      "seed": 7007,
+      "block_dim": 1,
+      "parameters": {
+        "kind": "gate",
+        "types": "bf16_bf16_f32",
+        "shape": [
+          2,
+          65,
+          2,
+          128
+        ]
+      }
+    },
+    {
+      "id": "gate_bf16_f32_bf16",
+      "seed": 7007,
+      "block_dim": 1,
+      "parameters": {
+        "kind": "gate",
+        "types": "bf16_f32_bf16",
+        "shape": [
+          2,
+          65,
+          2,
+          128
+        ]
+      }
+    },
+    {
+      "id": "gate_bf16_f32_f32",
+      "seed": 7007,
+      "block_dim": 1,
+      "parameters": {
+        "kind": "gate",
+        "types": "bf16_f32_f32",
+        "shape": [
+          2,
+          65,
+          2,
+          128
+        ]
+      }
+    },
+    {
+      "id": "gate_f32_bf16_bf16",
+      "seed": 7007,
+      "block_dim": 1,
+      "parameters": {
+        "kind": "gate",
+        "types": "f32_bf16_bf16",
+        "shape": [
+          2,
+          65,
+          2,
+          128
+        ]
+      }
+    },
+    {
+      "id": "gate_f32_bf16_f32",
+      "seed": 7007,
+      "block_dim": 1,
+      "parameters": {
+        "kind": "gate",
+        "types": "f32_bf16_f32",
+        "shape": [
+          2,
+          65,
+          2,
+          128
+        ]
+      }
+    },
+    {
+      "id": "gate_f32_f32_bf16",
+      "seed": 7007,
+      "block_dim": 1,
+      "parameters": {
+        "kind": "gate",
+        "types": "f32_f32_bf16",
+        "shape": [
+          2,
+          65,
+          2,
+          128
+        ]
+      }
+    },
+    {
+      "id": "gate_f32_f32_f32",
+      "seed": 7007,
+      "block_dim": 1,
+      "parameters": {
+        "kind": "gate",
+        "types": "f32_f32_f32",
+        "shape": [
+          2,
+          65,
+          2,
+          128
+        ]
+      }
+    },
+    {
+      "id": "beta_bf16",
+      "seed": 7007,
+      "block_dim": 1,
+      "parameters": {
+        "kind": "beta",
+        "types": "bf16",
+        "shape": [
+          2,
+          65,
+          3
+        ]
+      }
+    },
+    {
+      "id": "beta_f32",
+      "seed": 7007,
+      "block_dim": 1,
+      "parameters": {
+        "kind": "beta",
+        "types": "f32",
+        "shape": [
+          2,
+          65,
+          3
+        ]
+      }
+    }
+  ],
+  "support": [
+    {
+      "device": "a5",
+      "backend": "cce",
+      "stage": "reference",
+      "status": "passed",
+      "note": "All14 declared bounded cases, bd1; sim/pipesim executed only after complete native T4096; no cross-stage inference."
+    },
+    {
+      "device": "a5",
+      "backend": "cce",
+      "stage": "emit",
+      "status": "passed",
+      "note": "28 typed namespace entries emitted; actual stage claims updated only from new evidence"
+    },
+    {
+      "device": "a5",
+      "backend": "cce",
+      "stage": "compile",
+      "status": "passed",
+      "note": "All50 vendors including9backward at bd1,2,4; bd3 still pending. New50-entry receipt is retained with full-v1-bd4."
+    },
+    {
+      "device": "a5",
+      "backend": "cce",
+      "stage": "board",
+      "status": "untested",
+      "note": "First fullKimi B1T4096H=HV32 allflags atbd4 passed new numerical/poison/audit checks. Leaf/grid/otherbd/endpoints/perf and DPM44repeatability qualification pending; formal declared-case hardware scope remains unqualified."
+    },
+    {
+      "device": "a5",
+      "backend": "cce",
+      "stage": "sim",
+      "status": "passed",
+      "note": "All14 declared bounded cases, bd1; sim/pipesim executed only after complete native T4096; no cross-stage inference."
+    },
+    {
+      "device": "a5",
+      "backend": "cce",
+      "stage": "pipesim",
+      "status": "passed",
+      "note": "All14 declared bounded cases, bd1; sim/pipesim executed only after complete native T4096; no cross-stage inference."
+    }
+  ],
+  "provenance": [
+    {
+      "source": "Original BF-07 unit",
+      "base": "c09a80ed8dbb96fdde7642eee21bec00d8f38e3a",
+      "budget_commit": "c9409a2a99f4b3042bbc3302126d3291c5e3bdc9",
+      "decisions": [
+        "D-PM-43",
+        "D-PM-44",
+        "PM5748898047"
+      ]
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-# KDA raw preprocessing: calibration before implementation
+# KDA raw preprocessing kernels (BF-07 stage 1)
 
 BF-07 moves enabled raw q/k normalization, gate transform and beta sigmoid into
 a new `kernels/projects/a5/kda_prep` unit on A5. The selected source baseline is
@@ -8,9 +8,14 @@ backward and layout kernels remain read-only.
 
 ## Current evidence
 
-CPU precision study only: **100 cases**, **66 corrupt-output controls rejected**,
-Python3.11.15 / Torch2.10.0+cpu. No candidate kernel has been written, compiled,
-simulated or executed on a device. No native acceptance is claimed here.
+The first budget commit, `c9409a2`, contains **100 CPU calibration cases** and
+**66 rejected corrupt-output controls**, Python3.11.15 / Torch2.10.0+cpu, before
+any candidate kernel source. The candidate now emits all28 typed chunk/decode
+entries to CCE. All50 vendors compile at bd1,2,4. The first complete Kimi T4096 all-flags
+workload at bd4 passes the new public/cached/backward checks. After that hardware
+run, all14 bounded source cases pass sim and pipesim at bd1. Remaining native
+grids, block dimensions, endpoints, repeatability and performance are pending;
+this is not completed BF-07 acceptance.
 FP64 is used only to measure preprocessing numerical error; the independent
 and pinned FLA end-to-end KDA goldens remain **Torch CPU FP32**.
 
@@ -50,11 +55,12 @@ path we also report all differences, without replacing the FP64 comparison.
 | beta:f32 | 3.82180445751e-08 | 1.14654133725e-07 | 3.46300092717e-07 |
 
 BF16 normalized outputs must also differ by at most1ULP from the correctly
-rounded reference. The predecessor's FP32 normalized outputs themselves reach
+rounded FP64 reference and the predecessor FP32 host result, separately. The predecessor's FP32 normalized outputs themselves reach
 2–3ULP against correctly rounded FP64 (BF16-input maximum3, FP32-input maximum2).
 This was reported to PM **before implementation**. FP32 differences above1ULP
-remain a review trigger requiring a located reduction/sqrt/division explanation;
-these observations are not converted into an automatic2–3ULP allowance.
+are reported with a located reduction/sqrt/division explanation. PM clarified
+that FP32 has no ULP pass line; its frozen relative-L2 and elementwise3F limits
+are the numerical criteria. The frozen budget file is unchanged.
 
 ## Range and nonfinite semantics
 
@@ -93,5 +99,82 @@ The standalone study imports only Torch and the verified predecessor snapshot;
 it does not import candidate kernel code or access devices/network. Text raw
 records are `evidence/calibration/pre-kernel.json`; summary and all-file hashes
 are adjacent. Inputs and references regenerate at run time from the seed.
-Stage2, unless PM splits it into BF-08, must separately calibrate and freeze
-its raw/parameter-gradient budgets before its kernel implementation.
+PM split the custom preprocessing gradient chain into BF-08. That task must
+separately calibrate and freeze raw/parameter-gradient budgets before writing
+its backward kernels.
+
+
+## Candidate architecture and dispatch boundary
+
+There are14 typed variants per namespace: four norm input/output dtype pairs,
+eight independent gate input/A_log/dt_bias tuples and two sigmoid inputs. Chunk
+and decode use separate operator names so their block dimensions can differ in
+one process. Existing public `prepare` reaches the compilation hooks; all50
+vendors (28 prep,6 layout,5 forward,9 backward,2 decode) register before the first
+custom execution. Each block dimension still requires a separate process.
+
+The three vector kernels own disjoint4096-element tiles, with a single UB slot
+and explicit MTE2/VF/MTE3 dependencies under auto_sync. Gate tiles contain up
+to32 token rows for one head. Norm reduces each K128 row as two64-lane cadds,
+then adds the partial sums, additive1e-6, sqrt and division in that fixed order.
+BF16 stores round to nearest even. Gate implements compensated log1p(exp(u))
+and the strict u>20 branch without clipping exp(A_log). Sigmoid uses FP32
+1/(1+exp(-x)). Native endpoint behavior remains to be measured, not inferred.
+
+All flags enabled add four preparation launches: gate, q, k and beta. Disabled
+routes retain the input object and launch nothing. Host work is metadata,
+validation, allocation and dispatch. Chunk compiles all nine backward vendors
+before preparation; decode compiles both decode dtypes and its14 prep vendors.
+
+Chunk chooses the retained training graph before preparation when grad mode is
+on and any q/k/v/g/beta/initial_state requires grad, or when enabled gate
+parameters require grad. This includes parameter-only training. `no_grad`
+always selects kernel preparation; decode always selects the inference path.
+The original `_prepare_inputs` remains differentiable and is a **noncompliant
+training exception pending BF-08**. D-PM-42 and D-PM-44 retain their scope.
+
+## Host checks and pending native evidence
+
+The new117 host cases check typed launch arguments, eight flag combinations,
+BF16/FP32 input and output pairs, both namespaces, disabled identity, unchanged
+inputs, compilation order, dtype rejection, and training/no_grad routing.
+The approved domain suite has71 passing cases; the combined layer/decode/prep
+boundary suite has146. AST checks confirm only the five approved existing test
+functions changed and only the public module docstring changed in `__init__`.
+In the isolated three-entry base swap, the52 public dtype/routing checks yield
+44 expected failures and8 retained training passes. These are host ABI evidence,
+not numerical kernel validation. All stable/layout kernel sources remain intact.
+
+Native completion still requires full Kimi all-flags public/cached/backward,
+all dtype/flag/shape and gate endpoint grids, unchanged-input and poisoned-output
+checks, all block dimensions, actual TorchDispatch audits, post-hardware bounded
+sim/pipesim, three same-card old/new/old timing rounds with Torch NPU baseline,
+and a verified fresh restore of the final evidence archive.
+
+
+## First complete native workload
+
+New evidence: `evidence/native/full-v1-bd4/`, CANN9.1.0-beta.1 compiler timestamp
+20260509_173000235; Python3.12.14, Torch2.12.0+cu130, torch_npu2.12.0. Every
+native JSON embeds raw compiler/OPP version lines and version.info hashes.
+The complete public all-flags forward, cached forward and backward execute49
+custom launches after all50 vendors have registered. Plain/cached o and state
+are bitwise equal; all nine caches and six gradients are finite; all ten inputs
+are unchanged; actual TorchDispatch has no unregistered arithmetic/copy entry.
+
+Prep relative-L2 errors against FP64 are q0.00165520, k0.00165529,
+g6.16113e-8, beta4.07918e-8, all below frozen budgets. BF16 q/k differ by at
+most1ULP from each comparison object. FP32 gate reaches4ULP versus roundedFP64
+and6 versus host; beta reaches2 and3. These distributions require the retained
+operation-boundary explanation, not a looser budget.
+
+Against each CPU FP32 oracle using predecessor CPU preparation, gradient
+relative-L2 is dq0.0280442, dk0.0330546, dv0.0035786, dbeta0.0038455,
+dg0.0629151, dh0 0.0023648. Both goldens also pass using actual native preparation
+as their input. Per-head/per-chunk forward checks pass. This single full case
+does not establish the D-PM-44 device-repeatability boundary or the remaining grid.
+
+The complete host suite is1001 passed /5 NPU-module skips, with1001 collected
+cases and per-file counts in `evidence/host/summary.json`. The declared14 bounded
+reference cases pass; sim and pipesim each pass14 only after the full hardware
+run, with pipe evidence retaining balance, hazard and deadlock fields.

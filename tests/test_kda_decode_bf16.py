@@ -105,14 +105,24 @@ def test_prepare_compiles_both_dtype_vendors_once(monkeypatch):
         return entry
 
     monkeypatch.setattr(compiler, 'compile_kernel', compile_kernel)
+    prep = decode._prep_runtime()
+    prep.prepare.cache_clear()
+    prep_kernels = set(prep.kernels('decode').values())
+    assert len(prep_kernels) == 14
     decode._compiled.cache_clear()
     decode._compiled_pair.cache_clear()
     try:
         assert decode._compiled('a5', 4) is kernels[torch.float32]
         assert decode._compiled('a5', 4, torch.bfloat16) is kernels[torch.bfloat16]
-        assert len(calls) == 2
-        assert {x[0] for x in calls} == set(kernels.values())
+        decode_calls = [row for row in calls if row[0] in kernels.values()]
+        prep_calls = [row for row in calls if row[0] in prep_kernels]
+        assert len(decode_calls) == 2
+        assert {row[0] for row in decode_calls} == set(kernels.values())
+        assert len(prep_calls) == len(prep_kernels)
+        assert {row[0] for row in prep_calls} == prep_kernels
+        assert len(calls) == len(prep_kernels) + len(kernels)
         assert all(kw == dict(device='a5', block_dim=4) for _, kw in calls)
     finally:
+        prep.prepare.cache_clear()
         decode._compiled.cache_clear()
         decode._compiled_pair.cache_clear()

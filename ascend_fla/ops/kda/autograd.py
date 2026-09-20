@@ -2,9 +2,9 @@
 
 The first five arguments follow FLA's q/k/v/g/beta order. By default they are
 already prepared: normalized q/k, log-decay g, and sigmoid beta. The optional
-``use_*_in_kernel`` flags instead request FP32 PyTorch preparation on the input
-device before the existing custom kernels. They describe input semantics; this
-implementation does not fuse those operations into the kernels.
+``use_*_in_kernel`` flags request FP32 preparation in custom kernels for
+inference. Training retains the differentiable host preparation graph pending
+BF-08; this remains an explicitly audited exception.
 
 Chunk mode checks the prepared-input domain by default. This is a heuristic:
 small unnormalized q/k cannot be distinguished from prepared inputs. Opting out
@@ -24,6 +24,7 @@ from .chunk import (
     VALUE_DIM,
     _check_input_domain,
     _prepare_inputs,
+    _prepare_kernel_inputs,
     _layout_runtime,
     chunk_kda_fwd,
     chunk_kda_fwd_with_caches,
@@ -114,14 +115,14 @@ def chunk_kda(
 
     Args:
         q, k: ``[B, T, H, 128]`` bfloat16, already normalized by default.
-            With ``use_qk_l2norm_in_kernel=True``, floating raw inputs are
+            With ``use_qk_l2norm_in_kernel=True``, BF16 or FP32 raw inputs are
             normalized in FP32 with ``x/sqrt(sum(x*x)+1e-6)`` then cast to BF16.
         v: ``[B, T, HV, 128]`` bfloat16，``HV % H == 0``。
         g: ``[B, T, HV, 128]`` float32，log 空间的 per-channel 衰减**增量**。
             Already ``-exp(A_log) * softplus(g_raw + dt_bias)`` by default;
-            ``use_gate_in_kernel=True`` accepts floating raw gate inputs instead.
+            ``use_gate_in_kernel=True`` accepts BF16 or FP32 raw gate inputs instead.
         beta: ``[B, T, HV]`` float32, post-sigmoid by default;
-            ``use_beta_sigmoid_in_kernel=True`` accepts floating raw logits.
+            ``use_beta_sigmoid_in_kernel=True`` accepts BF16 or FP32 raw logits.
         A_log, dt_bias: Required for raw gate preparation, with exact shapes
             ``[HV]`` and flattened ``[HV*128]``. Gate/beta preparation is FP32.
         check_domain: On prepared routes (their flag is False), require finite
@@ -161,12 +162,21 @@ def chunk_kda(
     Raises:
         ValueError: 任何定尺/dtype/设备约束不满足。绝不静默降级（AGENTS.md §7）。
     """
-    # Keep preparation outside Function.apply so gradients reach raw inputs,
-    # A_log and dt_bias, including calls where ONLY the gate parameters train.
+    # Choose before preparation; gate-parameter-only training must keep its graph.
+    train_inputs = (q, k, v, g, beta, initial_state)
+    if use_gate_in_kernel:
+        train_inputs += (A_log, dt_bias)
+    training = torch.is_grad_enabled() and any(
+        isinstance(t, torch.Tensor) and t.requires_grad for t in train_inputs)
     options = dict(use_qk_l2norm_in_kernel=use_qk_l2norm_in_kernel,
                    use_gate_in_kernel=use_gate_in_kernel,
                    use_beta_sigmoid_in_kernel=use_beta_sigmoid_in_kernel)
-    q, k, g, beta = _prepare_inputs(q, k, g, beta, A_log=A_log, dt_bias=dt_bias, **options)
+    if training:
+        q, k, g, beta = _prepare_inputs(q, k, g, beta, A_log=A_log, dt_bias=dt_bias, **options)
+    else:
+        q, k, g, beta = _prepare_kernel_inputs(
+            q, k, g, beta, A_log=A_log, dt_bias=dt_bias, **options,
+            device=device, block_dim=block_dim, namespace="chunk", impl=impl)
     if check_domain:
         _check_input_domain(q, k, g, beta, **options)
 

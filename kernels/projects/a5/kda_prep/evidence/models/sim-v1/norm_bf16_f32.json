@@ -1,0 +1,92 @@
+{
+  "case": {
+    "id": "norm_bf16_f32",
+    "seed": 7007,
+    "block_dim": 1,
+    "parameters": {
+      "kind": "norm",
+      "types": "bf16_f32",
+      "shape": [
+        2,
+        65,
+        2,
+        128
+      ]
+    }
+  },
+  "stage": "sim",
+  "to_fp64": {
+    "elements": 33280,
+    "finite_pairs": 33280,
+    "actual_nan": 0,
+    "reference_nan": 0,
+    "actual_posinf": 0,
+    "reference_posinf": 0,
+    "actual_neginf": 0,
+    "reference_neginf": 0,
+    "reference_norm": 16.12451543281415,
+    "residual_norm": 6.574658117476707e-07,
+    "relative_l2": 4.07742988920893e-08,
+    "relative_l2_finite_pairs": 4.07742988920893e-08,
+    "max_abs": 3.306522189383543e-08,
+    "max_relative_nonzero": 1.4539999682703228e-07,
+    "relative_quantiles": [
+      2.838816647612229e-08,
+      6.789362712366346e-08,
+      1.0281265716159874e-07,
+      1.4539999682703228e-07
+    ],
+    "zero_reference_nonzero_actual": 0,
+    "rounded_reference_max_ulp": 2,
+    "rounded_reference_over_one_ulp": 82,
+    "rounded_reference_sign_differences": 0,
+    "actual_sha256": "730f87107e9bdd3ed2feaa3d4de477fafbbbbba6dca31c91e020372cd3c0c875",
+    "reference_fp64_sha256": "b486a2c61e75fb8a164118feafc7363fe1df1f1e485e7dd0531e6051e1221c1e"
+  },
+  "to_predecessor_fp32": {
+    "elements": 33280,
+    "finite_pairs": 33280,
+    "actual_nan": 0,
+    "reference_nan": 0,
+    "actual_posinf": 0,
+    "reference_posinf": 0,
+    "actual_neginf": 0,
+    "reference_neginf": 0,
+    "reference_norm": 16.124515622208026,
+    "residual_norm": 5.888102482153804e-07,
+    "relative_l2": 3.651646114593494e-08,
+    "relative_l2_finite_pairs": 3.651646114593494e-08,
+    "max_abs": 2.9802322387695312e-08,
+    "max_relative_nonzero": 1.6755688241989e-07,
+    "relative_quantiles": [
+      0.0,
+      7.921946016532626e-08,
+      1.2800929859544996e-07,
+      1.6755688241989e-07
+    ],
+    "zero_reference_nonzero_actual": 0,
+    "rounded_reference_max_ulp": 2,
+    "rounded_reference_over_one_ulp": 528,
+    "rounded_reference_sign_differences": 0,
+    "actual_sha256": "730f87107e9bdd3ed2feaa3d4de477fafbbbbba6dca31c91e020372cd3c0c875",
+    "reference_fp64_sha256": "eeab3f4e40d192116780560dd783ccccd72567070909cf552c35be9664daf3f0"
+  },
+  "budget": {
+    "relative_l2": 1.8892900244007207e-07,
+    "max_relative_nonzero": 5.422593638666157e-07
+  },
+  "passed": true,
+  "execution_evidence": [
+    {
+      "kernel": "kda_prep_chunk_norm_bf16_f32_kernel",
+      "device": "a5",
+      "requested_backend": "cce",
+      "stage": "sim",
+      "launcher": "sim",
+      "block_dim": 1,
+      "model": "functional Surface IR",
+      "backend_executed": false,
+      "sim_processes": "threads"
+    }
+  ]
+}
