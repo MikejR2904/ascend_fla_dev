@@ -15,8 +15,8 @@ entries to CCE. All50 vendors compile at bd1,2,3,4. The complete Kimi T4096 all-
 workload passes at each of bd1,2,3,4. All17 returned outputs, caches and gradients
 are bitwise identical across those four runs. After that hardware
 run, all14 bounded source cases pass sim and pipesim at bd1. Ordinary chunk grids, regression and training checks, fresh scan repeatability, and
-synchronized performance measurements have also completed. The remaining decode
-dimensions, special-value grid failures and final archive restore still block
+synchronized performance measurements have also completed. The remaining special-value grid failures, endpoint reachability checks,
+metric comparison reruns and final archive restore still block
 BF-07 acceptance. The task and PR remain incomplete.
 FP64 is used only to measure preprocessing numerical error; the independent
 and pinned FLA end-to-end KDA goldens remain **Torch CPU FP32**.
@@ -148,8 +148,8 @@ In the isolated three-entry base swap, the52 public dtype/routing checks yield
 44 expected failures and8 retained training passes. These are host ABI evidence,
 not numerical kernel validation. All stable/layout kernel sources remain intact.
 
-Remaining native completion requires the higher decode block dimensions,
-resolution and completion of special-value grids, their full cross-bd comparison,
+Remaining native completion requires high-bd leaf checks, resolution and
+completion of special-value grids, their full cross-bd comparison,
 and a verified fresh restore of the final source and evidence archive. Completed
 regression, repeatability and timing stages are recorded separately below.
 
@@ -231,9 +231,10 @@ The ordinary public Cartesian grid covers C1/2/3, HV/H1/2/4/8, all eight flags
 and independent supported input dtype combinations. Chunk has1620 cases per
 block dimension; bd1/2/3/4 all pass and every output, all nine caches and every
 preparation tensor has identical hashes across those runs. Decode has3240 cases
-per dimension, including BF16 and FP32 v. Retrieved bd1/2/4 runs all pass and
-are bitwise identical. Additional high-bd runs are not claimed here until their
-complete receipts are retrieved and compared. Decode uses legal16-token public
+per dimension, including BF16 and FP32 v. All bd1/2/4/8/16/28 runs pass and every returned tensor and preparation
+value is bitwise identical across the six dimensions. The full ten-run ordinary
+grid contains25,920 native cases and51,870 self-contained original JSON receipts;
+all have been losslessly archived and restored with matching original hashes. Decode uses legal16-token public
 calls and carries the returned FP32 state through each C*64-token sequence.
 Every process registers all50 vendors, including all nine backward entries,
 before executing a custom kernel. These counts exclude failed boundary cases.
@@ -286,14 +287,30 @@ For A_log89/100 and u=-100/-90/-88, candidate and predecessor NPU produce
 NaN while CPU FP32 produces -Inf. For those A_log values and u=-87/-40/-20,
 candidate agrees with CPU FP32 (-Inf) while the predecessor NPU produces NaN.
 The independent FP64 gate remains finite. Matching both predecessor masks is
-impossible for these combinations. No production repair, reassociation,
-new input gate or accepted exception has been inferred from this discovery.
+impossible for these combinations. PM5750678047 explicitly removes that
+impossible equality requirement for this diagnostic endpoint population: no
+numerical pass line is assigned. The48 points classify as16 finite ties to
+FP64,16 finite candidate improvements over old NPU,4 shared nonfinite classes,
+6 candidate/CPU agreements differing from old NPU, and6 candidate/old-NPU
+agreements differing from CPU. All16 nonfinite points have A_log89/100, outside
+the FLA default log(U(1,16)) initialization range. This classification does not
+change the ordinary domain, frozen budgets, kernel or155/105 gates.
+
+The A_log80/u=-88 control is candidate/old-NPU zero while CPU FP32 gives
+-0.000335462624207139. The normal final product would be representable, so
+this result locates the underflow before the final multiplication. Together
+with the native exp(-88)=0 trace and the retained kernel operation order, it
+explains the later Inf*0=NaN class at A_log89/100. Public entry rejection or
+propagation is being measured separately; it is not inferred from leaf values.
 
 Two public boundary failures are retained in `native/boundary-diagnosis`:
 
 - Chunk `nearzero_c2_g2_rbf16_vbf16_flags010`: q/k scaled by1e-20;
   second chunk/head1 CPU FP32 o has magnitude at most approximately7.85e-44,
-  below BF16's smallest subnormal. Returned BF16 o is zero. Relative-L2 is1,
+  below BF16's smallest subnormal. Returned BF16 o is numerically zero. The
+  saved tensor inspection finds3991/3670 signed-zero differences against the
+  two correctly rounded CPU goldens: numeric ULP distance is0, but byte equality
+  is false. The earlier torch.equal-based wording was corrected. Relative-L2 is1,
   above0.05, although global o/state pass. The verifier accumulates norms in
   FP64 to avoid FP32 underflow masking this failure; the golden is CPU FP32.
 - Decode `nearzero_c2_g1_rbf16_vbf16_flags110`: all enabled preparations meet

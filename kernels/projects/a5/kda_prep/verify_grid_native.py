@@ -1,6 +1,7 @@
 """Native public grid; each process owns one chunk and one decode block_dim."""
 import argparse
 import hashlib
+import math
 import traceback
 from pathlib import Path
 import torch
@@ -32,6 +33,8 @@ def main():
     parser.add_argument('--block-dim',type=int,required=True)
     parser.add_argument('--output',type=Path,required=True)
     parser.add_argument('--case-id')
+    parser.add_argument('--boundary-kind',nargs='+',choices=('zero','nearzero','threshold','beta_saturation'),
+                        help='Run a named diagnostic partition; other required populations remain pending.')
     parser.add_argument('--chunk-count',type=int,choices=(1,2,3))
     args=parser.parse_args()
     bd=args.block_dim if args.route=='chunk' else min(args.block_dim,4)
@@ -41,28 +44,87 @@ def main():
     decode_checks=unit.module('verify_native').load('_bf07_decode_checks',unit.ROOT.parent/'kda_fused_recurrent_bf16/research.py')
     generator=native_grid.cases if args.population=='ordinary' else native_grid.boundary_cases
     cases=[p for p in generator(args.route) if not args.chunk_count or p['C']==args.chunk_count]
+    if args.boundary_kind:
+        assert args.population=='boundary'
+        cases=[p for p in cases if p['boundary'] in args.boundary_kind]
     if args.case_id:cases=[p for p in cases if p['id']==args.case_id]
     assert cases, 'selected population is empty'
     rows=[]
     original_forward_metric=context.reference.metrics
-    def forward_metric(actual,expected):
-        result=original_forward_metric(actual,expected)
+    original_decode_metric=decode_checks.metrics
+    metric_comparisons=[]
+    metric_stats=dict(comparisons=0,same_at_six_significant_digits=0,max_absolute_difference=0.,nonfinite_comparisons=0)
+
+    def relative_l2(actual,expected):
         a,e=actual.detach().cpu().double(),expected.detach().cpu().double()
         norm=float(e.norm());residual=float((a-e).norm())
-        result['relative_l2_fp64_accumulation']=residual/norm if norm else (0. if residual==0 else float('inf'))
-        result['passed']=result['passed'] and result['relative_l2_fp64_accumulation']<=.05
+        return residual/norm if norm else (0. if residual==0 else float('inf'))
+
+    def zero_representation_endpoint(actual,expected):
+        # PM5750678047: only BF16 output slices whose correctly rounded
+        # CPU FP32 golden is entirely zero. The original relative error stays.
+        if args.population!='boundary' or actual.dtype!=torch.bfloat16:
+            return None
+        rounded=expected.to(torch.bfloat16)
+        if not bool(expected.isfinite().all()) or not bool((rounded==0).all()):
+            return None
+        # Distance from numeric zero in BF16 representable steps. Signed-zero
+        # encodings are recorded separately; +0 and -0 have zero ULP distance.
+        distances=(actual.contiguous().view(torch.int16).long() & 0x7fff)
+        finite=bool(actual.isfinite().all())
+        return dict(owner_comment='https://github.com/ddddwee1/ascend_fla_dev/issues/106#issuecomment-5750678047',
+                    definition='CPU FP32 golden correctly rounded to BF16 is zero throughout this slice',
+                    elements=actual.numel(),max_ulp_from_rounded_zero=int(distances.max()),
+                    signed_zero_differences=int((torch.signbit(actual)!=torch.signbit(rounded)).sum()),
+                    bitwise_equal_to_rounded_reference=check.digest(actual)==check.digest(rounded),
+                    passed=finite and bool((distances<=1).all()))
+
+    def record_metrics(old,new):
+        same=format(old,'.6g')==format(new,'.6g')
+        difference=abs(old-new)
+        metric_comparisons.append(dict(legacy_relative_l2=old,corrected_fp64_relative_l2=new,
+            legacy_implementation='FP32 norm' if args.route=='chunk' else 'FP64 norm with denominator clamped at 1e-30',
+            absolute_difference=difference,same_at_six_significant_digits=same,
+            same_at_six_decimal_places=format(old,'.6f')==format(new,'.6f')))
+        metric_stats['comparisons']+=1
+        metric_stats['same_at_six_significant_digits']+=int(same)
+        if math.isfinite(difference):metric_stats['max_absolute_difference']=max(metric_stats['max_absolute_difference'],difference)
+        else:metric_stats['nonfinite_comparisons']+=1
+
+    def forward_metric(actual,expected):
+        result=original_forward_metric(actual,expected)
+        precise=relative_l2(actual,expected)
+        record_metrics(result['relative_l2'],precise)
+        result.update(relative_l2_fp64_accumulation=precise,legacy_passed=result['passed'])
+        result['passed']=result['legacy_passed'] and precise<=.05
+        endpoint=zero_representation_endpoint(actual,expected)
+        if endpoint is not None:
+            result['zero_representation_endpoint']=endpoint
+            result['passed']=endpoint['passed']
         return result
-    if args.population=='boundary':
-        context.reference.metrics=forward_metric
-        original_decode_metric=decode_checks.metrics
-        def decode_metric(actual,expected):
-            result=original_decode_metric(actual,expected)
-            a,e=actual.detach().cpu().double(),expected.detach().cpu().double()
-            norm=float(e.norm());residual=float((a-e).norm())
-            result['relative_l2']=residual/norm if norm else (0. if residual==0 else float('inf'))
-            return result
-        decode_checks.metrics=decode_metric
+
+    context.reference.metrics=forward_metric
+
+    def decode_measure(actual,expected):
+        result=original_decode_metric(actual,expected)
+        legacy=result['relative_l2'];precise=relative_l2(actual,expected)
+        old_floor=original_decode_metric(expected.bfloat16().float(),expected)['relative_l2']
+        floor=relative_l2(expected.bfloat16().float(),expected)
+        old_limit=min(.01,3*old_floor) if actual.dtype==torch.bfloat16 else 1e-5
+        limit=min(.01,3*floor) if actual.dtype==torch.bfloat16 else 1e-5
+        old_pass=result['finite'] and legacy<=old_limit
+        record_metrics(legacy,precise)
+        result.update(relative_l2=precise,legacy_relative_l2=legacy,
+            legacy_budget=old_limit,legacy_passed=old_pass,budget=limit,bf16_floor=floor,
+            passed=old_pass and precise<=limit)
+        endpoint=zero_representation_endpoint(actual,expected)
+        if endpoint is not None:
+            result['zero_representation_endpoint']=endpoint
+            result['passed']=endpoint['passed']
+        return result
+
     for case in cases:
+        metric_comparisons.clear()
         label=case['id'];print('CASE_START',args.route,label,flush=True)
         x=(native_grid.inputs if args.population=='ordinary' else native_grid.boundary_inputs)(case);flags=case['flags'];dtype=x['v'].dtype
         dev={n:t.npu() for n,t in x.items()}
@@ -136,21 +198,19 @@ def main():
                     prior=torch.cat((x['h0'][:,None],ref['chunk_states'][:,:-1]),dim=1)
                     measures['cached_states']=[dict(chunk=c,head=h,**check.metrics(got['cache_h'][:,c,h],prior[:,c,h],.05)) for c in range(case['C']) for h in range(case['HV'])]
                 else:
-                    measures={}
-                    for n in ('o','final_state'):
-                        metric=decode_checks.metrics(got[n],ref[n])
-                        floor=decode_checks.metrics(ref[n].bfloat16().float(),ref[n])['relative_l2']
-                        limit=min(.01,3*floor) if dtype==torch.bfloat16 and n=='o' else 1e-5
-                        metric.update(budget=limit,bf16_floor=floor,passed=metric['finite'] and metric['relative_l2']<=limit)
-                        measures[n]=metric
-                    measures['per_head_chunk']=[]
-                    for c in range(case['C']):
-                        for h in range(case['HV']):
-                            a,e=got['o'][:,c*64:(c+1)*64,h],ref['o'][:,c*64:(c+1)*64,h]
-                            m=decode_checks.metrics(a,e);floor=decode_checks.metrics(e.bfloat16().float(),e)['relative_l2']
-                            limit=min(.01,3*floor) if dtype==torch.bfloat16 else 1e-5
-                            measures['per_head_chunk'].append(dict(chunk=c,head=h,**m,budget=limit,passed=m['finite'] and m['relative_l2']<=limit))
+                    measures={n:decode_measure(got[n],ref[n]) for n in ('o','final_state')}
+                    measures['per_head_chunk']=[dict(chunk=c,head=h,**decode_measure(
+                        got['o'][:,c*64:(c+1)*64,h],ref['o'][:,c*64:(c+1)*64,h]))
+                        for c in range(case['C']) for h in range(case['HV'])]
                 comparisons[name]=measures
+            zero_slices=[]
+            for oracle,measures in comparisons.items():
+                for output in ('o','final_state'):
+                    if 'zero_representation_endpoint' in measures[output]:
+                        zero_slices.append(dict(oracle=oracle,output=output,scope='whole',**measures[output]['zero_representation_endpoint']))
+                for part in measures['per_head_chunk']:
+                    if 'zero_representation_endpoint' in part:
+                        zero_slices.append(dict(oracle=oracle,output='o',scope='head_chunk',chunk=part['chunk'],head=part['head'],**part['zero_representation_endpoint']))
             row=dict(case=case,route=args.route,population=args.population,block_dim=args.block_dim,
                      decode_test_schedule='16-token public calls with carried FP32 state' if args.route=='decode' else None,
                      input_sha256={n:check.digest(t) for n,t in x.items()},
@@ -161,7 +221,7 @@ def main():
                      disabled_same_object=disabled,plain_cached_exact=plain_cached_exact,
                      all_flags_disabled_exact=exact_disabled,preparation=prec,
                      predecessor_npu_differences={n:check.metrics(t,before[n],.05) for n,t in got.items()},
-                     cpu_fp32_references=comparisons,passed=False)
+                     cpu_fp32_references=comparisons,zero_representation_slices=zero_slices,passed=False)
             row['passed']=(all(row['input_unchanged'].values()) and all(row['finite'].values()) and all(disabled.values())
                 and (plain_cached_exact is None or all(plain_cached_exact)) and not audit.unexpected()
                 and all(p['passed'] for p in prec.values())
@@ -172,14 +232,16 @@ def main():
             if not row['passed'] and args.route=='decode':
                 oracle_native=dict(zip(('q','k','g','beta'),prep_cpu));oracle_native.update(v=x['v'],h0=x['h0'])
                 isolated_refs=dict(independent=context.reference.independent_reference(oracle_native),fla=context.reference.fla_reference(oracle_native))
-                row['located_actual_preparation_references']={label:{n:decode_checks.metrics(got[n],ref[n]) for n in ('o','final_state')} for label,ref in isolated_refs.items()}
+                row['located_actual_preparation_references']={label:{n:dict(original_decode_metric(got[n],ref[n]),relative_l2=relative_l2(got[n],ref[n])) for n in ('o','final_state')} for label,ref in isolated_refs.items()}
                 direct_data={n:prepared[i] for i,n in enumerate(('q','k','g','beta'))}
                 direct_data.update(v=dev['v'],initial_state=dev['h0'],output_final_state=True)
                 direct=check.cpu(decode_sequence(fused_recurrent,direct_data,dbd))
                 row['raw_vs_actual_prepared_public_bitwise']={n:check.digest(got[n])==check.digest(direct[i]) for i,n in enumerate(('o','final_state'))}
             context.write('cases/'+label,row)
+            context.write('metric-comparisons/'+label,dict(ordinary_decisions_require_legacy_and_corrected_pass=True,population=args.population,comparisons=metric_comparisons))
             rows.append(dict(id=label,passed=row['passed'],output_sha256=row['output_sha256'],prep_sha256=row['prep_sha256']))
-            context.write('summary',dict(complete=False,passed=False,expected=len(cases),cases=rows))
+            context.write('summary',dict(complete=False,passed=False,expected=len(cases),cases=rows,
+                          metric_implementation_summary=metric_stats,selected_boundary_kinds=args.boundary_kind,full_population=args.boundary_kind is None and args.case_id is None and args.chunk_count is None))
             if not row['passed']:
                 torch.save(dict(inputs=x,actual=got,before=before,reference=refs,actual_preparation=prep_cpu,predecessor_npu_preparation=check.cpu(old_prep)),args.output/(label+'.private.pt'))
                 raise AssertionError('public grid case failed: '+label)
@@ -187,7 +249,8 @@ def main():
         except BaseException as exc:
             context.write('failure',dict(case=case,type=type(exc).__name__,error=str(exc),traceback=traceback.format_exc(),completed=len(rows)))
             raise
-    context.write('summary',dict(complete=True,passed=True,expected=len(cases),cases=rows))
+    context.write('summary',dict(complete=True,passed=True,expected=len(cases),cases=rows,
+                  metric_implementation_summary=metric_stats,selected_boundary_kinds=args.boundary_kind,full_population=args.boundary_kind is None and args.case_id is None and args.chunk_count is None))
     print('GRID_DONE',args.route,args.block_dim,len(rows),flush=True)
 
 

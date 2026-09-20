@@ -23,11 +23,11 @@
     "after_native": true
   },
   "pending": [
-    "decode_high_bd_receipt_retrieval_and_cross_bd",
-    "expanded_nonfinite_comparison_contract",
     "public_nearzero_failures_and_remaining_boundary_grid",
     "decode_leaf_high_bd",
-    "final_source_and_evidence_archive_fresh_restore"
+    "final_source_and_evidence_archive_fresh_restore",
+    "public_nonfinite_reachability_measurement",
+    "corrected_metric_native_ordinary_comparison"
   ],
   "full_native_block_dims": [
     1,
@@ -71,13 +71,18 @@
       "retrieved_block_dims": [
         1,
         2,
-        4
+        4,
+        8,
+        16,
+        28
       ],
       "cases_per_bd": 3240,
       "passed": true,
-      "cross_bd_bitwise": true,
-      "higher_block_dims": "receipt retrieval pending; not claimed"
-    }
+      "cross_bd_bitwise": true
+    },
+    "total_native_cases": 25920,
+    "lossless_archived_receipts": 51870,
+    "fresh_receipt_restore_passed": true
   },
   "regressions": {
     "block_dims": [
@@ -127,6 +132,8 @@
   "unresolved": {
     "risk": "https://github.com/ddddwee1/ascend_fla_dev/issues/106#issuecomment-5750600450",
     "nonfinite_cross_products": "native/endpoint-v2-bd4/downstream.json",
-    "nearzero_failures": "native/boundary-diagnosis"
+    "nearzero_failures": "native/boundary-diagnosis",
+    "nonfinite_comparison_owner": "https://github.com/ddddwee1/ascend_fla_dev/issues/106#issuecomment-5750678047",
+    "nonfinite_comparison_status": "No numerical pass line: classify and report actual endpoint behavior. Public reachability measurement pending."
   }
 }
