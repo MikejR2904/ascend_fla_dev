@@ -1,5 +1,6 @@
 """Replay native receipt budgets and cross-block-dimension byte comparisons."""
 import argparse
+from collections import Counter
 import json
 import math
 from pathlib import Path
@@ -63,6 +64,10 @@ def replay(root, block_dims):
                 reference[key] = artifact
         boundary = json.loads((folder/'boundaries.json').read_text())
         assert boundary['passed'] and len(boundary['cases']) == 57
+        assert Counter(row['kind'] for row in boundary['cases']) == {
+            'original_unrounded_fp32': 8, 'output_final_state_false': 4,
+            'decode_chaining': 16, 'metadata_rejection': 13,
+            'raw_flags_legacy': 14, 'prepared_default': 2}
         numerical = 0
         for row in boundary['cases']:
             if 'comparison' in row:
@@ -81,6 +86,10 @@ def replay(root, block_dims):
                 assert all(row['input_unchanged'].values())
             if row.get('original_fp32_bitwise') is not None:
                 assert row['original_fp32_bitwise']
+            if row['kind']=='original_unrounded_fp32':
+                assert row['original_bitwise']
+            if 'host_operations' in row and row['kind']!='raw_flags_legacy':
+                assert set(row['host_operations']) <= {'aten.empty.memory_format','aten.view.default'}
             if 'host_categories' in row:
                 for item in row['host_categories']:
                     assert item['category'] in ('operator','registered_A2-44_legacy_exception_to_BF-07')
@@ -90,6 +99,9 @@ def replay(root, block_dims):
                 assert row['bitwise']
             if row['kind']=='metadata_rejection':
                 assert row['no_launch']
+            if row['kind']=='output_final_state_false':
+                assert row['exact_output'] and row['state_returned'] is False
+        assert numerical == 40
         reports.append(dict(block_dim=bd,numerical_cases=len(observed),additional_checks=57,
                             additional_hashed_cases=numerical,compile_entries=17,backward_entries=9,worst=worst))
     return dict(passed=True,block_dims=block_dims,

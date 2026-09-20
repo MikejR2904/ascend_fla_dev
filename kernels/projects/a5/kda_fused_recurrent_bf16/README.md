@@ -52,6 +52,13 @@ at bd=8/16/28 and `--mode perf` for three synchronized baseline/candidate/baseli
 rounds plus the actual Torch NPU reference baseline. No backward execution
 claim follows merely from compiling the backward dependencies.
 
+Run `--mode prefill` separately at each accepted block dimension. It checks
+21 stable-prefill/decode chains against both CPU FP32 references, including
+64/128-token prefixes, 64 decoded tokens, grouped heads and gate-span boundaries.
+The three comparison layers and their fixed budgets are in the research report.
+The original FP32 baseline is the exact public wrapper snapshot in
+`evidence/fp32-entry-before.py`, using the unchanged original kernel.
+
 Only after the full hardware workload, run bounded source-based diagnostics:
 
 ```bash
@@ -66,6 +73,18 @@ python kernels/projects/a5/kda_fused_recurrent_bf16/run.py check \
 The second probe retains token row strides and repeated-head UB reuse: four
 heads on two vector participants. The first exercises kernel zero-state
 initialization and the T=1 tail. Neither diagnostic replaces native acceptance.
+The companion FP32 entry has a bounded zero-state T2/H1/HV4 probe:
+
+```bash
+python kernels/projects/a5/kda_fused_recurrent_bf16/diagnose_fp32.py \
+  --launcher pipesim --output tmp/bf06/fp32-pipesim
+```
+
+Use `--launcher sim` for the functional model. Grid receipts can be independently
+replayed with `aggregate.py --root <receipts-directory> --output <result.json>`;
+the replay checks all nine backward compile entries, numerical budgets, audits
+and cross-block-dimension output bytes. Prefill and performance are separate
+acceptance stages.
 
 ## Precision and evidence
 
