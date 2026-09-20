@@ -675,6 +675,10 @@
         {
           "at": "2026-09-20T02:48",
           "summary": "STATUS（02:48Z，自述，PR #115 头 8e9806d）：首个完整 workload 原始日志、202 个占用样本、六个 vendor build 与 138/138 canonical CPU reference 已补入 PR；主验证环境 bd2 完整网格目前 135/138 记录通过（两条 dtype、三种 cotangent、所有短网格 / 边界），剩余长序列分组继续；接着 bd1 成对网格与同卡三轮，第二验证环境只作补充、不代替同环境的跨 bd 字节检查。blockers（不阻塞）：第二环境的 CANN 9.2.0 与指定 library 90cfcdc 存在头文件兼容差异——生成的 tensorutils_cce.h 检查 IMPL_UTILS_SYS_MACROS_H，而该环境 CANN 的 sys_macros_impl.h 用 IMPL_UTILS_SYS_MACROS_IMPL_H 并在 72/74 行定义 g_coreType，导致原 FP32 checkpoint 也报 g_coreType redefinition；第二环境尚无 kernel 执行 pass，完整失败日志、源码位置与头文件 sha 保留，未改导出代码 / library pin / 数值预算；任务主环境已编译并运行成功。PM 记一条观察：同为「CANN 9.2.0」的不同小版本头文件布局不同，所以评审要的 CANN 标识应带 inner / compiler 时间戳（BF-06 的回执已带）。"
+        },
+        {
+          "at": "2026-09-20T03:17",
+          "summary": "STATUS（03:17Z，自述，PR #115 提交 59b86e6，仍 draft）：bd2 完整 69 case × BF16 / FP32 = 138/138 记录通过——全部 A / B、NaN 预填 composition / independent leaves、缺省 cotangent dummy poison、输入不变、FP32 原入口字节对照与实际 host 算子审计通过，196 项零预算比较严格为 0，完整 raw JSON / log / receipt 与 615 个占用样本已提交，foreign = 0，BF16 实际 host 列表只有 aten.empty.memory_format；同环境同卡 bd1 完整网格已通过 134/138 记录，剩余 ratio8 长序列 dht / both，先跑 full workload、六项 vendor build 在执行前完成；十二个 bd1 / bd2 vendor build 均通过，原始日志 / 二进制哈希清单已提交；未改 FP32 单元或 reserved paths；主机 88 focused、763 passed / 9 skipped 全套、138 canonical CPU reference、gen_matrix / pm_board 检查通过。接着：bd1 完成并设备排空后，同一份代码自动进入完整原 FP32 / new BF16 / 原 FP32 的三轮同卡测量（T1024 / 4096，10 warmup / 50 repeat / 每次前后同步），再做独立 runtime 启动告警对照；全验收后 ready PR 并 DONE。兼容性核实：第二环境 guard 冲突的原因是「同为 CANN 9.2.0」的两个环境 build timestamp 不同（主环境 20260805_101249091 定义 IMPL_UTILS_SYS_MACROS_H；第二环境 20260909_000323409 的 sys_macros_impl.h 改用 IMPL_UTILS_SYS_MACROS_IMPL_H）；主环境全部 205 个 library 包文件 / 资源与干净 90cfcdc checkout 逐字节一致；第二环境失败记录独立保留、不声称通过、不改 library pin / 导出代码 / 工具链共享目录。"
         }
       ],
       "result": null,
@@ -727,6 +731,14 @@
         {
           "at": "2026-09-19T18:53",
           "summary": "APPLY（18:53Z，自述，#102）：条件申请，BF-02 验收并 CLOSE 之后才派（session gdn-series-…，同一 session 不同时持有两个任务；BF-01 仍在评审中）；已预读 PK-03 公共入口与 D-PM-37，先冻结精度边界与 F 预算，再完整 workload / 全 grid / 近零行 / beta_atk0 / NaN 预填 / 跨 bd 字节与同卡三轮。PM 回 NO_TASK：BF-03 依赖 BF-01（review），按 BF-01 → BF-02 → BF-03 的序，BF-02 CLOSE 后直接按这条 APPLY 派单，不需要重新申领。"
+        },
+        {
+          "at": "2026-09-20T03:04",
+          "summary": "RISK contradicts-handoff（03:04Z，自述；工具因任务未派、assignee 不符而不采信，PM 当数据核实成立）：BF-03 规格「FP32 归一化后再作 cube 的 BF16 operand」需在派单时冻结口径——两个指定只读起点（PK-03 的 pgdn_chunk_fwd、已合入的 BF-01）都是 Vector 递推 / 分块实现，没有 Cube 数据通路（kernels/pgdn_chunk_fwd/kernels/atk.py:19 的 atk_tile 在 FP32 VF 里归一化并算 ATK，:94 入口把 q_norm / k_read / k_write 保留为 FP32 GM，stages.py 五阶段只用 UB / VF 没有 L0A / L0B / L0C / MMAD；docs/research/gdn_chunk_fwd_bf16.md:17-20 记载 BF-01 保留 FP32 Vector 运算顺序、不作 Cube 声称）。提议 BF-03 在四项写集内沿用六阶段 Vector：BF16 q/k/v 直接进自编译 kernel，FP32 归一化与 ATK，保留 FP32 q_norm / k_read / k_write 与递推中间边，末端直接写 BF16 o，主状态与 ATK 状态保持 FP32，FP32 公共路径逐位不变，host 只分配 / 元数据 / launch，预算仍 min(1e-2, 3F)、不声称 Cube 吞吐提升；请 PM 在 BF-03 的 ASSIGN 里明确是否接受，若 Cube 是硬要求会另做数据流 / 精度预检、不把 Vector 当完成。当前无新增 BF-03 kernel / 公共代码 / 设备任务。"
+        },
+        {
+          "at": "2026-09-20T03:22",
+          "summary": "PM 裁定：Cube 不是硬要求（那句话是 PM 照 BF-04 类推写的），接受与 BF-01 一致的 Vector 精度方案，不声称 Cube 吞吐提升；硬要求不变（转换都在 kernel、FP32 改前改后逐位相同、两条 dtype 路径 host 审计只有分配 / 元数据 / 校验 / launch、预算 min(1e-2, 3F) 先校准、k_read / k_write 不对称与 per-H ATK 状态保持）；另做 Cube 路径要单独立项。规格已改（BF-03.md「Cube 澄清」），#102 已回复；BF-02 CLOSE 后按排队 APPLY 直接派。"
         }
       ],
       "result": null,
