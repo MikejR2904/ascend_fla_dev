@@ -11,6 +11,12 @@
 
 ### 正在飞的任务（现在没有；A5K-02、PK-02、PK-03 都已于 2026-09-19 合入）
 
+> **2026-09-20T16:25Z 更新：BF-07 近零调查——D-PM-51 前提补齐；同时发现规则之外的失败（未验收）；BF-03 bd1 全网格与 132 条记录完成。**
+> - **D-PM-51 前提补齐**：普通 decode 的 1e-5 是对旧 CPU-prep 输入的 golden，普通域 6 个 bd 分布一致（max 3.27e-7），普通 BF16 q / k prep 与旧 CPU 值全逐位相同；近零档 ~1% 的 q / k 差异（173 / 185 / 16384）= eps 主导下商恰在 BF16 中点（PM 在 CPU 上复算：随机 BF16 ÷ 1e-3 约 0.75% ≈ 1/128 恰在中点，同量级）；16 个 decode state 失败 = C∈{2,3} × group∈{1,2,4,8} × flags∈{110,111}，最大 9.825e-4，六个 bd 完全一致。新 verifier `--dpm51-nearzero-decode` 只限 decode / boundary / `nearzero_*`，逐案记 Σ(q/k²)/eps。
+> - **RISK `contradicts-handoff`（16:10Z）**：逐元素分类发现三类不能被 flush 类关闭的输出失败——chunk 的 normal 子集 L2 > 0.05（最坏 0.975，golden max 2.5e-38）、chunk 的 CPU subnormal→非零、decode 的非零 subnormal / CPU 零而 candidate 非零；chunk 每 bd 16 个 o 失败、decode 每 bd 44 个 o 失败，六个 bd 一致；candidate = 旧 NPU 逐位或差 ≤ 1 BF16 ULP（chunk）/ ≤ 4 FP32 ULP（decode）。**PM 认：这些按 D-PM-50 (c) 就是失败，保持未验收**，不能用 zero-only 规则或 D-PM-51 关闭；不改只读 kernel / 阈值 / 域。**BF-07 若带着这些失败 DONE，PM 把它们逐类交用户决定**（接受为端点类只披露不设线并给下溢区间定义 / 改 inherited kernel（kernel 批次）/ 其它）；DONE 里要给每个失败切片的类别、|golden|max、各分类个数、candidate vs 旧 NPU 的逐位 / ULP 差与「全部失败切片 |golden|max 上界」。
+> - **排队提醒**：BF-07 的近零端点调查在拉长，BF-08（梯度链，依赖 BF-07）与 A5K-03（scan_fused 定位，P0，建议给发现者 session）都排在它后面；A5K-03 与 BF-07 无依赖，用户可另开 session 直接 APPLY 并行做（需要 A5 至少两张卡）。
+> - **BF-03**（距 ASSIGN 7.7h / 24h）：bd1 全网格 66/66，与 bd2 合计 132 条原生记录；跨 bd 1122 对 SHA256 一致；66 个 FP32 公共结果对 pristine 入口逐位相同；BF16 最差 o 1.681e-3、主 state 3.23e-6、ATK 6.01e-7，最大 error / budget = 0.3333；24 个构建的 432 条 warning 行逐类定位到模板 / CANN 头文件；三轮同卡测量已启动，随后整理证据与 PR 再 DONE。
+>
 > **2026-09-20T16:13Z 更新：用户同意 BF-07 decode 近零方案（D-PM-51）。**
 > - **决定**：只限 boundary-grid 的近零 decode 端点组（`nearzero_*`），该组 `final_state` / `o` 改判 (A) 对以 candidate 实际 native-prep 输出为输入的 CPU FP32 reference（`final_state` ≤ 1e-5、`o` ≤ min(0.01, 3F)，数值不放宽）+ (B) prep 单步冻结预算已过 + (C) raw 与 prepared-public 逐位相同（真实字节 SHA）；对旧 prep 的 CPU reference 的偏差（4.31e-4）作观测如实报并写明分解。普通域 decode、chunk 的判据与 155 / 105 门控、域不变。
 > - **前提（补齐前不得对别的 case 用）**：申领人补三样——普通 decode state 1e-5 的比较对象；普通域对旧 prep reference 的分布与近零档 ~1% q / k 差异率更高的原因；其它落在 1e-5 之上的近零 decode 切片。**BF-07 规格**已追加「端点比较口径追加」一节，汇总 D-PM-48 / D-PM-50 / D-PM-51 四条端点口径，评审时逐条对。
