@@ -1,0 +1,22 @@
+__aicore__ inline void inverse_dainv_a2_kernel_vec(GM_ADDR dv_, GM_ADDR v_, GM_ADDR d_w_, GM_ADDR k_exp_, GM_ADDR beta_, GM_ADDR dtri_, int32_t B, int32_t HV, int32_t C, int32_t BT, int32_t HVK, int32_t HVB, GM_ADDR workspace)
+    GMTensor<bfloat16_t> beta((__gm__ bfloat16_t*)beta_);
+    SEvent<PIPE_MTE2, PIPE_V, 0, 0> ev_mte2_v_ready_1;  // guards b_ub, beta_b_ub #324
+    SEvent<PIPE_V, PIPE_S, 0, 1> ev_v_s_ready_1;  // guards beta_f_ub #325
+    SEvent<PIPE_V, PIPE_MTE3, 0, 0> ev_v_mte3_ready_1;  // guards out_ub #326
+    SEvent<PIPE_V, PIPE_MTE2, 1, 0> ev_v_mte2_valid_1;  // guards a_ub #338
+    SEvent<PIPE_V, PIPE_S, 1, 0> ev_v_s_valid_1;  // guards beta_ub #339
+    SEvent<PIPE_MTE3, PIPE_V, 1, 0> ev_mte3_v_valid_1;  // guards out_ub #340
+    const Tensor<bfloat16_t, Position::UB> beta_b_ub((uint64_t)(29184));  // #378
+    const Tensor<float, Position::UB> beta_f_ub((uint64_t)(31232));  // #379
+    const Tensor<float, Position::UB> beta_ub((uint64_t)(35328));  // #380
+    DEvent<PIPE_S, PIPE_V, 0, 0, 1> beta_ready;  // #28
+    float beta_val = 0.0f;  // #393
+        const Tensor<bfloat16_t, Position::UB> view_7 = beta_b_ub;  // #493
+        const GMTensor<bfloat16_t> view_8 = beta[((add_3 * HVB) + mod_1)];  // #498
+        vconv_bf162f32(beta_f_ub.ptr(), beta_b_ub.ptr(), (uint8_t)(16), (uint16_t)1, (uint16_t)0, (uint16_t)8, (uint16_t)4);  // #132
+            beta_val = beta_f_ub.load(j_1 * 16);  // #138 #139 #140
+            beta_ub.store(j_1, (float)(beta_val));  // #144
+        beta_ready.set();  // #145
+        beta_ready.wait();  // #146
+            vmul(view_11.ptr(), view_12.ptr(), beta_ub.ptr(), (uint8_t)(1), (uint8_t)1, (uint8_t)1, (uint8_t)1, (uint8_t)8, (uint8_t)8, (uint8_t)0);  // #157
+        vconv_f322bf16r(out_ub.ptr(), m_ub.ptr(), (uint8_t)(32), (uint16_t)1, (uint16_t)1, (uint16_t)4, (uint16_t)8);  // #170

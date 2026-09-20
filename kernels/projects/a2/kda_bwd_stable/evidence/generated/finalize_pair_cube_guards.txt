@@ -1,0 +1,48 @@
+__aicore__ inline void finalize_pair_a2_kernel_cube(GM_ADDR Mqk_, GM_ADDR Mbase_, GM_ADDR Mbeta_, GM_ADDR q_hv_, GM_ADDR k_hv_, GM_ADDR kg_, GM_ADDR dq_pair_, GM_ADDR dk_pair_, GM_ADDR s_base_, GM_ADDR t_beta_, int32_t B, int32_t HV, int32_t T, GM_ADDR workspace)
+    GMTensor<bfloat16_t> Mbeta((__gm__ bfloat16_t*)Mbeta_);
+    GMTensor<bfloat16_t> t_beta((__gm__ bfloat16_t*)t_beta_);
+    DEvent<PIPE_MTE2, PIPE_MTE1, 0, 0, 1> ev_mte2_mte1_ready_1;  // guards l1_k, l1_kg, l1_mbase, l1_mbeta, l1_mqk #273
+    SEvent<PIPE_MTE1, PIPE_M, 0, 1> ev_mte1_m_ready_1;  // guards _l0b #274
+    SEvent<PIPE_M, PIPE_MTE1, 0, 2> ev_m_mte1_valid_1;  // guards _l0a, _l0b #275
+    SEvent<PIPE_MTE1, PIPE_M, 0, 2> ev_mte1_m_ready_2;  // guards _l0b #276
+    DEvent<PIPE_M, PIPE_FIX, 0, 0, 1> ev_m_fix_ready_1;  // guards l0c_dk, l0c_dq, l0c_s, l0c_t #277
+    SEvent<PIPE_MTE1, PIPE_M, 0, 3> ev_mte1_m_ready_3;  // guards _l0b #278
+    SEvent<PIPE_MTE1, PIPE_M, 0, 4> ev_mte1_m_ready_4;  // guards _l0b #279
+    SEvent<PIPE_MTE1, PIPE_MTE2, 0, 6> ev_mte1_mte2_valid_1;  // guards l1_mqk #280
+    SEvent<PIPE_MTE1, PIPE_MTE2, 0, 7> ev_mte1_mte2_valid_2;  // guards l1_mbeta #282
+    DEvent<PIPE_MTE1, PIPE_MTE2, 2, 0, 1> ev_mte1_mte2_valid_3;  // guards l1_q #284
+    DEvent<PIPE_MTE1, PIPE_MTE2, 2, 2, 3> ev_mte1_mte2_valid_4;  // guards l1_kg #285
+    DEvent<PIPE_MTE1, PIPE_MTE2, 2, 4, 5> ev_mte1_mte2_valid_5;  // guards l1_k #286
+    SEvent<PIPE_M, PIPE_MTE1, 1, 0> ev_m_mte1_valid_2;  // guards _l0a #287
+    SEvent<PIPE_M, PIPE_MTE1, 1, 1> ev_m_mte1_valid_3;  // guards _l0a #288
+    SEvent<PIPE_MTE1, PIPE_M, 1, 0> ev_mte1_m_ready_5;  // guards _l0b #289
+    SEvent<PIPE_FIX, PIPE_M, 1, 0> ev_fix_m_valid_1;  // guards l0c_dq #290
+    SEvent<PIPE_FIX, PIPE_M, 1, 1> ev_fix_m_valid_2;  // guards l0c_dk #291
+    SEvent<PIPE_FIX, PIPE_M, 1, 2> ev_fix_m_valid_3;  // guards l0c_s #292
+    SEvent<PIPE_FIX, PIPE_M, 1, 3> ev_fix_m_valid_4;  // guards l0c_t #293
+    const DBuff<bfloat16_t, Position::L1> l1_mqk((uint64_t)(0), (uint64_t)(8192));  // #1
+    const DBuff<bfloat16_t, Position::L1> l1_mbase((uint64_t)(16384), (uint64_t)(8192));  // #2
+    const DBuff<bfloat16_t, Position::L1> l1_mbeta((uint64_t)(32768), (uint64_t)(8192));  // #3
+    const DBuff<bfloat16_t, Position::L1> l1_q((uint64_t)(49152), (uint64_t)(16384));  // #4
+    const DBuff<bfloat16_t, Position::L1> l1_k((uint64_t)(81920), (uint64_t)(16384));  // #5
+    const DBuff<bfloat16_t, Position::L1> l1_kg((uint64_t)(114688), (uint64_t)(16384));  // #6
+        const Tensor<bfloat16_t, Position::L1> slot_1 = l1_mqk.get(slot);  // #37
+        const Tensor<bfloat16_t, Position::L1> slot_2 = l1_q.get(slot);  // #41
+        const Tensor<bfloat16_t, Position::L1> slot_3 = l1_kg.get(slot);  // #45
+        const Tensor<bfloat16_t, Position::L1> slot_4 = l1_mqk.get(slot);  // #49
+        const Tensor<bfloat16_t, Position::L1> slot_5 = l1_kg.get(slot);  // #50
+            const Tensor<bfloat16_t, Position::L1> slot_5_tile = l1_kg.get(slot)[(((_subn / 16) * 1024) + (_subn % 16))];  // #104
+        const Tensor<bfloat16_t, Position::L1> slot_6 = l1_mqk.get(slot);  // #52
+        const Tensor<bfloat16_t, Position::L1> slot_7 = l1_q.get(slot);  // #53
+            const Tensor<bfloat16_t, Position::L1> slot_7_tile = l1_q.get(slot)[(((_subn_1 / 16) * 1024) + (_subn_1 % 16))];  // #124
+        const Tensor<bfloat16_t, Position::L1> slot_8 = l1_mbase.get(slot);  // #61
+        const Tensor<bfloat16_t, Position::L1> slot_9 = l1_mbeta.get(slot);  // #65
+        const GMTensor<bfloat16_t> view_6 = Mbeta[(((div_2 * ((HV * T) * 64)) + (mod_1 * (T * 64))) + (mul_2 * 64))];  // #67
+        const Tensor<bfloat16_t, Position::L1> slot_10 = l1_k.get(slot);  // #69
+        const Tensor<bfloat16_t, Position::L1> slot_11 = l1_mbase.get(slot);  // #73
+        const Tensor<bfloat16_t, Position::L1> slot_12 = l1_kg.get(slot);  // #74
+            const Tensor<bfloat16_t, Position::L1> slot_12_tile = l1_kg.get(slot)[(((_subn_2 / 16) * 1024) + (_subn_2 % 16))];  // #144
+        const Tensor<bfloat16_t, Position::L1> slot_13 = l1_mbeta.get(slot);  // #76
+        const Tensor<bfloat16_t, Position::L1> slot_14 = l1_k.get(slot);  // #77
+            const Tensor<bfloat16_t, Position::L1> slot_14_tile = l1_k.get(slot)[(((_subn_3 / 16) * 1024) + (_subn_3 % 16))];  // #164
+        const GMTensor<bfloat16_t> view_9 = t_beta[(((div_2 * ((HV * T) * 128)) + (mod_1 * (T * 128))) + (mul_2 * 128))];  // #83
