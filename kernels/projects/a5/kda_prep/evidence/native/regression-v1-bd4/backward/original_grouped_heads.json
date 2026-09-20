@@ -1,0 +1,1359 @@
+{
+  "environment": {
+    "python": "3.12.14",
+    "torch": "2.12.0+cu130",
+    "torch_npu": "2.12.0",
+    "ascriptor": "0.1.0",
+    "library_commit": "90cfcdc720bbcd66e8bd4361c4dd4fbc1a2a57b5",
+    "kernels_commit": "b3b3f9c16df7c4626ed3c081032a1be5a753d0b1",
+    "cann_version_records": {
+      "compiler": {
+        "raw_lines": [
+          "Version=9.1.0-beta.1",
+          "version_dir=cann",
+          "required_package_runtime_version=\"9.1\"",
+          "required_package_ge-executor_version=\"9.1\"",
+          "required_package_metadef_version=\"9.1\"",
+          "required_package_opbase_version=\"9.1\"",
+          "required_package_bisheng-compiler_version=\"9.1\"",
+          "required_package_tbe-tik_version=\"9.1\"",
+          "timestamp=20260509_173000235"
+        ],
+        "sha256": "0f982a259247cdd06df4fa5bdaf526b57b6ad15f7d27a33f23b3c70a381c2fe5"
+      },
+      "opp": {
+        "raw_lines": [
+          "Version=9.1.0-beta.1",
+          "version_dir=cann",
+          "required_package_runtime_version=\">=8.5\"",
+          "required_package_ge-executor_version=\">=8.5\"",
+          "required_package_metadef_version=\">=8.5\"",
+          "required_package_asc-devkit_version=\">=8.5\"",
+          "required_package_bisheng-compiler_version=\">=8.5\"",
+          "timestamp=20260509_173000235"
+        ],
+        "sha256": "377b05dab3a2dfc87dfaa92affd69a9aa5795a54d423cbe629d3495ad20370ef"
+      }
+    },
+    "opp_directories": [
+      "ascend910_93",
+      "ascend910b",
+      "ascend950"
+    ],
+    "drivers_sha256": {
+      "native_audit.py": "bfffeb22e43a3619118da1aa7119b7d1b5324d81d1632c982cfafcaebc4d6ba5",
+      "native_context.py": "d3afb051d41fd56707734a9dea941896a4923c0f9ea1ef749f80b0f8af425725",
+      "verify_regressions_native.py": "3edbdb4f446fc153f4ea69193426b386cabe8f1e7915de139018f726afca4b4f",
+      "guard.py": "62cf761fd794ee34c7a7f7ea6787dd5c17682b3be7274f07de823848cd6bcc4b",
+      "verify_grid_native.py": "cf4b17d097fb8b9d638ae5d5bef80e099787fdf6df0f580bf205d6bfd33571d8",
+      "native_environment.py": "8aa453ef4cfd92476bb80d463ddf63d4b1e1d3c2eb325ad69e93fcaecc50833d",
+      "unit.py": "d270c3d60704500bd41813831e57b0cea5ee95f67f5db914ff21cc6c1e8b22b7",
+      "native_grid.py": "39fd7fd5470f3af42d461d42644ae862b7745b352c9678761c512c4ab7d5dbab",
+      "verify_native.py": "37161cbe3d595e842fc62a66a8a78d5b2e9532059cb37e3d6f0897be5248e9e2",
+      "wait_native.py": "08e8443c06033198882b95d750c43bca7c0aa3365ae4f9db5394717ac7df7fe7"
+    },
+    "prep_sha256": {
+      "native_audit.py": "bfffeb22e43a3619118da1aa7119b7d1b5324d81d1632c982cfafcaebc4d6ba5",
+      "native_environment.py": "8aa453ef4cfd92476bb80d463ddf63d4b1e1d3c2eb325ad69e93fcaecc50833d",
+      "unit.py": "e3f9c1f51a977b31b87fd03397ea43a78b4b04f6dc487947ff0532eac747d9ae",
+      "run.py": "cc9b6f4400d94e45a3af3d607bbe143ad2211ce7b3189dbe3298166e5a541a32",
+      "_unit_runner.py": "91ab007ac56f59f3c1b918947be769e725e51d98f981f41608864a2ae477133a",
+      "runtime.py": "a63385ec54c95d02357b9748156cfe82b217e72b3834c159e7a029e5752fcbe3",
+      "verify_calibration.py": "e5f7403369d294444d617e7e93a06f83552caeb535d7a3f2c5cb54b8b287ff84",
+      "verify_native.py": "37161cbe3d595e842fc62a66a8a78d5b2e9532059cb37e3d6f0897be5248e9e2",
+      "kernels/forward.py": "135b1fa2f92c26da9a6b57434f09515ac95592f033b328c3c5ddcd9ac9b2b455",
+      "baseline/autograd.py": "c2a535ae2ec5b7f1b7da000a42a96e985fcc84aa4b05df1421cc83b424b25903",
+      "baseline/chunk.py": "5bf75978176280c5eaf9268e7730ea00bf1581bb1ef8dddb35ad5a178ffd49d0",
+      "baseline/fused_recurrent.py": "1e78c50a1f15f23e9a7213d57b021b558c02164989765877b6fba92a10cf473a",
+      "ref/calibrate.py": "d21ec73afc242b1b17e7d7f15e72c034fa0dfabda6505abe4edf74313cdb0765"
+    },
+    "wrappers_sha256": {
+      "chunk.py": "c79a199d9b8b9d5820834e87d7ad0805ce63531df878c11720c0a4f181c8a87e",
+      "chunk_bwd.py": "71ce0e041a02853de768e982cc38a497294ecbfaa9e8715aca084ad3db69247e",
+      "autograd.py": "78b96d6bb9a81dfa800c4704214bcd0cdce3447f2d1b1fdd77dd11bf5380559d",
+      "fused_recurrent.py": "872d15f102e482f4baa7f9229471e8bdcbc564c1e4531967d65be0fc758771fc"
+    }
+  },
+  "case": {
+    "id": "original_grouped_heads",
+    "B": 1,
+    "H": 1,
+    "HV": 2,
+    "C": 2,
+    "state": true
+  },
+  "block_dim": 4,
+  "bitwise": {
+    "o": {
+      "shape": [
+        1,
+        128,
+        2,
+        128
+      ],
+      "dtype": "torch.bfloat16",
+      "sha256": "6682a68a61730a152bb2e6d5dd35f1f2493d1ebdff0cb3816f1e5e3c516b9157",
+      "before_sha256": "6682a68a61730a152bb2e6d5dd35f1f2493d1ebdff0cb3816f1e5e3c516b9157",
+      "passed": true
+    },
+    "final_state": {
+      "shape": [
+        1,
+        2,
+        128,
+        128
+      ],
+      "dtype": "torch.float32",
+      "sha256": "2aea65ab224110e06139f26ceca57a8441e94cc24e24cb62ecb1619f7d31b665",
+      "before_sha256": "2aea65ab224110e06139f26ceca57a8441e94cc24e24cb62ecb1619f7d31b665",
+      "passed": true
+    },
+    "cache_g_cumsum": {
+      "shape": [
+        1,
+        128,
+        2,
+        128
+      ],
+      "dtype": "torch.bfloat16",
+      "sha256": "f6969a826ea67f3881016fa595c68a6231bfbe5a41b8a7d54e6f0e50986b878f",
+      "before_sha256": "f6969a826ea67f3881016fa595c68a6231bfbe5a41b8a7d54e6f0e50986b878f",
+      "passed": true
+    },
+    "cache_Aqk": {
+      "shape": [
+        1,
+        128,
+        2,
+        64
+      ],
+      "dtype": "torch.bfloat16",
+      "sha256": "67caa09b52d57ea940fc3238c696dd369c890ba21d198d5b868c53765855d43a",
+      "before_sha256": "67caa09b52d57ea940fc3238c696dd369c890ba21d198d5b868c53765855d43a",
+      "passed": true
+    },
+    "cache_Akk": {
+      "shape": [
+        1,
+        128,
+        2,
+        64
+      ],
+      "dtype": "torch.bfloat16",
+      "sha256": "373b287f17e8d57ca42c72cba61908ee3e742492257b04c078f874c93b937ab8",
+      "before_sha256": "373b287f17e8d57ca42c72cba61908ee3e742492257b04c078f874c93b937ab8",
+      "passed": true
+    },
+    "cache_w": {
+      "shape": [
+        1,
+        128,
+        2,
+        128
+      ],
+      "dtype": "torch.bfloat16",
+      "sha256": "7f92b44b0206038f7616f28b29cc4265563283cc0563d8be58a67469e28d4707",
+      "before_sha256": "7f92b44b0206038f7616f28b29cc4265563283cc0563d8be58a67469e28d4707",
+      "passed": true
+    },
+    "cache_u": {
+      "shape": [
+        1,
+        128,
+        2,
+        128
+      ],
+      "dtype": "torch.bfloat16",
+      "sha256": "cf796c414ff00c3205938d9ceaee98060ebdfd8eb9dc5c3d5d56ee14efb47d6f",
+      "before_sha256": "cf796c414ff00c3205938d9ceaee98060ebdfd8eb9dc5c3d5d56ee14efb47d6f",
+      "passed": true
+    },
+    "cache_qg": {
+      "shape": [
+        1,
+        128,
+        2,
+        128
+      ],
+      "dtype": "torch.bfloat16",
+      "sha256": "77a75b9211a949d33dd5184448b65fa9668bc10ed294b183e119ab89731e19be",
+      "before_sha256": "77a75b9211a949d33dd5184448b65fa9668bc10ed294b183e119ab89731e19be",
+      "passed": true
+    },
+    "cache_kg": {
+      "shape": [
+        1,
+        128,
+        2,
+        128
+      ],
+      "dtype": "torch.bfloat16",
+      "sha256": "a09c5ea93fe5164547de14f9ec88f2cdcc7d09da8227d4e817d688ebae38d650",
+      "before_sha256": "a09c5ea93fe5164547de14f9ec88f2cdcc7d09da8227d4e817d688ebae38d650",
+      "passed": true
+    },
+    "cache_v_new": {
+      "shape": [
+        1,
+        128,
+        2,
+        128
+      ],
+      "dtype": "torch.bfloat16",
+      "sha256": "723fa3d19f0ec776e6120117333cfbcc9d589b027b98521f6d7fa87c80da1e4a",
+      "before_sha256": "723fa3d19f0ec776e6120117333cfbcc9d589b027b98521f6d7fa87c80da1e4a",
+      "passed": true
+    },
+    "cache_h": {
+      "shape": [
+        1,
+        2,
+        2,
+        128,
+        128
+      ],
+      "dtype": "torch.bfloat16",
+      "sha256": "d06b2d3907bc4934a61c0d5edd7dc76dd26215c88dfc081a8073d1a47963a108",
+      "before_sha256": "d06b2d3907bc4934a61c0d5edd7dc76dd26215c88dfc081a8073d1a47963a108",
+      "passed": true
+    },
+    "dq": {
+      "shape": [
+        1,
+        128,
+        1,
+        128
+      ],
+      "dtype": "torch.bfloat16",
+      "sha256": "7bc134d0a23d47b005415b74c6579f0f8ed623a448e58f427ea3c95a334420e7",
+      "before_sha256": "7bc134d0a23d47b005415b74c6579f0f8ed623a448e58f427ea3c95a334420e7",
+      "passed": true
+    },
+    "dk": {
+      "shape": [
+        1,
+        128,
+        1,
+        128
+      ],
+      "dtype": "torch.bfloat16",
+      "sha256": "954025bb61cf005905cbad26d21aabe12abc94fed4eb10dd238ad4be5faa1fb8",
+      "before_sha256": "954025bb61cf005905cbad26d21aabe12abc94fed4eb10dd238ad4be5faa1fb8",
+      "passed": true
+    },
+    "dv": {
+      "shape": [
+        1,
+        128,
+        2,
+        128
+      ],
+      "dtype": "torch.bfloat16",
+      "sha256": "23386dd25b270b08a95dbc0af88f3bef5a51bac014a3f1c6145427fcadba0c66",
+      "before_sha256": "23386dd25b270b08a95dbc0af88f3bef5a51bac014a3f1c6145427fcadba0c66",
+      "passed": true
+    },
+    "dbeta": {
+      "shape": [
+        1,
+        128,
+        2
+      ],
+      "dtype": "torch.bfloat16",
+      "sha256": "9aeb2d79e89e135809b7968b1105b5b0373c7a8cceebfe5cb71edad6f34aba73",
+      "before_sha256": "9aeb2d79e89e135809b7968b1105b5b0373c7a8cceebfe5cb71edad6f34aba73",
+      "passed": true
+    },
+    "dg": {
+      "shape": [
+        1,
+        128,
+        2,
+        128
+      ],
+      "dtype": "torch.bfloat16",
+      "sha256": "6596e2e7f53a986e0aeb176792fc418514e1146a13af8d66803393b65080d6cb",
+      "before_sha256": "6596e2e7f53a986e0aeb176792fc418514e1146a13af8d66803393b65080d6cb",
+      "passed": true
+    },
+    "dh0": {
+      "shape": [
+        1,
+        2,
+        128,
+        128
+      ],
+      "dtype": "torch.bfloat16",
+      "sha256": "60374884fd452cfee180ce17934dc3b8baa3ffd19343cccd790b98d26021b505",
+      "before_sha256": "60374884fd452cfee180ce17934dc3b8baa3ffd19343cccd790b98d26021b505",
+      "passed": true
+    }
+  },
+  "input_sha256": {
+    "q": "7aa46b11359b585f6ca49029766d46faedfe3e563dd842886cba4fe63136d7a6",
+    "k": "ac4a16de9454b7499b335cb1addf3f87052769da36b6f391832e2883146cb0a8",
+    "v": "e81494ed65d230a54a89beaa58a16f1586ce50a3c01f2d7d738ad1434cf931fe",
+    "do": "5f2ca35357ff38c03ef1337cde0dd4e2a8a1885535c566ed51ecd19d18d5bf45",
+    "dht": "87b44468416614a1f8049757dadef1a4b07964e5629fd24188868ce80a21647c",
+    "g": "50deeafb9bcf3251b1d239485cecc69cbcc18b43048f8cffc70d53946a4a34a5",
+    "beta": "e33b38b598e8384c792f448b92b93edb58091a5a24425eeea77f8eae6dcbeef1",
+    "h0": "71fa9f792da2c2e309ad1dabaa0e5850f998f41495ec6ecaa730964bdb730911"
+  },
+  "input_unchanged": {
+    "q": true,
+    "k": true,
+    "v": true,
+    "do": true,
+    "dht": true,
+    "g": true,
+    "beta": true,
+    "h0": true
+  },
+  "output_sha256": {
+    "o": "6682a68a61730a152bb2e6d5dd35f1f2493d1ebdff0cb3816f1e5e3c516b9157",
+    "final_state": "2aea65ab224110e06139f26ceca57a8441e94cc24e24cb62ecb1619f7d31b665",
+    "cache_g_cumsum": "f6969a826ea67f3881016fa595c68a6231bfbe5a41b8a7d54e6f0e50986b878f",
+    "cache_Aqk": "67caa09b52d57ea940fc3238c696dd369c890ba21d198d5b868c53765855d43a",
+    "cache_Akk": "373b287f17e8d57ca42c72cba61908ee3e742492257b04c078f874c93b937ab8",
+    "cache_w": "7f92b44b0206038f7616f28b29cc4265563283cc0563d8be58a67469e28d4707",
+    "cache_u": "cf796c414ff00c3205938d9ceaee98060ebdfd8eb9dc5c3d5d56ee14efb47d6f",
+    "cache_qg": "77a75b9211a949d33dd5184448b65fa9668bc10ed294b183e119ab89731e19be",
+    "cache_kg": "a09c5ea93fe5164547de14f9ec88f2cdcc7d09da8227d4e817d688ebae38d650",
+    "cache_v_new": "723fa3d19f0ec776e6120117333cfbcc9d589b027b98521f6d7fa87c80da1e4a",
+    "cache_h": "d06b2d3907bc4934a61c0d5edd7dc76dd26215c88dfc081a8073d1a47963a108",
+    "dq": "7bc134d0a23d47b005415b74c6579f0f8ed623a448e58f427ea3c95a334420e7",
+    "dk": "954025bb61cf005905cbad26d21aabe12abc94fed4eb10dd238ad4be5faa1fb8",
+    "dv": "23386dd25b270b08a95dbc0af88f3bef5a51bac014a3f1c6145427fcadba0c66",
+    "dbeta": "9aeb2d79e89e135809b7968b1105b5b0373c7a8cceebfe5cb71edad6f34aba73",
+    "dg": "6596e2e7f53a986e0aeb176792fc418514e1146a13af8d66803393b65080d6cb",
+    "dh0": "60374884fd452cfee180ce17934dc3b8baa3ffd19343cccd790b98d26021b505"
+  },
+  "finite": {
+    "o": true,
+    "final_state": true,
+    "cache_g_cumsum": true,
+    "cache_Aqk": true,
+    "cache_Akk": true,
+    "cache_w": true,
+    "cache_u": true,
+    "cache_qg": true,
+    "cache_kg": true,
+    "cache_v_new": true,
+    "cache_h": true,
+    "dq": true,
+    "dk": true,
+    "dv": true,
+    "dbeta": true,
+    "dg": true,
+    "dh0": true
+  },
+  "plain_cached_exact": [
+    true,
+    true
+  ],
+  "references": {
+    "independent": {
+      "o": {
+        "relative_l2": 0.0026250958908349276,
+        "max_abs_diff": 4.1267776396125555e-07,
+        "finite": true,
+        "allclose": true,
+        "passed": true
+      },
+      "final_state": {
+        "relative_l2": 0.0019865960348397493,
+        "max_abs_diff": 7.975497283041477e-06,
+        "finite": true,
+        "allclose": true,
+        "passed": true
+      },
+      "gradients": {
+        "dq": {
+          "relative_l2": 0.021464373916387558,
+          "max_abs": 3.263801772845909e-06,
+          "finite": true,
+          "budget": 0.05,
+          "bf16_rounding_floor": 0.0016403717454522848,
+          "exceeds_3F": true,
+          "passed": true
+        },
+        "dk": {
+          "relative_l2": 0.09307057410478592,
+          "max_abs": 0.00036784273106604815,
+          "finite": true,
+          "budget": 0.15,
+          "bf16_rounding_floor": 0.0015680883079767227,
+          "exceeds_3F": true,
+          "passed": true
+        },
+        "dv": {
+          "relative_l2": 0.002902526408433914,
+          "max_abs": 5.304533988237381e-05,
+          "finite": true,
+          "budget": 0.05,
+          "bf16_rounding_floor": 0.0015025065513327718,
+          "exceeds_3F": false,
+          "passed": true
+        },
+        "dbeta": {
+          "relative_l2": 0.0012518499279394746,
+          "max_abs": 3.706954885274172e-07,
+          "finite": true,
+          "budget": 0.05,
+          "bf16_rounding_floor": 0.0010651160264387727,
+          "exceeds_3F": false,
+          "passed": true
+        },
+        "dg": {
+          "relative_l2": 0.14397063851356506,
+          "max_abs": 2.016290818573907e-05,
+          "finite": true,
+          "budget": 0.25,
+          "bf16_rounding_floor": 0.001671867328695953,
+          "exceeds_3F": true,
+          "passed": true
+        },
+        "dh0": {
+          "relative_l2": 0.002380046062171459,
+          "max_abs": 2.137458068318665e-07,
+          "finite": true,
+          "budget": 0.05,
+          "bf16_rounding_floor": 0.0016720377607271075,
+          "exceeds_3F": false,
+          "passed": true
+        }
+      },
+      "per_head_chunk": [
+        {
+          "chunk": 0,
+          "head": 0,
+          "relative_l2": 0.002481836127117276,
+          "max_abs_diff": 3.2396201277151704e-07,
+          "finite": true,
+          "allclose": true,
+          "passed": true
+        },
+        {
+          "chunk": 0,
+          "head": 1,
+          "relative_l2": 0.0026562493294477463,
+          "max_abs_diff": 4.1267776396125555e-07,
+          "finite": true,
+          "allclose": true,
+          "passed": true
+        },
+        {
+          "chunk": 1,
+          "head": 0,
+          "relative_l2": 0.0029419506900012493,
+          "max_abs_diff": 6.418849807232618e-08,
+          "finite": true,
+          "allclose": true,
+          "passed": true
+        },
+        {
+          "chunk": 1,
+          "head": 1,
+          "relative_l2": 0.0030338566284626722,
+          "max_abs_diff": 1.0561234375927597e-07,
+          "finite": true,
+          "allclose": true,
+          "passed": true
+        }
+      ]
+    },
+    "fla": {
+      "o": {
+        "relative_l2": 0.002625126391649246,
+        "max_abs_diff": 4.126923158764839e-07,
+        "finite": true,
+        "allclose": true,
+        "passed": true
+      },
+      "final_state": {
+        "relative_l2": 0.0019865981303155422,
+        "max_abs_diff": 7.975613698363304e-06,
+        "finite": true,
+        "allclose": true,
+        "passed": true
+      },
+      "gradients": {
+        "dq": {
+          "relative_l2": 0.021464373916387558,
+          "max_abs": 3.263801772845909e-06,
+          "finite": true,
+          "budget": 0.05,
+          "bf16_rounding_floor": 0.0016403717454522848,
+          "exceeds_3F": true,
+          "passed": true
+        },
+        "dk": {
+          "relative_l2": 0.09307057410478592,
+          "max_abs": 0.00036784273106604815,
+          "finite": true,
+          "budget": 0.15,
+          "bf16_rounding_floor": 0.0015680883079767227,
+          "exceeds_3F": true,
+          "passed": true
+        },
+        "dv": {
+          "relative_l2": 0.002902526408433914,
+          "max_abs": 5.304533988237381e-05,
+          "finite": true,
+          "budget": 0.05,
+          "bf16_rounding_floor": 0.0015025065513327718,
+          "exceeds_3F": false,
+          "passed": true
+        },
+        "dbeta": {
+          "relative_l2": 0.0012518499279394746,
+          "max_abs": 3.706954885274172e-07,
+          "finite": true,
+          "budget": 0.05,
+          "bf16_rounding_floor": 0.0010651160264387727,
+          "exceeds_3F": false,
+          "passed": true
+        },
+        "dg": {
+          "relative_l2": 0.14397063851356506,
+          "max_abs": 2.016290818573907e-05,
+          "finite": true,
+          "budget": 0.25,
+          "bf16_rounding_floor": 0.001671867328695953,
+          "exceeds_3F": true,
+          "passed": true
+        },
+        "dh0": {
+          "relative_l2": 0.002380046062171459,
+          "max_abs": 2.137458068318665e-07,
+          "finite": true,
+          "budget": 0.05,
+          "bf16_rounding_floor": 0.0016720377607271075,
+          "exceeds_3F": false,
+          "passed": true
+        }
+      },
+      "per_head_chunk": [
+        {
+          "chunk": 0,
+          "head": 0,
+          "relative_l2": 0.0024818747770041227,
+          "max_abs_diff": 3.2395473681390285e-07,
+          "finite": true,
+          "allclose": true,
+          "passed": true
+        },
+        {
+          "chunk": 0,
+          "head": 1,
+          "relative_l2": 0.0026562826242297888,
+          "max_abs_diff": 4.126923158764839e-07,
+          "finite": true,
+          "allclose": true,
+          "passed": true
+        },
+        {
+          "chunk": 1,
+          "head": 0,
+          "relative_l2": 0.002941950224339962,
+          "max_abs_diff": 6.418667908292264e-08,
+          "finite": true,
+          "allclose": true,
+          "passed": true
+        },
+        {
+          "chunk": 1,
+          "head": 1,
+          "relative_l2": 0.0030338482465595007,
+          "max_abs_diff": 1.0561234375927597e-07,
+          "finite": true,
+          "allclose": true,
+          "passed": true
+        }
+      ]
+    }
+  },
+  "operations": [
+    {
+      "category": "DPM42_dw_negation_exception_not_compliant",
+      "file": "ascend_fla/ops/kda/chunk_bwd.py",
+      "line": 286,
+      "operator": "aten.neg.default",
+      "count": 1
+    },
+    {
+      "category": "DPM42_scan_states_whole_exception_not_compliant",
+      "file": "ascend_fla/ops/kda/chunk.py",
+      "line": 705,
+      "operator": "aten._to_copy.default",
+      "count": 2
+    },
+    {
+      "category": "DPM42_scan_states_whole_exception_not_compliant",
+      "file": "ascend_fla/ops/kda/chunk.py",
+      "line": 705,
+      "operator": "aten.select.int",
+      "count": 2
+    },
+    {
+      "category": "DPM42_scan_states_whole_exception_not_compliant",
+      "file": "ascend_fla/ops/kda/chunk.py",
+      "line": 706,
+      "operator": "aten._to_copy.default",
+      "count": 2
+    },
+    {
+      "category": "DPM42_scan_states_whole_exception_not_compliant",
+      "file": "ascend_fla/ops/kda/chunk.py",
+      "line": 706,
+      "operator": "aten.matmul.default",
+      "count": 2
+    },
+    {
+      "category": "DPM42_scan_states_whole_exception_not_compliant",
+      "file": "ascend_fla/ops/kda/chunk.py",
+      "line": 706,
+      "operator": "aten.select.int",
+      "count": 2
+    },
+    {
+      "category": "DPM42_scan_states_whole_exception_not_compliant",
+      "file": "ascend_fla/ops/kda/chunk.py",
+      "line": 706,
+      "operator": "aten.sub.Tensor",
+      "count": 2
+    },
+    {
+      "category": "DPM42_scan_states_whole_exception_not_compliant",
+      "file": "ascend_fla/ops/kda/chunk.py",
+      "line": 708,
+      "operator": "aten.select.int",
+      "count": 4
+    },
+    {
+      "category": "DPM42_scan_states_whole_exception_not_compliant",
+      "file": "ascend_fla/ops/kda/chunk.py",
+      "line": 709,
+      "operator": "aten._to_copy.default",
+      "count": 2
+    },
+    {
+      "category": "DPM42_scan_states_whole_exception_not_compliant",
+      "file": "ascend_fla/ops/kda/chunk.py",
+      "line": 709,
+      "operator": "aten.add.Tensor",
+      "count": 2
+    },
+    {
+      "category": "DPM42_scan_states_whole_exception_not_compliant",
+      "file": "ascend_fla/ops/kda/chunk.py",
+      "line": 709,
+      "operator": "aten.matmul.default",
+      "count": 2
+    },
+    {
+      "category": "DPM42_scan_states_whole_exception_not_compliant",
+      "file": "ascend_fla/ops/kda/chunk.py",
+      "line": 709,
+      "operator": "aten.mul.Tensor",
+      "count": 2
+    },
+    {
+      "category": "DPM42_scan_states_whole_exception_not_compliant",
+      "file": "ascend_fla/ops/kda/chunk.py",
+      "line": 709,
+      "operator": "aten.select.int",
+      "count": 2
+    },
+    {
+      "category": "DPM42_scan_states_whole_exception_not_compliant",
+      "file": "ascend_fla/ops/kda/chunk.py",
+      "line": 709,
+      "operator": "aten.transpose.int",
+      "count": 2
+    },
+    {
+      "category": "DPM42_scan_states_whole_exception_not_compliant",
+      "file": "ascend_fla/ops/kda/chunk.py",
+      "line": 709,
+      "operator": "aten.unsqueeze.default",
+      "count": 2
+    },
+    {
+      "category": "DPM42_scan_states_whole_exception_not_compliant",
+      "file": "ascend_fla/ops/kda/chunk.py",
+      "line": 710,
+      "operator": "aten._to_copy.default",
+      "count": 1
+    },
+    {
+      "category": "DPM42_scan_states_whole_exception_not_compliant",
+      "file": "ascend_fla/ops/kda/chunk.py",
+      "line": 710,
+      "operator": "aten.stack.default",
+      "count": 1
+    },
+    {
+      "category": "DPM42_scan_states_whole_exception_not_compliant",
+      "file": "ascend_fla/ops/kda/chunk.py",
+      "line": 711,
+      "operator": "aten._to_copy.default",
+      "count": 1
+    },
+    {
+      "category": "DPM42_scan_states_whole_exception_not_compliant",
+      "file": "ascend_fla/ops/kda/chunk.py",
+      "line": 711,
+      "operator": "aten.stack.default",
+      "count": 1
+    },
+    {
+      "category": "operator",
+      "file": "ascend_fla/ops/kda/chunk.py",
+      "line": 413,
+      "operator": "aten.view.default",
+      "count": 2
+    },
+    {
+      "category": "operator",
+      "file": "ascend_fla/ops/kda/chunk.py",
+      "line": 432,
+      "operator": "aten.view.default",
+      "count": 10
+    },
+    {
+      "category": "operator",
+      "file": "ascend_fla/ops/kda/chunk.py",
+      "line": 539,
+      "operator": "aten.empty.memory_format",
+      "count": 22
+    },
+    {
+      "category": "operator",
+      "file": "ascend_fla/ops/kda/chunk_bwd.py",
+      "line": 250,
+      "operator": "aten.empty.memory_format",
+      "count": 33
+    },
+    {
+      "category": "operator",
+      "file": "ascend_fla/ops/kda/chunk_bwd.py",
+      "line": 260,
+      "operator": "aten.slice.Tensor",
+      "count": 1
+    },
+    {
+      "category": "operator",
+      "file": "ascend_fla/ops/kda/chunk_bwd.py",
+      "line": 260,
+      "operator": "aten.view.default",
+      "count": 1
+    },
+    {
+      "category": "operator",
+      "file": "ascend_fla/ops/kda/chunk_bwd.py",
+      "line": 264,
+      "operator": "aten.view.default",
+      "count": 1
+    },
+    {
+      "category": "operator",
+      "file": "ascend_fla/ops/kda/chunk_bwd.py",
+      "line": 270,
+      "operator": "aten.view.default",
+      "count": 1
+    },
+    {
+      "category": "operator",
+      "file": "ascend_fla/ops/kda/chunk_bwd.py",
+      "line": 309,
+      "operator": "aten.view.default",
+      "count": 1
+    },
+    {
+      "category": "operator",
+      "file": "ascend_fla/ops/kda/chunk_bwd.py",
+      "line": 327,
+      "operator": "aten.view.default",
+      "count": 6
+    },
+    {
+      "category": "operator",
+      "file": "ascend_fla/ops/kda/chunk_bwd.py",
+      "line": 339,
+      "operator": "aten.view.default",
+      "count": 4
+    },
+    {
+      "category": "operator",
+      "file": "kernels/projects/a5/kda_layout/runtime.py",
+      "line": 90,
+      "operator": "aten.view.default",
+      "count": 22
+    },
+    {
+      "category": "operator",
+      "file": "kernels/projects/a5/kda_layout/runtime.py",
+      "line": 95,
+      "operator": "aten.empty.memory_format",
+      "count": 22
+    },
+    {
+      "category": "operator",
+      "file": "kernels/projects/a5/kda_layout/runtime.py",
+      "line": 103,
+      "operator": "aten.view.default",
+      "count": 22
+    },
+    {
+      "category": "operator",
+      "file": "kernels/projects/a5/kda_layout/runtime.py",
+      "line": 120,
+      "operator": "aten.view.default",
+      "count": 1
+    },
+    {
+      "category": "readonly_validation_DPM42_provisional",
+      "file": "ascend_fla/ops/kda/chunk.py",
+      "line": 180,
+      "operator": "aten._local_scalar_dense.default",
+      "count": 1
+    },
+    {
+      "category": "readonly_validation_DPM42_provisional",
+      "file": "ascend_fla/ops/kda/chunk.py",
+      "line": 180,
+      "operator": "aten.all.default",
+      "count": 1
+    },
+    {
+      "category": "readonly_validation_DPM42_provisional",
+      "file": "ascend_fla/ops/kda/chunk.py",
+      "line": 180,
+      "operator": "aten.bitwise_and.Tensor",
+      "count": 1
+    },
+    {
+      "category": "readonly_validation_DPM42_provisional",
+      "file": "ascend_fla/ops/kda/chunk.py",
+      "line": 180,
+      "operator": "aten.isfinite.default",
+      "count": 1
+    },
+    {
+      "category": "readonly_validation_DPM42_provisional",
+      "file": "ascend_fla/ops/kda/chunk.py",
+      "line": 180,
+      "operator": "aten.le.Scalar",
+      "count": 1
+    },
+    {
+      "category": "readonly_validation_DPM42_provisional",
+      "file": "ascend_fla/ops/kda/chunk.py",
+      "line": 182,
+      "operator": "aten._local_scalar_dense.default",
+      "count": 1
+    },
+    {
+      "category": "readonly_validation_DPM42_provisional",
+      "file": "ascend_fla/ops/kda/chunk.py",
+      "line": 183,
+      "operator": "aten.all.default",
+      "count": 1
+    },
+    {
+      "category": "readonly_validation_DPM42_provisional",
+      "file": "ascend_fla/ops/kda/chunk.py",
+      "line": 183,
+      "operator": "aten.bitwise_and.Tensor",
+      "count": 2
+    },
+    {
+      "category": "readonly_validation_DPM42_provisional",
+      "file": "ascend_fla/ops/kda/chunk.py",
+      "line": 183,
+      "operator": "aten.gt.Scalar",
+      "count": 1
+    },
+    {
+      "category": "readonly_validation_DPM42_provisional",
+      "file": "ascend_fla/ops/kda/chunk.py",
+      "line": 183,
+      "operator": "aten.isfinite.default",
+      "count": 1
+    },
+    {
+      "category": "readonly_validation_DPM42_provisional",
+      "file": "ascend_fla/ops/kda/chunk.py",
+      "line": 183,
+      "operator": "aten.lt.Scalar",
+      "count": 1
+    },
+    {
+      "category": "readonly_validation_DPM42_provisional",
+      "file": "ascend_fla/ops/kda/chunk.py",
+      "line": 187,
+      "operator": "aten._to_copy.default",
+      "count": 2
+    },
+    {
+      "category": "readonly_validation_DPM42_provisional",
+      "file": "ascend_fla/ops/kda/chunk.py",
+      "line": 187,
+      "operator": "aten.linalg_vector_norm.default",
+      "count": 2
+    },
+    {
+      "category": "readonly_validation_DPM42_provisional",
+      "file": "ascend_fla/ops/kda/chunk.py",
+      "line": 188,
+      "operator": "aten._local_scalar_dense.default",
+      "count": 2
+    },
+    {
+      "category": "readonly_validation_DPM42_provisional",
+      "file": "ascend_fla/ops/kda/chunk.py",
+      "line": 188,
+      "operator": "aten.all.default",
+      "count": 2
+    },
+    {
+      "category": "readonly_validation_DPM42_provisional",
+      "file": "ascend_fla/ops/kda/chunk.py",
+      "line": 188,
+      "operator": "aten.bitwise_and.Tensor",
+      "count": 2
+    },
+    {
+      "category": "readonly_validation_DPM42_provisional",
+      "file": "ascend_fla/ops/kda/chunk.py",
+      "line": 188,
+      "operator": "aten.isfinite.default",
+      "count": 2
+    },
+    {
+      "category": "readonly_validation_DPM42_provisional",
+      "file": "ascend_fla/ops/kda/chunk.py",
+      "line": 188,
+      "operator": "aten.le.Scalar",
+      "count": 2
+    },
+    {
+      "category": "readonly_validation_DPM42_provisional",
+      "file": "ascend_fla/ops/kda/chunk.py",
+      "line": 475,
+      "operator": "aten.cumsum.default",
+      "count": 2
+    },
+    {
+      "category": "readonly_validation_DPM42_provisional",
+      "file": "ascend_fla/ops/kda/chunk.py",
+      "line": 475,
+      "operator": "aten.view.default",
+      "count": 2
+    },
+    {
+      "category": "readonly_validation_DPM42_provisional",
+      "file": "ascend_fla/ops/kda/chunk.py",
+      "line": 476,
+      "operator": "aten._local_scalar_dense.default",
+      "count": 2
+    },
+    {
+      "category": "readonly_validation_DPM42_provisional",
+      "file": "ascend_fla/ops/kda/chunk.py",
+      "line": 476,
+      "operator": "aten.amax.default",
+      "count": 2
+    },
+    {
+      "category": "readonly_validation_DPM42_provisional",
+      "file": "ascend_fla/ops/kda/chunk.py",
+      "line": 476,
+      "operator": "aten.amin.default",
+      "count": 2
+    },
+    {
+      "category": "readonly_validation_DPM42_provisional",
+      "file": "ascend_fla/ops/kda/chunk.py",
+      "line": 476,
+      "operator": "aten.max.default",
+      "count": 2
+    },
+    {
+      "category": "readonly_validation_DPM42_provisional",
+      "file": "ascend_fla/ops/kda/chunk.py",
+      "line": 476,
+      "operator": "aten.sub.Tensor",
+      "count": 2
+    }
+  ],
+  "unexpected": [],
+  "launches": [
+    {
+      "operator": "KdaLayoutBf16Bf16Kernel",
+      "signature": "cf153020c43cbeab",
+      "outputs": [
+        "destination"
+      ],
+      "poisoned": true
+    },
+    {
+      "operator": "KdaLayoutBf16Bf16Kernel",
+      "signature": "cf153020c43cbeab",
+      "outputs": [
+        "destination"
+      ],
+      "poisoned": true
+    },
+    {
+      "operator": "KdaLayoutBf16Bf16Kernel",
+      "signature": "cf153020c43cbeab",
+      "outputs": [
+        "destination"
+      ],
+      "poisoned": true
+    },
+    {
+      "operator": "KdaLayoutF32F32Kernel",
+      "signature": "c734ca5227d79ce8",
+      "outputs": [
+        "destination"
+      ],
+      "poisoned": true
+    },
+    {
+      "operator": "KdaLayoutF32F32Kernel",
+      "signature": "c734ca5227d79ce8",
+      "outputs": [
+        "destination"
+      ],
+      "poisoned": true
+    },
+    {
+      "operator": "KdaSub1GateStableKernel",
+      "signature": "aad21f2d2b3d2c2c",
+      "outputs": [
+        "g_cumsum",
+        "eg"
+      ],
+      "poisoned": true
+    },
+    {
+      "operator": "KdaSub2ScoreStableKernel",
+      "signature": "69ca68c647809e44",
+      "outputs": [
+        "Aqk",
+        "strict"
+      ],
+      "poisoned": true
+    },
+    {
+      "operator": "TrilInverse64V2StrictBf16Kernel",
+      "signature": "a5a2c0726a680ba3",
+      "outputs": [
+        "inv"
+      ],
+      "poisoned": true
+    },
+    {
+      "operator": "KdaSub3WyStableKernel",
+      "signature": "d90b2cf4c23fa99a",
+      "outputs": [
+        "w",
+        "u",
+        "qg",
+        "kg"
+      ],
+      "poisoned": true
+    },
+    {
+      "operator": "KdaSub45AqkRepairedKernel",
+      "signature": "d24e6d59beb12bc6",
+      "outputs": [
+        "o",
+        "final_state"
+      ],
+      "poisoned": true
+    },
+    {
+      "operator": "KdaLayoutBf16Bf16Kernel",
+      "signature": "cf153020c43cbeab",
+      "outputs": [
+        "destination"
+      ],
+      "poisoned": true
+    },
+    {
+      "operator": "KdaLayoutBf16Bf16Kernel",
+      "signature": "cf153020c43cbeab",
+      "outputs": [
+        "destination"
+      ],
+      "poisoned": true
+    },
+    {
+      "operator": "KdaLayoutBf16Bf16Kernel",
+      "signature": "cf153020c43cbeab",
+      "outputs": [
+        "destination"
+      ],
+      "poisoned": true
+    },
+    {
+      "operator": "KdaLayoutBf16Bf16Kernel",
+      "signature": "cf153020c43cbeab",
+      "outputs": [
+        "destination"
+      ],
+      "poisoned": true
+    },
+    {
+      "operator": "KdaLayoutF32F32Kernel",
+      "signature": "c734ca5227d79ce8",
+      "outputs": [
+        "destination"
+      ],
+      "poisoned": true
+    },
+    {
+      "operator": "KdaLayoutF32F32Kernel",
+      "signature": "c734ca5227d79ce8",
+      "outputs": [
+        "destination"
+      ],
+      "poisoned": true
+    },
+    {
+      "operator": "KdaSub1GateStableKernel",
+      "signature": "aad21f2d2b3d2c2c",
+      "outputs": [
+        "g_cumsum",
+        "eg"
+      ],
+      "poisoned": true
+    },
+    {
+      "operator": "KdaSub2ScoreStableKernel",
+      "signature": "69ca68c647809e44",
+      "outputs": [
+        "Aqk",
+        "strict"
+      ],
+      "poisoned": true
+    },
+    {
+      "operator": "TrilInverse64V2StrictBf16Kernel",
+      "signature": "a5a2c0726a680ba3",
+      "outputs": [
+        "inv"
+      ],
+      "poisoned": true
+    },
+    {
+      "operator": "KdaSub3WyStableKernel",
+      "signature": "d90b2cf4c23fa99a",
+      "outputs": [
+        "w",
+        "u",
+        "qg",
+        "kg"
+      ],
+      "poisoned": true
+    },
+    {
+      "operator": "KdaSub45AqkRepairedKernel",
+      "signature": "d24e6d59beb12bc6",
+      "outputs": [
+        "o",
+        "final_state"
+      ],
+      "poisoned": true
+    },
+    {
+      "operator": "KdaLayoutF32Bf16Kernel",
+      "signature": "1bace06d52ff1d46",
+      "outputs": [
+        "destination"
+      ],
+      "poisoned": true
+    },
+    {
+      "operator": "KdaLayoutBf16Bf16Kernel",
+      "signature": "cf153020c43cbeab",
+      "outputs": [
+        "destination"
+      ],
+      "poisoned": true
+    },
+    {
+      "operator": "KdaLayoutBf16Bf16Kernel",
+      "signature": "cf153020c43cbeab",
+      "outputs": [
+        "destination"
+      ],
+      "poisoned": true
+    },
+    {
+      "operator": "KdaLayoutBf16Bf16Kernel",
+      "signature": "cf153020c43cbeab",
+      "outputs": [
+        "destination"
+      ],
+      "poisoned": true
+    },
+    {
+      "operator": "KdaLayoutBf16Bf16Kernel",
+      "signature": "cf153020c43cbeab",
+      "outputs": [
+        "destination"
+      ],
+      "poisoned": true
+    },
+    {
+      "operator": "KdaLayoutBf16Bf16Kernel",
+      "signature": "cf153020c43cbeab",
+      "outputs": [
+        "destination"
+      ],
+      "poisoned": true
+    },
+    {
+      "operator": "KdaLayoutBf16Bf16Kernel",
+      "signature": "cf153020c43cbeab",
+      "outputs": [
+        "destination"
+      ],
+      "poisoned": true
+    },
+    {
+      "operator": "KdaLayoutBf16Bf16Kernel",
+      "signature": "cf153020c43cbeab",
+      "outputs": [
+        "destination"
+      ],
+      "poisoned": true
+    },
+    {
+      "operator": "KdaLayoutBf16Bf16Kernel",
+      "signature": "cf153020c43cbeab",
+      "outputs": [
+        "destination"
+      ],
+      "poisoned": true
+    },
+    {
+      "operator": "KdaLayoutF32Bf16Kernel",
+      "signature": "1bace06d52ff1d46",
+      "outputs": [
+        "destination"
+      ],
+      "poisoned": true
+    },
+    {
+      "operator": "KdaLayoutBf16Bf16Kernel",
+      "signature": "cf153020c43cbeab",
+      "outputs": [
+        "destination"
+      ],
+      "poisoned": true
+    },
+    {
+      "operator": "ScanFusedKernel",
+      "signature": "306f6f401a02c792",
+      "outputs": [
+        "dAqk",
+        "dh",
+        "dv",
+        "dh0"
+      ],
+      "poisoned": true
+    },
+    {
+      "operator": "InverseMmBoundedKernel",
+      "signature": "5a0b0e0263189b90",
+      "outputs": [
+        "d_qg",
+        "d_kg",
+        "d_vh",
+        "d_v_beta",
+        "d_k_beta_g"
+      ],
+      "poisoned": true
+    },
+    {
+      "operator": "InverseEpilogueKernel",
+      "signature": "99d699ab19037e94",
+      "outputs": [
+        "dq_hv",
+        "dk_hv",
+        "dv",
+        "dbeta",
+        "dg_core",
+        "k_exp"
+      ],
+      "poisoned": true
+    },
+    {
+      "operator": "InverseDainvKernel",
+      "signature": "ed387cdedccff8e4",
+      "outputs": [
+        "dtri"
+      ],
+      "poisoned": true
+    },
+    {
+      "operator": "InverseDakkFusedKernel",
+      "signature": "c9546079430df630",
+      "outputs": [
+        "dAkk"
+      ],
+      "poisoned": true
+    },
+    {
+      "operator": "FinalizePreStableKernel",
+      "signature": "89a92dfb7d3decd2",
+      "outputs": [
+        "q_scaled",
+        "k_scaled",
+        "kg",
+        "m_qk",
+        "m_base",
+        "m_beta"
+      ],
+      "poisoned": true
+    },
+    {
+      "operator": "FinalizePairKernel",
+      "signature": "0ec1db8afb1df417",
+      "outputs": [
+        "dq_pair",
+        "dk_pair",
+        "s_base",
+        "t_beta"
+      ],
+      "poisoned": true
+    },
+    {
+      "operator": "FinalizePostStableKernel",
+      "signature": "de7bf5fd932aff3e",
+      "outputs": [
+        "dq_hv_out",
+        "dk_hv_out",
+        "dbeta_out",
+        "dg_out"
+      ],
+      "poisoned": true
+    },
+    {
+      "operator": "FinalizeReduceKernel",
+      "signature": "c50ccb9f48fbef6a",
+      "outputs": [
+        "dq_out",
+        "dk_out"
+      ],
+      "poisoned": true
+    }
+  ],
+  "passed": true
+}

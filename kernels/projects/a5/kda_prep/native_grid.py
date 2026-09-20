@@ -33,3 +33,28 @@ def inputs(case):
     x={n:z.to(TYPES[case['types'][n]]) for n,z in x.items()}
     x['h0']=randn(b,hv,128,128)*.01
     return x
+
+
+def boundary_cases(route):
+    value_types=('bf16',) if route=='chunk' else tuple(TYPES)
+    for c,group,raw,vd,flags,kind in itertools.product((1,2,3),(1,2,4,8),TYPES,value_types,itertools.product((False,True),repeat=3),('zero','nearzero','threshold','beta_saturation')):
+        types=dict(q=raw if flags[0] else vd,k=raw if flags[0] else vd,v=vd,
+            g=raw if flags[1] else 'f32',A_log=raw if flags[1] else 'f32',dt_bias=raw if flags[1] else 'f32',beta=raw if flags[2] else 'f32')
+        yield dict(id=f'{kind}_c{c}_g{group}_r{raw}_v{vd}_flags'+''.join(str(int(f)) for f in flags),
+            B=1,C=c,H=1,HV=group,flags=dict(zip(FLAG_NAMES,flags)),types=types,seed=7011,boundary=kind)
+
+
+def boundary_inputs(case):
+    x=inputs(case);kind=case['boundary']
+    if kind in ('zero','nearzero'):
+        for n in ('q','k'):
+            if kind=='zero':x[n].zero_()
+            else:x[n]*=1e-20
+    elif kind=='threshold' and case['flags'][FLAG_NAMES[1]]:
+        values=torch.tensor([-40.,-20.,0.,19.999998092651367,20.,20.000001907348633,40.,80.])
+        x['g']=values.repeat((x['g'].numel()+len(values)-1)//len(values))[:x['g'].numel()].reshape(x['g'].shape).to(x['g'].dtype)
+        x['A_log'].fill_(-6.);x['dt_bias'].zero_()
+    elif kind=='beta_saturation' and case['flags'][FLAG_NAMES[2]]:
+        values=torch.tensor([-100.,-20.,-1.,0.,1.,20.,100.])
+        x['beta']=values.repeat((x['beta'].numel()+len(values)-1)//len(values))[:x['beta'].numel()].reshape(x['beta'].shape).to(x['beta'].dtype)
+    return x

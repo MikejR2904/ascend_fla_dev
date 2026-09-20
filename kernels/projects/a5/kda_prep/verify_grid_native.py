@@ -27,9 +27,11 @@ def decode_sequence(api,data,block_dim):
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--population',choices=('ordinary','boundary'),default='ordinary')
     parser.add_argument('--route',choices=('chunk','decode'),required=True)
     parser.add_argument('--block-dim',type=int,required=True)
     parser.add_argument('--output',type=Path,required=True)
+    parser.add_argument('--case-id')
     parser.add_argument('--chunk-count',type=int,choices=(1,2,3))
     args=parser.parse_args()
     bd=args.block_dim if args.route=='chunk' else min(args.block_dim,4)
@@ -37,11 +39,32 @@ def main():
     context=native_context.Context(args.output,bd,dbd,__file__)
     check=context.check;old=context.old
     decode_checks=unit.module('verify_native').load('_bf07_decode_checks',unit.ROOT.parent/'kda_fused_recurrent_bf16/research.py')
-    cases=[p for p in native_grid.cases(args.route) if not args.chunk_count or p['C']==args.chunk_count]
+    generator=native_grid.cases if args.population=='ordinary' else native_grid.boundary_cases
+    cases=[p for p in generator(args.route) if not args.chunk_count or p['C']==args.chunk_count]
+    if args.case_id:cases=[p for p in cases if p['id']==args.case_id]
+    assert cases, 'selected population is empty'
     rows=[]
+    original_forward_metric=context.reference.metrics
+    def forward_metric(actual,expected):
+        result=original_forward_metric(actual,expected)
+        a,e=actual.detach().cpu().double(),expected.detach().cpu().double()
+        norm=float(e.norm());residual=float((a-e).norm())
+        result['relative_l2_fp64_accumulation']=residual/norm if norm else (0. if residual==0 else float('inf'))
+        result['passed']=result['passed'] and result['relative_l2_fp64_accumulation']<=.05
+        return result
+    if args.population=='boundary':
+        context.reference.metrics=forward_metric
+        original_decode_metric=decode_checks.metrics
+        def decode_metric(actual,expected):
+            result=original_decode_metric(actual,expected)
+            a,e=actual.detach().cpu().double(),expected.detach().cpu().double()
+            norm=float(e.norm());residual=float((a-e).norm())
+            result['relative_l2']=residual/norm if norm else (0. if residual==0 else float('inf'))
+            return result
+        decode_checks.metrics=decode_metric
     for case in cases:
         label=case['id'];print('CASE_START',args.route,label,flush=True)
-        x=native_grid.inputs(case);flags=case['flags'];dtype=x['v'].dtype
+        x=(native_grid.inputs if args.population=='ordinary' else native_grid.boundary_inputs)(case);flags=case['flags'];dtype=x['v'].dtype
         dev={n:t.npu() for n,t in x.items()}
         prep_kwargs=dict(flags,A_log=dev['A_log'],dt_bias=dev['dt_bias'],qk_dtype=dtype)
         data=dict(q=dev['q'],k=dev['k'],v=dev['v'],g=dev['g'],beta=dev['beta'],
@@ -79,7 +102,21 @@ def main():
                     values.update(alog=x['A_log'],bias=x['dt_bias'])
                     types+='_'+case['types']['A_log']+'_'+case['types']['dt_bias']
                 inp=dict(values=values,parameters=dict(kind=kind,types=types))
-                prec[name]=unit.compare(inp,{'destination':prep_cpu[i].reshape(1,-1)},unit.reference(inp),context.budgets)
+                if case.get('boundary')=='beta_saturation' and kind=='beta':
+                    # Frozen calibration excludes saturation endpoints from the
+                    # ordinary floor. Retain their full FP64 discrepancy, require
+                    # actual CPU FP32 endpoint bytes, and keep ordinary limits on
+                    # the remaining nonsaturated members of this same population.
+                    actual=prep_cpu[i].reshape(1,-1);high=unit.reference(inp)['destination']
+                    expected_cpu=unit.host_reference(inp)['destination']
+                    endpoint=values['source'].reshape(1,-1).abs()>20
+                    ordinary_input=dict(values={'source':values['source'].reshape(1,-1)[~endpoint].reshape(1,-1)},parameters=inp['parameters'])
+                    ordinary=unit.compare(ordinary_input,{'destination':actual[~endpoint].reshape(1,-1)},unit.reference(ordinary_input),context.budgets)
+                    exact=check.digest(actual[endpoint])==check.digest(expected_cpu[endpoint])
+                    prec[name]=dict(ordinary=ordinary,endpoint_count=int(endpoint.sum()),endpoint_cpu_exact=exact,
+                        full_to_fp64=context.precision.metrics(actual,high),passed=ordinary['passed'] and exact)
+                else:
+                    prec[name]=unit.compare(inp,{'destination':prep_cpu[i].reshape(1,-1)},unit.reference(inp),context.budgets)
             with torch.no_grad():
                 old_prep=old._prepare_inputs(*(dev[n] for n in ('q','k','g','beta')),**prep_kwargs)
                 if args.route=='chunk':
@@ -114,7 +151,7 @@ def main():
                             limit=min(.01,3*floor) if dtype==torch.bfloat16 else 1e-5
                             measures['per_head_chunk'].append(dict(chunk=c,head=h,**m,budget=limit,passed=m['finite'] and m['relative_l2']<=limit))
                 comparisons[name]=measures
-            row=dict(case=case,route=args.route,block_dim=args.block_dim,
+            row=dict(case=case,route=args.route,population=args.population,block_dim=args.block_dim,
                      decode_test_schedule='16-token public calls with carried FP32 state' if args.route=='decode' else None,
                      input_sha256={n:check.digest(t) for n,t in x.items()},
                      input_unchanged={n:check.digest(dev[n])==check.digest(t) for n,t in x.items()},
@@ -132,11 +169,19 @@ def main():
                 and all(m[n]['passed'] for m in comparisons.values() for n in ('o','final_state'))
                 and all(p['passed'] for m in comparisons.values() for p in m['per_head_chunk'])
                 and all(p['passed'] for m in comparisons.values() for p in m.get('cached_states',[])))
+            if not row['passed'] and args.route=='decode':
+                oracle_native=dict(zip(('q','k','g','beta'),prep_cpu));oracle_native.update(v=x['v'],h0=x['h0'])
+                isolated_refs=dict(independent=context.reference.independent_reference(oracle_native),fla=context.reference.fla_reference(oracle_native))
+                row['located_actual_preparation_references']={label:{n:decode_checks.metrics(got[n],ref[n]) for n in ('o','final_state')} for label,ref in isolated_refs.items()}
+                direct_data={n:prepared[i] for i,n in enumerate(('q','k','g','beta'))}
+                direct_data.update(v=dev['v'],initial_state=dev['h0'],output_final_state=True)
+                direct=check.cpu(decode_sequence(fused_recurrent,direct_data,dbd))
+                row['raw_vs_actual_prepared_public_bitwise']={n:check.digest(got[n])==check.digest(direct[i]) for i,n in enumerate(('o','final_state'))}
             context.write('cases/'+label,row)
             rows.append(dict(id=label,passed=row['passed'],output_sha256=row['output_sha256'],prep_sha256=row['prep_sha256']))
             context.write('summary',dict(complete=False,passed=False,expected=len(cases),cases=rows))
             if not row['passed']:
-                torch.save(dict(inputs=x,actual=got,before=before,reference=refs),args.output/(label+'.private.pt'))
+                torch.save(dict(inputs=x,actual=got,before=before,reference=refs,actual_preparation=prep_cpu,predecessor_npu_preparation=check.cpu(old_prep)),args.output/(label+'.private.pt'))
                 raise AssertionError('public grid case failed: '+label)
             print('CASE_PASS',label,flush=True)
         except BaseException as exc:

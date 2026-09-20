@@ -125,14 +125,38 @@ def main():
             # Range mismatches are explicit unresolved records, never swept into
             # the ordinary error floor or accepted by an additive tolerance.
             semantic_exact=masks and semantic['finite_differing_values']==0 and semantic['finite_sign_differences']==0
+            endpoint_qualification=None
+            if not case['numerical']:
+                a=actual.reshape(-1);high_value=expected['destination'].reshape(-1);cpu_value=old['destination'].reshape(-1)
+                tiny_value=torch.finfo(torch.float32).tiny
+                normal=(torch.isfinite(a)&torch.isfinite(high_value)&torch.isfinite(cpu_value)
+                        &(cpu_value.abs()>=tiny_value)&(high_value.abs()>=tiny_value))
+                normal_metrics=None;normal_pass=None
+                if bool(normal.any()):
+                    normal_metrics=precision.metrics(a[normal],high_value[normal])
+                    cpu_metrics=precision.metrics(a[normal],cpu_value[normal])
+                    limit=budgets['limits'][case['kind']+':'+case['types']]
+                    normal_pass=(normal_metrics['relative_l2'] is not None
+                        and normal_metrics['relative_l2']<=limit['relative_l2']
+                        and normal_metrics['max_relative_nonzero']<=limit['max_relative_nonzero'])
+                    if a.dtype==torch.bfloat16:
+                        normal_pass=normal_pass and all(m['rounded_reference_over_one_ulp']==0 for m in (normal_metrics,cpu_metrics))
+                hard_masks=all(comparison[k] for comparison in (semantic,native_semantic) for k in
+                    ('nan_mask_equal','positive_infinity_mask_equal','negative_infinity_mask_equal'))
+                hard_signs=semantic['finite_sign_differences']==0 and native_semantic['finite_sign_differences']==0
+                endpoint_qualification=dict(owner_comment='https://github.com/ddddwee1/ascend_fla_dev/issues/106#issuecomment-5749276712',
+                    normal_finite_count=int(normal.sum()),normal_finite_to_fp64=normal_metrics,normal_finite_pass=normal_pass,
+                    masks_match_both_predecessors=hard_masks,signs_match_both_predecessors=hard_signs,
+                    passed=hard_masks and hard_signs and normal_pass is not False,
+                    scope='Recorded native underflow/overflow/saturation; no CPU-subnormal bitwise requirement. Nonzero normal finite members retain frozen budgets. Empty normal subsets make no numerical-accuracy claim. Cross-bd/namespace hashes are separately required.')
             row=dict(case={k:v for k,v in case.items() if k!='inputs'},namespace=namespace,block_dim=dim,
                      input_shapes={name:list(t.shape) for name,t in values.items()},
                      input_sha256={name:precision.digest(t) for name,t in values.items()},
                      actual_sha256=precision.digest(actual),to_fp64=high,to_predecessor_cpu_fp32=host,
                      semantic=semantic,to_predecessor_npu=precision.metrics(actual,old_native),
-                     predecessor_npu_semantic=native_semantic,predecessor_npu_vs_cpu=old_native_vs_cpu,endpoint_exact=semantic_exact,input_unchanged=preserved,
+                     predecessor_npu_semantic=native_semantic,predecessor_npu_vs_cpu=old_native_vs_cpu,endpoint_exact=semantic_exact,endpoint_qualification=endpoint_qualification,input_unchanged=preserved,
                      output_canaries_unchanged=canaries,numerical_pass=numerical_pass,
-                     passed=all(preserved.values()) and canaries and (numerical_pass if case['numerical'] else semantic_exact))
+                     passed=all(preserved.values()) and canaries and (numerical_pass if case['numerical'] else endpoint_qualification['passed']))
             write('cases/'+case_id,row)
             if not row['passed']:
                 torch.save(dict(inputs=values,actual=actual,predecessor=old,predecessor_npu=old_native,fp64=expected),args.output/(case_id+'.private.pt'))
@@ -140,7 +164,7 @@ def main():
             write('summary',dict(complete=False,passed=False,cases=rows))
             print('CASE_RESULT',case_id,row['passed'],flush=True)
     write('summary',dict(complete=True,passed=all(r['passed'] for r in rows),cases=rows,
-          note='Endpoint exact mismatches require located review; no ordinary budget or domain change is authorized.'))
+          note='PM5749276712 endpoint qualification: masks/signs and normal finite budgets enforced; native range behavior recorded. Cross-bd/namespace hashes remain a separate gate.'))
     print('LEAF_DONE',len(rows),sum(r['passed'] for r in rows),flush=True)
     return 0 if all(r['passed'] for r in rows) else 1
 
