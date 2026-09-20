@@ -85,7 +85,7 @@ def measure(api, research, bd, original_fp32, to_device, fla):
                                  marginal_us_per_token=slope, estimated_fixed_us=one['median_us']-slope)
         fixed.append(result)
     return dict(passed=True, warmup=warmup, repeat=repeat, rounds=3, cases=rows,
-                baseline='Original FP32 wrapper preparation and unchanged FP32 custom kernel',
+                baseline='Exact pre-BF06 public wrapper snapshot from 0f517ee and unchanged FP32 custom kernel',
                 additional_baseline='kda_recurrent_ref on actual Torch NPU, FP32 recurrence with BF16 GM inputs/output',
                 timing='Synchronized API wall time in microseconds, preallocated inputs, output allocation included',
                 fixed_cost=dict(method='T1/T16 linear intercept; estimate includes bridge and device fixed costs',

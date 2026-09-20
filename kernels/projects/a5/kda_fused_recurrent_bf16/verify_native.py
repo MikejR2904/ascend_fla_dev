@@ -77,6 +77,18 @@ def main():
     torch.npu.set_device(0)
     write('device', dict(name=torch.npu.get_device_name(0), block_dim=args.block_dim))
     fla = research.load_fla(os.environ['BF06_FLA_NAIVE'])
+    import types
+    before_path = root / 'evidence/fp32-entry-before.py'
+    before = types.ModuleType('ascend_fla.ops.kda._bf06_original_public')
+    before.__package__ = 'ascend_fla.ops.kda'
+    before.__file__ = api.__file__
+    exec(compile(before_path.read_text(), str(before_path), 'exec'), before.__dict__)
+    # Preserve the exact original public function, reusing the vendor already
+    # registered above rather than creating another compiler object after launch.
+    before._compiled = lambda device, block_dim: old_op
+    write('baseline', dict(commit='0f517ee', public_sha256=hashlib.sha256(before_path.read_bytes()).hexdigest(),
+                           original_kernel_sha256=hashlib.sha256(
+                               (root.parent/'kda_fused_recurrent/kernels/step.py').read_bytes()).hexdigest()))
 
     def cpu(x):
         return x.detach().cpu().contiguous()
@@ -139,25 +151,7 @@ def main():
         return (tuple(cpu(x) if x is not None else None for x in got) if return_cpu else got), audit.operations
 
     def original_fp32(data, *, return_cpu=True):
-        # Original public wrapper's FP32 preparation and output layout, with its
-        # unchanged read-only kernel. This baseline intentionally includes host work.
-        q, k, v, g, beta = (data[n] for n in ('q', 'k', 'v', 'g', 'beta'))
-        b, t, h, _ = q.shape
-        hv = v.shape[2]
-        groups = hv // h
-        def bhv(x):
-            return x.to(torch.float32).permute(0, 2, 1, 3).contiguous()
-        qs = bhv(q.repeat_interleave(groups, dim=2) * data['scale']) if groups > 1 else bhv(q * data['scale'])
-        kk = bhv(k.repeat_interleave(groups, dim=2)) if groups > 1 else bhv(k)
-        bb = beta.float().permute(0, 2, 1).contiguous().view(b, hv, 1, t)
-        state = data['initial_state']
-        if state is None:
-            state = torch.zeros(b, hv, 128, 128, dtype=torch.float32, device='cpu').to(q.device)
-        oo = torch.empty(b, hv, t, 128, dtype=torch.float32, device=q.device)
-        ss = torch.empty(b, hv, 128, 128, dtype=torch.float32, device=q.device)
-        old_op(dict(qs=qs, k=kk, v=bhv(v), g=bhv(g), beta=bb, initial_state=state),
-               dict(B=b, HV=hv, T=t, head_dim=128, value_dim=128), dict(o=oo, final_state=ss))
-        result = oo.permute(0, 2, 1, 3).contiguous(), ss
+        result = before.fused_recurrent_kda(**data, block_dim=args.block_dim)
         if return_cpu:
             torch.npu.synchronize()
             return tuple(cpu(x) for x in result)
@@ -216,7 +210,7 @@ def main():
             for p in research.cases():
                 if p['T'] in (1, 2, 16) and p['id'].startswith(('grid_', 'real_')):
                     execute(p, fp32=True)
-        if args.mode in ('suite', 'boundaries'):
+        if args.mode in ('suite', 'boundaries', 'prefill'):
             from native_checks import boundaries
             write('boundaries', boundaries(api, research, args.block_dim, public, original_fp32, to_device, fla))
         if args.mode == 'perf':

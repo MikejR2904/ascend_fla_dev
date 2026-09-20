@@ -150,12 +150,7 @@ def boundaries(api, research, bd, public, original_fp32, to_device, fla):
         assert all(unchanged.values())
         exact = None
         if dtype == torch.float32:
-            qn,kn,gn,bn = api._prepare_inputs(dev['q'],dev['k'],dev['g'],dev['beta'],
-                A_log=dev['A_log'],dt_bias=dev['dt_bias'],use_qk_l2norm_in_kernel=flags[0],
-                use_gate_in_kernel=flags[1],use_beta_sigmoid_in_kernel=flags[2],qk_dtype=dtype)
-            prepared = dict(q=qn,k=kn,v=dev['v'],g=gn,beta=bn,initial_state=dev['initial_state'],
-                            scale=dev['scale'],output_final_state=True)
-            exact = hashes(got)==hashes(original_fp32(prepared))
+            exact = hashes(got)==hashes(original_fp32(dev))
             assert exact
         rows.append(dict(kind='raw_flags_legacy' if any(flags) else 'prepared_default',
                          dtype=str(dtype), flags=flags, comparison=result, original_fp32_bitwise=exact,
