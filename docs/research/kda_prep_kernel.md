@@ -445,6 +445,56 @@ with failing normal subsets also fail that0.05 check on the predecessor NPU.
 The domain, tolerances and inherited stable kernels remain unchanged. These
 failures await owner/user disposition; the task is not fully accepted.
 
+## Feasibility of the remaining tiny-output comparisons
+
+Offline analysis of the retained **CPU FP32** goldens exposes criteria that
+cannot be met by any output. This does not change the criteria or turn a failure
+into a pass. Each loaded tensor archive is SHA256-verified; FP64 is used only
+for norm accumulation, and both FP32 reference byte hashes are retained.
+
+For two references, a necessary condition for one output to meet both relative-L2
+limits is the triangle inequality:
+`norm(r1-r2) <= limit1*norm(r1) + limit2*norm(r2)`. Separately, nearest rounding
+of the golden to the required output dtype minimizes every absolute element
+error, hence supplies a lower bound on achievable L2 error. The approved
+all-rounded-zero special case is excluded from these ordinary-limit tests.
+
+Of148 failing decode head/chunk locations (44 cases),124 have disjoint CPU
+reference error bounds. The other24 have a minimum possible BF16 rounding
+error above the unchanged0.01 cap. Example
+`nearzero_c3_g8_rf32_vf32_flags010`, chunk2/head6: the independent/FLA
+reference norms are9.084802858398826e-43 and9.329564827382392e-43, while
+their distance is3.301864796061735e-43. The sum of their permitted1e-5
+error radii is only1.841436768578122e-47, smaller by a factor17930.91597.
+No kernel output can simultaneously fit both bounds.
+
+Of40 failing chunk locations,16 (across8 cases) have minimum BF16 rounding
+error above0.05. For chunk or decode
+`nearzero_c2_g8_rbf16_vbf16_flags010`, chunk1/head4, the nearest BF16
+result itself has relative-L2 approximately0.8977. The rounded golden is
+not entirely zero, so the prior zero-representation exception does not apply.
+Other locations contain genuine normal-value errors; this argument does not
+establish that those errors are unrepairable. It establishes that kernel
+repair alone cannot close every current endpoint criterion.
+
+`native/endpoint-comparison-feasibility.json` records every bound and source
+hash. Reproduce from the private tensor backup without executing device code:
+
+```bash
+python analyze_endpoint_feasibility.py \
+  --tensor-root "$PRIVATE_TENSOR_ROOT" \
+  --tensor-manifest evidence/native/retained-tensor-manifest.json \
+  --case-table evidence/native/remaining-output-failure-table.json \
+  --output comparison-feasibility.json
+```
+
+All798 retained tensor files (5734547148 bytes) have been independently restored
+from a complete private archive and SHA256-verified. The binary archive stays
+outside Git; its receipt is `host/native-tensor-backup-restore.json`.
+[The additional comparison RISK](https://github.com/ddddwee1/ascend_fla_dev/issues/106#issuecomment-5751267005)
+asks the owner to include this feasibility issue in the user decision. No
+reference, limit, dtype, gate or public domain has been changed.
+
 ## Metric implementation verification
 
 CPU FP32 goldens are retained, while relative-L2 accumulation uses FP64 without
