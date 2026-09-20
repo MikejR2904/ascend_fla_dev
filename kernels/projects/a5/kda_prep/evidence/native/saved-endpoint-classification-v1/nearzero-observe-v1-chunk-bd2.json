@@ -1,0 +1,5253 @@
+{
+  "environment": {
+    "python": "3.12.14",
+    "torch": "2.12.0+cu130",
+    "torch_npu": "2.12.0",
+    "ascriptor": "0.1.0",
+    "library_commit": "90cfcdc720bbcd66e8bd4361c4dd4fbc1a2a57b5",
+    "kernels_commit": "b3b3f9c16df7c4626ed3c081032a1be5a753d0b1",
+    "cann_version_records": {
+      "compiler": {
+        "raw_lines": [
+          "Version=9.1.0-beta.1",
+          "version_dir=cann",
+          "required_package_runtime_version=\"9.1\"",
+          "required_package_ge-executor_version=\"9.1\"",
+          "required_package_metadef_version=\"9.1\"",
+          "required_package_opbase_version=\"9.1\"",
+          "required_package_bisheng-compiler_version=\"9.1\"",
+          "required_package_tbe-tik_version=\"9.1\"",
+          "timestamp=20260509_173000235"
+        ],
+        "sha256": "0f982a259247cdd06df4fa5bdaf526b57b6ad15f7d27a33f23b3c70a381c2fe5"
+      },
+      "opp": {
+        "raw_lines": [
+          "Version=9.1.0-beta.1",
+          "version_dir=cann",
+          "required_package_runtime_version=\">=8.5\"",
+          "required_package_ge-executor_version=\">=8.5\"",
+          "required_package_metadef_version=\">=8.5\"",
+          "required_package_asc-devkit_version=\">=8.5\"",
+          "required_package_bisheng-compiler_version=\">=8.5\"",
+          "timestamp=20260509_173000235"
+        ],
+        "sha256": "377b05dab3a2dfc87dfaa92affd69a9aa5795a54d423cbe629d3495ad20370ef"
+      }
+    },
+    "opp_directories": [
+      "ascend910_93",
+      "ascend910b",
+      "ascend950"
+    ],
+    "drivers_sha256": {
+      "native_audit.py": "bfffeb22e43a3619118da1aa7119b7d1b5324d81d1632c982cfafcaebc4d6ba5",
+      "native_context.py": "d3afb051d41fd56707734a9dea941896a4923c0f9ea1ef749f80b0f8af425725",
+      "guard.py": "bd38c22514dcb3be56b14ec00425663a4bd537e483dee10485753690e21bc6a0",
+      "verify_grid_native.py": "3896a79b71fa1619a471dc28931ee24f539ef4fedf75852796349e106599933a",
+      "native_environment.py": "8aa453ef4cfd92476bb80d463ddf63d4b1e1d3c2eb325ad69e93fcaecc50833d",
+      "unit.py": "d270c3d60704500bd41813831e57b0cea5ee95f67f5db914ff21cc6c1e8b22b7",
+      "native_grid.py": "2a70c1b87dcc88f979abdecdbdc16fc3d5237ff72dc91c0dba377c181e29913b",
+      "verify_native.py": "37161cbe3d595e842fc62a66a8a78d5b2e9532059cb37e3d6f0897be5248e9e2",
+      "wait_native.py": "b73e05c7070f441014f34a60b71d56802f42e08f40e8f94b4834b57edfa9c7c0"
+    },
+    "prep_sha256": {
+      "native_audit.py": "bfffeb22e43a3619118da1aa7119b7d1b5324d81d1632c982cfafcaebc4d6ba5",
+      "native_environment.py": "8aa453ef4cfd92476bb80d463ddf63d4b1e1d3c2eb325ad69e93fcaecc50833d",
+      "unit.py": "e3f9c1f51a977b31b87fd03397ea43a78b4b04f6dc487947ff0532eac747d9ae",
+      "run.py": "cc9b6f4400d94e45a3af3d607bbe143ad2211ce7b3189dbe3298166e5a541a32",
+      "_unit_runner.py": "91ab007ac56f59f3c1b918947be769e725e51d98f981f41608864a2ae477133a",
+      "runtime.py": "a63385ec54c95d02357b9748156cfe82b217e72b3834c159e7a029e5752fcbe3",
+      "verify_calibration.py": "e5f7403369d294444d617e7e93a06f83552caeb535d7a3f2c5cb54b8b287ff84",
+      "verify_native.py": "37161cbe3d595e842fc62a66a8a78d5b2e9532059cb37e3d6f0897be5248e9e2",
+      "kernels/forward.py": "135b1fa2f92c26da9a6b57434f09515ac95592f033b328c3c5ddcd9ac9b2b455",
+      "baseline/autograd.py": "c2a535ae2ec5b7f1b7da000a42a96e985fcc84aa4b05df1421cc83b424b25903",
+      "baseline/chunk.py": "5bf75978176280c5eaf9268e7730ea00bf1581bb1ef8dddb35ad5a178ffd49d0",
+      "baseline/fused_recurrent.py": "1e78c50a1f15f23e9a7213d57b021b558c02164989765877b6fba92a10cf473a",
+      "ref/calibrate.py": "d21ec73afc242b1b17e7d7f15e72c034fa0dfabda6505abe4edf74313cdb0765"
+    },
+    "wrappers_sha256": {
+      "chunk.py": "c79a199d9b8b9d5820834e87d7ad0805ce63531df878c11720c0a4f181c8a87e",
+      "chunk_bwd.py": "71ce0e041a02853de768e982cc38a497294ecbfaa9e8715aca084ad3db69247e",
+      "autograd.py": "78b96d6bb9a81dfa800c4704214bcd0cdce3447f2d1b1fdd77dd11bf5380559d",
+      "fused_recurrent.py": "872d15f102e482f4baa7f9229471e8bdcbc564c1e4531967d65be0fc758771fc"
+    }
+  },
+  "run": "nearzero-observe-v1-chunk-bd2",
+  "stage": "CPU classification of saved actual native outputs",
+  "classifier_sha256": "9c2b0b387ebafef19d5f13c31f86c5cadb597fc91514a0c8b01beb0845d1dd43",
+  "owner_comment": "https://github.com/ddddwee1/ascend_fla_dev/issues/106#issuecomment-5750896563",
+  "changes_numerical_acceptance": false,
+  "original_complete": true,
+  "original_passed": false,
+  "cases": [
+    {
+      "id": "nearzero_c2_g4_rbf16_vbf16_flags010",
+      "raw_tensor_archive_sha256": "7efe0a743d63b57539bdf1509467f84b83aeba30ee7ade668d9582ae35e4d325",
+      "actual_and_input_hashes_verified": true,
+      "slices": [
+        {
+          "oracle": "independent",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 1,
+          "original_metric": {
+            "chunk": 1,
+            "head": 1,
+            "relative_l2": 0.0,
+            "max_abs_diff": 1.1480469776717109e-38,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 1.0,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 1.0,
+            "actual_max_abs": 0.0,
+            "golden_max_abs": 1.1480469776717109e-38,
+            "counts": {
+              "cpu_normal": 0,
+              "cpu_subnormal_flushed_to_signed_zero": 7749,
+              "cpu_subnormal_actual_nonzero": 0,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 443,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": null,
+              "budget": 0.05,
+              "passed": null
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 955,
+            "signed_zero_difference_count": 3632,
+            "unqualified_other_count": 0,
+            "other_samples": [],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        },
+        {
+          "oracle": "fla",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 1,
+          "original_metric": {
+            "chunk": 1,
+            "head": 1,
+            "relative_l2": 0.0,
+            "max_abs_diff": 1.1480478184507895e-38,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 1.0,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 1.0,
+            "actual_max_abs": 0.0,
+            "golden_max_abs": 1.1480478184507895e-38,
+            "counts": {
+              "cpu_normal": 0,
+              "cpu_subnormal_flushed_to_signed_zero": 7753,
+              "cpu_subnormal_actual_nonzero": 0,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 439,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": null,
+              "budget": 0.05,
+              "passed": null
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 955,
+            "signed_zero_difference_count": 3426,
+            "unqualified_other_count": 0,
+            "other_samples": [],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        }
+      ]
+    },
+    {
+      "id": "nearzero_c2_g4_rbf16_vbf16_flags011",
+      "raw_tensor_archive_sha256": "37c90c42f6edac4e14987c727d5beded8f8d27fc0200e3e06e28b1390782f0c2",
+      "actual_and_input_hashes_verified": true,
+      "slices": [
+        {
+          "oracle": "independent",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 1,
+          "original_metric": {
+            "chunk": 1,
+            "head": 1,
+            "relative_l2": 0.0,
+            "max_abs_diff": 1.148046697412018e-38,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 1.0,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 1.0,
+            "actual_max_abs": 0.0,
+            "golden_max_abs": 1.148046697412018e-38,
+            "counts": {
+              "cpu_normal": 0,
+              "cpu_subnormal_flushed_to_signed_zero": 7975,
+              "cpu_subnormal_actual_nonzero": 0,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 217,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": null,
+              "budget": 0.05,
+              "passed": null
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 955,
+            "signed_zero_difference_count": 3626,
+            "unqualified_other_count": 0,
+            "other_samples": [],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        },
+        {
+          "oracle": "fla",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 1,
+          "original_metric": {
+            "chunk": 1,
+            "head": 1,
+            "relative_l2": 0.0,
+            "max_abs_diff": 1.1480464171523252e-38,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 1.0,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 1.0,
+            "actual_max_abs": 0.0,
+            "golden_max_abs": 1.1480464171523252e-38,
+            "counts": {
+              "cpu_normal": 0,
+              "cpu_subnormal_flushed_to_signed_zero": 7978,
+              "cpu_subnormal_actual_nonzero": 0,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 214,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": null,
+              "budget": 0.05,
+              "passed": null
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 955,
+            "signed_zero_difference_count": 3525,
+            "unqualified_other_count": 0,
+            "other_samples": [],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        }
+      ]
+    },
+    {
+      "id": "nearzero_c2_g4_rf32_vbf16_flags010",
+      "raw_tensor_archive_sha256": "058b84982c33e86d6f5b7e6b2fd3dc3113688788928536d06a99f6bb5dc14c84",
+      "actual_and_input_hashes_verified": true,
+      "slices": [
+        {
+          "oracle": "independent",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 1,
+          "original_metric": {
+            "chunk": 1,
+            "head": 1,
+            "relative_l2": 0.0,
+            "max_abs_diff": 1.1416501903119145e-38,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 1.0,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 1.0,
+            "actual_max_abs": 0.0,
+            "golden_max_abs": 1.1416501903119145e-38,
+            "counts": {
+              "cpu_normal": 0,
+              "cpu_subnormal_flushed_to_signed_zero": 7750,
+              "cpu_subnormal_actual_nonzero": 0,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 442,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": null,
+              "budget": 0.05,
+              "passed": null
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 956,
+            "signed_zero_difference_count": 3626,
+            "unqualified_other_count": 0,
+            "other_samples": [],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        },
+        {
+          "oracle": "fla",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 1,
+          "original_metric": {
+            "chunk": 1,
+            "head": 1,
+            "relative_l2": 0.0,
+            "max_abs_diff": 1.141650330441761e-38,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 1.0,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 1.0,
+            "actual_max_abs": 0.0,
+            "golden_max_abs": 1.141650330441761e-38,
+            "counts": {
+              "cpu_normal": 0,
+              "cpu_subnormal_flushed_to_signed_zero": 7756,
+              "cpu_subnormal_actual_nonzero": 0,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 436,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": null,
+              "budget": 0.05,
+              "passed": null
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 956,
+            "signed_zero_difference_count": 3430,
+            "unqualified_other_count": 0,
+            "other_samples": [],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        }
+      ]
+    },
+    {
+      "id": "nearzero_c2_g4_rf32_vbf16_flags011",
+      "raw_tensor_archive_sha256": "edcdd73577bf51172c6fb428b7d69a8e64b0efa5fe8fa2da4177bcefe6f339db",
+      "actual_and_input_hashes_verified": true,
+      "slices": [
+        {
+          "oracle": "independent",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 1,
+          "original_metric": {
+            "chunk": 1,
+            "head": 1,
+            "relative_l2": 0.0,
+            "max_abs_diff": 1.1416490692731431e-38,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 1.0,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 1.0,
+            "actual_max_abs": 0.0,
+            "golden_max_abs": 1.1416490692731431e-38,
+            "counts": {
+              "cpu_normal": 0,
+              "cpu_subnormal_flushed_to_signed_zero": 7982,
+              "cpu_subnormal_actual_nonzero": 0,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 210,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": null,
+              "budget": 0.05,
+              "passed": null
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 956,
+            "signed_zero_difference_count": 3622,
+            "unqualified_other_count": 0,
+            "other_samples": [],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        },
+        {
+          "oracle": "fla",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 1,
+          "original_metric": {
+            "chunk": 1,
+            "head": 1,
+            "relative_l2": 0.0,
+            "max_abs_diff": 1.1416483686239109e-38,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 1.0,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 1.0,
+            "actual_max_abs": 0.0,
+            "golden_max_abs": 1.1416483686239109e-38,
+            "counts": {
+              "cpu_normal": 0,
+              "cpu_subnormal_flushed_to_signed_zero": 7977,
+              "cpu_subnormal_actual_nonzero": 0,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 215,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": null,
+              "budget": 0.05,
+              "passed": null
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 956,
+            "signed_zero_difference_count": 3524,
+            "unqualified_other_count": 0,
+            "other_samples": [],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        }
+      ]
+    },
+    {
+      "id": "nearzero_c2_g8_rbf16_vbf16_flags010",
+      "raw_tensor_archive_sha256": "02553109ed81580835f6f92b2993a317ee1dd0b01936607e3914182a4d5212a5",
+      "actual_and_input_hashes_verified": true,
+      "slices": [
+        {
+          "oracle": "independent",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 1,
+          "original_metric": {
+            "chunk": 1,
+            "head": 1,
+            "relative_l2": 0.0,
+            "max_abs_diff": 3.3785277948902053e-38,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 0.21480032307857785,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 0.21480032307857785,
+            "actual_max_abs": 3.217915785376012e-37,
+            "golden_max_abs": 3.223342734068649e-37,
+            "counts": {
+              "cpu_normal": 480,
+              "cpu_subnormal_flushed_to_signed_zero": 7376,
+              "cpu_subnormal_actual_nonzero": 33,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 303,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": 0.18840924222990063,
+              "budget": 0.05,
+              "passed": false
+            },
+            "candidate_equals_old_npu_bitwise": false,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 1896,
+            "signed_zero_difference_count": 3155,
+            "unqualified_other_count": 33,
+            "other_samples": [
+              {
+                "index": [
+                  0,
+                  0,
+                  3
+                ],
+                "actual": 2.0020138162442084e-38,
+                "cpu_fp32": 8.929894975577829e-39,
+                "old_npu": 2.0020138162442084e-38
+              },
+              {
+                "index": [
+                  0,
+                  0,
+                  79
+                ],
+                "actual": 1.597937633149047e-38,
+                "cpu_fp32": 5.410746879792628e-39,
+                "old_npu": 1.597937633149047e-38
+              },
+              {
+                "index": [
+                  0,
+                  0,
+                  106
+                ],
+                "actual": 1.5795705339174488e-38,
+                "cpu_fp32": 7.010152513212902e-39,
+                "old_npu": 1.5795705339174488e-38
+              },
+              {
+                "index": [
+                  0,
+                  0,
+                  120
+                ],
+                "actual": 1.285696946211877e-38,
+                "cpu_fp32": -8.364056260877325e-40,
+                "old_npu": 1.285696946211877e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  26
+                ],
+                "actual": 2.3234380527971777e-38,
+                "cpu_fp32": 5.782844871412511e-39,
+                "old_npu": 2.3234380527971777e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  31
+                ],
+                "actual": 1.221412098901283e-38,
+                "cpu_fp32": 9.024661988123187e-39,
+                "old_npu": 1.221412098901283e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  39
+                ],
+                "actual": 1.3958995416014664e-38,
+                "cpu_fp32": 6.300642870860567e-39,
+                "old_npu": 1.3958995416014664e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  47
+                ],
+                "actual": -2.3234380527971777e-38,
+                "cpu_fp32": -1.1507534455257078e-38,
+                "old_npu": -2.3234380527971777e-38
+              }
+            ],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        },
+        {
+          "oracle": "independent",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 2,
+          "original_metric": {
+            "chunk": 1,
+            "head": 2,
+            "relative_l2": 0.0,
+            "max_abs_diff": 2.7265456583937977e-38,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 0.9785602346304504,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 0.9785602346304504,
+            "actual_max_abs": 2.047931564323204e-38,
+            "golden_max_abs": 2.7265456583937977e-38,
+            "counts": {
+              "cpu_normal": 41,
+              "cpu_subnormal_flushed_to_signed_zero": 7735,
+              "cpu_subnormal_actual_nonzero": 0,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 416,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": 0.964615724949192,
+              "budget": 0.05,
+              "passed": false
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 1184,
+            "signed_zero_difference_count": 3510,
+            "unqualified_other_count": 0,
+            "other_samples": [],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        },
+        {
+          "oracle": "independent",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 3,
+          "original_metric": {
+            "chunk": 1,
+            "head": 3,
+            "relative_l2": 0.0,
+            "max_abs_diff": 1.8490371457504896e-39,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 1.0,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 1.0,
+            "actual_max_abs": 0.0,
+            "golden_max_abs": 1.8490371457504896e-39,
+            "counts": {
+              "cpu_normal": 0,
+              "cpu_subnormal_flushed_to_signed_zero": 7722,
+              "cpu_subnormal_actual_nonzero": 0,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 470,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": null,
+              "budget": 0.05,
+              "passed": null
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 503,
+            "signed_zero_difference_count": 3708,
+            "unqualified_other_count": 0,
+            "other_samples": [],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        },
+        {
+          "oracle": "independent",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 4,
+          "original_metric": {
+            "chunk": 1,
+            "head": 4,
+            "relative_l2": 0.0,
+            "max_abs_diff": 7.947744500111065e-41,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 1.0,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 1.0,
+            "actual_max_abs": 0.0,
+            "golden_max_abs": 7.947744500111065e-41,
+            "counts": {
+              "cpu_normal": 0,
+              "cpu_subnormal_flushed_to_signed_zero": 7625,
+              "cpu_subnormal_actual_nonzero": 0,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 567,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": null,
+              "budget": 0.05,
+              "passed": null
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 11,
+            "signed_zero_difference_count": 4073,
+            "unqualified_other_count": 0,
+            "other_samples": [],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        },
+        {
+          "oracle": "fla",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 1,
+          "original_metric": {
+            "chunk": 1,
+            "head": 1,
+            "relative_l2": 0.0,
+            "max_abs_diff": 3.3785272343708196e-38,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 0.2148003294461515,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 0.2148003294461515,
+            "actual_max_abs": 3.217915785376012e-37,
+            "golden_max_abs": 3.2233431824841578e-37,
+            "counts": {
+              "cpu_normal": 480,
+              "cpu_subnormal_flushed_to_signed_zero": 7335,
+              "cpu_subnormal_actual_nonzero": 33,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 344,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": 0.18840924467599415,
+              "budget": 0.05,
+              "passed": false
+            },
+            "candidate_equals_old_npu_bitwise": false,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 1896,
+            "signed_zero_difference_count": 2976,
+            "unqualified_other_count": 33,
+            "other_samples": [
+              {
+                "index": [
+                  0,
+                  0,
+                  3
+                ],
+                "actual": 2.0020138162442084e-38,
+                "cpu_fp32": 8.929897778174757e-39,
+                "old_npu": 2.0020138162442084e-38
+              },
+              {
+                "index": [
+                  0,
+                  0,
+                  79
+                ],
+                "actual": 1.597937633149047e-38,
+                "cpu_fp32": 5.4107440771956994e-39,
+                "old_npu": 1.597937633149047e-38
+              },
+              {
+                "index": [
+                  0,
+                  0,
+                  106
+                ],
+                "actual": 1.5795705339174488e-38,
+                "cpu_fp32": 7.010146908019044e-39,
+                "old_npu": 1.5795705339174488e-38
+              },
+              {
+                "index": [
+                  0,
+                  0,
+                  120
+                ],
+                "actual": 1.285696946211877e-38,
+                "cpu_fp32": -8.364056260877325e-40,
+                "old_npu": 1.285696946211877e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  26
+                ],
+                "actual": 2.3234380527971777e-38,
+                "cpu_fp32": 5.782849075307904e-39,
+                "old_npu": 2.3234380527971777e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  31
+                ],
+                "actual": 1.221412098901283e-38,
+                "cpu_fp32": 9.024653580332401e-39,
+                "old_npu": 1.221412098901283e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  39
+                ],
+                "actual": 1.3958995416014664e-38,
+                "cpu_fp32": 6.300634463069781e-39,
+                "old_npu": 1.3958995416014664e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  47
+                ],
+                "actual": -2.3234380527971777e-38,
+                "cpu_fp32": -1.1507537257854007e-38,
+                "old_npu": -2.3234380527971777e-38
+              }
+            ],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        },
+        {
+          "oracle": "fla",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 2,
+          "original_metric": {
+            "chunk": 1,
+            "head": 2,
+            "relative_l2": 0.0,
+            "max_abs_diff": 2.7265456583937977e-38,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 0.9785602461714551,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 0.9785602461714551,
+            "actual_max_abs": 2.047931564323204e-38,
+            "golden_max_abs": 2.7265456583937977e-38,
+            "counts": {
+              "cpu_normal": 41,
+              "cpu_subnormal_flushed_to_signed_zero": 7723,
+              "cpu_subnormal_actual_nonzero": 0,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 428,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": 0.9646157372996639,
+              "budget": 0.05,
+              "passed": false
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 1184,
+            "signed_zero_difference_count": 3301,
+            "unqualified_other_count": 0,
+            "other_samples": [],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        },
+        {
+          "oracle": "fla",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 3,
+          "original_metric": {
+            "chunk": 1,
+            "head": 3,
+            "relative_l2": 0.0,
+            "max_abs_diff": 1.8490315405566323e-39,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 1.0,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 1.0,
+            "actual_max_abs": 0.0,
+            "golden_max_abs": 1.8490315405566323e-39,
+            "counts": {
+              "cpu_normal": 0,
+              "cpu_subnormal_flushed_to_signed_zero": 7686,
+              "cpu_subnormal_actual_nonzero": 0,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 506,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": null,
+              "budget": 0.05,
+              "passed": null
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 503,
+            "signed_zero_difference_count": 3522,
+            "unqualified_other_count": 0,
+            "other_samples": [],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        },
+        {
+          "oracle": "fla",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 4,
+          "original_metric": {
+            "chunk": 1,
+            "head": 4,
+            "relative_l2": 0.0,
+            "max_abs_diff": 7.94802475980393e-41,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 1.0,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 1.0,
+            "actual_max_abs": 0.0,
+            "golden_max_abs": 7.94802475980393e-41,
+            "counts": {
+              "cpu_normal": 0,
+              "cpu_subnormal_flushed_to_signed_zero": 7588,
+              "cpu_subnormal_actual_nonzero": 0,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 604,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": null,
+              "budget": 0.05,
+              "passed": null
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 11,
+            "signed_zero_difference_count": 3739,
+            "unqualified_other_count": 0,
+            "other_samples": [],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        }
+      ]
+    },
+    {
+      "id": "nearzero_c2_g8_rbf16_vbf16_flags011",
+      "raw_tensor_archive_sha256": "31c9e985aab407115ebfc4e00e520cadd6381b14adf9e4ce207f87c2df276e38",
+      "actual_and_input_hashes_verified": true,
+      "slices": [
+        {
+          "oracle": "independent",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 1,
+          "original_metric": {
+            "chunk": 1,
+            "head": 1,
+            "relative_l2": 0.0,
+            "max_abs_diff": 3.378530317227441e-38,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 0.21480032443035366,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 0.21480032443035366,
+            "actual_max_abs": 3.217915785376012e-37,
+            "golden_max_abs": 3.2233422856531406e-37,
+            "counts": {
+              "cpu_normal": 480,
+              "cpu_subnormal_flushed_to_signed_zero": 7532,
+              "cpu_subnormal_actual_nonzero": 33,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 147,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": 0.18840923743026367,
+              "budget": 0.05,
+              "passed": false
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 1896,
+            "signed_zero_difference_count": 3168,
+            "unqualified_other_count": 33,
+            "other_samples": [
+              {
+                "index": [
+                  0,
+                  0,
+                  3
+                ],
+                "actual": 2.0020138162442084e-38,
+                "cpu_fp32": 8.929851535325435e-39,
+                "old_npu": 2.0020138162442084e-38
+              },
+              {
+                "index": [
+                  0,
+                  0,
+                  79
+                ],
+                "actual": 1.597937633149047e-38,
+                "cpu_fp32": 5.410777708358843e-39,
+                "old_npu": 1.597937633149047e-38
+              },
+              {
+                "index": [
+                  0,
+                  0,
+                  106
+                ],
+                "actual": 1.5795705339174488e-38,
+                "cpu_fp32": 7.010092257378936e-39,
+                "old_npu": 1.5795705339174488e-38
+              },
+              {
+                "index": [
+                  0,
+                  0,
+                  120
+                ],
+                "actual": 1.285696946211877e-38,
+                "cpu_fp32": -8.364084286846611e-40,
+                "old_npu": 1.285696946211877e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  26
+                ],
+                "actual": 2.3234380527971777e-38,
+                "cpu_fp32": 5.782844871412511e-39,
+                "old_npu": 2.3234380527971777e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  31
+                ],
+                "actual": 1.221412098901283e-38,
+                "cpu_fp32": 9.024653580332401e-39,
+                "old_npu": 1.221412098901283e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  39
+                ],
+                "actual": 1.3958995416014664e-38,
+                "cpu_fp32": 6.300633061771317e-39,
+                "old_npu": 1.3958995416014664e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  47
+                ],
+                "actual": -2.3234380527971777e-38,
+                "cpu_fp32": -1.1507530251361685e-38,
+                "old_npu": -2.3234380527971777e-38
+              }
+            ],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        },
+        {
+          "oracle": "independent",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 2,
+          "original_metric": {
+            "chunk": 1,
+            "head": 2,
+            "relative_l2": 0.0,
+            "max_abs_diff": 2.7265462189131834e-38,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 0.9785602609958838,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 0.9785602609958838,
+            "actual_max_abs": 2.047931564323204e-38,
+            "golden_max_abs": 2.7265462189131834e-38,
+            "counts": {
+              "cpu_normal": 41,
+              "cpu_subnormal_flushed_to_signed_zero": 7942,
+              "cpu_subnormal_actual_nonzero": 0,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 209,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": 0.9646157705515211,
+              "budget": 0.05,
+              "passed": false
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 1184,
+            "signed_zero_difference_count": 3513,
+            "unqualified_other_count": 0,
+            "other_samples": [],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        },
+        {
+          "oracle": "independent",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 3,
+          "original_metric": {
+            "chunk": 1,
+            "head": 3,
+            "relative_l2": 0.0,
+            "max_abs_diff": 1.8490329418550967e-39,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 1.0,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 1.0,
+            "actual_max_abs": 0.0,
+            "golden_max_abs": 1.8490329418550967e-39,
+            "counts": {
+              "cpu_normal": 0,
+              "cpu_subnormal_flushed_to_signed_zero": 7922,
+              "cpu_subnormal_actual_nonzero": 0,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 270,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": null,
+              "budget": 0.05,
+              "passed": null
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 503,
+            "signed_zero_difference_count": 3766,
+            "unqualified_other_count": 0,
+            "other_samples": [],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        },
+        {
+          "oracle": "independent",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 4,
+          "original_metric": {
+            "chunk": 1,
+            "head": 4,
+            "relative_l2": 0.0,
+            "max_abs_diff": 7.948865538882525e-41,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 1.0,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 1.0,
+            "actual_max_abs": 0.0,
+            "golden_max_abs": 7.948865538882525e-41,
+            "counts": {
+              "cpu_normal": 0,
+              "cpu_subnormal_flushed_to_signed_zero": 7881,
+              "cpu_subnormal_actual_nonzero": 0,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 311,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": null,
+              "budget": 0.05,
+              "passed": null
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 11,
+            "signed_zero_difference_count": 4082,
+            "unqualified_other_count": 0,
+            "other_samples": [],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        },
+        {
+          "oracle": "fla",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 1,
+          "original_metric": {
+            "chunk": 1,
+            "head": 1,
+            "relative_l2": 0.0,
+            "max_abs_diff": 3.378528915928977e-38,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 0.21480034044085264,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 0.21480034044085264,
+            "actual_max_abs": 3.217915785376012e-37,
+            "golden_max_abs": 3.2233422856531406e-37,
+            "counts": {
+              "cpu_normal": 480,
+              "cpu_subnormal_flushed_to_signed_zero": 7520,
+              "cpu_subnormal_actual_nonzero": 33,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 159,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": 0.1884092497723758,
+              "budget": 0.05,
+              "passed": false
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 1896,
+            "signed_zero_difference_count": 3075,
+            "unqualified_other_count": 33,
+            "other_samples": [
+              {
+                "index": [
+                  0,
+                  0,
+                  3
+                ],
+                "actual": 2.0020138162442084e-38,
+                "cpu_fp32": 8.929844528833113e-39,
+                "old_npu": 2.0020138162442084e-38
+              },
+              {
+                "index": [
+                  0,
+                  0,
+                  79
+                ],
+                "actual": 1.597937633149047e-38,
+                "cpu_fp32": 5.410767899269593e-39,
+                "old_npu": 1.597937633149047e-38
+              },
+              {
+                "index": [
+                  0,
+                  0,
+                  106
+                ],
+                "actual": 1.5795705339174488e-38,
+                "cpu_fp32": 7.010090856080471e-39,
+                "old_npu": 1.5795705339174488e-38
+              },
+              {
+                "index": [
+                  0,
+                  0,
+                  120
+                ],
+                "actual": 1.285696946211877e-38,
+                "cpu_fp32": -8.364154351769828e-40,
+                "old_npu": 1.285696946211877e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  26
+                ],
+                "actual": 2.3234380527971777e-38,
+                "cpu_fp32": 5.782840667517118e-39,
+                "old_npu": 2.3234380527971777e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  31
+                ],
+                "actual": 1.221412098901283e-38,
+                "cpu_fp32": 9.024663389421652e-39,
+                "old_npu": 1.221412098901283e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  39
+                ],
+                "actual": 1.3958995416014664e-38,
+                "cpu_fp32": 6.300635864368246e-39,
+                "old_npu": 1.3958995416014664e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  47
+                ],
+                "actual": -2.3234380527971777e-38,
+                "cpu_fp32": -1.1507530251361685e-38,
+                "old_npu": -2.3234380527971777e-38
+              }
+            ],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        },
+        {
+          "oracle": "fla",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 2,
+          "original_metric": {
+            "chunk": 1,
+            "head": 2,
+            "relative_l2": 0.0,
+            "max_abs_diff": 2.7265462189131834e-38,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 0.9785602532220776,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 0.9785602532220776,
+            "actual_max_abs": 2.047931564323204e-38,
+            "golden_max_abs": 2.7265462189131834e-38,
+            "counts": {
+              "cpu_normal": 41,
+              "cpu_subnormal_flushed_to_signed_zero": 7934,
+              "cpu_subnormal_actual_nonzero": 0,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 217,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": 0.9646157563753635,
+              "budget": 0.05,
+              "passed": false
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 1184,
+            "signed_zero_difference_count": 3402,
+            "unqualified_other_count": 0,
+            "other_samples": [],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        },
+        {
+          "oracle": "fla",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 3,
+          "original_metric": {
+            "chunk": 1,
+            "head": 3,
+            "relative_l2": 0.0,
+            "max_abs_diff": 1.849021731467382e-39,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 1.0,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 1.0,
+            "actual_max_abs": 0.0,
+            "golden_max_abs": 1.849021731467382e-39,
+            "counts": {
+              "cpu_normal": 0,
+              "cpu_subnormal_flushed_to_signed_zero": 7898,
+              "cpu_subnormal_actual_nonzero": 0,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 294,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": null,
+              "budget": 0.05,
+              "passed": null
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 503,
+            "signed_zero_difference_count": 3660,
+            "unqualified_other_count": 0,
+            "other_samples": [],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        },
+        {
+          "oracle": "fla",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 4,
+          "original_metric": {
+            "chunk": 1,
+            "head": 4,
+            "relative_l2": 0.0,
+            "max_abs_diff": 7.949005668728957e-41,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 1.0,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 1.0,
+            "actual_max_abs": 0.0,
+            "golden_max_abs": 7.949005668728957e-41,
+            "counts": {
+              "cpu_normal": 0,
+              "cpu_subnormal_flushed_to_signed_zero": 7903,
+              "cpu_subnormal_actual_nonzero": 0,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 289,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": null,
+              "budget": 0.05,
+              "passed": null
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 11,
+            "signed_zero_difference_count": 3947,
+            "unqualified_other_count": 0,
+            "other_samples": [],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        }
+      ]
+    },
+    {
+      "id": "nearzero_c2_g8_rf32_vbf16_flags010",
+      "raw_tensor_archive_sha256": "de249828092803c0df71cd30bd0efdf48ed7ee9aeaf0158f99f700033843426f",
+      "actual_and_input_hashes_verified": true,
+      "slices": [
+        {
+          "oracle": "independent",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 1,
+          "original_metric": {
+            "chunk": 1,
+            "head": 1,
+            "relative_l2": 0.0,
+            "max_abs_diff": 3.418240032849785e-38,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 0.21317754806238098,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 0.21317754806238098,
+            "actual_max_abs": 3.2326094647612906e-37,
+            "golden_max_abs": 3.2322789825314643e-37,
+            "counts": {
+              "cpu_normal": 482,
+              "cpu_subnormal_flushed_to_signed_zero": 7370,
+              "cpu_subnormal_actual_nonzero": 37,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 303,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": 0.18630134359285963,
+              "budget": 0.05,
+              "passed": false
+            },
+            "candidate_equals_old_npu_bitwise": false,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 1899,
+            "signed_zero_difference_count": 3155,
+            "unqualified_other_count": 37,
+            "other_samples": [
+              {
+                "index": [
+                  0,
+                  0,
+                  3
+                ],
+                "actual": 2.038748014707405e-38,
+                "cpu_fp32": 9.169547841543588e-39,
+                "old_npu": 2.038748014707405e-38
+              },
+              {
+                "index": [
+                  0,
+                  0,
+                  79
+                ],
+                "actual": 1.6071211827648462e-38,
+                "cpu_fp32": 6.805355545248758e-39,
+                "old_npu": 1.6071211827648462e-38
+              },
+              {
+                "index": [
+                  0,
+                  0,
+                  87
+                ],
+                "actual": 1.7265073277702348e-38,
+                "cpu_fp32": 1.0390944806421456e-38,
+                "old_npu": 1.7265073277702348e-38
+              },
+              {
+                "index": [
+                  0,
+                  0,
+                  106
+                ],
+                "actual": 1.6163047323806453e-38,
+                "cpu_fp32": 6.155693959009273e-39,
+                "old_npu": 1.6163047323806453e-38
+              },
+              {
+                "index": [
+                  0,
+                  0,
+                  120
+                ],
+                "actual": 1.3224311446750734e-38,
+                "cpu_fp32": 7.962121822355038e-40,
+                "old_npu": 1.3224311446750734e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  26
+                ],
+                "actual": 2.2958874039497803e-38,
+                "cpu_fp32": 5.5549446956670447e-39,
+                "old_npu": 2.2958874039497803e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  31
+                ],
+                "actual": 1.212228549285484e-38,
+                "cpu_fp32": 8.577104074199413e-39,
+                "old_npu": 1.212228549285484e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  39
+                ],
+                "actual": 1.4142666408330647e-38,
+                "cpu_fp32": 6.344060702479208e-39,
+                "old_npu": 1.4142666408330647e-38
+              }
+            ],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        },
+        {
+          "oracle": "independent",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 2,
+          "original_metric": {
+            "chunk": 1,
+            "head": 2,
+            "relative_l2": 0.0,
+            "max_abs_diff": 2.7000594358599014e-38,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 0.9786381682910296,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 0.9786381682910296,
+            "actual_max_abs": 2.0295644650916058e-38,
+            "golden_max_abs": 2.7000594358599014e-38,
+            "counts": {
+              "cpu_normal": 35,
+              "cpu_subnormal_flushed_to_signed_zero": 7735,
+              "cpu_subnormal_actual_nonzero": 0,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 422,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": 0.9618489791094483,
+              "budget": 0.05,
+              "passed": false
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 1181,
+            "signed_zero_difference_count": 3508,
+            "unqualified_other_count": 0,
+            "other_samples": [],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        },
+        {
+          "oracle": "independent",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 3,
+          "original_metric": {
+            "chunk": 1,
+            "head": 3,
+            "relative_l2": 0.0,
+            "max_abs_diff": 1.843106850649467e-39,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 1.0,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 1.0,
+            "actual_max_abs": 0.0,
+            "golden_max_abs": 1.843106850649467e-39,
+            "counts": {
+              "cpu_normal": 0,
+              "cpu_subnormal_flushed_to_signed_zero": 7720,
+              "cpu_subnormal_actual_nonzero": 0,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 472,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": null,
+              "budget": 0.05,
+              "passed": null
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 504,
+            "signed_zero_difference_count": 3711,
+            "unqualified_other_count": 0,
+            "other_samples": [],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        },
+        {
+          "oracle": "independent",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 4,
+          "original_metric": {
+            "chunk": 1,
+            "head": 4,
+            "relative_l2": 0.0,
+            "max_abs_diff": 7.945922812107443e-41,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 1.0,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 1.0,
+            "actual_max_abs": 0.0,
+            "golden_max_abs": 7.945922812107443e-41,
+            "counts": {
+              "cpu_normal": 0,
+              "cpu_subnormal_flushed_to_signed_zero": 7633,
+              "cpu_subnormal_actual_nonzero": 0,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 559,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": null,
+              "budget": 0.05,
+              "passed": null
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 11,
+            "signed_zero_difference_count": 4075,
+            "unqualified_other_count": 0,
+            "other_samples": [],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        },
+        {
+          "oracle": "fla",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 1,
+          "original_metric": {
+            "chunk": 1,
+            "head": 1,
+            "relative_l2": 0.0,
+            "max_abs_diff": 3.4182389118110134e-38,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 0.21317754378340542,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 0.21317754378340542,
+            "actual_max_abs": 3.2326094647612906e-37,
+            "golden_max_abs": 3.2322792067392186e-37,
+            "counts": {
+              "cpu_normal": 482,
+              "cpu_subnormal_flushed_to_signed_zero": 7338,
+              "cpu_subnormal_actual_nonzero": 37,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 335,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": 0.1863013443718231,
+              "budget": 0.05,
+              "passed": false
+            },
+            "candidate_equals_old_npu_bitwise": false,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 1899,
+            "signed_zero_difference_count": 2985,
+            "unqualified_other_count": 37,
+            "other_samples": [
+              {
+                "index": [
+                  0,
+                  0,
+                  3
+                ],
+                "actual": 2.038748014707405e-38,
+                "cpu_fp32": 9.169559051931302e-39,
+                "old_npu": 2.038748014707405e-38
+              },
+              {
+                "index": [
+                  0,
+                  0,
+                  79
+                ],
+                "actual": 1.6071211827648462e-38,
+                "cpu_fp32": 6.805377966024188e-39,
+                "old_npu": 1.6071211827648462e-38
+              },
+              {
+                "index": [
+                  0,
+                  0,
+                  87
+                ],
+                "actual": 1.7265073277702348e-38,
+                "cpu_fp32": 1.0390951812913778e-38,
+                "old_npu": 1.7265073277702348e-38
+              },
+              {
+                "index": [
+                  0,
+                  0,
+                  106
+                ],
+                "actual": 1.6163047323806453e-38,
+                "cpu_fp32": 6.15568975511388e-39,
+                "old_npu": 1.6163047323806453e-38
+              },
+              {
+                "index": [
+                  0,
+                  0,
+                  120
+                ],
+                "actual": 1.3224311446750734e-38,
+                "cpu_fp32": 7.962205900262897e-40,
+                "old_npu": 1.3224311446750734e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  26
+                ],
+                "actual": 2.2958874039497803e-38,
+                "cpu_fp32": 5.554955906054759e-39,
+                "old_npu": 2.2958874039497803e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  31
+                ],
+                "actual": 1.212228549285484e-38,
+                "cpu_fp32": 8.57711948848252e-39,
+                "old_npu": 1.212228549285484e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  39
+                ],
+                "actual": 1.4142666408330647e-38,
+                "cpu_fp32": 6.344073314165386e-39,
+                "old_npu": 1.4142666408330647e-38
+              }
+            ],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        },
+        {
+          "oracle": "fla",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 2,
+          "original_metric": {
+            "chunk": 1,
+            "head": 2,
+            "relative_l2": 0.0,
+            "max_abs_diff": 2.700060556898673e-38,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 0.9786381825041888,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 0.9786381825041888,
+            "actual_max_abs": 2.0295644650916058e-38,
+            "golden_max_abs": 2.700060556898673e-38,
+            "counts": {
+              "cpu_normal": 35,
+              "cpu_subnormal_flushed_to_signed_zero": 7729,
+              "cpu_subnormal_actual_nonzero": 0,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 428,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": 0.9618490065345142,
+              "budget": 0.05,
+              "passed": false
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 1181,
+            "signed_zero_difference_count": 3308,
+            "unqualified_other_count": 0,
+            "other_samples": [],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        },
+        {
+          "oracle": "fla",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 3,
+          "original_metric": {
+            "chunk": 1,
+            "head": 3,
+            "relative_l2": 0.0,
+            "max_abs_diff": 1.843106850649467e-39,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 1.0,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 1.0,
+            "actual_max_abs": 0.0,
+            "golden_max_abs": 1.843106850649467e-39,
+            "counts": {
+              "cpu_normal": 0,
+              "cpu_subnormal_flushed_to_signed_zero": 7680,
+              "cpu_subnormal_actual_nonzero": 0,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 512,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": null,
+              "budget": 0.05,
+              "passed": null
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 504,
+            "signed_zero_difference_count": 3523,
+            "unqualified_other_count": 0,
+            "other_samples": [],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        },
+        {
+          "oracle": "fla",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 4,
+          "original_metric": {
+            "chunk": 1,
+            "head": 4,
+            "relative_l2": 0.0,
+            "max_abs_diff": 7.946203071800308e-41,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 1.0,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 1.0,
+            "actual_max_abs": 0.0,
+            "golden_max_abs": 7.946203071800308e-41,
+            "counts": {
+              "cpu_normal": 0,
+              "cpu_subnormal_flushed_to_signed_zero": 7579,
+              "cpu_subnormal_actual_nonzero": 0,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 613,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": null,
+              "budget": 0.05,
+              "passed": null
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 11,
+            "signed_zero_difference_count": 3737,
+            "unqualified_other_count": 0,
+            "other_samples": [],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        }
+      ]
+    },
+    {
+      "id": "nearzero_c2_g8_rf32_vbf16_flags011",
+      "raw_tensor_archive_sha256": "69cddbdc5810efd057462574a0799c6a2418eb845037bc78866a5740ba9fc0c3",
+      "actual_and_input_hashes_verified": true,
+      "slices": [
+        {
+          "oracle": "independent",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 1,
+          "original_metric": {
+            "chunk": 1,
+            "head": 1,
+            "relative_l2": 0.0,
+            "max_abs_diff": 3.418241994667635e-38,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 0.21317755156552706,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 0.21317755156552706,
+            "actual_max_abs": 3.2326094647612906e-37,
+            "golden_max_abs": 3.2322783099082014e-37,
+            "counts": {
+              "cpu_normal": 482,
+              "cpu_subnormal_flushed_to_signed_zero": 7538,
+              "cpu_subnormal_actual_nonzero": 37,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 135,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": 0.1863013437355842,
+              "budget": 0.05,
+              "passed": false
+            },
+            "candidate_equals_old_npu_bitwise": false,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 1899,
+            "signed_zero_difference_count": 3174,
+            "unqualified_other_count": 37,
+            "other_samples": [
+              {
+                "index": [
+                  0,
+                  0,
+                  3
+                ],
+                "actual": 2.038748014707405e-38,
+                "cpu_fp32": 9.169508605186586e-39,
+                "old_npu": 2.038748014707405e-38
+              },
+              {
+                "index": [
+                  0,
+                  0,
+                  79
+                ],
+                "actual": 1.6071211827648462e-38,
+                "cpu_fp32": 6.805384972516509e-39,
+                "old_npu": 1.6071211827648462e-38
+              },
+              {
+                "index": [
+                  0,
+                  0,
+                  87
+                ],
+                "actual": 1.7265073277702348e-38,
+                "cpu_fp32": 1.039093639863067e-38,
+                "old_npu": 1.7265073277702348e-38
+              },
+              {
+                "index": [
+                  0,
+                  0,
+                  106
+                ],
+                "actual": 1.6163047323806453e-38,
+                "cpu_fp32": 6.155632301876842e-39,
+                "old_npu": 1.6163047323806453e-38
+              },
+              {
+                "index": [
+                  0,
+                  0,
+                  120
+                ],
+                "actual": 1.3224311446750734e-38,
+                "cpu_fp32": 7.962065770416465e-40,
+                "old_npu": 1.3224311446750734e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  26
+                ],
+                "actual": 2.2958874039497803e-38,
+                "cpu_fp32": 5.5549488995624376e-39,
+                "old_npu": 2.2958874039497803e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  31
+                ],
+                "actual": 1.212228549285484e-38,
+                "cpu_fp32": 8.577105475497877e-39,
+                "old_npu": 1.212228549285484e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  39
+                ],
+                "actual": 1.4142666408330647e-38,
+                "cpu_fp32": 6.3440649063746e-39,
+                "old_npu": 1.4142666408330647e-38
+              }
+            ],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        },
+        {
+          "oracle": "independent",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 2,
+          "original_metric": {
+            "chunk": 1,
+            "head": 2,
+            "relative_l2": 0.0,
+            "max_abs_diff": 2.70006027663898e-38,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 0.9786382111365417,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 0.9786382111365417,
+            "actual_max_abs": 2.0295644650916058e-38,
+            "golden_max_abs": 2.70006027663898e-38,
+            "counts": {
+              "cpu_normal": 35,
+              "cpu_subnormal_flushed_to_signed_zero": 7942,
+              "cpu_subnormal_actual_nonzero": 0,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 215,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": 0.961849061261442,
+              "budget": 0.05,
+              "passed": false
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 1181,
+            "signed_zero_difference_count": 3514,
+            "unqualified_other_count": 0,
+            "other_samples": [],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        },
+        {
+          "oracle": "independent",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 3,
+          "original_metric": {
+            "chunk": 1,
+            "head": 3,
+            "relative_l2": 0.0,
+            "max_abs_diff": 1.843102646754074e-39,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 1.0,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 1.0,
+            "actual_max_abs": 0.0,
+            "golden_max_abs": 1.843102646754074e-39,
+            "counts": {
+              "cpu_normal": 0,
+              "cpu_subnormal_flushed_to_signed_zero": 7924,
+              "cpu_subnormal_actual_nonzero": 0,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 268,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": null,
+              "budget": 0.05,
+              "passed": null
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 504,
+            "signed_zero_difference_count": 3776,
+            "unqualified_other_count": 0,
+            "other_samples": [],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        },
+        {
+          "oracle": "independent",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 4,
+          "original_metric": {
+            "chunk": 1,
+            "head": 4,
+            "relative_l2": 0.0,
+            "max_abs_diff": 7.94690372103247e-41,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 1.0,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 1.0,
+            "actual_max_abs": 0.0,
+            "golden_max_abs": 7.94690372103247e-41,
+            "counts": {
+              "cpu_normal": 0,
+              "cpu_subnormal_flushed_to_signed_zero": 7880,
+              "cpu_subnormal_actual_nonzero": 0,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 312,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": null,
+              "budget": 0.05,
+              "passed": null
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 11,
+            "signed_zero_difference_count": 4085,
+            "unqualified_other_count": 0,
+            "other_samples": [],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        },
+        {
+          "oracle": "fla",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 1,
+          "original_metric": {
+            "chunk": 1,
+            "head": 1,
+            "relative_l2": 0.0,
+            "max_abs_diff": 3.418242274927328e-38,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 0.21317754590936824,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 0.21317754590936824,
+            "actual_max_abs": 3.2326094647612906e-37,
+            "golden_max_abs": 3.23227875832371e-37,
+            "counts": {
+              "cpu_normal": 482,
+              "cpu_subnormal_flushed_to_signed_zero": 7512,
+              "cpu_subnormal_actual_nonzero": 37,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 161,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": 0.18630133911855354,
+              "budget": 0.05,
+              "passed": false
+            },
+            "candidate_equals_old_npu_bitwise": false,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 1899,
+            "signed_zero_difference_count": 3078,
+            "unqualified_other_count": 37,
+            "other_samples": [
+              {
+                "index": [
+                  0,
+                  0,
+                  3
+                ],
+                "actual": 2.038748014707405e-38,
+                "cpu_fp32": 9.169505802589658e-39,
+                "old_npu": 2.038748014707405e-38
+              },
+              {
+                "index": [
+                  0,
+                  0,
+                  79
+                ],
+                "actual": 1.6071211827648462e-38,
+                "cpu_fp32": 6.805365354338009e-39,
+                "old_npu": 1.6071211827648462e-38
+              },
+              {
+                "index": [
+                  0,
+                  0,
+                  87
+                ],
+                "actual": 1.7265073277702348e-38,
+                "cpu_fp32": 1.0390954615510706e-38,
+                "old_npu": 1.7265073277702348e-38
+              },
+              {
+                "index": [
+                  0,
+                  0,
+                  106
+                ],
+                "actual": 1.6163047323806453e-38,
+                "cpu_fp32": 6.155635104473771e-39,
+                "old_npu": 1.6163047323806453e-38
+              },
+              {
+                "index": [
+                  0,
+                  0,
+                  120
+                ],
+                "actual": 1.3224311446750734e-38,
+                "cpu_fp32": 7.962051757431821e-40,
+                "old_npu": 1.3224311446750734e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  26
+                ],
+                "actual": 2.2958874039497803e-38,
+                "cpu_fp32": 5.554960109950152e-39,
+                "old_npu": 2.2958874039497803e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  31
+                ],
+                "actual": 1.212228549285484e-38,
+                "cpu_fp32": 8.57710967939327e-39,
+                "old_npu": 1.212228549285484e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  39
+                ],
+                "actual": 1.4142666408330647e-38,
+                "cpu_fp32": 6.344073314165386e-39,
+                "old_npu": 1.4142666408330647e-38
+              }
+            ],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        },
+        {
+          "oracle": "fla",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 2,
+          "original_metric": {
+            "chunk": 1,
+            "head": 2,
+            "relative_l2": 0.0,
+            "max_abs_diff": 2.700059996379287e-38,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 0.9786381872782999,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 0.9786381872782999,
+            "actual_max_abs": 2.0295644650916058e-38,
+            "golden_max_abs": 2.700059996379287e-38,
+            "counts": {
+              "cpu_normal": 35,
+              "cpu_subnormal_flushed_to_signed_zero": 7944,
+              "cpu_subnormal_actual_nonzero": 0,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 213,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": 0.9618490182299657,
+              "budget": 0.05,
+              "passed": false
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 1181,
+            "signed_zero_difference_count": 3408,
+            "unqualified_other_count": 0,
+            "other_samples": [],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        },
+        {
+          "oracle": "fla",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 3,
+          "original_metric": {
+            "chunk": 1,
+            "head": 3,
+            "relative_l2": 0.0,
+            "max_abs_diff": 1.8431054493510027e-39,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 1.0,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 1.0,
+            "actual_max_abs": 0.0,
+            "golden_max_abs": 1.8431054493510027e-39,
+            "counts": {
+              "cpu_normal": 0,
+              "cpu_subnormal_flushed_to_signed_zero": 7895,
+              "cpu_subnormal_actual_nonzero": 0,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 297,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": null,
+              "budget": 0.05,
+              "passed": null
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 504,
+            "signed_zero_difference_count": 3664,
+            "unqualified_other_count": 0,
+            "other_samples": [],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        },
+        {
+          "oracle": "fla",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 4,
+          "original_metric": {
+            "chunk": 1,
+            "head": 4,
+            "relative_l2": 0.0,
+            "max_abs_diff": 7.947604370264632e-41,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 1.0,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 1.0,
+            "actual_max_abs": 0.0,
+            "golden_max_abs": 7.947604370264632e-41,
+            "counts": {
+              "cpu_normal": 0,
+              "cpu_subnormal_flushed_to_signed_zero": 7907,
+              "cpu_subnormal_actual_nonzero": 0,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 285,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": null,
+              "budget": 0.05,
+              "passed": null
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 11,
+            "signed_zero_difference_count": 3950,
+            "unqualified_other_count": 0,
+            "other_samples": [],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        }
+      ]
+    },
+    {
+      "id": "nearzero_c3_g4_rbf16_vbf16_flags010",
+      "raw_tensor_archive_sha256": "e141b0be438559ca89b3ab310cd7988e6260ed5a43d91500c3a5b8a63c07a95a",
+      "actual_and_input_hashes_verified": true,
+      "slices": [
+        {
+          "oracle": "independent",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 1,
+          "original_metric": {
+            "chunk": 1,
+            "head": 1,
+            "relative_l2": 0.0,
+            "max_abs_diff": 7.771131848159887e-39,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 1.0,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 1.0,
+            "actual_max_abs": 0.0,
+            "golden_max_abs": 7.771131848159887e-39,
+            "counts": {
+              "cpu_normal": 0,
+              "cpu_subnormal_flushed_to_signed_zero": 7875,
+              "cpu_subnormal_actual_nonzero": 0,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 317,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": null,
+              "budget": 0.05,
+              "passed": null
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 917,
+            "signed_zero_difference_count": 3673,
+            "unqualified_other_count": 0,
+            "other_samples": [],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        },
+        {
+          "oracle": "fla",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 1,
+          "original_metric": {
+            "chunk": 1,
+            "head": 1,
+            "relative_l2": 0.0,
+            "max_abs_diff": 7.771131848159887e-39,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 1.0,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 1.0,
+            "actual_max_abs": 0.0,
+            "golden_max_abs": 7.771131848159887e-39,
+            "counts": {
+              "cpu_normal": 0,
+              "cpu_subnormal_flushed_to_signed_zero": 7832,
+              "cpu_subnormal_actual_nonzero": 0,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 360,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": null,
+              "budget": 0.05,
+              "passed": null
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 917,
+            "signed_zero_difference_count": 3456,
+            "unqualified_other_count": 0,
+            "other_samples": [],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        }
+      ]
+    },
+    {
+      "id": "nearzero_c3_g4_rbf16_vbf16_flags011",
+      "raw_tensor_archive_sha256": "decd5a4becbdc3b4d0e4d4904302faf7ff6563c89018336e26f8a34f34529ab3",
+      "actual_and_input_hashes_verified": true,
+      "slices": [
+        {
+          "oracle": "independent",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 1,
+          "original_metric": {
+            "chunk": 1,
+            "head": 1,
+            "relative_l2": 0.0,
+            "max_abs_diff": 7.771131848159887e-39,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 1.0,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 1.0,
+            "actual_max_abs": 0.0,
+            "golden_max_abs": 7.771131848159887e-39,
+            "counts": {
+              "cpu_normal": 0,
+              "cpu_subnormal_flushed_to_signed_zero": 7996,
+              "cpu_subnormal_actual_nonzero": 0,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 196,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": null,
+              "budget": 0.05,
+              "passed": null
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 917,
+            "signed_zero_difference_count": 3717,
+            "unqualified_other_count": 0,
+            "other_samples": [],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        },
+        {
+          "oracle": "fla",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 1,
+          "original_metric": {
+            "chunk": 1,
+            "head": 1,
+            "relative_l2": 0.0,
+            "max_abs_diff": 7.771137453353744e-39,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 1.0,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 1.0,
+            "actual_max_abs": 0.0,
+            "golden_max_abs": 7.771137453353744e-39,
+            "counts": {
+              "cpu_normal": 0,
+              "cpu_subnormal_flushed_to_signed_zero": 7993,
+              "cpu_subnormal_actual_nonzero": 0,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 199,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": null,
+              "budget": 0.05,
+              "passed": null
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 917,
+            "signed_zero_difference_count": 3615,
+            "unqualified_other_count": 0,
+            "other_samples": [],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        }
+      ]
+    },
+    {
+      "id": "nearzero_c3_g4_rf32_vbf16_flags010",
+      "raw_tensor_archive_sha256": "f4262827191fd7fbde41f60ba6f771194c65a2d0209285bcf937ad260b7c1283",
+      "actual_and_input_hashes_verified": true,
+      "slices": [
+        {
+          "oracle": "independent",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 1,
+          "original_metric": {
+            "chunk": 1,
+            "head": 1,
+            "relative_l2": 0.0,
+            "max_abs_diff": 7.710916651849385e-39,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 1.0,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 1.0,
+            "actual_max_abs": 0.0,
+            "golden_max_abs": 7.710916651849385e-39,
+            "counts": {
+              "cpu_normal": 0,
+              "cpu_subnormal_flushed_to_signed_zero": 7877,
+              "cpu_subnormal_actual_nonzero": 0,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 315,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": null,
+              "budget": 0.05,
+              "passed": null
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 916,
+            "signed_zero_difference_count": 3669,
+            "unqualified_other_count": 0,
+            "other_samples": [],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        },
+        {
+          "oracle": "fla",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 1,
+          "original_metric": {
+            "chunk": 1,
+            "head": 1,
+            "relative_l2": 0.0,
+            "max_abs_diff": 7.710911046655528e-39,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 1.0,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 1.0,
+            "actual_max_abs": 0.0,
+            "golden_max_abs": 7.710911046655528e-39,
+            "counts": {
+              "cpu_normal": 0,
+              "cpu_subnormal_flushed_to_signed_zero": 7830,
+              "cpu_subnormal_actual_nonzero": 0,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 362,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": null,
+              "budget": 0.05,
+              "passed": null
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 916,
+            "signed_zero_difference_count": 3451,
+            "unqualified_other_count": 0,
+            "other_samples": [],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        }
+      ]
+    },
+    {
+      "id": "nearzero_c3_g4_rf32_vbf16_flags011",
+      "raw_tensor_archive_sha256": "d973731705432bb425b66a403d80a30965636363e58207928423154a5fefb1fb",
+      "actual_and_input_hashes_verified": true,
+      "slices": [
+        {
+          "oracle": "independent",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 1,
+          "original_metric": {
+            "chunk": 1,
+            "head": 1,
+            "relative_l2": 0.0,
+            "max_abs_diff": 7.710916651849385e-39,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 1.0,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 1.0,
+            "actual_max_abs": 0.0,
+            "golden_max_abs": 7.710916651849385e-39,
+            "counts": {
+              "cpu_normal": 0,
+              "cpu_subnormal_flushed_to_signed_zero": 7997,
+              "cpu_subnormal_actual_nonzero": 0,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 195,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": null,
+              "budget": 0.05,
+              "passed": null
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 916,
+            "signed_zero_difference_count": 3706,
+            "unqualified_other_count": 0,
+            "other_samples": [],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        },
+        {
+          "oracle": "fla",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 1,
+          "original_metric": {
+            "chunk": 1,
+            "head": 1,
+            "relative_l2": 0.0,
+            "max_abs_diff": 7.71091525055092e-39,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 1.0,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 1.0,
+            "actual_max_abs": 0.0,
+            "golden_max_abs": 7.71091525055092e-39,
+            "counts": {
+              "cpu_normal": 0,
+              "cpu_subnormal_flushed_to_signed_zero": 7985,
+              "cpu_subnormal_actual_nonzero": 0,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 207,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": null,
+              "budget": 0.05,
+              "passed": null
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 916,
+            "signed_zero_difference_count": 3607,
+            "unqualified_other_count": 0,
+            "other_samples": [],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        }
+      ]
+    },
+    {
+      "id": "nearzero_c3_g8_rbf16_vbf16_flags010",
+      "raw_tensor_archive_sha256": "92e56640db24fea6a3a88cbe9d9888713d627813f63b85712fa1498b7707da98",
+      "actual_and_input_hashes_verified": true,
+      "slices": [
+        {
+          "oracle": "independent",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 1,
+          "original_metric": {
+            "chunk": 1,
+            "head": 1,
+            "relative_l2": 0.0,
+            "max_abs_diff": 3.901498827749163e-38,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 0.19968034874384652,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 0.19968034874384652,
+            "actual_max_abs": 2.5567002130384753e-37,
+            "golden_max_abs": 2.558324822426075e-37,
+            "counts": {
+              "cpu_normal": 480,
+              "cpu_subnormal_flushed_to_signed_zero": 7406,
+              "cpu_subnormal_actual_nonzero": 29,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 277,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": 0.17151060084387976,
+              "budget": 0.05,
+              "passed": false
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 1898,
+            "signed_zero_difference_count": 3088,
+            "unqualified_other_count": 29,
+            "other_samples": [
+              {
+                "index": [
+                  0,
+                  0,
+                  31
+                ],
+                "actual": 2.6815964878133434e-38,
+                "cpu_fp32": 7.484826953719826e-39,
+                "old_npu": 2.6815964878133434e-38
+              },
+              {
+                "index": [
+                  0,
+                  0,
+                  44
+                ],
+                "actual": -1.6254882819964444e-38,
+                "cpu_fp32": -4.216881225843349e-39,
+                "old_npu": -1.6254882819964444e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  4
+                ],
+                "actual": -1.7081402285386365e-38,
+                "cpu_fp32": -1.6002253930219038e-39,
+                "old_npu": -1.7081402285386365e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  5
+                ],
+                "actual": 1.7632415262334313e-38,
+                "cpu_fp32": 1.0958201635167857e-38,
+                "old_npu": 1.7632415262334313e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  13
+                ],
+                "actual": -1.7907921750808286e-38,
+                "cpu_fp32": -1.0974627655766672e-38,
+                "old_npu": -1.7907921750808286e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  46
+                ],
+                "actual": 1.515285686606855e-38,
+                "cpu_fp32": 9.200244685703087e-39,
+                "old_npu": 1.515285686606855e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  100
+                ],
+                "actual": -1.7724250758492304e-38,
+                "cpu_fp32": -6.956973236491775e-39,
+                "old_npu": -1.7724250758492304e-38
+              },
+              {
+                "index": [
+                  0,
+                  2,
+                  4
+                ],
+                "actual": 1.3407982439066717e-38,
+                "cpu_fp32": 2.4304877266420363e-39,
+                "old_npu": 1.3407982439066717e-38
+              }
+            ],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        },
+        {
+          "oracle": "independent",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 2,
+          "original_metric": {
+            "chunk": 1,
+            "head": 2,
+            "relative_l2": 0.0,
+            "max_abs_diff": 2.5163766726368187e-38,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 0.9872856361720609,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 0.9872856361720609,
+            "actual_max_abs": 1.7540579766176321e-38,
+            "golden_max_abs": 2.5163766726368187e-38,
+            "counts": {
+              "cpu_normal": 28,
+              "cpu_subnormal_flushed_to_signed_zero": 7896,
+              "cpu_subnormal_actual_nonzero": 0,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 268,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": 0.9754624300471524,
+              "budget": 0.05,
+              "passed": false
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 1141,
+            "signed_zero_difference_count": 3450,
+            "unqualified_other_count": 0,
+            "other_samples": [],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        },
+        {
+          "oracle": "independent",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 3,
+          "original_metric": {
+            "chunk": 1,
+            "head": 3,
+            "relative_l2": 0.0,
+            "max_abs_diff": 1.678557977177661e-39,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 1.0,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 1.0,
+            "actual_max_abs": 0.0,
+            "golden_max_abs": 1.678557977177661e-39,
+            "counts": {
+              "cpu_normal": 0,
+              "cpu_subnormal_flushed_to_signed_zero": 7802,
+              "cpu_subnormal_actual_nonzero": 0,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 390,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": null,
+              "budget": 0.05,
+              "passed": null
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 475,
+            "signed_zero_difference_count": 3876,
+            "unqualified_other_count": 0,
+            "other_samples": [],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        },
+        {
+          "oracle": "independent",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 4,
+          "original_metric": {
+            "chunk": 1,
+            "head": 4,
+            "relative_l2": 0.0,
+            "max_abs_diff": 8.200118353535965e-41,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 1.0,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 1.0,
+            "actual_max_abs": 0.0,
+            "golden_max_abs": 8.200118353535965e-41,
+            "counts": {
+              "cpu_normal": 0,
+              "cpu_subnormal_flushed_to_signed_zero": 7679,
+              "cpu_subnormal_actual_nonzero": 0,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 513,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": null,
+              "budget": 0.05,
+              "passed": null
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 12,
+            "signed_zero_difference_count": 4015,
+            "unqualified_other_count": 0,
+            "other_samples": [],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        },
+        {
+          "oracle": "fla",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 1,
+          "original_metric": {
+            "chunk": 1,
+            "head": 1,
+            "relative_l2": 0.0,
+            "max_abs_diff": 3.9014996685282415e-38,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 0.1996803511541337,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 0.1996803511541337,
+            "actual_max_abs": 2.5567002130384753e-37,
+            "golden_max_abs": 2.5583250466338292e-37,
+            "counts": {
+              "cpu_normal": 480,
+              "cpu_subnormal_flushed_to_signed_zero": 7400,
+              "cpu_subnormal_actual_nonzero": 29,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 283,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": 0.17151060564295198,
+              "budget": 0.05,
+              "passed": false
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 1898,
+            "signed_zero_difference_count": 2952,
+            "unqualified_other_count": 29,
+            "other_samples": [
+              {
+                "index": [
+                  0,
+                  0,
+                  31
+                ],
+                "actual": 2.6815964878133434e-38,
+                "cpu_fp32": 7.484832558913683e-39,
+                "old_npu": 2.6815964878133434e-38
+              },
+              {
+                "index": [
+                  0,
+                  0,
+                  44
+                ],
+                "actual": -1.6254882819964444e-38,
+                "cpu_fp32": -4.2168910349325996e-39,
+                "old_npu": -1.6254882819964444e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  4
+                ],
+                "actual": -1.7081402285386365e-38,
+                "cpu_fp32": -1.600230998215761e-39,
+                "old_npu": -1.7081402285386365e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  5
+                ],
+                "actual": 1.7632415262334313e-38,
+                "cpu_fp32": 1.0958200233869392e-38,
+                "old_npu": 1.7632415262334313e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  13
+                ],
+                "actual": -1.7907921750808286e-38,
+                "cpu_fp32": -1.097464307004978e-38,
+                "old_npu": -1.7907921750808286e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  46
+                ],
+                "actual": 1.515285686606855e-38,
+                "cpu_fp32": 9.200254494792337e-39,
+                "old_npu": 1.515285686606855e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  100
+                ],
+                "actual": -1.7724250758492304e-38,
+                "cpu_fp32": -6.956925592343988e-39,
+                "old_npu": -1.7724250758492304e-38
+              },
+              {
+                "index": [
+                  0,
+                  2,
+                  4
+                ],
+                "actual": 1.3407982439066717e-38,
+                "cpu_fp32": 2.430486325343572e-39,
+                "old_npu": 1.3407982439066717e-38
+              }
+            ],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        },
+        {
+          "oracle": "fla",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 2,
+          "original_metric": {
+            "chunk": 1,
+            "head": 2,
+            "relative_l2": 0.0,
+            "max_abs_diff": 2.5163766726368187e-38,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 0.98728563609724,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 0.98728563609724,
+            "actual_max_abs": 1.7540579766176321e-38,
+            "golden_max_abs": 2.5163766726368187e-38,
+            "counts": {
+              "cpu_normal": 28,
+              "cpu_subnormal_flushed_to_signed_zero": 7919,
+              "cpu_subnormal_actual_nonzero": 0,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 245,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": 0.9754624276755596,
+              "budget": 0.05,
+              "passed": false
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 1141,
+            "signed_zero_difference_count": 3333,
+            "unqualified_other_count": 0,
+            "other_samples": [],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        },
+        {
+          "oracle": "fla",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 3,
+          "original_metric": {
+            "chunk": 1,
+            "head": 3,
+            "relative_l2": 0.0,
+            "max_abs_diff": 1.6785593784761254e-39,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 1.0,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 1.0,
+            "actual_max_abs": 0.0,
+            "golden_max_abs": 1.6785593784761254e-39,
+            "counts": {
+              "cpu_normal": 0,
+              "cpu_subnormal_flushed_to_signed_zero": 7671,
+              "cpu_subnormal_actual_nonzero": 0,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 521,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": null,
+              "budget": 0.05,
+              "passed": null
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 475,
+            "signed_zero_difference_count": 3602,
+            "unqualified_other_count": 0,
+            "other_samples": [],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        },
+        {
+          "oracle": "fla",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 4,
+          "original_metric": {
+            "chunk": 1,
+            "head": 4,
+            "relative_l2": 0.0,
+            "max_abs_diff": 8.199417704303802e-41,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 1.0,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 1.0,
+            "actual_max_abs": 0.0,
+            "golden_max_abs": 8.199417704303802e-41,
+            "counts": {
+              "cpu_normal": 0,
+              "cpu_subnormal_flushed_to_signed_zero": 7571,
+              "cpu_subnormal_actual_nonzero": 0,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 621,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": null,
+              "budget": 0.05,
+              "passed": null
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 12,
+            "signed_zero_difference_count": 3780,
+            "unqualified_other_count": 0,
+            "other_samples": [],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        }
+      ]
+    },
+    {
+      "id": "nearzero_c3_g8_rbf16_vbf16_flags011",
+      "raw_tensor_archive_sha256": "d619085f4962673f0ec5c0e6564d6761cf8c72a98a1b2324abb3560cc6276c9f",
+      "actual_and_input_hashes_verified": true,
+      "slices": [
+        {
+          "oracle": "independent",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 1,
+          "original_metric": {
+            "chunk": 1,
+            "head": 1,
+            "relative_l2": 0.0,
+            "max_abs_diff": 3.901498827749163e-38,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 0.1996803486995453,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 0.1996803486995453,
+            "actual_max_abs": 2.5567002130384753e-37,
+            "golden_max_abs": 2.5583252708415835e-37,
+            "counts": {
+              "cpu_normal": 480,
+              "cpu_subnormal_flushed_to_signed_zero": 7547,
+              "cpu_subnormal_actual_nonzero": 29,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 136,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": 0.1715106022850171,
+              "budget": 0.05,
+              "passed": false
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 1898,
+            "signed_zero_difference_count": 3129,
+            "unqualified_other_count": 29,
+            "other_samples": [
+              {
+                "index": [
+                  0,
+                  0,
+                  31
+                ],
+                "actual": 2.6815964878133434e-38,
+                "cpu_fp32": 7.484804532944397e-39,
+                "old_npu": 2.6815964878133434e-38
+              },
+              {
+                "index": [
+                  0,
+                  0,
+                  44
+                ],
+                "actual": -1.6254882819964444e-38,
+                "cpu_fp32": -4.216892436231064e-39,
+                "old_npu": -1.6254882819964444e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  4
+                ],
+                "actual": -1.7081402285386365e-38,
+                "cpu_fp32": -1.6002295969172968e-39,
+                "old_npu": -1.7081402285386365e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  5
+                ],
+                "actual": 1.7632415262334313e-38,
+                "cpu_fp32": 1.0958198832570928e-38,
+                "old_npu": 1.7632415262334313e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  13
+                ],
+                "actual": -1.7907921750808286e-38,
+                "cpu_fp32": -1.0974631859662065e-38,
+                "old_npu": -1.7907921750808286e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  46
+                ],
+                "actual": 1.515285686606855e-38,
+                "cpu_fp32": 9.20023908050923e-39,
+                "old_npu": 1.515285686606855e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  100
+                ],
+                "actual": -1.7724250758492304e-38,
+                "cpu_fp32": -6.95696202610406e-39,
+                "old_npu": -1.7724250758492304e-38
+              },
+              {
+                "index": [
+                  0,
+                  2,
+                  4
+                ],
+                "actual": 1.3407982439066717e-38,
+                "cpu_fp32": 2.4304849240451076e-39,
+                "old_npu": 1.3407982439066717e-38
+              }
+            ],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        },
+        {
+          "oracle": "independent",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 2,
+          "original_metric": {
+            "chunk": 1,
+            "head": 2,
+            "relative_l2": 0.0,
+            "max_abs_diff": 2.516378073935283e-38,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 0.9872856378563912,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 0.9872856378563912,
+            "actual_max_abs": 1.7540579766176321e-38,
+            "golden_max_abs": 2.516378073935283e-38,
+            "counts": {
+              "cpu_normal": 28,
+              "cpu_subnormal_flushed_to_signed_zero": 7976,
+              "cpu_subnormal_actual_nonzero": 0,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 188,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": 0.9754624318055064,
+              "budget": 0.05,
+              "passed": false
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 1141,
+            "signed_zero_difference_count": 3485,
+            "unqualified_other_count": 0,
+            "other_samples": [],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        },
+        {
+          "oracle": "independent",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 3,
+          "original_metric": {
+            "chunk": 1,
+            "head": 3,
+            "relative_l2": 0.0,
+            "max_abs_diff": 1.6785944109377335e-39,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 1.0,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 1.0,
+            "actual_max_abs": 0.0,
+            "golden_max_abs": 1.6785944109377335e-39,
+            "counts": {
+              "cpu_normal": 0,
+              "cpu_subnormal_flushed_to_signed_zero": 7973,
+              "cpu_subnormal_actual_nonzero": 0,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 219,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": null,
+              "budget": 0.05,
+              "passed": null
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 475,
+            "signed_zero_difference_count": 3903,
+            "unqualified_other_count": 0,
+            "other_samples": [],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        },
+        {
+          "oracle": "independent",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 4,
+          "original_metric": {
+            "chunk": 1,
+            "head": 4,
+            "relative_l2": 0.0,
+            "max_abs_diff": 8.199417704303802e-41,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 1.0,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 1.0,
+            "actual_max_abs": 0.0,
+            "golden_max_abs": 8.199417704303802e-41,
+            "counts": {
+              "cpu_normal": 0,
+              "cpu_subnormal_flushed_to_signed_zero": 7927,
+              "cpu_subnormal_actual_nonzero": 0,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 265,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": null,
+              "budget": 0.05,
+              "passed": null
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 12,
+            "signed_zero_difference_count": 4056,
+            "unqualified_other_count": 0,
+            "other_samples": [],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        },
+        {
+          "oracle": "fla",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 1,
+          "original_metric": {
+            "chunk": 1,
+            "head": 1,
+            "relative_l2": 0.0,
+            "max_abs_diff": 3.9014993882685487e-38,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 0.1996803502662789,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 0.1996803502662789,
+            "actual_max_abs": 2.5567002130384753e-37,
+            "golden_max_abs": 2.558325495049338e-37,
+            "counts": {
+              "cpu_normal": 480,
+              "cpu_subnormal_flushed_to_signed_zero": 7527,
+              "cpu_subnormal_actual_nonzero": 29,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 156,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": 0.17151060361770296,
+              "budget": 0.05,
+              "passed": false
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 1898,
+            "signed_zero_difference_count": 3059,
+            "unqualified_other_count": 29,
+            "other_samples": [
+              {
+                "index": [
+                  0,
+                  0,
+                  31
+                ],
+                "actual": 2.6815964878133434e-38,
+                "cpu_fp32": 7.484793322556682e-39,
+                "old_npu": 2.6815964878133434e-38
+              },
+              {
+                "index": [
+                  0,
+                  0,
+                  44
+                ],
+                "actual": -1.6254882819964444e-38,
+                "cpu_fp32": -4.2168952388279925e-39,
+                "old_npu": -1.6254882819964444e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  4
+                ],
+                "actual": -1.7081402285386365e-38,
+                "cpu_fp32": -1.6002253930219038e-39,
+                "old_npu": -1.7081402285386365e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  5
+                ],
+                "actual": 1.7632415262334313e-38,
+                "cpu_fp32": 1.0958194628675535e-38,
+                "old_npu": 1.7632415262334313e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  13
+                ],
+                "actual": -1.7907921750808286e-38,
+                "cpu_fp32": -1.0974644471348244e-38,
+                "old_npu": -1.7907921750808286e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  46
+                ],
+                "actual": 1.515285686606855e-38,
+                "cpu_fp32": 9.200247488300016e-39,
+                "old_npu": 1.515285686606855e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  100
+                ],
+                "actual": -1.7724250758492304e-38,
+                "cpu_fp32": -6.956959223507132e-39,
+                "old_npu": -1.7724250758492304e-38
+              },
+              {
+                "index": [
+                  0,
+                  2,
+                  4
+                ],
+                "actual": 1.3407982439066717e-38,
+                "cpu_fp32": 2.430482121448179e-39,
+                "old_npu": 1.3407982439066717e-38
+              }
+            ],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        },
+        {
+          "oracle": "fla",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 2,
+          "original_metric": {
+            "chunk": 1,
+            "head": 2,
+            "relative_l2": 0.0,
+            "max_abs_diff": 2.516378354194976e-38,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 0.9872856279991391,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 0.9872856279991391,
+            "actual_max_abs": 1.7540579766176321e-38,
+            "golden_max_abs": 2.516378354194976e-38,
+            "counts": {
+              "cpu_normal": 28,
+              "cpu_subnormal_flushed_to_signed_zero": 7980,
+              "cpu_subnormal_actual_nonzero": 0,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 184,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": 0.975462412591423,
+              "budget": 0.05,
+              "passed": false
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 1141,
+            "signed_zero_difference_count": 3397,
+            "unqualified_other_count": 0,
+            "other_samples": [],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        },
+        {
+          "oracle": "fla",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 3,
+          "original_metric": {
+            "chunk": 1,
+            "head": 3,
+            "relative_l2": 0.0,
+            "max_abs_diff": 1.6785930096392692e-39,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 1.0,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 1.0,
+            "actual_max_abs": 0.0,
+            "golden_max_abs": 1.6785930096392692e-39,
+            "counts": {
+              "cpu_normal": 0,
+              "cpu_subnormal_flushed_to_signed_zero": 7942,
+              "cpu_subnormal_actual_nonzero": 0,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 250,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": null,
+              "budget": 0.05,
+              "passed": null
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 475,
+            "signed_zero_difference_count": 3757,
+            "unqualified_other_count": 0,
+            "other_samples": [],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        },
+        {
+          "oracle": "fla",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 4,
+          "original_metric": {
+            "chunk": 1,
+            "head": 4,
+            "relative_l2": 0.0,
+            "max_abs_diff": 8.19871705507164e-41,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 1.0,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 1.0,
+            "actual_max_abs": 0.0,
+            "golden_max_abs": 8.19871705507164e-41,
+            "counts": {
+              "cpu_normal": 0,
+              "cpu_subnormal_flushed_to_signed_zero": 7901,
+              "cpu_subnormal_actual_nonzero": 0,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 291,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": null,
+              "budget": 0.05,
+              "passed": null
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 12,
+            "signed_zero_difference_count": 3919,
+            "unqualified_other_count": 0,
+            "other_samples": [],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        }
+      ]
+    },
+    {
+      "id": "nearzero_c3_g8_rf32_vbf16_flags010",
+      "raw_tensor_archive_sha256": "52e093391bf197a23e439943de8c4db7d7e08dd767c6dbc07888e8da244e22aa",
+      "actual_and_input_hashes_verified": true,
+      "slices": [
+        {
+          "oracle": "independent",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 1,
+          "original_metric": {
+            "chunk": 1,
+            "head": 1,
+            "relative_l2": 0.0,
+            "max_abs_diff": 3.9055099044734463e-38,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 0.19700656456924925,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 0.19700656456924925,
+            "actual_max_abs": 2.5860875718090325e-37,
+            "golden_max_abs": 2.581743994985134e-37,
+            "counts": {
+              "cpu_normal": 481,
+              "cpu_subnormal_flushed_to_signed_zero": 7396,
+              "cpu_subnormal_actual_nonzero": 29,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 286,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": 0.16875724635609812,
+              "budget": 0.05,
+              "passed": false
+            },
+            "candidate_equals_old_npu_bitwise": false,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 1898,
+            "signed_zero_difference_count": 3084,
+            "unqualified_other_count": 29,
+            "other_samples": [
+              {
+                "index": [
+                  0,
+                  0,
+                  31
+                ],
+                "actual": 2.644862289350147e-38,
+                "cpu_fp32": 9.383957716972999e-39,
+                "old_npu": 2.644862289350147e-38
+              },
+              {
+                "index": [
+                  0,
+                  0,
+                  44
+                ],
+                "actual": -1.5428363354542524e-38,
+                "cpu_fp32": -2.36498963512103e-39,
+                "old_npu": -1.5428363354542524e-38
+              },
+              {
+                "index": [
+                  0,
+                  0,
+                  68
+                ],
+                "actual": 1.432633740064663e-38,
+                "cpu_fp32": -1.930623544940409e-39,
+                "old_npu": 1.432633740064663e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  4
+                ],
+                "actual": -1.7081402285386365e-38,
+                "cpu_fp32": -1.4374015179596817e-39,
+                "old_npu": -1.7081402285386365e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  5
+                ],
+                "actual": 1.7816086254650295e-38,
+                "cpu_fp32": 1.0082516211826635e-38,
+                "old_npu": 1.7816086254650295e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  13
+                ],
+                "actual": -1.7999757246966277e-38,
+                "cpu_fp32": -1.0564532054988157e-38,
+                "old_npu": -1.7999757246966277e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  46
+                ],
+                "actual": 1.4693679385278594e-38,
+                "cpu_fp32": 7.827819976235683e-39,
+                "old_npu": 1.4601843889120603e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  100
+                ],
+                "actual": -1.6805895796912392e-38,
+                "cpu_fp32": -5.6823353377603495e-39,
+                "old_npu": -1.6805895796912392e-38
+              }
+            ],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        },
+        {
+          "oracle": "independent",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 2,
+          "original_metric": {
+            "chunk": 1,
+            "head": 2,
+            "relative_l2": 0.0,
+            "max_abs_diff": 2.4866276667585885e-38,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 0.9872354237639956,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 0.9872354237639956,
+            "actual_max_abs": 1.744874427001833e-38,
+            "golden_max_abs": 2.4866276667585885e-38,
+            "counts": {
+              "cpu_normal": 28,
+              "cpu_subnormal_flushed_to_signed_zero": 7896,
+              "cpu_subnormal_actual_nonzero": 0,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 268,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": 0.9753803194399283,
+              "budget": 0.05,
+              "passed": false
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 1144,
+            "signed_zero_difference_count": 3452,
+            "unqualified_other_count": 0,
+            "other_samples": [],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        },
+        {
+          "oracle": "independent",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 3,
+          "original_metric": {
+            "chunk": 1,
+            "head": 3,
+            "relative_l2": 0.0,
+            "max_abs_diff": 1.6736940702079896e-39,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 1.0,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 1.0,
+            "actual_max_abs": 0.0,
+            "golden_max_abs": 1.6736940702079896e-39,
+            "counts": {
+              "cpu_normal": 0,
+              "cpu_subnormal_flushed_to_signed_zero": 7809,
+              "cpu_subnormal_actual_nonzero": 0,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 383,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": null,
+              "budget": 0.05,
+              "passed": null
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 474,
+            "signed_zero_difference_count": 3877,
+            "unqualified_other_count": 0,
+            "other_samples": [],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        },
+        {
+          "oracle": "independent",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 4,
+          "original_metric": {
+            "chunk": 1,
+            "head": 4,
+            "relative_l2": 0.0,
+            "max_abs_diff": 8.260934706887662e-41,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 1.0,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 1.0,
+            "actual_max_abs": 0.0,
+            "golden_max_abs": 8.260934706887662e-41,
+            "counts": {
+              "cpu_normal": 0,
+              "cpu_subnormal_flushed_to_signed_zero": 7678,
+              "cpu_subnormal_actual_nonzero": 0,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 514,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": null,
+              "budget": 0.05,
+              "passed": null
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 12,
+            "signed_zero_difference_count": 4014,
+            "unqualified_other_count": 0,
+            "other_samples": [],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        },
+        {
+          "oracle": "fla",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 1,
+          "original_metric": {
+            "chunk": 1,
+            "head": 1,
+            "relative_l2": 0.0,
+            "max_abs_diff": 3.905510745252525e-38,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 0.1970065553970848,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 0.1970065553970848,
+            "actual_max_abs": 2.5860875718090325e-37,
+            "golden_max_abs": 2.581744667608397e-37,
+            "counts": {
+              "cpu_normal": 481,
+              "cpu_subnormal_flushed_to_signed_zero": 7405,
+              "cpu_subnormal_actual_nonzero": 29,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 277,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": 0.16875724064536057,
+              "budget": 0.05,
+              "passed": false
+            },
+            "candidate_equals_old_npu_bitwise": false,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 1898,
+            "signed_zero_difference_count": 2949,
+            "unqualified_other_count": 29,
+            "other_samples": [
+              {
+                "index": [
+                  0,
+                  0,
+                  31
+                ],
+                "actual": 2.644862289350147e-38,
+                "cpu_fp32": 9.383949309182213e-39,
+                "old_npu": 2.644862289350147e-38
+              },
+              {
+                "index": [
+                  0,
+                  0,
+                  44
+                ],
+                "actual": -1.5428363354542524e-38,
+                "cpu_fp32": -2.3649840299271727e-39,
+                "old_npu": -1.5428363354542524e-38
+              },
+              {
+                "index": [
+                  0,
+                  0,
+                  68
+                ],
+                "actual": 1.432633740064663e-38,
+                "cpu_fp32": -1.9306207423434805e-39,
+                "old_npu": 1.432633740064663e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  4
+                ],
+                "actual": -1.7081402285386365e-38,
+                "cpu_fp32": -1.437398715362753e-39,
+                "old_npu": -1.7081402285386365e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  5
+                ],
+                "actual": 1.7816086254650295e-38,
+                "cpu_fp32": 1.0082503600140456e-38,
+                "old_npu": 1.7816086254650295e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  13
+                ],
+                "actual": -1.7999757246966277e-38,
+                "cpu_fp32": -1.0564525048495835e-38,
+                "old_npu": -1.7999757246966277e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  46
+                ],
+                "actual": 1.4693679385278594e-38,
+                "cpu_fp32": 7.82782558142954e-39,
+                "old_npu": 1.4601843889120603e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  100
+                ],
+                "actual": -1.6805895796912392e-38,
+                "cpu_fp32": -5.682350752043457e-39,
+                "old_npu": -1.6805895796912392e-38
+              }
+            ],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        },
+        {
+          "oracle": "fla",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 2,
+          "original_metric": {
+            "chunk": 1,
+            "head": 2,
+            "relative_l2": 0.0,
+            "max_abs_diff": 2.48662878779736e-38,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 0.9872354220536053,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 0.9872354220536053,
+            "actual_max_abs": 1.744874427001833e-38,
+            "golden_max_abs": 2.48662878779736e-38,
+            "counts": {
+              "cpu_normal": 28,
+              "cpu_subnormal_flushed_to_signed_zero": 7915,
+              "cpu_subnormal_actual_nonzero": 0,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 249,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": 0.9753803163287442,
+              "budget": 0.05,
+              "passed": false
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 1144,
+            "signed_zero_difference_count": 3334,
+            "unqualified_other_count": 0,
+            "other_samples": [],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        },
+        {
+          "oracle": "fla",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 3,
+          "original_metric": {
+            "chunk": 1,
+            "head": 3,
+            "relative_l2": 0.0,
+            "max_abs_diff": 1.673695471506454e-39,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 1.0,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 1.0,
+            "actual_max_abs": 0.0,
+            "golden_max_abs": 1.673695471506454e-39,
+            "counts": {
+              "cpu_normal": 0,
+              "cpu_subnormal_flushed_to_signed_zero": 7670,
+              "cpu_subnormal_actual_nonzero": 0,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 522,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": null,
+              "budget": 0.05,
+              "passed": null
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 474,
+            "signed_zero_difference_count": 3604,
+            "unqualified_other_count": 0,
+            "other_samples": [],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        },
+        {
+          "oracle": "fla",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 4,
+          "original_metric": {
+            "chunk": 1,
+            "head": 4,
+            "relative_l2": 0.0,
+            "max_abs_diff": 8.260234057655499e-41,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 1.0,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 1.0,
+            "actual_max_abs": 0.0,
+            "golden_max_abs": 8.260234057655499e-41,
+            "counts": {
+              "cpu_normal": 0,
+              "cpu_subnormal_flushed_to_signed_zero": 7579,
+              "cpu_subnormal_actual_nonzero": 0,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 613,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": null,
+              "budget": 0.05,
+              "passed": null
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 12,
+            "signed_zero_difference_count": 3785,
+            "unqualified_other_count": 0,
+            "other_samples": [],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        }
+      ]
+    },
+    {
+      "id": "nearzero_c3_g8_rf32_vbf16_flags011",
+      "raw_tensor_archive_sha256": "e1ab61ef894da185bec54eb517b3bd3b3b41746f4e59215da52767937dbcfac9",
+      "actual_and_input_hashes_verified": true,
+      "slices": [
+        {
+          "oracle": "independent",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 1,
+          "original_metric": {
+            "chunk": 1,
+            "head": 1,
+            "relative_l2": 0.0,
+            "max_abs_diff": 3.9055099044734463e-38,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 0.19700656792450474,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 0.19700656792450474,
+            "actual_max_abs": 2.5860875718090325e-37,
+            "golden_max_abs": 2.581743994985134e-37,
+            "counts": {
+              "cpu_normal": 481,
+              "cpu_subnormal_flushed_to_signed_zero": 7541,
+              "cpu_subnormal_actual_nonzero": 29,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 141,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": 0.16875724801972172,
+              "budget": 0.05,
+              "passed": false
+            },
+            "candidate_equals_old_npu_bitwise": false,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 1898,
+            "signed_zero_difference_count": 3134,
+            "unqualified_other_count": 29,
+            "other_samples": [
+              {
+                "index": [
+                  0,
+                  0,
+                  31
+                ],
+                "actual": 2.644862289350147e-38,
+                "cpu_fp32": 9.383926888406784e-39,
+                "old_npu": 2.644862289350147e-38
+              },
+              {
+                "index": [
+                  0,
+                  0,
+                  44
+                ],
+                "actual": -1.5428363354542524e-38,
+                "cpu_fp32": -2.364981227330244e-39,
+                "old_npu": -1.5428363354542524e-38
+              },
+              {
+                "index": [
+                  0,
+                  0,
+                  68
+                ],
+                "actual": 1.432633740064663e-38,
+                "cpu_fp32": -1.930617939746552e-39,
+                "old_npu": 1.432633740064663e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  4
+                ],
+                "actual": -1.7081402285386365e-38,
+                "cpu_fp32": -1.4373973140642887e-39,
+                "old_npu": -1.7081402285386365e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  5
+                ],
+                "actual": 1.7816086254650295e-38,
+                "cpu_fp32": 1.0082520415722028e-38,
+                "old_npu": 1.7816086254650295e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  13
+                ],
+                "actual": -1.7999757246966277e-38,
+                "cpu_fp32": -1.05645264497943e-38,
+                "old_npu": -1.7999757246966277e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  46
+                ],
+                "actual": 1.4693679385278594e-38,
+                "cpu_fp32": 7.827824180131076e-39,
+                "old_npu": 1.4601843889120603e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  100
+                ],
+                "actual": -1.6805895796912392e-38,
+                "cpu_fp32": -5.682304509194134e-39,
+                "old_npu": -1.6805895796912392e-38
+              }
+            ],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        },
+        {
+          "oracle": "independent",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 2,
+          "original_metric": {
+            "chunk": 1,
+            "head": 2,
+            "relative_l2": 0.0,
+            "max_abs_diff": 2.4866296285764386e-38,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 0.9872354329022847,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 0.9872354329022847,
+            "actual_max_abs": 1.744874427001833e-38,
+            "golden_max_abs": 2.4866296285764386e-38,
+            "counts": {
+              "cpu_normal": 28,
+              "cpu_subnormal_flushed_to_signed_zero": 7978,
+              "cpu_subnormal_actual_nonzero": 0,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 186,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": 0.9753803362476811,
+              "budget": 0.05,
+              "passed": false
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 1143,
+            "signed_zero_difference_count": 3485,
+            "unqualified_other_count": 0,
+            "other_samples": [],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        },
+        {
+          "oracle": "independent",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 3,
+          "original_metric": {
+            "chunk": 1,
+            "head": 3,
+            "relative_l2": 0.0,
+            "max_abs_diff": 1.6737291026695977e-39,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 1.0,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 1.0,
+            "actual_max_abs": 0.0,
+            "golden_max_abs": 1.6737291026695977e-39,
+            "counts": {
+              "cpu_normal": 0,
+              "cpu_subnormal_flushed_to_signed_zero": 7968,
+              "cpu_subnormal_actual_nonzero": 0,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 224,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": null,
+              "budget": 0.05,
+              "passed": null
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 474,
+            "signed_zero_difference_count": 3906,
+            "unqualified_other_count": 0,
+            "other_samples": [],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        },
+        {
+          "oracle": "independent",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 4,
+          "original_metric": {
+            "chunk": 1,
+            "head": 4,
+            "relative_l2": 0.0,
+            "max_abs_diff": 8.260234057655499e-41,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 1.0,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 1.0,
+            "actual_max_abs": 0.0,
+            "golden_max_abs": 8.260234057655499e-41,
+            "counts": {
+              "cpu_normal": 0,
+              "cpu_subnormal_flushed_to_signed_zero": 7925,
+              "cpu_subnormal_actual_nonzero": 0,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 267,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": null,
+              "budget": 0.05,
+              "passed": null
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 12,
+            "signed_zero_difference_count": 4055,
+            "unqualified_other_count": 0,
+            "other_samples": [],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        },
+        {
+          "oracle": "fla",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 1,
+          "original_metric": {
+            "chunk": 1,
+            "head": 1,
+            "relative_l2": 0.0,
+            "max_abs_diff": 3.905510184733139e-38,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 0.1970065552171561,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 0.1970065552171561,
+            "actual_max_abs": 2.5860875718090325e-37,
+            "golden_max_abs": 2.5817442191928885e-37,
+            "counts": {
+              "cpu_normal": 481,
+              "cpu_subnormal_flushed_to_signed_zero": 7530,
+              "cpu_subnormal_actual_nonzero": 29,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 152,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": 0.16875723732439968,
+              "budget": 0.05,
+              "passed": false
+            },
+            "candidate_equals_old_npu_bitwise": false,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 1898,
+            "signed_zero_difference_count": 3057,
+            "unqualified_other_count": 29,
+            "other_samples": [
+              {
+                "index": [
+                  0,
+                  0,
+                  31
+                ],
+                "actual": 2.644862289350147e-38,
+                "cpu_fp32": 9.383938098794499e-39,
+                "old_npu": 2.644862289350147e-38
+              },
+              {
+                "index": [
+                  0,
+                  0,
+                  44
+                ],
+                "actual": -1.5428363354542524e-38,
+                "cpu_fp32": -2.3649826286287084e-39,
+                "old_npu": -1.5428363354542524e-38
+              },
+              {
+                "index": [
+                  0,
+                  0,
+                  68
+                ],
+                "actual": 1.432633740064663e-38,
+                "cpu_fp32": -1.9306109332542302e-39,
+                "old_npu": 1.432633740064663e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  4
+                ],
+                "actual": -1.7081402285386365e-38,
+                "cpu_fp32": -1.4373917088704314e-39,
+                "old_npu": -1.7081402285386365e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  5
+                ],
+                "actual": 1.7816086254650295e-38,
+                "cpu_fp32": 1.0082513409229706e-38,
+                "old_npu": 1.7816086254650295e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  13
+                ],
+                "actual": -1.7999757246966277e-38,
+                "cpu_fp32": -1.0564529252391228e-38,
+                "old_npu": -1.7999757246966277e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  46
+                ],
+                "actual": 1.4693679385278594e-38,
+                "cpu_fp32": 7.827838193115719e-39,
+                "old_npu": 1.4601843889120603e-38
+              },
+              {
+                "index": [
+                  0,
+                  1,
+                  100
+                ],
+                "actual": -1.6805895796912392e-38,
+                "cpu_fp32": -5.682317120880313e-39,
+                "old_npu": -1.6805895796912392e-38
+              }
+            ],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        },
+        {
+          "oracle": "fla",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 2,
+          "original_metric": {
+            "chunk": 1,
+            "head": 2,
+            "relative_l2": 0.0,
+            "max_abs_diff": 2.486630469355517e-38,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 0.9872354380512218,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 0.9872354380512218,
+            "actual_max_abs": 1.744874427001833e-38,
+            "golden_max_abs": 2.486630469355517e-38,
+            "counts": {
+              "cpu_normal": 28,
+              "cpu_subnormal_flushed_to_signed_zero": 7970,
+              "cpu_subnormal_actual_nonzero": 0,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 194,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": 0.9753803448585535,
+              "budget": 0.05,
+              "passed": false
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 1143,
+            "signed_zero_difference_count": 3393,
+            "unqualified_other_count": 0,
+            "other_samples": [],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        },
+        {
+          "oracle": "fla",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 3,
+          "original_metric": {
+            "chunk": 1,
+            "head": 3,
+            "relative_l2": 0.0,
+            "max_abs_diff": 1.6737361091619194e-39,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 1.0,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 1.0,
+            "actual_max_abs": 0.0,
+            "golden_max_abs": 1.6737361091619194e-39,
+            "counts": {
+              "cpu_normal": 0,
+              "cpu_subnormal_flushed_to_signed_zero": 7951,
+              "cpu_subnormal_actual_nonzero": 0,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 241,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": null,
+              "budget": 0.05,
+              "passed": null
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 474,
+            "signed_zero_difference_count": 3761,
+            "unqualified_other_count": 0,
+            "other_samples": [],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        },
+        {
+          "oracle": "fla",
+          "output": "o",
+          "scope": "head_chunk",
+          "chunk": 1,
+          "head": 4,
+          "original_metric": {
+            "chunk": 1,
+            "head": 4,
+            "relative_l2": 0.0,
+            "max_abs_diff": 8.260234057655499e-41,
+            "finite": true,
+            "allclose": true,
+            "passed": false,
+            "relative_l2_fp64_accumulation": 1.0,
+            "legacy_passed": true
+          },
+          "classification": {
+            "elements": 8192,
+            "actual_dtype": "torch.bfloat16",
+            "golden_dtype": "torch.float32",
+            "raw_relative_l2": 1.0,
+            "actual_max_abs": 0.0,
+            "golden_max_abs": 8.260234057655499e-41,
+            "counts": {
+              "cpu_normal": 0,
+              "cpu_subnormal_flushed_to_signed_zero": 7892,
+              "cpu_subnormal_actual_nonzero": 0,
+              "cpu_subnormal_actual_nonzero_numerically_exact": 0,
+              "both_numeric_zero": 300,
+              "cpu_zero_actual_nonzero": 0,
+              "nonfinite": 0
+            },
+            "normal_subset": {
+              "relative_l2": null,
+              "budget": 0.05,
+              "passed": null
+            },
+            "candidate_equals_old_npu_bitwise": true,
+            "candidate_equals_rounded_cpu_bitwise": false,
+            "rounded_cpu_nonzero": 12,
+            "signed_zero_difference_count": 3921,
+            "unqualified_other_count": 0,
+            "other_samples": [],
+            "scope": "Classification only; original numerical pass/fail is retained. Exact numeric zeros are separate from flush. Nonzero subnormal results are not covered by flush qualification."
+          }
+        }
+      ]
+    }
+  ]
+}

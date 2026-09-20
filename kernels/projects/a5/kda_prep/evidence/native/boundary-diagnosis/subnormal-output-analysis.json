@@ -1,0 +1,53 @@
+{
+  "stage": "Inspection of saved native tensors; CPU FP32 references are original saved native-run goldens",
+  "case": {
+    "id": "nearzero_c2_g4_rbf16_vbf16_flags010",
+    "B": 1,
+    "C": 2,
+    "H": 1,
+    "HV": 4,
+    "flags": {
+      "use_qk_l2norm_in_kernel": false,
+      "use_gate_in_kernel": true,
+      "use_beta_sigmoid_in_kernel": false
+    },
+    "types": {
+      "q": "bf16",
+      "k": "bf16",
+      "v": "bf16",
+      "g": "bf16",
+      "A_log": "bf16",
+      "dt_bias": "bf16",
+      "beta": "f32"
+    },
+    "seed": 7011,
+    "boundary": "nearzero"
+  },
+  "saved_tensor_sha256": "7efe0a743d63b57539bdf1509467f84b83aeba30ee7ade668d9582ae35e4d325",
+  "saved_input_output_hashes_match_native": true,
+  "actual_nonzero": 0,
+  "predecessor_npu_nonzero": 0,
+  "candidate_predecessor_bitwise": true,
+  "references": {
+    "independent": {
+      "cpu_fp32_max_abs": 1.1480469776717109e-38,
+      "cpu_fp32_nonzero": 7749,
+      "fp32_min_normal": 1.1754943508222875e-38,
+      "fp32_subnormal_count": 7749,
+      "bf16_rounded_nonzero": 955,
+      "max_bf16_ulp_distance_from_zero": 125,
+      "relative_l2": 1.0,
+      "all_rounded_zero_endpoint_definition_satisfied": false
+    },
+    "fla": {
+      "cpu_fp32_max_abs": 1.1480478184507895e-38,
+      "cpu_fp32_nonzero": 7753,
+      "fp32_min_normal": 1.1754943508222875e-38,
+      "fp32_subnormal_count": 7753,
+      "bf16_rounded_nonzero": 955,
+      "max_bf16_ulp_distance_from_zero": 125,
+      "relative_l2": 1.0,
+      "all_rounded_zero_endpoint_definition_satisfied": false
+    }
+  }
+}

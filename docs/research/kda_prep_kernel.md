@@ -15,10 +15,11 @@ entries to CCE. All50 vendors compile at bd1,2,3,4. The complete Kimi T4096 all-
 workload passes at each of bd1,2,3,4. All17 returned outputs, caches and gradients
 are bitwise identical across those four runs. After that hardware
 run, all14 bounded source cases pass sim and pipesim at bd1. Ordinary chunk grids, regression and training checks, fresh scan repeatability, and
-synchronized performance measurements have also completed. The remaining special-value grid failures, endpoint reachability checks,
-metric comparison reruns and final archive restore still block
-BF-07 acceptance. The task and PR remain incomplete.
-FP64 is used only to measure preprocessing numerical error; the independent
+synchronized performance measurements have also completed. All required grid populations have now executed. Nearzero state and output
+failures, their unresolved acceptance boundary, and the final delivery archive
+still block BF-07 acceptance. Endpoint reachability, high-bd leaf checks and
+metric-comparison reruns have completed. The task and PR remain incomplete.
+FP64 is used for preprocessing error studies and reliable norm accumulation; the independent
 and pinned FLA end-to-end KDA goldens remain **Torch CPU FP32**.
 
 The seed7007 generator covers K128, B1/B2, C1/C3 and full Kimi B1/T4096/H32,
@@ -122,7 +123,7 @@ then adds the partial sums, additive1e-6, sqrt and division in that fixed order.
 BF16 stores round to nearest even. Gate implements compensated log1p(exp(u))
 and the strict u>20 branch without clipping exp(A_log). Sigmoid uses FP32
 1/(1+exp(-x)). Native endpoint behavior is measured below; expanded nonfinite
-cross-products remain unresolved.
+cross-products are diagnostic classifications without a numerical pass line.
 
 All flags enabled add four preparation launches: gate, q, k and beta. Disabled
 routes retain the input object and launch nothing. Host work is metadata,
@@ -148,8 +149,7 @@ In the isolated three-entry base swap, the52 public dtype/routing checks yield
 44 expected failures and8 retained training passes. These are host ABI evidence,
 not numerical kernel validation. All stable/layout kernel sources remain intact.
 
-Remaining native completion requires high-bd leaf checks, resolution and
-completion of special-value grids, their full cross-bd comparison,
+Remaining completion requires resolution of retained nearzero failures
 and a verified fresh restore of the final source and evidence archive. Completed
 regression, repeatability and timing stages are recorded separately below.
 
@@ -201,7 +201,7 @@ and explicit endpoint review, not a wider tolerance, new gate, or replacement
 of the CPU reference. Large finite norm rows show the already declared fixed
 reduction rounding difference. Exponent overflow masks agree with both actual
 predecessors in this initial population only; the expanded cross-products below
-expose disagreements. Full range qualification remains open.
+expose disagreements. Full range qualification remains open because of the composed nearzero failures below.
 
 The retained allocator notice comes from the package-reported
 [AddPadSize owner source](https://github.com/Ascend/pytorch/blob/fa0f83fe49d309dcbc31e264e9e6ed6e5dc49d2d/torch_npu/csrc/core/npu/NPUCachingAllocator.cpp#L179).
@@ -221,8 +221,8 @@ a claim about unavailable vendor implementation source. The candidate's
 compensated branch retains the independent CPU/FP64 value within the frozen
 ordinary threshold-case budgets. The owner subsequently clarified that native
 underflow/saturation behavior is recorded explicitly, with no CPU-subnormal
-bitwise requirement. Ordinary budgets and domains remain fixed. The new
-cross-product conflicts below require further clarification.
+bitwise requirement. Ordinary budgets and domains remain fixed. The expanded cross-products below use the subsequent explicit diagnostic
+classification decision.
 
 
 ## Completed ordinary grids and regressions
@@ -260,9 +260,10 @@ claimed fixed.
 
 The third leaf series runs200 cases at each of bd1/2/3/4. Its120 ordinary
 numerical cases and80 qualified range cases pass the clarified criteria.
-All100 input populations are byte-identical across the eight combinations of
-run and chunk/decode namespace. The expanded cross-products below are separate
-unresolved cases, so this leaf result does not qualify the entire input range.
+High decode bd8/16/28 each also complete200 cases. All100 input populations
+are byte-identical across14 combinations of run and chunk/decode namespace
+(including repeated chunk-bd4 controls). This leaf result does not qualify
+the entire composed input range.
 
 ## Expanded range failures retained for review
 
@@ -301,7 +302,13 @@ The A_log80/u=-88 control is candidate/old-NPU zero while CPU FP32 gives
 this result locates the underflow before the final multiplication. Together
 with the native exp(-88)=0 trace and the retained kernel operation order, it
 explains the later Inf*0=NaN class at A_log89/100. Public entry rejection or
-propagation is being measured separately; it is not inferred from leaf values.
+propagation was measured separately:96 actual public-entry calls cover all48
+points in chunk and decode. Chunk yields29 finite/19 rejected candidate cases
+versus31/17 old-NPU cases. All16 nonfinite processed-gate cases are rejected
+by the existing default span check. Decode has no such span gate:40 finite/8 NaN
+candidate returns versus34 finite/14 NaN predecessor returns. These are observed
+endpoint classes, not accuracy passes; every input remains unchanged. See
+`native/reachability-v1-bd4`.
 
 Two public boundary failures are retained in `native/boundary-diagnosis`:
 
@@ -324,9 +331,108 @@ Two public boundary failures are retained in `native/boundary-diagnosis`:
   reference has been changed. See `boundary-probe-v2-decode-bd1` alongside
   the original failures.
 
-These are open acceptance failures, reported in
+The original numerical failures remain available in
 [the located boundary RISK](https://github.com/ddddwee1/ascend_fla_dev/issues/106#issuecomment-5750600450).
-They are not counted as passing grid cases.
+PM5750678047 separately qualifies BF16 slices whose correctly rounded CPU
+golden is entirely zero using at most1ULP from numeric zero; raw relative-L2
+and signed-zero differences remain. This does not cover the wider failures below.
+
+## Complete special-value collection and unresolved nearzero failures
+
+Zero, threshold20 and beta-saturation populations pass576 chunk cases per
+block dimension and1152 decode cases per dimension:9216 native cases across
+the required four/six block dimensions, respectively. Their returned outputs,
+caches and preparations match bitwise across dimensions. They are independent
+partitions; nearzero remains a required population and is reported separately.
+
+All nearzero runs are complete. Each chunk bd1/2/3/4 has192 cases:176 numerical
+passes and16 output failures. Each decode bd1/2/4/8/16/28 has384 cases:324 passes,
+16 state failures and44 output failures. All returned/preparation hashes,
+failure locations and metrics are identical across the respective dimensions.
+`--observe-all-cases` only keeps collecting after a numerical failure: its
+zero exit status means collection finished, while the receipt retains
+`passed=false` and `diagnostic_collection_only=true`. No kernel exception is
+converted to a pass. Every failed case retains the actual tensors privately,
+and their hashes are verified against the original public receipts before analysis.
+
+The16 decode state failures are C2/3 × group1/2/4/8 × flags110/111, with BF16
+raw q/k and BF16 v. Maximum old-CPU-prep state relative-L2 is
+0.0009824887023388708 at `nearzero_c3_g1_rbf16_vbf16_flags111`, FLA reference.
+The unchanged1e-5 comparison remains failed, retained as an observation after the user-approved D-PM-51 change. Fresh
+all-bd reruns against actual native-prep CPU FP32 references are in progress;
+state stays limited to1e-5, and prep budgets plus raw/prepared byte equality
+are required. This permission applies only to the named nearzero decode group.
+Ordinary decode still compares against **old CPU preparation**: across all six
+dimensions its median/p99/max state errors are8.092760291e-8 /
+2.983920105e-7 /3.266389653118004e-7. The maximum occurs at
+`c2_g1_vf32_flags100_bf16_bf16_f32_f32_f32_f32`, independent reference.
+
+The48 native normalization probes in `native/norm-rounding-v1-bd4` distinguish
+FP32 arithmetic from the final BF16 cast. In all48 groups, casting the actual
+FP32-output variant reproduces the actual typed output bytes. Ordinary BF16
+outputs match the old CPU values in this population. Nearzero BF16→BF16 C2
+q/k differ at173/185 of16384 elements, relative-L2
+0.0005294714281 /0.0005775565286. All48 saved differing BF16 samples have an
+FP64 ideal result exactly at a BF16 midpoint, with candidate and old FP32
+quotients on opposite sides. Epsilon-dominated denominators and discrete BF16
+inputs produce these ties. Candidate internal denominator values were not
+captured, so this evidence does not attribute the difference to sqrt versus
+division individually. The formula and BF16 RNE boundary are unchanged.
+
+PM5750896563 permits explicit classification of CPU FP32 subnormal outputs
+that the device flushes to signed zero, without calling that a CPU correctness
+pass. True numeric zeros are counted separately. The first wider chunk slice,
+`nearzero_c2_g4_rbf16_vbf16_flags010`, chunk1/head1, has CPU maximum
+1.14804698e-38, below FP32 minimum normal. Candidate and old NPU are both
+bitwise zero;955 CPU values remain nonzero when rounded to BF16, with up to125
+ULP from zero and raw L2=1. Thus it is not the all-rounded-zero class.
+
+Applying the classification to every failed slice also exposes **unqualified
+normal and nonzero-subnormal failures**:
+
+- Eight of the16 failing chunk cases contain CPU-normal elements whose subset
+  error exceeds0.05. For `nearzero_c3_g8_rbf16_vbf16_flags011`, chunk1/head2,
+  the28 normal golden elements have relative-L2=0.9754624318055064; the entire
+  slice is0.9872856378563912. Candidate and old NPU are bitwise equal in this
+  slice. This is an inherited numerical failure, not CPU accuracy acceptance.
+- For `nearzero_c2_g8_rbf16_vbf16_flags010`, chunk1/head1,480 normal elements
+  have relative-L2=0.18840924222990063. There are7376 subnormal→zero elements
+  and33 CPU-subnormal elements with nonzero candidate values. Candidate and
+  old NPU are not bitwise equal for the entire slice. Across the differing chunk
+  failure slices, the largest candidate/old difference is1 BF16 ULP; maximum
+  relative-L2 is0.0002745665475.
+- All44 decode output-failure cases have results outside the zero-only flush
+  class. Example `nearzero_c2_g2_rbf16_vf32_flags010`, chunk1/head1:613 CPU
+  subnormals become zero,6866 remain nonzero (1181 numerically equal), and528
+  CPU zeros become nonzero. Relative-L2=0.29826944892132695, max absolute
+  error1.6815581571897805e-44. Candidate and old NPU are bitwise equal in this
+  example; other slices differ by up to4 FP32 ULP. Their maximum
+  candidate/old slice relative-L2 is0.001312404898. These do not erase
+  the larger CPU-reference errors.
+
+Counts above are per run and per identified oracle/slice; two oracles are not
+distinct hardware samples. All four/six block dimensions reproduce these
+classifications. No accepted gate, domain, stable kernel or tolerance is
+changed. The first flushing instruction in the composed path remains unlocated.
+See `native/saved-endpoint-classification-v2`, the raw nearzero shards, and
+[the complete-classification RISK](https://github.com/ddddwee1/ascend_fla_dev/issues/106#issuecomment-5750969353).
+
+## Metric implementation verification
+
+CPU FP32 goldens are retained, while relative-L2 accumulation uses FP64 without
+a denominator clamp. FP32 norm underflow previously made some chunk slice
+errors read0; the old decode clamp at1e-30 similarly hid extremely small
+slice errors. Original and corrected values are both retained. Ordinary
+acceptance requires **both original and corrected checks**, preventing this
+metric correction from converting an ordinary failure into a pass.
+
+Fresh native runs repeat1620 chunk and3240 decode ordinary cases. All pass;
+all returned and preparation bytes match the original runs. Among30780 chunk
+metric comparisons, the maximum absolute change is1.0916166891857676e-8;
+25455 match at six significant digits and30730 at six decimal places. These
+are small differences, not universal digit equality. All61560 ordinary decode
+metric comparisons are unchanged. The now-visible nearzero failures above
+remain failed. See `native/metric-implementation-proof.json` and `native/metrics-v1`.
 
 ## Synchronized performance: slower than the predecessor
 

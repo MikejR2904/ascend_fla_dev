@@ -35,6 +35,10 @@ def main():
     parser.add_argument('--case-id')
     parser.add_argument('--boundary-kind',nargs='+',choices=('zero','nearzero','threshold','beta_saturation'),
                         help='Run a named diagnostic partition; other required populations remain pending.')
+    parser.add_argument('--observe-all-cases',action='store_true',
+                        help='Diagnostic collection: retain every numerical failure; exit zero means collection completed, not acceptance passed.')
+    parser.add_argument('--dpm51-nearzero-decode',action='store_true',
+                        help='User-approved nearzero decode comparison; retains old CPU-prep metrics and all original limits.')
     parser.add_argument('--chunk-count',type=int,choices=(1,2,3))
     args=parser.parse_args()
     bd=args.block_dim if args.route=='chunk' else min(args.block_dim,4)
@@ -49,6 +53,9 @@ def main():
         cases=[p for p in cases if p['boundary'] in args.boundary_kind]
     if args.case_id:cases=[p for p in cases if p['id']==args.case_id]
     assert cases, 'selected population is empty'
+    if args.dpm51_nearzero_decode:
+        assert args.route=='decode' and args.population=='boundary'
+        assert all(p['boundary']=='nearzero' and p['id'].startswith('nearzero_') for p in cases)
     rows=[]
     original_forward_metric=context.reference.metrics
     original_decode_metric=decode_checks.metrics
@@ -222,14 +229,15 @@ def main():
                      all_flags_disabled_exact=exact_disabled,preparation=prec,
                      predecessor_npu_differences={n:check.metrics(t,before[n],.05) for n,t in got.items()},
                      cpu_fp32_references=comparisons,zero_representation_slices=zero_slices,passed=False)
-            row['passed']=(all(row['input_unchanged'].values()) and all(row['finite'].values()) and all(disabled.values())
+            non_reference_checks=(all(row['input_unchanged'].values()) and all(row['finite'].values()) and all(disabled.values())
                 and (plain_cached_exact is None or all(plain_cached_exact)) and not audit.unexpected()
                 and all(p['passed'] for p in prec.values())
-                and (exact_disabled is None or all(p['passed'] for p in exact_disabled.values()))
+                and (exact_disabled is None or all(p['passed'] for p in exact_disabled.values())))
+            row['passed']=(non_reference_checks
                 and all(m[n]['passed'] for m in comparisons.values() for n in ('o','final_state'))
                 and all(p['passed'] for m in comparisons.values() for p in m['per_head_chunk'])
                 and all(p['passed'] for m in comparisons.values() for p in m.get('cached_states',[])))
-            if not row['passed'] and args.route=='decode':
+            if args.route=='decode' and (not row['passed'] or args.dpm51_nearzero_decode):
                 oracle_native=dict(zip(('q','k','g','beta'),prep_cpu));oracle_native.update(v=x['v'],h0=x['h0'])
                 isolated_refs=dict(independent=context.reference.independent_reference(oracle_native),fla=context.reference.fla_reference(oracle_native))
                 row['located_actual_preparation_references']={label:{n:dict(original_decode_metric(got[n],ref[n]),relative_l2=relative_l2(got[n],ref[n])) for n in ('o','final_state')} for label,ref in isolated_refs.items()}
@@ -237,21 +245,47 @@ def main():
                 direct_data.update(v=dev['v'],initial_state=dev['h0'],output_final_state=True)
                 direct=check.cpu(decode_sequence(fused_recurrent,direct_data,dbd))
                 row['raw_vs_actual_prepared_public_bitwise']={n:check.digest(got[n])==check.digest(direct[i]) for i,n in enumerate(('o','final_state'))}
+                if args.dpm51_nearzero_decode:
+                    # This bounds the named diagnostic population; it does not
+                    # add a public input gate. Goldens remain CPU FP32.
+                    eps_ratios={n:float(x[n].double().square().sum(-1).max()/1e-6) for n in ('q','k')}
+                    assert all(value<1e-12 for value in eps_ratios.values()),eps_ratios
+                    native_comparisons={}
+                    for name,ref in isolated_refs.items():
+                        measures={n:decode_measure(got[n],ref[n]) for n in ('o','final_state')}
+                        measures['per_head_chunk']=[dict(chunk=c,head=h,**decode_measure(
+                            got['o'][:,c*64:(c+1)*64,h],ref['o'][:,c*64:(c+1)*64,h]))
+                            for c in range(case['C']) for h in range(case['HV'])]
+                        native_comparisons[name]=measures
+                    row['old_cpu_preparation_criteria_passed']=row['passed']
+                    row['native_preparation_cpu_fp32_references']=native_comparisons
+                    row['comparison_contract']=dict(decision='D-PM-51',
+                        owner_comment='https://github.com/ddddwee1/ascend_fla_dev/issues/106#issuecomment-5750986507',
+                        scope='Named nearzero decode boundary population only',sum_squared_over_epsilon=eps_ratios,
+                        limits_changed=False,old_cpu_preparation_metrics_retained=True)
+                    row['passed']=(non_reference_checks and all(row['raw_vs_actual_prepared_public_bitwise'].values())
+                        and all(m[n]['passed'] for m in native_comparisons.values() for n in ('o','final_state'))
+                        and all(p['passed'] for m in native_comparisons.values() for p in m['per_head_chunk']))
             context.write('cases/'+label,row)
             context.write('metric-comparisons/'+label,dict(ordinary_decisions_require_legacy_and_corrected_pass=True,population=args.population,comparisons=metric_comparisons))
             rows.append(dict(id=label,passed=row['passed'],output_sha256=row['output_sha256'],prep_sha256=row['prep_sha256']))
             context.write('summary',dict(complete=False,passed=False,expected=len(cases),cases=rows,
                           metric_implementation_summary=metric_stats,selected_boundary_kinds=args.boundary_kind,full_population=args.boundary_kind is None and args.case_id is None and args.chunk_count is None))
             if not row['passed']:
-                torch.save(dict(inputs=x,actual=got,before=before,reference=refs,actual_preparation=prep_cpu,predecessor_npu_preparation=check.cpu(old_prep)),args.output/(label+'.private.pt'))
-                raise AssertionError('public grid case failed: '+label)
-            print('CASE_PASS',label,flush=True)
+                torch.save(dict(inputs=x,actual=got,before=before,reference=refs,
+                    native_preparation_reference=isolated_refs if args.dpm51_nearzero_decode else None,
+                    actual_preparation=prep_cpu,predecessor_npu_preparation=check.cpu(old_prep)),args.output/(label+'.private.pt'))
+                if not args.observe_all_cases:
+                    raise AssertionError('public grid case failed: '+label)
+            print('CASE_PASS' if row['passed'] else 'CASE_FAIL_RETAINED',label,flush=True)
         except BaseException as exc:
             context.write('failure',dict(case=case,type=type(exc).__name__,error=str(exc),traceback=traceback.format_exc(),completed=len(rows)))
             raise
-    context.write('summary',dict(complete=True,passed=True,expected=len(cases),cases=rows,
+    context.write('summary',dict(complete=True,passed=all(row['passed'] for row in rows),expected=len(cases),cases=rows,
+                  diagnostic_collection_only=args.observe_all_cases,
                   metric_implementation_summary=metric_stats,selected_boundary_kinds=args.boundary_kind,full_population=args.boundary_kind is None and args.case_id is None and args.chunk_count is None))
-    print('GRID_DONE',args.route,args.block_dim,len(rows),flush=True)
+    print('GRID_COLLECTED' if args.observe_all_cases else 'GRID_DONE',args.route,args.block_dim,len(rows),
+          'passing',sum(row['passed'] for row in rows),flush=True)
 
 
 if __name__=='__main__':main()

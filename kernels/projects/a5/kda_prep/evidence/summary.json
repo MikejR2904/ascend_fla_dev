@@ -23,11 +23,9 @@
     "after_native": true
   },
   "pending": [
-    "public_nearzero_failures_and_remaining_boundary_grid",
-    "decode_leaf_high_bd",
-    "final_source_and_evidence_archive_fresh_restore",
-    "public_nonfinite_reachability_measurement",
-    "corrected_metric_native_ordinary_comparison"
+    "D-PM-51_actual_preparation_nearzero_decode_native_reruns",
+    "nearzero_normal_and_nonzero_subnormal_output_failures",
+    "final_source_and_evidence_archive_fresh_restore"
   ],
   "full_native_block_dims": [
     1,
@@ -127,13 +125,105 @@
     "ordinary_per_bd": 120,
     "qualified_endpoint_per_bd": 80,
     "cross_bd_namespace_bitwise": true,
-    "expanded_cross_products_qualified": false
+    "expanded_cross_products_qualified": "diagnostic classification; no numerical pass line per PM5750678047",
+    "decode_high_block_dims": [
+      8,
+      16,
+      28
+    ],
+    "total_runs": 7,
+    "namespace_run_combinations": 14
   },
   "unresolved": {
     "risk": "https://github.com/ddddwee1/ascend_fla_dev/issues/106#issuecomment-5750600450",
     "nonfinite_cross_products": "native/endpoint-v2-bd4/downstream.json",
     "nearzero_failures": "native/boundary-diagnosis",
     "nonfinite_comparison_owner": "https://github.com/ddddwee1/ascend_fla_dev/issues/106#issuecomment-5750678047",
-    "nonfinite_comparison_status": "No numerical pass line: classify and report actual endpoint behavior. Public reachability measurement pending."
+    "nonfinite_comparison_status": "All 48 cross-products classified; 96 actual public-entry observations retained. No numerical pass line; no domain/gate change.",
+    "new_output_risk": "https://github.com/ddddwee1/ascend_fla_dev/issues/106#issuecomment-5750969353"
+  },
+  "independent_boundary_grid": {
+    "chunk_block_dims": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "chunk_cases_per_bd": 576,
+    "decode_block_dims": [
+      1,
+      2,
+      4,
+      8,
+      16,
+      28
+    ],
+    "decode_cases_per_bd": 1152,
+    "total_native_cases": 9216,
+    "passed": true,
+    "cross_bd_bitwise": true,
+    "excludes_nearzero_explicitly": true
+  },
+  "nearzero_grid": {
+    "complete_collection": true,
+    "numerical_acceptance_passed": false,
+    "chunk": {
+      "block_dims": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "cases_per_bd": 192,
+      "passed_per_bd": 176,
+      "output_failure_cases_per_bd": 16
+    },
+    "decode": {
+      "block_dims": [
+        1,
+        2,
+        4,
+        8,
+        16,
+        28
+      ],
+      "cases_per_bd": 384,
+      "passed_per_bd": 324,
+      "state_failure_cases_per_bd": 16,
+      "output_failure_cases_per_bd": 44
+    },
+    "outputs_and_preparation_cross_bd_bitwise": true,
+    "failure_locations_and_metrics_cross_bd_equal": true,
+    "receipt": "native/nearzero-cross-bd-and-failures.json",
+    "note": "Diagnostic collector exits zero after all cases, while passed remains false. Normal golden elements and nonzero subnormal results contain failures outside the approved zero-only flush class.",
+    "D-PM-51": {
+      "owner_comment": "https://github.com/ddddwee1/ascend_fla_dev/issues/106#issuecomment-5750986507",
+      "user_approved": true,
+      "native_reruns": "in progress; no new acceptance claim yet"
+    }
+  },
+  "public_nonfinite_reachability": {
+    "points": 96,
+    "chunk": {
+      "candidate_finite": 29,
+      "candidate_rejected": 19,
+      "predecessor_finite": 31,
+      "predecessor_rejected": 17
+    },
+    "decode": {
+      "candidate_finite": 40,
+      "candidate_nan": 8,
+      "predecessor_finite": 34,
+      "predecessor_nan": 14
+    },
+    "receipt": "native/reachability-v1-bd4",
+    "numerical_pass_line": null
+  },
+  "metric_correction": {
+    "native_rerun_cases": 4860,
+    "passed": true,
+    "outputs_and_preparation_match_original_bitwise": true,
+    "ordinary_requires_original_and_corrected_pass": true,
+    "receipt": "native/metric-implementation-proof.json"
   }
 }
