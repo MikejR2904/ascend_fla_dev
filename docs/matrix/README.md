@@ -208,7 +208,7 @@ kimi_linear_layer / bd=4 的拆分（ms）：fwd_kernels 1.314 · caches_host_si
 
 ## 缺口
 
-P0 2 项 · P1 22 项 · P2 11 项 · 已解决 13 项 · 共 48 项
+P0 2 项 · P1 22 项 · P2 12 项 · 已解决 13 项 · 共 49 项
 
 **第一期里程碑**：第一期五项已全部有结论，并补齐了同机性能对比：aclnn 编译、runtime 桥、kda_fwd 接线、KDA 本地基线均实测通过；自编译算子在 block_dim=4 下比 torch_npu 组合快 4.43x（kimi_linear_layer）/ 2.38x（long_context T=4096）/ 19.7x（smoke）。过程中修掉两个自己的 bug（bridge-per-call-overhead、op-name-collision-in-process），它们先后让 block_dim 的效果被完全掩盖。当前最大的性能项是 block-dim-ceiling（已升 P1）：扩展性一路线性到契约上限 4，而硬件有 28 cube。第二期的前置障碍 kda-fwd-bwd-dtype-mismatch 已量化（降 P2）。
 
@@ -237,7 +237,7 @@ P0 2 项 · P1 22 项 · P2 11 项 · 已解决 13 项 · 共 48 项
 
 | 算子族 | P0 | P1 | P2 |
 |---|---|---|---|
-| KDA | `c1-multihead-o-corrupt`<br>`ascriptor-gm-transfer-two-slice-row-gap` | `decode-call-overhead`<br>`decode-layer-overhead`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`no-tail-path`<br>`block-dim-ceiling`<br>`qk-l2norm-not-in-kernel`<br>`state-layout-k-first`<br>`kda-bwd-inverse-mm-mutex-over-budget`<br>`a2-splitk-fp32-cube`<br>`a2-splitk-bf16-fp16-unsettled`<br>`a2-cast-blkstride-sim-blind`<br>`kda-bwd-scan-dh0-nondeterministic` | `kda-fwd-bwd-dtype-mismatch`<br>`npu-builtin-ops-missing`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`kernel-nd2nz-suboptimal`<br>`fwd-caches-not-emitted`<br>`modules-are-torch-not-kernels`<br>`stable-unit-no-harness`<br>`gate-span-still-bounded`<br>`a2-sim-vs-toolchain-blind-spots`<br>`a2-autosync-missing-cross-pipe-guards` |
+| KDA | `c1-multihead-o-corrupt`<br>`ascriptor-gm-transfer-two-slice-row-gap` | `decode-call-overhead`<br>`decode-layer-overhead`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`no-tail-path`<br>`block-dim-ceiling`<br>`qk-l2norm-not-in-kernel`<br>`state-layout-k-first`<br>`kda-bwd-inverse-mm-mutex-over-budget`<br>`a2-splitk-fp32-cube`<br>`a2-splitk-bf16-fp16-unsettled`<br>`a2-cast-blkstride-sim-blind`<br>`kda-bwd-scan-dh0-nondeterministic` | `kda-fwd-bwd-dtype-mismatch`<br>`npu-builtin-ops-missing`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`kernel-nd2nz-suboptimal`<br>`fwd-caches-not-emitted`<br>`modules-are-torch-not-kernels`<br>`stable-unit-no-harness`<br>`gate-span-still-bounded`<br>`a2-sim-vs-toolchain-blind-spots`<br>`a2-autosync-missing-cross-pipe-guards`<br>`a2-kda-bwd-pair-checkpoint-thin-margin` |
 | GDN | `ascriptor-gm-transfer-two-slice-row-gap` | `gdn-no-gqa`<br>`layout-not-token-major`<br>`nonzero-initial-state`<br>`d-initial-state-absent`<br>`state-dtype-bf16`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`scale-param-no-slot`<br>`no-tail-path`<br>`block-dim-ceiling`<br>`a2-splitk-fp32-cube`<br>`a2-splitk-bf16-fp16-unsettled` | `npu-builtin-ops-missing`<br>`fixed-kv-128`<br>`asymmetric-kv-dim` |
 | GDN-2 | `ascriptor-gm-transfer-two-slice-row-gap` | `no-varlen`<br>`no-tail-path`<br>`gdn2-abi-not-gdn`<br>`gdn2-chunk-gate-range`<br>`gdn2-decode-fragmentation` | `npu-builtin-ops-missing`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`modules-are-torch-not-kernels` |
 | DeltaNet | `ascriptor-gm-transfer-two-slice-row-gap` | `layout-not-token-major`<br>`nonzero-initial-state`<br>`d-initial-state-absent`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`scale-param-no-slot`<br>`no-tail-path` | `npu-builtin-ops-missing`<br>`fixed-kv-128`<br>`asymmetric-kv-dim` |
@@ -667,3 +667,14 @@ PM 在权威 workspace 上独立跑了 `benchmarks/diag_c1_multihead.py`，**上
 - 过程教训：这正是 `AGENTS.md` §6.5「按症状规律倒推根因」——同一次改动里混了两个变量就把通过归因给了其中一个。PM 要最小复现，A/B 把因果证伪了，这是证据流程按设计起作用。
 - **影响** 观察性：没有观察到错误结果。潜在风险是竞态类（生成代码的 ready 列表缺缓冲，复现概率可能依赖时序），所以留着预防性栅栏；但 PM 不再把它记成静默错误类。（对比 `a2-cast-blkstride-sim-blind`：那条有独立证据——`got/ref * beta[col]` 恒为 0.5547 = beta[0]，改逐行 cast 后逐位一致。）
 - **建议** 1. 本仓侧：a2 单元里保留栅栏作预防，单元 README 注明「预防、未观察到后果、不声称修了什么」；(C, HV) 网格里 C≥2 照扫。2. 转给 ascriptor 所有者：若确认 auto_sync 的 ready 列表本应包含这些缓冲，补全（这条只是静态观察）。3. A2-09 的 DONE 带上这次 A/B 的负结果原始输出（文本），不再为它要求「最小复现」。
+
+#### `a2-kda-bwd-pair-checkpoint-thin-margin` — A2 上 kda_bwd 的 finalize_pair 四个积：checkpoint 的相对 L2 是重尾统计量，26 例里 2 处真机独有偏离 7~8e-6（sim / pipesim 为 0），判据 1e-5 只剩 1.2~1.4 倍余量，成因未确立
+
+- **类别** numerics · **适用于** KDA · **阻塞** —
+- **依据** **来源：A2-09 的 DONE（#112，PR #119 头 276d53d，2026-09-20T13:50Z；PM 从 `evidence/unit/aclnn.json` 原始回执复算，sim / pipesim 回执对照；真机数字自述、PM 无 A2 真机，只对 910B3 / CANN 9.0.0 / pin 90cfcdc 成立，A2-11 之前只作观测。）**
+- 契约给 `finalize_pair.{qk_left,qk_right,s_base,t_beta}` 的判据是相对 L2 1e-5，`reason` 与 README 的依据是「四个 case（C=1/2/3、HV=1/2/4）实测最差 1.06e-07，比实测宽两个数量级」。26 个真机 case 的实数：`qk_left` 在 `gentle_decay_bd1` / `bd2` 是 8.296e-06、`t_beta` 在 `grid_c2_hv4_bd1` 是 7.000e-06（预算的 83% / 70%），其余 23 例都 ≤ 1.06e-07（大多是 0 或 1e-9 以下）；ulp 采样的四个 case 没含这两个。
+- `gentle_decay_bd1` 与 `grid_c2_hv4_bd1` 在 sim / pipesim 回执里这两项都是 0.0：只有真机偏离。
+- kernel 里四个积各写自己的 L0C tile，`splitn` + `is_init=True`，每个 tile 只有一次 MMAD（源码注释与 PM 读源码一致），所以**不是** `a2-splitk-fp32-cube` 那类累加链问题。
+- **PM 推断，未验证**：四个输出 `dq_pair` / `dk_pair` / `s_base` / `t_beta` 是 BF16 GM 张量（FP32 L0C 经 fixpipe 舍入），checkpoint 的相对 L2 由「碰巧落在 BF16 舍入边界上的少数元素翻转」主导，所以取值是 0 与 1e-7~1e-5 之间的重尾分布，四个 case 的最大值管不住尾部。申领人的解释是「真机与 torch 的求和顺序不同」（相消附近元素差几十个 BF16 ulp，而范数不受影响）；对 `gentle_decay` 这种操作数不跨大数量级的 case 该解释是否覆盖，没有证据。
+- **影响** 只影响 A2 的 stage checkpoint 判据，六项输出梯度的预算（沿用 a5）不受影响（最差占预算 77%，dq @ zero_initial_state）。失败方式是「响」的（stage 检查报 failed），不是静默错误；代价是换种子 / 换卡 / 换形状时这两个 checkpoint 可能超 1e-5 而误报。**A2-09 的 README / contract.reason「比实测宽两个数量级」只对采样的四个 case 成立**，已要求 README 改成 26 例的实数。
+- **建议** 1. A2-09（已要求）：README 改成 26 例的实数并写明成因未确立；`contract.json` 的 `reason` 因为在 unit digest 里，留到下一次因别的原因动 contract 时同改。2. 建议申领人对这两个 case 补跑 `ulp_stats.py`（`CASES=gentle_decay_bd1,grid_c2_hv4_bd1`），看是不是「少数元素差 1 ulp」；是的话，后续 A2 单元的 stage 判据改成对翻转敏感的写法（超 1 ulp 的元素数 + 最大逐元素相对偏差），而不是只用相对 L2。3. A2-11 定性 A2 的 cube FP32 / BF16 数值时对照，不据此单独下结论。

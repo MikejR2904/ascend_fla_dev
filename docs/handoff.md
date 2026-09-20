@@ -11,6 +11,11 @@
 
 ### 正在飞的任务（现在没有；A5K-02、PK-02、PK-03 都已于 2026-09-19 合入）
 
+> **2026-09-20T14:18Z 更新：A2-09 rework 后重交 DONE（PR #119 头 276d53d）——PM 评审 accept（技术判据全过），合入前要一个只改 README 的提交；合入等用户授权。**
+> - **两条阻塞已修，均由 PM 复算确认**（`tmp/review/A2-09/v2/`，git-ignored）：所有 `.json` 可解析、数值全是有限 float；`source_id.py` 在 PR 头重算 digest = `b4bb774d…`，26 个 case 的 before / after 都是它、`started_at` 晚于最后一次源码改动；六项梯度相对 L2 从 `aclnn.json` 复算（dq ≤ 3.829e-2 / dk ≤ 1.115e-1 / dv ≤ 3.887e-3 / dbeta ≤ 7.456e-3 / dg ≤ 1.776e-1 / dh0 ≤ 5.293e-3，全在 a5 预算内，1014 项全 passed）；`run.py reference` 26/26；pipesim `gentle_decay_bd1` 通过、39 项与回执逐位相同；隐私 0 命中。代码 / 契约 / README 与上一版逐字节相同。
+> - **PM 发现的一条实质问题**：契约 `reason` 与 README 写「四个 case 实测最差相对 L2 1.06e-07，1e-5 比实测宽两个数量级」——对那四个成立、对 26 个不成立：真机 `finalize_pair.qk_left` 在 `gentle_decay` 是 8.296e-6、`t_beta` 在 `grid_c2_hv4_bd1` 是 7.000e-6（预算的 83% / 70%），sim / pipesim 在这两处是 0.0。已要求 README 改成 26 例实数、写明成因未确立（`contract.json` 的 reason 在 digest 里，留到下次动契约时同改）；记 gaps `a2-kda-bwd-pair-checkpoint-thin-margin`（P2，A2 观察）。此外 `pair_checkpoint_ulp.log` 少了 finalize_pre 三个量（contract 只给 finalize_pair 设档，ulp_stats 按 contract 枚举），DONE 没提，已要求 README 说一句。
+> - **下一步**：申领人推只改 README.md 的提交 → PM 核对 diff 只动 README → 向用户请求 #119 的合入授权（A2 PR，A2-11 之前 A2 结论不算数）→ `--match-head-commit` 合入 → 全量测试 → CLOSE。
+>
 > **2026-09-20T13:44Z 更新：用户回「改」——AGENTS.md §5 的两处过时措辞已改（D-PM-47）。**
 > - 改了：`layout_device="auto"` 自动探测绕路那句（FMT-02 后已删）、⚠️ 段里「已加绕行 `_scan_states(on_cpu=)` / `chunk_kda_bwd(layout_device=)`」那句（同样失效，现写明缺 ascend950 算子包的机器上默认门控检查、`_scan_states`、`dw` 取负、`log2(eg)` 分支会失败，纯前向在 `check_gate_range=False` 时可用）。不改任何规则；`CLAUDE.md` 是软链，只改 AGENTS.md 一处。
 >
