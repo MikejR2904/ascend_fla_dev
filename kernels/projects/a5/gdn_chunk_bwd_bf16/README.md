@@ -26,8 +26,8 @@ cross-block hashes. `measure.py` measures three complete original-FP32 / new
 BF16 / original-FP32 sandwiches on one card, including backward checkpoints.
 
 Status: 88 focused host tests pass; all three entries lower with balanced
-events and emit CCE. The first full-workload bd2 native run passes both dtypes against A/B and
-independent leaves/composition. The complete grid and timing are pending. Calibration
+events and emit CCE. The complete bd2 grid passes 138/138 native records against A/B and
+independent leaves/composition. The bd1 grid and timing are pending. Calibration
 JSON files are pre-implementation CPU evidence, not device results.
 
 CPU-isolated repository suite: 763 passed, 9 skipped, 5 existing importorskip

@@ -1,0 +1,284 @@
+{
+  "stage": "vendor_compilation_failed_before_kernel_execution",
+  "accepted": false,
+  "environment": {
+    "python": "3.12.14 | packaged by Anaconda, Inc. | (main, Aug 27 2026, 14:46:43) [GCC 14.3.0]",
+    "torch": "2.12.0+cu130",
+    "torch_npu": "2.12.0",
+    "ascriptor": "0.1.0",
+    "soc": "Ascend 950PR_9579 V100"
+  },
+  "actual_compile_returncode": 1,
+  "health_after": true,
+  "source_identity": "library90cfcdc720bbcd66e8bd4361c4dd4fbc1a2a57b5; unchanged original FP32 checkpoint",
+  "logs": [
+    {
+      "file": "secondary-build-failed-v1-native.log",
+      "lines": 75,
+      "sha256": "9978ec89b3ee539c4d11123b2567c93c5f966f9e6862e249516ece0e5937155f"
+    },
+    {
+      "file": "secondary-build-failed-v1-build.log",
+      "lines": 197,
+      "sha256": "63d45b6d29360280de99e442115b066b20ca0458ea516f193ee44dbfadbaf84a"
+    },
+    {
+      "file": "secondary-build-failed-v2-native.log",
+      "lines": 75,
+      "sha256": "375c77f1fbae4516e94a46cf62b7927b316af16ddc456aa1035276a23b3a9c19"
+    },
+    {
+      "file": "secondary-build-failed-v2-build.log",
+      "lines": 252,
+      "sha256": "1e40ffd3faf0ac18cf6d2ff7f8c9b3ab29ae6d6158b4df6d70ee95d1999a256e"
+    }
+  ],
+  "header_sites": [
+    {
+      "file": "<CANN>/compiler/version.info",
+      "sha256": "549db810cdda8c536bdedaa870e46fd7da445cd2937ab75fd7524b2ae64dd8a0",
+      "lines": [
+        {
+          "line": 1,
+          "text": "Version=9.2.0"
+        },
+        {
+          "line": 2,
+          "text": "version_dir=cann"
+        },
+        {
+          "line": 3,
+          "text": "required_package_runtime_version=\"9.2\""
+        },
+        {
+          "line": 4,
+          "text": "required_package_ge-executor_version=\"9.2\""
+        },
+        {
+          "line": 5,
+          "text": "required_package_metadef_version=\"9.2\""
+        },
+        {
+          "line": 6,
+          "text": "required_package_bisheng-compiler_version=\"9.2\""
+        },
+        {
+          "line": 7,
+          "text": "required_package_tbe-tik_version=\"9.2\""
+        },
+        {
+          "line": 8,
+          "text": "timestamp=20260909_000323409"
+        }
+      ]
+    },
+    {
+      "file": "<CANN>/opp/version.info",
+      "sha256": "3ad8a7c642e5ec505c2feb293ed327fb007b93997f3096b38842fec1f4c0fe14",
+      "lines": [
+        {
+          "line": 1,
+          "text": "Version=9.2.0"
+        },
+        {
+          "line": 2,
+          "text": "version_dir=cann"
+        },
+        {
+          "line": 3,
+          "text": "required_package_runtime_version=\">=8.5\""
+        },
+        {
+          "line": 4,
+          "text": "required_package_ge-executor_version=\">=8.5\""
+        },
+        {
+          "line": 5,
+          "text": "required_package_metadef_version=\">=8.5\""
+        },
+        {
+          "line": 6,
+          "text": "required_package_asc-devkit_version=\">=8.5\""
+        },
+        {
+          "line": 7,
+          "text": "required_package_bisheng-compiler_version=\">=8.5\""
+        },
+        {
+          "line": 8,
+          "text": "timestamp=20260909_000323409"
+        }
+      ]
+    },
+    {
+      "file": "<CANN>/x86_64-linux/asc/impl/utils/sys_macros_impl.h",
+      "sha256": "8ab88268cc820b7580da708b783ca35e12ba55a2f1baac2d343e3248fc365982",
+      "lines": [
+        {
+          "line": 15,
+          "text": "#ifndef IMPL_UTILS_SYS_MACROS_IMPL_H"
+        },
+        {
+          "line": 16,
+          "text": "#define IMPL_UTILS_SYS_MACROS_IMPL_H"
+        },
+        {
+          "line": 70,
+          "text": "#else"
+        },
+        {
+          "line": 71,
+          "text": "#if defined(SPLIT_CORE_CUBE)"
+        },
+        {
+          "line": 72,
+          "text": "constexpr int32_t g_coreType = AscendC::AIC;"
+        },
+        {
+          "line": 73,
+          "text": "#elif defined(SPLIT_CORE_VEC)"
+        },
+        {
+          "line": 74,
+          "text": "constexpr int32_t g_coreType = AscendC::AIV;"
+        },
+        {
+          "line": 75,
+          "text": "#else"
+        },
+        {
+          "line": 76,
+          "text": "constexpr int32_t g_coreType = AscendC::MIX;"
+        },
+        {
+          "line": 77,
+          "text": "#endif"
+        }
+      ]
+    },
+    {
+      "file": "<EXTERNAL_PATH>",
+      "sha256": "549db810cdda8c536bdedaa870e46fd7da445cd2937ab75fd7524b2ae64dd8a0",
+      "lines": [
+        {
+          "line": 1,
+          "text": "Version=9.2.0"
+        },
+        {
+          "line": 2,
+          "text": "version_dir=cann"
+        },
+        {
+          "line": 3,
+          "text": "required_package_runtime_version=\"9.2\""
+        },
+        {
+          "line": 4,
+          "text": "required_package_ge-executor_version=\"9.2\""
+        },
+        {
+          "line": 5,
+          "text": "required_package_metadef_version=\"9.2\""
+        },
+        {
+          "line": 6,
+          "text": "required_package_bisheng-compiler_version=\"9.2\""
+        },
+        {
+          "line": 7,
+          "text": "required_package_tbe-tik_version=\"9.2\""
+        },
+        {
+          "line": 8,
+          "text": "timestamp=20260909_000323409"
+        }
+      ]
+    },
+    {
+      "file": "<EXTERNAL_PATH>",
+      "sha256": "3ad8a7c642e5ec505c2feb293ed327fb007b93997f3096b38842fec1f4c0fe14",
+      "lines": [
+        {
+          "line": 1,
+          "text": "Version=9.2.0"
+        },
+        {
+          "line": 2,
+          "text": "version_dir=cann"
+        },
+        {
+          "line": 3,
+          "text": "required_package_runtime_version=\">=8.5\""
+        },
+        {
+          "line": 4,
+          "text": "required_package_ge-executor_version=\">=8.5\""
+        },
+        {
+          "line": 5,
+          "text": "required_package_metadef_version=\">=8.5\""
+        },
+        {
+          "line": 6,
+          "text": "required_package_asc-devkit_version=\">=8.5\""
+        },
+        {
+          "line": 7,
+          "text": "required_package_bisheng-compiler_version=\">=8.5\""
+        },
+        {
+          "line": 8,
+          "text": "timestamp=20260909_000323409"
+        }
+      ]
+    },
+    {
+      "file": "<EXTERNAL_PATH>",
+      "sha256": "8ab88268cc820b7580da708b783ca35e12ba55a2f1baac2d343e3248fc365982",
+      "lines": [
+        {
+          "line": 15,
+          "text": "#ifndef IMPL_UTILS_SYS_MACROS_IMPL_H"
+        },
+        {
+          "line": 16,
+          "text": "#define IMPL_UTILS_SYS_MACROS_IMPL_H"
+        },
+        {
+          "line": 70,
+          "text": "#else"
+        },
+        {
+          "line": 71,
+          "text": "#if defined(SPLIT_CORE_CUBE)"
+        },
+        {
+          "line": 72,
+          "text": "constexpr int32_t g_coreType = AscendC::AIC;"
+        },
+        {
+          "line": 73,
+          "text": "#elif defined(SPLIT_CORE_VEC)"
+        },
+        {
+          "line": 74,
+          "text": "constexpr int32_t g_coreType = AscendC::AIV;"
+        },
+        {
+          "line": 75,
+          "text": "#else"
+        },
+        {
+          "line": 76,
+          "text": "constexpr int32_t g_coreType = AscendC::MIX;"
+        },
+        {
+          "line": 77,
+          "text": "#endif"
+        }
+      ]
+    }
+  ],
+  "scope": "Secondary environment only; no device kernel execution or numerical/performance acceptance. No generated-source, library-pin or vendor-source modification.",
+  "redaction": "No log line removed. Machine paths, addresses and trailing spaces redacted; complete originals retained privately."
+}

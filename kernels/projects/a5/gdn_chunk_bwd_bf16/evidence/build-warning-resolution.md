@@ -1,10 +1,10 @@
 # BF-02 vendor compilation warnings
 
-Scope: six actual CCE vendor builds at block_dim2 (unchanged FP32 checkpoint,
+Scope: twelve actual CCE vendor builds at block_dim1/2 (unchanged FP32 checkpoint,
 reverse, group_reduce and new BF16 equivalents), library90cfcdc, CANN9.2.0.
 Full raw build and harness logs are retained. No log line is filtered.
 
-All six builds completed, created the actual installed operator libraries and
+All twelve builds completed, created the actual installed operator libraries and
 executed in the full-workload public and leaf/composition checks. Actual file
 hashes and source signatures are in the build artifact manifest.
 
@@ -24,7 +24,7 @@ hashes and source signatures are in the build artifact manifest.
    is attributed to the outer Python string literal, not the nested regex.
    The fresh template SHA256 is
    ec9f69a86e2d3a9da17dedab13716fa1ffad80140ea88a74cbdb8ead035ec385.
-   The generated registration helper compiles all six selected operators;
+   The generated registration helper compiles all twelve selected operator/block-dim builds;
    actual loading/execution is verified by the full workload. No suppressed
    warning, changed regex or alternate backend is used.
 

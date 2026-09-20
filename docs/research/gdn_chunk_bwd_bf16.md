@@ -1,7 +1,7 @@
 # GDN grouped BF16 backward
 
-Status: frozen contract implemented; first full native workload passes both
-dtypes at bd2. Complete grouped grids and same-card timing are pending.
+Status: frozen contract implemented; the full bd2 grid passes all 138 native
+records. The matching bd1 grid and same-card timing are pending.
 
 Task BF-02, issue #101; assigned session gdn-series-20260919T115559Z-29cb31d7.
 Base e10e477b8b6fd6234a63f0aa9a7692c766699d63; original FP32 unit remains read-only.
@@ -79,7 +79,7 @@ Raw values: evidence/calibration-pre-kernel.json. A/B max relative L2 is
 The additional zero calibration rejected 36 actual nonzero perturbations
 across ten cases, including noncontiguous oracle gradients.
 
-## Required validation (pending)
+## Validation matrix
 
 Full B1/T4096/H=HV8 first, then ratios1/2/4/8 x C1/2/3/64, B2, all cotangent
 modes, gate/beta/zero-input boundaries; independent leaves and composition,
@@ -99,7 +99,7 @@ in ignored task scratch. A host regression now lowers all three typed stages.
 
 The focused public ABI, mixed-dtype rejection, independent-reference,
 zero-floor, negative-control and lowering suite passes 88 tests. Native
-acceptance and same-card timing remain pending; no model or CUDA/Triton result
+bd1 acceptance and same-card timing remain pending; no model or CUDA/Triton result
 is used as device evidence.
 
 CPU-isolated repository suite: 763 passed, 9 skipped, 5 existing importorskip
@@ -133,3 +133,26 @@ environment and occupancy; `canonical-reference-summary.json` for138/138CPU
 reference records; and the six bd2 vendor build logs/artifact manifest plus
 `build-warning-resolution.md` for actual compilation and warning attribution.
 The three new entries emitted and compiled without vector-loop-cond warnings.
+
+## Complete bd2 grid
+
+All 69 cases pass on both actual BF16 and FP32 public paths: 138 records,
+including ratios 1/2/4/8, chunk counts 1/2/3/64, B2, three cotangent modes,
+and gate/beta/zero boundaries. Every row includes fresh A/B comparisons,
+poisoned composition and independent leaves, input byte hashes and the
+actual public host-op trace. All 69 FP32 rows match the original public
+implementation byte for byte. There are 196 zero-budget comparisons, all
+exact; no tolerance was changed.
+
+Maximum BF16 public relative L2 against A is 0.00168669 for dq, 0.00183567
+for dk, 0.00177863 for dv, 8.28836e-7 for dg and 9.50440e-7 for dbeta.
+Each result satisfies its own frozen oracle-specific budget. BF16 public
+traces contain only `aten.empty.memory_format`; FP32 traces additionally
+contain the unchanged `aten.zeros.default` / `aten.zeros_like.default`
+allocations for absent cotangents.
+
+The shared lock covers the whole run and context drain. Of 615 occupancy
+samples, 602 positively observe both driver registries and match the exact
+compute child; no foreign context appears. Before/after are empty and
+post-run health passes. See `evidence/grid-v1-bd2*`. Cross-bd byte equality
+and timing will be reported only after their separate runs finish.
