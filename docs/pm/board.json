@@ -342,6 +342,13 @@
       "by": "pm",
       "decision": "BF-07 boundary-v3 chunk bd4 第 394 例（nearzero_c2_g4…flags010，q/k×1e-20）——「golden 整片是 FP32 subnormal、candidate 与实际旧 NPU 逐字节同为 0」这一类：归入既有的 native 下溢单列资格（规格 2026-09-20 澄清第 3 条 subnormal / 下溢端点类；D-PM-48 (1) 的第 (ii) 类「candidate = 旧 NPU ≠ CPU」），不新增数值闸、不收窄域；D-PM-48 (2) 的「整片正确舍入为 0」口径不扩到此类，保持失败、不放宽 0.05 / ULP 阈值。条件：该片逐元素分类——(a) golden 为 FP32 正规数 → 普通判据；(b) golden 为 FP32 subnormal 且 candidate 为 ±0 → flush 类（报个数）；(c) 其它一律失败；与旧 NPU 逐字节相同只表示无回退、不是 CPU 正确性通过，DONE 不得写成通过；写可达性；其它 flag / bd / decode 上同类切片按同一分类统计。",
       "risk": "PM 的读法：这是把规格已有的端点类应用到新出现的一个 subnormal 输出类别，不是新增口径；(a)(b)(c) 的逐元素分类防止这个类别藏住别的误差。若用户认为 subnormal 输出被设备冲成 0 属于需要闸 / 收窄域的情形，那是域变化，只用户能定，PM 不提议。与 D-PM-48 (2) 一样，若用户认为口径已属改判据，PM 撤回。"
+    },
+    {
+      "id": "D-PM-51",
+      "date": "2026-09-20",
+      "by": "user",
+      "decision": "同意 BF-07 decode 近零档的比较对象方案。（用户原话：「同意BF-07 decode近零方案」，回应 PM 给出的定位结果与建议。）",
+      "risk": "PM 的读法（就是 PM 报告里写的那一版，不多不少）：只限 boundary-grid 里的近零 decode 端点组（nearzero_*），该组的 final_state / o 改为 (A) 对以 candidate 实际 native-prep 输出为输入的 CPU FP32 reference 判（final_state ≤ 1e-5、o ≤ min(0.01, 3F)，数值不放宽）+ (B) prep 单步冻结预算已过 + (C) raw 与 prepared-public 逐位相同；对旧 prep 的 CPU reference 的偏差（4.31e-4）作观测如实报并写明分解。普通域 decode 与 chunk 的判据、1e-5 / 0.05 / min(0.01, 3F) 的数值、155 / 105 门控、域都不变。申领人须先补三样才能对别的 case 用这条口径：普通 decode state 判据的比较对象、普通域对旧 prep reference 的分布与近零档 ~1% q / k 差异率更高的原因、其它落在 1e-5 之上的近零 decode 切片；已写进 BF-07 规格「端点比较口径追加」第 4 条。实测（自述，申领人）：对旧 prep 的 CPU reference state 4.309e-4；对实际 native-prep 输入的双 CPU reference state 7.24e-8 / 3.96e-8、o 1.54e-3；raw 与 prepared-public 的 o / state 逐位相同；q / k 对旧 NPU prep 173 / 185 个（各 16384）BF16 元素差 1 ulp。"
     }
   ],
   "gated_epics": [
@@ -1450,6 +1457,10 @@
         {
           "at": "2026-09-20T15:59",
           "summary": "RISK comparison-contract-boundary（15:41Z，自述，#106；PR #118 头 15:48Z 又更新为 1ed6a9a2，仍 draft、未 DONE）：boundary-v3 chunk bd4 第 394 例 nearzero_c2_g4_rbf16_vbf16_flags010（B1/C2/H1/HV4，q/k×1e-20，仅 gate flag）：新 gate prep 通过冻结预算，全局 o L2=2.949e-3、state=2.634e-3 通过；第二 chunk / head1 的实际 o 全 0，与实际旧 NPU 路径逐字节相同；两份 CPU FP32 golden 在该片的最大绝对值 1.14804698e-38 / 1.14804782e-38，非零值全部 < FP32 最小正规数 1.1754944e-38；每份 golden 对 BF16 正确舍入后有 955 个非零元素，实际零与正确舍入的最大距离 125 ULP、相对 L2=1；不是「整片正确舍入为 0、0 ULP」的案例，也不是放大 1-ULP prep 差的 decode 案例。私有原始 tensor 回执 SHA256 已记；失败 JSON、逐片指标与脱敏 trace 保留，完整证据随下一提交发布；现有 forward / backward / layout 源码未修改。申领人提议：保持失败，不扩大全片舍入零的定义、不放宽 0.05 / ULP 阈值、不新增范围闸；具体第一次 flush 的算子未定位，不据症状归因给某条指令；请明确「native 下溢行为单列资格」是否覆盖这个公开输出 subnormal 类别。进度（自述）：所有高 bd 叶子完成，100 输入 × 14 次 namespace / run 结果逐位一致；公开非有限可达性 96 点实测——A_log 89 / 100 的 chunk 非有限 gate 全被默认 155 检查拒绝（span 为 NaN），decode 放行，candidate 8 点 NaN、其余 40 有限，旧 NPU 14 NaN / 34 有限（A89/u=−87 candidate 有限而旧 NPU NaN，A89/u=−88 两者 NaN）；decode 独立边界分组（零 / threshold / beta 饱和）bd1 已 1152 例通过，其余 bd 继续；普通新旧指标对照已启动。任务未 DONE。PM 裁定（D-PM-50，已回复 #106，非协议消息）：这一类在已有的 native 下溢单列资格之内（规格 2026-09-20 澄清第 3 条 subnormal / 下溢端点类、D-PM-48 (1) 的第 (ii) 类），不需要新的用户决定；D-PM-48 (2) 的整片舍入零口径不扩到此类，保持失败、不放宽阈值。条件：该片逐元素分类——(a) golden 为 FP32 正规数 → 普通判据；(b) golden 为 FP32 subnormal 且 candidate 为 ±0 → flush 类（报个数）；(c) 其它一律失败；与旧 NPU 逐字节相同只表示无回退、不是 CPU 正确性通过，DONE 不得写成通过；写可达性；其它 flag / bd / decode 上同类切片按同一分类统计；不新增闸、不收窄域（要拦是域变化，只用户能定）。decode 不设门控是存量行为，本任务不改。"
+        },
+        {
+          "at": "2026-09-20T16:13",
+          "summary": "用户回复「同意BF-07 decode近零方案」（D-PM-51）：decode 近零端点组的 final_state / o 改用 (A) 对实际 native-prep 输出的 CPU reference（final_state ≤ 1e-5、o ≤ min(0.01, 3F)）+ (B) prep 单步冻结预算已过 + (C) raw 与 prepared-public 逐位相同，对旧 prep reference 的偏差作观测；范围只限 nearzero_* 组，普通域与 chunk 判据不变；前提是申领人补三样（见规格「端点比较口径追加」第 4 条）。规格已追加该节（汇总 D-PM-48 / D-PM-50 / D-PM-51 三个端点口径）；已回复 #106（非协议消息）。"
         }
       ],
       "result": null,

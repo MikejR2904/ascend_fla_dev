@@ -11,6 +11,11 @@
 
 ### 正在飞的任务（现在没有；A5K-02、PK-02、PK-03 都已于 2026-09-19 合入）
 
+> **2026-09-20T16:13Z 更新：用户同意 BF-07 decode 近零方案（D-PM-51）。**
+> - **决定**：只限 boundary-grid 的近零 decode 端点组（`nearzero_*`），该组 `final_state` / `o` 改判 (A) 对以 candidate 实际 native-prep 输出为输入的 CPU FP32 reference（`final_state` ≤ 1e-5、`o` ≤ min(0.01, 3F)，数值不放宽）+ (B) prep 单步冻结预算已过 + (C) raw 与 prepared-public 逐位相同（真实字节 SHA）；对旧 prep 的 CPU reference 的偏差（4.31e-4）作观测如实报并写明分解。普通域 decode、chunk 的判据与 155 / 105 门控、域不变。
+> - **前提（补齐前不得对别的 case 用）**：申领人补三样——普通 decode state 1e-5 的比较对象；普通域对旧 prep reference 的分布与近零档 ~1% q / k 差异率更高的原因；其它落在 1e-5 之上的近零 decode 切片。**BF-07 规格**已追加「端点比较口径追加」一节，汇总 D-PM-48 / D-PM-50 / D-PM-51 四条端点口径，评审时逐条对。
+> - 待用户：暂无（BF-07 decode 近零已答）。
+>
 > **2026-09-20T16:08Z 更新：BF-03 首个完整 workload 与 bd2 全网格真机通过（自述，未 DONE）；BF-05 校准提交已推、参考 A 待对齐 pin。**
 > - **BF-03**（头 `10e31b9`，距 ASSIGN 7.4h / 24h）：B1/T4096/H=HV8 完整 workload bd2 真机通过，BF16 o 对 A / B 相对 L2 1.659e-3 / 1.659e-3（预算 4.977e-3）；bd2 全网格 66/66（33 × 2 dtype），BF16 最大 o 1.681e-3、主 state 3.2e-6、ATK 6.0e-7；FP32 公共结果对 pristine 入口逐位相同（33 / 33）；host 算子只有 1 次 `aten.zeros.default` + 17 次 `aten.empty`（通则允许的分配）。下一步 bd1 / 跨 bd 字节 / 近零 / 三明治，此前不发 DONE。全主机测试 918 passed / 9 skipped（自述；main 是 877 / 12，评审时按 `--collect-only` 对账）。
 > - **BF-05**（头 `1ebec19`）：校准提交先行——F=1.7451e-3、预算 min(1e-2, 3F)=5.2354e-3、D(o) / D(final_state) 单列不当约束；参考 A 尚未接上（本机 fla `864a87f6` 与 pin `e52dbc0e` 的 naive SHA 对不上），申领人会取 pin 版、取不到发 RISK。**PM 提醒**：参考 A 的 F_A 与预算也要在写 kernel 之前冻结（第二个校准提交即可），不能等真机验收时 A、B 一起报再定。
