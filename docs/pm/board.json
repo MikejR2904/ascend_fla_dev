@@ -973,6 +973,10 @@
         {
           "at": "2026-09-20T01:40",
           "summary": "STATUS（01:40Z，自述）：已读到 PM 在 01:22Z 的裁定（评论 5746672559）与 main 规格新增节，按三层口径执行——decode 严格 min(.01, 3F) / state 1e-5；16 vs 16×1 逐位；全链、前缀、后缀分别对双 oracle 用同次一次性长前向定出的 min(.01, 3E_oneshot)，不采用旧 .05 线；先前 STATUS 误写「待裁定」是切到新 PR 监控时初次快照没显示已存在的新评论，已修正。bd4 完整网格 136 个数值案例 + 57 个附加检查全部 native 通过（含原 8 个未舍入 FP32 形状、两 dtype / 两 state 的分段逐位对照、16 个 raw-flags 组合、metadata 拒绝）；短暂的外来设备上下文触发拒绝后，自动队列取得健康空闲窗口继续，未干预其他任务。完整 native 之后 BF16 T1/G1/state0 与 T2/G4/state1 的 sim + pipesim 全部通过（pipesim 0 hazard / event balance 空 / 无 deadlock），FP32 T2/G4/state0 功能 sim 通过。bd1/2 与 8/16/28 继续独立进程；prefill 验收接着实现，等当前批次完成后同步运行，保持正在构建 / 执行的源码不变。blockers: 实现无阻塞，其余硬件验收进行中。PR #114 仍 draft（头 9295de2e，PM 不审）。"
+        },
+        {
+          "at": "2026-09-20T02:05",
+          "summary": "STATUS（02:05Z，自述）：bd = 1 / 2 / 4 各自独立进程已完成 136 个数值案例 + 57 个附加检查，均退出 0；17 项 vendor 含完整九个 backward 在各进程首次 custom 执行前编完；bd = 8 / 16 / 28 在继续。申领人下载并独立复算了 bd = 1 / 4 的原始 JSON：136 个数值案例及 40 个有输出哈希的附加案例全部跨 bd 逐位相同、输入哈希一致。最差 BF16 o 相对 L2 1.885e-3，最差 FP32 o 2.01e-7，最差全局 state 1.71e-7（逐头 1.80e-7），每个案例都按两个 CPU FP32 oracle 与既定预算逐项复算；默认 host 审计、NaN 覆盖、输入不变检查通过；原 FP32 kernel 只读。接着：完成剩余 bd 与全量跨 bd 复算后更新验收源码，执行已裁定的三层 prefill 链（原阈值，不用 0.05）与三轮同步性能，精确的旧公共 wrapper 快照已加入对照（保留完整旧入口成本），实际 Torch NPU baseline 已准备、尚未测量。blockers: none；无 DONE，PR #114 仍 draft（头 b83e7b7d，PM 不审）。"
         }
       ],
       "result": null,
