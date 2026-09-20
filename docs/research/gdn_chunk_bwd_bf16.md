@@ -1,6 +1,7 @@
 # GDN grouped BF16 backward
 
-Status: contract frozen before kernel implementation; native acceptance pending.
+Status: frozen contract implemented; first full native workload passes both
+dtypes at bd2. Complete grouped grids and same-card timing are pending.
 
 Task BF-02, issue #101; assigned session gdn-series-20260919T115559Z-29cb31d7.
 Base e10e477b8b6fd6234a63f0aa9a7692c766699d63; original FP32 unit remains read-only.
@@ -106,3 +107,29 @@ deprecation warnings (pytest8.3.2). Hardware tests run separately under the
 device lock; these skips are not device acceptance. The initial unisolated
 host invocation was interrupted after unrelated KDA device tests failed, and
 is retained in ignored scratch; no test, requirement or tolerance was relaxed.
+
+## First full native workload
+
+B1/T4096/H=HV8/K=V128, block_dim2, both cotangents. Actual BF16 and FP32
+public outputs pass fresh pinned CPU autograd A and independent analytical B,
+NaN-poisoned composition and independently supplied stage inputs. Inputs are
+unchanged and original/new FP32 public outputs are byte-identical. The public
+host audit records exactly10 `aten.empty.memory_format` calls for each dtype.
+
+BF16 dq/dk/dv relative L2 is approximately0.00163–0.00168, below each frozen
+budget; FP32 public A/B max relative L2 is2.4538954e-7. This first case has
+HV/H=1 and both cotangents; it does not establish grouped or omitted-cotangent
+coverage by itself. The broader grid is a separate required run.
+
+The actual environment is Ascend950PR_9589 V100, CANN9.2.0 with the ascend950
+operator package, Python3.12.13, Torch2.12.0+cpu, torch_npu2.12.0, and the pinned
+Ascriptor source. Shared-lock occupancy evidence contains202samples,
+182positively observing both installed-driver context registries and matching
+the exact compute child. No foreign context was observed; before/after were
+empty and the device remained healthy. Machine identities are kept privately.
+
+See the unit's `evidence/full-v4-bd2*` files for raw numbers/logs, source hashes,
+environment and occupancy; `canonical-reference-summary.json` for138/138CPU
+reference records; and the six bd2 vendor build logs/artifact manifest plus
+`build-warning-resolution.md` for actual compilation and warning attribution.
+The three new entries emitted and compiled without vector-loop-cond warnings.

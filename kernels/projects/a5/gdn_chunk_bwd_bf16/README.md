@@ -26,7 +26,8 @@ cross-block hashes. `measure.py` measures three complete original-FP32 / new
 BF16 / original-FP32 sandwiches on one card, including backward checkpoints.
 
 Status: 88 focused host tests pass; all three entries lower with balanced
-events and emit CCE. Hardware acceptance and timing are pending. Calibration
+events and emit CCE. The first full-workload bd2 native run passes both dtypes against A/B and
+independent leaves/composition. The complete grid and timing are pending. Calibration
 JSON files are pre-implementation CPU evidence, not device results.
 
 CPU-isolated repository suite: 763 passed, 9 skipped, 5 existing importorskip
@@ -34,3 +35,9 @@ deprecation warnings (pytest8.3.2). Hardware tests run separately under the
 device lock; these skips are not device acceptance. The initial unisolated
 host invocation was interrupted after unrelated KDA device tests failed, and
 is retained in ignored scratch; no test, requirement or tolerance was relaxed.
+
+First native evidence: `evidence/full-v4-bd2.json`, its unfiltered redacted log,
+source manifest, receipt and occupancy record. Canonical CPU reference passed
+all138cases; six bd2 vendor build logs and artifact hashes are retained.
+`summarize_native.py` rechecks both final grids and every cross-block hash;
+`summarize_timing.py` recomputes all retained same-card sample medians.
