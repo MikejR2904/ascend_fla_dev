@@ -1490,7 +1490,7 @@
       "wave": "W0",
       "soc": "a2",
       "priority": "P1",
-      "status": "assigned",
+      "status": "in_progress",
       "model": [],
       "kernel": [
         "kda_bwd_stable"
@@ -1540,6 +1540,14 @@
         {
           "at": "2026-09-20T00:32",
           "summary": "派给 limjiunnbin（session a2-01-…，A2-03 的同一个 session；唯一有 a2 真机的申领人），16h，分支 task/A2-09；A2-03 已 CLOSE，直接派，不需要重新申领。第一个 STATUS 要按 A2-03 的实测速度重新给出九个 kernel 的估计与 bwd 单元 contract / 网格 / 证据整理的估计，PM 再调时限；顺带做 A2-03 评审的两条非阻塞意见（每次运行的原始回执自带 SoC / CANN / 算子包一行、哈希字段统一 *_sha）与申领人已看出的两处 host 操作挪进 kernel（g_cumsum 每 chunk 末行的切片拷贝、inverse_mm 输出的取负，D-PM-37）；证据用文本文件；A2 数字 A2-11 之前只作观测，合入前 PM 问用户"
+        },
+        {
+          "at": "2026-09-20T00:42",
+          "summary": "ACK（00:42Z，eta 5h，自述）：已读 A2-09 / A2-03 规格与拆分裁定 / 通则 / AGENTS §2 §3 §6 §7，以及 a5 kda_bwd 的九个 kernel、composition.py / stages.py / contract.json 与本仓 kda_bwd_stable 的三个改写；计划——四个纯向量 kernel 先行（finalize_reduce / finalize_pre / finalize_post / inverse_epilogue，前三个在等派单期间已在 ignored tmp 下写了草稿，ascriptor check 各 0 error / 0 warning：64 / 191 / 282 ops），再纯 cube 的 finalize_pair，再四个混合（inverse_mm bounded、inverse_dainv、inverse_dakk_fused、scan_fused；A5 用 .nz() 的 UB→L1 在 a2 上不可用，dstate / dv 两个桥按 GM 环 + mutex 重写）；两处 host 操作按 D-PM-37 挪进 kernel（g_cumsum 每 chunk 末行改由 kernel 跨步直读、inverse_mm 输出的取负进 kernel）；bwd 单元 unit / contract / run / 自带 CPU 参考 + canonical runner，六项梯度 (C∈{1,2,3})×(HV∈{1,2,4})×(bd∈{1,2}) 网格含奇数 C；每个 kernel 依次 check / sim / pipesim / 910B3 真机（bd1 与 bd2 逐位相同），回执自带 SoC / CANN / 算子包、哈希字段统一 *_sha，draft PR 增量推送。状态 assigned→in_progress"
+        },
+        {
+          "at": "2026-09-20T00:43",
+          "summary": "STATUS（00:43Z，自述）：分支 task/A2-09 已建（基于 3884c27）；三个纯向量草稿已过 ascriptor check（finalize_reduce 64 ops、finalize_pre 191、finalize_post 282，均 0 error / 0 warning），落到 kernels/projects/a2/kda_bwd_stable/ 后逐个验证。按 A2-03 的实测速度重估（A2-03：6 个 kernel 1.2h、单元与证据 2.3h，合计约 3.5h）：九个 kernel 合计约 2.2h（finalize_reduce 0.1、finalize_pre 0.2、finalize_post 0.3、inverse_epilogue 0.3、finalize_pair 0.1、inverse_mm 0.2、inverse_dainv 0.2、inverse_dakk_fused 0.2、scan_fused 0.6——最大，反向扫描 + dstate / dv 两个桥、.nz() 在 a2 上不可用要改 GM 环），bwd 单元 0.5h，六项梯度网格 + 真机 + 证据整理 1.5h，合计约 4.2h（时限 16h，误差主要在 scan_fused）。blockers: none。PM：估计有了实测口径，时限 16h 保持（约 4 倍余量，反向 kernel 比前向重），超估计 25% 走 timebox-slip"
         }
       ],
       "result": null
