@@ -29,7 +29,10 @@ FP32 bmm / 减 / 乘 / stack 来补 `h` / `v_new`（稳定 recurrent 本身不�
    例外逐条列出（文件、行、算子名）并标注归属（`fwd-caches-not-emitted` 的 kernel 批次 / 校验类）。九个检查点与六个梯度改前改后逐位相同、门控闸（前向 155 / 反向 105）不变、raw flags 不扩大的要求都不变。
 5. 这**不放宽**任何逐位判据 / 闸 / 域，也不给新代码开例外：新单元自己写的入口与 kernel 里不能有 host 转换 / 算术。存量算术留到 kernel 批次（用户批准）之后才能消除，PM 会把它列进要用户决定的事项。
 
-## 2026-09-20 验收口径（PM 裁定 D-PM-44，依申领人的 RISK `bitwise-mismatch` / `kernel-change-needed` 与两条 STATUS；数字自述，PM 未复现）
+## 2026-09-20 验收口径（PM 裁定 D-PM-44，依申领人的 RISK `bitwise-mismatch` / `kernel-change-needed` 与 STATUS）
+
+> **06:05Z 补：PM 已从 PR #116 头 964cc8e 里提交的原始 JSON（`evidence/diagnosis/old-public-repeats.json`、`scan-probe-comparison.json`）自己复算**：旧路径 12 次 h0 五个哈希 7/2/1/1/1、其余 7 项各 1 个哈希、h0 相对 L2 与「超 0.05 的 4 次」与自述一致；第一设备 12 次直接重放 11 次 dh0 不同、dAqk / dh / dv 全同；候选 12 次同一哈希。
+> 下面「事实」里的统计现在是 PM 核实过的；**设备 / 环境标识（哪张卡、CANN 9.1.0-beta.1）与第二设备的结果仍是自述**，PM 没有该环境、未复现。
 
 **事实（自述）**：在申领人的替代环境（只读既有 CANN 9.1.0-beta.1）里，**旧公共路径自己**对同一 B2/T192/H2/HV4 输入重复 12 次，FP32 h0 梯度出现 5 个不同哈希（频次 2/1/7/1/1），其余 7 项输出 / 梯度各只有 1 个哈希；
 h0 对 CPU FP32 的相对 L2 是 0.002337 ×7、0.008439、0.153270、0.357131、0.358643 ×2，**4 次超过原 0.05 预算**。差异隔离到只读上游 `scan_fused` 的 dh0 输出（`scan_fused.py:358-362` 一带，机制未定位）：固定输入直接重放已编译的原始 scan vendor 12 次，
