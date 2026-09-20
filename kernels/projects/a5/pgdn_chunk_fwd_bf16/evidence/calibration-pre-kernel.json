@@ -1,0 +1,3916 @@
+{
+  "stage": "cpu_pre_kernel_calibration",
+  "python": "3.11.15 (main, May 13 2026, 07:56:17) [GCC 11.4.0]",
+  "torch": "2.10.0+cpu",
+  "fla_pin": "e52dbc0ea19d3a40d7ab7f9eed855d2b473994d2",
+  "oracle_sha256": "3baa67a5f35dc7230698e3f1761ec8675131318c15d4a27ed7f2fce11e84b5e8",
+  "rule": "o/main state: min(1e-2,3F) per case/output/oracle; F=0 exact; ATK and FP32 1e-4",
+  "source_sha256": {
+    "reference.py": "1c9929dbeffa87d348913be0bed912cf9ca705e9b5b20725bb9f9c0c24edd5e6",
+    "oracle.py": "f5d21b20b3de18b0672034aa0da4f8827b86c18a8319fc22d7197a2539a49410",
+    "calibrate.py": "14cada81c9b88204dae36e9b962a0b20f3e703c109cd974602473d40942d62c6"
+  },
+  "cases": [
+    {
+      "case": {
+        "id": "grid_r1_c1_bd1",
+        "seed": 69000,
+        "parameters": {
+          "B": 1,
+          "T": 64,
+          "H": 2,
+          "HV": 2,
+          "N": 1,
+          "gate_scale": 1.0,
+          "atk_gate_scale": 0.03
+        },
+        "block_dim": 1
+      },
+      "dtype": "bfloat16",
+      "A_B": {
+        "o": {
+          "relative_l2": 4.748116937011942e-07,
+          "max_abs": 2.561137080192566e-09,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 4.201627975124022e-07,
+          "max_abs": 8.149072527885437e-09,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 1.8535812235896968e-07,
+          "max_abs": 7.450580596923828e-08,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.0016554159199729248,
+          "final_state": 0.0016432124689804615,
+          "final_A_state": 0.0016245318338759156
+        },
+        "B": {
+          "o": 0.0016554185101395494,
+          "final_state": 0.001643211731244977,
+          "final_A_state": 0.001624543008082849
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.004966247759918775,
+          "final_state": 0.004929637406941384,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.004966255530418648,
+          "final_state": 0.004929635193734931,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 0.07806059345602989
+    },
+    {
+      "case": {
+        "id": "grid_r1_c1_bd1",
+        "seed": 69000,
+        "parameters": {
+          "B": 1,
+          "T": 64,
+          "H": 2,
+          "HV": 2,
+          "N": 1,
+          "gate_scale": 1.0,
+          "atk_gate_scale": 0.03
+        },
+        "block_dim": 1
+      },
+      "dtype": "float32",
+      "A_B": {
+        "o": {
+          "relative_l2": 4.709783202668993e-07,
+          "max_abs": 2.3283064365386963e-09,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 4.1964714931125804e-07,
+          "max_abs": 7.916241884231567e-09,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 1.8699097583557802e-07,
+          "max_abs": 8.940696716308594e-08,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.0016603085501192018,
+          "final_state": 0.001650083804055259,
+          "final_A_state": 0.0016172694512415048
+        },
+        "B": {
+          "o": 0.0016603144620380003,
+          "final_state": 0.0016500827616647686,
+          "final_A_state": 0.0016172748894979832
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 0.05730071850121021
+    },
+    {
+      "case": {
+        "id": "grid_r1_c2_bd1",
+        "seed": 69001,
+        "parameters": {
+          "B": 1,
+          "T": 128,
+          "H": 2,
+          "HV": 2,
+          "N": 2,
+          "gate_scale": 1.0,
+          "atk_gate_scale": 0.03
+        },
+        "block_dim": 1
+      },
+      "dtype": "bfloat16",
+      "A_B": {
+        "o": {
+          "relative_l2": 4.928453420493302e-07,
+          "max_abs": 2.270098775625229e-09,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 4.863602059457628e-07,
+          "max_abs": 1.1175870895385742e-08,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 1.909207509509027e-07,
+          "max_abs": 1.6391277313232422e-07,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.0016456775587619995,
+          "final_state": 0.0016579506000969336,
+          "final_A_state": 0.0015029198441124097
+        },
+        "B": {
+          "o": 0.0016456693307063618,
+          "final_state": 0.001657957891796851,
+          "final_A_state": 0.0015029136370763013
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.004937032676285999,
+          "final_state": 0.0049738518002908,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.004937007992119085,
+          "final_state": 0.004973873675390553,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 0.11067445483058691
+    },
+    {
+      "case": {
+        "id": "grid_r1_c2_bd1",
+        "seed": 69001,
+        "parameters": {
+          "B": 1,
+          "T": 128,
+          "H": 2,
+          "HV": 2,
+          "N": 2,
+          "gate_scale": 1.0,
+          "atk_gate_scale": 0.03
+        },
+        "block_dim": 1
+      },
+      "dtype": "float32",
+      "A_B": {
+        "o": {
+          "relative_l2": 5.0758677585833e-07,
+          "max_abs": 2.3283064365386963e-09,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 4.769262021582948e-07,
+          "max_abs": 1.1175870895385742e-08,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 1.9522711267279394e-07,
+          "max_abs": 1.7881393432617188e-07,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.0016545768016815127,
+          "final_state": 0.00164833336083502,
+          "final_A_state": 0.0015534331474382325
+        },
+        "B": {
+          "o": 0.001654580860364253,
+          "final_state": 0.0016483363446252789,
+          "final_A_state": 0.0015534345848635875
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 0.10640980023890734
+    },
+    {
+      "case": {
+        "id": "grid_r1_c3_bd1",
+        "seed": 69002,
+        "parameters": {
+          "B": 1,
+          "T": 192,
+          "H": 2,
+          "HV": 2,
+          "N": 3,
+          "gate_scale": 1.0,
+          "atk_gate_scale": 0.03
+        },
+        "block_dim": 1
+      },
+      "dtype": "bfloat16",
+      "A_B": {
+        "o": {
+          "relative_l2": 5.950170098393547e-07,
+          "max_abs": 4.773028194904327e-09,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 9.10555273920308e-07,
+          "max_abs": 3.259629011154175e-08,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 2.7501590512032855e-07,
+          "max_abs": 2.086162567138672e-07,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.0016802421280073718,
+          "final_state": 0.0016630506078692377,
+          "final_A_state": 0.0017755888854708887
+        },
+        "B": {
+          "o": 0.0016802481596682403,
+          "final_state": 0.0016630493716011372,
+          "final_A_state": 0.0017755760483443412
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.005040726384022115,
+          "final_state": 0.004989151823607713,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.005040744479004721,
+          "final_state": 0.004989148114803412,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 0.15945801697671413
+    },
+    {
+      "case": {
+        "id": "grid_r1_c3_bd1",
+        "seed": 69002,
+        "parameters": {
+          "B": 1,
+          "T": 192,
+          "H": 2,
+          "HV": 2,
+          "N": 3,
+          "gate_scale": 1.0,
+          "atk_gate_scale": 0.03
+        },
+        "block_dim": 1
+      },
+      "dtype": "float32",
+      "A_B": {
+        "o": {
+          "relative_l2": 5.641496766918587e-07,
+          "max_abs": 3.4924596548080444e-09,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 9.119415587384364e-07,
+          "max_abs": 2.9802322387695312e-08,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 2.631060510733288e-07,
+          "max_abs": 2.086162567138672e-07,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.0016675465326971884,
+          "final_state": 0.0016628287780729204,
+          "final_A_state": 0.0017548777140015046
+        },
+        "B": {
+          "o": 0.0016675389948846758,
+          "final_state": 0.001662821854766139,
+          "final_A_state": 0.0017548641252188083
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 0.1552091846242547
+    },
+    {
+      "case": {
+        "id": "full_r1_bd1",
+        "seed": 69003,
+        "parameters": {
+          "B": 1,
+          "T": 4096,
+          "H": 1,
+          "HV": 1,
+          "N": 64,
+          "gate_scale": 1.0,
+          "atk_gate_scale": 0.03
+        },
+        "block_dim": 1
+      },
+      "dtype": "bfloat16",
+      "A_B": {
+        "o": {
+          "relative_l2": 5.272848928729274e-07,
+          "max_abs": 4.773028194904327e-09,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 1.1988040518548759e-06,
+          "max_abs": 1.6763806343078613e-08,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 2.3244067705809053e-07,
+          "max_abs": 2.086162567138672e-07,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.00166402319876985,
+          "final_state": 0.0016612816136836646,
+          "final_A_state": 0.0017866964940526334
+        },
+        "B": {
+          "o": 0.0016640208622789687,
+          "final_state": 0.001661284729723728,
+          "final_A_state": 0.0017866570878493633
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.0049920695963095495,
+          "final_state": 0.004983844841050994,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.004992062586836906,
+          "final_state": 0.004983854189171183,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 2.4182392368093133
+    },
+    {
+      "case": {
+        "id": "full_r1_bd1",
+        "seed": 69003,
+        "parameters": {
+          "B": 1,
+          "T": 4096,
+          "H": 1,
+          "HV": 1,
+          "N": 64,
+          "gate_scale": 1.0,
+          "atk_gate_scale": 0.03
+        },
+        "block_dim": 1
+      },
+      "dtype": "float32",
+      "A_B": {
+        "o": {
+          "relative_l2": 5.303510641910385e-07,
+          "max_abs": 5.122274160385132e-09,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 1.2260166016046271e-06,
+          "max_abs": 1.7695128917694092e-08,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 2.441861967778546e-07,
+          "max_abs": 1.7881393432617188e-07,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.001658770058204797,
+          "final_state": 0.001677138131810256,
+          "final_A_state": 0.001774500548833818
+        },
+        "B": {
+          "o": 0.001658771503881834,
+          "final_state": 0.0016771389379916708,
+          "final_A_state": 0.0017745079894352042
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 2.2960437051951885
+    },
+    {
+      "case": {
+        "id": "grid_r2_c1_bd1",
+        "seed": 69004,
+        "parameters": {
+          "B": 1,
+          "T": 64,
+          "H": 2,
+          "HV": 4,
+          "N": 1,
+          "gate_scale": 1.0,
+          "atk_gate_scale": 0.03
+        },
+        "block_dim": 1
+      },
+      "dtype": "bfloat16",
+      "A_B": {
+        "o": {
+          "relative_l2": 4.966784473086165e-07,
+          "max_abs": 3.3760443329811096e-09,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 3.769459303196617e-07,
+          "max_abs": 2.60770320892334e-08,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 1.8703003190104213e-07,
+          "max_abs": 8.940696716308594e-08,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.0016802587367604177,
+          "final_state": 0.0016740632170319165,
+          "final_A_state": 0.0016347107285830979
+        },
+        "B": {
+          "o": 0.0016802619567376346,
+          "final_state": 0.001674066253181984,
+          "final_A_state": 0.0016347062340240008
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.005040776210281253,
+          "final_state": 0.005022189651095749,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.005040785870212904,
+          "final_state": 0.005022198759545952,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 0.09171763155609369
+    },
+    {
+      "case": {
+        "id": "grid_r2_c1_bd1",
+        "seed": 69004,
+        "parameters": {
+          "B": 1,
+          "T": 64,
+          "H": 2,
+          "HV": 4,
+          "N": 1,
+          "gate_scale": 1.0,
+          "atk_gate_scale": 0.03
+        },
+        "block_dim": 1
+      },
+      "dtype": "float32",
+      "A_B": {
+        "o": {
+          "relative_l2": 4.815354591638192e-07,
+          "max_abs": 2.9103830456733704e-09,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 3.7181415250345327e-07,
+          "max_abs": 1.862645149230957e-08,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 2.1020215298771468e-07,
+          "max_abs": 1.043081283569336e-07,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.0016596883985324153,
+          "final_state": 0.0016532275571522793,
+          "final_A_state": 0.0016963819940155256
+        },
+        "B": {
+          "o": 0.0016596853432574831,
+          "final_state": 0.0016532209567220002,
+          "final_A_state": 0.0016963879809287331
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 0.0852738581597805
+    },
+    {
+      "case": {
+        "id": "grid_r2_c2_bd1",
+        "seed": 69005,
+        "parameters": {
+          "B": 1,
+          "T": 128,
+          "H": 2,
+          "HV": 4,
+          "N": 2,
+          "gate_scale": 1.0,
+          "atk_gate_scale": 0.03
+        },
+        "block_dim": 1
+      },
+      "dtype": "bfloat16",
+      "A_B": {
+        "o": {
+          "relative_l2": 5.155376521386236e-07,
+          "max_abs": 3.841705620288849e-09,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 4.5621387058270757e-07,
+          "max_abs": 1.862645149230957e-08,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 2.2394719037966612e-07,
+          "max_abs": 2.086162567138672e-07,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.00165244280095886,
+          "final_state": 0.001659743982419015,
+          "final_A_state": 0.0016512073984983452
+        },
+        "B": {
+          "o": 0.0016524434348905155,
+          "final_state": 0.001659743172519022,
+          "final_A_state": 0.0016512211332744677
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.00495732840287658,
+          "final_state": 0.004979231947257045,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.004957330304671546,
+          "final_state": 0.004979229517557067,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 0.1653253212571144
+    },
+    {
+      "case": {
+        "id": "grid_r2_c2_bd1",
+        "seed": 69005,
+        "parameters": {
+          "B": 1,
+          "T": 128,
+          "H": 2,
+          "HV": 4,
+          "N": 2,
+          "gate_scale": 1.0,
+          "atk_gate_scale": 0.03
+        },
+        "block_dim": 1
+      },
+      "dtype": "float32",
+      "A_B": {
+        "o": {
+          "relative_l2": 5.332459328151347e-07,
+          "max_abs": 3.3760443329811096e-09,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 4.6083195738415166e-07,
+          "max_abs": 1.862645149230957e-08,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 2.1449729469058154e-07,
+          "max_abs": 1.4901161193847656e-07,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.0016614535415722968,
+          "final_state": 0.00165069815973126,
+          "final_A_state": 0.001625494227198622
+        },
+        "B": {
+          "o": 0.0016614523057093679,
+          "final_state": 0.0016506961676751707,
+          "final_A_state": 0.001625481270268026
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 0.16341436002403498
+    },
+    {
+      "case": {
+        "id": "grid_r2_c3_bd1",
+        "seed": 69006,
+        "parameters": {
+          "B": 1,
+          "T": 192,
+          "H": 2,
+          "HV": 4,
+          "N": 3,
+          "gate_scale": 1.0,
+          "atk_gate_scale": 0.03
+        },
+        "block_dim": 1
+      },
+      "dtype": "bfloat16",
+      "A_B": {
+        "o": {
+          "relative_l2": 5.237052372768047e-07,
+          "max_abs": 4.6566128730773926e-09,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 8.64940325552334e-07,
+          "max_abs": 7.82310962677002e-08,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 2.706066108032676e-07,
+          "max_abs": 2.980232238769531e-07,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.0016667780936706733,
+          "final_state": 0.001663250853846186,
+          "final_A_state": 0.0016410079350793483
+        },
+        "B": {
+          "o": 0.0016667759845677547,
+          "final_state": 0.0016632521236614917,
+          "final_A_state": 0.0016410538141694497
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.00500033428101202,
+          "final_state": 0.004989752561538558,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.0050003279537032645,
+          "final_state": 0.0049897563709844755,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 0.2374738994985819
+    },
+    {
+      "case": {
+        "id": "grid_r2_c3_bd1",
+        "seed": 69006,
+        "parameters": {
+          "B": 1,
+          "T": 192,
+          "H": 2,
+          "HV": 4,
+          "N": 3,
+          "gate_scale": 1.0,
+          "atk_gate_scale": 0.03
+        },
+        "block_dim": 1
+      },
+      "dtype": "float32",
+      "A_B": {
+        "o": {
+          "relative_l2": 5.181839731867697e-07,
+          "max_abs": 3.725290298461914e-09,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 8.67508553540414e-07,
+          "max_abs": 7.450580596923828e-08,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 2.464696338921327e-07,
+          "max_abs": 2.086162567138672e-07,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.001665687879158187,
+          "final_state": 0.0016577287318353235,
+          "final_A_state": 0.0016445962698062662
+        },
+        "B": {
+          "o": 0.0016656871124490654,
+          "final_state": 0.0016577263840642364,
+          "final_A_state": 0.0016446026394023837
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 0.22733704280108213
+    },
+    {
+      "case": {
+        "id": "full_r2_bd1",
+        "seed": 69007,
+        "parameters": {
+          "B": 1,
+          "T": 4096,
+          "H": 1,
+          "HV": 2,
+          "N": 64,
+          "gate_scale": 1.0,
+          "atk_gate_scale": 0.03
+        },
+        "block_dim": 1
+      },
+      "dtype": "bfloat16",
+      "A_B": {
+        "o": {
+          "relative_l2": 5.142022529354414e-07,
+          "max_abs": 4.423782229423523e-09,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 2.728326292555946e-07,
+          "max_abs": 1.862645149230957e-08,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 2.500088923689596e-07,
+          "max_abs": 1.7881393432617188e-07,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.0016600276756736528,
+          "final_state": 0.001645280096636268,
+          "final_A_state": 0.001838475467981506
+        },
+        "B": {
+          "o": 0.0016600284293333857,
+          "final_state": 0.0016452803094614608,
+          "final_A_state": 0.001838462990921723
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.004980083027020958,
+          "final_state": 0.004935840289908804,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.004980085288000157,
+          "final_state": 0.004935840928384383,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 3.3519915156066418
+    },
+    {
+      "case": {
+        "id": "full_r2_bd1",
+        "seed": 69007,
+        "parameters": {
+          "B": 1,
+          "T": 4096,
+          "H": 1,
+          "HV": 2,
+          "N": 64,
+          "gate_scale": 1.0,
+          "atk_gate_scale": 0.03
+        },
+        "block_dim": 1
+      },
+      "dtype": "float32",
+      "A_B": {
+        "o": {
+          "relative_l2": 5.181854071424054e-07,
+          "max_abs": 4.889443516731262e-09,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 2.705888509379651e-07,
+          "max_abs": 1.4901161193847656e-08,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 2.299040683735685e-07,
+          "max_abs": 1.7881393432617188e-07,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.0016579202954361775,
+          "final_state": 0.001640518366298766,
+          "final_A_state": 0.0018053605525224592
+        },
+        "B": {
+          "o": 0.0016579205960267054,
+          "final_state": 0.0016405180537907784,
+          "final_A_state": 0.0018053788315727873
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 3.190504756756127
+    },
+    {
+      "case": {
+        "id": "grid_r4_c1_bd1",
+        "seed": 69008,
+        "parameters": {
+          "B": 1,
+          "T": 64,
+          "H": 2,
+          "HV": 8,
+          "N": 1,
+          "gate_scale": 1.0,
+          "atk_gate_scale": 0.03
+        },
+        "block_dim": 1
+      },
+      "dtype": "bfloat16",
+      "A_B": {
+        "o": {
+          "relative_l2": 4.7387047789734536e-07,
+          "max_abs": 2.6193447411060333e-09,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 8.924422530534483e-07,
+          "max_abs": 1.0803341865539551e-07,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 1.704102360718834e-07,
+          "max_abs": 8.940696716308594e-08,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.001662393899199031,
+          "final_state": 0.0016614594716309835,
+          "final_A_state": 0.0016611045557250776
+        },
+        "B": {
+          "o": 0.0016623956102784312,
+          "final_state": 0.001661463025570324,
+          "final_A_state": 0.0016611143299905295
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.004987181697597093,
+          "final_state": 0.004984378414892951,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.004987186830835294,
+          "final_state": 0.004984389076710972,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 0.14985572081059217
+    },
+    {
+      "case": {
+        "id": "grid_r4_c1_bd1",
+        "seed": 69008,
+        "parameters": {
+          "B": 1,
+          "T": 64,
+          "H": 2,
+          "HV": 8,
+          "N": 1,
+          "gate_scale": 1.0,
+          "atk_gate_scale": 0.03
+        },
+        "block_dim": 1
+      },
+      "dtype": "float32",
+      "A_B": {
+        "o": {
+          "relative_l2": 4.910762913750845e-07,
+          "max_abs": 2.7939677238464355e-09,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 8.90756296726927e-07,
+          "max_abs": 1.043081283569336e-07,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 1.7547840927671913e-07,
+          "max_abs": 1.043081283569336e-07,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.0016744975302572733,
+          "final_state": 0.001658883327406232,
+          "final_A_state": 0.0016546028833450657
+        },
+        "B": {
+          "o": 0.0016744913269620782,
+          "final_state": 0.0016588830148424154,
+          "final_A_state": 0.001654605821555494
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 0.13836646359413862
+    },
+    {
+      "case": {
+        "id": "grid_r4_c2_bd1",
+        "seed": 69009,
+        "parameters": {
+          "B": 1,
+          "T": 128,
+          "H": 2,
+          "HV": 8,
+          "N": 2,
+          "gate_scale": 1.0,
+          "atk_gate_scale": 0.03
+        },
+        "block_dim": 1
+      },
+      "dtype": "bfloat16",
+      "A_B": {
+        "o": {
+          "relative_l2": 4.899122093317452e-07,
+          "max_abs": 3.725290298461914e-09,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 5.191211776970017e-07,
+          "max_abs": 3.166496753692627e-08,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 1.934700016731013e-07,
+          "max_abs": 1.7881393432617188e-07,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.001655069295479823,
+          "final_state": 0.0016592760628332752,
+          "final_A_state": 0.0017095741977420735
+        },
+        "B": {
+          "o": 0.0016550651607623633,
+          "final_state": 0.0016592772159467444,
+          "final_A_state": 0.0017095537194593284
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.004965207886439469,
+          "final_state": 0.004977828188499825,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.00496519548228709,
+          "final_state": 0.004977831647840233,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 0.264928238466382
+    },
+    {
+      "case": {
+        "id": "grid_r4_c2_bd1",
+        "seed": 69009,
+        "parameters": {
+          "B": 1,
+          "T": 128,
+          "H": 2,
+          "HV": 8,
+          "N": 2,
+          "gate_scale": 1.0,
+          "atk_gate_scale": 0.03
+        },
+        "block_dim": 1
+      },
+      "dtype": "float32",
+      "A_B": {
+        "o": {
+          "relative_l2": 4.871144124143781e-07,
+          "max_abs": 4.190951585769653e-09,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 5.204044954946807e-07,
+          "max_abs": 3.166496753692627e-08,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 1.956661089904512e-07,
+          "max_abs": 1.4901161193847656e-07,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.0016591296197928792,
+          "final_state": 0.0016627079943474206,
+          "final_A_state": 0.0016955548889240324
+        },
+        "B": {
+          "o": 0.0016591302290570756,
+          "final_state": 0.0016627098801259546,
+          "final_A_state": 0.001695537924272438
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 0.24872657842934132
+    },
+    {
+      "case": {
+        "id": "grid_r4_c3_bd1",
+        "seed": 69010,
+        "parameters": {
+          "B": 1,
+          "T": 192,
+          "H": 2,
+          "HV": 8,
+          "N": 3,
+          "gate_scale": 1.0,
+          "atk_gate_scale": 0.03
+        },
+        "block_dim": 1
+      },
+      "dtype": "bfloat16",
+      "A_B": {
+        "o": {
+          "relative_l2": 4.6807176959864577e-07,
+          "max_abs": 3.4924596548080444e-09,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 5.035856253948288e-07,
+          "max_abs": 2.9802322387695312e-08,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 2.211908458235843e-07,
+          "max_abs": 1.4901161193847656e-07,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.0016584476832341747,
+          "final_state": 0.0016595301608192043,
+          "final_A_state": 0.0015400037502085458
+        },
+        "B": {
+          "o": 0.0016584464939729824,
+          "final_state": 0.0016595340262158251,
+          "final_A_state": 0.001540001164728961
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.004975343049702524,
+          "final_state": 0.004978590482457613,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.004975339481918947,
+          "final_state": 0.004978602078647475,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 0.386922319419682
+    },
+    {
+      "case": {
+        "id": "grid_r4_c3_bd1",
+        "seed": 69010,
+        "parameters": {
+          "B": 1,
+          "T": 192,
+          "H": 2,
+          "HV": 8,
+          "N": 3,
+          "gate_scale": 1.0,
+          "atk_gate_scale": 0.03
+        },
+        "block_dim": 1
+      },
+      "dtype": "float32",
+      "A_B": {
+        "o": {
+          "relative_l2": 4.643545058414914e-07,
+          "max_abs": 3.026798367500305e-09,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 5.078790215972909e-07,
+          "max_abs": 2.9802322387695312e-08,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 2.3285467309067023e-07,
+          "max_abs": 1.4901161193847656e-07,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.0016546075371428627,
+          "final_state": 0.0016608502295094912,
+          "final_A_state": 0.0015528304708463247
+        },
+        "B": {
+          "o": 0.0016546061258413838,
+          "final_state": 0.001660847934472034,
+          "final_A_state": 0.0015528466587255748
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 0.36260959412902594
+    },
+    {
+      "case": {
+        "id": "full_r4_bd1",
+        "seed": 69011,
+        "parameters": {
+          "B": 1,
+          "T": 4096,
+          "H": 1,
+          "HV": 4,
+          "N": 64,
+          "gate_scale": 1.0,
+          "atk_gate_scale": 0.03
+        },
+        "block_dim": 1
+      },
+      "dtype": "bfloat16",
+      "A_B": {
+        "o": {
+          "relative_l2": 5.265812643430918e-07,
+          "max_abs": 5.3551048040390015e-09,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 8.921404855722146e-07,
+          "max_abs": 3.166496753692627e-08,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 2.671220028860238e-07,
+          "max_abs": 2.086162567138672e-07,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.0016598805985058981,
+          "final_state": 0.001639991377886215,
+          "final_A_state": 0.001774378187638348
+        },
+        "B": {
+          "o": 0.0016598806946216966,
+          "final_state": 0.0016399869857651598,
+          "final_A_state": 0.001774392351121281
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.004979641795517694,
+          "final_state": 0.0049199741336586455,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.00497964208386509,
+          "final_state": 0.004919960957295479,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 4.944778436794877
+    },
+    {
+      "case": {
+        "id": "full_r4_bd1",
+        "seed": 69011,
+        "parameters": {
+          "B": 1,
+          "T": 4096,
+          "H": 1,
+          "HV": 4,
+          "N": 64,
+          "gate_scale": 1.0,
+          "atk_gate_scale": 0.03
+        },
+        "block_dim": 1
+      },
+      "dtype": "float32",
+      "A_B": {
+        "o": {
+          "relative_l2": 5.277223187135732e-07,
+          "max_abs": 5.587935447692871e-09,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 9.052239578080785e-07,
+          "max_abs": 3.632158041000366e-08,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 2.8515816437948426e-07,
+          "max_abs": 2.086162567138672e-07,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.0016587318699733064,
+          "final_state": 0.001633847102661313,
+          "final_A_state": 0.0018018296591165363
+        },
+        "B": {
+          "o": 0.0016587313056280978,
+          "final_state": 0.0016338538743204223,
+          "final_A_state": 0.0018018238779540494
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 4.783939658664167
+    },
+    {
+      "case": {
+        "id": "grid_r8_c1_bd1",
+        "seed": 69012,
+        "parameters": {
+          "B": 1,
+          "T": 64,
+          "H": 2,
+          "HV": 16,
+          "N": 1,
+          "gate_scale": 1.0,
+          "atk_gate_scale": 0.03
+        },
+        "block_dim": 1
+      },
+      "dtype": "bfloat16",
+      "A_B": {
+        "o": {
+          "relative_l2": 4.808572112953869e-07,
+          "max_abs": 3.259629011154175e-09,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 7.257551883863712e-07,
+          "max_abs": 7.078051567077637e-08,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 1.9070128694441684e-07,
+          "max_abs": 8.940696716308594e-08,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.001669070128912847,
+          "final_state": 0.001657587625329151,
+          "final_A_state": 0.0016071241994035158
+        },
+        "B": {
+          "o": 0.0016690648657730776,
+          "final_state": 0.0016575953198121449,
+          "final_A_state": 0.0016071282882520036
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.00500721038673854,
+          "final_state": 0.004972762875987453,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.005007194597319233,
+          "final_state": 0.004972785959436434,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 0.2669797698035836
+    },
+    {
+      "case": {
+        "id": "grid_r8_c1_bd1",
+        "seed": 69012,
+        "parameters": {
+          "B": 1,
+          "T": 64,
+          "H": 2,
+          "HV": 16,
+          "N": 1,
+          "gate_scale": 1.0,
+          "atk_gate_scale": 0.03
+        },
+        "block_dim": 1
+      },
+      "dtype": "float32",
+      "A_B": {
+        "o": {
+          "relative_l2": 4.6180258031112214e-07,
+          "max_abs": 3.259629011154175e-09,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 7.237171234659021e-07,
+          "max_abs": 5.960464477539063e-08,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 1.7593683629429663e-07,
+          "max_abs": 1.043081283569336e-07,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.0016706167527489912,
+          "final_state": 0.001657146767008729,
+          "final_A_state": 0.0016357757888836174
+        },
+        "B": {
+          "o": 0.0016706151619107587,
+          "final_state": 0.0016571403470849787,
+          "final_A_state": 0.001635783427741736
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 0.23817138001322746
+    },
+    {
+      "case": {
+        "id": "grid_r8_c2_bd1",
+        "seed": 69013,
+        "parameters": {
+          "B": 1,
+          "T": 128,
+          "H": 2,
+          "HV": 16,
+          "N": 2,
+          "gate_scale": 1.0,
+          "atk_gate_scale": 0.03
+        },
+        "block_dim": 1
+      },
+      "dtype": "bfloat16",
+      "A_B": {
+        "o": {
+          "relative_l2": 4.930947308198156e-07,
+          "max_abs": 3.026798367500305e-09,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 5.741046654547828e-07,
+          "max_abs": 3.725290298461914e-08,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 2.3503978608689754e-07,
+          "max_abs": 2.086162567138672e-07,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.0016666750482001397,
+          "final_state": 0.0016531235475508658,
+          "final_A_state": 0.0017004591174303466
+        },
+        "B": {
+          "o": 0.001666673001948561,
+          "final_state": 0.0016531206900069007,
+          "final_A_state": 0.001700448441115824
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.005000025144600419,
+          "final_state": 0.004959370642652597,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.005000019005845683,
+          "final_state": 0.004959362070020702,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 0.4660792341455817
+    },
+    {
+      "case": {
+        "id": "grid_r8_c2_bd1",
+        "seed": 69013,
+        "parameters": {
+          "B": 1,
+          "T": 128,
+          "H": 2,
+          "HV": 16,
+          "N": 2,
+          "gate_scale": 1.0,
+          "atk_gate_scale": 0.03
+        },
+        "block_dim": 1
+      },
+      "dtype": "float32",
+      "A_B": {
+        "o": {
+          "relative_l2": 4.914881904087653e-07,
+          "max_abs": 2.7939677238464355e-09,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 5.769787173986852e-07,
+          "max_abs": 4.842877388000488e-08,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 2.1950879120221135e-07,
+          "max_abs": 1.6391277313232422e-07,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.0016679280585765492,
+          "final_state": 0.0016638559152948923,
+          "final_A_state": 0.001738219342165477
+        },
+        "B": {
+          "o": 0.001667925430158659,
+          "final_state": 0.0016638543313688043,
+          "final_A_state": 0.0017382364721598047
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 0.4309325600042939
+    },
+    {
+      "case": {
+        "id": "grid_r8_c3_bd1",
+        "seed": 69014,
+        "parameters": {
+          "B": 1,
+          "T": 192,
+          "H": 2,
+          "HV": 16,
+          "N": 3,
+          "gate_scale": 1.0,
+          "atk_gate_scale": 0.03
+        },
+        "block_dim": 1
+      },
+      "dtype": "bfloat16",
+      "A_B": {
+        "o": {
+          "relative_l2": 5.287309483604301e-07,
+          "max_abs": 6.05359673500061e-09,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 6.230217101531997e-07,
+          "max_abs": 4.470348358154297e-08,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 2.1038766428967943e-07,
+          "max_abs": 1.4901161193847656e-07,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.0016591751528115452,
+          "final_state": 0.0016594089296148383,
+          "final_A_state": 0.0016256636165298422
+        },
+        "B": {
+          "o": 0.0016591753538371815,
+          "final_state": 0.0016594097374244402,
+          "final_A_state": 0.0016256898463589
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.004977525458434636,
+          "final_state": 0.0049782267888445145,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.0049775260615115445,
+          "final_state": 0.004978229212273321,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 0.6714636413380504
+    },
+    {
+      "case": {
+        "id": "grid_r8_c3_bd1",
+        "seed": 69014,
+        "parameters": {
+          "B": 1,
+          "T": 192,
+          "H": 2,
+          "HV": 16,
+          "N": 3,
+          "gate_scale": 1.0,
+          "atk_gate_scale": 0.03
+        },
+        "block_dim": 1
+      },
+      "dtype": "float32",
+      "A_B": {
+        "o": {
+          "relative_l2": 5.324977663210358e-07,
+          "max_abs": 6.51925802230835e-09,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 6.228260192950975e-07,
+          "max_abs": 4.842877388000488e-08,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 2.151851439870529e-07,
+          "max_abs": 2.086162567138672e-07,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.001659613230424193,
+          "final_state": 0.0016514880576293885,
+          "final_A_state": 0.0016111554402006554
+        },
+        "B": {
+          "o": 0.0016596161945620822,
+          "final_state": 0.001651490738198571,
+          "final_A_state": 0.001611141876363125
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 0.6375681487843394
+    },
+    {
+      "case": {
+        "id": "full_r8_bd1",
+        "seed": 69015,
+        "parameters": {
+          "B": 1,
+          "T": 4096,
+          "H": 1,
+          "HV": 8,
+          "N": 64,
+          "gate_scale": 1.0,
+          "atk_gate_scale": 0.03
+        },
+        "block_dim": 1
+      },
+      "dtype": "bfloat16",
+      "A_B": {
+        "o": {
+          "relative_l2": 5.175406820930355e-07,
+          "max_abs": 6.28642737865448e-09,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 5.462662817836669e-07,
+          "max_abs": 2.3283064365386963e-08,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 2.7616191132453337e-07,
+          "max_abs": 2.086162567138672e-07,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.0016587936361341644,
+          "final_state": 0.0016658608162572425,
+          "final_A_state": 0.0017504521937810238
+        },
+        "B": {
+          "o": 0.0016587939658547688,
+          "final_state": 0.001665862686657255,
+          "final_A_state": 0.0017504715265168717
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.004976380908402493,
+          "final_state": 0.004997582448771728,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.004976381897564306,
+          "final_state": 0.004997588059971765,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 8.008427888154984
+    },
+    {
+      "case": {
+        "id": "full_r8_bd1",
+        "seed": 69015,
+        "parameters": {
+          "B": 1,
+          "T": 4096,
+          "H": 1,
+          "HV": 8,
+          "N": 64,
+          "gate_scale": 1.0,
+          "atk_gate_scale": 0.03
+        },
+        "block_dim": 1
+      },
+      "dtype": "float32",
+      "A_B": {
+        "o": {
+          "relative_l2": 5.157864593482065e-07,
+          "max_abs": 7.450580596923828e-09,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 5.416769146725645e-07,
+          "max_abs": 2.3748725652694702e-08,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 2.5981863071482335e-07,
+          "max_abs": 1.7881393432617188e-07,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.0016606233991895841,
+          "final_state": 0.001668687580564729,
+          "final_A_state": 0.0017478137652149025
+        },
+        "B": {
+          "o": 0.0016606233899422822,
+          "final_state": 0.0016686854482291526,
+          "final_A_state": 0.0017477916250077446
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 7.689639402553439
+    },
+    {
+      "case": {
+        "id": "batch2_c3_r4_bd1",
+        "seed": 69016,
+        "parameters": {
+          "B": 2,
+          "T": 192,
+          "H": 3,
+          "HV": 12,
+          "N": 3,
+          "gate_scale": 1.0,
+          "atk_gate_scale": 0.03
+        },
+        "block_dim": 1
+      },
+      "dtype": "bfloat16",
+      "A_B": {
+        "o": {
+          "relative_l2": 5.230212717789174e-07,
+          "max_abs": 6.05359673500061e-09,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 4.4812804232323843e-07,
+          "max_abs": 2.421438694000244e-08,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 2.307566600628262e-07,
+          "max_abs": 2.086162567138672e-07,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.0016589937640414474,
+          "final_state": 0.0016619502520625541,
+          "final_A_state": 0.0017061527008941258
+        },
+        "B": {
+          "o": 0.0016589948342693689,
+          "final_state": 0.0016619507114923728,
+          "final_A_state": 0.001706161617584087
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.004976981292124342,
+          "final_state": 0.004985850756187663,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.004976984502808106,
+          "final_state": 0.0049858521344771185,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 1.022701977752149
+    },
+    {
+      "case": {
+        "id": "batch2_c3_r4_bd1",
+        "seed": 69016,
+        "parameters": {
+          "B": 2,
+          "T": 192,
+          "H": 3,
+          "HV": 12,
+          "N": 3,
+          "gate_scale": 1.0,
+          "atk_gate_scale": 0.03
+        },
+        "block_dim": 1
+      },
+      "dtype": "float32",
+      "A_B": {
+        "o": {
+          "relative_l2": 5.156679914403412e-07,
+          "max_abs": 5.820766091346741e-09,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 4.502862524406663e-07,
+          "max_abs": 2.60770320892334e-08,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 2.2942155816342332e-07,
+          "max_abs": 2.682209014892578e-07,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.0016525916822925436,
+          "final_state": 0.0016569012310548809,
+          "final_A_state": 0.0017209648724659775
+        },
+        "B": {
+          "o": 0.0016525909236886538,
+          "final_state": 0.0016569051417222693,
+          "final_A_state": 0.0017209528989442057
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 0.9247029032558203
+    },
+    {
+      "case": {
+        "id": "pgdn340m_bd1",
+        "seed": 69017,
+        "parameters": {
+          "B": 1,
+          "T": 4096,
+          "H": 8,
+          "HV": 8,
+          "N": 64,
+          "gate_scale": 1.0,
+          "atk_gate_scale": 0.03
+        },
+        "block_dim": 1
+      },
+      "dtype": "bfloat16",
+      "A_B": {
+        "o": {
+          "relative_l2": 5.186378121459737e-07,
+          "max_abs": 9.080395102500916e-09,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 6.035117477677754e-07,
+          "max_abs": 3.3527612686157227e-08,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 2.726255060755787e-07,
+          "max_abs": 2.384185791015625e-07,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.0016589176312862032,
+          "final_state": 0.0016560219670990206,
+          "final_A_state": 0.0017894092438861962
+        },
+        "B": {
+          "o": 0.0016589176505827264,
+          "final_state": 0.001656018884912635,
+          "final_A_state": 0.0017894126582225912
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.00497675289385861,
+          "final_state": 0.004968065901297062,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.0049767529517481795,
+          "final_state": 0.004968056654737905,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 8.574066499248147
+    },
+    {
+      "case": {
+        "id": "pgdn340m_bd1",
+        "seed": 69017,
+        "parameters": {
+          "B": 1,
+          "T": 4096,
+          "H": 8,
+          "HV": 8,
+          "N": 64,
+          "gate_scale": 1.0,
+          "atk_gate_scale": 0.03
+        },
+        "block_dim": 1
+      },
+      "dtype": "float32",
+      "A_B": {
+        "o": {
+          "relative_l2": 5.190072819417615e-07,
+          "max_abs": 7.450580596923828e-09,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 6.03440800672357e-07,
+          "max_abs": 3.5390257835388184e-08,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 2.895634456552102e-07,
+          "max_abs": 3.5762786865234375e-07,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.0016603196719865265,
+          "final_state": 0.0016621503690669934,
+          "final_A_state": 0.0017817728572938414
+        },
+        "B": {
+          "o": 0.0016603188511462163,
+          "final_state": 0.0016621505197343405,
+          "final_A_state": 0.0017817701974257025
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 8.146230450831354
+    },
+    {
+      "case": {
+        "id": "pgdn1b_bd1",
+        "seed": 69018,
+        "parameters": {
+          "B": 1,
+          "T": 4096,
+          "H": 14,
+          "HV": 14,
+          "N": 64,
+          "gate_scale": 1.0,
+          "atk_gate_scale": 0.03
+        },
+        "block_dim": 1
+      },
+      "dtype": "bfloat16",
+      "A_B": {
+        "o": {
+          "relative_l2": 5.1746872882783e-07,
+          "max_abs": 7.2177499532699585e-09,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 4.469380918252806e-07,
+          "max_abs": 3.91155481338501e-08,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 2.629653871545239e-07,
+          "max_abs": 2.682209014892578e-07,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.0016578364648556015,
+          "final_state": 0.001654578460967386,
+          "final_A_state": 0.0018071088730274023
+        },
+        "B": {
+          "o": 0.0016578369344761362,
+          "final_state": 0.0016545786785144422,
+          "final_A_state": 0.0018071256346719063
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.004973509394566805,
+          "final_state": 0.004963735382902158,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.0049735108034284084,
+          "final_state": 0.004963736035543327,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 13.618356241844594
+    },
+    {
+      "case": {
+        "id": "pgdn1b_bd1",
+        "seed": 69018,
+        "parameters": {
+          "B": 1,
+          "T": 4096,
+          "H": 14,
+          "HV": 14,
+          "N": 64,
+          "gate_scale": 1.0,
+          "atk_gate_scale": 0.03
+        },
+        "block_dim": 1
+      },
+      "dtype": "float32",
+      "A_B": {
+        "o": {
+          "relative_l2": 5.161819231660341e-07,
+          "max_abs": 7.2177499532699585e-09,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 4.485492773654355e-07,
+          "max_abs": 3.259629011154175e-08,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 2.558028862393474e-07,
+          "max_abs": 2.980232238769531e-07,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.0016595730675002293,
+          "final_state": 0.0016587076271954633,
+          "final_A_state": 0.001810652547466704
+        },
+        "B": {
+          "o": 0.0016595728326014051,
+          "final_state": 0.0016587078588514066,
+          "final_A_state": 0.0018106534640975392
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 12.645215008407831
+    },
+    {
+      "case": {
+        "id": "norm_zero_bd1",
+        "seed": 69019,
+        "parameters": {
+          "B": 1,
+          "T": 64,
+          "H": 1,
+          "HV": 2,
+          "N": 1,
+          "gate_scale": 1.0,
+          "atk_gate_scale": 0.03,
+          "norm": 0.0
+        },
+        "block_dim": 1
+      },
+      "dtype": "bfloat16",
+      "A_B": {
+        "o": {
+          "relative_l2": 0.0,
+          "max_abs": 0.0,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 0.0,
+          "max_abs": 0.0,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 0.0,
+          "max_abs": 0.0,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.0,
+          "final_state": 0.0,
+          "final_A_state": 0.0
+        },
+        "B": {
+          "o": 0.0,
+          "final_state": 0.0,
+          "final_A_state": 0.0
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.0,
+          "final_state": 0.0,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.0,
+          "final_state": 0.0,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 0.059542760252952576,
+      "actual_q_first_component": 0.0
+    },
+    {
+      "case": {
+        "id": "norm_zero_bd1",
+        "seed": 69019,
+        "parameters": {
+          "B": 1,
+          "T": 64,
+          "H": 1,
+          "HV": 2,
+          "N": 1,
+          "gate_scale": 1.0,
+          "atk_gate_scale": 0.03,
+          "norm": 0.0
+        },
+        "block_dim": 1
+      },
+      "dtype": "float32",
+      "A_B": {
+        "o": {
+          "relative_l2": 0.0,
+          "max_abs": 0.0,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 0.0,
+          "max_abs": 0.0,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 0.0,
+          "max_abs": 0.0,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.0,
+          "final_state": 0.0,
+          "final_A_state": 0.0
+        },
+        "B": {
+          "o": 0.0,
+          "final_state": 0.0,
+          "final_A_state": 0.0
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 0.05586485844105482,
+      "actual_q_first_component": 0.0
+    },
+    {
+      "case": {
+        "id": "norm_tiny_bd1",
+        "seed": 69020,
+        "parameters": {
+          "B": 1,
+          "T": 64,
+          "H": 1,
+          "HV": 2,
+          "N": 1,
+          "gate_scale": 1.0,
+          "atk_gate_scale": 0.03,
+          "norm": 1e-06
+        },
+        "block_dim": 1
+      },
+      "dtype": "bfloat16",
+      "A_B": {
+        "o": {
+          "relative_l2": 3.0762742376624324e-07,
+          "max_abs": 6.984919309616089e-09,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 4.6461318194012936e-07,
+          "max_abs": 4.0978193283081055e-08,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 1.9139045355901075e-07,
+          "max_abs": 3.814697265625e-06,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.0016535540153578368,
+          "final_state": 0.0015881672509336594,
+          "final_A_state": 0.00283430122675539
+        },
+        "B": {
+          "o": 0.0016535528954770029,
+          "final_state": 0.0015881671971447076,
+          "final_A_state": 0.002834110378723502
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.004960662046073511,
+          "final_state": 0.004764501752800979,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.004960658686431009,
+          "final_state": 0.004764501591434123,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 0.0607155105099082,
+      "actual_q_first_component": 9.98377799987793e-07
+    },
+    {
+      "case": {
+        "id": "norm_tiny_bd1",
+        "seed": 69020,
+        "parameters": {
+          "B": 1,
+          "T": 64,
+          "H": 1,
+          "HV": 2,
+          "N": 1,
+          "gate_scale": 1.0,
+          "atk_gate_scale": 0.03,
+          "norm": 1e-06
+        },
+        "block_dim": 1
+      },
+      "dtype": "float32",
+      "A_B": {
+        "o": {
+          "relative_l2": 3.056200909867741e-07,
+          "max_abs": 6.984919309616089e-09,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 4.547674433559816e-07,
+          "max_abs": 4.470348358154297e-08,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 1.9139045355901075e-07,
+          "max_abs": 3.814697265625e-06,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.0016533196129690452,
+          "final_state": 0.001624908993440522,
+          "final_A_state": 0.00283430122675539
+        },
+        "B": {
+          "o": 0.0016533206005575419,
+          "final_state": 0.0016248856887810467,
+          "final_A_state": 0.002834110378723502
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 0.057691508904099464,
+      "actual_q_first_component": 9.999999974752427e-07
+    },
+    {
+      "case": {
+        "id": "norm_nearzero_bd1",
+        "seed": 69021,
+        "parameters": {
+          "B": 1,
+          "T": 64,
+          "H": 1,
+          "HV": 2,
+          "N": 1,
+          "gate_scale": 1.0,
+          "atk_gate_scale": 0.03,
+          "norm": 0.0001
+        },
+        "block_dim": 1
+      },
+      "dtype": "bfloat16",
+      "A_B": {
+        "o": {
+          "relative_l2": 2.6390518140661057e-07,
+          "max_abs": 6.51925802230835e-09,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 1.5268246343778014e-07,
+          "max_abs": 2.2351741790771484e-08,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 2.675183976860729e-07,
+          "max_abs": 5.7220458984375e-06,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.0016673871259121273,
+          "final_state": 0.0016621819617519947,
+          "final_A_state": 0.0006711144869951281
+        },
+        "B": {
+          "o": 0.0016673861215507962,
+          "final_state": 0.0016622053700645842,
+          "final_A_state": 0.0006708471480613962
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.005002161377736382,
+          "final_state": 0.004986545885255984,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.005002158364652389,
+          "final_state": 0.004986616110193753,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 0.06105388142168522,
+      "actual_q_first_component": 0.00010013580322265625
+    },
+    {
+      "case": {
+        "id": "norm_nearzero_bd1",
+        "seed": 69021,
+        "parameters": {
+          "B": 1,
+          "T": 64,
+          "H": 1,
+          "HV": 2,
+          "N": 1,
+          "gate_scale": 1.0,
+          "atk_gate_scale": 0.03,
+          "norm": 0.0001
+        },
+        "block_dim": 1
+      },
+      "dtype": "float32",
+      "A_B": {
+        "o": {
+          "relative_l2": 2.6286482402343046e-07,
+          "max_abs": 6.51925802230835e-09,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 1.438305801841368e-07,
+          "max_abs": 1.4901161193847656e-08,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 2.675183976860729e-07,
+          "max_abs": 5.7220458984375e-06,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.0016518564474288504,
+          "final_state": 0.0017201852356627093,
+          "final_A_state": 0.0006711144869951281
+        },
+        "B": {
+          "o": 0.0016518557355349394,
+          "final_state": 0.0017201944651063638,
+          "final_A_state": 0.0006708471480613962
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 0.05713193956762552,
+      "actual_q_first_component": 9.999999747378752e-05
+    },
+    {
+      "case": {
+        "id": "norm_small_bd1",
+        "seed": 69022,
+        "parameters": {
+          "B": 1,
+          "T": 64,
+          "H": 1,
+          "HV": 2,
+          "N": 1,
+          "gate_scale": 1.0,
+          "atk_gate_scale": 0.03,
+          "norm": 0.01
+        },
+        "block_dim": 1
+      },
+      "dtype": "bfloat16",
+      "A_B": {
+        "o": {
+          "relative_l2": 2.792641032747664e-07,
+          "max_abs": 6.05359673500061e-09,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 1.621571752816288e-07,
+          "max_abs": 1.862645149230957e-08,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 3.190192582355619e-07,
+          "max_abs": 7.62939453125e-06,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.0016464000658945677,
+          "final_state": 0.0016944025085019517,
+          "final_A_state": 0.0016789983560937622
+        },
+        "B": {
+          "o": 0.0016464005602506502,
+          "final_state": 0.001694402895571366,
+          "final_A_state": 0.0016793168396175855
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.004939200197683703,
+          "final_state": 0.005083207525505855,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.00493920168075195,
+          "final_state": 0.0050832086867140976,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 0.06139010097831488,
+      "actual_q_first_component": 0.010009765625
+    },
+    {
+      "case": {
+        "id": "norm_small_bd1",
+        "seed": 69022,
+        "parameters": {
+          "B": 1,
+          "T": 64,
+          "H": 1,
+          "HV": 2,
+          "N": 1,
+          "gate_scale": 1.0,
+          "atk_gate_scale": 0.03,
+          "norm": 0.01
+        },
+        "block_dim": 1
+      },
+      "dtype": "float32",
+      "A_B": {
+        "o": {
+          "relative_l2": 2.7955510959261997e-07,
+          "max_abs": 6.05359673500061e-09,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 1.6525033921048246e-07,
+          "max_abs": 2.514570951461792e-08,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 3.190192582355619e-07,
+          "max_abs": 7.62939453125e-06,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.001671271108030592,
+          "final_state": 0.0016002243178775894,
+          "final_A_state": 0.0016789983560937622
+        },
+        "B": {
+          "o": 0.0016712752103010984,
+          "final_state": 0.0016002275538147194,
+          "final_A_state": 0.0016793168396175855
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 0.057854979299008846,
+      "actual_q_first_component": 0.009999999776482582
+    },
+    {
+      "case": {
+        "id": "gzero_bd1",
+        "seed": 69523,
+        "parameters": {
+          "B": 1,
+          "T": 192,
+          "H": 2,
+          "HV": 4,
+          "N": 3,
+          "gate_scale": 0.0,
+          "atk_gate_scale": 0.0
+        },
+        "block_dim": 1
+      },
+      "dtype": "bfloat16",
+      "A_B": {
+        "o": {
+          "relative_l2": 4.0895266271039366e-07,
+          "max_abs": 7.450580596923828e-09,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 3.3022495071447606e-07,
+          "max_abs": 8.940696716308594e-08,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 2.142445161363578e-07,
+          "max_abs": 7.152557373046875e-07,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.0016509547409928845,
+          "final_state": 0.001645238221622776,
+          "final_A_state": 0.0015491489524295083
+        },
+        "B": {
+          "o": 0.001650955935477761,
+          "final_state": 0.001645239444460448,
+          "final_A_state": 0.0015491692003200945
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.004952864222978653,
+          "final_state": 0.004935714664868328,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.004952867806433283,
+          "final_state": 0.004935718333381344,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 0.23898470029234886
+    },
+    {
+      "case": {
+        "id": "gzero_bd1",
+        "seed": 69523,
+        "parameters": {
+          "B": 1,
+          "T": 192,
+          "H": 2,
+          "HV": 4,
+          "N": 3,
+          "gate_scale": 0.0,
+          "atk_gate_scale": 0.0
+        },
+        "block_dim": 1
+      },
+      "dtype": "float32",
+      "A_B": {
+        "o": {
+          "relative_l2": 4.0732787536605646e-07,
+          "max_abs": 7.450580596923828e-09,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 3.29784446386662e-07,
+          "max_abs": 7.82310962677002e-08,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 2.2530863082036775e-07,
+          "max_abs": 4.76837158203125e-07,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.0016541416591484403,
+          "final_state": 0.0016554766951039773,
+          "final_A_state": 0.0015744678205857768
+        },
+        "B": {
+          "o": 0.001654141079351307,
+          "final_state": 0.0016554760505979873,
+          "final_A_state": 0.0015744809352397377
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 0.22971149533987045
+    },
+    {
+      "case": {
+        "id": "gweak_bd1",
+        "seed": 69524,
+        "parameters": {
+          "B": 1,
+          "T": 192,
+          "H": 2,
+          "HV": 4,
+          "N": 3,
+          "gate_scale": 0.03
+        },
+        "block_dim": 1
+      },
+      "dtype": "bfloat16",
+      "A_B": {
+        "o": {
+          "relative_l2": 3.99404032938837e-07,
+          "max_abs": 3.725290298461914e-09,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 2.7995792583980804e-07,
+          "max_abs": 3.725290298461914e-08,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 2.00368576069748e-07,
+          "max_abs": 1.7881393432617188e-07,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.0016576207520967014,
+          "final_state": 0.0016594328627549807,
+          "final_A_state": 0.0017317732203531156
+        },
+        "B": {
+          "o": 0.0016576207103910954,
+          "final_state": 0.0016594336543191087,
+          "final_A_state": 0.0017317745618017173
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.004972862256290104,
+          "final_state": 0.004978298588264942,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.004972862131173286,
+          "final_state": 0.0049783009629573265,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 0.2391406912356615
+    },
+    {
+      "case": {
+        "id": "gweak_bd1",
+        "seed": 69524,
+        "parameters": {
+          "B": 1,
+          "T": 192,
+          "H": 2,
+          "HV": 4,
+          "N": 3,
+          "gate_scale": 0.03
+        },
+        "block_dim": 1
+      },
+      "dtype": "float32",
+      "A_B": {
+        "o": {
+          "relative_l2": 3.974978622355449e-07,
+          "max_abs": 4.190951585769653e-09,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 2.7814800280969536e-07,
+          "max_abs": 2.9802322387695312e-08,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 2.0831454599473457e-07,
+          "max_abs": 1.4901161193847656e-07,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.001655446953873461,
+          "final_state": 0.001657858315855902,
+          "final_A_state": 0.0017266363580434292
+        },
+        "B": {
+          "o": 0.001655449002112604,
+          "final_state": 0.0016578583530493832,
+          "final_A_state": 0.0017266488073839773
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 0.23067923448979855
+    },
+    {
+      "case": {
+        "id": "gstrong_bd1",
+        "seed": 69525,
+        "parameters": {
+          "B": 1,
+          "T": 192,
+          "H": 2,
+          "HV": 4,
+          "N": 3,
+          "gate_scale": 30.0,
+          "atk_gate_scale": 30.0
+        },
+        "block_dim": 1
+      },
+      "dtype": "bfloat16",
+      "A_B": {
+        "o": {
+          "relative_l2": 1.877562496372892e-06,
+          "max_abs": 2.7997884899377823e-08,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 4.3467308697407264e-08,
+          "max_abs": 3.725290298461914e-09,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 0.0,
+          "max_abs": 0.0,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.0016714660370707372,
+          "final_state": 0.0016552588409626532,
+          "final_A_state": 0.0018732159938368857
+        },
+        "B": {
+          "o": 0.0016714630567585202,
+          "final_state": 0.0016552590094213778,
+          "final_A_state": 0.0018732159938368857
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.005014398111212212,
+          "final_state": 0.004965776522887959,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.00501438917027556,
+          "final_state": 0.004965777028264133,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 0.23886703047901392
+    },
+    {
+      "case": {
+        "id": "gstrong_bd1",
+        "seed": 69525,
+        "parameters": {
+          "B": 1,
+          "T": 192,
+          "H": 2,
+          "HV": 4,
+          "N": 3,
+          "gate_scale": 30.0,
+          "atk_gate_scale": 30.0
+        },
+        "block_dim": 1
+      },
+      "dtype": "float32",
+      "A_B": {
+        "o": {
+          "relative_l2": 1.891934110672174e-06,
+          "max_abs": 2.805609256029129e-08,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 4.2418338280939155e-08,
+          "max_abs": 1.862645149230957e-09,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 4.786444343755644e-13,
+          "max_abs": 5.684341886080802e-14,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.0016612705818107524,
+          "final_state": 0.0016578519834320564,
+          "final_A_state": 0.0015780052838596354
+        },
+        "B": {
+          "o": 0.0016612742538821,
+          "final_state": 0.0016578532840006055,
+          "final_A_state": 0.0015780052838596376
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 0.22744649276137352
+    },
+    {
+      "case": {
+        "id": "atk_beta0_bd1",
+        "seed": 69526,
+        "parameters": {
+          "B": 1,
+          "T": 192,
+          "H": 2,
+          "HV": 4,
+          "N": 3,
+          "beta_atk": 0.0
+        },
+        "block_dim": 1
+      },
+      "dtype": "bfloat16",
+      "A_B": {
+        "o": {
+          "relative_l2": 5.316927453702275e-07,
+          "max_abs": 3.725290298461914e-09,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 5.987308265143724e-07,
+          "max_abs": 3.166496753692627e-08,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 0.0,
+          "max_abs": 0.0,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.0016548160653604772,
+          "final_state": 0.0016534243313827918,
+          "final_A_state": 0.0
+        },
+        "B": {
+          "o": 0.0016548144266941335,
+          "final_state": 0.0016534270099213945,
+          "final_A_state": 0.0
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.004964448196081431,
+          "final_state": 0.0049602729941483755,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.004964443280082401,
+          "final_state": 0.004960281029764184,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 0.23808961175382137
+    },
+    {
+      "case": {
+        "id": "atk_beta0_bd1",
+        "seed": 69526,
+        "parameters": {
+          "B": 1,
+          "T": 192,
+          "H": 2,
+          "HV": 4,
+          "N": 3,
+          "beta_atk": 0.0
+        },
+        "block_dim": 1
+      },
+      "dtype": "float32",
+      "A_B": {
+        "o": {
+          "relative_l2": 5.183679274619807e-07,
+          "max_abs": 4.190951585769653e-09,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 5.955493968165588e-07,
+          "max_abs": 3.725290298461914e-08,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 0.0,
+          "max_abs": 0.0,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.0016720503514658601,
+          "final_state": 0.0016710839889428957,
+          "final_A_state": 0.0
+        },
+        "B": {
+          "o": 0.001672046470967442,
+          "final_state": 0.001671087709009951,
+          "final_A_state": 0.0
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 0.22662767209112644
+    },
+    {
+      "case": {
+        "id": "atk_beta1_bd1",
+        "seed": 69527,
+        "parameters": {
+          "B": 1,
+          "T": 192,
+          "H": 2,
+          "HV": 4,
+          "N": 3,
+          "beta_atk": 1.0
+        },
+        "block_dim": 1
+      },
+      "dtype": "bfloat16",
+      "A_B": {
+        "o": {
+          "relative_l2": 5.332520108602495e-07,
+          "max_abs": 2.7939677238464355e-09,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 9.717760235500224e-07,
+          "max_abs": 3.725290298461914e-08,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 2.0029993888398722e-07,
+          "max_abs": 2.384185791015625e-07,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.0016584826326297662,
+          "final_state": 0.001643575223424042,
+          "final_A_state": 0.0017077875887268957
+        },
+        "B": {
+          "o": 0.0016584851675048255,
+          "final_state": 0.0016435719626838221,
+          "final_A_state": 0.0017078013197067143
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.0049754478978892985,
+          "final_state": 0.004930725670272126,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.004975455502514476,
+          "final_state": 0.004930715888051466,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 0.23805047944188118
+    },
+    {
+      "case": {
+        "id": "atk_beta1_bd1",
+        "seed": 69527,
+        "parameters": {
+          "B": 1,
+          "T": 192,
+          "H": 2,
+          "HV": 4,
+          "N": 3,
+          "beta_atk": 1.0
+        },
+        "block_dim": 1
+      },
+      "dtype": "float32",
+      "A_B": {
+        "o": {
+          "relative_l2": 5.359837437735392e-07,
+          "max_abs": 3.958120942115784e-09,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 9.724815218496503e-07,
+          "max_abs": 3.91155481338501e-08,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 2.0552221292502934e-07,
+          "max_abs": 3.5762786865234375e-07,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.0016555498910054102,
+          "final_state": 0.0016463001795438412,
+          "final_A_state": 0.0017163515135453864
+        },
+        "B": {
+          "o": 0.0016555471089789058,
+          "final_state": 0.001646297511400329,
+          "final_A_state": 0.0017163624130320696
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 0.2289694743230939
+    },
+    {
+      "case": {
+        "id": "beta0_bd1",
+        "seed": 69528,
+        "parameters": {
+          "B": 1,
+          "T": 192,
+          "H": 2,
+          "HV": 4,
+          "N": 3,
+          "beta": 0.0
+        },
+        "block_dim": 1
+      },
+      "dtype": "bfloat16",
+      "A_B": {
+        "o": {
+          "relative_l2": 0.0,
+          "max_abs": 0.0,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 0.0,
+          "max_abs": 0.0,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 2.2525251365734584e-07,
+          "max_abs": 1.4901161193847656e-07,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.0,
+          "final_state": 0.0,
+          "final_A_state": 0.001705058197874671
+        },
+        "B": {
+          "o": 0.0,
+          "final_state": 0.0,
+          "final_A_state": 0.0017050659133166209
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.0,
+          "final_state": 0.0,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.0,
+          "final_state": 0.0,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 0.23753441963344812
+    },
+    {
+      "case": {
+        "id": "beta0_bd1",
+        "seed": 69528,
+        "parameters": {
+          "B": 1,
+          "T": 192,
+          "H": 2,
+          "HV": 4,
+          "N": 3,
+          "beta": 0.0
+        },
+        "block_dim": 1
+      },
+      "dtype": "float32",
+      "A_B": {
+        "o": {
+          "relative_l2": 0.0,
+          "max_abs": 0.0,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 0.0,
+          "max_abs": 0.0,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 2.0927604065780964e-07,
+          "max_abs": 1.1920928955078125e-07,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.0,
+          "final_state": 0.0,
+          "final_A_state": 0.001680981868458089
+        },
+        "B": {
+          "o": 0.0,
+          "final_state": 0.0,
+          "final_A_state": 0.0016809984641061749
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 0.2252949308604002
+    },
+    {
+      "case": {
+        "id": "beta1_bd1",
+        "seed": 69529,
+        "parameters": {
+          "B": 1,
+          "T": 192,
+          "H": 2,
+          "HV": 4,
+          "N": 3,
+          "beta": 1.0
+        },
+        "block_dim": 1
+      },
+      "dtype": "bfloat16",
+      "A_B": {
+        "o": {
+          "relative_l2": 5.311876862906111e-07,
+          "max_abs": 5.471520125865936e-09,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 6.672557079991558e-07,
+          "max_abs": 4.842877388000488e-08,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 2.4574228152035097e-07,
+          "max_abs": 2.086162567138672e-07,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.0016598722016174313,
+          "final_state": 0.0016619061369809029,
+          "final_A_state": 0.0017190152482751888
+        },
+        "B": {
+          "o": 0.001659868288218664,
+          "final_state": 0.0016619033466383126,
+          "final_A_state": 0.0017190299470767215
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.004979616604852294,
+          "final_state": 0.004985718410942709,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.004979604864655992,
+          "final_state": 0.004985710039914938,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 0.23944321181625128
+    },
+    {
+      "case": {
+        "id": "beta1_bd1",
+        "seed": 69529,
+        "parameters": {
+          "B": 1,
+          "T": 192,
+          "H": 2,
+          "HV": 4,
+          "N": 3,
+          "beta": 1.0
+        },
+        "block_dim": 1
+      },
+      "dtype": "float32",
+      "A_B": {
+        "o": {
+          "relative_l2": 5.240691987112476e-07,
+          "max_abs": 5.820766091346741e-09,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 6.61621413543974e-07,
+          "max_abs": 4.470348358154297e-08,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 2.515588722497896e-07,
+          "max_abs": 1.7881393432617188e-07,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.00165481236978819,
+          "final_state": 0.0016706947124790529,
+          "final_A_state": 0.0017135129670488227
+        },
+        "B": {
+          "o": 0.0016548172360490224,
+          "final_state": 0.0016706924147773306,
+          "final_A_state": 0.0017135097772150627
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 0.22911384422332048
+    },
+    {
+      "case": {
+        "id": "clamp_0_bd1",
+        "seed": 70300,
+        "block_dim": 1,
+        "parameters": {
+          "B": 1,
+          "T": 128,
+          "H": 1,
+          "HV": 2,
+          "N": 2,
+          "norm": 1e-13
+        }
+      },
+      "dtype": "bfloat16",
+      "A_B": {
+        "o": {
+          "relative_l2": 4.354475644423183e-07,
+          "max_abs": 2.0372681319713593e-10,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 4.628153752789531e-07,
+          "max_abs": 5.587935447692871e-09,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 0.0,
+          "max_abs": 0.0,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.0016522386653581294,
+          "final_state": 0.0017217364004759518,
+          "final_A_state": 0.0017424587735220642
+        },
+        "B": {
+          "o": 0.001652236258087991,
+          "final_state": 0.0017217626193934416,
+          "final_A_state": 0.0017424587735220642
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.004956715996074388,
+          "final_state": 0.005165209201427856,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.004956708774263973,
+          "final_state": 0.005165287858180325,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 0.11153477430343628,
+      "actual_q_first_component": 9.992007221626409e-14
+    },
+    {
+      "case": {
+        "id": "clamp_0_bd1",
+        "seed": 70300,
+        "block_dim": 1,
+        "parameters": {
+          "B": 1,
+          "T": 128,
+          "H": 1,
+          "HV": 2,
+          "N": 2,
+          "norm": 1e-13
+        }
+      },
+      "dtype": "float32",
+      "A_B": {
+        "o": {
+          "relative_l2": 4.4092161460808187e-07,
+          "max_abs": 2.3283064365386963e-10,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 4.901630858455327e-07,
+          "max_abs": 7.450580596923828e-09,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 3.1464545592703416e-07,
+          "max_abs": 8.940696716308594e-08,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.0016538564014576698,
+          "final_state": 0.0017741088110884598,
+          "final_A_state": 0.003337444351018051
+        },
+        "B": {
+          "o": 0.0016538565040414212,
+          "final_state": 0.001774175791540688,
+          "final_A_state": 0.003337757946263607
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 0.1070387614890933,
+      "actual_q_first_component": 9.9999998245167e-14
+    },
+    {
+      "case": {
+        "id": "clamp_1_bd1",
+        "seed": 70301,
+        "block_dim": 1,
+        "parameters": {
+          "B": 1,
+          "T": 128,
+          "H": 1,
+          "HV": 2,
+          "N": 2,
+          "norm": 1e-12
+        }
+      },
+      "dtype": "bfloat16",
+      "A_B": {
+        "o": {
+          "relative_l2": 3.148076328520599e-07,
+          "max_abs": 6.984919309616089e-09,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 1.1894195619995922e-06,
+          "max_abs": 6.705522537231445e-08,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 2.6586851167006567e-07,
+          "max_abs": 7.62939453125e-06,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.0016392498278528151,
+          "final_state": 0.0018625198428028603,
+          "final_A_state": 0.0018776298965419214
+        },
+        "B": {
+          "o": 0.0016392466358898874,
+          "final_state": 0.0018627130422340442,
+          "final_A_state": 0.0018778962643270763
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.004917749483558446,
+          "final_state": 0.0055875595284085805,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.0049177399076696625,
+          "final_state": 0.005588139126702132,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 0.1124908858910203,
+      "actual_q_first_component": 1.0018652574217413e-12
+    },
+    {
+      "case": {
+        "id": "clamp_1_bd1",
+        "seed": 70301,
+        "block_dim": 1,
+        "parameters": {
+          "B": 1,
+          "T": 128,
+          "H": 1,
+          "HV": 2,
+          "N": 2,
+          "norm": 1e-12
+        }
+      },
+      "dtype": "float32",
+      "A_B": {
+        "o": {
+          "relative_l2": 3.1454226049553513e-07,
+          "max_abs": 7.450580596923828e-09,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 1.193600175552064e-06,
+          "max_abs": 5.587935447692871e-08,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 2.6586851167006567e-07,
+          "max_abs": 7.62939453125e-06,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.0016520889633818733,
+          "final_state": 0.001667207706222519,
+          "final_A_state": 0.0018776298965419214
+        },
+        "B": {
+          "o": 0.0016520873815357526,
+          "final_state": 0.0016671433652410306,
+          "final_A_state": 0.0018778962643270763
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 0.10620429180562496,
+      "actual_q_first_component": 9.999999960041972e-13
+    },
+    {
+      "case": {
+        "id": "clamp_2_bd1",
+        "seed": 70302,
+        "block_dim": 1,
+        "parameters": {
+          "B": 1,
+          "T": 128,
+          "H": 1,
+          "HV": 2,
+          "N": 2,
+          "norm": 2e-12
+        }
+      },
+      "dtype": "bfloat16",
+      "A_B": {
+        "o": {
+          "relative_l2": 2.8139777912695283e-07,
+          "max_abs": 7.450580596923828e-09,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 3.64003725535282e-07,
+          "max_abs": 2.2351741790771484e-08,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 1.2485321943390302e-07,
+          "max_abs": 3.814697265625e-06,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.0016406639319231173,
+          "final_state": 0.0015287372759591675,
+          "final_A_state": 0.001749568163927283
+        },
+        "B": {
+          "o": 0.0016406661581871921,
+          "final_state": 0.0015287929269545732,
+          "final_A_state": 0.0017496927986919378
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.004921991795769352,
+          "final_state": 0.004586211827877502,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.004921998474561576,
+          "final_state": 0.0045863787808637195,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 0.11081221513450146,
+      "actual_q_first_component": 2.0037305148434825e-12
+    },
+    {
+      "case": {
+        "id": "clamp_2_bd1",
+        "seed": 70302,
+        "block_dim": 1,
+        "parameters": {
+          "B": 1,
+          "T": 128,
+          "H": 1,
+          "HV": 2,
+          "N": 2,
+          "norm": 2e-12
+        }
+      },
+      "dtype": "float32",
+      "A_B": {
+        "o": {
+          "relative_l2": 2.823581460229352e-07,
+          "max_abs": 8.381903171539307e-09,
+          "finite": true
+        },
+        "final_state": {
+          "relative_l2": 3.6063335083145384e-07,
+          "max_abs": 2.514570951461792e-08,
+          "finite": true
+        },
+        "final_A_state": {
+          "relative_l2": 1.2485321943390302e-07,
+          "max_abs": 3.814697265625e-06,
+          "finite": true
+        }
+      },
+      "floors": {
+        "A": {
+          "o": 0.001645842727288524,
+          "final_state": 0.0014692962333233475,
+          "final_A_state": 0.001749568163927283
+        },
+        "B": {
+          "o": 0.0016458423792487754,
+          "final_state": 0.0014693301798810263,
+          "final_A_state": 0.0017496927986919378
+        }
+      },
+      "budgets": {
+        "A": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        },
+        "B": {
+          "o": 0.0001,
+          "final_state": 0.0001,
+          "final_A_state": 0.0001
+        }
+      },
+      "seconds": 0.10711996257305145,
+      "actual_q_first_component": 1.9999999920083944e-12
+    }
+  ],
+  "passed": true
+}

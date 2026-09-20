@@ -1,0 +1,1327 @@
+{
+  "schema": "ascriptor.kernel-unit/1",
+  "kind": "project",
+  "dependencies": {
+    "python": ">=3.10",
+    "ascriptor": "==0.1.0",
+    "host": [
+      "torch>=2.9.0",
+      "numpy"
+    ]
+  },
+  "comparison": {
+    "default": {
+      "mode": "allclose",
+      "atol": 2e-05,
+      "rtol": 0.0002,
+      "max_relative_l2": 0.0001,
+      "reason": "FP32 accumulation order budget versus independent CPU solve; no weakened threshold after device runs."
+    },
+    "outputs": {
+      "o": {
+        "mode": "allclose",
+        "atol": 2e-05,
+        "rtol": 0.01,
+        "max_relative_l2": 0.01,
+        "reason": "BF16 output rounding; execute additionally enforces fixed min(1e-2,3F)."
+      }
+    },
+    "stage_outputs": {
+      "o": {
+        "mode": "allclose",
+        "atol": 2e-05,
+        "rtol": 0.01,
+        "max_relative_l2": 0.01,
+        "reason": "BF16 output rounding; execute additionally enforces fixed min(1e-2,3F)."
+      }
+    }
+  },
+  "profile": {
+    "warmup": 10,
+    "repeat": 50
+  },
+  "id": "a5.pgdn_chunk_fwd_bf16",
+  "description": "Native BF16 PGDN forward: FP32 normalization/ATK and six Vector stages; direct BF16 output and FP32 states.",
+  "inputs": {
+    "q": {
+      "dtype": "bfloat16",
+      "shape": [
+        "B",
+        "T",
+        "H",
+        128
+      ]
+    },
+    "k": {
+      "dtype": "bfloat16",
+      "shape": [
+        "B",
+        "T",
+        "H",
+        128
+      ]
+    },
+    "v": {
+      "dtype": "bfloat16",
+      "shape": [
+        "B",
+        "T",
+        "HV",
+        128
+      ]
+    },
+    "g": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "T",
+        "HV"
+      ],
+      "note": "Nonpositive scalar log decay."
+    },
+    "initial_state": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "HV",
+        128,
+        128
+      ],
+      "note": "Internal zero-state buffer only; nonzero values rejected."
+    },
+    "beta": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "T",
+        "HV"
+      ],
+      "note": "Scalar update gate in [0,1]."
+    },
+    "g_atk": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "T",
+        "H"
+      ],
+      "note": "Finite nonpositive ATK log decay."
+    },
+    "beta_atk": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "T",
+        "H"
+      ],
+      "note": "ATK update in [0,1]."
+    }
+  },
+  "outputs": {
+    "o": {
+      "dtype": "bfloat16",
+      "shape": [
+        "B",
+        "T",
+        "HV",
+        128
+      ],
+      "initialization": "NaN poison; every element must be overwritten.",
+      "reference_dtype": "float32"
+    },
+    "final_state": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "HV",
+        128,
+        128
+      ],
+      "initialization": "NaN poison; every element must be overwritten."
+    },
+    "final_A_state": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "H",
+        128
+      ],
+      "initialization": "NaN poison; one complete row per key head."
+    }
+  },
+  "stages": {
+    "qn": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "N",
+        "HV",
+        64,
+        128
+      ]
+    },
+    "kw": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "N",
+        "HV",
+        64,
+        128
+      ]
+    },
+    "gc": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "N",
+        "HV",
+        64,
+        128
+      ]
+    },
+    "bk": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "N",
+        "HV",
+        64,
+        128
+      ]
+    },
+    "wv": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "N",
+        "HV",
+        64,
+        128
+      ]
+    },
+    "u": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "N",
+        "HV",
+        64,
+        128
+      ]
+    },
+    "wy": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "N",
+        "HV",
+        64,
+        128
+      ]
+    },
+    "delta": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "N",
+        "HV",
+        64,
+        128
+      ]
+    },
+    "lower": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "N",
+        "HV",
+        64,
+        64
+      ]
+    },
+    "score": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "N",
+        "HV",
+        64,
+        64
+      ]
+    },
+    "states": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "N",
+        "HV",
+        128,
+        128
+      ]
+    },
+    "o": {
+      "dtype": "bfloat16",
+      "shape": [
+        "B",
+        "T",
+        "HV",
+        128
+      ],
+      "initialization": "NaN poison; every element must be overwritten.",
+      "reference_dtype": "float32"
+    },
+    "final_state": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "HV",
+        128,
+        128
+      ],
+      "initialization": "NaN poison; every element must be overwritten."
+    },
+    "q_norm": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "T",
+        "H",
+        128
+      ]
+    },
+    "k_read": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "T",
+        "H",
+        128
+      ]
+    },
+    "k_write": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "T",
+        "H",
+        128
+      ]
+    },
+    "final_A_state": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "H",
+        128
+      ],
+      "initialization": "NaN poison; one complete row per key head."
+    }
+  },
+  "cases": [
+    {
+      "id": "grid_r1_c1_bd1",
+      "seed": 69000,
+      "parameters": {
+        "B": 1,
+        "T": 64,
+        "H": 2,
+        "HV": 2,
+        "N": 1,
+        "gate_scale": 1.0,
+        "atk_gate_scale": 0.03
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "grid_r1_c1_bd2",
+      "seed": 69000,
+      "parameters": {
+        "B": 1,
+        "T": 64,
+        "H": 2,
+        "HV": 2,
+        "N": 1,
+        "gate_scale": 1.0,
+        "atk_gate_scale": 0.03
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "grid_r1_c2_bd1",
+      "seed": 69001,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 2,
+        "HV": 2,
+        "N": 2,
+        "gate_scale": 1.0,
+        "atk_gate_scale": 0.03
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "grid_r1_c2_bd2",
+      "seed": 69001,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 2,
+        "HV": 2,
+        "N": 2,
+        "gate_scale": 1.0,
+        "atk_gate_scale": 0.03
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "grid_r1_c3_bd1",
+      "seed": 69002,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 2,
+        "HV": 2,
+        "N": 3,
+        "gate_scale": 1.0,
+        "atk_gate_scale": 0.03
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "grid_r1_c3_bd2",
+      "seed": 69002,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 2,
+        "HV": 2,
+        "N": 3,
+        "gate_scale": 1.0,
+        "atk_gate_scale": 0.03
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "full_r1_bd1",
+      "seed": 69003,
+      "parameters": {
+        "B": 1,
+        "T": 4096,
+        "H": 1,
+        "HV": 1,
+        "N": 64,
+        "gate_scale": 1.0,
+        "atk_gate_scale": 0.03
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "full_r1_bd2",
+      "seed": 69003,
+      "parameters": {
+        "B": 1,
+        "T": 4096,
+        "H": 1,
+        "HV": 1,
+        "N": 64,
+        "gate_scale": 1.0,
+        "atk_gate_scale": 0.03
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "grid_r2_c1_bd1",
+      "seed": 69004,
+      "parameters": {
+        "B": 1,
+        "T": 64,
+        "H": 2,
+        "HV": 4,
+        "N": 1,
+        "gate_scale": 1.0,
+        "atk_gate_scale": 0.03
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "grid_r2_c1_bd2",
+      "seed": 69004,
+      "parameters": {
+        "B": 1,
+        "T": 64,
+        "H": 2,
+        "HV": 4,
+        "N": 1,
+        "gate_scale": 1.0,
+        "atk_gate_scale": 0.03
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "grid_r2_c2_bd1",
+      "seed": 69005,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 2,
+        "HV": 4,
+        "N": 2,
+        "gate_scale": 1.0,
+        "atk_gate_scale": 0.03
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "grid_r2_c2_bd2",
+      "seed": 69005,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 2,
+        "HV": 4,
+        "N": 2,
+        "gate_scale": 1.0,
+        "atk_gate_scale": 0.03
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "grid_r2_c3_bd1",
+      "seed": 69006,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 2,
+        "HV": 4,
+        "N": 3,
+        "gate_scale": 1.0,
+        "atk_gate_scale": 0.03
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "grid_r2_c3_bd2",
+      "seed": 69006,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 2,
+        "HV": 4,
+        "N": 3,
+        "gate_scale": 1.0,
+        "atk_gate_scale": 0.03
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "full_r2_bd1",
+      "seed": 69007,
+      "parameters": {
+        "B": 1,
+        "T": 4096,
+        "H": 1,
+        "HV": 2,
+        "N": 64,
+        "gate_scale": 1.0,
+        "atk_gate_scale": 0.03
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "full_r2_bd2",
+      "seed": 69007,
+      "parameters": {
+        "B": 1,
+        "T": 4096,
+        "H": 1,
+        "HV": 2,
+        "N": 64,
+        "gate_scale": 1.0,
+        "atk_gate_scale": 0.03
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "grid_r4_c1_bd1",
+      "seed": 69008,
+      "parameters": {
+        "B": 1,
+        "T": 64,
+        "H": 2,
+        "HV": 8,
+        "N": 1,
+        "gate_scale": 1.0,
+        "atk_gate_scale": 0.03
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "grid_r4_c1_bd2",
+      "seed": 69008,
+      "parameters": {
+        "B": 1,
+        "T": 64,
+        "H": 2,
+        "HV": 8,
+        "N": 1,
+        "gate_scale": 1.0,
+        "atk_gate_scale": 0.03
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "grid_r4_c2_bd1",
+      "seed": 69009,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 2,
+        "HV": 8,
+        "N": 2,
+        "gate_scale": 1.0,
+        "atk_gate_scale": 0.03
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "grid_r4_c2_bd2",
+      "seed": 69009,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 2,
+        "HV": 8,
+        "N": 2,
+        "gate_scale": 1.0,
+        "atk_gate_scale": 0.03
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "grid_r4_c3_bd1",
+      "seed": 69010,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 2,
+        "HV": 8,
+        "N": 3,
+        "gate_scale": 1.0,
+        "atk_gate_scale": 0.03
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "grid_r4_c3_bd2",
+      "seed": 69010,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 2,
+        "HV": 8,
+        "N": 3,
+        "gate_scale": 1.0,
+        "atk_gate_scale": 0.03
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "full_r4_bd1",
+      "seed": 69011,
+      "parameters": {
+        "B": 1,
+        "T": 4096,
+        "H": 1,
+        "HV": 4,
+        "N": 64,
+        "gate_scale": 1.0,
+        "atk_gate_scale": 0.03
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "full_r4_bd2",
+      "seed": 69011,
+      "parameters": {
+        "B": 1,
+        "T": 4096,
+        "H": 1,
+        "HV": 4,
+        "N": 64,
+        "gate_scale": 1.0,
+        "atk_gate_scale": 0.03
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "grid_r8_c1_bd1",
+      "seed": 69012,
+      "parameters": {
+        "B": 1,
+        "T": 64,
+        "H": 2,
+        "HV": 16,
+        "N": 1,
+        "gate_scale": 1.0,
+        "atk_gate_scale": 0.03
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "grid_r8_c1_bd2",
+      "seed": 69012,
+      "parameters": {
+        "B": 1,
+        "T": 64,
+        "H": 2,
+        "HV": 16,
+        "N": 1,
+        "gate_scale": 1.0,
+        "atk_gate_scale": 0.03
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "grid_r8_c2_bd1",
+      "seed": 69013,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 2,
+        "HV": 16,
+        "N": 2,
+        "gate_scale": 1.0,
+        "atk_gate_scale": 0.03
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "grid_r8_c2_bd2",
+      "seed": 69013,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 2,
+        "HV": 16,
+        "N": 2,
+        "gate_scale": 1.0,
+        "atk_gate_scale": 0.03
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "grid_r8_c3_bd1",
+      "seed": 69014,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 2,
+        "HV": 16,
+        "N": 3,
+        "gate_scale": 1.0,
+        "atk_gate_scale": 0.03
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "grid_r8_c3_bd2",
+      "seed": 69014,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 2,
+        "HV": 16,
+        "N": 3,
+        "gate_scale": 1.0,
+        "atk_gate_scale": 0.03
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "full_r8_bd1",
+      "seed": 69015,
+      "parameters": {
+        "B": 1,
+        "T": 4096,
+        "H": 1,
+        "HV": 8,
+        "N": 64,
+        "gate_scale": 1.0,
+        "atk_gate_scale": 0.03
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "full_r8_bd2",
+      "seed": 69015,
+      "parameters": {
+        "B": 1,
+        "T": 4096,
+        "H": 1,
+        "HV": 8,
+        "N": 64,
+        "gate_scale": 1.0,
+        "atk_gate_scale": 0.03
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "batch2_c3_r4_bd1",
+      "seed": 69016,
+      "parameters": {
+        "B": 2,
+        "T": 192,
+        "H": 3,
+        "HV": 12,
+        "N": 3,
+        "gate_scale": 1.0,
+        "atk_gate_scale": 0.03
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "batch2_c3_r4_bd2",
+      "seed": 69016,
+      "parameters": {
+        "B": 2,
+        "T": 192,
+        "H": 3,
+        "HV": 12,
+        "N": 3,
+        "gate_scale": 1.0,
+        "atk_gate_scale": 0.03
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "pgdn340m_bd1",
+      "seed": 69017,
+      "parameters": {
+        "B": 1,
+        "T": 4096,
+        "H": 8,
+        "HV": 8,
+        "N": 64,
+        "gate_scale": 1.0,
+        "atk_gate_scale": 0.03
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "pgdn340m_bd2",
+      "seed": 69017,
+      "parameters": {
+        "B": 1,
+        "T": 4096,
+        "H": 8,
+        "HV": 8,
+        "N": 64,
+        "gate_scale": 1.0,
+        "atk_gate_scale": 0.03
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "pgdn1b_bd1",
+      "seed": 69018,
+      "parameters": {
+        "B": 1,
+        "T": 4096,
+        "H": 14,
+        "HV": 14,
+        "N": 64,
+        "gate_scale": 1.0,
+        "atk_gate_scale": 0.03
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "pgdn1b_bd2",
+      "seed": 69018,
+      "parameters": {
+        "B": 1,
+        "T": 4096,
+        "H": 14,
+        "HV": 14,
+        "N": 64,
+        "gate_scale": 1.0,
+        "atk_gate_scale": 0.03
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "norm_zero_bd1",
+      "seed": 69019,
+      "parameters": {
+        "B": 1,
+        "T": 64,
+        "H": 1,
+        "HV": 2,
+        "N": 1,
+        "gate_scale": 1.0,
+        "atk_gate_scale": 0.03,
+        "norm": 0.0
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "norm_zero_bd2",
+      "seed": 69019,
+      "parameters": {
+        "B": 1,
+        "T": 64,
+        "H": 1,
+        "HV": 2,
+        "N": 1,
+        "gate_scale": 1.0,
+        "atk_gate_scale": 0.03,
+        "norm": 0.0
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "norm_tiny_bd1",
+      "seed": 69020,
+      "parameters": {
+        "B": 1,
+        "T": 64,
+        "H": 1,
+        "HV": 2,
+        "N": 1,
+        "gate_scale": 1.0,
+        "atk_gate_scale": 0.03,
+        "norm": 1e-06
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "norm_tiny_bd2",
+      "seed": 69020,
+      "parameters": {
+        "B": 1,
+        "T": 64,
+        "H": 1,
+        "HV": 2,
+        "N": 1,
+        "gate_scale": 1.0,
+        "atk_gate_scale": 0.03,
+        "norm": 1e-06
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "norm_nearzero_bd1",
+      "seed": 69021,
+      "parameters": {
+        "B": 1,
+        "T": 64,
+        "H": 1,
+        "HV": 2,
+        "N": 1,
+        "gate_scale": 1.0,
+        "atk_gate_scale": 0.03,
+        "norm": 0.0001
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "norm_nearzero_bd2",
+      "seed": 69021,
+      "parameters": {
+        "B": 1,
+        "T": 64,
+        "H": 1,
+        "HV": 2,
+        "N": 1,
+        "gate_scale": 1.0,
+        "atk_gate_scale": 0.03,
+        "norm": 0.0001
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "norm_small_bd1",
+      "seed": 69022,
+      "parameters": {
+        "B": 1,
+        "T": 64,
+        "H": 1,
+        "HV": 2,
+        "N": 1,
+        "gate_scale": 1.0,
+        "atk_gate_scale": 0.03,
+        "norm": 0.01
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "norm_small_bd2",
+      "seed": 69022,
+      "parameters": {
+        "B": 1,
+        "T": 64,
+        "H": 1,
+        "HV": 2,
+        "N": 1,
+        "gate_scale": 1.0,
+        "atk_gate_scale": 0.03,
+        "norm": 0.01
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "gzero_bd1",
+      "seed": 69523,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 2,
+        "HV": 4,
+        "N": 3,
+        "gate_scale": 0.0,
+        "atk_gate_scale": 0.0
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "gzero_bd2",
+      "seed": 69523,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 2,
+        "HV": 4,
+        "N": 3,
+        "gate_scale": 0.0,
+        "atk_gate_scale": 0.0
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "gweak_bd1",
+      "seed": 69524,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 2,
+        "HV": 4,
+        "N": 3,
+        "gate_scale": 0.03
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "gweak_bd2",
+      "seed": 69524,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 2,
+        "HV": 4,
+        "N": 3,
+        "gate_scale": 0.03
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "gstrong_bd1",
+      "seed": 69525,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 2,
+        "HV": 4,
+        "N": 3,
+        "gate_scale": 30.0,
+        "atk_gate_scale": 30.0
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "gstrong_bd2",
+      "seed": 69525,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 2,
+        "HV": 4,
+        "N": 3,
+        "gate_scale": 30.0,
+        "atk_gate_scale": 30.0
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "atk_beta0_bd1",
+      "seed": 69526,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 2,
+        "HV": 4,
+        "N": 3,
+        "beta_atk": 0.0
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "atk_beta0_bd2",
+      "seed": 69526,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 2,
+        "HV": 4,
+        "N": 3,
+        "beta_atk": 0.0
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "atk_beta1_bd1",
+      "seed": 69527,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 2,
+        "HV": 4,
+        "N": 3,
+        "beta_atk": 1.0
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "atk_beta1_bd2",
+      "seed": 69527,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 2,
+        "HV": 4,
+        "N": 3,
+        "beta_atk": 1.0
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "beta0_bd1",
+      "seed": 69528,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 2,
+        "HV": 4,
+        "N": 3,
+        "beta": 0.0
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "beta0_bd2",
+      "seed": 69528,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 2,
+        "HV": 4,
+        "N": 3,
+        "beta": 0.0
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "beta1_bd1",
+      "seed": 69529,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 2,
+        "HV": 4,
+        "N": 3,
+        "beta": 1.0
+      },
+      "block_dim": 1
+    },
+    {
+      "id": "beta1_bd2",
+      "seed": 69529,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 2,
+        "HV": 4,
+        "N": 3,
+        "beta": 1.0
+      },
+      "block_dim": 2
+    },
+    {
+      "id": "clamp_0_bd1",
+      "seed": 70300,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 2,
+        "N": 2,
+        "norm": 1e-13
+      }
+    },
+    {
+      "id": "clamp_0_bd2",
+      "seed": 70300,
+      "block_dim": 2,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 2,
+        "N": 2,
+        "norm": 1e-13
+      }
+    },
+    {
+      "id": "clamp_1_bd1",
+      "seed": 70301,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 2,
+        "N": 2,
+        "norm": 1e-12
+      }
+    },
+    {
+      "id": "clamp_1_bd2",
+      "seed": 70301,
+      "block_dim": 2,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 2,
+        "N": 2,
+        "norm": 1e-12
+      }
+    },
+    {
+      "id": "clamp_2_bd1",
+      "seed": 70302,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 2,
+        "N": 2,
+        "norm": 2e-12
+      }
+    },
+    {
+      "id": "clamp_2_bd2",
+      "seed": 70302,
+      "block_dim": 2,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 1,
+        "HV": 2,
+        "N": 2,
+        "norm": 2e-12
+      }
+    }
+  ],
+  "support": [
+    {
+      "device": "a5",
+      "backend": "cce",
+      "stage": "reference",
+      "status": "untested",
+      "note": "No inherited qualification from the FP32 parent."
+    },
+    {
+      "device": "a5",
+      "backend": "cce",
+      "stage": "sim",
+      "status": "untested",
+      "note": "No inherited qualification from the FP32 parent."
+    },
+    {
+      "device": "a5",
+      "backend": "cce",
+      "stage": "pipesim",
+      "status": "untested",
+      "note": "No inherited qualification from the FP32 parent."
+    },
+    {
+      "device": "a5",
+      "backend": "cce",
+      "stage": "emit",
+      "status": "untested",
+      "note": "No inherited qualification from the FP32 parent."
+    },
+    {
+      "device": "a5",
+      "backend": "cce",
+      "stage": "compile",
+      "status": "untested",
+      "note": "No inherited qualification from the FP32 parent."
+    },
+    {
+      "device": "a5",
+      "backend": "cce",
+      "stage": "board",
+      "status": "untested",
+      "note": "No inherited qualification from the FP32 parent."
+    }
+  ],
+  "domain": {
+    "layout": "contiguous token-major",
+    "T": "positive multiple of64, <=4096",
+    "B": "positive",
+    "H": "positive",
+    "HV": "positive multiple of H; consecutive groups",
+    "K": 128,
+    "V": 128,
+    "block_dim": [
+      1,
+      2
+    ],
+    "initial_state": "None only, internal zero seed",
+    "initial_A_state": "None only, initialized by ATK kernel",
+    "normalization": "FP32 x/max(norm(x),1e-12), enabled only",
+    "x": 1.5,
+    "eps": 1e-06,
+    "center": -0.2,
+    "scale": "128**-0.5",
+    "gates": "finite g/g_atk<=0, finite FP32 chunk prefixes; beta/beta_atk in[0,1]",
+    "public_dtype": "matching FP32/BF16 qkv; gate/state FP32",
+    "intermediates": "FP32; output only rounded to original q dtype"
+  },
+  "workspace": {
+    "N": "T/64",
+    "lifetime": "one ordered six-launch call; unique producers, retained through last consumers",
+    "grouping": "ATK is per H; prepare reads key head floor(value_head/(HV/H)) without host replication"
+  },
+  "saved_state": {
+    "training": "none; inference forward only",
+    "states": "FP32 incoming main state per chunk; ATK A persists across chunks in its owning key-head worker"
+  },
+  "provenance": {
+    "baseline": "ee4a1a1c24041f0963fafc98e477d352bf91f10a",
+    "source": "Independent local derivative of pgdn_chunk_fwd; no sibling production dependency."
+  },
+  "measured": {
+    "native_inprocess": {
+      "status": "untested"
+    },
+    "performance": {
+      "status": "untested"
+    }
+  }
+}
