@@ -1152,6 +1152,10 @@
         {
           "at": "2026-09-20T05:07",
           "summary": "PR #116（draft，头 13028fb8，04:50Z 开）：22 个文件（3742+ / 116−），全部在写集内（kda_layout 新单元含 baseline/ 的改前源码副本用于逐位对照、ops/kda 的 chunk / chunk_bwd / autograd 三处接线、tests/test_kda_layout_kernel.py、docs/research/kda_layout_kernel.md），无保留路径、无二进制。draft 不触发合入，PM 等 DONE 再审（D-PM-42 范围：_scan_states 整体 / log2(eg) / dw 取负 / 只读校验单列为存量例外；输出逐位不变；真机全网格与同卡性能）。"
+        },
+        {
+          "at": "2026-09-20T05:22",
+          "summary": "STATUS（05:06Z，自述，PR #116 仍 draft，头 13028fb8）：bd4 完整 22 项 vendor 构建通过（六个新布局 / 转换 / 零填充入口 + 五个 forward + 九个 backward + 两个 decode），首次自定义 kernel 执行前全部注册；环境：只读既有 CANN 9.1.0-beta.1（原始 compiler timestamp 20260509_173000235）、Python 3.12.14、Torch 2.12.0+cu130、torch_npu 2.12.0，library 90cf / kernels b3b3 不变，Docker 内构建 / 运行；前置部署问题已定位并保留原始失败（复用源码丢失执行权限、厂商安装器 home 冲突），没改上游或生成 kernel 源码；编译日志只有既有 ND→NZ 搬运提示。构建通过不代表 device 验收通过，无 DONE。STATUS（05:17Z，自述）：首个完整原始 Kimi B1/T4096/H=HV32/C64、bd4 真机 workload 已实际执行 plain forward、cached forward 与全部 backward——19 项输出 / 状态 / 九缓存 / 六梯度对旧路径逐位通过，两套独立 CPU FP32 参考与原六梯度预算通过，输入哈希不变、NaN 预填后输出有限、实际 host 审计 unexpected=[]，receipt full_kimi_t4096.json SHA256 944059e9…（稍后随脱敏证据提交）。后续叶子阶段暴露验收脚本的同名 unit.py 导入冲突（引用实现改 sys.path 后误导入只读 upstream unit），原始失败已保留，改为按本单元明确文件身份加载并新增回归，88 项相关主机测试通过；尚未重跑该阶段，未宣称整个 full 模式通过；生产 kernel 未改、逐位比较无失败。接着：剩余 bd 独立进程构建，随后同步验收脚本，复跑完整链与全部叶子、网格 / 边界 / 跨 bd 与三轮性能；完整原始真机通过后才开始有界模型诊断。PM 备注：环境是 CANN 9.1.0-beta.1（与 BF-01/02/04/06 的 9.2.0 不同），DONE 的原始回执须带 CANN 版本 + compiler timestamp 与 opp 算子包目录（列出 ascend950 是否存在——AGENTS §5：9.1.0 系机器常只有 910 系列包），别把两套 CANN 的数字互相当预期；PM 届时从 receipt 与原始日志自己复算。"
         }
       ],
       "result": null,
@@ -4055,6 +4059,10 @@
         {
           "at": "2026-09-20T05:07",
           "summary": "排队申领人在 #93 补了一条只读预检（04:56Z，5747736773，自述）：把原 B 的 norm_backward 换成与 Torch 2.10 autograd 在 10 个归一化 primitive 用例上逐位相同的求导顺序后，21 个 clamp 用例仍有 8 个失败（below 7/7、at / above 各 3/7；do-only 在 norm=1e-12 时 dq / dk 相对 L2 1.4664 / 0.9987），即「primitive 顺序匹配」不足以解决整链相对误差，不能宣布已修复；FP64 gradcheck 全过与 literal FP32 失败同时保留，预算 / 用例未动。PM 处置：已把这条写进 PK-05 规格「派单前待 PM 裁定」一节作为补充，裁定仍要在派单前正面回答四点（判据基准、预算口径、冻结方式、近 eps 行的入口处置）；无需再回复申领人。"
+        },
+        {
+          "at": "2026-09-20T05:22",
+          "summary": "排队申领人在 #93 又补一条只读预检（05:05Z，5747774486，自述）：问题不限于近 eps 行——单分量正 key / query 归一化后恒为单位轴，do-only / dA_T-only 下相关梯度数学上为 0，纯相对 1e-4 判据被舍入残差支配：8 个范数 {1e-6, .03, .05, .1, .3, .5, 1, 2} × 两种 cotangent 共 16 条，6 过 10 败（.5 / 1 / 2 过；.03 / do-only 的 dq A↔B 相对 L2 1.3152，1e-6 / do-only 的 dk 为 ∞——A 严格 0、B 9.77e-4）；原始失败全部保留、未放宽任何预算 / 域。PM 处置：写进 PK-05 规格「补充 2」——裁定要针对「真零 / 近零梯度的基准与量化判据」，「拒绝近 eps 行」不是充分处置、`[eps, 1e3·eps]` 不是已证实的支持域；仍是派单前由 PM 写进规格，无需回复申领人。"
         }
       ],
       "result": null,
