@@ -36,11 +36,20 @@ def replay_prefill(root, block_dims):
         assert summary['complete'] and summary['passed'] and len(summary['cases']) == 6
         for row in summary['cases']:
             assert row['passed'] and all(row['input_unchanged'].values())
+            assert all(row['poison_all_written'])
+            assert set(row['host_operations']) <= {'aten.empty.memory_format','aten.view.default'}
+            for comp in list(row['comparison'].values())+row['per_head']:
+                limit=min(.01,3*comp['output_floor']) if row['dtype']=='bfloat16' else 1e-5
+                check_metric(comp['o'],limit)
+                check_metric(comp['final_state'],1e-5)
             if row['dtype']=='float32':
                 assert row['original_fp32_bitwise'] == [True, True]
         boundary = read(folder/'boundaries.json')
         assert boundary['passed'] and len(boundary['cases']) == 57
         for row in boundary['cases']:
+            for comp in row.get('comparison',{}).values():
+                check_metric(comp['o'],min(.01,3*comp['output_floor']) if 'output_floor' in comp else 1e-5)
+                check_metric(comp['final_state'],1e-5)
             if row['kind']=='original_unrounded_fp32':
                 assert row['original_bitwise']
             if row.get('original_fp32_bitwise') is not None:
@@ -71,9 +80,12 @@ def replay_prefill(root, block_dims):
                     worst['local_state'] = max(worst['local_state'],comp['final_state']['relative_l2'])
             assert set(row['comparison']) == {'A','B'}
             for comp in row['comparison'].values():
+                check_metric(comp['oneshot_o'],math.inf)
+                check_metric(comp['oneshot_state'],math.inf)
                 ob = min(.01,3*comp['oneshot_o']['relative_l2'])
                 sb = min(.01,3*comp['oneshot_state']['relative_l2'])
                 assert comp['o_budget']==ob and comp['state_budget']==sb
+                assert set(comp['metrics']) == {'o','final_state','prefix_o','suffix_o','prefix_state'}
                 for key, metric in comp['metrics'].items():
                     check_metric(metric,sb if key in ('final_state','prefix_state') else ob)
                     field = {'o':'global_o','final_state':'global_state'}.get(key,key)
@@ -92,6 +104,8 @@ def replay_prefill(root, block_dims):
 def replay_performance(root):
     folder = root/'perf-bd4'
     build_and_baseline(folder,4)
+    summary=read(folder/'summary.json')
+    assert summary['complete'] and summary['passed']
     result = read(folder/'performance.json')
     assert result['passed'] and result['warmup']==5 and result['repeat']==20 and result['rounds']==3
     assert len(result['cases'])==4
