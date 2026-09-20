@@ -75,16 +75,42 @@ ASCEND_RT_VISIBLE_DEVICES=<card> PYTHONPATH=<ascriptor>/library python run.py ch
 六项输出沿用 a5 的预算：allclose rtol/atol 1e-3 加 `max_relative_l2` 0.05，`dk` 放宽到 0.15、
 `dg` 放宽到 0.25（理由见契约，是 a5 的实测理由，不是 A2 的新结论）。
 
-逐 kernel 的 33 个 checkpoint 里，`finalize_pair` 的四个积单独一档。它们是 64 项的 FP32 点积，
-操作数还带着**未抵消**的成对衰减：910B3 实测操作数跨 13 个数量级（`|k_scaled|` 到 1.8e+13），
-和到 3.3e+08，项与项之间灾难性相消。真机与 torch 的求和顺序不同，于是相消附近的元素能差几十个
-BF16 ulp，而向量范数不受影响。四个 case（C=1/2/3、HV=1/2/4）实测：最大 58 ulp，
-超过 1 ulp 的元素占比 ≤ 0.41%，相对 L2 最大 1.06e-07。
-所以这四个的判据取**相对 L2 1e-5**（比实测宽两个数量级），逐元素的 rtol 取 1.0 只当粗错闸
-（58 ulp 约等于值的 0.23~0.45，1.0 是两倍余量）。`finalize_pre` 的三个缩放量**一点都不用放宽**
-（0 ulp，相对 L2 ≤ 3.7e-27），用默认预算。
+逐 kernel 的 33 个 checkpoint 里，`finalize_pair` 的四个积单独一档：判据是**相对 L2 1e-5**，
+逐元素的 `rtol` 取 1.0 只当粗错闸。`finalize_pre` 的三个缩放量**不放宽**，用默认预算
+（26 个真机 case、78 项，相对 L2 最大 2.085e-26）。
 
-这一档是**看到真机结果之后定的**，如实记在这里；六项输出的预算一个字没动。
+全部 26 个真机 case、104 项的实测（`evidence/measurements/`，可从 `evidence/unit/aclnn.json` 复算）：
+
+| 项 | case | 相对 L2 | 逐元素最大 | 对 1e-5 预算的余量 |
+|---|---|---|---|---|
+| `qk_left` | `gentle_decay_bd1` / `bd2` | 8.296e-06 | 1 ulp | 约 1.2× |
+| `t_beta` | `grid_c2_hv4_bd1` | 7.000e-06 | 1 ulp | 约 1.4× |
+| 其余 101 项 | — | ≤ 1.056e-07 | 最大 58 ulp | ≥ 95× |
+
+**余量只有 1.2× ~ 1.4×，不是两个数量级**（早先的 README 与 `contract.json` 的 `reason` 里写的
+「宽两个数量级」只在我最初抽样的四个 case 上成立，那四个恰好不含上面两个 —— 由 PM 在评审时对着
+26 份真机回执查出来，这里按实数更正）。
+
+两种机制，都是 BF16 存储粒度，只是在不同指标上现形：
+- **量级大、相消重**的 case（如 `multi_chunk`，操作数跨 13 个数量级、和到 3.3e+08）：逐元素能差到
+  58 ulp，但范数不受影响，相对 L2 只有 1e-11 ~ 1e-13。
+- **上面那两项**：逐元素**最多 1 ulp**（占比 0%），相对 L2 却到 8.3e-06 —— 因为一次 BF16 舍入
+  落在了占张量范数很大份额的那个元素上（`gentle_decay` 的 `qk_left` 量级只有 9.3e-05）。
+  这不是累加误差，是一次舍入。
+
+**没有确立的**：真机与 torch 为什么在这两项上舍到不同的一侧。sim 与 pipesim 在同样这两项上是
+**恰好 0.0**，所以偏离只出现在真机；「FP32 求和顺序不同」这个解释对相消重的 case 说得通，
+对 `gentle_decay`（操作数不跨数量级）**没有单独证据**。这一档因此按 A2 观察记，
+A2-11 之前不据此下结论；这个单元通过的依据是六项梯度的预算（沿用 a5、一个字没动）
+与 sim / pipesim 的逐 kernel 检查。
+
+这一档是**看到真机结果之后定的**，如实记在这里。`contract.json` 的 `reason` 还留着「两个数量级」
+那句旧话：它在 `unit_source_sha256` 里，改它就要把 26 个 case 全部重跑，为一句话不值得再来一轮，
+留到下次因别的原因动 `contract.json` 时一起改。
+
+`evidence/measurements/pair_checkpoint_ulp.log` 只覆盖这四个积（脚本按契约的 `stage_outputs` 枚举，
+`finalize_pre` 不在其中了）；上面两个偏离 case 的单独测量在
+`evidence/measurements/pair_checkpoint_ulp_deviating_cases.log`。
 
 ## 没有确立的
 
