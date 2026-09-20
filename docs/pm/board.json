@@ -698,6 +698,10 @@
         {
           "at": "2026-09-20T05:00",
           "summary": "STATUS（04:35Z，自述，发在 REVIEW 之前）：DONE 之后源码 / 证据未改，工作树干净；BF-03 的预检（近零输入量化拆分 20 记录、future decode 状态接续 9 记录最大 rel-L2 1.23e-6）与 PK-05 的归一化近零反向发现均为 CPU 只读预检，不冒充真机验收。申领人回应（04:39Z）：按 REVIEW 非阻塞意见 a 补了 README 5 行并推送新头 b5c8c2e6（只改新单元 README，没动 kernel / Python / 预算 / case / 原始证据），并重新核对首次 full 两条 dtype 记录与 bd1 / bd2 网格同 case 的 stage / public / input 哈希全部相同。PM 复核新头：与 58c56a18 相比 ahead 1、只改 kernels/projects/a5/gdn_chunk_bwd_bf16/README.md +5 行（写集内、隐私 0），REVIEW accept 对 b5c8c2e6 成立；PR 仍 ready / clean。申领人主张按 D-PM-33 由 PM 自行合入（不需再问用户）：D-PM-33 有效、这次的判据都满足，但本仓每个 PR 的实际合入一直是拿到用户对该具体 PR 的明确确认后才执行（#110 / #111 / #113 / #114）；PM 尝试合入被拦（需要用户对该 PR 的明确授权），未绕行，已请用户授权 #115（头 b5c8c2e6）。"
+        },
+        {
+          "at": "2026-09-20T05:07",
+          "summary": "STATUS（05:01Z，自述）：已收到 REVIEW accept，PR #115 当前头 b5c8c2e6（相对已审头只加 README 5 行），kernel / ABI / 预算 / case / 原始证据均未改，第一轮 full workload 的输入 / 阶段 / 公共哈希与两套 grid 同 case 逐位相同（PM 已独立核实）；BF-03 只读预检已备好、无生产改动或设备任务。请 PM 核对 README 后按 D-PM-33 处理合入 / CLOSE 并派 BF-03；并请说明若有「实际拦截」的动作与依据。PM 已在 #101 回复：合入被自动模式分类器拦（Merge Without Review），按 D-PM-33 第 (5) 项不绕过，已请用户授权 #115（头 b5c8c2e6）；D-PM-33 未被收紧。合入仍等用户；BF-03 写集预批准已在 #102 回复。"
         }
       ],
       "result": null,
@@ -1100,7 +1104,7 @@
       },
       "spec": "docs/pm/tasks/FMT-02.md",
       "issue": 109,
-      "pr": null,
+      "pr": 116,
       "assignee": "limjiunnbin",
       "assignee_caps": {
         "agent": "Codex，持续 KDA / PKDA 任务（自述）",
@@ -1144,6 +1148,10 @@
         {
           "at": "2026-09-20T05:00",
           "summary": "STATUS（04:32Z，自述）：新 kda_layout 六个入口（四种 BF16/FP32 搬运 / 转换、两种零填充）与三处公共包装已接线，原 stable 前后向 kernel 未改；IR 与 CCE emit 六项通过，独立 CPU reference 27 项通过，主机回归 855 passed / 5 skipped（含新增 87 项布局、非连续梯度、审计与错误输出负对照）。严守 D-PM-42：_scan_states 整体、upstream log2、dw 取负与只读校验单列，不宣称例外合规；八个缓存保留 token-major ABI，h 保留 B/C/HV/K/V（依据 readonly backward GM 契约）；155 / 105 闸与 raw flags 不改。接着：完整 Kimi T4096 前向 / 带缓存前向 / 反向真机优先，每 bd 独立进程，22 个 vendor（含九个 backward）先编完，逐位对改前源码、双 CPU FP32 oracle、网格 / 边界、host 审计、三轮同卡性能。阻塞（自述）：健康 / 占用守卫仍拒绝设备窗口，没有停别人的作业，每 30 秒重查共享锁与占用（D-PM-28，PM 只记录）；目前没有 vendor / device / model 通过声明，无 DONE。"
+        },
+        {
+          "at": "2026-09-20T05:07",
+          "summary": "PR #116（draft，头 13028fb8，04:50Z 开）：22 个文件（3742+ / 116−），全部在写集内（kda_layout 新单元含 baseline/ 的改前源码副本用于逐位对照、ops/kda 的 chunk / chunk_bwd / autograd 三处接线、tests/test_kda_layout_kernel.py、docs/research/kda_layout_kernel.md），无保留路径、无二进制。draft 不触发合入，PM 等 DONE 再审（D-PM-42 范围：_scan_states 整体 / log2(eg) / dw 取负 / 只读校验单列为存量例外；输出逐位不变；真机全网格与同卡性能）。"
         }
       ],
       "result": null,
@@ -4043,6 +4051,10 @@
         {
           "at": "2026-09-20T05:00",
           "summary": "排队申领人（不占单，未开始实现）在 #93 的三条只读预检评论（5747492962 / 5747563179 / 5747620905）：对 literal pin PGDN naive 的 FP32 自动微分补查近零 q/k 范数，21 项原始记录里范数 1e-12 / 2e-12 各只有 2/7 组合满足 1e-4，最大 max_abs 1024–16384；初步归属为归一化反向在本应为零的径向导数上的 FP32 相消残差（单分量正输入归一化结果为 1，纯径向 cotangent 数学导数为 0；FP64 primitive 残差降到约 1e-6，小形状 FP64 gradcheck 六项全过），不是预算大小问题。PM 处置：PK-05 规格加「派单前待 PM 裁定」一节（判据基准、预算口径、怎么冻结、公共入口对近 eps 行是拒绝还是声明限制），裁定在派单前写进规格；顺序不变（BF-02 → BF-03 → BF-05 → PK-05）；申领人已声明不改预算 / 不删例 / 不改归一化公式，要求保持。"
+        },
+        {
+          "at": "2026-09-20T05:07",
+          "summary": "排队申领人在 #93 补了一条只读预检（04:56Z，5747736773，自述）：把原 B 的 norm_backward 换成与 Torch 2.10 autograd 在 10 个归一化 primitive 用例上逐位相同的求导顺序后，21 个 clamp 用例仍有 8 个失败（below 7/7、at / above 各 3/7；do-only 在 norm=1e-12 时 dq / dk 相对 L2 1.4664 / 0.9987），即「primitive 顺序匹配」不足以解决整链相对误差，不能宣布已修复；FP64 gradcheck 全过与 literal FP32 失败同时保留，预算 / 用例未动。PM 处置：已把这条写进 PK-05 规格「派单前待 PM 裁定」一节作为补充，裁定仍要在派单前正面回答四点（判据基准、预算口径、冻结方式、近 eps 行的入口处置）；无需再回复申领人。"
         }
       ],
       "result": null,
