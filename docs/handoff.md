@@ -11,6 +11,11 @@
 
 ### 正在飞的任务（现在没有；A5K-02、PK-02、PK-03 都已于 2026-09-19 合入）
 
+> **2026-09-20T11:30Z 更新：A2-09 交了 DONE（PR #119 draft）——PM 评审 rework：原始回执被脱敏破坏、回执不带源码身份；技术部分成立。**
+> - **评审**（`tmp/review/A2-09/`，git-ignored）：40 个文件全在 `kernels/projects/a2/kda_bwd_stable/**`、无二进制、最大 1.7 MB，隐私 0 命中，a5 与 A2-03 的 a2 单元零改动；契约六项预算 = a5、board stage `untested`、block_dim 只声明 1 与 2、门控跨度 `untested`；无 `@vf` / splitk，`GetValueFrom` 只读 FP32；`finalize_pair` 判据（相对 L2 1e-5，实测最差 1.06e-7）与 ulp 日志（最大 58 ulp、>1 ulp 至多 0.4028 个百分点）对得上，A/B 逐位相同，bd 逐位相同；PM 在 NPU-free 环境自己跑 `run.py reference` 26/26。
+> - **两条阻塞**：① `evidence/unit/{aclnn,sim,pipesim}.json` 是坏 JSON——脱敏把「0.」后不带科学计数法的长小数替换成 `<serial>`（aclnn 490 处 / sim、pipesim 各 232 处），六项梯度相对 L2 等关键数在原始回执里被毁，只剩 `passed` 布尔，PM 只能读汇总表；② 回执不带源码身份，aclnn 26 次运行跨 05:30–09:24Z、期间源码改过（L1 栅栏、`bar_all` 删 / 恢复、判据），`repo_sha` 是 rebase 前的提交，「去注释逐字节相同」没给对照。已请修脱敏并在最终源码上复跑 26 个 case（回执记 `unit_source_sha256`）、补 `bar_all` 的 pipesim 报错原文。A2 PR 合入本来就要用户授权（A2-11 之前 A2 结论不算数）。
+> - **评审工具坑**：A2 的 `run.py check --launcher pipesim --case <id>` 单个 case 也要 >5 分钟——工具调用会超时，用 `setsid nohup … &` 脱离运行再轮询日志；`json.load` 失败先看是不是脱敏占位符（`grep -c '<serial>'`）。**教训（给以后所有带脱敏的证据）**：脱敏规则别用「长数字串」的启发式，会吃掉浮点数；要按字段名 / 严格格式，并且脱敏后必须有「可解析 + 数值字段无占位符」的检查。
+>
 > **2026-09-20T09:15Z 更新：BF-07 已 ACK 并给了估计（阶段 1 约 17h、阶段 2 约 21h）——PM 拆出 BF-08（阶段 2 梯度链）；BF-07 的 RISK（FP32 输出没有「1 ulp」线）是规格写宽了，已改。**
 > - **拆分**：BF-07 = 前向 / 推理 / decode（24h），BF-08 = 梯度链（24h，BF-07 CLOSE 后同 session `01a0b7ce-…` 连续，issue 待 sync 建）。BF-07 需要梯度且 raw flag 开着时保留 host `_prepare_inputs` 图（登记的存量例外），DONE 只声称阶段 1；BF-08 才消除它。kernel 批次是同一个（D-PM-43），拆分不另问用户。`kernel_inventory` 新增 `kda_prep`（wip）。
 > - **测试清单已确认**：BF-07 可改 `tests/test_kda_domain_checks.py` 里 3 个函数、BF-08 改 2 个；能不改就不改，新覆盖写进新测试文件，改动只换观察点为新 kernel ABI 边界的局部 CPU 替身，不加生产旁路。
