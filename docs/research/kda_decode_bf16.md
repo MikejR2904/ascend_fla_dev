@@ -92,5 +92,7 @@ Both entries pass IR lowering, event-balance checks and CCE source emission.
 The default public wrapper passes a CPU proxy audit containing only two empty
 allocations, with actual returned buffers, unchanged input pointers and dtype
 checks. Together with the existing decode and raw-input regressions, 99 host
-tests pass. These are static and host checks; vendor builds and NPU acceptance
+tests pass. The subsequent full host suite passed 768 tests with 5 skips.
+The standalone unit passed all 83 CPU reference cases without importing the
+DSL, custom kernels or simulator. These are static and host checks; vendor builds and NPU acceptance
 remain separate requirements.
