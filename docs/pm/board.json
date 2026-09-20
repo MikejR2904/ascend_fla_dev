@@ -604,7 +604,7 @@
       "wave": "W0",
       "soc": "a5",
       "priority": "P0",
-      "status": "in_progress",
+      "status": "review",
       "model": [],
       "kernel": [
         "gdn_bwd"
@@ -686,6 +686,10 @@
         {
           "at": "2026-09-20T03:17",
           "summary": "STATUS（03:17Z，自述，PR #115 提交 59b86e6，仍 draft）：bd2 完整 69 case × BF16 / FP32 = 138/138 记录通过——全部 A / B、NaN 预填 composition / independent leaves、缺省 cotangent dummy poison、输入不变、FP32 原入口字节对照与实际 host 算子审计通过，196 项零预算比较严格为 0，完整 raw JSON / log / receipt 与 615 个占用样本已提交，foreign = 0，BF16 实际 host 列表只有 aten.empty.memory_format；同环境同卡 bd1 完整网格已通过 134/138 记录，剩余 ratio8 长序列 dht / both，先跑 full workload、六项 vendor build 在执行前完成；十二个 bd1 / bd2 vendor build 均通过，原始日志 / 二进制哈希清单已提交；未改 FP32 单元或 reserved paths；主机 88 focused、763 passed / 9 skipped 全套、138 canonical CPU reference、gen_matrix / pm_board 检查通过。接着：bd1 完成并设备排空后，同一份代码自动进入完整原 FP32 / new BF16 / 原 FP32 的三轮同卡测量（T1024 / 4096，10 warmup / 50 repeat / 每次前后同步），再做独立 runtime 启动告警对照；全验收后 ready PR 并 DONE。兼容性核实：第二环境 guard 冲突的原因是「同为 CANN 9.2.0」的两个环境 build timestamp 不同（主环境 20260805_101249091 定义 IMPL_UTILS_SYS_MACROS_H；第二环境 20260909_000323409 的 sys_macros_impl.h 改用 IMPL_UTILS_SYS_MACROS_IMPL_H）；主环境全部 205 个 library 包文件 / 资源与干净 90cfcdc checkout 逐字节一致；第二环境失败记录独立保留、不声称通过、不改 library pin / 导出代码 / 工具链共享目录。"
+        },
+        {
+          "at": "2026-09-20T03:36",
+          "summary": "DONE（03:36Z，自述）：PR #115 转正式（头 58c56a18，提交 1a3cf5a / 4095f57 / 8e9806d / 59b86e6 / 4a88e18 / 58c56a18）。自述验收：两条 dtype 实际公共入口逐 case 真机 host 审计——BF16 只有 aten.empty.memory_format，FP32 另有缺省 cotangent 的 zeros / zeros_like 分配，无 host 转换 / 重排 / 算术；三个自编译 kernel 直接收 BF16 q/k/v/do 并直接写 BF16 dq/dk/dv，dg / dbeta / dht / g / beta 仍 FP32；实现前提交 1a3cf5a 冻结 ABI 与严格 min(1e-2, 3F_g)（采用 ASSIGN 与 PM 确认，没有采用旧规格较宽的 2e-2 / 4F），138 条 CPU 校准记录、A 精度提升 / B 独立解析的 FP64 gradcheck、6 项非零负控制、36 项真实非零扰动对零预算拒绝；完整 B1/T4096/H=HV8/K=V128 先跑，再 69 case × 两 dtype × bd1/2 = 276/276（ratios 1/2/4/8 × C 1/2/3/64、多 batch、三种 cotangent、gate / beta / 零边界）；A/B 新生成参考、NaN composition 与 independent leaves、缺省 dummy poison、输入不变全部通过；138 对跨 bd case / dtype 的 10 阶段数组逐位相同，138 条 FP32 记录的 5 项公共返回与原入口逐位相同；同卡完整原 FP32 / new BF16 / 原 FP32 三轮（T1024 / 4096，B1 / H=HV8 / K=V128 / bd2 / both，每段 10 warmup / 50 repeat）900 计时样本；范围外输入显式拒绝；五项批准写集内，原 FP32 kernel 单元与 reserved_paths 无改动，旧 test_gdn_chunk_bwd.py 仅获批的 BF16 拒绝用例被替换、其他函数 AST 相同；逐梯度 A / B 预算全部通过（每个 BF16 路径梯度含 FP32 dg / dbeta 均 ≤ min(1e-2, 3F_g)），392 项零预算比较严格相等，FP32 公共 / 中间量 ≤ 1e-4。数字（BF16 公共路径，两 bd / 全部 shape 网格的各自最大值）：dq rel-L2 1.687e-3、dk 1.836e-3、dv 1.779e-3、dg 8.29e-7、dbeta 9.50e-7；FP32 公共 A / B 最大相对 L2 1.08e-6；计时三轮中位数：T1024 原 FP32 160.43ms / BF16 171.01ms，T4096 647.66ms / 691.94ms，BF16 约慢 6.6% / 6.8%，如实交付、无速度门槛。真机：soc=a5 chip=Ascend950PR_9589V100 cann=9.2.0 build=20260805_101249091 opp 含 ascend950；主环境 205 个 tracked 包文件 / 资源与干净 pin 逐字节匹配。证据：grid-v1-bd1.log:280 与 grid-v1-bd2.log:280 均为 NATIVE_PASS 138，timing-v1-bd2.log:8 TIMING_PASS，startup-control-v2.log:4 CONTROL_PASS；12 个 vendor build 原始日志 / 产物 hash、canonical-reference-summary、host 日志随 PR；28 份 runtime 日志 1604 行全部保留，12 条已归属启动 warning、0 ERROR / FATAL / CRITICAL。host 测试：CPU 隔离全仓 763 passed / 9 skipped，focused 88 passed，canonical reference 138/138。限制：不声称 sim / pipesim、CUDA / Triton、权重或整模型验证；补充环境在原 FP32 checkpoint 的 vendor build 失败（同名 CANN 9.2.0 不同 build 的 guard 变化），完整失败日志保留、不算通过。主 checkpoint / tape / adjoint 与分组 partial 保持 FP32，dq / dk 在完整连续组求和后仅末端一次 RNE 至 BF16；缺省 do / dht 由 kernel 清零且 dummy 不读；三次 launch，无 Cube 吞吐声称。matrix_delta: none。PM 评审进行中"
         }
       ],
       "result": null,
@@ -1058,7 +1062,7 @@
       "wave": "W0",
       "soc": "a5",
       "priority": "P0",
-      "status": "assigned",
+      "status": "in_progress",
       "model": [],
       "kernel": [
         "kda_fwd_stable",
@@ -1119,6 +1123,10 @@
         {
           "at": "2026-09-20T03:48",
           "summary": "派给 limjiunnbin（session 01a0b7ce-…，BF-06 的同一个 session），24h，分支 task/FMT-02；BF-06 已 CLOSE，按它在 #109 的排队 APPLY 直接派，不需要重新申领。规格含 D-PM-42 范围裁定：FMT-02 = dtype / 布局转换进新 kda_layout 单元、输出逐位不变；_scan_states 整体、log2(eg) 分支、只读校验是已登记的存量算术例外（审计单列、不搬进新单元）；dw 取负与 g_cumsum × 1/ln2 可选并进同一 launch（逐位相同才并）。"
+        },
+        {
+          "at": "2026-09-20T03:52",
+          "summary": "ACK（03:52Z，eta 16h，自述）：已读 AGENTS / handoff / PROTOCOL / START / FMT-02.md / 通则；计划——基于 main f040477 建 task/FMT-02，先固定改前源码、API / GM ABI、逐位比较契约与 D-PM-42 审计例外；在新 kda_layout 单元实现布局、dtype 与缺省零填充，接入三处包装，保留既有前后向 kernel、九缓存 ABI、155 / 105 闸与 raw flags 语义；真机完整 workload 先行，每 bd 独立进程且全部依赖预编译，完成契约 / 真实形状 / 网格、九缓存与六梯度逐位对照、跨 bd 哈希、host 算子审计、三轮同卡性能；完整真机之后跑缩小模型诊断，保留未过滤日志与文本回执，脱敏归档 / 恢复复算；PR / DONE 后继续申请 KDA / PKDA 任务。状态 assigned→in_progress"
         }
       ],
       "result": null,
