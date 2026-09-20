@@ -12,7 +12,7 @@ import torch
 from torch.utils._python_dispatch import TorchDispatchMode
 from ascend_fla.ops import pgdn_chunk_fwd as public
 from ref import oracle
-from ref.reference import OUTPUTS, make_inputs, reference_stages, metric, budget
+from ref.reference import OUTPUTS, make_inputs, reference_stages, metric, budget, floor
 
 
 def digest(value):
@@ -68,6 +68,8 @@ def check(actual, expected, dtype, *, public_outputs=False):
         assert value.dtype == (dtype if name == 'o' else torch.float32)
         limit = budget(target, dtype, name) if public_outputs or name == 'o' else 1e-4
         row = dict(**metric(value, target), budget=limit)
+        if dtype == torch.bfloat16 and name in ('o', 'final_state') and (public_outputs or name == 'o'):
+            row['rounding_floor'] = floor(target)
         assert row['finite'] and row['relative_l2'] <= limit, (name, row)
         if not public_outputs:
             torch.testing.assert_close(value.float(), target, atol=2e-5,
@@ -111,6 +113,7 @@ def main():
         rounded_case = None
         for dtype_name in ('bfloat16', 'float32'):
             started = time.monotonic()
+            print('NATIVE_CASE_START', json.dumps(dict(case=case, dtype=dtype_name)), flush=True)
             cpu = make_inputs(dict(case, dtype=dtype_name))
             dtype = cpu['q'].dtype
             a = oracle.reference(cpu)
