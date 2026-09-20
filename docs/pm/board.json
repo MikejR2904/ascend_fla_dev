@@ -279,6 +279,13 @@
       "by": "pm",
       "decision": "BF-06 的 prefill→decode 比较口径：三层分别报告——① decode 自身（从实际状态起算两个独立 CPU FP32 oracle，o ≤ min(1e-2, 3F)、state ≤ 1e-5）；② 16 token 与 16 次单 token 逐位相同；③ 端到端对两个全序列 CPU FP32 oracle，通过线 min(1e-2, 3·E_oneshot)（E_oneshot 为同次运行里一次性 stable 长前向对同一 oracle 的相对 L2），前缀 / 后缀单列。不采用 BF16 chunk 契约的 0.05。",
       "risk": "规格原来只写「对得上」没有数，这条是 PM 给的新预算（不是放宽既有预算，比契约的 0.05 严约 5 倍）：(1) 3·E_oneshot 自校准，E_oneshot 的下界是 BF16 舍入地板 F，所以 ≥ 3F，不会因一次侥幸的小误差误杀；(2) 但 1e-2 与 3·E_oneshot 都是 PM 的取法，没有 A5 真机的前缀 + decode 链数据支持——申领人在真机上跑出结果后如实报数，若系统性地过不了要发 RISK 讨论口径，用户可以纠正；(3) 前缀段是 chunk 路径自己的误差，BF-06 不为它负责，但要单列报告，让「链的退化」和「chunk 本来的误差」分开。"
+    },
+    {
+      "id": "D-PM-42",
+      "date": "2026-09-20",
+      "by": "pm",
+      "decision": "FMT-02 的范围与审计口径：FMT-02 = D-PM-37 字面（host 的 dtype / 布局转换进自编译 kernel，输出逐位不变）；_scan_states 整体（h / v_new 的 host 复算）、log2(eg) 分支、只读校验是「已登记的存量算术例外」，审计单列、不宣称合规、不搬进新单元，消除 _scan_states 要改 kda_fwd_stable 的 kernel（kernel 批次，用户批准）；位精确的 dw 取负与 g_cumsum × 1/ln2 可选并进同一 launch（逐位相同才并）。验收：推理前向与 decode 完全干净，带缓存前向与反向在例外之外无 host 转换算子。",
+      "risk": "这是 PM 对「FMT-02 原验收写得比现实严」的修正，方式与 D-PM-40（BF-06 的 raw flags 存量例外）相同：不给新代码开例外，存量的 host 算术在 kernel 批次之前仍在。后果：训练路径（带缓存前向）在 kernel 批次之前**不可能完全没有 host 算子**——_scan_states 里夹着 FP32 Cast 与 stack，是 D-PM-37 字面禁止的转换，但和算术缠在一起、不改前向 kernel 拆不开；PM 认为这是把存量例外老实登记，而不是放行。用户可以推翻：代价是要么现在批准一个 A5 kernel 批次（前向 kernel 导出 h / v_new，即 fwd-caches-not-emitted，P2），要么接受训练路径的存量例外。建议：这个批次与 BF-07（q/k l2norm、门控、beta sigmoid 融进前向 kernel）一起批，因为两者都要改 kda_fwd_stable 的 kernel。"
     }
   ],
   "gated_epics": [
@@ -664,6 +671,10 @@
         {
           "at": "2026-09-20T02:21",
           "summary": "STATUS（02:21Z，自述）：首个完整 workload B1 / T4096 / H=HV8 / K=V128、bd2，BF16 + FP32 两条实际公共路径通过新生成 A/B、NaN 预填的 composition / independent leaves、输入不变与 host 算子审计；FP32 新旧公共结果逐位一致。设备全程共享锁、202 个占用样本，其中 182 个同时正向识别 SVM / TRS 里的精确计算子进程，foreign = 0，前后为空且健康。BF16 dq / dk / dv 最大相对 L2 约 1.675e-3（BF16 舍入地板量级），各梯度均满足冻结的 min(1e-2, 3F_g)；FP32 A / B 各梯度最大相对 L2 约 2.454e-7；两 dtype 的公共 host 审计均只有 10 次 aten.empty。接着：全 69 case × 两 dtype × 两个 block_dim 的网格、缺省 cotangent poison、跨 bd 对照、同卡三轮；六个 vendor build 通过，日志 warning 正逐项归属核查。blockers: none；draft 仍待完整网格与测量，不提前 DONE。"
+        },
+        {
+          "at": "2026-09-20T02:48",
+          "summary": "STATUS（02:48Z，自述，PR #115 头 8e9806d）：首个完整 workload 原始日志、202 个占用样本、六个 vendor build 与 138/138 canonical CPU reference 已补入 PR；主验证环境 bd2 完整网格目前 135/138 记录通过（两条 dtype、三种 cotangent、所有短网格 / 边界），剩余长序列分组继续；接着 bd1 成对网格与同卡三轮，第二验证环境只作补充、不代替同环境的跨 bd 字节检查。blockers（不阻塞）：第二环境的 CANN 9.2.0 与指定 library 90cfcdc 存在头文件兼容差异——生成的 tensorutils_cce.h 检查 IMPL_UTILS_SYS_MACROS_H，而该环境 CANN 的 sys_macros_impl.h 用 IMPL_UTILS_SYS_MACROS_IMPL_H 并在 72/74 行定义 g_coreType，导致原 FP32 checkpoint 也报 g_coreType redefinition；第二环境尚无 kernel 执行 pass，完整失败日志、源码位置与头文件 sha 保留，未改导出代码 / library pin / 数值预算；任务主环境已编译并运行成功。PM 记一条观察：同为「CANN 9.2.0」的不同小版本头文件布局不同，所以评审要的 CANN 标识应带 inner / compiler 时间戳（BF-06 的回执已带）。"
         }
       ],
       "result": null,
@@ -888,7 +899,7 @@
       "wave": "W0",
       "soc": "a5",
       "priority": "P0",
-      "status": "in_progress",
+      "status": "review",
       "model": [],
       "kernel": [
         "kda_fused_recurrent"
@@ -989,6 +1000,10 @@
         {
           "at": "2026-09-20T02:20",
           "summary": "STATUS（02:20Z，自述，PR #114 头 56c2a2fd）：六个 bd 的真机网格全部完成并独立复算——414 个数值执行 + 342 个附加检查通过，共享案例跨 bd 输入哈希与输出字节一致；bd1 / 2 / 4 各 136 + 57，bd8 / 16 / 28 各 2 个完整 BF16 / FP32 workload + 57；17 项 vendor 含九个 backward 先编译，不声称 backward 已执行。证据在 kernels/projects/a5/kda_fused_recurrent_bf16/evidence/，全部文本（含完整未过滤运行日志仅脱敏路径、原始 JSON、逐头误差 / 预算、host 审计、全部编译项、模型 diagnostics、source hashes），干净 git archive 恢复后 77 个发布文件逐项 hash 复核、aggregate.py 六个 bd 再通过，没有二进制归档（已按 PM 的要求用文本）。接着 prefill / 性能：源码已同步并核对 3777 文件，设备队列取得新的双锁窗口，执行固定的三层 prefill 与精确旧公共 FP32 入口 / 实际 Torch NPU 三轮性能对照；边界生成器在首次执行前修为实际累计跨度精确 105 / 155 并记录 CPU / NPU 跨度。主机回归 768 passed / 5 skipped；BF16 两组 + FP32 一组 sim / pipesim 在首轮完整硬件之后通过。仍无 DONE，prefill 与性能未完成前保持 draft；contract 里 board passed 仅指已执行的 decode 单元网格，备注写明任务整体尚未验收。"
+        },
+        {
+          "at": "2026-09-20T02:37",
+          "summary": "DONE（02:37Z，自述）：PR #114 转正式，头 98d75fc9（4 个提交）。自述验收：默认 BF16 / FP32 公共入口真机 host 审计仅 aten.empty / aten.view，q 缩放、BF16 转换、GVA 寻址、token-major 读写都在新 kernel，raw flags 保持 D-PM-40 存量例外、审计单列不宣称合规；BF16 精度校准先于实现（82/82 CPU 案例，BF16 内部 state 负对照 81/82 被拒），预算始终 o ≤ min(0.01, 3F)、FP32 state ≤ 1e-5、双 CPU FP32 oracle；完整 workload 先跑，bd1/2/4 各 136 数值 + 57 附加检查，bd8/16/28 各 BF16 / FP32 完整 workload + 57，合计 414 + 342，每 bd 独立进程、17 项 vendor（含九个 backward）先编；输入不变 / NaN 覆盖 / 逐头误差 / 跨 bd 逐位一致；精确旧公共 FP32 入口对照在六个 bd 重跑（含八个原始 FP32 形状、raw flags 与非默认 scale），原 FP32 kernel 源码未改；prefill64/128→decode64：六个 bd 各 21 链 = 126 链 / 8568 次局部 decode，层 1 从实际状态起算双 oracle 严格预算、层 2 16 token 与 16 次单 token 逐位相同、层 3 全链 / 前缀 / 后缀通过 PM 的 min(0.01, 3E_oneshot)，精确跨度 0 / 105 / 155 与真实形状通过，所有链跨 bd 逐位一致；同卡三轮三明治（旧公共 FP32 入口 baseline + 实际 Torch NPU baseline），保留变慢结果；域外 dtype / 布局显式拒绝（FP64 因 NPU 无法表示在 CPU 张量上验证入口拒绝）；reserved_paths 与写集外差异为空；warm 调用不重算编译 signature、缓存查找 O(1)。真机：A5 Ascend950PR_9589 / CANN 9.2.0（compiler / OPP timestamp 20260805_101249091）/ 算子包含 ascend950。数字：完整 B2/T16/H4/HV32 非零 state BF16 o 相对 L2 1.6565e-3、state 1.53e-7；网格最差 BF16 o 1.885e-3、FP32 o 2.01e-7、逐头 state 1.80e-7；prefill 局部 decode 最差 o 1.971e-3 / state 1.46e-7，全链最差 o 3.663e-3 / state 2.47e-3，前 / 后缀 o 3.959e-3 / 3.267e-3；性能 bd4、warmup5 / repeat20：B1/T16/H32/G1 BF16 API wall 中位数 2761 / 2609 / 2735 us，相对旧 FP32 速度比 0.814 / 0.988 / 0.748（明确变慢），B2/T16/H4/G8 1.253 / 1.013 / 0.856，四形状相对实际 Torch NPU 中位数 1.751 / 2.640 / 3.838 / 2.007；T1 BF16 enqueue wall 约 374–378 us、旧 FP32 约 564–572 us。证据全是公开文本（147 个文件，publication.json 保留 SHA 与行数），干净 git archive 恢复后逐项通过，无二进制。23 条 / 进程性能告警原样保留并定位到旧 forward 的 ND-to-NZ 与旧 backward 的 UB bank stride。host 测试 768 passed / 5 skipped。matrix_delta: none。PM 评审进行中"
         }
       ],
       "result": null,
@@ -1037,6 +1052,18 @@
         {
           "at": "2026-09-19T16:47",
           "summary": "用户 D-PM-37 建：KDA 主路径在 host 侧用 permute().contiguous() 重排（含绕 CPU 旁路）与 dtype 转换，改为自编译 kernel；输出与改前逐位相同；要改已有 kernel 源码先发 RISK kernel-change-needed"
+        },
+        {
+          "at": "2026-09-20T02:37",
+          "summary": "APPLY（02:37Z，自述，#109）：条件申请，BF-06 CLOSE 之后接续派（session 01a0b7ce-…），仅 KDA / PKDA、不申请 GDN / GDN-2、不绕过 BF-07 的 kernel-batch gate；已读规格，未开始未经 ASSIGN 的实现。PM 回 NO_TASK：BF-06 合入并 CLOSE 后直接按这条 APPLY 派，不需要重新申领。"
+        },
+        {
+          "at": "2026-09-20T02:44",
+          "summary": "RISK contradicts-handoff（02:44Z，自述；工具因任务未派、assignee 不符而不采信，PM 当数据核实成立后采用）：FMT-02 规格称重排 / 转换是纯搬运、带缓存前向 / 反向 host 审计只许 empty / metadata / check / launch；但 chunk.py::_scan_states（约 599–639 行）用 host Torch 逐 chunk 做 FP32 bmm / 减 / 乘 / stack 补 h / v_new（稳定 recurrent 不导出它们）；chunk.py 约 720 行对 stable 的 g_cumsum 乘 1/ln2、upstream 分支做 log2(eg) 再降 BF16；chunk_bwd.py 约 294 行 host 取负生成 dw；域 / 门控跨度校验用只读 Tensor 算术。只换布局 / 转换无法让完整带缓存前向的审计干净；移动 h / v_new 复算会新增数值计算；现有前 / 反向 kernel 又明确只读。请求在派单前明确 h / v_new 复算、g_cumsum 换底 / log2 与 dw 取负是否属于新 kda_layout 单元授权的计算范围、还是登记存量例外另立 kernel 批次，并明确只读校验的审计分类；不请求放宽 155 / 105 闸、逐位判据或扩大 raw flags 例外。"
+        },
+        {
+          "at": "2026-09-20T02:55",
+          "summary": "PM 范围裁定（D-PM-42）：FMT-02 = D-PM-37 字面（dtype / 布局转换进自编译 kernel，新 kda_layout 单元，输出逐位不变）；已登记的存量算术例外（审计单列、给源码行、不宣称合规、不许搬进新单元）= _scan_states 整体（其 FP32 Cast 与算术缠在一起，消除要改 kda_fwd_stable 的 kernel 让它导出 h / v_new，属 kernel 批次 fwd-caches-not-emitted，只有用户能批）、log2(eg) 分支、只读校验（校验类）；允许可选并进：位精确的 dw 取负与 g_cumsum × 1/ln2（同一 launch、逐位相同，否则退回例外，不引入 FMA）；验收审计口径改为——推理前向与 decode 完全干净，带缓存前向与反向在例外之外不得再有 host dtype / 布局转换算子、例外逐条列出。规格已补一节并改验收行；#109 已回复 NO_TASK 与裁定。"
         }
       ],
       "result": null,

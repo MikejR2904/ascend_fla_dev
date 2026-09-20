@@ -97,7 +97,7 @@ _首个目标算子族，Kimi-Linear 用它_
 
 | 任务 | issue | SoC | dtype | 状态 | 说明 |
 |---|---|---|---|---|---|
-| BF-06 | [#105](https://github.com/ddddwee1/ascend_fla_dev/issues/105) | `a5` | bf16 | 🔵 in_progress | ★ 起点 |
+| BF-06 | [#105](https://github.com/ddddwee1/ascend_fla_dev/issues/105) | `a5` | bf16 | 🔵 review | ★ 起点 |
 | A2-03 | [#34](https://github.com/ddddwee1/ascend_fla_dev/issues/34) | `a2` | bf16、fp32 | ✅ done | ★ 起点 |
 | A2-K1 | [#44](https://github.com/ddddwee1/ascend_fla_dev/issues/44) | `a2` | bf16、fp32 | 🔒 gated (kernel-batch-approval) | ★ 起点 |
 | A5-01 | [#47](https://github.com/ddddwee1/ascend_fla_dev/issues/47) | `a5` | fp32 | 🔒 gated (wave:W-A3) | ★ 起点 |
