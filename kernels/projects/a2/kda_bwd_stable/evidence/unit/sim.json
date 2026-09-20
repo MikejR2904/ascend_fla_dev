@@ -7,12 +7,12 @@
    "ascend910b"
   ],
   "cann": "9.0.0",
-  "cann_version_cfg": [],
   "cube_core_num": 20,
   "l0c_bytes": 131072,
   "l1_bytes": 524288,
-  "note": "AGENTS.md section 2: before A2-11 an A2 device number is an observation, not an operator conclusion. Machine coordinates (hostname, serial numbers, PCIe bus ids, chip UUIDs) are deliberately not recorded here.",
-  "repo_sha": "0a7e6cc8c6229825deb24610abe30745c5a2b3e5",
+  "note": "AGENTS.md section 2: before A2-11 an A2 device number is an observation, not an operator conclusion. Machine coordinates (hostname, serial numbers, PCIe bus ids, chip UUIDs) are not collected: no npu-smi board panel is read, so redaction never has to touch a number.",
+  "repo_branch": "task/A2-09",
+  "repo_sha": "636065457648e83a3f4e8954c2a59a1e3ae9f201",
   "soc": "910B3",
   "soc_family": "a2 (c220)",
   "torch": "2.10.0+cpu",
@@ -37,7 +37,7 @@
       },
       "max_abs_error": 3.814697265625e-06,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.0074564833344733525
      },
      "dg": {
       "comparison": {
@@ -49,7 +49,7 @@
       },
       "max_abs_error": 2.002716064453125e-05,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.15256980651641386
      },
      "dh0": {
       "comparison": {
@@ -61,7 +61,7 @@
       },
       "max_abs_error": 2.384185791015625e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.002787072743076278
      },
      "dk": {
       "comparison": {
@@ -71,9 +71,9 @@
        "reason": "<see contract.json>",
        "rtol": 0.001
       },
-      "max_abs_error": 0.<serial>,
+      "max_abs_error": 0.000247955322265625,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.09570097308740723
      },
      "dq": {
       "comparison": {
@@ -85,7 +85,7 @@
       },
       "max_abs_error": 2.2649765014648438e-06,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.015372474677015113
      },
      "dv": {
       "comparison": {
@@ -97,7 +97,7 @@
       },
       "max_abs_error": 3.0517578125e-05,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.003199788492562663
      }
     },
     "execution_evidence": [
@@ -488,7 +488,7 @@
       },
       "max_abs_error": 1.7881393432617188e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.011602791705774036
      },
      "finalize_post.dk_hv": {
       "comparison": {
@@ -656,7 +656,7 @@
       },
       "max_abs_error": 1.680455170571804e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.00143852665460366
      },
      "inverse_epilogue.dk_hv": {
       "comparison": {
@@ -1406,7 +1406,7 @@
       },
       "max_abs_error": 3.814697265625e-06,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.0074564833344733525
      },
      "dg": {
       "comparison": {
@@ -1418,7 +1418,7 @@
       },
       "max_abs_error": 2.002716064453125e-05,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.15256980651641386
      },
      "dh0": {
       "comparison": {
@@ -1430,7 +1430,7 @@
       },
       "max_abs_error": 2.384185791015625e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.002787072743076278
      },
      "dk": {
       "comparison": {
@@ -1440,9 +1440,9 @@
        "reason": "<see contract.json>",
        "rtol": 0.001
       },
-      "max_abs_error": 0.<serial>,
+      "max_abs_error": 0.000247955322265625,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.09570097308740723
      },
      "dq": {
       "comparison": {
@@ -1454,7 +1454,7 @@
       },
       "max_abs_error": 2.2649765014648438e-06,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.015372474677015113
      },
      "dv": {
       "comparison": {
@@ -1466,7 +1466,7 @@
       },
       "max_abs_error": 3.0517578125e-05,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.003199788492562663
      }
     },
     "execution_evidence": [
@@ -1857,7 +1857,7 @@
       },
       "max_abs_error": 1.7881393432617188e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.011602791705774036
      },
      "finalize_post.dk_hv": {
       "comparison": {
@@ -2025,7 +2025,7 @@
       },
       "max_abs_error": 1.680455170571804e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.00143852665460366
      },
      "inverse_epilogue.dk_hv": {
       "comparison": {
@@ -2775,7 +2775,7 @@
       },
       "max_abs_error": 9.5367431640625e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.0023615318694663176
      },
      "dg": {
       "comparison": {
@@ -2787,7 +2787,7 @@
       },
       "max_abs_error": 8.285045623779297e-06,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.17764644905976626
      },
      "dh0": {
       "comparison": {
@@ -2799,7 +2799,7 @@
       },
       "max_abs_error": 2.384185791015625e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.0027901681491580123
      },
      "dk": {
       "comparison": {
@@ -2809,9 +2809,9 @@
        "reason": "<see contract.json>",
        "rtol": 0.001
       },
-      "max_abs_error": 0.<serial>,
+      "max_abs_error": 0.000156402587890625,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.0458858007900333
      },
      "dq": {
       "comparison": {
@@ -2823,7 +2823,7 @@
       },
       "max_abs_error": 3.203749656677246e-06,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.023563613660595145
      },
      "dv": {
       "comparison": {
@@ -2835,7 +2835,7 @@
       },
       "max_abs_error": 3.0517578125e-05,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.002940166332923661
      }
     },
     "execution_evidence": [
@@ -3226,7 +3226,7 @@
       },
       "max_abs_error": 4.032626748085022e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.04180106245850643
      },
      "finalize_post.dk_hv": {
       "comparison": {
@@ -3394,7 +3394,7 @@
       },
       "max_abs_error": 4.023313522338867e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.004930784864614546
      },
      "inverse_epilogue.dk_hv": {
       "comparison": {
@@ -4144,7 +4144,7 @@
       },
       "max_abs_error": 9.5367431640625e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.0023615318694663176
      },
      "dg": {
       "comparison": {
@@ -4156,7 +4156,7 @@
       },
       "max_abs_error": 8.285045623779297e-06,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.17764644905976626
      },
      "dh0": {
       "comparison": {
@@ -4168,7 +4168,7 @@
       },
       "max_abs_error": 2.384185791015625e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.0027901681491580123
      },
      "dk": {
       "comparison": {
@@ -4178,9 +4178,9 @@
        "reason": "<see contract.json>",
        "rtol": 0.001
       },
-      "max_abs_error": 0.<serial>,
+      "max_abs_error": 0.000156402587890625,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.0458858007900333
      },
      "dq": {
       "comparison": {
@@ -4192,7 +4192,7 @@
       },
       "max_abs_error": 3.203749656677246e-06,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.023563613660595145
      },
      "dv": {
       "comparison": {
@@ -4204,7 +4204,7 @@
       },
       "max_abs_error": 3.0517578125e-05,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.002940166332923661
      }
     },
     "execution_evidence": [
@@ -4595,7 +4595,7 @@
       },
       "max_abs_error": 4.032626748085022e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.04180106245850643
      },
      "finalize_post.dk_hv": {
       "comparison": {
@@ -4763,7 +4763,7 @@
       },
       "max_abs_error": 4.023313522338867e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.004930784864614546
      },
      "inverse_epilogue.dk_hv": {
       "comparison": {
@@ -5513,7 +5513,7 @@
       },
       "max_abs_error": 9.5367431640625e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.002231565279127574
      },
      "dg": {
       "comparison": {
@@ -5525,7 +5525,7 @@
       },
       "max_abs_error": 8.821487426757812e-06,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.11541282607963463
      },
      "dh0": {
       "comparison": {
@@ -5537,7 +5537,7 @@
       },
       "max_abs_error": 4.76837158203125e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.0029135799856729433
      },
      "dk": {
       "comparison": {
@@ -5547,9 +5547,9 @@
        "reason": "<see contract.json>",
        "rtol": 0.001
       },
-      "max_abs_error": 0.<serial>,
+      "max_abs_error": 0.000244140625,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.057597448407580396
      },
      "dq": {
       "comparison": {
@@ -5561,7 +5561,7 @@
       },
       "max_abs_error": 2.2649765014648438e-06,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.019012058960300192
      },
      "dv": {
       "comparison": {
@@ -5573,7 +5573,7 @@
       },
       "max_abs_error": 6.103515625e-05,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.0027186229214887373
      }
     },
     "execution_evidence": [
@@ -5964,7 +5964,7 @@
       },
       "max_abs_error": 3.594905138015747e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.025344042504457175
      },
      "finalize_post.dk_hv": {
       "comparison": {
@@ -6132,7 +6132,7 @@
       },
       "max_abs_error": 3.5762786865234375e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.0026702783576884916
      },
      "inverse_epilogue.dk_hv": {
       "comparison": {
@@ -6882,7 +6882,7 @@
       },
       "max_abs_error": 9.5367431640625e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.002231565279127574
      },
      "dg": {
       "comparison": {
@@ -6894,7 +6894,7 @@
       },
       "max_abs_error": 8.821487426757812e-06,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.11541282607963463
      },
      "dh0": {
       "comparison": {
@@ -6906,7 +6906,7 @@
       },
       "max_abs_error": 4.76837158203125e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.0029135799856729433
      },
      "dk": {
       "comparison": {
@@ -6916,9 +6916,9 @@
        "reason": "<see contract.json>",
        "rtol": 0.001
       },
-      "max_abs_error": 0.<serial>,
+      "max_abs_error": 0.000244140625,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.057597448407580396
      },
      "dq": {
       "comparison": {
@@ -6930,7 +6930,7 @@
       },
       "max_abs_error": 2.2649765014648438e-06,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.019012058960300192
      },
      "dv": {
       "comparison": {
@@ -6942,7 +6942,7 @@
       },
       "max_abs_error": 6.103515625e-05,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.0027186229214887373
      }
     },
     "execution_evidence": [
@@ -7333,7 +7333,7 @@
       },
       "max_abs_error": 3.594905138015747e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.025344042504457175
      },
      "finalize_post.dk_hv": {
       "comparison": {
@@ -7501,7 +7501,7 @@
       },
       "max_abs_error": 3.5762786865234375e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.0026702783576884916
      },
      "inverse_epilogue.dk_hv": {
       "comparison": {
@@ -8251,7 +8251,7 @@
       },
       "max_abs_error": 3.814697265625e-06,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.004027121054278295
      },
      "dg": {
       "comparison": {
@@ -8263,7 +8263,7 @@
       },
       "max_abs_error": 3.814697265625e-06,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.006005422293846673
      },
      "dh0": {
       "comparison": {
@@ -8275,7 +8275,7 @@
       },
       "max_abs_error": 1.52587890625e-05,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.005292979167153637
      },
      "dk": {
       "comparison": {
@@ -8287,7 +8287,7 @@
       },
       "max_abs_error": 1.52587890625e-05,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.005320592282144468
      },
      "dq": {
       "comparison": {
@@ -8299,7 +8299,7 @@
       },
       "max_abs_error": 1.9073486328125e-06,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.0035936924069935386
      },
      "dv": {
       "comparison": {
@@ -8311,7 +8311,7 @@
       },
       "max_abs_error": 6.103515625e-05,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.0038867577453710034
      }
     },
     "execution_evidence": [
@@ -8702,7 +8702,7 @@
       },
       "max_abs_error": 1.1920928955078125e-06,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.001606519560763028
      },
      "finalize_post.dk_hv": {
       "comparison": {
@@ -8870,7 +8870,7 @@
       },
       "max_abs_error": 9.5367431640625e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.0007375038035830543
      },
      "inverse_epilogue.dk_hv": {
       "comparison": {
@@ -9620,7 +9620,7 @@
       },
       "max_abs_error": 3.814697265625e-06,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.004027121054278295
      },
      "dg": {
       "comparison": {
@@ -9632,7 +9632,7 @@
       },
       "max_abs_error": 3.814697265625e-06,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.006005422293846673
      },
      "dh0": {
       "comparison": {
@@ -9644,7 +9644,7 @@
       },
       "max_abs_error": 1.52587890625e-05,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.005292979167153637
      },
      "dk": {
       "comparison": {
@@ -9656,7 +9656,7 @@
       },
       "max_abs_error": 1.52587890625e-05,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.005320592282144468
      },
      "dq": {
       "comparison": {
@@ -9668,7 +9668,7 @@
       },
       "max_abs_error": 1.9073486328125e-06,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.0035936924069935386
      },
      "dv": {
       "comparison": {
@@ -9680,7 +9680,7 @@
       },
       "max_abs_error": 6.103515625e-05,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.0038867577453710034
      }
     },
     "execution_evidence": [
@@ -10071,7 +10071,7 @@
       },
       "max_abs_error": 1.1920928955078125e-06,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.001606519560763028
      },
      "finalize_post.dk_hv": {
       "comparison": {
@@ -10239,7 +10239,7 @@
       },
       "max_abs_error": 9.5367431640625e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.0007375038035830543
      },
      "inverse_epilogue.dk_hv": {
       "comparison": {
@@ -10989,7 +10989,7 @@
       },
       "max_abs_error": 7.62939453125e-06,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.005309788248778126
      },
      "dg": {
       "comparison": {
@@ -11001,7 +11001,7 @@
       },
       "max_abs_error": 2.384185791015625e-05,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.12481973132797114
      },
      "dh0": {
       "comparison": {
@@ -11013,7 +11013,7 @@
       },
       "max_abs_error": 2.384185791015625e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.0029427154731644094
      },
      "dk": {
       "comparison": {
@@ -11023,9 +11023,9 @@
        "reason": "<see contract.json>",
        "rtol": 0.001
       },
-      "max_abs_error": 0.<serial>,
+      "max_abs_error": 0.0003204345703125,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.10741796113407183
      },
      "dq": {
       "comparison": {
@@ -11037,7 +11037,7 @@
       },
       "max_abs_error": 2.9802322387695312e-06,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.014803143882580434
      },
      "dv": {
       "comparison": {
@@ -11049,7 +11049,7 @@
       },
       "max_abs_error": 3.0517578125e-05,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.003339020312056396
      }
     },
     "execution_evidence": [
@@ -11440,7 +11440,7 @@
       },
       "max_abs_error": 4.78699803352356e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.012820206872249997
      },
      "finalize_post.dk_hv": {
       "comparison": {
@@ -11608,7 +11608,7 @@
       },
       "max_abs_error": 4.76837158203125e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.0013084974637795114
      },
      "inverse_epilogue.dk_hv": {
       "comparison": {
@@ -12358,7 +12358,7 @@
       },
       "max_abs_error": 7.62939453125e-06,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.005309788248778126
      },
      "dg": {
       "comparison": {
@@ -12370,7 +12370,7 @@
       },
       "max_abs_error": 2.384185791015625e-05,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.12481973132797114
      },
      "dh0": {
       "comparison": {
@@ -12382,7 +12382,7 @@
       },
       "max_abs_error": 2.384185791015625e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.0029427154731644094
      },
      "dk": {
       "comparison": {
@@ -12392,9 +12392,9 @@
        "reason": "<see contract.json>",
        "rtol": 0.001
       },
-      "max_abs_error": 0.<serial>,
+      "max_abs_error": 0.0003204345703125,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.10741796113407183
      },
      "dq": {
       "comparison": {
@@ -12406,7 +12406,7 @@
       },
       "max_abs_error": 2.9802322387695312e-06,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.014803143882580434
      },
      "dv": {
       "comparison": {
@@ -12418,7 +12418,7 @@
       },
       "max_abs_error": 3.0517578125e-05,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.003339020312056396
      }
     },
     "execution_evidence": [
@@ -12809,7 +12809,7 @@
       },
       "max_abs_error": 4.78699803352356e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.012820206872249997
      },
      "finalize_post.dk_hv": {
       "comparison": {
@@ -12977,7 +12977,7 @@
       },
       "max_abs_error": 4.76837158203125e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.0013084974637795114
      },
      "inverse_epilogue.dk_hv": {
       "comparison": {
@@ -13727,7 +13727,7 @@
       },
       "max_abs_error": 1.9073486328125e-06,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.0021518285800415735
      },
      "dg": {
       "comparison": {
@@ -13739,7 +13739,7 @@
       },
       "max_abs_error": 1.1920928955078125e-05,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.11340443591390637
      },
      "dh0": {
       "comparison": {
@@ -13751,7 +13751,7 @@
       },
       "max_abs_error": 4.76837158203125e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.0032179031032675536
      },
      "dk": {
       "comparison": {
@@ -13761,9 +13761,9 @@
        "reason": "<see contract.json>",
        "rtol": 0.001
       },
-      "max_abs_error": 0.<serial>,
+      "max_abs_error": 0.000244140625,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.08667119728822967
      },
      "dq": {
       "comparison": {
@@ -13775,7 +13775,7 @@
       },
       "max_abs_error": 2.6226043701171875e-06,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.012750288586983679
      },
      "dv": {
       "comparison": {
@@ -13787,7 +13787,7 @@
       },
       "max_abs_error": 6.103515625e-05,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.0036217334490037598
      }
     },
     "execution_evidence": [
@@ -14178,7 +14178,7 @@
       },
       "max_abs_error": 4.1816383600234985e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.01922656521949343
      },
      "finalize_post.dk_hv": {
       "comparison": {
@@ -14346,7 +14346,7 @@
       },
       "max_abs_error": 4.172325134277344e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.0019394424041941905
      },
      "inverse_epilogue.dk_hv": {
       "comparison": {
@@ -15096,7 +15096,7 @@
       },
       "max_abs_error": 1.9073486328125e-06,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.006746148423023122
      },
      "dg": {
       "comparison": {
@@ -15108,7 +15108,7 @@
       },
       "max_abs_error": 7.867813110351562e-06,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.14006865053460607
      },
      "dh0": {
       "comparison": {
@@ -15120,7 +15120,7 @@
       },
       "max_abs_error": 2.384185791015625e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.002840206683737744
      },
      "dk": {
       "comparison": {
@@ -15130,9 +15130,9 @@
        "reason": "<see contract.json>",
        "rtol": 0.001
       },
-      "max_abs_error": 0.<serial>,
+      "max_abs_error": 0.0001354217529296875,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.03804029900708343
      },
      "dq": {
       "comparison": {
@@ -15144,7 +15144,7 @@
       },
       "max_abs_error": 2.3543834686279297e-06,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.012158538436716947
      },
      "dv": {
       "comparison": {
@@ -15156,7 +15156,7 @@
       },
       "max_abs_error": 6.103515625e-05,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.002782022079608835
      }
     },
     "execution_evidence": [
@@ -15547,7 +15547,7 @@
       },
       "max_abs_error": 4.246830940246582e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.03942579103230612
      },
      "finalize_post.dk_hv": {
       "comparison": {
@@ -15715,7 +15715,7 @@
       },
       "max_abs_error": 4.2282044887542725e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.005140147371964408
      },
      "inverse_epilogue.dk_hv": {
       "comparison": {
@@ -16465,7 +16465,7 @@
       },
       "max_abs_error": 3.814697265625e-06,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.0034209770972495504
      },
      "dg": {
       "comparison": {
@@ -16477,7 +16477,7 @@
       },
       "max_abs_error": 2.3365020751953125e-05,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.1508417190559062
      },
      "dh0": {
       "comparison": {
@@ -16489,7 +16489,7 @@
       },
       "max_abs_error": 2.384185791015625e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.0027319244537568482
      },
      "dk": {
       "comparison": {
@@ -16499,9 +16499,9 @@
        "reason": "<see contract.json>",
        "rtol": 0.001
       },
-      "max_abs_error": 0.<serial>,
+      "max_abs_error": 0.0004119873046875,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.11154402293734339
      },
      "dq": {
       "comparison": {
@@ -16513,7 +16513,7 @@
       },
       "max_abs_error": 2.682209014892578e-06,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.01405568058997695
      },
      "dv": {
       "comparison": {
@@ -16525,7 +16525,7 @@
       },
       "max_abs_error": 3.0517578125e-05,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.0032978900553229003
      }
     },
     "execution_evidence": [
@@ -16916,7 +16916,7 @@
       },
       "max_abs_error": 3.213062882423401e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.014738443006098017
      },
      "finalize_post.dk_hv": {
       "comparison": {
@@ -17084,7 +17084,7 @@
       },
       "max_abs_error": 3.203749656677246e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.0013956421575316116
      },
      "inverse_epilogue.dk_hv": {
       "comparison": {
@@ -17834,7 +17834,7 @@
       },
       "max_abs_error": 1.9073486328125e-06,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.005286847911671558
      },
      "dg": {
       "comparison": {
@@ -17846,7 +17846,7 @@
       },
       "max_abs_error": 1.1920928955078125e-05,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.11830732575110349
      },
      "dh0": {
       "comparison": {
@@ -17858,7 +17858,7 @@
       },
       "max_abs_error": 2.384185791015625e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.002655607025220006
      },
      "dk": {
       "comparison": {
@@ -17868,9 +17868,9 @@
        "reason": "<see contract.json>",
        "rtol": 0.001
       },
-      "max_abs_error": 0.<serial>,
+      "max_abs_error": 0.00018310546875,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.06271595469419323
      },
      "dq": {
       "comparison": {
@@ -17882,7 +17882,7 @@
       },
       "max_abs_error": 3.6954879760742188e-06,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.014937377369189778
      },
      "dv": {
       "comparison": {
@@ -17894,7 +17894,7 @@
       },
       "max_abs_error": 3.0517578125e-05,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.002932720486980678
      }
     },
     "execution_evidence": [
@@ -18285,7 +18285,7 @@
       },
       "max_abs_error": 2.421438694000244e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.015450387211480343
      },
      "finalize_post.dk_hv": {
       "comparison": {
@@ -18453,7 +18453,7 @@
       },
       "max_abs_error": 2.384185791015625e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.0017497080400819852
      },
      "inverse_epilogue.dk_hv": {
       "comparison": {
@@ -19203,7 +19203,7 @@
       },
       "max_abs_error": 3.814697265625e-06,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.004099293085008392
      },
      "dg": {
       "comparison": {
@@ -19215,7 +19215,7 @@
       },
       "max_abs_error": 2.0503997802734375e-05,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.13294150008892167
      },
      "dh0": {
       "comparison": {
@@ -19227,7 +19227,7 @@
       },
       "max_abs_error": 2.384185791015625e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.0026476397769087225
      },
      "dk": {
       "comparison": {
@@ -19237,9 +19237,9 @@
        "reason": "<see contract.json>",
        "rtol": 0.001
       },
-      "max_abs_error": 0.<serial>,
+      "max_abs_error": 0.00067138671875,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.08798428195896248
      },
      "dq": {
       "comparison": {
@@ -19251,7 +19251,7 @@
       },
       "max_abs_error": 3.4421682357788086e-06,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.015309079649355276
      },
      "dv": {
       "comparison": {
@@ -19263,7 +19263,7 @@
       },
       "max_abs_error": 6.103515625e-05,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.003103429388444323
      }
     },
     "execution_evidence": [
@@ -19654,7 +19654,7 @@
       },
       "max_abs_error": 4.76837158203125e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.01554735126555744
      },
      "finalize_post.dk_hv": {
       "comparison": {
@@ -19822,7 +19822,7 @@
       },
       "max_abs_error": 2.384185791015625e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.0016347337641368265
      },
      "inverse_epilogue.dk_hv": {
       "comparison": {
@@ -20572,7 +20572,7 @@
       },
       "max_abs_error": 2.384185791015625e-06,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.002989535706014328
      },
      "dg": {
       "comparison": {
@@ -20584,7 +20584,7 @@
       },
       "max_abs_error": 1.2874603271484375e-05,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.1403623034531923
      },
      "dh0": {
       "comparison": {
@@ -20596,7 +20596,7 @@
       },
       "max_abs_error": 2.384185791015625e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.00273691637401213
      },
      "dk": {
       "comparison": {
@@ -20606,9 +20606,9 @@
        "reason": "<see contract.json>",
        "rtol": 0.001
       },
-      "max_abs_error": 0.<serial>,
+      "max_abs_error": 0.0002689361572265625,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.06641792684061779
      },
      "dq": {
       "comparison": {
@@ -20620,7 +20620,7 @@
       },
       "max_abs_error": 2.384185791015625e-06,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.014196698054147265
      },
      "dv": {
       "comparison": {
@@ -20632,7 +20632,7 @@
       },
       "max_abs_error": 6.103515625e-05,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.0025521262668204386
      }
     },
     "execution_evidence": [
@@ -21023,7 +21023,7 @@
       },
       "max_abs_error": 4.6193599700927734e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.027082760532640575
      },
      "finalize_post.dk_hv": {
       "comparison": {
@@ -21191,7 +21191,7 @@
       },
       "max_abs_error": 4.470348358154297e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.002996276846933009
      },
      "inverse_epilogue.dk_hv": {
       "comparison": {
@@ -21941,7 +21941,7 @@
       },
       "max_abs_error": 4.76837158203125e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.0008253196850426356
      },
      "dg": {
       "comparison": {
@@ -21953,7 +21953,7 @@
       },
       "max_abs_error": 1.811981201171875e-05,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.12753438845255818
      },
      "dh0": {
       "comparison": {
@@ -21965,7 +21965,7 @@
       },
       "max_abs_error": 2.384185791015625e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.0027190144841099224
      },
      "dk": {
       "comparison": {
@@ -21975,9 +21975,9 @@
        "reason": "<see contract.json>",
        "rtol": 0.001
       },
-      "max_abs_error": 0.<serial>,
+      "max_abs_error": 0.000244140625,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.06153587500002756
      },
      "dq": {
       "comparison": {
@@ -21989,7 +21989,7 @@
       },
       "max_abs_error": 2.3245811462402344e-06,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.018427926895337135
      },
      "dv": {
       "comparison": {
@@ -22001,7 +22001,7 @@
       },
       "max_abs_error": 6.103515625e-05,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.002815021803627001
      }
     },
     "execution_evidence": [
@@ -22392,7 +22392,7 @@
       },
       "max_abs_error": 4.805624485015869e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.026572017814227727
      },
      "finalize_post.dk_hv": {
       "comparison": {
@@ -22560,7 +22560,7 @@
       },
       "max_abs_error": 4.76837158203125e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.0025398176671214065
      },
      "inverse_epilogue.dk_hv": {
       "comparison": {
@@ -23310,7 +23310,7 @@
       },
       "max_abs_error": 9.5367431640625e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.002382990587248308
      },
      "dg": {
       "comparison": {
@@ -23322,7 +23322,7 @@
       },
       "max_abs_error": 8.58306884765625e-06,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.13641841208355077
      },
      "dh0": {
       "comparison": {
@@ -23334,7 +23334,7 @@
       },
       "max_abs_error": 2.384185791015625e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.0026828702592126474
      },
      "dk": {
       "comparison": {
@@ -23344,9 +23344,9 @@
        "reason": "<see contract.json>",
        "rtol": 0.001
       },
-      "max_abs_error": 0.<serial>,
+      "max_abs_error": 0.00022125244140625,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.07455931348296428
      },
      "dq": {
       "comparison": {
@@ -23358,7 +23358,7 @@
       },
       "max_abs_error": 2.7418136596679688e-06,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.01952501570987678
      },
      "dv": {
       "comparison": {
@@ -23370,7 +23370,7 @@
       },
       "max_abs_error": 3.0517578125e-05,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.0028093123174265404
      }
     },
     "execution_evidence": [
@@ -23761,7 +23761,7 @@
       },
       "max_abs_error": 1.19674950838089e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.014085831887524918
      },
      "finalize_post.dk_hv": {
       "comparison": {
@@ -23929,7 +23929,7 @@
       },
       "max_abs_error": 1.1920928955078125e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.001529156054054433
      },
      "inverse_epilogue.dk_hv": {
       "comparison": {
@@ -24679,7 +24679,7 @@
       },
       "max_abs_error": 1.9073486328125e-06,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.002374431785460382
      },
      "dg": {
       "comparison": {
@@ -24691,7 +24691,7 @@
       },
       "max_abs_error": 1.1444091796875e-05,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.13330995466091203
      },
      "dh0": {
       "comparison": {
@@ -24703,7 +24703,7 @@
       },
       "max_abs_error": 2.384185791015625e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.002906931466276206
      },
      "dk": {
       "comparison": {
@@ -24713,9 +24713,9 @@
        "reason": "<see contract.json>",
        "rtol": 0.001
       },
-      "max_abs_error": 0.<serial>,
+      "max_abs_error": 0.0002155303955078125,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.0742306113705267
      },
      "dq": {
       "comparison": {
@@ -24727,7 +24727,7 @@
       },
       "max_abs_error": 3.0994415283203125e-06,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.018648503223022597
      },
      "dv": {
       "comparison": {
@@ -24739,7 +24739,7 @@
       },
       "max_abs_error": 3.0517578125e-05,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.0029295897651934765
      }
     },
     "execution_evidence": [
@@ -25130,7 +25130,7 @@
       },
       "max_abs_error": 3.2869866117835045e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.016962867327798826
      },
      "finalize_post.dk_hv": {
       "comparison": {
@@ -25298,7 +25298,7 @@
       },
       "max_abs_error": 3.2782554626464844e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.001911163065133837
      },
      "inverse_epilogue.dk_hv": {
       "comparison": {
@@ -26048,7 +26048,7 @@
       },
       "max_abs_error": 1.430511474609375e-06,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.0026801499923802498
      },
      "dg": {
       "comparison": {
@@ -26060,7 +26060,7 @@
       },
       "max_abs_error": 2.384185791015625e-05,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.17211147660573303
      },
      "dh0": {
       "comparison": {
@@ -26072,7 +26072,7 @@
       },
       "max_abs_error": 2.384185791015625e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.0026934691466153652
      },
      "dk": {
       "comparison": {
@@ -26082,9 +26082,9 @@
        "reason": "<see contract.json>",
        "rtol": 0.001
       },
-      "max_abs_error": 0.<serial>,
+      "max_abs_error": 0.000278472900390625,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.0817310622327377
      },
      "dq": {
       "comparison": {
@@ -26096,7 +26096,7 @@
       },
       "max_abs_error": 2.2649765014648438e-06,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.017610068119184995
      },
      "dv": {
       "comparison": {
@@ -26108,7 +26108,7 @@
       },
       "max_abs_error": 3.0517578125e-05,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.0026271770169662124
      }
     },
     "execution_evidence": [
@@ -26499,7 +26499,7 @@
       },
       "max_abs_error": 4.78699803352356e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.01740267027695889
      },
      "finalize_post.dk_hv": {
       "comparison": {
@@ -26667,7 +26667,7 @@
       },
       "max_abs_error": 4.76837158203125e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.0017146559974528255
      },
      "inverse_epilogue.dk_hv": {
       "comparison": {
@@ -27417,7 +27417,7 @@
       },
       "max_abs_error": 3.814697265625e-06,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.0033492997597711687
      },
      "dg": {
       "comparison": {
@@ -27429,7 +27429,7 @@
       },
       "max_abs_error": 2.6702880859375e-05,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.14285227756589305
      },
      "dh0": {
       "comparison": {
@@ -27441,7 +27441,7 @@
       },
       "max_abs_error": 2.384185791015625e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.0028396770533758806
      },
      "dk": {
       "comparison": {
@@ -27451,9 +27451,9 @@
        "reason": "<see contract.json>",
        "rtol": 0.001
       },
-      "max_abs_error": 0.<serial>,
+      "max_abs_error": 0.00034332275390625,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.10244401952599146
      },
      "dq": {
       "comparison": {
@@ -27465,7 +27465,7 @@
       },
       "max_abs_error": 9.298324584960938e-06,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.021090265351159265
      },
      "dv": {
       "comparison": {
@@ -27477,7 +27477,7 @@
       },
       "max_abs_error": 3.0517578125e-05,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.003113679438371408
      }
     },
     "execution_evidence": [
@@ -27868,7 +27868,7 @@
       },
       "max_abs_error": 4.76837158203125e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.010869141630656148
      },
      "finalize_post.dk_hv": {
       "comparison": {
@@ -28036,7 +28036,7 @@
       },
       "max_abs_error": 4.172325134277344e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.001049832997478278
      },
      "inverse_epilogue.dk_hv": {
       "comparison": {
@@ -28786,7 +28786,7 @@
       },
       "max_abs_error": 1.9073486328125e-06,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.0013323126690201503
      },
      "dg": {
       "comparison": {
@@ -28798,7 +28798,7 @@
       },
       "max_abs_error": 1.621246337890625e-05,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.133946613401337
      },
      "dh0": {
       "comparison": {
@@ -28810,7 +28810,7 @@
       },
       "max_abs_error": 4.76837158203125e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.002779904642751752
      },
      "dk": {
       "comparison": {
@@ -28820,9 +28820,9 @@
        "reason": "<see contract.json>",
        "rtol": 0.001
       },
-      "max_abs_error": 0.<serial>,
+      "max_abs_error": 0.00041684508323669434,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.06635192050979412
      },
      "dq": {
       "comparison": {
@@ -28834,7 +28834,7 @@
       },
       "max_abs_error": 5.900859832763672e-06,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.021692801851544027
      },
      "dv": {
       "comparison": {
@@ -28846,7 +28846,7 @@
       },
       "max_abs_error": 6.103515625e-05,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.0030709455707441428
      }
     },
     "execution_evidence": [
@@ -29237,7 +29237,7 @@
       },
       "max_abs_error": 4.805624485015869e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.02213455552522868
      },
      "finalize_post.dk_hv": {
       "comparison": {
@@ -29405,7 +29405,7 @@
       },
       "max_abs_error": 4.76837158203125e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.0022136966883943682
      },
      "inverse_epilogue.dk_hv": {
       "comparison": {
@@ -30155,7 +30155,7 @@
       },
       "max_abs_error": 9.5367431640625e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.001069101892737537
      },
      "dg": {
       "comparison": {
@@ -30167,7 +30167,7 @@
       },
       "max_abs_error": 3.24249267578125e-05,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.14687929734954
      },
      "dh0": {
       "comparison": {
@@ -30179,7 +30179,7 @@
       },
       "max_abs_error": 2.384185791015625e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.002755639154180674
      },
      "dk": {
       "comparison": {
@@ -30189,9 +30189,9 @@
        "reason": "<see contract.json>",
        "rtol": 0.001
       },
-      "max_abs_error": 0.<serial>,
+      "max_abs_error": 0.000232696533203125,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.07924517804984908
      },
      "dq": {
       "comparison": {
@@ -30203,7 +30203,7 @@
       },
       "max_abs_error": 3.159046173095703e-06,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.021410760073862126
      },
      "dv": {
       "comparison": {
@@ -30215,7 +30215,7 @@
       },
       "max_abs_error": 6.103515625e-05,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.003056531990789527
      }
     },
     "execution_evidence": [
@@ -30606,7 +30606,7 @@
       },
       "max_abs_error": 2.421438694000244e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.015766402724711977
      },
      "finalize_post.dk_hv": {
       "comparison": {
@@ -30774,7 +30774,7 @@
       },
       "max_abs_error": 2.384185791015625e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.0017438656569011882
      },
      "inverse_epilogue.dk_hv": {
       "comparison": {
@@ -31524,7 +31524,7 @@
       },
       "max_abs_error": 9.5367431640625e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.001069101892737537
      },
      "dg": {
       "comparison": {
@@ -31536,7 +31536,7 @@
       },
       "max_abs_error": 3.24249267578125e-05,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.14687929734954
      },
      "dh0": {
       "comparison": {
@@ -31548,7 +31548,7 @@
       },
       "max_abs_error": 2.384185791015625e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.002755639154180674
      },
      "dk": {
       "comparison": {
@@ -31558,9 +31558,9 @@
        "reason": "<see contract.json>",
        "rtol": 0.001
       },
-      "max_abs_error": 0.<serial>,
+      "max_abs_error": 0.000232696533203125,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.07924517804984908
      },
      "dq": {
       "comparison": {
@@ -31572,7 +31572,7 @@
       },
       "max_abs_error": 3.159046173095703e-06,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.021410760073862126
      },
      "dv": {
       "comparison": {
@@ -31584,7 +31584,7 @@
       },
       "max_abs_error": 6.103515625e-05,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.003056531990789527
      }
     },
     "execution_evidence": [
@@ -31975,7 +31975,7 @@
       },
       "max_abs_error": 2.421438694000244e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.015766402724711977
      },
      "finalize_post.dk_hv": {
       "comparison": {
@@ -32143,7 +32143,7 @@
       },
       "max_abs_error": 2.384185791015625e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.0017438656569011882
      },
      "inverse_epilogue.dk_hv": {
       "comparison": {
@@ -32893,7 +32893,7 @@
       },
       "max_abs_error": 1.9073486328125e-06,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.004082947704033511
      },
      "dg": {
       "comparison": {
@@ -32905,7 +32905,7 @@
       },
       "max_abs_error": 2.193450927734375e-05,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.15104253765623843
      },
      "dh0": {
       "comparison": {
@@ -32917,7 +32917,7 @@
       },
       "max_abs_error": 2.384185791015625e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.0025515672795049203
      },
      "dk": {
       "comparison": {
@@ -32927,9 +32927,9 @@
        "reason": "<see contract.json>",
        "rtol": 0.001
       },
-      "max_abs_error": 0.<serial>,
+      "max_abs_error": 0.00045013427734375,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.07649521332871252
      },
      "dq": {
       "comparison": {
@@ -32941,7 +32941,7 @@
       },
       "max_abs_error": 3.874301910400391e-06,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.03829008738410168
      },
      "dv": {
       "comparison": {
@@ -32953,7 +32953,7 @@
       },
       "max_abs_error": 6.103515625e-05,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.0027582200918273773
      }
     },
     "execution_evidence": [
@@ -33344,7 +33344,7 @@
       },
       "max_abs_error": 4.777684807777405e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.0239432913847691
      },
      "finalize_post.dk_hv": {
       "comparison": {
@@ -33512,7 +33512,7 @@
       },
       "max_abs_error": 4.76837158203125e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.0023900150110440633
      },
      "inverse_epilogue.dk_hv": {
       "comparison": {
@@ -34262,7 +34262,7 @@
       },
       "max_abs_error": 3.814697265625e-06,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.002892248401015121
      },
      "dg": {
       "comparison": {
@@ -34274,7 +34274,7 @@
       },
       "max_abs_error": 2.574920654296875e-05,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.13758604601614363
      },
      "dh0": {
       "comparison": {
@@ -34286,7 +34286,7 @@
       },
       "max_abs_error": 2.384185791015625e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.002818081175255636
      },
      "dk": {
       "comparison": {
@@ -34296,9 +34296,9 @@
        "reason": "<see contract.json>",
        "rtol": 0.001
       },
-      "max_abs_error": 0.<serial>,
+      "max_abs_error": 0.000335693359375,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.07914575857403394
      },
      "dq": {
       "comparison": {
@@ -34310,7 +34310,7 @@
       },
       "max_abs_error": 3.1888484954833984e-06,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.01902540302167489
      },
      "dv": {
       "comparison": {
@@ -34322,7 +34322,7 @@
       },
       "max_abs_error": 6.103515625e-05,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.003130014913115392
      }
     },
     "execution_evidence": [
@@ -34713,7 +34713,7 @@
       },
       "max_abs_error": 4.805624485015869e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.021182122325571404
      },
      "finalize_post.dk_hv": {
       "comparison": {
@@ -34881,7 +34881,7 @@
       },
       "max_abs_error": 4.76837158203125e-07,
       "passed": true,
-      "relative_l2_error": 0.<serial>
+      "relative_l2_error": 0.0020186742293635714
      },
      "inverse_epilogue.dk_hv": {
       "comparison": {
@@ -35635,7 +35635,7 @@
   "schema": "ascriptor.unit-result/1",
   "simulator_imported": true,
   "stage": "sim",
-  "started_at": "2026-09-20T09:24:41.217096+00:00",
+  "started_at": "2026-09-20T11:33:37.390049+00:00",
   "unit": "a2.kda_bwd_stable",
   "versions": {
    "ascriptor": null,
@@ -35644,6 +35644,80 @@
    "torch": "2.10.0+cpu"
   }
  },
- "schema": "a2-09.evidence/1",
- "stage": "sim"
+ "schema": "a2-09.evidence/2",
+ "stage": "sim",
+ "unit_source": {
+  "files": {
+   "_unit_runner.py": {
+    "bytes": 34594,
+    "code_sha256": "005b870313a4fdec566e46acfa603759e074faa71a9c7956ecf8bf040b3af625",
+    "value_sha": "8e91d95ed0294ddbfc204957b8bf77606a79123655fc096963b94658b633566b"
+   },
+   "contract.json": {
+    "bytes": 26814,
+    "value_sha": "40f974e0f44a7ed65ed8305c6ff0e6bd4948172c4361298193f59d7840e052e8"
+   },
+   "kernels/finalize_pair.py": {
+    "bytes": 4894,
+    "code_sha256": "8b10511e126c0f8116b5f69125219d6c04cacf3243004bebd05e2267cc43b5f8",
+    "value_sha": "50092620fbe062cb8937e57fb7379e711a6a34815ca77101002dfd9a6daa2d08"
+   },
+   "kernels/finalize_post.py": {
+    "bytes": 13308,
+    "code_sha256": "ada5db69fe4144804a10733fd9ed545ea4f4fa01f73fc75021a3625526df3adf",
+    "value_sha": "979d1f30380a07fbe7ad5dd1e81a9a9ab833dc15b2bac9ed9f10cd5f55997fac"
+   },
+   "kernels/finalize_pre.py": {
+    "bytes": 10842,
+    "code_sha256": "4b374ebfeb95ebfa11b0545748c5629706ce1be48471708c9b1975607ac0b856",
+    "value_sha": "a8ae0e1101885017a9f0d58d1f2eea945f4e83e08072782e59a8cfbc1f6b27c9"
+   },
+   "kernels/finalize_reduce.py": {
+    "bytes": 2658,
+    "code_sha256": "5c350293a956e2440cc9a2395e66ea2fd79143bdf6eed105ea0dbecf9742a435",
+    "value_sha": "19972b03216fd3b799a69480965ed9af8aa6a004efe8415d906502f3c9d9667d"
+   },
+   "kernels/inverse_dainv.py": {
+    "bytes": 6879,
+    "code_sha256": "6d5bf8f2152f4f4c817466912c15ca67c9cb17084b944e023b8aa678e2114cbe",
+    "value_sha": "4a895c38186d44813e84cf5848fa5dc594352222240a36c66a229d44de14155d"
+   },
+   "kernels/inverse_dakk_fused.py": {
+    "bytes": 5647,
+    "code_sha256": "168b10aef7d7fa380cc39ddbac250a8a2ed3dc9e89850aec0fc64a340c9f3fb9",
+    "value_sha": "fdce4b8886270de12ba0b1a2d69049d3ac45cd2d20462e865f6e69c7e09029b9"
+   },
+   "kernels/inverse_epilogue.py": {
+    "bytes": 14654,
+    "code_sha256": "154c774fa5ad4b1fa95740d180bc0e61f01a0e88cfc74f7b59fee9c492e61266",
+    "value_sha": "b96c3f3ba347772c7fb97bcc88f6797e7fc44af7c18f638c898034e22921aacd"
+   },
+   "kernels/inverse_mm.py": {
+    "bytes": 6467,
+    "code_sha256": "82468e61bb206e2f6f644c8ab61a22af28f9cae2520d3f2c065f0e18855e8b6f",
+    "value_sha": "fa00a49d3c38e9fb71948d909ff812e6461f31ac52083383e57435e800f25c5c"
+   },
+   "kernels/scan_fused.py": {
+    "bytes": 11816,
+    "code_sha256": "2489903bb7f45a3b87d7a5e8d0019dab9e60316e80b25f5457bad7900da80860",
+    "value_sha": "99de3182650d2c6b9c27cedfb4a6cc717db4c4418f3e7488da902078907f8a37"
+   },
+   "reference.py": {
+    "bytes": 15731,
+    "code_sha256": "fa41533605bb8e6beed97070f0ec72c823aa0f01cbe629a1497faa59be0776fe",
+    "value_sha": "b21c57d9dea08a49b305a03dbacf148534e5ca801861a8c544b2b9c707a96d7e"
+   },
+   "run.py": {
+    "bytes": 214,
+    "code_sha256": "4708a83b3cec42c2515cc05e4a0a79d15b400d4f328fbf71e9c8541b2cc4fe4d",
+    "value_sha": "700b1e0c3c34c249042fb6d3ea79fa427b95d017376c0c114a30d06892f3beaf"
+   },
+   "unit.py": {
+    "bytes": 10401,
+    "code_sha256": "49775021a1eb1065a6d6c0ddda416a4bf1b78e3b3738eb95192b676aa2bd84ff",
+    "value_sha": "6d3dee3bed57121cd8a1f439058853558001b6b35e2aa723d26847ffb5a859f0"
+   }
+  },
+  "unit_source_sha256": "b4bb774d8f7406cadfc5bd89647d641b439abefbd1fb00dfb806ac404c29de94"
+ }
 }
