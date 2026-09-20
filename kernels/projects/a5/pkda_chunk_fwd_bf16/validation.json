@@ -1,0 +1,224 @@
+{
+  "schema": "bf04-qualification/1",
+  "qualified": true,
+  "scope": "A5 Ascend950PR_9589 native inprocess forward only; executed grid, no backward or other-SoC qualification",
+  "source": {
+    "runtime_commit": "dba8c33",
+    "library": "90cfcdc720bbcd66e8bd4361c4dd4fbc1a2a57b5",
+    "kernels": "b3b3f9c16df7c4626ed3c081032a1be5a753d0b1",
+    "fla": "e52dbc0ea19d3a40d7ab7f9eed855d2b473994d2",
+    "fla_naive_sha256": "ec18fab93598982c41447b8e0b3b3e3e1916b71945b131a4557033646ce187c5"
+  },
+  "environment": {
+    "soc": "Ascend950PR_9589",
+    "cann": "9.2.0",
+    "cann_inner": "V100R001C12B056",
+    "opp_packages": [
+      "ascend950",
+      "ascend910b",
+      "ascend910_93"
+    ],
+    "python": "3.12.13",
+    "torch": "2.12.0+cpu",
+    "torch_npu": "2.12.0",
+    "ascriptor": "0.1.0"
+  },
+  "native": {
+    "passed": true,
+    "cases": 356,
+    "boundary_checks": 172,
+    "per_block_dim": [
+      {
+        "block_dim": 1,
+        "cases": 89,
+        "boundary_checks": 43,
+        "vendors": 11,
+        "max_relative_l2": {
+          "A": {
+            "o": 0.0034262118861079216,
+            "final_state": 6.614809990423964e-06,
+            "final_A_state": 1.052942977253224e-07
+          },
+          "B": {
+            "o": 0.0034262610133737326,
+            "final_state": 4.9335415042151e-07,
+            "final_A_state": 1.052942977253224e-07
+          }
+        }
+      },
+      {
+        "block_dim": 2,
+        "cases": 89,
+        "boundary_checks": 43,
+        "vendors": 11,
+        "max_relative_l2": {
+          "A": {
+            "o": 0.0034262118861079216,
+            "final_state": 6.614809990423964e-06,
+            "final_A_state": 1.052942977253224e-07
+          },
+          "B": {
+            "o": 0.0034262610133737326,
+            "final_state": 4.9335415042151e-07,
+            "final_A_state": 1.052942977253224e-07
+          }
+        }
+      },
+      {
+        "block_dim": 3,
+        "cases": 89,
+        "boundary_checks": 43,
+        "vendors": 11,
+        "max_relative_l2": {
+          "A": {
+            "o": 0.0034262118861079216,
+            "final_state": 6.614809990423964e-06,
+            "final_A_state": 1.052942977253224e-07
+          },
+          "B": {
+            "o": 0.0034262610133737326,
+            "final_state": 4.9335415042151e-07,
+            "final_A_state": 1.052942977253224e-07
+          }
+        }
+      },
+      {
+        "block_dim": 4,
+        "cases": 89,
+        "boundary_checks": 43,
+        "vendors": 11,
+        "max_relative_l2": {
+          "A": {
+            "o": 0.0034262118861079216,
+            "final_state": 6.614809990423964e-06,
+            "final_A_state": 1.052942977253224e-07
+          },
+          "B": {
+            "o": 0.0034262610133737326,
+            "final_state": 4.9335415042151e-07,
+            "final_A_state": 1.052942977253224e-07
+          }
+        }
+      }
+    ],
+    "cross_block_dim": [
+      {
+        "block_dim": 1,
+        "cases": 89,
+        "input_bytes_equal": true,
+        "all19_stage_bytes_equal": true,
+        "public_output_bytes_equal": true
+      },
+      {
+        "block_dim": 2,
+        "cases": 89,
+        "input_bytes_equal": true,
+        "all19_stage_bytes_equal": true,
+        "public_output_bytes_equal": true
+      },
+      {
+        "block_dim": 3,
+        "cases": 89,
+        "input_bytes_equal": true,
+        "all19_stage_bytes_equal": true,
+        "public_output_bytes_equal": true
+      },
+      {
+        "block_dim": 4,
+        "cases": 89,
+        "input_bytes_equal": true,
+        "all19_stage_bytes_equal": true,
+        "public_output_bytes_equal": true
+      }
+    ],
+    "criteria": "Both CPU FP32 references; o/state<=1e-2 AND<=3F for each case; ATK<=1e-4. No model or historical qualification used."
+  },
+  "host_tests": {
+    "full": "708 passed, 5 skipped in 139.96s; five NPU test modules require torch_npu on the CPU host",
+    "cache_adapter_followup": "29 passed after restoring the accepted readonly FLA package path; all4 skipped oracle cases closed",
+    "pkda_cpu_environment": "83 passed",
+    "pkda_native_host_environment": "83 passed in 5.64s on final source",
+    "restored_source": "83 passed in 9.35s; t1_h1 reference and full-unit functional simulation passed"
+  },
+  "audit": {
+    "bf16_operators": [
+      "aten.empty.memory_format",
+      "aten.view.default"
+    ],
+    "control_readback": "ACL D2H numeric-guard codes, <=16KiB over declared B/H domain; no computational values",
+    "fp32": "Original read-only finite/range/norm/span checks separately classified; no dtype/layout transformations or computational host preprocessing",
+    "constant_allocation": "FP32 default zeros/full explicitly classified",
+    "authority": "https://github.com/ddddwee1/ascend_fla_dev/issues/103#issuecomment-5743858594"
+  },
+  "models": {
+    "functional": "Full unit t1_h1 bd1; output-only T129/H1/bd1 after native full workload",
+    "pipesim": "Output-only T129/H1/bd1, three iterations including tail; balanced events, no hazards/deadlock; full-chain pipesim untested"
+  },
+  "performance": {
+    "file": "evidence/performance.json",
+    "timing": "Same NPU, synchronized API wall time. Original FP32/BF16 sandwich: three warmup calls per dtype before all rounds, then three rounds with five repeats per segment. Torch NPU naive sandwich: one baseline validation/warmup call, then three rounds with two baseline repeats per side and three already-warmed candidate repeats.",
+    "cases": [
+      {
+        "T": 1024,
+        "BF16_ms": [
+          40.543612907640636,
+          40.33347906079143,
+          39.95956701692194
+        ],
+        "speedup_vs_original_fp32": [
+          1.3122788444174738,
+          1.2954173117314958,
+          1.248855636785644
+        ],
+        "speedup_vs_torch_npu": [
+          29.660327787613586,
+          23.98512222065065,
+          26.212432928741148
+        ]
+      },
+      {
+        "T": 4096,
+        "BF16_ms": [
+          152.22312905825675,
+          151.66946896351874,
+          151.72991796862334
+        ],
+        "speedup_vs_original_fp32": [
+          1.2370097151384196,
+          1.2101775573749132,
+          1.2145110106799542
+        ],
+        "speedup_vs_torch_npu": [
+          32.9759225772329,
+          31.139502618426057,
+          30.91028677860335
+        ]
+      }
+    ]
+  },
+  "warnings": {
+    "kind": "performance advisory only",
+    "location": "kernels/output.py BF16 ND-to-NZ L1 publications",
+    "disposition": "All raw warnings retained. Correctness/ownership verified native and bounded models; sanctioned multi-burst transfer retained. No performance threshold or warning suppression."
+  },
+  "archive_restoration": {
+    "passed": true,
+    "receipt": "evidence/restoration.json",
+    "checks": [
+      "All source and evidence file SHA256 values after extraction",
+      "Recompute 356 full-chain/172 boundary checks and all cross-bd hashes",
+      "83 PKDA tests on isolated restored source",
+      "Standalone full-unit t1_h1 reference and functional simulation",
+      "Final native T4096/H8/bd4 and original/current FP32 byte audit; native-host83tests"
+    ]
+  },
+  "native_closeout": {
+    "passed": true,
+    "case": "t4096_h8",
+    "block_dim": 4,
+    "source_manifest": "source-closeout-manifest.json inside evidence archive",
+    "scope": "Native kernel/public hashes match the grid and performance artifact; standalone helper and diagnostic scripts finalized",
+    "all11_vendors_before_first_custom_call": true,
+    "post_device_health": 0
+  }
+}

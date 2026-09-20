@@ -1,0 +1,156 @@
+[
+  {
+    "stage": "sim",
+    "case": {
+      "id": "output_nd2nz_reuse_tail",
+      "seed": 701,
+      "parameters": {
+        "B": 1,
+        "T": 129,
+        "H": 1
+      }
+    },
+    "block_dim": 1,
+    "result": {
+      "passed": true,
+      "finite": true,
+      "errors": {
+        "A": {
+          "o": {
+            "relative_l2": 0.0028796077240258455,
+            "max_abs": 8.864700794219971e-05
+          },
+          "final_state": {
+            "relative_l2": 2.3272430382803577e-07,
+            "max_abs": 8.195638656616211e-08
+          },
+          "final_A_state": {
+            "relative_l2": 0.0,
+            "max_abs": 0.0
+          }
+        },
+        "B": {
+          "o": {
+            "relative_l2": 0.0028796049300581217,
+            "max_abs": 8.863862603902817e-05
+          },
+          "final_state": {
+            "relative_l2": 0.0,
+            "max_abs": 0.0
+          },
+          "final_A_state": {
+            "relative_l2": 0.0,
+            "max_abs": 0.0
+          }
+        }
+      },
+      "floors": {
+        "o": {
+          "A": 0.0016544807003811002,
+          "B": 0.0016544780228286982
+        },
+        "final_state": {
+          "A": 0.0016425484791398048,
+          "B": 0.0016425523208454251
+        }
+      },
+      "budgets": {
+        "o": 0.0049634340684860945,
+        "final_state": 0.0049276454374194145,
+        "final_A_state": 0.0001
+      }
+    },
+    "evidence": [
+      {
+        "kernel": "pkda_bf16_output",
+        "device": "a5",
+        "requested_backend": "cce",
+        "stage": "sim",
+        "launcher": "sim",
+        "block_dim": 1,
+        "model": "functional Surface IR",
+        "backend_executed": false,
+        "sim_processes": "fork"
+      }
+    ]
+  },
+  {
+    "stage": "pipesim",
+    "case": {
+      "id": "output_nd2nz_reuse_tail",
+      "seed": 701,
+      "parameters": {
+        "B": 1,
+        "T": 129,
+        "H": 1
+      }
+    },
+    "block_dim": 1,
+    "result": {
+      "passed": true,
+      "finite": true,
+      "errors": {
+        "A": {
+          "o": {
+            "relative_l2": 0.0028796077240258455,
+            "max_abs": 8.864700794219971e-05
+          },
+          "final_state": {
+            "relative_l2": 2.3272430382803577e-07,
+            "max_abs": 8.195638656616211e-08
+          },
+          "final_A_state": {
+            "relative_l2": 0.0,
+            "max_abs": 0.0
+          }
+        },
+        "B": {
+          "o": {
+            "relative_l2": 0.0028796049300581217,
+            "max_abs": 8.863862603902817e-05
+          },
+          "final_state": {
+            "relative_l2": 0.0,
+            "max_abs": 0.0
+          },
+          "final_A_state": {
+            "relative_l2": 0.0,
+            "max_abs": 0.0
+          }
+        }
+      },
+      "floors": {
+        "o": {
+          "A": 0.0016544807003811002,
+          "B": 0.0016544780228286982
+        },
+        "final_state": {
+          "A": 0.0016425484791398048,
+          "B": 0.0016425523208454251
+        }
+      },
+      "budgets": {
+        "o": 0.0049634340684860945,
+        "final_state": 0.0049276454374194145,
+        "final_A_state": 0.0001
+      }
+    },
+    "evidence": [
+      {
+        "kernel": "pkda_bf16_output",
+        "device": "a5",
+        "requested_backend": "cce",
+        "stage": "pipesim",
+        "launcher": "pipesim",
+        "block_dim": 1,
+        "model": "lowered events and hazards",
+        "backend_executed": false,
+        "event_balance": [],
+        "hazards": [],
+        "deadlock": null,
+        "model_cycles": 31231,
+        "sim_processes": "fork"
+      }
+    ]
+  }
+]

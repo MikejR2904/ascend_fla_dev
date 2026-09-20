@@ -1,0 +1,793 @@
+{
+  "schema": "ascriptor.kernel-unit/1",
+  "id": "a5.pkda_chunk_fwd_bf16",
+  "kind": "project",
+  "description": "Native BF16 PKDA q/k/v and output, FP32 internal recurrence with BF16 cube output products.",
+  "inputs": {
+    "q": {
+      "dtype": "bfloat16",
+      "shape": [
+        "B",
+        "T",
+        "H",
+        128
+      ]
+    },
+    "k": {
+      "dtype": "bfloat16",
+      "shape": [
+        "B",
+        "T",
+        "H",
+        128
+      ]
+    },
+    "v": {
+      "dtype": "bfloat16",
+      "shape": [
+        "B",
+        "T",
+        "H",
+        128
+      ]
+    },
+    "g": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "T",
+        "H",
+        128
+      ],
+      "note": "Already-activated non-positive per-key-channel log decay."
+    },
+    "initial_state": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "H",
+        128,
+        128
+      ],
+      "note": "K-major, read-only and never aliased with final_state."
+    },
+    "g_atk": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "T",
+        "H"
+      ]
+    },
+    "beta_atk": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "T",
+        "H"
+      ]
+    },
+    "beta": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "T",
+        "H"
+      ]
+    },
+    "initial_A_state": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "H",
+        128
+      ],
+      "note": "Independent non-negative ATK state, read-only."
+    },
+    "log_atk_scale": {
+      "dtype": "float32",
+      "shape": [
+        "H"
+      ]
+    }
+  },
+  "outputs": {
+    "o": {
+      "dtype": "bfloat16",
+      "shape": [
+        "B",
+        "T",
+        "H",
+        128
+      ],
+      "initialization": "NaN poison; every element must be overwritten."
+    },
+    "final_state": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "H",
+        128,
+        128
+      ],
+      "initialization": "NaN poison; every element must be overwritten."
+    },
+    "final_A_state": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "H",
+        128
+      ],
+      "initialization": "NaN poison; full overwrite."
+    }
+  },
+  "domain": {
+    "B": [
+      1,
+      2
+    ],
+    "T": "1..4096",
+    "H": "1..32",
+    "K": 128,
+    "V": 128,
+    "block_dim": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "layout": "Token-major BTHD inputs/output; K-major BHKV state; all tensors contiguous.",
+    "gate_domain": "Finite g/g_atk<=0, beta/beta_atk in[0,1], initial_A_state>=0; per-chunk |sum(g)|<=155; key row L2<=1+1e-5.",
+    "normalization": "None: raw q/k are consumed unchanged; test generation supplies valid BF16-rounded keys.",
+    "ownership": "Prepare and scan own complete heads across chunks; other stages own chunk/head tiles.",
+    "aliasing": "All inputs read-only; all three outputs fresh and disjoint."
+  },
+  "dependencies": {
+    "python": ">=3.10",
+    "ascriptor": "==0.1.0",
+    "host": [
+      "torch>=2.9.0",
+      "numpy"
+    ]
+  },
+  "comparison": {
+    "default": {
+      "mode": "allclose",
+      "atol": 0.01,
+      "rtol": 0.01,
+      "max_relative_l2": 0.01,
+      "reference_dtype": "float32",
+      "reason": "Coarse portable check; execute additionally requires case-calibrated <=3F against both CPU FP32 references."
+    },
+    "outputs": {
+      "final_A_state": {
+        "mode": "allclose",
+        "atol": 0.0001,
+        "rtol": 0.0001,
+        "max_relative_l2": 0.0001,
+        "reference_dtype": "float32"
+      }
+    }
+  },
+  "cases": [
+    {
+      "id": "t1_h1",
+      "seed": 4101,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "T": 1,
+        "H": 1,
+        "N": 1,
+        "state_scale": 0.05,
+        "A_scale": 0.03,
+        "gate_scale": 0.1
+      }
+    },
+    {
+      "id": "t2_h1",
+      "seed": 4102,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "T": 2,
+        "H": 1,
+        "N": 1,
+        "state_scale": 0.05,
+        "A_scale": 0.03,
+        "gate_scale": 0.1
+      }
+    },
+    {
+      "id": "t63_h8",
+      "seed": 4163,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "T": 63,
+        "H": 8,
+        "N": 1,
+        "state_scale": 0.05,
+        "A_scale": 0.03,
+        "gate_scale": 0.1
+      }
+    },
+    {
+      "id": "t64_h8",
+      "seed": 4164,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "T": 64,
+        "H": 8,
+        "N": 1,
+        "state_scale": 0.05,
+        "A_scale": 0.03,
+        "gate_scale": 0.1
+      }
+    },
+    {
+      "id": "t65_h8",
+      "seed": 4165,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "T": 65,
+        "H": 8,
+        "N": 2,
+        "state_scale": 0.05,
+        "A_scale": 0.03,
+        "gate_scale": 0.1
+      }
+    },
+    {
+      "id": "t128_h8",
+      "seed": 4228,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "T": 128,
+        "H": 8,
+        "N": 2,
+        "state_scale": 0.05,
+        "A_scale": 0.03,
+        "gate_scale": 0.1
+      }
+    },
+    {
+      "id": "t192_h8",
+      "seed": 4292,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "T": 192,
+        "H": 8,
+        "N": 3,
+        "state_scale": 0.05,
+        "A_scale": 0.03,
+        "gate_scale": 0.1
+      }
+    },
+    {
+      "id": "t1024_h8",
+      "seed": 5124,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "T": 1024,
+        "H": 8,
+        "N": 16,
+        "state_scale": 0.05,
+        "A_scale": 0.03,
+        "gate_scale": 0.1
+      }
+    },
+    {
+      "id": "t4096_h8",
+      "seed": 8196,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "T": 4096,
+        "H": 8,
+        "N": 64,
+        "state_scale": 0.05,
+        "A_scale": 0.03,
+        "gate_scale": 0.1
+      }
+    },
+    {
+      "id": "t65_h1",
+      "seed": 4165,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "T": 65,
+        "H": 1,
+        "N": 2,
+        "state_scale": 0.05,
+        "A_scale": 0.03,
+        "gate_scale": 0.1
+      }
+    },
+    {
+      "id": "zero_A",
+      "seed": 6163,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "T": 2,
+        "H": 1,
+        "state_scale": 0.05,
+        "A_scale": 0.0,
+        "gate_scale": 0.1,
+        "zero_atk": true,
+        "N": 1
+      }
+    },
+    {
+      "id": "zero_S",
+      "seed": 6163,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "T": 2,
+        "H": 1,
+        "state_scale": 0.0,
+        "A_scale": 0.03,
+        "gate_scale": 0.1,
+        "N": 1
+      }
+    },
+    {
+      "id": "span105",
+      "seed": 6163,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "T": 64,
+        "H": 1,
+        "state_scale": 0.05,
+        "A_scale": 0.03,
+        "gate_scale": 0.1,
+        "gate_span": 105.0,
+        "N": 1
+      }
+    },
+    {
+      "id": "span155",
+      "seed": 6163,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "T": 64,
+        "H": 1,
+        "state_scale": 0.05,
+        "A_scale": 0.03,
+        "gate_scale": 0.1,
+        "gate_span": 155.0,
+        "N": 1
+      }
+    },
+    {
+      "id": "nearzero",
+      "seed": 6163,
+      "block_dim": 1,
+      "parameters": {
+        "B": 1,
+        "T": 2,
+        "H": 1,
+        "state_scale": 0.05,
+        "A_scale": 0.03,
+        "gate_scale": 0.1,
+        "row_norm": 1e-06,
+        "N": 1
+      }
+    },
+    {
+      "id": "b2_t2_h3",
+      "seed": 4323,
+      "block_dim": 1,
+      "parameters": {
+        "B": 2,
+        "T": 2,
+        "H": 3,
+        "N": 1
+      }
+    }
+  ],
+  "support": [
+    {
+      "device": "a5",
+      "backend": "cce",
+      "stage": "reference",
+      "status": "passed",
+      "cases": [
+        "t1_h1",
+        "t2_h1",
+        "t63_h8",
+        "t64_h8",
+        "t65_h8",
+        "t128_h8",
+        "t192_h8",
+        "t1024_h8",
+        "t4096_h8",
+        "t65_h1",
+        "zero_A",
+        "zero_S",
+        "span105",
+        "span155",
+        "nearzero",
+        "b2_t2_h3"
+      ],
+      "note": "CPU FP32 dual-oracle operand study, no device claim."
+    },
+    {
+      "device": "a5",
+      "backend": "cce",
+      "stage": "emit",
+      "status": "passed",
+      "note": "All six BF16 entries."
+    },
+    {
+      "device": "a5",
+      "backend": "cce",
+      "stage": "compile",
+      "status": "passed",
+      "note": "All six BF16 plus five original FP32 vendors atbd1/2/3/4; separate processes."
+    },
+    {
+      "device": "a5",
+      "backend": "cce",
+      "stage": "sim",
+      "status": "passed",
+      "cases": [
+        "t1_h1"
+      ],
+      "note": "Full unit; output-only T129/H1/bd1 additionally checked after native full workload."
+    },
+    {
+      "device": "a5",
+      "backend": "cce",
+      "stage": "pipesim",
+      "status": "untested",
+      "note": "Full chain untested. Output-only T129/H1/bd1 diagnostic passed event/hazard/deadlock checks; see validation.json."
+    },
+    {
+      "device": "a5",
+      "backend": "cce",
+      "stage": "board",
+      "status": "passed",
+      "cases": [
+        "t1_h1",
+        "t2_h1",
+        "t63_h8",
+        "t64_h8",
+        "t65_h8",
+        "t128_h8",
+        "t192_h8",
+        "t1024_h8",
+        "t4096_h8",
+        "t65_h1",
+        "zero_A",
+        "zero_S",
+        "span105",
+        "span155",
+        "nearzero",
+        "b2_t2_h3"
+      ],
+      "note": "Actual inprocess only on950PR_9589/CANN9.2.0:89 full-chain cases+43API checks perbd1/2/3/4. SSHboard/aclnn launchers untested."
+    }
+  ],
+  "measured": {
+    "native_inprocess": {
+      "passed": true,
+      "cases": 356,
+      "boundary_checks": 172,
+      "per_block_dim": [
+        {
+          "block_dim": 1,
+          "cases": 89,
+          "boundary_checks": 43,
+          "vendors": 11,
+          "max_relative_l2": {
+            "A": {
+              "o": 0.0034262118861079216,
+              "final_state": 6.614809990423964e-06,
+              "final_A_state": 1.052942977253224e-07
+            },
+            "B": {
+              "o": 0.0034262610133737326,
+              "final_state": 4.9335415042151e-07,
+              "final_A_state": 1.052942977253224e-07
+            }
+          }
+        },
+        {
+          "block_dim": 2,
+          "cases": 89,
+          "boundary_checks": 43,
+          "vendors": 11,
+          "max_relative_l2": {
+            "A": {
+              "o": 0.0034262118861079216,
+              "final_state": 6.614809990423964e-06,
+              "final_A_state": 1.052942977253224e-07
+            },
+            "B": {
+              "o": 0.0034262610133737326,
+              "final_state": 4.9335415042151e-07,
+              "final_A_state": 1.052942977253224e-07
+            }
+          }
+        },
+        {
+          "block_dim": 3,
+          "cases": 89,
+          "boundary_checks": 43,
+          "vendors": 11,
+          "max_relative_l2": {
+            "A": {
+              "o": 0.0034262118861079216,
+              "final_state": 6.614809990423964e-06,
+              "final_A_state": 1.052942977253224e-07
+            },
+            "B": {
+              "o": 0.0034262610133737326,
+              "final_state": 4.9335415042151e-07,
+              "final_A_state": 1.052942977253224e-07
+            }
+          }
+        },
+        {
+          "block_dim": 4,
+          "cases": 89,
+          "boundary_checks": 43,
+          "vendors": 11,
+          "max_relative_l2": {
+            "A": {
+              "o": 0.0034262118861079216,
+              "final_state": 6.614809990423964e-06,
+              "final_A_state": 1.052942977253224e-07
+            },
+            "B": {
+              "o": 0.0034262610133737326,
+              "final_state": 4.9335415042151e-07,
+              "final_A_state": 1.052942977253224e-07
+            }
+          }
+        }
+      ],
+      "cross_block_dim": [
+        {
+          "block_dim": 1,
+          "cases": 89,
+          "input_bytes_equal": true,
+          "all19_stage_bytes_equal": true,
+          "public_output_bytes_equal": true
+        },
+        {
+          "block_dim": 2,
+          "cases": 89,
+          "input_bytes_equal": true,
+          "all19_stage_bytes_equal": true,
+          "public_output_bytes_equal": true
+        },
+        {
+          "block_dim": 3,
+          "cases": 89,
+          "input_bytes_equal": true,
+          "all19_stage_bytes_equal": true,
+          "public_output_bytes_equal": true
+        },
+        {
+          "block_dim": 4,
+          "cases": 89,
+          "input_bytes_equal": true,
+          "all19_stage_bytes_equal": true,
+          "public_output_bytes_equal": true
+        }
+      ],
+      "criteria": "Both CPU FP32 references; o/state<=1e-2 AND<=3F for each case; ATK<=1e-4. No model or historical qualification used."
+    },
+    "performance": "See evidence/performance.json; all raw rounds retained.",
+    "scope": "BF16 forward only; CPU study and native qualification separate."
+  },
+  "provenance": {
+    "derived_from": "a5.pkda_chunk_fwd at433c577; original FP32 unit unchanged",
+    "library_commit": "90cfcdc720bbcd66e8bd4361c4dd4fbc1a2a57b5",
+    "kernels_commit": "b3b3f9c16df7c4626ed3c081032a1be5a753d0b1",
+    "fla_commit": "e52dbc0ea19d3a40d7ab7f9eed855d2b473994d2"
+  },
+  "profile": {
+    "warmup": 10,
+    "repeat": 50
+  },
+  "release_scope": {
+    "version": "0.0.1.dev0",
+    "hardware": [
+      "a5"
+    ],
+    "note": "Experimental native BF16 forward on Ascend950PR_9589 / CANN9.2.0; original FP32 path unchanged. SSH board/aclnn launchers and backward untested."
+  },
+  "stages": {
+    "qn": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "N",
+        "H",
+        64,
+        128
+      ]
+    },
+    "kn": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "N",
+        "H",
+        64,
+        128
+      ]
+    },
+    "gc": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "N",
+        "H",
+        64,
+        128
+      ]
+    },
+    "bk": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "N",
+        "H",
+        64,
+        128
+      ]
+    },
+    "wv": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "N",
+        "H",
+        64,
+        128
+      ]
+    },
+    "u": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "N",
+        "H",
+        64,
+        128
+      ]
+    },
+    "wy": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "N",
+        "H",
+        64,
+        128
+      ]
+    },
+    "delta": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "N",
+        "H",
+        64,
+        128
+      ]
+    },
+    "lower": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "N",
+        "H",
+        64,
+        64
+      ]
+    },
+    "score": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "N",
+        "H",
+        64,
+        64
+      ]
+    },
+    "states": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "N",
+        "H",
+        128,
+        128
+      ]
+    },
+    "o": {
+      "dtype": "bfloat16",
+      "shape": [
+        "B",
+        "T",
+        "H",
+        128
+      ],
+      "initialization": "NaN poison; every element must be overwritten."
+    },
+    "final_state": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "H",
+        128,
+        128
+      ],
+      "initialization": "NaN poison; every element must be overwritten."
+    },
+    "final_A_state": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "H",
+        128
+      ],
+      "initialization": "NaN poison; full overwrite."
+    }
+  },
+  "workspace": {
+    "N": "ceil(T/64)",
+    "lifetime": "One public call; each stage output has a unique producer, separate storage and launch-ordered consumers."
+  },
+  "saved_state": {
+    "training": "No backward/autograd; independent initial/final main S and ATK A.",
+    "states": "Incoming K-major FP32 state per chunk, consumed by output stage."
+  },
+  "validation": {
+    "source_identity": {
+      "runtime_commit": "dba8c33",
+      "library": "90cfcdc720bbcd66e8bd4361c4dd4fbc1a2a57b5",
+      "kernels": "b3b3f9c16df7c4626ed3c081032a1be5a753d0b1",
+      "fla": "e52dbc0ea19d3a40d7ab7f9eed855d2b473994d2",
+      "fla_naive_sha256": "ec18fab93598982c41447b8e0b3b3e3e1916b71945b131a4557033646ce187c5"
+    },
+    "hardware": "356 native full-chain cases plus172 boundary/FP32 checks, allpass; crossbdinputs/all19stagebuffers/publicoutputsbyte-identical.",
+    "environment": {
+      "soc": "Ascend950PR_9589",
+      "cann": "9.2.0",
+      "cann_inner": "V100R001C12B056",
+      "opp_packages": [
+        "ascend950",
+        "ascend910b",
+        "ascend910_93"
+      ],
+      "python": "3.12.13",
+      "torch": "2.12.0+cpu",
+      "torch_npu": "2.12.0",
+      "ascriptor": "0.1.0"
+    },
+    "reproduce": "verify_native.py --block-dim <1..4> --mode suite --output <ignored-output>, independent processes under external device locks; all BF16 and FP32 vendors before first custom launch.",
+    "native_launchers": {
+      "inprocess": "passed",
+      "board": "untested",
+      "aclnn": "untested"
+    }
+  }
+}
