@@ -1,0 +1,216 @@
+{
+  "environment": {
+    "python": "3.12.14",
+    "torch": "2.12.0+cu130",
+    "torch_npu": "2.12.0",
+    "ascriptor": "0.1.0",
+    "library_commit": "90cfcdc720bbcd66e8bd4361c4dd4fbc1a2a57b5",
+    "kernels_commit": "b3b3f9c16df7c4626ed3c081032a1be5a753d0b1",
+    "cann_version_records": {
+      "compiler": {
+        "raw_lines": [
+          "Version=9.1.0-beta.1",
+          "version_dir=cann",
+          "required_package_runtime_version=\"9.1\"",
+          "required_package_ge-executor_version=\"9.1\"",
+          "required_package_metadef_version=\"9.1\"",
+          "required_package_opbase_version=\"9.1\"",
+          "required_package_bisheng-compiler_version=\"9.1\"",
+          "required_package_tbe-tik_version=\"9.1\"",
+          "timestamp=20260509_173000235"
+        ],
+        "sha256": "0f982a259247cdd06df4fa5bdaf526b57b6ad15f7d27a33f23b3c70a381c2fe5"
+      },
+      "opp": {
+        "raw_lines": [
+          "Version=9.1.0-beta.1",
+          "version_dir=cann",
+          "required_package_runtime_version=\">=8.5\"",
+          "required_package_ge-executor_version=\">=8.5\"",
+          "required_package_metadef_version=\">=8.5\"",
+          "required_package_asc-devkit_version=\">=8.5\"",
+          "required_package_bisheng-compiler_version=\">=8.5\"",
+          "timestamp=20260509_173000235"
+        ],
+        "sha256": "377b05dab3a2dfc87dfaa92affd69a9aa5795a54d423cbe629d3495ad20370ef"
+      }
+    },
+    "opp_directories": [
+      "ascend910_93",
+      "ascend910b",
+      "ascend950"
+    ],
+    "driver_source_sha256": {
+      "verify_leaf_native.py": "60b05ede0f379030011900889842b5dbb899411a7d447765e7c7b17e86db1ef5",
+      "unit.py": "d270c3d60704500bd41813831e57b0cea5ee95f67f5db914ff21cc6c1e8b22b7",
+      "native_cases.py": "f71cacb5aea2bc9a9c86295901114a1b862a5b45d00e775540315fc670a5e65e"
+    },
+    "source_sha256": {
+      "native_audit.py": "bfffeb22e43a3619118da1aa7119b7d1b5324d81d1632c982cfafcaebc4d6ba5",
+      "native_environment.py": "8aa453ef4cfd92476bb80d463ddf63d4b1e1d3c2eb325ad69e93fcaecc50833d",
+      "unit.py": "e3f9c1f51a977b31b87fd03397ea43a78b4b04f6dc487947ff0532eac747d9ae",
+      "run.py": "cc9b6f4400d94e45a3af3d607bbe143ad2211ce7b3189dbe3298166e5a541a32",
+      "_unit_runner.py": "91ab007ac56f59f3c1b918947be769e725e51d98f981f41608864a2ae477133a",
+      "runtime.py": "a63385ec54c95d02357b9748156cfe82b217e72b3834c159e7a029e5752fcbe3",
+      "verify_calibration.py": "e5f7403369d294444d617e7e93a06f83552caeb535d7a3f2c5cb54b8b287ff84",
+      "verify_native.py": "37161cbe3d595e842fc62a66a8a78d5b2e9532059cb37e3d6f0897be5248e9e2",
+      "kernels/forward.py": "135b1fa2f92c26da9a6b57434f09515ac95592f033b328c3c5ddcd9ac9b2b455",
+      "baseline/autograd.py": "c2a535ae2ec5b7f1b7da000a42a96e985fcc84aa4b05df1421cc83b424b25903",
+      "baseline/chunk.py": "5bf75978176280c5eaf9268e7730ea00bf1581bb1ef8dddb35ad5a178ffd49d0",
+      "baseline/fused_recurrent.py": "1e78c50a1f15f23e9a7213d57b021b558c02164989765877b6fba92a10cf473a",
+      "ref/calibrate.py": "d21ec73afc242b1b17e7d7f15e72c034fa0dfabda6505abe4edf74313cdb0765"
+    },
+    "predecessor_sha256": "5bf75978176280c5eaf9268e7730ea00bf1581bb1ef8dddb35ad5a178ffd49d0"
+  },
+  "case": {
+    "id": "gate_f32_f32_bf16_random",
+    "kind": "gate",
+    "types": "f32_f32_bf16",
+    "numerical": true
+  },
+  "namespace": "chunk",
+  "block_dim": 4,
+  "input_shapes": {
+    "source": [
+      2,
+      65,
+      8,
+      128
+    ],
+    "alog": [
+      8
+    ],
+    "bias": [
+      1024
+    ]
+  },
+  "input_sha256": {
+    "source": "e991279579136d5b4dcd2586893082bfdfca2eb323933e7d570a6495831a0011",
+    "alog": "eb41e4ea052689b344bf5939ee74e45cb78c4f20bf97604aa971a0d39e0b7b07",
+    "bias": "6e1dfd618cdd75fe5625c587449bfb530d85c3448821821c2d49fc2045f0e48b"
+  },
+  "actual_sha256": "97f10506349e2710b953086c1872e50adad590dee76535871f12ab8ffed8a882",
+  "to_fp64": {
+    "elements": 133120,
+    "finite_pairs": 133120,
+    "actual_nan": 0,
+    "reference_nan": 0,
+    "actual_posinf": 0,
+    "reference_posinf": 0,
+    "actual_neginf": 0,
+    "reference_neginf": 0,
+    "reference_norm": 2256.9986544021544,
+    "residual_norm": 0.00012135080266087872,
+    "relative_l2": 5.376644882981676e-08,
+    "relative_l2_finite_pairs": 5.376644882981676e-08,
+    "max_abs": 6.3042184663686385e-06,
+    "max_relative_nonzero": 2.9456495111621533e-07,
+    "relative_quantiles": [
+      4.417752938135619e-08,
+      1.0641827723228034e-07,
+      1.6495085420070166e-07,
+      2.9456495111621533e-07
+    ],
+    "zero_reference_nonzero_actual": 0,
+    "rounded_reference_max_ulp": 4,
+    "rounded_reference_over_one_ulp": 8041,
+    "rounded_reference_sign_differences": 0,
+    "actual_sha256": "97f10506349e2710b953086c1872e50adad590dee76535871f12ab8ffed8a882",
+    "reference_fp64_sha256": "d72081aee065becefaf4558c9b40a35a74321c09f7edd55d22b31d042b6e9e5b"
+  },
+  "to_predecessor_cpu_fp32": {
+    "elements": 133120,
+    "finite_pairs": 133120,
+    "actual_nan": 0,
+    "reference_nan": 0,
+    "actual_posinf": 0,
+    "reference_posinf": 0,
+    "actual_neginf": 0,
+    "reference_neginf": 0,
+    "reference_norm": 2256.9986107158147,
+    "residual_norm": 0.00010067986770884224,
+    "relative_l2": 4.4607855419508335e-08,
+    "relative_l2_finite_pairs": 4.4607855419508335e-08,
+    "max_abs": 5.7220458984375e-06,
+    "max_relative_nonzero": 3.3237689113102955e-07,
+    "relative_quantiles": [
+      0.0,
+      1.0958344003176019e-07,
+      1.9132987359407002e-07,
+      3.3237689113102955e-07
+    ],
+    "zero_reference_nonzero_actual": 0,
+    "rounded_reference_max_ulp": 5,
+    "rounded_reference_over_one_ulp": 8897,
+    "rounded_reference_sign_differences": 0,
+    "actual_sha256": "97f10506349e2710b953086c1872e50adad590dee76535871f12ab8ffed8a882",
+    "reference_fp64_sha256": "6889df10c8bf761049c8a9ac032a459fd11106418384fb7bb27f495e9e854618"
+  },
+  "semantic": {
+    "nan_mask_equal": true,
+    "positive_infinity_mask_equal": true,
+    "negative_infinity_mask_equal": true,
+    "finite_count": 133120,
+    "finite_differing_values": 47957,
+    "finite_sign_differences": 0,
+    "expected_subnormal_count": 0,
+    "expected_subnormal_flushed_to_zero": 0
+  },
+  "to_predecessor_npu": {
+    "elements": 133120,
+    "finite_pairs": 133120,
+    "actual_nan": 0,
+    "reference_nan": 0,
+    "actual_posinf": 0,
+    "reference_posinf": 0,
+    "actual_neginf": 0,
+    "reference_neginf": 0,
+    "reference_norm": 2256.998610315608,
+    "residual_norm": 0.00011282482708094364,
+    "relative_l2": 4.9988877514269604e-08,
+    "relative_l2_finite_pairs": 4.9988877514269604e-08,
+    "max_abs": 3.814697265625e-06,
+    "max_relative_nonzero": 2.555987348553432e-06,
+    "relative_quantiles": [
+      0.0,
+      1.648876090678255e-07,
+      3.869352857375903e-07,
+      2.555987348553432e-06
+    ],
+    "zero_reference_nonzero_actual": 0,
+    "rounded_reference_max_ulp": 39,
+    "rounded_reference_over_one_ulp": 26467,
+    "rounded_reference_sign_differences": 0,
+    "actual_sha256": "97f10506349e2710b953086c1872e50adad590dee76535871f12ab8ffed8a882",
+    "reference_fp64_sha256": "d342b7abeae8a438a81e43dab890a2e97f27034ae2699121c80f0d86ec4b7ba1"
+  },
+  "predecessor_npu_semantic": {
+    "nan_mask_equal": true,
+    "positive_infinity_mask_equal": true,
+    "negative_infinity_mask_equal": true,
+    "finite_count": 133120,
+    "finite_differing_values": 57505,
+    "finite_sign_differences": 0,
+    "expected_subnormal_count": 0,
+    "expected_subnormal_flushed_to_zero": 0
+  },
+  "predecessor_npu_vs_cpu": {
+    "nan_mask_equal": true,
+    "positive_infinity_mask_equal": true,
+    "negative_infinity_mask_equal": true,
+    "finite_count": 133120,
+    "finite_differing_values": 58586,
+    "finite_sign_differences": 0,
+    "expected_subnormal_count": 0,
+    "expected_subnormal_flushed_to_zero": 0
+  },
+  "endpoint_exact": false,
+  "input_unchanged": {
+    "source": true,
+    "alog": true,
+    "bias": true
+  },
+  "output_canaries_unchanged": true,
+  "numerical_pass": true,
+  "passed": true
+}

@@ -1,11 +1,12 @@
 """Generated inputs, independent precision references, and source-file execution."""
 import functools
 import importlib.util
+import os
 from pathlib import Path
 
 import torch
 
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(os.environ.get('BF07_UNIT_ROOT', Path(__file__).resolve().parent)).resolve()
 DTYPES = {'bf16': torch.bfloat16, 'f32': torch.float32}
 
 

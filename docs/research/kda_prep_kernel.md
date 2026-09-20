@@ -11,10 +11,11 @@ backward and layout kernels remain read-only.
 The first budget commit, `c9409a2`, contains **100 CPU calibration cases** and
 **66 rejected corrupt-output controls**, Python3.11.15 / Torch2.10.0+cpu, before
 any candidate kernel source. The candidate now emits all28 typed chunk/decode
-entries to CCE. All50 vendors compile at bd1,2,4. The first complete Kimi T4096 all-flags
-workload at bd4 passes the new public/cached/backward checks. After that hardware
+entries to CCE. All50 vendors compile at bd1,2,3,4. The complete Kimi T4096 all-flags
+workload passes at each of bd1,2,3,4. All17 returned outputs, caches and gradients
+are bitwise identical across those four runs. After that hardware
 run, all14 bounded source cases pass sim and pipesim at bd1. Remaining native
-grids, block dimensions, endpoints, repeatability and performance are pending;
+grids, decode block dimensions, endpoints, repeatability and performance are pending;
 this is not completed BF-07 acceptance.
 FP64 is used only to measure preprocessing numerical error; the independent
 and pinned FLA end-to-end KDA goldens remain **Torch CPU FP32**.
@@ -145,10 +146,10 @@ In the isolated three-entry base swap, the52 public dtype/routing checks yield
 44 expected failures and8 retained training passes. These are host ABI evidence,
 not numerical kernel validation. All stable/layout kernel sources remain intact.
 
-Native completion still requires full Kimi all-flags public/cached/backward,
-all dtype/flag/shape and gate endpoint grids, unchanged-input and poisoned-output
-checks, all block dimensions, actual TorchDispatch audits, post-hardware bounded
-sim/pipesim, three same-card old/new/old timing rounds with Torch NPU baseline,
+Remaining native completion requires the full dtype/flag/shape and gate endpoint
+grids, repeatability and training checks, decode block dimensions, cross-bd
+comparison of the entire grid, and three same-card old/new/old timing rounds
+with Torch NPU baseline,
 and a verified fresh restore of the final evidence archive.
 
 
@@ -178,3 +179,31 @@ The complete host suite is1001 passed /5 NPU-module skips, with1001 collected
 cases and per-file counts in `evidence/host/summary.json`. The declared14 bounded
 reference cases pass; sim and pipesim each pass14 only after the full hardware
 run, with pipe evidence retaining balance, hazard and deadlock fields.
+
+## Native endpoint investigation (not yet qualified)
+
+Two leaf runs each execute100 cases in both chunk/decode namespaces at bd4.
+All120 ordinary finite cases meet the frozen budgets; all200 input hashes and
+output guard regions remain unchanged. Of80 endpoint cases,28 exactly match
+the CPU predecessor and52 have finite-value differences. NaN/Inf masks and
+finite signs agree throughout. The exactness flag is a diagnostic trigger,
+not a replacement for the agreed error criteria. Both raw runs are retained.
+
+The second run also executes the byte-pinned predecessor on the same NPU.
+It flushes the same tested CPU subnormal gate/beta values to zero. For beta
+saturation the candidate and predecessor NPU outputs are identical. At
+softplus input−87 and A_log−0.2, however, the predecessor NPU returns−0 while
+the candidate returns−1.3474764119981045e−38; CPU FP32 returns
+−1.347476552127951e−38 and FP64−1.3474764283785483e−38. That nonzero
+candidate result is normal FP32. This requires a located operation comparison
+and explicit endpoint review, not a wider tolerance, new gate, or replacement
+of the CPU reference. Large finite norm rows show the already declared fixed
+reduction rounding difference; exponent overflow masks agree with both actual
+predecessors. Full range qualification remains open.
+
+The retained allocator notice comes from the package-reported
+[AddPadSize owner source](https://github.com/Ascend/pytorch/blob/fa0f83fe49d309dcbc31e264e9e6ed6e5dc49d2d/torch_npu/csrc/core/npu/NPUCachingAllocator.cpp#L179).
+It reports compatibility padding, not a requested tensor-arithmetic change.
+Every native input/output guard passed; the notice was not suppressed.
+Runtime/source line numbers differ, so the reported git version alone is not
+asserted to prove an unmodified binary. See native/allocator-notice.json.
