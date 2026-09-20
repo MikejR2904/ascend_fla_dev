@@ -359,9 +359,12 @@ The16 decode state failures are C2/3 × group1/2/4/8 × flags110/111, with BF16
 raw q/k and BF16 v. Maximum old-CPU-prep state relative-L2 is
 0.0009824887023388708 at `nearzero_c3_g1_rbf16_vbf16_flags111`, FLA reference.
 The unchanged1e-5 comparison remains failed, retained as an observation after the user-approved D-PM-51 change. Fresh
-all-bd reruns against actual native-prep CPU FP32 references are in progress;
-state stays limited to1e-5, and prep budgets plus raw/prepared byte equality
-are required. This permission applies only to the named nearzero decode group.
+all-bd reruns against actual native-prep CPU FP32 references are complete;
+all384 cases per dimension pass state at the unchanged1e-5 limit (maximum
+9.438083900103515e-7), plus frozen prep budgets and raw/prepared byte equality.
+Each dimension has340 fully passing cases and44 remaining output failures;
+all six dimensions match in output/prep bytes and comparison metrics.
+`native/dpm51-native-summary.json` lists every case using this limited rule. This permission applies only to the named nearzero decode group.
 Ordinary decode still compares against **old CPU preparation**: across all six
 dimensions its median/p99/max state errors are8.092760291e-8 /
 2.983920105e-7 /3.266389653118004e-7. The maximum occurs at
@@ -416,6 +419,30 @@ classifications. No accepted gate, domain, stable kernel or tolerance is
 changed. The first flushing instruction in the composed path remains unlocated.
 See `native/saved-endpoint-classification-v2`, the raw nearzero shards, and
 [the complete-classification RISK](https://github.com/ddddwee1/ascend_fla_dev/issues/106#issuecomment-5750969353).
+
+## Remaining output failures: complete decision table
+
+`native/remaining-output-failure-table.json` contains every failing output slice,
+its CPU-normal subset error, zero/subnormal classifications (including exact
+nonzero values separately), old-NPU byte equality and maximum ULP difference.
+Chunk uses the original old-prep CPU FP32 references; decode uses the approved
+D-PM-51 actual-prep CPU FP32 references. Repeated block dimensions have identical
+classification and metrics. The table lists them explicitly but deduplicates
+the summary across dimensions; two oracles may share elements.
+
+| Route | Failing cases per bd | Oracle/slice comparisons | Largest golden magnitude | Units of FP32 minimum normal | Largest candidate/old-NPU ULP |
+|---|---:|---:|---:|---:|---:|
+| chunk |16|80|3.2322792067392186e-37|27.4971904755|1 BF16|
+| decode, D-PM-51 |44|190|1.1480479585806359e-38|0.9766511917|4 FP32|
+
+Thus the whole failure population is **not** bounded by2.6e-38: some chunk
+goldens reach about27.5 times FP32 minimum normal. All failures satisfy the
+reported candidate/old-NPU ULP bounds, but70/80 chunk and139/190 decode
+oracle/slice comparisons are byte-identical. Neither byte equality nor these
+small predecessor differences establishes CPU correctness. All8 chunk cases
+with failing normal subsets also fail that0.05 check on the predecessor NPU.
+The domain, tolerances and inherited stable kernels remain unchanged. These
+failures await owner/user disposition; the task is not fully accepted.
 
 ## Metric implementation verification
 

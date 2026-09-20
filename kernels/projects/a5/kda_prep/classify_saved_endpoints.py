@@ -71,6 +71,7 @@ def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--runs',type=Path,nargs='+',required=True)
     p.add_argument('--output',type=Path,required=True)
+    p.add_argument('--reference',choices=('predecessor','actual-preparation'),default='predecessor')
     args=p.parse_args();args.output.mkdir(parents=True,exist_ok=False)
     torch.set_num_threads(1)
     for run in args.runs:
@@ -83,18 +84,25 @@ def main():
             assert all(digest(t)==receipt['output_sha256'][n] for n,t in saved['actual'].items())
             assert all(digest(t)==receipt['input_sha256'][n] for n,t in saved['inputs'].items())
             slices=[]
-            for oracle, measures in receipt['cpu_fp32_references'].items():
+            if args.reference=='actual-preparation':
+                assert receipt['comparison_contract']['decision']=='D-PM-51'
+                measures_by_oracle=receipt['native_preparation_cpu_fp32_references']
+                references=saved['native_preparation_reference']
+            else:
+                measures_by_oracle=receipt['cpu_fp32_references']
+                references=saved['reference']
+            for oracle, measures in measures_by_oracle.items():
                 for name in ('o','final_state'):
                     if not measures[name]['passed']:
-                        slices.append(dict(oracle=oracle,output=name,scope='whole',original_metric=measures[name],classification=classify(saved['actual'][name],saved['reference'][oracle][name],saved['before'][name],receipt['route'])))
+                        slices.append(dict(oracle=oracle,output=name,scope='whole',original_metric=measures[name],classification=classify(saved['actual'][name],references[oracle][name],saved['before'][name],receipt['route'])))
                 for m in measures['per_head_chunk']:
                     if m['passed']:continue
                     c,h=m['chunk'],m['head'];idx=(slice(None),slice(c*64,(c+1)*64),h)
-                    slices.append(dict(oracle=oracle,output='o',scope='head_chunk',chunk=c,head=h,original_metric=m,classification=classify(saved['actual']['o'][idx],saved['reference'][oracle]['o'][idx],saved['before']['o'][idx],receipt['route'])))
+                    slices.append(dict(oracle=oracle,output='o',scope='head_chunk',chunk=c,head=h,original_metric=m,classification=classify(saved['actual']['o'][idx],references[oracle]['o'][idx],saved['before']['o'][idx],receipt['route'])))
             result.append(dict(id=label,raw_tensor_archive_sha256=hashlib.sha256(raw).hexdigest(),actual_and_input_hashes_verified=True,slices=slices))
         report=dict(environment=summary['environment'],run=run.name,stage='CPU classification of saved actual native outputs',
             classifier_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),owner_comment='https://github.com/ddddwee1/ascend_fla_dev/issues/106#issuecomment-5750896563',
-            changes_numerical_acceptance=False,original_complete=summary['complete'],original_passed=summary['passed'],cases=result)
+            comparison_object=args.reference,changes_numerical_acceptance=False,original_complete=summary['complete'],original_passed=summary['passed'],cases=result)
         (args.output/(run.name+'.json')).write_text(json.dumps(report,indent=2,allow_nan=False)+'\n')
         print(run.name,len(result),'classified',flush=True)
 

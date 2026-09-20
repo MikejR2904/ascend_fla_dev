@@ -23,9 +23,8 @@
     "after_native": true
   },
   "pending": [
-    "D-PM-51_actual_preparation_nearzero_decode_native_reruns",
-    "nearzero_normal_and_nonzero_subnormal_output_failures",
-    "final_source_and_evidence_archive_fresh_restore"
+    "remaining_output_endpoint_acceptance_owner_user_decision",
+    "final_snapshot_after_last_evidence_commit"
   ],
   "full_native_block_dims": [
     1,
@@ -199,7 +198,14 @@
     "D-PM-51": {
       "owner_comment": "https://github.com/ddddwee1/ascend_fla_dev/issues/106#issuecomment-5750986507",
       "user_approved": true,
-      "native_reruns": "in progress; no new acceptance claim yet"
+      "native_reruns": "complete",
+      "cases_per_bd": 384,
+      "passed_cases_per_bd": 340,
+      "remaining_output_failures_per_bd": 44,
+      "state_all_passed": true,
+      "maximum_state_relative_l2": 9.438083900103515e-07,
+      "all_cross_bd_output_prep_and_new_metrics_equal": true,
+      "receipt": "native/dpm51-native-summary.json"
     }
   },
   "public_nonfinite_reachability": {
@@ -225,5 +231,21 @@
     "outputs_and_preparation_match_original_bitwise": true,
     "ordinary_requires_original_and_corrected_pass": true,
     "receipt": "native/metric-implementation-proof.json"
+  },
+  "remaining_output_failures": {
+    "receipt": "native/remaining-output-failure-table.json",
+    "all_still_numerically_failed": true,
+    "chunk": {
+      "cases_per_bd": 16,
+      "maximum_golden_abs": 3.2322792067392186e-37,
+      "maximum_golden_min_normal_units": 27.497190475463867,
+      "maximum_candidate_old_ulp": 1
+    },
+    "decode": {
+      "cases_per_bd": 44,
+      "maximum_golden_abs": 1.1480479585806359e-38,
+      "maximum_golden_min_normal_units": 0.9766511917114258,
+      "maximum_candidate_old_ulp": 4
+    }
   }
 }

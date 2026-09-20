@@ -127,6 +127,18 @@
         "relative_l2": 1.1465413372516245e-07,
         "max_relative_nonzero": 3.463000927174088e-07
       }
+    },
+    "nearzero_decode": {
+      "decision": "D-PM-51",
+      "scope": "Named nearzero_* boundary-grid decode cases with epsilon-dominated normalization only",
+      "reference": "Actual native-preparation values supplied to both independent CPU FP32 references",
+      "requirements": [
+        "Retain old CPU-prep reference deviations",
+        "Unchanged state 1e-5 and original output limits",
+        "All enabled preparation steps pass frozen budgets",
+        "Raw and directly prepared public o/state hashes match"
+      ],
+      "no_ordinary_or_chunk_change": true
     }
   },
   "cases": [
@@ -366,7 +378,7 @@
       "backend": "cce",
       "stage": "board",
       "status": "failed",
-      "note": "Full B1T4096H=HV32 allflags bd1..4 passes with17 bitwise endpoints; 25920 ordinary-grid and9216 zero/threshold/saturation cases pass. All required nearzero runs executed with retained failures: 16 state plus44 output cases per decode bd;16 output cases per chunk bd. Normal golden subsets and nonzero subnormal outputs contain unresolved failures, beyond the zero-only flush classification. Domain is not fully qualified. See evidence/summary.json and RISK5750969353."
+      "note": "Full B1T4096H=HV32 allflags bd1..4 passes with17 bitwise endpoints;25920 ordinary-grid and9216 zero/threshold/saturation cases pass. D-PM-51 nearzero decode384 cases per each of6bd: all state checks pass unchanged1e-5, but44 output cases per bd remain failed. Chunk has16 output cases per each of4bd, including8 cases with failing CPU-normal subsets. Domain is not fully qualified. See evidence/native/remaining-output-failure-table.json."
     },
     {
       "device": "a5",
