@@ -1353,25 +1353,29 @@
       "device": "a5",
       "backend": "cce",
       "stage": "compile",
-      "status": "untested"
+      "status": "passed",
+      "note": "Both decode entries and all 17 dependency vendors compiled at decode bd=1/2/4/8/16/28; forward/backward use min(bd,4). See evidence/native-grid/receipts. Backward compilation does not claim backward execution."
     },
     {
       "device": "a5",
       "backend": "cce",
       "stage": "sim",
-      "status": "untested"
+      "status": "passed",
+      "note": "Bounded BF16 probes T1/H1/G1/no-state and T2/H1/G4/state; FP32 companion T2/H1/G4/no-state, bd1. Not the full case grid. See evidence/models."
     },
     {
       "device": "a5",
       "backend": "cce",
       "stage": "pipesim",
-      "status": "untested"
+      "status": "passed",
+      "note": "Same bounded probes as sim; event balance and hazards empty, no deadlock; cycles 5658/37248/24052 respectively. Model evidence, not device timing."
     },
     {
       "device": "a5",
       "backend": "cce",
       "stage": "board",
-      "status": "untested"
+      "status": "passed",
+      "note": "Standalone decode grid passed: 136 numeric plus 57 boundary checks per bd1/2/4, full BF16/FP32 workload plus 57 boundaries per bd8/16/28. Shared outputs byte-identical across bd. Prefill integration and performance remain pending; BF-06 is not fully accepted."
     }
   ],
   "provenance": {

@@ -1,0 +1,134 @@
+{
+  "block_dim": 1,
+  "comparison": {
+    "final_state": {
+      "actual_dtype": "float32",
+      "comparison": {
+        "atol": 1e-06,
+        "max_relative_l2": 1e-05,
+        "mode": "allclose",
+        "reason": "Portable outer check; execute additionally enforces per-case <=3F separately for both CPU FP32 references.",
+        "reference_dtype": "float32",
+        "rtol": 1e-05
+      },
+      "max_abs_error": 0.0,
+      "passed": true,
+      "reference_dtype": "float32",
+      "relative_l2_error": 0.0
+    },
+    "o": {
+      "actual_dtype": "bfloat16",
+      "comparison": {
+        "atol": 0.01,
+        "max_relative_l2": 0.01,
+        "mode": "allclose",
+        "reason": "Portable outer check; execute additionally enforces per-case <=3F separately for both CPU FP32 references.",
+        "reference_dtype": "float32",
+        "rtol": 0.01
+      },
+      "max_abs_error": 6.374437361955643e-06,
+      "passed": true,
+      "reference_dtype": "float32",
+      "relative_l2_error": 0.0018848413119829715
+    }
+  },
+  "execution_evidence": [
+    {
+      "backend_executed": false,
+      "block_dim": 1,
+      "device": "a5",
+      "kernel": "kda_decode_bf16_kernel",
+      "launcher": "sim",
+      "model": "functional Surface IR",
+      "requested_backend": "cce",
+      "sim_processes": "threads",
+      "stage": "sim"
+    },
+    {
+      "dual_oracle": {
+        "A": {
+          "final_state": {
+            "finite": true,
+            "max_abs": 0.0,
+            "relative_l2": 0.0
+          },
+          "o": {
+            "finite": true,
+            "max_abs": 6.374437361955643e-06,
+            "relative_l2": 0.0018848413119829715
+          },
+          "output_budget": 0.0056545239359489146,
+          "output_floor": 0.0018848413119829715,
+          "passed": true,
+          "state_budget": 1e-05
+        },
+        "B": {
+          "final_state": {
+            "finite": true,
+            "max_abs": 0.0,
+            "relative_l2": 0.0
+          },
+          "o": {
+            "finite": true,
+            "max_abs": 6.374437361955643e-06,
+            "relative_l2": 0.0018848413119829715
+          },
+          "output_budget": 0.0056545239359489146,
+          "output_floor": 0.0018848413119829715,
+          "passed": true,
+          "state_budget": 1e-05
+        }
+      }
+    }
+  ],
+  "id": "grid_b1_h1_t1_g1_s0",
+  "parameters": {
+    "B": 1,
+    "G": 1,
+    "H": 1,
+    "HV": 1,
+    "T": 1,
+    "id": "grid_b1_h1_t1_g1_s0",
+    "state": false
+  },
+  "passed": true,
+  "reference": {
+    "final_state": {
+      "comparison": {
+        "atol": 1e-06,
+        "max_relative_l2": 1e-05,
+        "mode": "allclose",
+        "reason": "Portable outer check; execute additionally enforces per-case <=3F separately for both CPU FP32 references.",
+        "reference_dtype": "float32",
+        "rtol": 1e-05
+      },
+      "dtype": "float32",
+      "sha256": "a1ac104aab1352cf61e08efe762f0abd760291ffe458776b0933cc56482a7220",
+      "shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    "o": {
+      "comparison": {
+        "atol": 0.01,
+        "max_relative_l2": 0.01,
+        "mode": "allclose",
+        "reason": "Portable outer check; execute additionally enforces per-case <=3F separately for both CPU FP32 references.",
+        "reference_dtype": "float32",
+        "rtol": 0.01
+      },
+      "dtype": "float32",
+      "sha256": "ba9b6dd8bf54cc1908af9349084978e002acb90758d1e0e2c5128e3b1116949e",
+      "shape": [
+        1,
+        1,
+        1,
+        128
+      ]
+    }
+  },
+  "seed": 20260920
+}

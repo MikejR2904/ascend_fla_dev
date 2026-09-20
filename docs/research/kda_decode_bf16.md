@@ -52,7 +52,7 @@ python kernels/projects/a5/kda_fused_recurrent_bf16/research.py \
 
 The original complete result is in `evidence/cpu-precision-initial.json`.
 This is CPU calibration, not source-emission, vendor-compilation, simulator
-or NPU acceptance evidence. All BF-06 hardware stages are currently untested.
+or NPU acceptance evidence. Subsequent hardware results are recorded below.
 
 ## Owner scope ruling
 
@@ -114,3 +114,61 @@ limit. Prefix state is also checked against its own CPU prefix reference with
 the same state limit. Chain-vs-oneshot errors are reported without a separate
 threshold. The old chunk contract's 0.05 limit is not used for this acceptance.
 These rules are fixed before executing the prefill measurements.
+
+## Completed decode grid; integration and performance pending
+
+The selected kernel source has SHA256
+`c4e341a99c005259e0c9bfb59541ba192ac177d4da648862c1a68f7c8b3cea14`.
+Native execution used Ascend950PR_9589, CANN compiler/OPP 9.2.0 build
+`20260805_101249091`, Python 3.12.13, Torch 2.12.0+cpu with torch_npu 2.12.0,
+and Ascriptor 0.1.0 at library `90cfcdc` / kernels `b3b3f9c`.
+The Torch version suffix describes the base package; execution used actual NPU
+tensors through torch_npu. CPU FP32 goldens were generated on the same host.
+
+Every independent block-dimension process compiled and registered 17 vendors,
+including all nine backward entries, before its first custom execution. The
+first full workload was B2/T16/H4/HV32 with nonzero state. Its BF16 output error
+was 0.001656522640 and state error 1.525832876e-7. Compilation of backward
+dependencies does not constitute backward execution.
+
+| Decode block dimension | Numerical cases | Additional checks | Result |
+| --- | ---: | ---: | --- |
+| 1, 2, 4 (each) | 136 | 57 | Passed |
+| 8, 16, 28 (each) | 2 complete BF16/FP32 workloads | 57 | Passed |
+
+The complete grid includes all 82 BF16 calibration shapes plus the initial
+full workload, FP32 grid/real shapes, intermediate token lengths, grouped
+heads, optional state, gate extremes and scale/beta endpoints. Additional
+checks cover eight original unrounded FP32 shapes, optional returned state,
+1/2/4/8-token segmentation, metadata rejection and all eight raw-flag combinations
+for both dtypes. Raw preprocessing remains the separately audited exception.
+
+The 414 numerical executions and 342 additional checks passed. Independent
+replay checks the full compile manifests, both-oracle budgets, each head,
+input hashes, NaN coverage and default host operations. All shared numerical
+and 40 additional hashed cases have byte-identical outputs across block
+dimensions. Worst BF16 output relative L2 is 0.001884841312; worst FP32 output
+is 2.011265135e-7; worst global state is 1.711005737e-7 and per-head state
+1.797956881e-7. Default-path audits contain only `aten.empty.memory_format`
+and `aten.view.default`.
+
+The grid used verifier commit `492127d` and the original read-only FP32 kernel
+with its old input preparation. Subsequent prefill and performance modes use
+the exact original public-wrapper snapshot `0f517ee` as well, including its
+metadata, allocation, scaling and layout costs. Those modes remain unexecuted
+at this checkpoint and must pass before BF-06 is complete.
+
+After the first complete native workload, bounded BF16 sim/pipesim probes
+passed at T1/H1/G1 without state and T2/H1/G4 with state; the latter retains
+token row strides and repeated-head buffer reuse. The FP32 companion passed
+T2/H1/G4 without state. All use bd1. Pipe-model cycles were 5658, 37248 and
+24052 respectively, with empty event-balance/hazard lists and no deadlock.
+These diagnostics do not qualify the whole native grid or measure device time.
+
+The final host suite passed 768 tests with 5 skips. Public text receipts,
+complete native logs and an independent replay are under the unit's
+`evidence/`. The 23 warnings per native build are retained: 20 existing
+forward-dependency ND-to-NZ transfer performance diagnostics and three
+backward-dependency UB bank-stride performance diagnostics. Their owner is
+`ascriptor/ir/lint.py`; they do not describe a new decode-kernel correctness
+or synchronization failure. Neither dependencies nor warning controls changed.

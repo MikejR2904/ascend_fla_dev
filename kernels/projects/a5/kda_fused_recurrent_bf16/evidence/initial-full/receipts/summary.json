@@ -1,0 +1,157 @@
+{
+  "complete": true,
+  "passed": true,
+  "cases": [
+    {
+      "case": {
+        "id": "full_b2_t16_h4_g8",
+        "B": 2,
+        "T": 16,
+        "H": 4,
+        "G": 8,
+        "state": true
+      },
+      "dtype": "bfloat16",
+      "block_dim": 4,
+      "comparison": {
+        "A": {
+          "o": {
+            "relative_l2": 0.0016565226398026175,
+            "max_abs": 5.6259334087371826e-05,
+            "finite": true
+          },
+          "final_state": {
+            "relative_l2": 1.5258328760170573e-07,
+            "max_abs": 5.960464477539063e-08,
+            "finite": true
+          },
+          "output_floor": 0.0016565226136608152,
+          "output_budget": 0.004969567840982445,
+          "state_budget": 1e-05,
+          "passed": true
+        },
+        "B": {
+          "o": {
+            "relative_l2": 0.0016565226398026175,
+            "max_abs": 5.6259334087371826e-05,
+            "finite": true
+          },
+          "final_state": {
+            "relative_l2": 1.5258328760170573e-07,
+            "max_abs": 5.960464477539063e-08,
+            "finite": true
+          },
+          "output_floor": 0.0016565226136608152,
+          "output_budget": 0.004969567840982445,
+          "state_budget": 1e-05,
+          "passed": true
+        }
+      },
+      "original_fp32_bitwise": null,
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "g": true,
+        "beta": true,
+        "initial_state": true
+      },
+      "host_operations": [
+        "aten.empty.memory_format",
+        "aten.empty.memory_format",
+        "aten.empty.memory_format"
+      ],
+      "poison_all_written": [
+        true,
+        true
+      ],
+      "input_sha256": {
+        "q": "25ba2e8ac91457fd2cd185ed7d923975a09b88cf8976b3b770e72cd257564941",
+        "k": "5210005593fada9c68f04ae9f524053f05cfa70b33e6cb88a85e2dd9531e0ce3",
+        "v": "ac058f38d9366e6ec4ed26800b538c79c5d7ae4aa25313fc26aa351875d0bc11",
+        "g": "11a5ac8fcd5c78794cb4c6099e7941b163cf2c1d6a3474b694479dd6d3a4deb1",
+        "beta": "b33887a6c31fcdc09dceb7de9b272970b472e68be9756faf7bde78c3f71ee49c",
+        "initial_state": "0c089fc41032b852a8fe797b05e6ed6356560fbd3efb65278702f435cfb7e1a4"
+      },
+      "output_sha256": {
+        "o": "679b02e72b77a413e222b24901dc4a9e2ac91bee673db67221d8c80257c3c7eb",
+        "final_state": "a1ad9681857d79ea7b3af274da89d014b1133d9cac7632b4d2cdfc3310e6f944"
+      },
+      "passed": true
+    },
+    {
+      "case": {
+        "id": "full_b2_t16_h4_g8",
+        "B": 2,
+        "T": 16,
+        "H": 4,
+        "G": 8,
+        "state": true
+      },
+      "dtype": "float32",
+      "block_dim": 4,
+      "comparison": {
+        "A": {
+          "o": {
+            "relative_l2": 1.9424225033648819e-07,
+            "max_abs": 4.6566128730773926e-09,
+            "finite": true
+          },
+          "final_state": {
+            "relative_l2": 1.5258328760170573e-07,
+            "max_abs": 5.960464477539063e-08,
+            "finite": true
+          },
+          "passed": true
+        },
+        "B": {
+          "o": {
+            "relative_l2": 1.9424225033648819e-07,
+            "max_abs": 4.6566128730773926e-09,
+            "finite": true
+          },
+          "final_state": {
+            "relative_l2": 1.5258328760170573e-07,
+            "max_abs": 5.960464477539063e-08,
+            "finite": true
+          },
+          "passed": true
+        }
+      },
+      "original_fp32_bitwise": [
+        true,
+        true
+      ],
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "g": true,
+        "beta": true,
+        "initial_state": true
+      },
+      "host_operations": [
+        "aten.empty.memory_format",
+        "aten.empty.memory_format",
+        "aten.empty.memory_format"
+      ],
+      "poison_all_written": [
+        true,
+        true
+      ],
+      "input_sha256": {
+        "q": "f74b9f9282fd39b40825098f3c0ca2283d2c31289331fc5c79a0a3554677f96e",
+        "k": "dab785c7941d0059039ec2073dffa055f59d297e84b9e5d936165ae38c6a920c",
+        "v": "72364d24d8790ed9e29e825578d60cec3571c3a477c5c02d8e7c9e783e617cbd",
+        "g": "11a5ac8fcd5c78794cb4c6099e7941b163cf2c1d6a3474b694479dd6d3a4deb1",
+        "beta": "b33887a6c31fcdc09dceb7de9b272970b472e68be9756faf7bde78c3f71ee49c",
+        "initial_state": "0c089fc41032b852a8fe797b05e6ed6356560fbd3efb65278702f435cfb7e1a4"
+      },
+      "output_sha256": {
+        "o": "cd38593243b1e5ef1a6de6a45cbcfb998b51b63241191664cd092a18d0d86644",
+        "final_state": "a1ad9681857d79ea7b3af274da89d014b1133d9cac7632b4d2cdfc3310e6f944"
+      },
+      "passed": true
+    }
+  ]
+}

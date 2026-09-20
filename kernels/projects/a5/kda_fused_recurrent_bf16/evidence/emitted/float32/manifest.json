@@ -1,0 +1,176 @@
+{
+ "backend": "cce",
+ "arch": "c310",
+ "kernel": "kda_decode_fp32_kernel",
+ "ir_kernel": "kda_decode_fp32_kernel",
+ "device": "950",
+ "mode": "vec",
+ "task_type": "KERNEL_TYPE_AIV_ONLY",
+ "block_dim": 1,
+ "params": [
+  {
+   "name": "q",
+   "ir_name": "q",
+   "kind": "tensor",
+   "dtype": "f32",
+   "dims": [
+    "B",
+    "T",
+    "H",
+    128
+   ],
+   "output": false
+  },
+  {
+   "name": "k",
+   "ir_name": "k",
+   "kind": "tensor",
+   "dtype": "f32",
+   "dims": [
+    "B",
+    "T",
+    "H",
+    128
+   ],
+   "output": false
+  },
+  {
+   "name": "v",
+   "ir_name": "v",
+   "kind": "tensor",
+   "dtype": "f32",
+   "dims": [
+    "B",
+    "T",
+    "HV",
+    128
+   ],
+   "output": false
+  },
+  {
+   "name": "g",
+   "ir_name": "g",
+   "kind": "tensor",
+   "dtype": "f32",
+   "dims": [
+    "B",
+    "T",
+    "HV",
+    128
+   ],
+   "output": false
+  },
+  {
+   "name": "beta",
+   "ir_name": "beta",
+   "kind": "tensor",
+   "dtype": "f32",
+   "dims": [
+    "B",
+    "T",
+    "HV"
+   ],
+   "output": false
+  },
+  {
+   "name": "initial_state",
+   "ir_name": "initial_state",
+   "kind": "tensor",
+   "dtype": "f32",
+   "dims": [
+    "B",
+    "HV",
+    128,
+    128
+   ],
+   "output": false
+  },
+  {
+   "name": "o",
+   "ir_name": "o",
+   "kind": "tensor",
+   "dtype": "f32",
+   "dims": [
+    "B",
+    "T",
+    "HV",
+    128
+   ],
+   "output": true
+  },
+  {
+   "name": "final_state",
+   "ir_name": "final_state",
+   "kind": "tensor",
+   "dtype": "f32",
+   "dims": [
+    "B",
+    "HV",
+    128,
+    128
+   ],
+   "output": true
+  },
+  {
+   "name": "B",
+   "ir_name": "B",
+   "kind": "scalar",
+   "dtype": "i32"
+  },
+  {
+   "name": "T",
+   "ir_name": "T",
+   "kind": "scalar",
+   "dtype": "i32"
+  },
+  {
+   "name": "H",
+   "ir_name": "H",
+   "kind": "scalar",
+   "dtype": "i32"
+  },
+  {
+   "name": "HV",
+   "ir_name": "HV",
+   "kind": "scalar",
+   "dtype": "i32"
+  },
+  {
+   "name": "has_initial",
+   "ir_name": "has_initial",
+   "kind": "scalar",
+   "dtype": "i32"
+  },
+  {
+   "name": "scale",
+   "ir_name": "scale",
+   "kind": "scalar",
+   "dtype": "f32"
+  }
+ ],
+ "outputs": [
+  "o",
+  "final_state"
+ ],
+ "workspaces": [],
+ "sides": [
+  "vec"
+ ],
+ "vf": [
+  "initialize_state",
+  "scale_fp32",
+  "recurrent_steps"
+ ],
+ "simt": {},
+ "ops": 211,
+ "files": [
+  "initialize_state.h",
+  "kda_decode_fp32_kernel.cpp",
+  "kda_decode_fp32_kernel_vec.h",
+  "recurrent_steps.h",
+  "scalar_math.h",
+  "scale_fp32.h",
+  "tensorutils_cce.h"
+ ],
+ "entry": "kda_decode_fp32_kernel.cpp"
+}
