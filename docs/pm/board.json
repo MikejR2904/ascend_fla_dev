@@ -1300,7 +1300,7 @@
       },
       "spec": "docs/pm/tasks/BF-07.md",
       "issue": 106,
-      "pr": null,
+      "pr": 118,
       "assignee": "limjiunnbin",
       "assignee_caps": {
         "agent": "Codex，持续 KDA / PKDA 任务（自述）",
@@ -1344,6 +1344,10 @@
         {
           "at": "2026-09-20T09:37",
           "summary": "STATUS（09:22Z，自述）：已收到 PM 裁定，按拆分执行（BF-07 仅阶段 1，BF-08 待 CLOSE 后连续执行；训练保留原 host 图且不宣称合规）；28 个 chunk / decode 前处理 typed 变体完成 IR 与 CCE 源码生成，公开推理 / decode 接入 candidate，尚无真机通过声明；接着独立 Docker 目录校验源码哈希、先构建 50 个 vendor（含 9 个 backward）、再完整 Kimi T4096 全 flags 真机先跑。首次 host 边界检查 57 passed / 14 failed（14 条均为原测试 CPU 替身仍在旧观察点，失败日志保留），只调整两个必需函数内的新 kernel ABI CPU 替身后 71 passed；test_raw_flags_compose_and_preserve_disabled_inputs 与两个训练梯度函数原样保留；采用 PM 的 FP32 relL2 通过线（ULP 仅分布和解释），BF16 两比较对象 1 ULP 不变。RISK write-set-expansion（09:25Z）：ascend_fla/ops/kda/__init__.py 顶部 docstring 仍称 chunk / decode flags 全在 PyTorch host 前处理，阶段 1 后会误导调用方；请求仅改该 docstring（也可由 PM 合入时修）。RISK write-set-expansion（09:31Z）：首轮完整 host 套 801 passed / 77 skipped / 11 failed（未含新增 117 项 prep ABI 测试，新增 117 项单独全过）：7 个失败来自 tests/test_kda_layer_semantics.py 的 test_layer_l2norm_uses_additive_squared_epsilon（5 参数）与 test_layer_without_short_conv_activates_all_three_projections（2 参数）——旧 CPU 测试只替换 chunk_kda_fwd，现在公开 no_grad 在它之前进入新 prep NPU ABI、CPU 设备被显式拒绝；1 个来自 tests/test_kda_decode_bf16.py::test_prepare_compiles_both_dtype_vendors_once——现在要预注册 14 个 prep + 2 个 decode vendor（旧断言 len=2 实为 16）；另 3 个 PKDA 失败是私有 host 环境缺 FLA_PKDA_NAIVE、不改测试。请求只改三个具名函数（layer 两个各自局部加显式 CPU kernel ABI 替身，原独立 FP64 参考 / 全部参数 / 零容差 / SiLU / 投影 / 对象语义不变，不改共享 _capture，不加生产 CPU 旁路；decode 编译函数保留原断言并独立检查 14 个 prep typed vendor 各一次）。PM 处置：**两条都批准**（已回复 #106）——写集加 ascend_fla/ops/kda/__init__.py（仅 docstring，其余 AST 不变）、tests/test_kda_layer_semantics.py（两个具名函数）、tests/test_kda_decode_bf16.py（一个具名函数）、tests/test_kda_domain_checks.py（已确认的两个函数，raw_flags_compose 申领人决定原样保留）；条件：局部 CPU 替身、不改共享 _capture、不加生产旁路、不减少原覆盖、16 要能解释成 14+2；评审时 AST 核其余顶层定义、入口换回 base 的负对照、NPU-free 完整 host 套逐文件对账。进度很快（预算提交后 15 分钟内 28 个 typed 变体 IR / CCE 生成），无真机通过声明，等 DONE。"
+        },
+        {
+          "at": "2026-09-20T10:07",
+          "summary": "STATUS（09:54Z，自述，PR #118 draft，头 1d18143a）：实现与首批证据已推、未提交 DONE；收到「重新扩充校准人口」的建议时已存在候选 kernel 源码，因此没有重冻、也没改 c9409a2 的任何预算（符合 PM 的条件）。新完整 Kimi B1/T4096/H=HV32/K128、全 flags、bd4 真机：公开 / 缓存前向逐位一致，九缓存与六梯度有限，十个输入不变，实际 TorchDispatch 无未登记项；旧 host 准备与实际 native 准备分别交给两个 CPU FP32 oracle 均通过；此前 50 个 vendor 全部注册（含 9 个 backward）。prep 对 FP64 relL2：q=0.00165520、k=0.00165529、g=6.16113e-8、beta=4.07918e-8，全部满足冻结预算；BF16 q/k 对两个比较对象最多 1 ULP；FP32 gate 最多 4/6 ULP、beta 2/3 ULP（对 rounded FP64 / host），会补操作边界解释，不把 ULP 当通过线、不改预算。全链梯度对原 CPU 准备 oracle：dq .0280442、dk .0330546、dv .0035786、dbeta .0038455、dg .0629151、dh0 .0023648，均沿用既定预算。全 50 vendor bd1/2/4 已编完、bd3 在独立进程构建；完整硬件之后 sim14 与 pipesim14 均通过。完整 host 1001 passed / 5 NPU 模块 skip，collect 1001 逐文件可对账；仅五个获批既有测试函数与 __init__ 模块 docstring 改变，AST 其余相同；三入口 base 换回的有效 52 条负对照 44 fail / 8 训练保留 pass。剩余：其余 native bd、完整 API / decode dtype / flags 网格、量程与门控边界、D-PM-44 旧路径 repeatability、新旧训练回归、同卡三轮性能与 Torch NPU 基线、归档恢复；原始 CANN / compiler / OPP 行与 hash 嵌入每份 native JSON，最大新增 blob 约 2 MB。blockers：暂无代码外阻断，共享设备窗口动态变化。PM 复核（静态）：PR #118 共 84 个文件（2 个提交），全部在写集内（kda_prep/** + chunk.py / autograd.py / fused_recurrent.py / __init__.py + 三个获批既有测试文件 + 新测试与文档），无保留路径；等 DONE 再评审。无需回复。"
         }
       ],
       "result": null,
