@@ -29,6 +29,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--block-dim', type=int, choices=(1, 2, 3, 4), required=True)
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--profile-only', action='store_true', help='Separate T4096 profiler trace; not a clean timing run')
     args = parser.parse_args()
     assert os.environ.get('BF08_EXTERNAL_DEVICE_LOCK') == '1'
     args.output.mkdir(parents=True, exist_ok=False)
@@ -167,7 +168,7 @@ def main():
             custom_event_sum_ms=sum(r['device_event_ms'] for r in records),
             custom_host_dispatch_sum_ms=sum(r['host_dispatch_ms'] for r in records),
             interpretation='Separate instrumented run. Events can include stream idle time while the host dispatches; these are not isolated kernel durations or an additive decomposition of clean wall time.')
-    for tokens in (1024, 4096):
+    for tokens in ((4096,) if args.profile_only else (1024, 4096)):
         rng = torch.Generator().manual_seed(8008)
         shape = (1, tokens, 32, 128)
         raw = {n: torch.randn(shape, generator=rng).bfloat16() for n in ('q', 'k')}
@@ -193,6 +194,44 @@ def main():
                     output_final_state=True,**flags,**options)
             gradients = torch.autograd.grad((output,state),[x[n] for n in raw_names],(x['do'],x['dht']))
             return dict(o=output,final_state=state,**{'d'+n:t for n,t in zip(raw_names,gradients)})
+        if args.profile_only:
+            profile_records=[]
+            names={r['signature']:r['entry'] for r in builds}
+            for route in ('baseline','candidate'):
+                # Profile only after a complete actual training warmup. Vendor
+                # compilation remains complete before the first custom launch.
+                warm=training(route);torch.npu.synchronize();del warm
+                original=CompiledKernel.__call__
+                def observe(op, inputs, scalars, outputs):
+                    with torch.profiler.record_function('BF08::'+op.signature+'::'+names[op.signature]):
+                        return original(op,inputs,scalars,outputs)
+                CompiledKernel.__call__=observe
+                try:
+                    with torch_npu.profiler.profile(
+                        activities=[torch_npu.profiler.ProfilerActivity.CPU,torch_npu.profiler.ProfilerActivity.NPU],
+                        record_shapes=True,with_stack=False,
+                        schedule=torch_npu.profiler.schedule(wait=0,warmup=1,active=1,repeat=1),
+                        experimental_config=torch_npu.profiler._ExperimentalConfig(
+                            profiler_level=torch_npu.profiler.ProfilerLevel.Level1),
+                        on_trace_ready=torch_npu.profiler.tensorboard_trace_handler(
+                            str(args.output/'profiler'/route),worker_name='bf08_'+route,analyse_flag=True,async_mode=False)) as profiler:
+                        for iteration in range(2):
+                            value=training(route)
+                            torch.npu.synchronize()
+                            profiler.step()
+                finally:
+                    CompiledKernel.__call__=original
+                returned=check.cpu(value);del value
+                assert all(bool(t.isfinite().all()) for t in returned.values())
+                unchanged={n:check.digest(device_inputs[n])==check.digest(t) for n,t in raw.items()}
+                assert all(unchanged.values())
+                profile_records.append(dict(route=route,tokens=tokens,output_sha256={n:check.digest(t) for n,t in returned.items()},
+                    inputs_unchanged=unchanged,scope='Separate NPU profiler run after full-workload warmup; not clean performance timing'))
+                write('profile-summary',dict(complete=False,rows=profile_records))
+            write('profile-summary',dict(complete=True,rows=profile_records,
+                scope='Profiler files are private; publish aggregate kernel-time attribution and trace hashes only.'))
+            print('BF08_PROFILE_COMPLETE',flush=True)
+            return
         for baseline_route in ('baseline','torch_npu'):
             print('PERF_START',tokens,baseline_route,flush=True)
             for route in (baseline_route,'candidate'):

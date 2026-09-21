@@ -51,6 +51,13 @@ def verify(root, budgets):
             budget = limits[row['key']]
             assert row['passed'] and high['finite_pairs'] == high['elements']
             assert high['zero_reference_nonzero_actual'] == 0
+            if budget['ulp_limit_each_reference'] is not None:
+                # This final grid ran the stricter pre-D-PM-56 pair of lines.
+                # Passing both everywhere also satisfies the later pointwise
+                # interpretation; no data-dependent waiver is needed here.
+                for field in ('ulp_to_fp64_distribution','ulp_to_old_distribution'):
+                    assert sum(x['count'] for x in row[field]) == high['elements']
+                    assert all(x['ulp'] <= 1 for x in row[field])
             values = dict(relative_l2=high['relative_l2'], max_relative=high['max_relative_nonzero'],
                 relative_l2_ratio=high['relative_l2']/budget['relative_l2_limit'],
                 max_relative_ratio=high['max_relative_nonzero']/budget['elementwise_relative_limit'])
@@ -63,9 +70,11 @@ def verify(root, budgets):
     for (key, metric), maximum in maxima.items():
         assert report['groups'][key][metric]['value'] == maximum, (key, metric)
     uses = collections.Counter()
-    for case in load('audit-uses.json')['cases']:
-        assert len(case['table_by_selection']) == 9
-        uses.update(case['table_by_selection'].values())
+    audit_uses=load('audit-uses.json')
+    assert len(audit_uses['selections']) == 9
+    for case in audit_uses['cases']:
+        assert len(case['tables']) == 9
+        uses.update(audit_uses['table_dictionary'][index] for index in case['tables'])
     union = collections.Counter()
     for table in report['audit_tables']:
         assert digest(json.dumps(table['operations'], sort_keys=True, separators=(',', ':')).encode()) == table['sha256']
@@ -83,7 +92,7 @@ def verify(root, budgets):
         assert row['receipt']['passed']
     return dict(passed=True, reconstructed_summary_sha256=digest(original), metric_rows=metric_rows,
         groups=len(report['groups']), public_training_calls=sum(uses.values())*4,
-        all_four_original_summary_hashes_equal=True, audit_tables=len(uses),
+        all_four_original_summary_hashes_equal=True, retained_bf16_stricter_dual_lines_passed=True, audit_tables=len(uses),
         audit_union_recomputed=True, selected_original_receipts=len(list((root/'selected-original').glob('*.json'))))
 
 

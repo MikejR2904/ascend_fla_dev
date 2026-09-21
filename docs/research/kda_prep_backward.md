@@ -3,8 +3,9 @@
 BF-08 implements custom backward kernels for raw KDA preparation. Final-source
 full Kimi training passes bd1/2/3/4 with 19 matching output/gradient/cache hashes;
 12 reduced model checks pass. Native performance is measured and slower.
-Qualification remains incomplete: final grid/evidence closeout and endpoint
-interpretation are still open. BF-07 forward results do not qualify BF-08.
+All required grids and native regressions have executed on the final production
+source. Native flushes and the PM-designated unqualified gate observations
+remain explicit disclosures, subject to the user’s final merge disposition. BF-07 forward results do not qualify BF-08.
 
 The first commit froze comparison criteria and calibration before any candidate
 kernel implementation; historical failures below remain part of the evidence.
@@ -335,8 +336,10 @@ with finite output/state/gradients. BF16 beta16 now passes the authoritative
 FP64 line and discloses its nine-ULP distance from the old graph.
 
 Gate A_log89/100 no longer has candidate-only NaNs. A_log88 still has positions
-where candidate and FP64 are finite while both CPU FP32 and old NPU are infinite:
+where candidate and FP64 are finite while CPU FP32 is infinite:
 2 BF16 and13 FP32 dg positions, also present in corresponding dt_bias gradients.
+For each output, old NPU is infinite at the2 BF16 and5 FP32 positions;
+at the other8 FP32 positions it is finite with a rounding difference from candidate.
 These do not fit the literal three equality labels in D-PM-48(1); they remain
 unqualified pending owner interpretation, rather than inventing another endpoint
 class or forcing an old arithmetic order. `located-endpoints.json` publishes all
@@ -362,3 +365,155 @@ no speed acceptance threshold. Candidate medians are about106.8ms at T1024 and
 The final host suite passes1139 tests with5 NPU-only skips. Base-entry negative
 controls still produce11 expected failures and8 no-grad passes. These host
 checks and measured performance do not resolve the remaining endpoint scope.
+
+
+## Final grid, native disclosures and private restoration
+
+The final production completes 1,620 cases × nine gradient selections at each
+of bd1/2/3/4: 58,320 public training calls, including parameter-only gradients.
+All returned outputs, gradients and nine cache hashes agree bitwise across bd.
+The four original summary files have the identical SHA256
+`219b24724ddfb1170c5afac67eb2e81894e57d386814abdf08eaef31eb5c59c6`.
+`evidence/backward/final-grid-v1` publishes a bounded representation of every
+returned hash,7992 original numerical records,123 distinct original host audit
+tables and all invocation mappings. Six full worst-case receipts are retained.
+The public verifier reconstructs the original summary bytes and recomputes all
+28 frozen-budget maxima/ratios and the complete host operator union:
+
+```bash
+python kernels/projects/a5/kda_prep/verify_backward_review.py kernels/projects/a5/kda_prep/evidence/backward/final-grid-v1
+```
+
+Final norm22, explicit prepare, inference then training, T1024 and original
+backward/gate regressions have all been rerun on the final production. Their
+summary/hash records are under `evidence/backward/final-closeout-v1`. All32,775
+individual BF16 norm discrepancy rows were compared against the previously
+published detail: actual/reference/input hashes and each recorded point agree.
+This links identical detail values after the new execution; it does not use
+historical execution to qualify new source.
+
+The final four-bd endpoint run measures identical four-column values and bits.
+Per bd, the D-PM-56 native-flush count is482:239 BF16 gate gradients and241 FP32
+gate gradients at A_log=-100, plus one beta=-88 gradient in each dtype. These
+are **not CPU correctness passes**. CPU-zero/candidate-zero points are counted
+separately. The signed-zero observation is retained, and D-PM-52 is not applied.
+Gate ordinary finite subsets, including A_log80 and the finite portions of88,
+meet the original frozen analytic criteria. Candidate-only NaN count is zero.
+
+[PM disposition](https://github.com/ddddwee1/ascend_fla_dev/issues/117#issuecomment-5755620410)
+leaves the30 A_log88 output records per bd as **unqualified observations**:
+14 have both old paths infinite;16 have CPU infinite and old NPU finite with a
+rounding difference from candidate. They are neither passes nor ordinary-budget
+failures. The four columns, FP64 distances and default public gate rejection are
+retained. No fourth endpoint class is invented. Full unchecked public execution
+at these extreme gate values is not claimed qualified. PM will present this
+section, D-PM-54/55/56 and the measured slowdown together for user merge approval.
+
+The complete private archive `bf08-final-receipts.private.tar` is75,786,240 bytes,
+SHA256 `30dca16aa8b3de77ebcb7f4e8b42071435bd23d8993917c8547fe22374bc4b01`.
+It contains all6560 original grid JSON and910 other final validation JSON,
+including per-receipt environments. Both component archives were freshly
+restored with every original-byte hash checked; all282 bundled members were
+then checked byte-for-byte against those verified components. Source identity,
+archive manifests, restoration results and public recomputation results are in
+`final-closeout-v1/archive-restoration.json`. The complete archive stays private;
+machine coordinates are excluded. After extracting it into an ignored scratch
+directory, restore its compressed receipt shards with:
+
+```bash
+python kernels/projects/a5/kda_prep/backward_evidence_archive.py verify tmp/bf08-private-receipts/grid-v4/grid-v4-bd1 --restore tmp/bf08-restored-bd1
+python kernels/projects/a5/kda_prep/backward_evidence_archive.py verify tmp/bf08-private-receipts/validation --restore tmp/bf08-restored-validation
+```
+
+Repeat the first command for bd2/3/4 using distinct fresh output directories.
+Re-run `summarize_backward_grid.py` on those four restored directories to
+recompute the bounded public package from complete originals. Later publication
+adds summaries/hashes only, following PM’s evidence-size limit.
+
+
+## Device kernel time and dispatch attribution
+
+The37.6→425.7ms result measures the **complete forward/backward training step**,
+including preparation; it is not preparation alone. Its three-round clean
+measurements remain the headline result. A separate NPU Level1 profiler capture
+uses one warmup and one active step per path, with explicit `profiler.step()`.
+All50 vendors precede the first custom launch, and candidate result hashes match
+the clean T4096 run. The first profiling attempt warned that stopping in RECORD
+could leave incomplete data; it is retained privately and not used below. The
+scheduled rerun removes that warning and the initial level/AIC-metric warning.
+
+| Separate event-instrumented run | Old path | Candidate |
+|---|---:|---:|
+| Synchronized host wall (ms) | 37.704827 | 425.361666 |
+| Whole-stream NPU event (ms) | 37.566223 | 425.249359 |
+| Custom host dispatch sum (ms) | 3.518247 | 3.605901 |
+| Custom launches | 34.000000 | 43.000000 |
+
+Host dispatch overlaps device execution. Per-launch event windows can include
+host idle gaps, so the event sums are not an additive decomposition of clean
+wall time. The profiler's device durations exclude task queue wait, but Level1
+hardware-counter collection perturbs durations: summed kernel durations are
+81.949ms old/476.127ms candidate, rather than the clean37.6/425.7ms medians.
+Both sources identify the same dominant gate first stage. The profiler observes
+34 old/43 candidate custom launches and812 old/761 candidate total NPU kernels;
+unchanged registered host operations remain in that total.
+
+Every candidate custom kernel is listed below, aggregated over identical kernel
+names within the one active training step. The public JSON also keeps each
+individual invocation's device duration, the source CSV hash and environment.
+
+| Kernel | Calls | Profiled device ms | Separate event window ms | Host dispatch ms |
+|---|---:|---:|---:|---:|
+| `kda_prep_backward_gate_bf16_f32_f32_kernel` | 1 | 375.466117 | 370.907471 | 0.112889 |
+| `kda_prep_backward_norm_bf16_kernel` | 2 | 19.566360 | 17.761840 | 0.151778 |
+| `kda_layout_bf16_bf16_kernel` | 12 | 16.360361 | 10.143459 | 0.383406 |
+| `inverse_epilogue_kernel` | 1 | 5.993875 | 2.262993 | 0.199139 |
+| `finalize_post_stable_kernel` | 1 | 4.932353 | 1.912493 | 0.181552 |
+| `inverse_mm_bounded_kernel` | 1 | 4.424511 | 0.717511 | 0.142484 |
+| `kda_sub45_aqk_repaired_kernel` | 1 | 3.926023 | 1.290965 | 0.046851 |
+| `kda_sub2_score_stable_kernel` | 1 | 3.888422 | 1.285671 | 0.042995 |
+| `scan_fused_kernel` | 1 | 3.514776 | 2.000056 | 0.161843 |
+| `kda_layout_f32_bf16_kernel` | 3 | 3.397746 | 2.321267 | 0.900762 |
+| `finalize_pair_kernel` | 1 | 3.305203 | 0.656380 | 0.138718 |
+| `finalize_pre_stable_kernel` | 1 | 3.112445 | 0.997151 | 0.147110 |
+| `tril_inverse64_v2_strict_bf16_kernel` | 1 | 3.103281 | 1.467564 | 0.025608 |
+| `kda_sub3_wy_stable_kernel` | 1 | 2.761051 | 0.617966 | 0.051698 |
+| `kda_prep_chunk_norm_bf16_bf16_kernel` | 2 | 2.537441 | 1.644463 | 0.054463 |
+| `kda_layout_bf16_f32_kernel` | 3 | 1.933004 | 0.924175 | 0.225988 |
+| `inverse_dainv_kernel` | 1 | 1.838224 | 0.339910 | 0.099789 |
+| `kda_prep_chunk_gate_bf16_f32_f32_kernel` | 1 | 1.833099 | 1.078656 | 0.069975 |
+| `kda_layout_f32_f32_kernel` | 2 | 1.781218 | 1.170068 | 0.052048 |
+| `finalize_reduce_kernel` | 1 | 1.296735 | 0.576625 | 0.080911 |
+| `inverse_dakk_fused_kernel` | 1 | 1.267772 | 0.337246 | 0.074011 |
+| `kda_sub1_gate_stable_kernel` | 1 | 0.566155 | 0.193082 | 0.033740 |
+| `kda_prep_backward_beta_bf16_kernel` | 1 | 0.440268 | 0.429601 | 0.112349 |
+| `kda_prep_backward_gate_reduce_f32_f32_kernel` | 1 | 0.151922 | 0.117413 | 0.085679 |
+| `kda_prep_chunk_beta_bf16_kernel` | 1 | 0.014990 | 0.010045 | 0.030115 |
+
+The gate first stage spends375.466ms in the profiler and
+370.907ms in the separate event window. Its
+profiled vector/scalar activity ratios are0.994/
+0.001; these are hardware-counter observations,
+not an independent speed model. Source inspection explains the likely cost:
+for every32-BT-row×128-channel work item, each64-lane half evaluates compensated
+exp, log1p/softplus and sigmoid, multiple product residuals and a fixed five-level
+partial reduction. Exp evaluates its polynomial and eight compensated squarings;
+all high/low components are materialized through the fixed reduction. These are
+inferences from the measured dominant stage and source, not isolated per-operation
+microbenchmarks. The second global reduction is small in the actual measurements;
+it does not account for the several-hundred-millisecond regression.
+
+A later performance task could reduce the compensated transcendental/product
+instruction count while proving the same frozen error bounds, reduce repeated
+64-lane temporary loads/stores, improve work-item pipelining and tile reuse, or
+reduce redundant preparation launches. Selective compensation would require a
+proved sensitivity/error bound; no threshold or approximate fallback is approved
+here. Any pipeline/tile change must preserve fixed reduction order, cross-bd
+bitwise results and full native validation. The16,777,216-element gate first stage
+is the first measurement target; merely removing one small final-reduction launch
+would not address the dominant cost. **No such optimization is made in BF-08.**
+
+The profiler archive is private. Public `performance-attribution-summary.json`
+contains only aggregate kernel measurements and per-kernel times; machine/device
+coordinates and raw tracing paths are omitted. `summarize_backward_profile.py`
+recomputes it from the archived CSV and clean measurement receipts.

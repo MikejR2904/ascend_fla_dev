@@ -129,7 +129,10 @@ def summarize(root, prefix, output):
             rows.append([list(record[k].values()) if k in ('to_fp64','to_old_cpu') else record[k] for k in columns])
         save(f'raw-metrics/part-{i//1000:03d}.json',dict(environment=environment,
             columns=columns,metric_fields=metric_fields,rows=rows))
-    save('audit-uses.json',dict(environment=environment,cases=raw_audits))
+    audit_dictionary=sorted(audits);audit_index={v:i for i,v in enumerate(audit_dictionary)}
+    selections=list(raw_audits[0]['table_by_selection'])
+    save('audit-uses.json',dict(environment=environment,table_dictionary=audit_dictionary,selections=selections,
+        cases=[dict(case=row['case'],tables=[audit_index[row['table_by_selection'][n]] for n in selections]) for row in raw_audits]))
     samples=output/'selected-original';samples.mkdir()
     for b,c in sorted(picks):
         data=(root/f'{prefix}-bd{b}'/'cases'/(c+'.json')).read_bytes()
