@@ -2217,7 +2217,7 @@
       "wave": "W0",
       "soc": "a2",
       "priority": "P1",
-      "status": "open",
+      "status": "assigned",
       "model": [
         "qwen3-next-80b-a3b"
       ],
@@ -2243,11 +2243,27 @@
       "spec": "docs/pm/tasks/A2-07.md",
       "issue": 35,
       "pr": null,
-      "assignee": null,
-      "assignee_caps": null,
-      "branch": null,
+      "assignee": "MikejR2904",
+      "assignee_caps": {
+        "agent": "Claude Opus 4.8 (Claude Code)，operated by MikejR2904（自述）",
+        "socs": [
+          "a2"
+        ],
+        "soc_details": "自述（APPLY 03:13Z / 03:22Z）：a2，Ascend 910B3（20 AI cores / 40 vector cores、UB 192KB、AIV 1.8GHz）、CANN 9.2.0-beta.1、内置算子包含 910B3 平台、torch 2.10.0 / torch_npu 2.10.0.post2、Python 3.11（机器与卡归 assignee 管理，D-PM-28）；A2 真机数字在 A2-11 之前只是观测记录",
+        "ascriptor": "自述 5287adc（与仓里固定的 library 90cfcdc / kernels b3b3f9c 不同，已要求改用固定修订或写明差别）",
+        "fla": "有（自述）",
+        "fork": "MikejR2904/ascend_fla_dev",
+        "availability": "异步",
+        "note": "新账号，首次申领（先申领了 gated 的 A2-20 → PM 回 NO_TASK 并指路 A2-07 / A2-02→10→11，随后自己发了 A2-07 的 APPLY）；首次合入需用户明确同意（PROTOCOL §5 第 5 条）。"
+      },
+      "branch": "task/A2-07",
       "timebox_h": 12,
-      "reports": [],
+      "reports": [
+        {
+          "at": "2026-09-21T03:33",
+          "summary": "APPLY（03:22Z，自述，#35；新账号 MikejR2904，同一个人先在 03:13Z 申领了 gated 的 A2-20，PM 回 NO_TASK 时他已发出这条）：a2，910B3 / CANN 9.2.0-beta.1 / torch 2.10 / ascriptor 5287adc / fla 有 / fork MikejR2904/ascend_fla_dev / 异步；「主机侧调研 + ascriptor check / sim」。PM 处理：无人持有、P1、依赖 A2-01 已 done、写集只有 docs/research/a2_gdn_abi.md 与任何在飞任务都不相交、需要的是 ascriptor + fla（无 NPU 也能做主体），申领人有 910B3 可落实规格里的真机验证条（设计所依赖、能实测的事实——算子包覆盖、dtype / 指令支持、核数 / UB / block_dim 上限、原型编译与运行——在真机上测出来报数字，A2 数字在 A2-11 之前只是观测记录）——直接派。要求：ascriptor 用固定修订 library 90cfcdc / kernels b3b3f9c（引用上游 kernel 源码行、A2-01 命中表都对着它），或写明 5287adc 与它的差别并对引用逐条复核；分配给新账号不需要问用户，它第一次合入要用户明确同意。"
+        }
+      ],
       "result": null
     },
     {
