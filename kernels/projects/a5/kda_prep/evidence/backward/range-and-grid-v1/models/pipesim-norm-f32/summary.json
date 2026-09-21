@@ -1,0 +1,1248 @@
+{
+  "environment": {
+    "python": "3.11.15",
+    "torch": "2.10.0+cpu",
+    "ascriptor": "0.1.0",
+    "stage": "pipesim",
+    "device_profile": "950",
+    "block_dim": 1,
+    "vector_participants": 2,
+    "library_commit": "90cfcdc720bbcd66e8bd4361c4dd4fbc1a2a57b5",
+    "kernels_commit": "b3b3f9c16df7c4626ed3c081032a1be5a753d0b1",
+    "accepted_runtime_manifest_sha256": "5cdd9b7600c14440489b26ab45f4042e38d07fee05a5342d558155ed755d136e",
+    "verified_runtime_files": 259,
+    "kernel_source_sha256": "2da8afd583aa37cd47521cfa4ba23d7ba38f832bd5c49e2f694ff07d4405180e",
+    "driver_sha256": "8bcd908db8a8b6db3cc61fa5d369be0ac8330283e4803a7c89d4ba591650f202",
+    "budget_sha256": "af053b4d3987eb9baf8ff8636b57f421f1f6531bd57f2fe10e176e9dba306b31",
+    "scope": "Reduced diagnostic; neither full workload nor board performance qualification"
+  },
+  "complete": true,
+  "passed": true,
+  "cases": [
+    {
+      "id": "norm65rows",
+      "key": "norm:f32:dx",
+      "to_fp64": {
+        "elements": 8320,
+        "finite_pairs": 8320,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 7.889226094534274,
+        "residual_norm": 4.5206293875678064e-07,
+        "relative_l2": 5.7301303491602794e-08,
+        "relative_l2_finite_pairs": 5.7301303491602794e-08,
+        "max_abs": 3.3245259323244625e-08,
+        "max_relative_nonzero": 1.8771297315352172e-07,
+        "relative_quantiles": [
+          3.933463012081588e-08,
+          9.571766355951948e-08,
+          1.450186828425487e-07,
+          1.8771297315352172e-07
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 2,
+        "rounded_reference_over_one_ulp": 309,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "5489021d1d1138a2d3413f6ea95d03882d85d95e14dab13aef41c041fe971244",
+        "reference_fp64_sha256": "89b744c37469ada739575ee182283aa3b5e23525386c3c069c196cd6d735613b"
+      },
+      "to_old_cpu": {
+        "elements": 8320,
+        "finite_pairs": 8320,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 7.889226144523196,
+        "residual_norm": 5.515123711918475e-07,
+        "relative_l2": 6.99070303079998e-08,
+        "relative_l2_finite_pairs": 6.99070303079998e-08,
+        "max_abs": 5.960464477539063e-08,
+        "max_relative_nonzero": 0.004202047983805339,
+        "relative_quantiles": [
+          6.399711405846071e-08,
+          1.3217981606559365e-07,
+          1.60416639772743e-05,
+          0.004202047983805339
+        ],
+        "zero_reference_nonzero_actual": 128,
+        "rounded_reference_max_ulp": 491376398,
+        "rounded_reference_over_one_ulp": 1052,
+        "rounded_reference_sign_differences": 34,
+        "actual_sha256": "5489021d1d1138a2d3413f6ea95d03882d85d95e14dab13aef41c041fe971244",
+        "reference_fp64_sha256": "299b701fc588da92834de00cdc42802a959d2de230af4a0d273993df8c9545a4"
+      },
+      "budget": {
+        "output_dtype": "torch.float32",
+        "calibration_case_ids": [
+          "norm:f32:dx:gaussian:11",
+          "norm:f32:dx:full_kimi:12",
+          "norm:f32:dx:scale_0:13",
+          "norm:f32:dx:scale_1e-20:14",
+          "norm:f32:dx:scale_1e-08:15",
+          "norm:f32:dx:scale_0.0001:16",
+          "norm:f32:dx:scale_30:17"
+        ],
+        "floor_relative_l2": 6.279634967708087e-08,
+        "floor_max_relative_nonzero": 0.04098930330172564,
+        "old_to_rounded_fp64_max_ulp": 619320,
+        "relative_l2_limit": 1.883890490312426e-07,
+        "elementwise_relative_limit": 0.12296790990517692,
+        "zero_reference_nonzero_allowed": 0,
+        "ulp_limit_each_reference": null,
+        "ulp_policy_basis": "D-PM-54 calibration output/dtype classification; FP32 retains BF-07 no-ULP-passline rule"
+      },
+      "ulp_to_fp64_distribution": [
+        {
+          "ulp": 0,
+          "count": 4459
+        },
+        {
+          "ulp": 1,
+          "count": 3552
+        },
+        {
+          "ulp": 2,
+          "count": 309
+        }
+      ],
+      "ulp_to_old_distribution": [
+        {
+          "ulp": 0,
+          "count": 3720
+        },
+        {
+          "ulp": 1,
+          "count": 3514
+        },
+        {
+          "ulp": 2,
+          "count": 600
+        },
+        {
+          "ulp": 3,
+          "count": 106
+        },
+        {
+          "ulp": 4,
+          "count": 33
+        },
+        {
+          "ulp": 5,
+          "count": 16
+        },
+        {
+          "ulp": 6,
+          "count": 10
+        },
+        {
+          "ulp": 7,
+          "count": 9
+        },
+        {
+          "ulp": 8,
+          "count": 11
+        },
+        {
+          "ulp": 9,
+          "count": 9
+        },
+        {
+          "ulp": 10,
+          "count": 6
+        },
+        {
+          "ulp": 11,
+          "count": 1
+        },
+        {
+          "ulp": 12,
+          "count": 2
+        },
+        {
+          "ulp": 13,
+          "count": 3
+        },
+        {
+          "ulp": 14,
+          "count": 2
+        },
+        {
+          "ulp": 15,
+          "count": 2
+        },
+        {
+          "ulp": 16,
+          "count": 1
+        },
+        {
+          "ulp": 17,
+          "count": 2
+        },
+        {
+          "ulp": 18,
+          "count": 2
+        },
+        {
+          "ulp": 19,
+          "count": 2
+        },
+        {
+          "ulp": 21,
+          "count": 1
+        },
+        {
+          "ulp": 24,
+          "count": 1
+        },
+        {
+          "ulp": 25,
+          "count": 1
+        },
+        {
+          "ulp": 26,
+          "count": 2
+        },
+        {
+          "ulp": 27,
+          "count": 2
+        },
+        {
+          "ulp": 29,
+          "count": 1
+        },
+        {
+          "ulp": 33,
+          "count": 2
+        },
+        {
+          "ulp": 34,
+          "count": 1
+        },
+        {
+          "ulp": 35,
+          "count": 1
+        },
+        {
+          "ulp": 38,
+          "count": 1
+        },
+        {
+          "ulp": 39,
+          "count": 1
+        },
+        {
+          "ulp": 40,
+          "count": 1
+        },
+        {
+          "ulp": 45,
+          "count": 1
+        },
+        {
+          "ulp": 46,
+          "count": 1
+        },
+        {
+          "ulp": 50,
+          "count": 1
+        },
+        {
+          "ulp": 51,
+          "count": 2
+        },
+        {
+          "ulp": 58,
+          "count": 1
+        },
+        {
+          "ulp": 59,
+          "count": 1
+        },
+        {
+          "ulp": 61,
+          "count": 1
+        },
+        {
+          "ulp": 64,
+          "count": 1
+        },
+        {
+          "ulp": 73,
+          "count": 1
+        },
+        {
+          "ulp": 76,
+          "count": 1
+        },
+        {
+          "ulp": 78,
+          "count": 1
+        },
+        {
+          "ulp": 80,
+          "count": 1
+        },
+        {
+          "ulp": 81,
+          "count": 1
+        },
+        {
+          "ulp": 86,
+          "count": 1
+        },
+        {
+          "ulp": 91,
+          "count": 1
+        },
+        {
+          "ulp": 93,
+          "count": 1
+        },
+        {
+          "ulp": 98,
+          "count": 1
+        },
+        {
+          "ulp": 100,
+          "count": 2
+        },
+        {
+          "ulp": 101,
+          "count": 1
+        },
+        {
+          "ulp": 104,
+          "count": 1
+        },
+        {
+          "ulp": 116,
+          "count": 1
+        },
+        {
+          "ulp": 118,
+          "count": 2
+        },
+        {
+          "ulp": 123,
+          "count": 1
+        },
+        {
+          "ulp": 127,
+          "count": 1
+        },
+        {
+          "ulp": 130,
+          "count": 1
+        },
+        {
+          "ulp": 131,
+          "count": 1
+        },
+        {
+          "ulp": 136,
+          "count": 1
+        },
+        {
+          "ulp": 137,
+          "count": 1
+        },
+        {
+          "ulp": 145,
+          "count": 1
+        },
+        {
+          "ulp": 150,
+          "count": 1
+        },
+        {
+          "ulp": 154,
+          "count": 1
+        },
+        {
+          "ulp": 157,
+          "count": 1
+        },
+        {
+          "ulp": 160,
+          "count": 1
+        },
+        {
+          "ulp": 163,
+          "count": 1
+        },
+        {
+          "ulp": 164,
+          "count": 1
+        },
+        {
+          "ulp": 174,
+          "count": 1
+        },
+        {
+          "ulp": 175,
+          "count": 1
+        },
+        {
+          "ulp": 181,
+          "count": 1
+        },
+        {
+          "ulp": 193,
+          "count": 1
+        },
+        {
+          "ulp": 196,
+          "count": 1
+        },
+        {
+          "ulp": 200,
+          "count": 2
+        },
+        {
+          "ulp": 207,
+          "count": 1
+        },
+        {
+          "ulp": 209,
+          "count": 1
+        },
+        {
+          "ulp": 210,
+          "count": 1
+        },
+        {
+          "ulp": 212,
+          "count": 1
+        },
+        {
+          "ulp": 213,
+          "count": 1
+        },
+        {
+          "ulp": 219,
+          "count": 1
+        },
+        {
+          "ulp": 227,
+          "count": 1
+        },
+        {
+          "ulp": 228,
+          "count": 2
+        },
+        {
+          "ulp": 230,
+          "count": 2
+        },
+        {
+          "ulp": 240,
+          "count": 1
+        },
+        {
+          "ulp": 246,
+          "count": 1
+        },
+        {
+          "ulp": 257,
+          "count": 1
+        },
+        {
+          "ulp": 261,
+          "count": 2
+        },
+        {
+          "ulp": 270,
+          "count": 1
+        },
+        {
+          "ulp": 282,
+          "count": 1
+        },
+        {
+          "ulp": 285,
+          "count": 1
+        },
+        {
+          "ulp": 300,
+          "count": 1
+        },
+        {
+          "ulp": 302,
+          "count": 1
+        },
+        {
+          "ulp": 326,
+          "count": 1
+        },
+        {
+          "ulp": 327,
+          "count": 1
+        },
+        {
+          "ulp": 343,
+          "count": 1
+        },
+        {
+          "ulp": 348,
+          "count": 2
+        },
+        {
+          "ulp": 358,
+          "count": 1
+        },
+        {
+          "ulp": 361,
+          "count": 1
+        },
+        {
+          "ulp": 363,
+          "count": 1
+        },
+        {
+          "ulp": 371,
+          "count": 1
+        },
+        {
+          "ulp": 385,
+          "count": 1
+        },
+        {
+          "ulp": 402,
+          "count": 1
+        },
+        {
+          "ulp": 411,
+          "count": 1
+        },
+        {
+          "ulp": 419,
+          "count": 1
+        },
+        {
+          "ulp": 438,
+          "count": 1
+        },
+        {
+          "ulp": 442,
+          "count": 1
+        },
+        {
+          "ulp": 446,
+          "count": 1
+        },
+        {
+          "ulp": 450,
+          "count": 1
+        },
+        {
+          "ulp": 453,
+          "count": 1
+        },
+        {
+          "ulp": 456,
+          "count": 2
+        },
+        {
+          "ulp": 458,
+          "count": 1
+        },
+        {
+          "ulp": 468,
+          "count": 1
+        },
+        {
+          "ulp": 472,
+          "count": 1
+        },
+        {
+          "ulp": 481,
+          "count": 1
+        },
+        {
+          "ulp": 513,
+          "count": 1
+        },
+        {
+          "ulp": 528,
+          "count": 1
+        },
+        {
+          "ulp": 529,
+          "count": 1
+        },
+        {
+          "ulp": 547,
+          "count": 1
+        },
+        {
+          "ulp": 549,
+          "count": 1
+        },
+        {
+          "ulp": 553,
+          "count": 1
+        },
+        {
+          "ulp": 578,
+          "count": 1
+        },
+        {
+          "ulp": 588,
+          "count": 1
+        },
+        {
+          "ulp": 616,
+          "count": 1
+        },
+        {
+          "ulp": 628,
+          "count": 1
+        },
+        {
+          "ulp": 669,
+          "count": 1
+        },
+        {
+          "ulp": 733,
+          "count": 1
+        },
+        {
+          "ulp": 789,
+          "count": 1
+        },
+        {
+          "ulp": 818,
+          "count": 1
+        },
+        {
+          "ulp": 870,
+          "count": 1
+        },
+        {
+          "ulp": 876,
+          "count": 1
+        },
+        {
+          "ulp": 905,
+          "count": 1
+        },
+        {
+          "ulp": 1035,
+          "count": 1
+        },
+        {
+          "ulp": 1066,
+          "count": 1
+        },
+        {
+          "ulp": 1156,
+          "count": 1
+        },
+        {
+          "ulp": 1210,
+          "count": 1
+        },
+        {
+          "ulp": 1254,
+          "count": 1
+        },
+        {
+          "ulp": 1479,
+          "count": 1
+        },
+        {
+          "ulp": 1702,
+          "count": 1
+        },
+        {
+          "ulp": 1902,
+          "count": 1
+        },
+        {
+          "ulp": 2019,
+          "count": 1
+        },
+        {
+          "ulp": 2303,
+          "count": 1
+        },
+        {
+          "ulp": 2333,
+          "count": 1
+        },
+        {
+          "ulp": 2378,
+          "count": 1
+        },
+        {
+          "ulp": 2828,
+          "count": 1
+        },
+        {
+          "ulp": 2985,
+          "count": 1
+        },
+        {
+          "ulp": 3402,
+          "count": 1
+        },
+        {
+          "ulp": 3442,
+          "count": 1
+        },
+        {
+          "ulp": 4819,
+          "count": 1
+        },
+        {
+          "ulp": 7649,
+          "count": 1
+        },
+        {
+          "ulp": 52874,
+          "count": 1
+        },
+        {
+          "ulp": 369188414,
+          "count": 1
+        },
+        {
+          "ulp": 411921652,
+          "count": 1
+        },
+        {
+          "ulp": 416222062,
+          "count": 1
+        },
+        {
+          "ulp": 418938334,
+          "count": 1
+        },
+        {
+          "ulp": 430312923,
+          "count": 1
+        },
+        {
+          "ulp": 436273845,
+          "count": 1
+        },
+        {
+          "ulp": 437121872,
+          "count": 1
+        },
+        {
+          "ulp": 442348631,
+          "count": 1
+        },
+        {
+          "ulp": 446049409,
+          "count": 1
+        },
+        {
+          "ulp": 451293330,
+          "count": 1
+        },
+        {
+          "ulp": 451606536,
+          "count": 1
+        },
+        {
+          "ulp": 453277138,
+          "count": 1
+        },
+        {
+          "ulp": 454057340,
+          "count": 1
+        },
+        {
+          "ulp": 454646974,
+          "count": 1
+        },
+        {
+          "ulp": 455308595,
+          "count": 1
+        },
+        {
+          "ulp": 455663848,
+          "count": 1
+        },
+        {
+          "ulp": 457245782,
+          "count": 1
+        },
+        {
+          "ulp": 457912658,
+          "count": 1
+        },
+        {
+          "ulp": 458706925,
+          "count": 1
+        },
+        {
+          "ulp": 458769080,
+          "count": 1
+        },
+        {
+          "ulp": 458980421,
+          "count": 1
+        },
+        {
+          "ulp": 459155307,
+          "count": 1
+        },
+        {
+          "ulp": 460892140,
+          "count": 1
+        },
+        {
+          "ulp": 461804585,
+          "count": 1
+        },
+        {
+          "ulp": 462192664,
+          "count": 1
+        },
+        {
+          "ulp": 462276814,
+          "count": 1
+        },
+        {
+          "ulp": 462619589,
+          "count": 1
+        },
+        {
+          "ulp": 463617817,
+          "count": 1
+        },
+        {
+          "ulp": 464252948,
+          "count": 1
+        },
+        {
+          "ulp": 464630108,
+          "count": 1
+        },
+        {
+          "ulp": 464872904,
+          "count": 1
+        },
+        {
+          "ulp": 464915122,
+          "count": 1
+        },
+        {
+          "ulp": 464916512,
+          "count": 1
+        },
+        {
+          "ulp": 465387421,
+          "count": 1
+        },
+        {
+          "ulp": 465659086,
+          "count": 1
+        },
+        {
+          "ulp": 465916233,
+          "count": 1
+        },
+        {
+          "ulp": 466373483,
+          "count": 1
+        },
+        {
+          "ulp": 466543024,
+          "count": 1
+        },
+        {
+          "ulp": 466891386,
+          "count": 1
+        },
+        {
+          "ulp": 467378430,
+          "count": 1
+        },
+        {
+          "ulp": 467757685,
+          "count": 1
+        },
+        {
+          "ulp": 468466966,
+          "count": 1
+        },
+        {
+          "ulp": 468929746,
+          "count": 1
+        },
+        {
+          "ulp": 469517034,
+          "count": 1
+        },
+        {
+          "ulp": 469897790,
+          "count": 1
+        },
+        {
+          "ulp": 469913462,
+          "count": 1
+        },
+        {
+          "ulp": 470303411,
+          "count": 1
+        },
+        {
+          "ulp": 470706709,
+          "count": 1
+        },
+        {
+          "ulp": 470965711,
+          "count": 1
+        },
+        {
+          "ulp": 471029206,
+          "count": 1
+        },
+        {
+          "ulp": 471434967,
+          "count": 1
+        },
+        {
+          "ulp": 471547324,
+          "count": 1
+        },
+        {
+          "ulp": 471583487,
+          "count": 1
+        },
+        {
+          "ulp": 471739932,
+          "count": 1
+        },
+        {
+          "ulp": 471990836,
+          "count": 1
+        },
+        {
+          "ulp": 472146873,
+          "count": 1
+        },
+        {
+          "ulp": 472223030,
+          "count": 1
+        },
+        {
+          "ulp": 472441417,
+          "count": 1
+        },
+        {
+          "ulp": 472938696,
+          "count": 1
+        },
+        {
+          "ulp": 473519016,
+          "count": 1
+        },
+        {
+          "ulp": 473643386,
+          "count": 1
+        },
+        {
+          "ulp": 473768885,
+          "count": 1
+        },
+        {
+          "ulp": 473798492,
+          "count": 1
+        },
+        {
+          "ulp": 473832667,
+          "count": 1
+        },
+        {
+          "ulp": 473895024,
+          "count": 1
+        },
+        {
+          "ulp": 474455939,
+          "count": 1
+        },
+        {
+          "ulp": 474582860,
+          "count": 1
+        },
+        {
+          "ulp": 474649385,
+          "count": 1
+        },
+        {
+          "ulp": 474730979,
+          "count": 1
+        },
+        {
+          "ulp": 475087613,
+          "count": 1
+        },
+        {
+          "ulp": 475153398,
+          "count": 1
+        },
+        {
+          "ulp": 475401958,
+          "count": 1
+        },
+        {
+          "ulp": 476171496,
+          "count": 1
+        },
+        {
+          "ulp": 476375686,
+          "count": 1
+        },
+        {
+          "ulp": 476539948,
+          "count": 1
+        },
+        {
+          "ulp": 476598392,
+          "count": 1
+        },
+        {
+          "ulp": 476981696,
+          "count": 1
+        },
+        {
+          "ulp": 477618187,
+          "count": 1
+        },
+        {
+          "ulp": 477626117,
+          "count": 1
+        },
+        {
+          "ulp": 477769876,
+          "count": 1
+        },
+        {
+          "ulp": 478319552,
+          "count": 1
+        },
+        {
+          "ulp": 478738305,
+          "count": 1
+        },
+        {
+          "ulp": 478766211,
+          "count": 1
+        },
+        {
+          "ulp": 478795923,
+          "count": 1
+        },
+        {
+          "ulp": 478885963,
+          "count": 1
+        },
+        {
+          "ulp": 479097875,
+          "count": 1
+        },
+        {
+          "ulp": 479109505,
+          "count": 1
+        },
+        {
+          "ulp": 479336979,
+          "count": 1
+        },
+        {
+          "ulp": 479467928,
+          "count": 1
+        },
+        {
+          "ulp": 479479435,
+          "count": 1
+        },
+        {
+          "ulp": 479498007,
+          "count": 1
+        },
+        {
+          "ulp": 479627455,
+          "count": 1
+        },
+        {
+          "ulp": 479962279,
+          "count": 1
+        },
+        {
+          "ulp": 479983127,
+          "count": 1
+        },
+        {
+          "ulp": 479987260,
+          "count": 1
+        },
+        {
+          "ulp": 480019918,
+          "count": 1
+        },
+        {
+          "ulp": 480651171,
+          "count": 1
+        },
+        {
+          "ulp": 480693279,
+          "count": 1
+        },
+        {
+          "ulp": 480747176,
+          "count": 1
+        },
+        {
+          "ulp": 480839586,
+          "count": 1
+        },
+        {
+          "ulp": 480880400,
+          "count": 1
+        },
+        {
+          "ulp": 480962963,
+          "count": 1
+        },
+        {
+          "ulp": 481465347,
+          "count": 1
+        },
+        {
+          "ulp": 481835791,
+          "count": 1
+        },
+        {
+          "ulp": 481906595,
+          "count": 1
+        },
+        {
+          "ulp": 481984859,
+          "count": 1
+        },
+        {
+          "ulp": 482174044,
+          "count": 1
+        },
+        {
+          "ulp": 482328788,
+          "count": 1
+        },
+        {
+          "ulp": 482491030,
+          "count": 1
+        },
+        {
+          "ulp": 482614835,
+          "count": 1
+        },
+        {
+          "ulp": 482957695,
+          "count": 1
+        },
+        {
+          "ulp": 482972788,
+          "count": 1
+        },
+        {
+          "ulp": 483413272,
+          "count": 1
+        },
+        {
+          "ulp": 483789268,
+          "count": 1
+        },
+        {
+          "ulp": 483862471,
+          "count": 1
+        },
+        {
+          "ulp": 483929395,
+          "count": 1
+        },
+        {
+          "ulp": 484264313,
+          "count": 1
+        },
+        {
+          "ulp": 484453558,
+          "count": 1
+        },
+        {
+          "ulp": 484456276,
+          "count": 1
+        },
+        {
+          "ulp": 485026205,
+          "count": 1
+        },
+        {
+          "ulp": 485348351,
+          "count": 1
+        },
+        {
+          "ulp": 485737489,
+          "count": 1
+        },
+        {
+          "ulp": 486182342,
+          "count": 1
+        },
+        {
+          "ulp": 486913525,
+          "count": 1
+        },
+        {
+          "ulp": 487099524,
+          "count": 1
+        },
+        {
+          "ulp": 487287735,
+          "count": 1
+        },
+        {
+          "ulp": 488376616,
+          "count": 1
+        },
+        {
+          "ulp": 491376398,
+          "count": 1
+        }
+      ],
+      "bf16_over_one_locations": 0,
+      "detail_pages": [],
+      "passed": true
+    }
+  ],
+  "execution_evidence": [
+    {
+      "kernel": "kda_prep_backward_norm_f32_kernel",
+      "device": "a5",
+      "requested_backend": "cce",
+      "stage": "pipesim",
+      "launcher": "pipesim",
+      "block_dim": 1,
+      "model": "lowered events and hazards",
+      "backend_executed": false,
+      "event_balance": [],
+      "hazards": [],
+      "deadlock": null,
+      "model_cycles": 21290,
+      "sim_processes": "threads"
+    }
+  ],
+  "retained_boundaries": "two vector participants, repeated4096 tiles, one-row/one-element tail; gate two-stage GM handoff and grouped A-output owners"
+}

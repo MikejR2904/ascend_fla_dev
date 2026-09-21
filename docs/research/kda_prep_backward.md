@@ -212,3 +212,32 @@ range candidate uses device-local powers of two and the algebraically equivalent
 scaled derivative, keeping the input/output ABI and fixed reduction order. Its
 complete qualification, same-input forward observations, and performance remain
 pending. Historical numerical failures and metadata clarifications remain explicit.
+
+
+## Range repair and newly located grid failures
+
+The source at `297c80baaf6e055b924579f1d6909cd698cefaf2` completed the full
+Kimi training workload at bd1/2/3/4. All50 vendors, including9 existing backward
+entries, preceded the first custom launch in each process. All19 returned
+output/cache/gradient hashes agree across the four processes. The22 norm native
+cases pass the original frozen gradient criteria, and12 reduced sim/pipesim
+configurations pass their numerical and synchronization checks. Raw receipts,
+executed source and the manifest are in
+`kernels/projects/a5/kda_prep/evidence/backward/range-and-grid-v1/`.
+
+These results do not qualify the complete task. At scale1e20, the unchanged
+BF07 forward and both predecessor paths return finite zero normalized values,
+while FP64 forward is nonzero. The repaired analytic gradient is finite/nonzero
+and close to FP64; predecessor gradients are zero. This forward/backward
+endpoint consistency question is disclosed to PM in issue117 comment5754878405.
+No endpoint exemption, forward change or new tolerance is assumed.
+
+The complete bd1 andbd3 training grids each retained54 failed cases outof1620.
+The failures are in gate parameter cancellation (including one BF16 bias
+position at2ULP to both references) and FP32 beta's frozen relative-L2 limit.
+The latter is bitwise the correct product of the actual saved FP32 sigmoid;
+the same oldCPU gradient and alternate multiplication associations also exceed
+the frozen analytic limit on the located population. Comment5754936474 requests
+the owning derivative-semantics decision before changing this boundary.
+Numerical budgets remain byte-identical to the initial freeze. Additional gate
+precision work is an unqualified candidate until native workload and grid reruns.

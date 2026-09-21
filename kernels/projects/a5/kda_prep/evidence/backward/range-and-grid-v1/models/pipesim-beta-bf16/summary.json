@@ -1,0 +1,132 @@
+{
+  "environment": {
+    "python": "3.11.15",
+    "torch": "2.10.0+cpu",
+    "ascriptor": "0.1.0",
+    "stage": "pipesim",
+    "device_profile": "950",
+    "block_dim": 1,
+    "vector_participants": 2,
+    "library_commit": "90cfcdc720bbcd66e8bd4361c4dd4fbc1a2a57b5",
+    "kernels_commit": "b3b3f9c16df7c4626ed3c081032a1be5a753d0b1",
+    "accepted_runtime_manifest_sha256": "5cdd9b7600c14440489b26ab45f4042e38d07fee05a5342d558155ed755d136e",
+    "verified_runtime_files": 259,
+    "kernel_source_sha256": "2da8afd583aa37cd47521cfa4ba23d7ba38f832bd5c49e2f694ff07d4405180e",
+    "driver_sha256": "8bcd908db8a8b6db3cc61fa5d369be0ac8330283e4803a7c89d4ba591650f202",
+    "budget_sha256": "af053b4d3987eb9baf8ff8636b57f421f1f6531bd57f2fe10e176e9dba306b31",
+    "scope": "Reduced diagnostic; neither full workload nor board performance qualification"
+  },
+  "complete": true,
+  "passed": true,
+  "cases": [
+    {
+      "id": "beta8193",
+      "key": "beta:bf16:dbeta",
+      "to_fp64": {
+        "elements": 8193,
+        "finite_pairs": 8193,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 19.063190746613056,
+        "residual_norm": 0.031852764798283334,
+        "relative_l2": 0.0016709041640336412,
+        "relative_l2_finite_pairs": 0.0016709041640336412,
+        "max_abs": 0.001951947924432429,
+        "max_relative_nonzero": 0.0038483203921861964,
+        "relative_quantiles": [
+          0.0013808721617003064,
+          0.002625521698347959,
+          0.0034742949760332396,
+          0.0038483203921861964
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 0,
+        "rounded_reference_over_one_ulp": 0,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "cddc790cd5882525e3919af1b6a8e1e3b6a806909d06757658e745fab6dc0879",
+        "reference_fp64_sha256": "73f0aec1118a786f0cbf668a4732e0b254547d924771b1a207cb874a9197c6f4"
+      },
+      "to_old_cpu": {
+        "elements": 8193,
+        "finite_pairs": 8193,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 19.063037496023387,
+        "residual_norm": 0.0,
+        "relative_l2": 0.0,
+        "relative_l2_finite_pairs": 0.0,
+        "max_abs": 0.0,
+        "max_relative_nonzero": 0.0,
+        "relative_quantiles": [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 0,
+        "rounded_reference_over_one_ulp": 0,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "cddc790cd5882525e3919af1b6a8e1e3b6a806909d06757658e745fab6dc0879",
+        "reference_fp64_sha256": "cddc790cd5882525e3919af1b6a8e1e3b6a806909d06757658e745fab6dc0879"
+      },
+      "budget": {
+        "output_dtype": "torch.bfloat16",
+        "calibration_case_ids": [
+          "beta:bf16:dbeta:gaussian:0",
+          "beta:bf16:dbeta:full_kimi:1",
+          "beta:bf16:dbeta:zero:2"
+        ],
+        "floor_relative_l2": 0.0016635021293267198,
+        "floor_max_relative_nonzero": 0.003879466045358764,
+        "old_to_rounded_fp64_max_ulp": 1,
+        "relative_l2_limit": 0.004990506387980159,
+        "elementwise_relative_limit": 0.011638398136076292,
+        "zero_reference_nonzero_allowed": 0,
+        "ulp_limit_each_reference": 1,
+        "ulp_policy_basis": "D-PM-54 calibration output/dtype classification; FP32 retains BF-07 no-ULP-passline rule"
+      },
+      "ulp_to_fp64_distribution": [
+        {
+          "ulp": 0,
+          "count": 8193
+        }
+      ],
+      "ulp_to_old_distribution": [
+        {
+          "ulp": 0,
+          "count": 8193
+        }
+      ],
+      "bf16_over_one_locations": 0,
+      "detail_pages": [],
+      "passed": true
+    }
+  ],
+  "execution_evidence": [
+    {
+      "kernel": "kda_prep_backward_beta_bf16_kernel",
+      "device": "a5",
+      "requested_backend": "cce",
+      "stage": "pipesim",
+      "launcher": "pipesim",
+      "block_dim": 1,
+      "model": "lowered events and hazards",
+      "backend_executed": false,
+      "event_balance": [],
+      "hazards": [],
+      "deadlock": null,
+      "model_cycles": 4688,
+      "sim_processes": "threads"
+    }
+  ],
+  "retained_boundaries": "two vector participants, repeated4096 tiles, one-row/one-element tail; gate two-stage GM handoff and grouped A-output owners"
+}

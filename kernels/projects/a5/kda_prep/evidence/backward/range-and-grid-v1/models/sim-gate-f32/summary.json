@@ -1,0 +1,904 @@
+{
+  "environment": {
+    "python": "3.11.15",
+    "torch": "2.10.0+cpu",
+    "ascriptor": "0.1.0",
+    "stage": "sim",
+    "device_profile": "950",
+    "block_dim": 1,
+    "vector_participants": 2,
+    "library_commit": "90cfcdc720bbcd66e8bd4361c4dd4fbc1a2a57b5",
+    "kernels_commit": "b3b3f9c16df7c4626ed3c081032a1be5a753d0b1",
+    "accepted_runtime_manifest_sha256": "5cdd9b7600c14440489b26ab45f4042e38d07fee05a5342d558155ed755d136e",
+    "verified_runtime_files": 259,
+    "kernel_source_sha256": "2da8afd583aa37cd47521cfa4ba23d7ba38f832bd5c49e2f694ff07d4405180e",
+    "driver_sha256": "8bcd908db8a8b6db3cc61fa5d369be0ac8330283e4803a7c89d4ba591650f202",
+    "budget_sha256": "af053b4d3987eb9baf8ff8636b57f421f1f6531bd57f2fe10e176e9dba306b31",
+    "scope": "Reduced diagnostic; neither full workload nor board performance qualification"
+  },
+  "complete": true,
+  "passed": true,
+  "cases": [
+    {
+      "id": "gate_bt65_hv2_dg",
+      "key": "gate:f32_f32_f32:dg",
+      "to_fp64": {
+        "elements": 16640,
+        "finite_pairs": 16640,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 68.11143475032227,
+        "residual_norm": 3.7284323452317623e-06,
+        "relative_l2": 5.474018215735972e-08,
+        "relative_l2_finite_pairs": 5.474018215735972e-08,
+        "max_abs": 3.3405994237512004e-07,
+        "max_relative_nonzero": 2.758531294888129e-07,
+        "relative_quantiles": [
+          3.976332154603191e-08,
+          9.568895202274914e-08,
+          1.5251069041944055e-07,
+          2.758531294888129e-07
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 4,
+        "rounded_reference_over_one_ulp": 611,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "ab20d688e550e6d8dc018633d4270f599858c469d69cf393419a66f853dff955",
+        "reference_fp64_sha256": "5216ef8810e991695f0428eae9c7e956d6e17b6c2786a8e2e0e68a26f337ffb2"
+      },
+      "to_old_cpu": {
+        "elements": 16640,
+        "finite_pairs": 16640,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 68.11143547339246,
+        "residual_norm": 4.016200934952463e-06,
+        "relative_l2": 5.896514890691712e-08,
+        "relative_l2_finite_pairs": 5.896514890691712e-08,
+        "max_abs": 2.384185791015625e-07,
+        "max_relative_nonzero": 2.3309816836121266e-07,
+        "relative_quantiles": [
+          0.0,
+          9.934007598235964e-08,
+          1.4037582608856157e-07,
+          2.3309816836121266e-07
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 3,
+        "rounded_reference_over_one_ulp": 313,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "ab20d688e550e6d8dc018633d4270f599858c469d69cf393419a66f853dff955",
+        "reference_fp64_sha256": "e9e48f905857f62bf987652d96d0b3b7ccbdd6d8d5cc6e9424d1899e8a3b1b21"
+      },
+      "budget": {
+        "output_dtype": "torch.float32",
+        "calibration_case_ids": [
+          "gate:f32_f32_f32:dg:gaussian:63",
+          "gate:f32_f32_f32:dg:full_kimi:66",
+          "gate:f32_f32_f32:dg:threshold:69"
+        ],
+        "floor_relative_l2": 5.527651302154307e-08,
+        "floor_max_relative_nonzero": 3.6630985929367317e-07,
+        "old_to_rounded_fp64_max_ulp": 6,
+        "relative_l2_limit": 1.6582953906462921e-07,
+        "elementwise_relative_limit": 1.0989295778810195e-06,
+        "zero_reference_nonzero_allowed": 0,
+        "ulp_limit_each_reference": null,
+        "ulp_policy_basis": "D-PM-54 calibration output/dtype classification; FP32 retains BF-07 no-ULP-passline rule"
+      },
+      "ulp_to_fp64_distribution": [
+        {
+          "ulp": 0,
+          "count": 8812
+        },
+        {
+          "ulp": 1,
+          "count": 7217
+        },
+        {
+          "ulp": 2,
+          "count": 585
+        },
+        {
+          "ulp": 3,
+          "count": 25
+        },
+        {
+          "ulp": 4,
+          "count": 1
+        }
+      ],
+      "ulp_to_old_distribution": [
+        {
+          "ulp": 0,
+          "count": 10107
+        },
+        {
+          "ulp": 1,
+          "count": 6220
+        },
+        {
+          "ulp": 2,
+          "count": 297
+        },
+        {
+          "ulp": 3,
+          "count": 16
+        }
+      ],
+      "bf16_over_one_locations": 0,
+      "detail_pages": [],
+      "passed": true
+    },
+    {
+      "id": "gate_bt65_hv2_dA_log",
+      "key": "gate:f32_f32_f32:dA_log",
+      "to_fp64": {
+        "elements": 2,
+        "finite_pairs": 2,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 169.73462869435357,
+        "residual_norm": 3.218583279694821e-05,
+        "relative_l2": 1.896244334142695e-07,
+        "relative_l2_finite_pairs": 1.896244334142695e-07,
+        "max_abs": 3.210718861623718e-05,
+        "max_relative_nonzero": 1.9064745586888844e-07,
+        "relative_quantiles": [
+          1.4847352542622887e-07,
+          1.8221266978035653e-07,
+          1.8980397726003524e-07,
+          1.9064745586888844e-07
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 2,
+        "rounded_reference_over_one_ulp": 1,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "04138f6e26d02dfb1f4da2b5a81c456d07482a5dc1c3fa14c288828c310de7e2",
+        "reference_fp64_sha256": "8a0b38255f657e9b682342198c81d0afb85e3c0e94742c1da812e19b847df590"
+      },
+      "to_old_cpu": {
+        "elements": 2,
+        "finite_pairs": 2,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 169.73461556462928,
+        "residual_norm": 4.613260888079767e-05,
+        "relative_l2": 2.717925788286356e-07,
+        "relative_l2_finite_pairs": 2.717925788286356e-07,
+        "max_abs": 4.57763671875e-05,
+        "max_relative_nonzero": 2.718129187787663e-07,
+        "relative_quantiles": [
+          2.711565814977017e-07,
+          2.716816513225534e-07,
+          2.71799792033145e-07,
+          2.718129187787663e-07
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 3,
+        "rounded_reference_over_one_ulp": 2,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "04138f6e26d02dfb1f4da2b5a81c456d07482a5dc1c3fa14c288828c310de7e2",
+        "reference_fp64_sha256": "98c36ef9d5b60ef0dd7f867c10cb13bfeb887b8c0eb5c5baa209bbaeeae10f9a"
+      },
+      "budget": {
+        "output_dtype": "torch.float32",
+        "calibration_case_ids": [
+          "gate:f32_f32_f32:dA_log:gaussian:64",
+          "gate:f32_f32_f32:dA_log:full_kimi:67",
+          "gate:f32_f32_f32:dA_log:threshold:70"
+        ],
+        "floor_relative_l2": 5.940614811985948e-07,
+        "floor_max_relative_nonzero": 3.986986164890883e-05,
+        "old_to_rounded_fp64_max_ulp": 499,
+        "relative_l2_limit": 1.7821844435957844e-06,
+        "elementwise_relative_limit": 0.0001196095849467265,
+        "zero_reference_nonzero_allowed": 0,
+        "ulp_limit_each_reference": null,
+        "ulp_policy_basis": "D-PM-54 calibration output/dtype classification; FP32 retains BF-07 no-ULP-passline rule"
+      },
+      "ulp_to_fp64_distribution": [
+        {
+          "ulp": 1,
+          "count": 1
+        },
+        {
+          "ulp": 2,
+          "count": 1
+        }
+      ],
+      "ulp_to_old_distribution": [
+        {
+          "ulp": 3,
+          "count": 2
+        }
+      ],
+      "bf16_over_one_locations": 0,
+      "detail_pages": [],
+      "passed": true
+    },
+    {
+      "id": "gate_bt65_hv2_ddt_bias",
+      "key": "gate:f32_f32_f32:ddt_bias",
+      "to_fp64": {
+        "elements": 256,
+        "finite_pairs": 256,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 65.33879359516838,
+        "residual_norm": 5.964064549793394e-06,
+        "relative_l2": 9.127907360435898e-08,
+        "relative_l2_finite_pairs": 9.127907360435898e-08,
+        "max_abs": 1.4185392291921062e-06,
+        "max_relative_nonzero": 9.304593865634235e-05,
+        "relative_quantiles": [
+          8.78957050164975e-08,
+          4.1661354944882474e-07,
+          2.2626240443511165e-06,
+          9.304593865634235e-05
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 1146,
+        "rounded_reference_over_one_ulp": 96,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "94d63337e42e9ed7f55011c725a55ec62f502874efeda57697f4ef02e8ff20de",
+        "reference_fp64_sha256": "4a56d7e70d52346fc30f05e2f4ac892d8cd5576e0e32bb34518284442e01f77d"
+      },
+      "to_old_cpu": {
+        "elements": 256,
+        "finite_pairs": 256,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 65.33879476217696,
+        "residual_norm": 8.98879741781625e-06,
+        "relative_l2": 1.3757213383770046e-07,
+        "relative_l2_finite_pairs": 1.3757213383770046e-07,
+        "max_abs": 1.9073486328125e-06,
+        "max_relative_nonzero": 8.314106960986053e-05,
+        "relative_quantiles": [
+          1.294017651515924e-07,
+          5.812595189486339e-07,
+          6.5225300640797825e-06,
+          8.314106960986053e-05
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 1024,
+        "rounded_reference_over_one_ulp": 138,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "94d63337e42e9ed7f55011c725a55ec62f502874efeda57697f4ef02e8ff20de",
+        "reference_fp64_sha256": "a03e3edc7efb693383035ce94bdea134b1a04b01ab43efc4fac0f42889f3a3b0"
+      },
+      "budget": {
+        "output_dtype": "torch.float32",
+        "calibration_case_ids": [
+          "gate:f32_f32_f32:ddt_bias:gaussian:65",
+          "gate:f32_f32_f32:ddt_bias:full_kimi:68",
+          "gate:f32_f32_f32:ddt_bias:threshold:71"
+        ],
+        "floor_relative_l2": 1.4719301473991355e-07,
+        "floor_max_relative_nonzero": 0.0007312911553903001,
+        "old_to_rounded_fp64_max_ulp": 8666,
+        "relative_l2_limit": 4.415790442197406e-07,
+        "elementwise_relative_limit": 0.0021938734661709003,
+        "zero_reference_nonzero_allowed": 0,
+        "ulp_limit_each_reference": null,
+        "ulp_policy_basis": "D-PM-54 calibration output/dtype classification; FP32 retains BF-07 no-ULP-passline rule"
+      },
+      "ulp_to_fp64_distribution": [
+        {
+          "ulp": 0,
+          "count": 75
+        },
+        {
+          "ulp": 1,
+          "count": 85
+        },
+        {
+          "ulp": 2,
+          "count": 40
+        },
+        {
+          "ulp": 3,
+          "count": 20
+        },
+        {
+          "ulp": 4,
+          "count": 9
+        },
+        {
+          "ulp": 5,
+          "count": 5
+        },
+        {
+          "ulp": 6,
+          "count": 1
+        },
+        {
+          "ulp": 7,
+          "count": 4
+        },
+        {
+          "ulp": 8,
+          "count": 2
+        },
+        {
+          "ulp": 10,
+          "count": 1
+        },
+        {
+          "ulp": 11,
+          "count": 1
+        },
+        {
+          "ulp": 13,
+          "count": 2
+        },
+        {
+          "ulp": 14,
+          "count": 5
+        },
+        {
+          "ulp": 17,
+          "count": 1
+        },
+        {
+          "ulp": 18,
+          "count": 1
+        },
+        {
+          "ulp": 30,
+          "count": 2
+        },
+        {
+          "ulp": 196,
+          "count": 1
+        },
+        {
+          "ulp": 1146,
+          "count": 1
+        }
+      ],
+      "ulp_to_old_distribution": [
+        {
+          "ulp": 0,
+          "count": 54
+        },
+        {
+          "ulp": 1,
+          "count": 64
+        },
+        {
+          "ulp": 2,
+          "count": 58
+        },
+        {
+          "ulp": 3,
+          "count": 17
+        },
+        {
+          "ulp": 4,
+          "count": 21
+        },
+        {
+          "ulp": 5,
+          "count": 8
+        },
+        {
+          "ulp": 6,
+          "count": 7
+        },
+        {
+          "ulp": 7,
+          "count": 2
+        },
+        {
+          "ulp": 8,
+          "count": 7
+        },
+        {
+          "ulp": 12,
+          "count": 2
+        },
+        {
+          "ulp": 13,
+          "count": 1
+        },
+        {
+          "ulp": 14,
+          "count": 1
+        },
+        {
+          "ulp": 16,
+          "count": 2
+        },
+        {
+          "ulp": 18,
+          "count": 1
+        },
+        {
+          "ulp": 20,
+          "count": 1
+        },
+        {
+          "ulp": 22,
+          "count": 1
+        },
+        {
+          "ulp": 24,
+          "count": 2
+        },
+        {
+          "ulp": 25,
+          "count": 1
+        },
+        {
+          "ulp": 32,
+          "count": 1
+        },
+        {
+          "ulp": 40,
+          "count": 1
+        },
+        {
+          "ulp": 48,
+          "count": 1
+        },
+        {
+          "ulp": 84,
+          "count": 1
+        },
+        {
+          "ulp": 288,
+          "count": 1
+        },
+        {
+          "ulp": 1024,
+          "count": 1
+        }
+      ],
+      "bf16_over_one_locations": 0,
+      "detail_pages": [],
+      "passed": true
+    },
+    {
+      "id": "gate_bt1_hv17_dg",
+      "key": "gate:f32_f32_f32:dg",
+      "to_fp64": {
+        "elements": 2176,
+        "finite_pairs": 2176,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 24.405320089383267,
+        "residual_norm": 1.387065244313151e-06,
+        "relative_l2": 5.683454424007117e-08,
+        "relative_l2_finite_pairs": 5.683454424007117e-08,
+        "max_abs": 2.5026153549490004e-07,
+        "max_relative_nonzero": 1.810679411550466e-07,
+        "relative_quantiles": [
+          3.973448414147472e-08,
+          1.0197788510212109e-07,
+          1.5327081260462218e-07,
+          1.810679411550466e-07
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 3,
+        "rounded_reference_over_one_ulp": 104,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "6232ef2086de1dd0eb1290338bd6eeed15d1934626a617afe671ba5ebad5c9fd",
+        "reference_fp64_sha256": "204e1e12653371f94edac43401e9d013a651f94429f65f7717ff5260bdad5687"
+      },
+      "to_old_cpu": {
+        "elements": 2176,
+        "finite_pairs": 2176,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 24.405320364709105,
+        "residual_norm": 1.3137559555528885e-06,
+        "relative_l2": 5.383071952837885e-08,
+        "relative_l2_finite_pairs": 5.383071952837885e-08,
+        "max_abs": 2.384185791015625e-07,
+        "max_relative_nonzero": 2.210232447936317e-07,
+        "relative_quantiles": [
+          0.0,
+          9.891088894326131e-08,
+          1.2103153171719824e-07,
+          2.210232447936317e-07
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 2,
+        "rounded_reference_over_one_ulp": 24,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "6232ef2086de1dd0eb1290338bd6eeed15d1934626a617afe671ba5ebad5c9fd",
+        "reference_fp64_sha256": "f55ba9c31bc758c670d5264d4ed3fbcf947915f9345302963b36053191724dd1"
+      },
+      "budget": {
+        "output_dtype": "torch.float32",
+        "calibration_case_ids": [
+          "gate:f32_f32_f32:dg:gaussian:63",
+          "gate:f32_f32_f32:dg:full_kimi:66",
+          "gate:f32_f32_f32:dg:threshold:69"
+        ],
+        "floor_relative_l2": 5.527651302154307e-08,
+        "floor_max_relative_nonzero": 3.6630985929367317e-07,
+        "old_to_rounded_fp64_max_ulp": 6,
+        "relative_l2_limit": 1.6582953906462921e-07,
+        "elementwise_relative_limit": 1.0989295778810195e-06,
+        "zero_reference_nonzero_allowed": 0,
+        "ulp_limit_each_reference": null,
+        "ulp_policy_basis": "D-PM-54 calibration output/dtype classification; FP32 retains BF-07 no-ULP-passline rule"
+      },
+      "ulp_to_fp64_distribution": [
+        {
+          "ulp": 0,
+          "count": 1147
+        },
+        {
+          "ulp": 1,
+          "count": 925
+        },
+        {
+          "ulp": 2,
+          "count": 101
+        },
+        {
+          "ulp": 3,
+          "count": 3
+        }
+      ],
+      "ulp_to_old_distribution": [
+        {
+          "ulp": 0,
+          "count": 1309
+        },
+        {
+          "ulp": 1,
+          "count": 843
+        },
+        {
+          "ulp": 2,
+          "count": 24
+        }
+      ],
+      "bf16_over_one_locations": 0,
+      "detail_pages": [],
+      "passed": true
+    },
+    {
+      "id": "gate_bt1_hv17_dA_log",
+      "key": "gate:f32_f32_f32:dA_log",
+      "to_fp64": {
+        "elements": 17,
+        "finite_pairs": 17,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 29.1795093896369,
+        "residual_norm": 4.2816273107662565e-06,
+        "relative_l2": 1.4673404043890045e-07,
+        "relative_l2_finite_pairs": 1.4673404043890045e-07,
+        "max_abs": 2.3655198866379124e-06,
+        "max_relative_nonzero": 6.850633952612078e-06,
+        "relative_quantiles": [
+          1.0690656378113652e-07,
+          9.425694275739398e-07,
+          5.937822668767094e-06,
+          6.850633952612078e-06
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 113,
+        "rounded_reference_over_one_ulp": 9,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "0dca5743af0a55ce48c6a35dfd02cb95e3ad445d64216f6607d435c1d42d4824",
+        "reference_fp64_sha256": "a742a41b371e452787e5d607865dfd6ecaecfdb3a031db3b3138aaff2ec37d0d"
+      },
+      "to_old_cpu": {
+        "elements": 17,
+        "finite_pairs": 17,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 29.179509173289638,
+        "residual_norm": 3.498981763563716e-06,
+        "relative_l2": 1.1991228991495912e-07,
+        "relative_l2_finite_pairs": 1.1991228991495912e-07,
+        "max_abs": 1.9073486328125e-06,
+        "max_relative_nonzero": 8.630477401134155e-06,
+        "relative_quantiles": [
+          1.0326169621999202e-07,
+          2.903079207296944e-06,
+          8.184078395573295e-06,
+          8.630477401134155e-06
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 110,
+        "rounded_reference_over_one_ulp": 6,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "0dca5743af0a55ce48c6a35dfd02cb95e3ad445d64216f6607d435c1d42d4824",
+        "reference_fp64_sha256": "761827254af51c9b7d19111a3cf5c51e1cd9837c5e13ab4e82d1bb50ee1c6079"
+      },
+      "budget": {
+        "output_dtype": "torch.float32",
+        "calibration_case_ids": [
+          "gate:f32_f32_f32:dA_log:gaussian:64",
+          "gate:f32_f32_f32:dA_log:full_kimi:67",
+          "gate:f32_f32_f32:dA_log:threshold:70"
+        ],
+        "floor_relative_l2": 5.940614811985948e-07,
+        "floor_max_relative_nonzero": 3.986986164890883e-05,
+        "old_to_rounded_fp64_max_ulp": 499,
+        "relative_l2_limit": 1.7821844435957844e-06,
+        "elementwise_relative_limit": 0.0001196095849467265,
+        "zero_reference_nonzero_allowed": 0,
+        "ulp_limit_each_reference": null,
+        "ulp_policy_basis": "D-PM-54 calibration output/dtype classification; FP32 retains BF-07 no-ULP-passline rule"
+      },
+      "ulp_to_fp64_distribution": [
+        {
+          "ulp": 0,
+          "count": 3
+        },
+        {
+          "ulp": 1,
+          "count": 5
+        },
+        {
+          "ulp": 2,
+          "count": 4
+        },
+        {
+          "ulp": 5,
+          "count": 1
+        },
+        {
+          "ulp": 10,
+          "count": 1
+        },
+        {
+          "ulp": 11,
+          "count": 1
+        },
+        {
+          "ulp": 15,
+          "count": 1
+        },
+        {
+          "ulp": 113,
+          "count": 1
+        }
+      ],
+      "ulp_to_old_distribution": [
+        {
+          "ulp": 0,
+          "count": 4
+        },
+        {
+          "ulp": 1,
+          "count": 7
+        },
+        {
+          "ulp": 2,
+          "count": 1
+        },
+        {
+          "ulp": 4,
+          "count": 1
+        },
+        {
+          "ulp": 8,
+          "count": 1
+        },
+        {
+          "ulp": 13,
+          "count": 1
+        },
+        {
+          "ulp": 96,
+          "count": 1
+        },
+        {
+          "ulp": 110,
+          "count": 1
+        }
+      ],
+      "bf16_over_one_locations": 0,
+      "detail_pages": [],
+      "passed": true
+    },
+    {
+      "id": "gate_bt1_hv17_ddt_bias",
+      "key": "gate:f32_f32_f32:ddt_bias",
+      "to_fp64": {
+        "elements": 2176,
+        "finite_pairs": 2176,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 24.405320089383267,
+        "residual_norm": 1.387065244313151e-06,
+        "relative_l2": 5.683454424007117e-08,
+        "relative_l2_finite_pairs": 5.683454424007117e-08,
+        "max_abs": 2.5026153549490004e-07,
+        "max_relative_nonzero": 1.810679411550466e-07,
+        "relative_quantiles": [
+          3.973448414147472e-08,
+          1.0197788510212109e-07,
+          1.5327081260462218e-07,
+          1.810679411550466e-07
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 3,
+        "rounded_reference_over_one_ulp": 104,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "6232ef2086de1dd0eb1290338bd6eeed15d1934626a617afe671ba5ebad5c9fd",
+        "reference_fp64_sha256": "204e1e12653371f94edac43401e9d013a651f94429f65f7717ff5260bdad5687"
+      },
+      "to_old_cpu": {
+        "elements": 2176,
+        "finite_pairs": 2176,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 24.405320364709105,
+        "residual_norm": 1.3137559555528885e-06,
+        "relative_l2": 5.383071952837885e-08,
+        "relative_l2_finite_pairs": 5.383071952837885e-08,
+        "max_abs": 2.384185791015625e-07,
+        "max_relative_nonzero": 2.210232447936317e-07,
+        "relative_quantiles": [
+          0.0,
+          9.891088894326131e-08,
+          1.2103153171719824e-07,
+          2.210232447936317e-07
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 2,
+        "rounded_reference_over_one_ulp": 24,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "6232ef2086de1dd0eb1290338bd6eeed15d1934626a617afe671ba5ebad5c9fd",
+        "reference_fp64_sha256": "f55ba9c31bc758c670d5264d4ed3fbcf947915f9345302963b36053191724dd1"
+      },
+      "budget": {
+        "output_dtype": "torch.float32",
+        "calibration_case_ids": [
+          "gate:f32_f32_f32:ddt_bias:gaussian:65",
+          "gate:f32_f32_f32:ddt_bias:full_kimi:68",
+          "gate:f32_f32_f32:ddt_bias:threshold:71"
+        ],
+        "floor_relative_l2": 1.4719301473991355e-07,
+        "floor_max_relative_nonzero": 0.0007312911553903001,
+        "old_to_rounded_fp64_max_ulp": 8666,
+        "relative_l2_limit": 4.415790442197406e-07,
+        "elementwise_relative_limit": 0.0021938734661709003,
+        "zero_reference_nonzero_allowed": 0,
+        "ulp_limit_each_reference": null,
+        "ulp_policy_basis": "D-PM-54 calibration output/dtype classification; FP32 retains BF-07 no-ULP-passline rule"
+      },
+      "ulp_to_fp64_distribution": [
+        {
+          "ulp": 0,
+          "count": 1147
+        },
+        {
+          "ulp": 1,
+          "count": 925
+        },
+        {
+          "ulp": 2,
+          "count": 101
+        },
+        {
+          "ulp": 3,
+          "count": 3
+        }
+      ],
+      "ulp_to_old_distribution": [
+        {
+          "ulp": 0,
+          "count": 1309
+        },
+        {
+          "ulp": 1,
+          "count": 843
+        },
+        {
+          "ulp": 2,
+          "count": 24
+        }
+      ],
+      "bf16_over_one_locations": 0,
+      "detail_pages": [],
+      "passed": true
+    }
+  ],
+  "execution_evidence": [
+    {
+      "kernel": "kda_prep_backward_gate_f32_f32_f32_kernel",
+      "device": "a5",
+      "requested_backend": "cce",
+      "stage": "sim",
+      "launcher": "sim",
+      "block_dim": 1,
+      "model": "functional Surface IR",
+      "backend_executed": false,
+      "sim_processes": "threads"
+    },
+    {
+      "kernel": "kda_prep_backward_gate_reduce_f32_f32_kernel",
+      "device": "a5",
+      "requested_backend": "cce",
+      "stage": "sim",
+      "launcher": "sim",
+      "block_dim": 1,
+      "model": "functional Surface IR",
+      "backend_executed": false,
+      "sim_processes": "threads"
+    },
+    {
+      "kernel": "kda_prep_backward_gate_f32_f32_f32_kernel",
+      "device": "a5",
+      "requested_backend": "cce",
+      "stage": "sim",
+      "launcher": "sim",
+      "block_dim": 1,
+      "model": "functional Surface IR",
+      "backend_executed": false,
+      "sim_processes": "threads"
+    },
+    {
+      "kernel": "kda_prep_backward_gate_reduce_f32_f32_kernel",
+      "device": "a5",
+      "requested_backend": "cce",
+      "stage": "sim",
+      "launcher": "sim",
+      "block_dim": 1,
+      "model": "functional Surface IR",
+      "backend_executed": false,
+      "sim_processes": "threads"
+    }
+  ],
+  "retained_boundaries": "two vector participants, repeated4096 tiles, one-row/one-element tail; gate two-stage GM handoff and grouped A-output owners"
+}
