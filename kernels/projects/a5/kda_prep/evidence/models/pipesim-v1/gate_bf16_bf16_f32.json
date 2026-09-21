@@ -1,0 +1,96 @@
+{
+  "case": {
+    "id": "gate_bf16_bf16_f32",
+    "seed": 7007,
+    "block_dim": 1,
+    "parameters": {
+      "kind": "gate",
+      "types": "bf16_bf16_f32",
+      "shape": [
+        2,
+        65,
+        2,
+        128
+      ]
+    }
+  },
+  "stage": "pipesim",
+  "to_fp64": {
+    "elements": 33280,
+    "finite_pairs": 33280,
+    "actual_nan": 0,
+    "reference_nan": 0,
+    "actual_posinf": 0,
+    "reference_posinf": 0,
+    "actual_neginf": 0,
+    "reference_neginf": 0,
+    "reference_norm": 197.02970430255527,
+    "residual_norm": 1.0996132858295896e-05,
+    "relative_l2": 5.580951814966149e-08,
+    "relative_l2_finite_pairs": 5.580951814966149e-08,
+    "max_abs": 6.656823745565532e-07,
+    "max_relative_nonzero": 2.7373703047584415e-07,
+    "relative_quantiles": [
+      3.843095536198868e-08,
+      9.519966323368194e-08,
+      1.5173171184043108e-07,
+      2.7373703047584415e-07
+    ],
+    "zero_reference_nonzero_actual": 0,
+    "rounded_reference_max_ulp": 4,
+    "rounded_reference_over_one_ulp": 1091,
+    "rounded_reference_sign_differences": 0,
+    "actual_sha256": "108d4d2e9e5120a010ae2e3379bba6e53c78fbf9df4322d1bd708bea92a553f7",
+    "reference_fp64_sha256": "e34864a58991e308cc784016f00058b8e8a441cb7c7387ebb24a3d68874fb3c6"
+  },
+  "to_predecessor_fp32": {
+    "elements": 33280,
+    "finite_pairs": 33280,
+    "actual_nan": 0,
+    "reference_nan": 0,
+    "actual_posinf": 0,
+    "reference_posinf": 0,
+    "actual_neginf": 0,
+    "reference_neginf": 0,
+    "reference_norm": 197.0297001699669,
+    "residual_norm": 7.693439499408716e-06,
+    "relative_l2": 3.904710555196501e-08,
+    "relative_l2_finite_pairs": 3.904710555196501e-08,
+    "max_abs": 4.76837158203125e-07,
+    "max_relative_nonzero": 2.3527416086235508e-07,
+    "relative_quantiles": [
+      0.0,
+      9.671535317644038e-08,
+      1.6309217347685693e-07,
+      2.3527416086235508e-07
+    ],
+    "zero_reference_nonzero_actual": 0,
+    "rounded_reference_max_ulp": 3,
+    "rounded_reference_over_one_ulp": 1341,
+    "rounded_reference_sign_differences": 0,
+    "actual_sha256": "108d4d2e9e5120a010ae2e3379bba6e53c78fbf9df4322d1bd708bea92a553f7",
+    "reference_fp64_sha256": "9f42759885d629973a6019a31acf0d0d3ddf1aa0266ecd773fa83ff30c9c4a9b"
+  },
+  "budget": {
+    "relative_l2": 1.464126540337291e-07,
+    "max_relative_nonzero": 8.144640195580126e-07
+  },
+  "passed": true,
+  "execution_evidence": [
+    {
+      "kernel": "kda_prep_chunk_gate_bf16_bf16_f32_kernel",
+      "device": "a5",
+      "requested_backend": "cce",
+      "stage": "pipesim",
+      "launcher": "pipesim",
+      "block_dim": 1,
+      "model": "lowered events and hazards",
+      "backend_executed": false,
+      "event_balance": [],
+      "hazards": [],
+      "deadlock": null,
+      "model_cycles": 19362,
+      "sim_processes": "threads"
+    }
+  ]
+}

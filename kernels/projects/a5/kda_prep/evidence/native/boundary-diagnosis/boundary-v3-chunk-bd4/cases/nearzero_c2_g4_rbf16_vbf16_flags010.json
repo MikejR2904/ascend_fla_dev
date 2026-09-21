@@ -1,0 +1,828 @@
+{
+  "environment": {
+    "python": "3.12.14",
+    "torch": "2.12.0+cu130",
+    "torch_npu": "2.12.0",
+    "ascriptor": "0.1.0",
+    "library_commit": "90cfcdc720bbcd66e8bd4361c4dd4fbc1a2a57b5",
+    "kernels_commit": "b3b3f9c16df7c4626ed3c081032a1be5a753d0b1",
+    "cann_version_records": {
+      "compiler": {
+        "raw_lines": [
+          "Version=9.1.0-beta.1",
+          "version_dir=cann",
+          "required_package_runtime_version=\"9.1\"",
+          "required_package_ge-executor_version=\"9.1\"",
+          "required_package_metadef_version=\"9.1\"",
+          "required_package_opbase_version=\"9.1\"",
+          "required_package_bisheng-compiler_version=\"9.1\"",
+          "required_package_tbe-tik_version=\"9.1\"",
+          "timestamp=20260509_173000235"
+        ],
+        "sha256": "0f982a259247cdd06df4fa5bdaf526b57b6ad15f7d27a33f23b3c70a381c2fe5"
+      },
+      "opp": {
+        "raw_lines": [
+          "Version=9.1.0-beta.1",
+          "version_dir=cann",
+          "required_package_runtime_version=\">=8.5\"",
+          "required_package_ge-executor_version=\">=8.5\"",
+          "required_package_metadef_version=\">=8.5\"",
+          "required_package_asc-devkit_version=\">=8.5\"",
+          "required_package_bisheng-compiler_version=\">=8.5\"",
+          "timestamp=20260509_173000235"
+        ],
+        "sha256": "377b05dab3a2dfc87dfaa92affd69a9aa5795a54d423cbe629d3495ad20370ef"
+      }
+    },
+    "opp_directories": [
+      "ascend910_93",
+      "ascend910b",
+      "ascend950"
+    ],
+    "drivers_sha256": {
+      "native_audit.py": "bfffeb22e43a3619118da1aa7119b7d1b5324d81d1632c982cfafcaebc4d6ba5",
+      "native_context.py": "d3afb051d41fd56707734a9dea941896a4923c0f9ea1ef749f80b0f8af425725",
+      "guard.py": "becbb8fdb80b93d680175a65c86d229d6df6a975cf43c42fb247dc9cf026153f",
+      "verify_grid_native.py": "30d94fd2ffb2dc8d2868cd216b67ae7b66baadf7fc9daadf67b0feeb12216d8a",
+      "native_environment.py": "8aa453ef4cfd92476bb80d463ddf63d4b1e1d3c2eb325ad69e93fcaecc50833d",
+      "unit.py": "d270c3d60704500bd41813831e57b0cea5ee95f67f5db914ff21cc6c1e8b22b7",
+      "native_grid.py": "2a70c1b87dcc88f979abdecdbdc16fc3d5237ff72dc91c0dba377c181e29913b",
+      "verify_native.py": "37161cbe3d595e842fc62a66a8a78d5b2e9532059cb37e3d6f0897be5248e9e2",
+      "wait_native.py": "5da619587873bdf1037ce3ff42c63893567158874323d0bfafeb56f844527e40"
+    },
+    "prep_sha256": {
+      "native_audit.py": "bfffeb22e43a3619118da1aa7119b7d1b5324d81d1632c982cfafcaebc4d6ba5",
+      "native_environment.py": "8aa453ef4cfd92476bb80d463ddf63d4b1e1d3c2eb325ad69e93fcaecc50833d",
+      "unit.py": "e3f9c1f51a977b31b87fd03397ea43a78b4b04f6dc487947ff0532eac747d9ae",
+      "run.py": "cc9b6f4400d94e45a3af3d607bbe143ad2211ce7b3189dbe3298166e5a541a32",
+      "_unit_runner.py": "91ab007ac56f59f3c1b918947be769e725e51d98f981f41608864a2ae477133a",
+      "runtime.py": "a63385ec54c95d02357b9748156cfe82b217e72b3834c159e7a029e5752fcbe3",
+      "verify_calibration.py": "e5f7403369d294444d617e7e93a06f83552caeb535d7a3f2c5cb54b8b287ff84",
+      "verify_native.py": "37161cbe3d595e842fc62a66a8a78d5b2e9532059cb37e3d6f0897be5248e9e2",
+      "kernels/forward.py": "135b1fa2f92c26da9a6b57434f09515ac95592f033b328c3c5ddcd9ac9b2b455",
+      "baseline/autograd.py": "c2a535ae2ec5b7f1b7da000a42a96e985fcc84aa4b05df1421cc83b424b25903",
+      "baseline/chunk.py": "5bf75978176280c5eaf9268e7730ea00bf1581bb1ef8dddb35ad5a178ffd49d0",
+      "baseline/fused_recurrent.py": "1e78c50a1f15f23e9a7213d57b021b558c02164989765877b6fba92a10cf473a",
+      "ref/calibrate.py": "d21ec73afc242b1b17e7d7f15e72c034fa0dfabda6505abe4edf74313cdb0765"
+    },
+    "wrappers_sha256": {
+      "chunk.py": "c79a199d9b8b9d5820834e87d7ad0805ce63531df878c11720c0a4f181c8a87e",
+      "chunk_bwd.py": "71ce0e041a02853de768e982cc38a497294ecbfaa9e8715aca084ad3db69247e",
+      "autograd.py": "78b96d6bb9a81dfa800c4704214bcd0cdce3447f2d1b1fdd77dd11bf5380559d",
+      "fused_recurrent.py": "872d15f102e482f4baa7f9229471e8bdcbc564c1e4531967d65be0fc758771fc"
+    }
+  },
+  "case": {
+    "id": "nearzero_c2_g4_rbf16_vbf16_flags010",
+    "B": 1,
+    "C": 2,
+    "H": 1,
+    "HV": 4,
+    "flags": {
+      "use_qk_l2norm_in_kernel": false,
+      "use_gate_in_kernel": true,
+      "use_beta_sigmoid_in_kernel": false
+    },
+    "types": {
+      "q": "bf16",
+      "k": "bf16",
+      "v": "bf16",
+      "g": "bf16",
+      "A_log": "bf16",
+      "dt_bias": "bf16",
+      "beta": "f32"
+    },
+    "seed": 7011,
+    "boundary": "nearzero"
+  },
+  "route": "chunk",
+  "population": "boundary",
+  "block_dim": 4,
+  "decode_test_schedule": null,
+  "input_sha256": {
+    "q": "ffe70d279a8c1f399f8c9d678cee0a7e889e37dc8c14fe44862efae0657f4131",
+    "k": "c7150b4362a46700b0197813e44c57162163c9f0de2fb245988a4fb240cf78b9",
+    "v": "323f47ae6cd2ae52f95980b420639dbe8343d9e5065ddae969f3d43ea5c6defc",
+    "g": "967667e9793b47243c1fb168dc1c45166559d0ca34c9cc927a2f40a4f6d6d1df",
+    "beta": "b87cac5621a07958f8daf8ea4946fd56f7b37547c5f5343fa73778980498f5f9",
+    "A_log": "00c55e5c94c0eb0234d4a312e08f0fc7b59e23504caffcaae5ed8f943e30e6a6",
+    "dt_bias": "516b8e4d63bad4e082e098278ca50536ef8870f3b079fac55b0f10626ea90df8",
+    "h0": "b466f50568fa099607b09cb562ca6223822240e0b64e78e47a0c74f353d82c3a"
+  },
+  "input_unchanged": {
+    "q": true,
+    "k": true,
+    "v": true,
+    "g": true,
+    "beta": true,
+    "A_log": true,
+    "dt_bias": true,
+    "h0": true
+  },
+  "output_sha256": {
+    "o": "3b9c50369edb5e2c13a7a9042a289bab2f45a480e9f1aa7a7ccbdbbc59c1fbea",
+    "final_state": "c0ef950fe7e27e00eb2b9ccac5a3fb3260326bdf6c3f8f2974c001f81c72c772",
+    "cache_g_cumsum": "d75f974f63979321743ee55a3bb5ec5112cc2e7ee5598cd6bf6051b81cf12286",
+    "cache_Aqk": "8635128644f7dc09e63c18f7ccf5ea801536b12e9735180fcd4bae62ca05861a",
+    "cache_Akk": "fa42b6e1da250c2824dde0b67719194ca73c66fce87d168a64322a145ff1cb0a",
+    "cache_w": "d2400545d48597d19f19da9bedfcab5f892186afb5d5d0e6e56a9502c7ec6dff",
+    "cache_u": "d175e2e693c940254b12a31a0bf2479d5b84bde27cd876f17e008b913dbdd5dd",
+    "cache_qg": "8352123f96c8d75fb46046754a7677cdf1b958c57ab87da317db41d97c277a8e",
+    "cache_kg": "fa313ea169b82307c93b464cd1160b9ce2907c3e09f037d6f242a3bb6f10afbd",
+    "cache_v_new": "d175e2e693c940254b12a31a0bf2479d5b84bde27cd876f17e008b913dbdd5dd",
+    "cache_h": "ad3217adfdfd3394d68f49377b4156dcac0d6f3dad4f9ba60cc2426037fa9d97"
+  },
+  "prep_sha256": {
+    "q": "ffe70d279a8c1f399f8c9d678cee0a7e889e37dc8c14fe44862efae0657f4131",
+    "k": "c7150b4362a46700b0197813e44c57162163c9f0de2fb245988a4fb240cf78b9",
+    "g": "2509820a4a329b634102e44394603349adbad4969a7174f0456e58566002fa9a",
+    "beta": "b87cac5621a07958f8daf8ea4946fd56f7b37547c5f5343fa73778980498f5f9"
+  },
+  "finite": {
+    "o": true,
+    "final_state": true,
+    "cache_g_cumsum": true,
+    "cache_Aqk": true,
+    "cache_Akk": true,
+    "cache_w": true,
+    "cache_u": true,
+    "cache_qg": true,
+    "cache_kg": true,
+    "cache_v_new": true,
+    "cache_h": true
+  },
+  "disabled_same_object": {
+    "q": true,
+    "k": true,
+    "beta": true
+  },
+  "plain_cached_exact": [
+    true,
+    true
+  ],
+  "all_flags_disabled_exact": null,
+  "preparation": {
+    "g": {
+      "to_fp64": {
+        "elements": 65536,
+        "finite_pairs": 65536,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 159.45808630531474,
+        "residual_norm": 1.080547965396743e-05,
+        "relative_l2": 6.77637610254406e-08,
+        "relative_l2_finite_pairs": 6.77637610254406e-08,
+        "max_abs": 1.725952560871491e-07,
+        "max_relative_nonzero": 2.3336796119525506e-07,
+        "relative_quantiles": [
+          4.562624304277171e-08,
+          1.1077438557970514e-07,
+          1.6696611295974267e-07,
+          2.3336796119525506e-07
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 3,
+        "rounded_reference_over_one_ulp": 4301,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "2509820a4a329b634102e44394603349adbad4969a7174f0456e58566002fa9a",
+        "reference_fp64_sha256": "6f5617bd5392a9e760bc6da6e71c37489ecece26f4933b20580ab935843112ce"
+      },
+      "to_predecessor_fp32": {
+        "elements": 65536,
+        "finite_pairs": 65536,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 159.45808652952408,
+        "residual_norm": 1.3222360473478706e-05,
+        "relative_l2": 8.292060165309053e-08,
+        "relative_l2_finite_pairs": 8.292060165309053e-08,
+        "max_abs": 2.384185791015625e-07,
+        "max_relative_nonzero": 3.2189922258118755e-07,
+        "relative_quantiles": [
+          0.0,
+          1.369409982861834e-07,
+          2.4856007079653643e-07,
+          3.2189922258118755e-07
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 4,
+        "rounded_reference_over_one_ulp": 8879,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "2509820a4a329b634102e44394603349adbad4969a7174f0456e58566002fa9a",
+        "reference_fp64_sha256": "dd6c0b0e2756834f77f9c8468eebd38b4b1237333743adf691284e5b8ce7928b"
+      },
+      "budget": {
+        "relative_l2": 1.385770801461847e-07,
+        "max_relative_nonzero": 5.106379369265594e-07
+      },
+      "passed": true
+    }
+  },
+  "predecessor_npu_differences": {
+    "o": {
+      "relative_l2": 0.0,
+      "max_abs": 3.0814879110195774e-33,
+      "finite": true,
+      "budget": 0.05,
+      "bf16_rounding_floor": 0.0,
+      "exceeds_3F": false,
+      "passed": true
+    },
+    "final_state": {
+      "relative_l2": 0.0,
+      "max_abs": 1.735493991486226e-29,
+      "finite": true,
+      "budget": 0.05,
+      "bf16_rounding_floor": 0.0,
+      "exceeds_3F": false,
+      "passed": true
+    },
+    "cache_g_cumsum": {
+      "relative_l2": 0.0,
+      "max_abs": 0.0,
+      "finite": true,
+      "budget": 0.05,
+      "bf16_rounding_floor": 0.0,
+      "exceeds_3F": false,
+      "passed": true
+    },
+    "cache_Aqk": {
+      "relative_l2": 0.0,
+      "max_abs": 0.0,
+      "finite": true,
+      "budget": 0.05,
+      "bf16_rounding_floor": 0.0,
+      "exceeds_3F": false,
+      "passed": true
+    },
+    "cache_Akk": {
+      "relative_l2": 0.0,
+      "max_abs": 0.0,
+      "finite": true,
+      "budget": 0.05,
+      "bf16_rounding_floor": 0.0,
+      "exceeds_3F": false,
+      "passed": true
+    },
+    "cache_w": {
+      "relative_l2": 0.0,
+      "max_abs": 2.0679515313825692e-25,
+      "finite": true,
+      "budget": 0.05,
+      "bf16_rounding_floor": 0.0,
+      "exceeds_3F": false,
+      "passed": true
+    },
+    "cache_u": {
+      "relative_l2": 0.0,
+      "max_abs": 0.0,
+      "finite": true,
+      "budget": 0.05,
+      "bf16_rounding_floor": 0.0,
+      "exceeds_3F": false,
+      "passed": true
+    },
+    "cache_qg": {
+      "relative_l2": 0.0,
+      "max_abs": 1.5407439555097887e-33,
+      "finite": true,
+      "budget": 0.05,
+      "bf16_rounding_floor": 0.0,
+      "exceeds_3F": false,
+      "passed": true
+    },
+    "cache_kg": {
+      "relative_l2": 0.0,
+      "max_abs": 2.0679515313825692e-25,
+      "finite": true,
+      "budget": 0.05,
+      "bf16_rounding_floor": 0.0,
+      "exceeds_3F": false,
+      "passed": true
+    },
+    "cache_v_new": {
+      "relative_l2": 0.0,
+      "max_abs": 0.0,
+      "finite": true,
+      "budget": 0.05,
+      "bf16_rounding_floor": 0.0,
+      "exceeds_3F": false,
+      "passed": true
+    },
+    "cache_h": {
+      "relative_l2": 7.6559999379866e-18,
+      "max_abs": 1.3877787807814457e-17,
+      "finite": true,
+      "budget": 0.05,
+      "bf16_rounding_floor": 0.0,
+      "exceeds_3F": true,
+      "passed": true
+    }
+  },
+  "cpu_fp32_references": {
+    "independent": {
+      "o": {
+        "relative_l2": 0.0,
+        "max_abs_diff": 5.874173844637742e-26,
+        "finite": true,
+        "allclose": true,
+        "passed": true,
+        "relative_l2_fp64_accumulation": 0.0029489402991352354,
+        "legacy_passed": true
+      },
+      "final_state": {
+        "relative_l2": 0.0,
+        "max_abs_diff": 5.305058033175096e-25,
+        "finite": true,
+        "allclose": true,
+        "passed": true,
+        "relative_l2_fp64_accumulation": 0.0026341566359045403,
+        "legacy_passed": true
+      },
+      "per_head_chunk": [
+        {
+          "chunk": 0,
+          "head": 0,
+          "relative_l2": 0.0,
+          "max_abs_diff": 5.874173844637742e-26,
+          "finite": true,
+          "allclose": true,
+          "passed": true,
+          "relative_l2_fp64_accumulation": 0.003162970821060506,
+          "legacy_passed": true
+        },
+        {
+          "chunk": 0,
+          "head": 1,
+          "relative_l2": 0.0,
+          "max_abs_diff": 4.160925730678749e-26,
+          "finite": true,
+          "allclose": true,
+          "passed": true,
+          "relative_l2_fp64_accumulation": 0.0028324401708890567,
+          "legacy_passed": true
+        },
+        {
+          "chunk": 0,
+          "head": 2,
+          "relative_l2": 0.0,
+          "max_abs_diff": 4.273890612306398e-26,
+          "finite": true,
+          "allclose": true,
+          "passed": true,
+          "relative_l2_fp64_accumulation": 0.0028561444433713654,
+          "legacy_passed": true
+        },
+        {
+          "chunk": 0,
+          "head": 3,
+          "relative_l2": 0.0,
+          "max_abs_diff": 3.9215656105120634e-26,
+          "finite": true,
+          "allclose": true,
+          "passed": true,
+          "relative_l2_fp64_accumulation": 0.0028792337837015955,
+          "legacy_passed": true
+        },
+        {
+          "chunk": 1,
+          "head": 0,
+          "relative_l2": 0.0,
+          "max_abs_diff": 4.692177282349048e-38,
+          "finite": true,
+          "allclose": true,
+          "passed": true,
+          "relative_l2_fp64_accumulation": 0.02388672492904854,
+          "legacy_passed": true
+        },
+        {
+          "chunk": 1,
+          "head": 1,
+          "relative_l2": 0.0,
+          "max_abs_diff": 1.1480469776717109e-38,
+          "finite": true,
+          "allclose": true,
+          "passed": false,
+          "relative_l2_fp64_accumulation": 1.0,
+          "legacy_passed": true
+        },
+        {
+          "chunk": 1,
+          "head": 2,
+          "relative_l2": 0.0,
+          "max_abs_diff": 1.3615015879379923e-41,
+          "finite": true,
+          "allclose": true,
+          "passed": true,
+          "relative_l2_fp64_accumulation": 1.0,
+          "legacy_passed": true,
+          "zero_representation_endpoint": {
+            "owner_comment": "https://github.com/ddddwee1/ascend_fla_dev/issues/106#issuecomment-5750678047",
+            "definition": "CPU FP32 golden correctly rounded to BF16 is zero throughout this slice",
+            "elements": 8192,
+            "max_ulp_from_rounded_zero": 0,
+            "signed_zero_differences": 4115,
+            "bitwise_equal_to_rounded_reference": false,
+            "passed": true
+          }
+        },
+        {
+          "chunk": 1,
+          "head": 3,
+          "relative_l2": 0.0,
+          "max_abs_diff": 1.1630777253895982e-43,
+          "finite": true,
+          "allclose": true,
+          "passed": true,
+          "relative_l2_fp64_accumulation": 1.0,
+          "legacy_passed": true,
+          "zero_representation_endpoint": {
+            "owner_comment": "https://github.com/ddddwee1/ascend_fla_dev/issues/106#issuecomment-5750678047",
+            "definition": "CPU FP32 golden correctly rounded to BF16 is zero throughout this slice",
+            "elements": 8192,
+            "max_ulp_from_rounded_zero": 0,
+            "signed_zero_differences": 4079,
+            "bitwise_equal_to_rounded_reference": false,
+            "passed": true
+          }
+        }
+      ],
+      "cached_states": [
+        {
+          "chunk": 0,
+          "head": 0,
+          "relative_l2": 0.0016700136475265026,
+          "max_abs": 0.00011568516492843628,
+          "finite": true,
+          "budget": 0.05,
+          "bf16_rounding_floor": 0.0016700136475265026,
+          "exceeds_3F": false,
+          "passed": true
+        },
+        {
+          "chunk": 0,
+          "head": 1,
+          "relative_l2": 0.001662684604525566,
+          "max_abs": 0.00012013688683509827,
+          "finite": true,
+          "budget": 0.05,
+          "bf16_rounding_floor": 0.001662684604525566,
+          "exceeds_3F": false,
+          "passed": true
+        },
+        {
+          "chunk": 0,
+          "head": 2,
+          "relative_l2": 0.001676427898928523,
+          "max_abs": 0.00011957436800003052,
+          "finite": true,
+          "budget": 0.05,
+          "bf16_rounding_floor": 0.001676427898928523,
+          "exceeds_3F": false,
+          "passed": true
+        },
+        {
+          "chunk": 0,
+          "head": 3,
+          "relative_l2": 0.0016657572705298662,
+          "max_abs": 0.0001180693507194519,
+          "finite": true,
+          "budget": 0.05,
+          "bf16_rounding_floor": 0.0016657572705298662,
+          "exceeds_3F": false,
+          "passed": true
+        },
+        {
+          "chunk": 1,
+          "head": 0,
+          "relative_l2": 0.0016646507428959012,
+          "max_abs": 2.398712603329453e-17,
+          "finite": true,
+          "budget": 0.05,
+          "bf16_rounding_floor": 0.00166464620269835,
+          "exceeds_3F": false,
+          "passed": true
+        },
+        {
+          "chunk": 1,
+          "head": 1,
+          "relative_l2": 0.0016442155465483665,
+          "max_abs": 2.0218941148756166e-19,
+          "finite": true,
+          "budget": 0.05,
+          "bf16_rounding_floor": 0.0016442127525806427,
+          "exceeds_3F": false,
+          "passed": true
+        },
+        {
+          "chunk": 1,
+          "head": 2,
+          "relative_l2": 0.001403791829943657,
+          "max_abs": 1.9530509744201252e-22,
+          "finite": true,
+          "budget": 0.05,
+          "bf16_rounding_floor": 0.001401352696120739,
+          "exceeds_3F": false,
+          "passed": true
+        },
+        {
+          "chunk": 1,
+          "head": 3,
+          "relative_l2": 0.0,
+          "max_abs": 4.796400521488587e-25,
+          "finite": true,
+          "budget": 0.05,
+          "bf16_rounding_floor": 0.0,
+          "exceeds_3F": false,
+          "passed": true
+        }
+      ]
+    },
+    "fla": {
+      "o": {
+        "relative_l2": 0.0,
+        "max_abs_diff": 5.873858300275654e-26,
+        "finite": true,
+        "allclose": true,
+        "passed": true,
+        "relative_l2_fp64_accumulation": 0.0029489394014893143,
+        "legacy_passed": true
+      },
+      "final_state": {
+        "relative_l2": 0.0,
+        "max_abs_diff": 5.30493181543026e-25,
+        "finite": true,
+        "allclose": true,
+        "passed": true,
+        "relative_l2_fp64_accumulation": 0.0026341587476363354,
+        "legacy_passed": true
+      },
+      "per_head_chunk": [
+        {
+          "chunk": 0,
+          "head": 0,
+          "relative_l2": 0.0,
+          "max_abs_diff": 5.873858300275654e-26,
+          "finite": true,
+          "allclose": true,
+          "passed": true,
+          "relative_l2_fp64_accumulation": 0.0031629966229257595,
+          "legacy_passed": true
+        },
+        {
+          "chunk": 0,
+          "head": 1,
+          "relative_l2": 0.0,
+          "max_abs_diff": 4.161083502859793e-26,
+          "finite": true,
+          "allclose": true,
+          "passed": true,
+          "relative_l2_fp64_accumulation": 0.0028324019482481016,
+          "legacy_passed": true
+        },
+        {
+          "chunk": 0,
+          "head": 2,
+          "relative_l2": 0.0,
+          "max_abs_diff": 4.274048384487442e-26,
+          "finite": true,
+          "allclose": true,
+          "passed": true,
+          "relative_l2_fp64_accumulation": 0.002856116350570937,
+          "legacy_passed": true
+        },
+        {
+          "chunk": 0,
+          "head": 3,
+          "relative_l2": 0.0,
+          "max_abs_diff": 3.921585332034694e-26,
+          "finite": true,
+          "allclose": true,
+          "passed": true,
+          "relative_l2_fp64_accumulation": 0.0028792909902408464,
+          "legacy_passed": true
+        },
+        {
+          "chunk": 1,
+          "head": 0,
+          "relative_l2": 0.0,
+          "max_abs_diff": 4.6921778428684337e-38,
+          "finite": true,
+          "allclose": true,
+          "passed": true,
+          "relative_l2_fp64_accumulation": 0.02388672457958087,
+          "legacy_passed": true
+        },
+        {
+          "chunk": 1,
+          "head": 1,
+          "relative_l2": 0.0,
+          "max_abs_diff": 1.1480478184507895e-38,
+          "finite": true,
+          "allclose": true,
+          "passed": false,
+          "relative_l2_fp64_accumulation": 1.0,
+          "legacy_passed": true
+        },
+        {
+          "chunk": 1,
+          "head": 2,
+          "relative_l2": 0.0,
+          "max_abs_diff": 1.3612213282451273e-41,
+          "finite": true,
+          "allclose": true,
+          "passed": true,
+          "relative_l2_fp64_accumulation": 1.0,
+          "legacy_passed": true,
+          "zero_representation_endpoint": {
+            "owner_comment": "https://github.com/ddddwee1/ascend_fla_dev/issues/106#issuecomment-5750678047",
+            "definition": "CPU FP32 golden correctly rounded to BF16 is zero throughout this slice",
+            "elements": 8192,
+            "max_ulp_from_rounded_zero": 0,
+            "signed_zero_differences": 3818,
+            "bitwise_equal_to_rounded_reference": false,
+            "passed": true
+          }
+        },
+        {
+          "chunk": 1,
+          "head": 3,
+          "relative_l2": 0.0,
+          "max_abs_diff": 1.14906474074635e-43,
+          "finite": true,
+          "allclose": true,
+          "passed": true,
+          "relative_l2_fp64_accumulation": 1.0,
+          "legacy_passed": true,
+          "zero_representation_endpoint": {
+            "owner_comment": "https://github.com/ddddwee1/ascend_fla_dev/issues/106#issuecomment-5750678047",
+            "definition": "CPU FP32 golden correctly rounded to BF16 is zero throughout this slice",
+            "elements": 8192,
+            "max_ulp_from_rounded_zero": 0,
+            "signed_zero_differences": 3629,
+            "bitwise_equal_to_rounded_reference": false,
+            "passed": true
+          }
+        }
+      ],
+      "cached_states": [
+        {
+          "chunk": 0,
+          "head": 0,
+          "relative_l2": 0.0016700136475265026,
+          "max_abs": 0.00011568516492843628,
+          "finite": true,
+          "budget": 0.05,
+          "bf16_rounding_floor": 0.0016700136475265026,
+          "exceeds_3F": false,
+          "passed": true
+        },
+        {
+          "chunk": 0,
+          "head": 1,
+          "relative_l2": 0.001662684604525566,
+          "max_abs": 0.00012013688683509827,
+          "finite": true,
+          "budget": 0.05,
+          "bf16_rounding_floor": 0.001662684604525566,
+          "exceeds_3F": false,
+          "passed": true
+        },
+        {
+          "chunk": 0,
+          "head": 2,
+          "relative_l2": 0.001676427898928523,
+          "max_abs": 0.00011957436800003052,
+          "finite": true,
+          "budget": 0.05,
+          "bf16_rounding_floor": 0.001676427898928523,
+          "exceeds_3F": false,
+          "passed": true
+        },
+        {
+          "chunk": 0,
+          "head": 3,
+          "relative_l2": 0.0016657572705298662,
+          "max_abs": 0.0001180693507194519,
+          "finite": true,
+          "budget": 0.05,
+          "bf16_rounding_floor": 0.0016657572705298662,
+          "exceeds_3F": false,
+          "passed": true
+        },
+        {
+          "chunk": 1,
+          "head": 0,
+          "relative_l2": 0.0016646507428959012,
+          "max_abs": 2.398712603329453e-17,
+          "finite": true,
+          "budget": 0.05,
+          "bf16_rounding_floor": 0.00166464620269835,
+          "exceeds_3F": false,
+          "passed": true
+        },
+        {
+          "chunk": 1,
+          "head": 1,
+          "relative_l2": 0.0016442155465483665,
+          "max_abs": 2.0218941148756166e-19,
+          "finite": true,
+          "budget": 0.05,
+          "bf16_rounding_floor": 0.0016442127525806427,
+          "exceeds_3F": false,
+          "passed": true
+        },
+        {
+          "chunk": 1,
+          "head": 2,
+          "relative_l2": 0.001403791829943657,
+          "max_abs": 1.9530509744201252e-22,
+          "finite": true,
+          "budget": 0.05,
+          "bf16_rounding_floor": 0.001401352696120739,
+          "exceeds_3F": false,
+          "passed": true
+        },
+        {
+          "chunk": 1,
+          "head": 3,
+          "relative_l2": 0.0,
+          "max_abs": 4.796463630361005e-25,
+          "finite": true,
+          "budget": 0.05,
+          "bf16_rounding_floor": 0.0,
+          "exceeds_3F": false,
+          "passed": true
+        }
+      ]
+    }
+  },
+  "zero_representation_slices": [
+    {
+      "oracle": "independent",
+      "output": "o",
+      "scope": "head_chunk",
+      "chunk": 1,
+      "head": 2,
+      "owner_comment": "https://github.com/ddddwee1/ascend_fla_dev/issues/106#issuecomment-5750678047",
+      "definition": "CPU FP32 golden correctly rounded to BF16 is zero throughout this slice",
+      "elements": 8192,
+      "max_ulp_from_rounded_zero": 0,
+      "signed_zero_differences": 4115,
+      "bitwise_equal_to_rounded_reference": false,
+      "passed": true
+    },
+    {
+      "oracle": "independent",
+      "output": "o",
+      "scope": "head_chunk",
+      "chunk": 1,
+      "head": 3,
+      "owner_comment": "https://github.com/ddddwee1/ascend_fla_dev/issues/106#issuecomment-5750678047",
+      "definition": "CPU FP32 golden correctly rounded to BF16 is zero throughout this slice",
+      "elements": 8192,
+      "max_ulp_from_rounded_zero": 0,
+      "signed_zero_differences": 4079,
+      "bitwise_equal_to_rounded_reference": false,
+      "passed": true
+    },
+    {
+      "oracle": "fla",
+      "output": "o",
+      "scope": "head_chunk",
+      "chunk": 1,
+      "head": 2,
+      "owner_comment": "https://github.com/ddddwee1/ascend_fla_dev/issues/106#issuecomment-5750678047",
+      "definition": "CPU FP32 golden correctly rounded to BF16 is zero throughout this slice",
+      "elements": 8192,
+      "max_ulp_from_rounded_zero": 0,
+      "signed_zero_differences": 3818,
+      "bitwise_equal_to_rounded_reference": false,
+      "passed": true
+    },
+    {
+      "oracle": "fla",
+      "output": "o",
+      "scope": "head_chunk",
+      "chunk": 1,
+      "head": 3,
+      "owner_comment": "https://github.com/ddddwee1/ascend_fla_dev/issues/106#issuecomment-5750678047",
+      "definition": "CPU FP32 golden correctly rounded to BF16 is zero throughout this slice",
+      "elements": 8192,
+      "max_ulp_from_rounded_zero": 0,
+      "signed_zero_differences": 3629,
+      "bitwise_equal_to_rounded_reference": false,
+      "passed": true
+    }
+  ],
+  "passed": false
+}

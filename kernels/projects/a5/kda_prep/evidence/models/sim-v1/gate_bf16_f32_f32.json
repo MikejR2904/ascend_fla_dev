@@ -1,0 +1,92 @@
+{
+  "case": {
+    "id": "gate_bf16_f32_f32",
+    "seed": 7007,
+    "block_dim": 1,
+    "parameters": {
+      "kind": "gate",
+      "types": "bf16_f32_f32",
+      "shape": [
+        2,
+        65,
+        2,
+        128
+      ]
+    }
+  },
+  "stage": "sim",
+  "to_fp64": {
+    "elements": 33280,
+    "finite_pairs": 33280,
+    "actual_nan": 0,
+    "reference_nan": 0,
+    "actual_posinf": 0,
+    "reference_posinf": 0,
+    "actual_neginf": 0,
+    "reference_neginf": 0,
+    "reference_norm": 196.93647477866165,
+    "residual_norm": 1.290010973404002e-05,
+    "relative_l2": 6.550391311989588e-08,
+    "relative_l2_finite_pairs": 6.550391311989588e-08,
+    "max_abs": 7.631908172101021e-07,
+    "max_relative_nonzero": 2.831959354852628e-07,
+    "relative_quantiles": [
+      4.400047874009719e-08,
+      1.0530582329199807e-07,
+      1.6472854871251217e-07,
+      2.831959354852628e-07
+    ],
+    "zero_reference_nonzero_actual": 0,
+    "rounded_reference_max_ulp": 5,
+    "rounded_reference_over_one_ulp": 1834,
+    "rounded_reference_sign_differences": 0,
+    "actual_sha256": "abc9a5e57c31e6f498df56c2ea9188aab0f8587c5e7dc527a153ff9761015828",
+    "reference_fp64_sha256": "b02b6bfa7b5940bb741dc2b5df8c21cffcd08f5b3cced9def2c0b91ec22c520e"
+  },
+  "to_predecessor_fp32": {
+    "elements": 33280,
+    "finite_pairs": 33280,
+    "actual_nan": 0,
+    "reference_nan": 0,
+    "actual_posinf": 0,
+    "reference_posinf": 0,
+    "actual_neginf": 0,
+    "reference_neginf": 0,
+    "reference_norm": 196.93646685502532,
+    "residual_norm": 7.504685144550663e-06,
+    "relative_l2": 3.810713812630361e-08,
+    "relative_l2_finite_pairs": 3.810713812630361e-08,
+    "max_abs": 4.76837158203125e-07,
+    "max_relative_nonzero": 2.3521074235685632e-07,
+    "relative_quantiles": [
+      0.0,
+      9.539765553965274e-08,
+      1.6047790441991506e-07,
+      2.3521074235685632e-07
+    ],
+    "zero_reference_nonzero_actual": 0,
+    "rounded_reference_max_ulp": 3,
+    "rounded_reference_over_one_ulp": 1255,
+    "rounded_reference_sign_differences": 0,
+    "actual_sha256": "abc9a5e57c31e6f498df56c2ea9188aab0f8587c5e7dc527a153ff9761015828",
+    "reference_fp64_sha256": "6dea06d4d53a5e0c1ca1da8c51ced7d119db1bf9a98be7d95b0be39b74ba7392"
+  },
+  "budget": {
+    "relative_l2": 1.3734466048431782e-07,
+    "max_relative_nonzero": 7.298292393636251e-07
+  },
+  "passed": true,
+  "execution_evidence": [
+    {
+      "kernel": "kda_prep_chunk_gate_bf16_f32_f32_kernel",
+      "device": "a5",
+      "requested_backend": "cce",
+      "stage": "sim",
+      "launcher": "sim",
+      "block_dim": 1,
+      "model": "functional Surface IR",
+      "backend_executed": false,
+      "sim_processes": "threads"
+    }
+  ]
+}

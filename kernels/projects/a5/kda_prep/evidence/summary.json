@@ -1,0 +1,304 @@
+{
+  "task": "BF-07",
+  "complete": true,
+  "first_full_workload": {
+    "passed": true,
+    "block_dim": 4,
+    "shape": "B1 T4096 H=HV32 K128",
+    "flags": [
+      true,
+      true,
+      true
+    ],
+    "receipt": "native/full-v1-bd4/full.json",
+    "source_qualification_note": "Historical wrapper mismatch: see native/full-final-source-qualification.json. Retained as the original observation; final-source bd4 qualification uses full-v2-bd4."
+  },
+  "host": {
+    "passed": 1001,
+    "skipped_modules": 5
+  },
+  "models": {
+    "sim": 14,
+    "pipesim": 14,
+    "block_dim": 1,
+    "after_native": true
+  },
+  "pending": [],
+  "full_native_block_dims": [
+    1,
+    2,
+    3,
+    4
+  ],
+  "full_cross_bd_bitwise_endpoints": 17,
+  "vendors": {
+    "each_chunk_block_dim": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "entries": 50,
+    "backward_entries": 9
+  },
+  "leaf": {
+    "runs": 2,
+    "cases_per_run": 200,
+    "ordinary_pass_per_run": 120,
+    "endpoint_exact_cpu_per_run": 28,
+    "endpoint_mismatch_per_run": 52,
+    "all_input_and_guards_unchanged": true,
+    "qualified": false,
+    "note": "Historical exact-CPU diagnostic runs v1/v2; current qualification is leaf_v3 below."
+  },
+  "ordinary_grid": {
+    "chunk": {
+      "block_dims": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "cases_per_bd": 1620,
+      "passed": true,
+      "all_output_cache_prep_cross_bd_bitwise": true
+    },
+    "decode": {
+      "retrieved_block_dims": [
+        1,
+        2,
+        4,
+        8,
+        16,
+        28
+      ],
+      "cases_per_bd": 3240,
+      "passed": true,
+      "cross_bd_bitwise": true
+    },
+    "total_native_cases": 25920,
+    "lossless_archived_receipts": 51870,
+    "fresh_receipt_restore_passed": true
+  },
+  "regressions": {
+    "block_dims": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "backward_cases_per_bd": 10,
+    "gate_cases_per_bd": 6,
+    "training_combinations_per_bd": 30,
+    "passed": true,
+    "training_host_exception_retained": true
+  },
+  "repeatability": {
+    "receipt": "native/repeat-v1-bd4",
+    "public_calls": 24,
+    "direct_scan_replays": 12,
+    "passed": true,
+    "scope": "measured device/input only; inherited scan defect not fixed"
+  },
+  "performance": {
+    "receipt": "native/perf-v1-bd4",
+    "rounds": 3,
+    "same_card": true,
+    "candidate_to_predecessor_ratios": {
+      "T1024_plain": 1.1219159,
+      "T1024_cached": 1.0655321,
+      "T4096_plain": 1.1178109,
+      "T4096_cached": 1.061396
+    },
+    "torch_npu_baselines_measured": true
+  },
+  "leaf_v3": {
+    "block_dims": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "cases_per_bd": 200,
+    "ordinary_per_bd": 120,
+    "qualified_endpoint_per_bd": 80,
+    "cross_bd_namespace_bitwise": true,
+    "expanded_cross_products_qualified": "diagnostic classification; no numerical pass line per PM5750678047",
+    "decode_high_block_dims": [
+      8,
+      16,
+      28
+    ],
+    "total_runs": 7,
+    "namespace_run_combinations": 14
+  },
+  "independent_boundary_grid": {
+    "chunk_block_dims": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "chunk_cases_per_bd": 576,
+    "decode_block_dims": [
+      1,
+      2,
+      4,
+      8,
+      16,
+      28
+    ],
+    "decode_cases_per_bd": 1152,
+    "total_native_cases": 9216,
+    "passed": true,
+    "cross_bd_bitwise": true,
+    "excludes_nearzero_explicitly": true
+  },
+  "nearzero_grid": {
+    "complete_collection": true,
+    "numerical_acceptance_passed": false,
+    "chunk": {
+      "block_dims": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "cases_per_bd": 192,
+      "passed_per_bd": 176,
+      "output_failure_cases_per_bd": 16
+    },
+    "decode": {
+      "block_dims": [
+        1,
+        2,
+        4,
+        8,
+        16,
+        28
+      ],
+      "cases_per_bd": 384,
+      "passed_per_bd": 324,
+      "state_failure_cases_per_bd": 16,
+      "output_failure_cases_per_bd": 44
+    },
+    "outputs_and_preparation_cross_bd_bitwise": true,
+    "failure_locations_and_metrics_cross_bd_equal": true,
+    "receipt": "native/nearzero-cross-bd-and-failures.json",
+    "note": "Original collector receipts and their passed=false remain unchanged. D-PM-51 actual-prep state reruns are listed separately; D-PM-52 classifies all remaining output failures as disclosure-only.",
+    "D-PM-51": {
+      "owner_comment": "https://github.com/ddddwee1/ascend_fla_dev/issues/106#issuecomment-5750986507",
+      "user_approved": true,
+      "native_reruns": "complete",
+      "cases_per_bd": 384,
+      "passed_cases_per_bd": 340,
+      "remaining_output_failures_per_bd": 44,
+      "state_all_passed": true,
+      "maximum_state_relative_l2": 9.438083900103515e-07,
+      "all_cross_bd_output_prep_and_new_metrics_equal": true,
+      "receipt": "native/dpm51-native-summary.json"
+    }
+  },
+  "public_nonfinite_reachability": {
+    "points": 96,
+    "chunk": {
+      "candidate_finite": 29,
+      "candidate_rejected": 19,
+      "predecessor_finite": 31,
+      "predecessor_rejected": 17
+    },
+    "decode": {
+      "candidate_finite": 40,
+      "candidate_nan": 8,
+      "predecessor_finite": 34,
+      "predecessor_nan": 14
+    },
+    "receipt": "native/reachability-v1-bd4",
+    "numerical_pass_line": null
+  },
+  "metric_correction": {
+    "native_rerun_cases": 4860,
+    "passed": true,
+    "outputs_and_preparation_match_original_bitwise": true,
+    "ordinary_requires_original_and_corrected_pass": true,
+    "receipt": "native/metric-implementation-proof.json"
+  },
+  "remaining_output_failures": {
+    "receipt": "native/remaining-output-failure-table.json",
+    "all_still_numerically_failed": true,
+    "chunk": {
+      "cases_per_bd": 16,
+      "maximum_golden_abs": 3.2322792067392186e-37,
+      "maximum_golden_min_normal_units": 27.497190475463867,
+      "maximum_candidate_old_ulp": 1
+    },
+    "decode": {
+      "cases_per_bd": 44,
+      "maximum_golden_abs": 1.1480479585806359e-38,
+      "maximum_golden_min_normal_units": 0.9766511917114258,
+      "maximum_candidate_old_ulp": 4
+    },
+    "feasibility": {
+      "receipt": "native/endpoint-comparison-feasibility.json",
+      "chunk": {
+        "failed_locations": 40,
+        "locations_with_unrepresentable_BF16_tolerance": 16,
+        "cases_affected": 8
+      },
+      "decode": {
+        "failed_locations": 148,
+        "disjoint_CPU_reference_error_balls": 124,
+        "locations_with_unrepresentable_BF16_tolerance": 24,
+        "cases_affected": 44
+      },
+      "criterion_changed": false
+    },
+    "disposition": {
+      "decision": "D-PM-52",
+      "user_approved": true,
+      "receipt": "native/dpm52-disclosure-scope.json",
+      "disclosed_chunk_locations": 40,
+      "disclosed_decode_locations": 148,
+      "outside_class_failures": 0,
+      "numerical_pass_claim": false
+    }
+  },
+  "delivery_restore": {
+    "artifact_head": "7af512472c17f3859a317ddbb07c5ade729322be",
+    "passed": true,
+    "files": 5341,
+    "receipt": "host/delivery-7af5124-restore.json",
+    "note": "Base snapshot plus documented metadata addenda preserve final qualification sources without changing tested mathematical artifacts."
+  },
+  "private_native_tensor_backup": {
+    "files": 798,
+    "bytes": 5734547148,
+    "all_restored_sha256_verified": true,
+    "receipt": "host/native-tensor-backup-restore.json",
+    "manifest": "native/retained-tensor-manifest.json"
+  },
+  "completion_scope": "All required BF-07 stages executed and D-PM-48/50/51/52 disclosure requirements fulfilled; numerical endpoint failures remain, PM review/final user merge authorization pending.",
+  "delivery_status": "ready_for_review",
+  "merge_authorized": false,
+  "retained_failures": {
+    "risk": "https://github.com/ddddwee1/ascend_fla_dev/issues/106#issuecomment-5750600450",
+    "nonfinite_cross_products": "native/endpoint-v2-bd4/downstream.json",
+    "nearzero_failures": "native/boundary-diagnosis",
+    "nonfinite_comparison_owner": "https://github.com/ddddwee1/ascend_fla_dev/issues/106#issuecomment-5750678047",
+    "nonfinite_comparison_status": "All 48 cross-products classified; 96 actual public-entry observations retained. No numerical pass line; no domain/gate change.",
+    "new_output_risk": "https://github.com/ddddwee1/ascend_fla_dev/issues/106#issuecomment-5750969353",
+    "output_disposition": "D-PM-52 user-approved disclosure only, no numerical PASS"
+  },
+  "final_source_full_workload": {
+    "receipt": "native/full-final-source-qualification.json",
+    "block_dims": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "passed": true,
+    "bitwise_endpoints": 17,
+    "comparisons": 32964
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "torch_npu_version": "2.12.0",
+  "reported_git_version": "fa0f83fe49d309dcbc31e264e9e6ed6e5dc49d2d",
+  "raw_notice": "The current CANN and Soc versions require processing for 32 padding size, with memory allocation.",
+  "observed_runtime_location": "NPUCachingAllocator.cpp:201",
+  "owner_source": "https://github.com/Ascend/pytorch/blob/fa0f83fe49d309dcbc31e264e9e6ed6e5dc49d2d/torch_npu/csrc/core/npu/NPUCachingAllocator.cpp#L179",
+  "owner_function": "AddPadSize",
+  "owner_branch": "Returns32 after the notice when the SoC/CANN compatibility conjunction is false; otherwise0. Source minimum CANN is9.1.0.",
+  "interpretation": "Allocator compatibility padding; no tensor arithmetic or domain change. The notice was retained, not disabled. Do not infer which compatibility operand failed solely from the warning or assume a reported git hash proves an unmodified binary.",
+  "validation": "Four complete full-workload block dimensions passed. Both native leaf runs preserved all 200 input and output guard regions, including N=1/63/64/65/4095/4096/4097/8193 tails. Endpoint numeric differences remain separately reported; no allocator setting was changed."
+}

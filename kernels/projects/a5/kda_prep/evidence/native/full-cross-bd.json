@@ -1,0 +1,245 @@
+{
+  "environment": {
+    "python": "3.12.14",
+    "torch": "2.12.0+cu130",
+    "torch_npu": "2.12.0",
+    "ascriptor": "0.1.0",
+    "library_commit": "90cfcdc720bbcd66e8bd4361c4dd4fbc1a2a57b5",
+    "kernels_commit": "b3b3f9c16df7c4626ed3c081032a1be5a753d0b1",
+    "cann_version_records": {
+      "compiler": {
+        "raw_lines": [
+          "Version=9.1.0-beta.1",
+          "version_dir=cann",
+          "required_package_runtime_version=\"9.1\"",
+          "required_package_ge-executor_version=\"9.1\"",
+          "required_package_metadef_version=\"9.1\"",
+          "required_package_opbase_version=\"9.1\"",
+          "required_package_bisheng-compiler_version=\"9.1\"",
+          "required_package_tbe-tik_version=\"9.1\"",
+          "timestamp=20260509_173000235"
+        ],
+        "sha256": "0f982a259247cdd06df4fa5bdaf526b57b6ad15f7d27a33f23b3c70a381c2fe5"
+      },
+      "opp": {
+        "raw_lines": [
+          "Version=9.1.0-beta.1",
+          "version_dir=cann",
+          "required_package_runtime_version=\">=8.5\"",
+          "required_package_ge-executor_version=\">=8.5\"",
+          "required_package_metadef_version=\">=8.5\"",
+          "required_package_asc-devkit_version=\">=8.5\"",
+          "required_package_bisheng-compiler_version=\">=8.5\"",
+          "timestamp=20260509_173000235"
+        ],
+        "sha256": "377b05dab3a2dfc87dfaa92affd69a9aa5795a54d423cbe629d3495ad20370ef"
+      }
+    },
+    "opp_directories": [
+      "ascend910_93",
+      "ascend910b",
+      "ascend950"
+    ],
+    "driver_sha256": "37161cbe3d595e842fc62a66a8a78d5b2e9532059cb37e3d6f0897be5248e9e2",
+    "source_sha256": {
+      "_unit_runner.py": "91ab007ac56f59f3c1b918947be769e725e51d98f981f41608864a2ae477133a",
+      "baseline/autograd.py": "c2a535ae2ec5b7f1b7da000a42a96e985fcc84aa4b05df1421cc83b424b25903",
+      "baseline/chunk.py": "5bf75978176280c5eaf9268e7730ea00bf1581bb1ef8dddb35ad5a178ffd49d0",
+      "baseline/fused_recurrent.py": "1e78c50a1f15f23e9a7213d57b021b558c02164989765877b6fba92a10cf473a",
+      "kernels/forward.py": "135b1fa2f92c26da9a6b57434f09515ac95592f033b328c3c5ddcd9ac9b2b455",
+      "native_audit.py": "bfffeb22e43a3619118da1aa7119b7d1b5324d81d1632c982cfafcaebc4d6ba5",
+      "native_environment.py": "8aa453ef4cfd92476bb80d463ddf63d4b1e1d3c2eb325ad69e93fcaecc50833d",
+      "ref/calibrate.py": "d21ec73afc242b1b17e7d7f15e72c034fa0dfabda6505abe4edf74313cdb0765",
+      "run.py": "cc9b6f4400d94e45a3af3d607bbe143ad2211ce7b3189dbe3298166e5a541a32",
+      "runtime.py": "a63385ec54c95d02357b9748156cfe82b217e72b3834c159e7a029e5752fcbe3",
+      "unit.py": "e3f9c1f51a977b31b87fd03397ea43a78b4b04f6dc487947ff0532eac747d9ae",
+      "verify_calibration.py": "e5f7403369d294444d617e7e93a06f83552caeb535d7a3f2c5cb54b8b287ff84",
+      "verify_native.py": "37161cbe3d595e842fc62a66a8a78d5b2e9532059cb37e3d6f0897be5248e9e2"
+    },
+    "wrappers_sha256": {
+      "chunk.py": "c79a199d9b8b9d5820834e87d7ad0805ce63531df878c11720c0a4f181c8a87e",
+      "chunk_bwd.py": "71ce0e041a02853de768e982cc38a497294ecbfaa9e8715aca084ad3db69247e",
+      "autograd.py": "78b96d6bb9a81dfa800c4704214bcd0cdce3447f2d1b1fdd77dd11bf5380559d",
+      "fused_recurrent.py": "872d15f102e482f4baa7f9229471e8bdcbc564c1e4531967d65be0fc758771fc"
+    },
+    "audit_driver_sha256": "bfffeb22e43a3619118da1aa7119b7d1b5324d81d1632c982cfafcaebc4d6ba5"
+  },
+  "block_dims": [
+    1,
+    2,
+    3,
+    4
+  ],
+  "case": {
+    "id": "full_kimi_t4096_all_flags",
+    "B": 1,
+    "T": 4096,
+    "H": 32,
+    "HV": 32,
+    "K": 128,
+    "raw_dtype": "bf16",
+    "parameter_dtype": "f32",
+    "flags": [
+      true,
+      true,
+      true
+    ]
+  },
+  "all_four_passed": true,
+  "outputs": {
+    "o": {
+      "sha256_by_bd": {
+        "1": "cc91b69bb5442758c396f20eaa92d2410bc70cbf1935258d4f332196524e1826",
+        "2": "cc91b69bb5442758c396f20eaa92d2410bc70cbf1935258d4f332196524e1826",
+        "3": "cc91b69bb5442758c396f20eaa92d2410bc70cbf1935258d4f332196524e1826",
+        "4": "cc91b69bb5442758c396f20eaa92d2410bc70cbf1935258d4f332196524e1826"
+      },
+      "bitwise": true
+    },
+    "final_state": {
+      "sha256_by_bd": {
+        "1": "58639adb88256bd50cd0870744b46ec314861d55b1a537d144a3d3244d03b002",
+        "2": "58639adb88256bd50cd0870744b46ec314861d55b1a537d144a3d3244d03b002",
+        "3": "58639adb88256bd50cd0870744b46ec314861d55b1a537d144a3d3244d03b002",
+        "4": "58639adb88256bd50cd0870744b46ec314861d55b1a537d144a3d3244d03b002"
+      },
+      "bitwise": true
+    },
+    "cache_g_cumsum": {
+      "sha256_by_bd": {
+        "1": "97466aa183d457e12e54afe5f25acffd0a99070022674ed684ba8c8a3079d374",
+        "2": "97466aa183d457e12e54afe5f25acffd0a99070022674ed684ba8c8a3079d374",
+        "3": "97466aa183d457e12e54afe5f25acffd0a99070022674ed684ba8c8a3079d374",
+        "4": "97466aa183d457e12e54afe5f25acffd0a99070022674ed684ba8c8a3079d374"
+      },
+      "bitwise": true
+    },
+    "cache_Aqk": {
+      "sha256_by_bd": {
+        "1": "33215de6e1ce6948cad53498cdd94c659fcb4d1cf0ba854fae75e98340e237c5",
+        "2": "33215de6e1ce6948cad53498cdd94c659fcb4d1cf0ba854fae75e98340e237c5",
+        "3": "33215de6e1ce6948cad53498cdd94c659fcb4d1cf0ba854fae75e98340e237c5",
+        "4": "33215de6e1ce6948cad53498cdd94c659fcb4d1cf0ba854fae75e98340e237c5"
+      },
+      "bitwise": true
+    },
+    "cache_Akk": {
+      "sha256_by_bd": {
+        "1": "eec6563daca78da7a3a6e09241119676f4a96c61def19908db6f616626c8c599",
+        "2": "eec6563daca78da7a3a6e09241119676f4a96c61def19908db6f616626c8c599",
+        "3": "eec6563daca78da7a3a6e09241119676f4a96c61def19908db6f616626c8c599",
+        "4": "eec6563daca78da7a3a6e09241119676f4a96c61def19908db6f616626c8c599"
+      },
+      "bitwise": true
+    },
+    "cache_w": {
+      "sha256_by_bd": {
+        "1": "2920b779e89dc32b3b51b99d21c7e43eb446ee2eddef80f56048305c625983b5",
+        "2": "2920b779e89dc32b3b51b99d21c7e43eb446ee2eddef80f56048305c625983b5",
+        "3": "2920b779e89dc32b3b51b99d21c7e43eb446ee2eddef80f56048305c625983b5",
+        "4": "2920b779e89dc32b3b51b99d21c7e43eb446ee2eddef80f56048305c625983b5"
+      },
+      "bitwise": true
+    },
+    "cache_u": {
+      "sha256_by_bd": {
+        "1": "3a20f29f0cd7a27802830de1034922568d9c92164a78ecf712cf7348e54f0b3d",
+        "2": "3a20f29f0cd7a27802830de1034922568d9c92164a78ecf712cf7348e54f0b3d",
+        "3": "3a20f29f0cd7a27802830de1034922568d9c92164a78ecf712cf7348e54f0b3d",
+        "4": "3a20f29f0cd7a27802830de1034922568d9c92164a78ecf712cf7348e54f0b3d"
+      },
+      "bitwise": true
+    },
+    "cache_qg": {
+      "sha256_by_bd": {
+        "1": "a5f84b0b9f00b6867351fd43ba93360824c104ab2437e1f180bd88067d13ba92",
+        "2": "a5f84b0b9f00b6867351fd43ba93360824c104ab2437e1f180bd88067d13ba92",
+        "3": "a5f84b0b9f00b6867351fd43ba93360824c104ab2437e1f180bd88067d13ba92",
+        "4": "a5f84b0b9f00b6867351fd43ba93360824c104ab2437e1f180bd88067d13ba92"
+      },
+      "bitwise": true
+    },
+    "cache_kg": {
+      "sha256_by_bd": {
+        "1": "84d11bd7dfaa3d0d41b94343a3ef000d58350c7adcd6bf9306207edfa56e57e8",
+        "2": "84d11bd7dfaa3d0d41b94343a3ef000d58350c7adcd6bf9306207edfa56e57e8",
+        "3": "84d11bd7dfaa3d0d41b94343a3ef000d58350c7adcd6bf9306207edfa56e57e8",
+        "4": "84d11bd7dfaa3d0d41b94343a3ef000d58350c7adcd6bf9306207edfa56e57e8"
+      },
+      "bitwise": true
+    },
+    "cache_v_new": {
+      "sha256_by_bd": {
+        "1": "04d1160b2b0d59e914b069a81134c710c47e8654cc6ec9f853a85efb004cbe8f",
+        "2": "04d1160b2b0d59e914b069a81134c710c47e8654cc6ec9f853a85efb004cbe8f",
+        "3": "04d1160b2b0d59e914b069a81134c710c47e8654cc6ec9f853a85efb004cbe8f",
+        "4": "04d1160b2b0d59e914b069a81134c710c47e8654cc6ec9f853a85efb004cbe8f"
+      },
+      "bitwise": true
+    },
+    "cache_h": {
+      "sha256_by_bd": {
+        "1": "1f3de1f9dcf44efdbb90675ff3927d151b14af52e8e4564b022140ab2396a6b0",
+        "2": "1f3de1f9dcf44efdbb90675ff3927d151b14af52e8e4564b022140ab2396a6b0",
+        "3": "1f3de1f9dcf44efdbb90675ff3927d151b14af52e8e4564b022140ab2396a6b0",
+        "4": "1f3de1f9dcf44efdbb90675ff3927d151b14af52e8e4564b022140ab2396a6b0"
+      },
+      "bitwise": true
+    },
+    "dq": {
+      "sha256_by_bd": {
+        "1": "e0555ad7311649e5544f2b23c66ffebb9fb0662dc0d6bd1268c12cb81e259830",
+        "2": "e0555ad7311649e5544f2b23c66ffebb9fb0662dc0d6bd1268c12cb81e259830",
+        "3": "e0555ad7311649e5544f2b23c66ffebb9fb0662dc0d6bd1268c12cb81e259830",
+        "4": "e0555ad7311649e5544f2b23c66ffebb9fb0662dc0d6bd1268c12cb81e259830"
+      },
+      "bitwise": true
+    },
+    "dk": {
+      "sha256_by_bd": {
+        "1": "86cf634dfa700148613a16d8c1aaf9e06d680fb7d9cf4d526dcbe0fb05064562",
+        "2": "86cf634dfa700148613a16d8c1aaf9e06d680fb7d9cf4d526dcbe0fb05064562",
+        "3": "86cf634dfa700148613a16d8c1aaf9e06d680fb7d9cf4d526dcbe0fb05064562",
+        "4": "86cf634dfa700148613a16d8c1aaf9e06d680fb7d9cf4d526dcbe0fb05064562"
+      },
+      "bitwise": true
+    },
+    "dv": {
+      "sha256_by_bd": {
+        "1": "edac3ed1b1e26dacab1641c5918106b40890b14c121b4f184630f952a959bb0e",
+        "2": "edac3ed1b1e26dacab1641c5918106b40890b14c121b4f184630f952a959bb0e",
+        "3": "edac3ed1b1e26dacab1641c5918106b40890b14c121b4f184630f952a959bb0e",
+        "4": "edac3ed1b1e26dacab1641c5918106b40890b14c121b4f184630f952a959bb0e"
+      },
+      "bitwise": true
+    },
+    "dbeta": {
+      "sha256_by_bd": {
+        "1": "28472153cf18c927f0ade8e28aaeac186b163d88b6cf8a4f392fcca1bf8a880c",
+        "2": "28472153cf18c927f0ade8e28aaeac186b163d88b6cf8a4f392fcca1bf8a880c",
+        "3": "28472153cf18c927f0ade8e28aaeac186b163d88b6cf8a4f392fcca1bf8a880c",
+        "4": "28472153cf18c927f0ade8e28aaeac186b163d88b6cf8a4f392fcca1bf8a880c"
+      },
+      "bitwise": true
+    },
+    "dg": {
+      "sha256_by_bd": {
+        "1": "1b9685a97a05d17dce3ffaeab0ce8eabf2998100659676732e2badfb1ee2b404",
+        "2": "1b9685a97a05d17dce3ffaeab0ce8eabf2998100659676732e2badfb1ee2b404",
+        "3": "1b9685a97a05d17dce3ffaeab0ce8eabf2998100659676732e2badfb1ee2b404",
+        "4": "1b9685a97a05d17dce3ffaeab0ce8eabf2998100659676732e2badfb1ee2b404"
+      },
+      "bitwise": true
+    },
+    "dh0": {
+      "sha256_by_bd": {
+        "1": "65c33a7add246cb729c62e6d1abf797392b3d6ac0baef4542f4505423f3ba408",
+        "2": "65c33a7add246cb729c62e6d1abf797392b3d6ac0baef4542f4505423f3ba408",
+        "3": "65c33a7add246cb729c62e6d1abf797392b3d6ac0baef4542f4505423f3ba408",
+        "4": "65c33a7add246cb729c62e6d1abf797392b3d6ac0baef4542f4505423f3ba408"
+      },
+      "bitwise": true
+    }
+  },
+  "qualification": "One full workload per block_dim; does not substitute for D-PM-44 repeatability qualification or the complete grid."
+}

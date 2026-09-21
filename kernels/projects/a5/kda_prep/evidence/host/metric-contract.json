@@ -1,0 +1,40 @@
+{
+  "passed": true,
+  "source_sha256": "30d94fd2ffb2dc8d2868cd216b67ae7b66baadf7fc9daadf67b0feeb12216d8a",
+  "checks": [
+    "saved BF16 zero-representation slice retains L2=1 and records signed zeros",
+    "two-ULP corruption rejected",
+    "same underflow slice remains failed outside authorized boundary population",
+    "ordinary decisions imply legacy pass",
+    "saved decode composition failure remains failed at unchanged 1e-5"
+  ],
+  "chunk_saved_slice": {
+    "relative_l2": 0.0,
+    "max_abs_diff": 7.847271400218976e-44,
+    "finite": true,
+    "allclose": true,
+    "passed": true,
+    "relative_l2_fp64_accumulation": 1.0,
+    "legacy_passed": true,
+    "zero_representation_endpoint": {
+      "owner_comment": "https://github.com/ddddwee1/ascend_fla_dev/issues/106#issuecomment-5750678047",
+      "definition": "CPU FP32 golden correctly rounded to BF16 is zero throughout this slice",
+      "elements": 8192,
+      "max_ulp_from_rounded_zero": 0,
+      "signed_zero_differences": 3991,
+      "bitwise_equal_to_rounded_reference": false,
+      "passed": true
+    }
+  },
+  "decode_original_failure": {
+    "relative_l2": 0.0004308747926146436,
+    "max_abs": 1.383562972071508e-21,
+    "finite": true,
+    "legacy_relative_l2": 0.0004308747926146436,
+    "legacy_budget": 1e-05,
+    "legacy_passed": false,
+    "budget": 1e-05,
+    "bf16_floor": 0.0016661382830452532,
+    "passed": false
+  }
+}

@@ -1,0 +1,5768 @@
+{
+  "environment": {
+    "python": "3.12.14",
+    "torch": "2.12.0+cu130",
+    "torch_npu": "2.12.0",
+    "ascriptor": "0.1.0",
+    "library_commit": "90cfcdc720bbcd66e8bd4361c4dd4fbc1a2a57b5",
+    "kernels_commit": "b3b3f9c16df7c4626ed3c081032a1be5a753d0b1",
+    "cann_version_records": {
+      "compiler": {
+        "raw_lines": [
+          "Version=9.1.0-beta.1",
+          "version_dir=cann",
+          "required_package_runtime_version=\"9.1\"",
+          "required_package_ge-executor_version=\"9.1\"",
+          "required_package_metadef_version=\"9.1\"",
+          "required_package_opbase_version=\"9.1\"",
+          "required_package_bisheng-compiler_version=\"9.1\"",
+          "required_package_tbe-tik_version=\"9.1\"",
+          "timestamp=20260509_173000235"
+        ],
+        "sha256": "0f982a259247cdd06df4fa5bdaf526b57b6ad15f7d27a33f23b3c70a381c2fe5"
+      },
+      "opp": {
+        "raw_lines": [
+          "Version=9.1.0-beta.1",
+          "version_dir=cann",
+          "required_package_runtime_version=\">=8.5\"",
+          "required_package_ge-executor_version=\">=8.5\"",
+          "required_package_metadef_version=\">=8.5\"",
+          "required_package_asc-devkit_version=\">=8.5\"",
+          "required_package_bisheng-compiler_version=\">=8.5\"",
+          "timestamp=20260509_173000235"
+        ],
+        "sha256": "377b05dab3a2dfc87dfaa92affd69a9aa5795a54d423cbe629d3495ad20370ef"
+      }
+    },
+    "opp_directories": [
+      "ascend910_93",
+      "ascend910b",
+      "ascend950"
+    ],
+    "drivers_sha256": {
+      "native_audit.py": "bfffeb22e43a3619118da1aa7119b7d1b5324d81d1632c982cfafcaebc4d6ba5",
+      "native_context.py": "d3afb051d41fd56707734a9dea941896a4923c0f9ea1ef749f80b0f8af425725",
+      "verify_reachability_native.py": "42f0ef4a0d010855d142f22a4a7d206a24594b4284b0398a806c72d4e057fa3e",
+      "guard.py": "8de66702148762900fb37acf7aa2cbcbe8ed25a97e1150b84d77e970454271c3",
+      "native_environment.py": "8aa453ef4cfd92476bb80d463ddf63d4b1e1d3c2eb325ad69e93fcaecc50833d",
+      "unit.py": "d270c3d60704500bd41813831e57b0cea5ee95f67f5db914ff21cc6c1e8b22b7",
+      "native_grid.py": "2a70c1b87dcc88f979abdecdbdc16fc3d5237ff72dc91c0dba377c181e29913b",
+      "verify_native.py": "37161cbe3d595e842fc62a66a8a78d5b2e9532059cb37e3d6f0897be5248e9e2",
+      "wait_native.py": "21f425a2c467ffab4cb42a94256a83b4baef26aadb4cb16b5251bb8e6f7d9775"
+    },
+    "prep_sha256": {
+      "native_audit.py": "bfffeb22e43a3619118da1aa7119b7d1b5324d81d1632c982cfafcaebc4d6ba5",
+      "native_environment.py": "8aa453ef4cfd92476bb80d463ddf63d4b1e1d3c2eb325ad69e93fcaecc50833d",
+      "unit.py": "e3f9c1f51a977b31b87fd03397ea43a78b4b04f6dc487947ff0532eac747d9ae",
+      "run.py": "cc9b6f4400d94e45a3af3d607bbe143ad2211ce7b3189dbe3298166e5a541a32",
+      "_unit_runner.py": "91ab007ac56f59f3c1b918947be769e725e51d98f981f41608864a2ae477133a",
+      "runtime.py": "a63385ec54c95d02357b9748156cfe82b217e72b3834c159e7a029e5752fcbe3",
+      "verify_calibration.py": "e5f7403369d294444d617e7e93a06f83552caeb535d7a3f2c5cb54b8b287ff84",
+      "verify_native.py": "37161cbe3d595e842fc62a66a8a78d5b2e9532059cb37e3d6f0897be5248e9e2",
+      "kernels/forward.py": "135b1fa2f92c26da9a6b57434f09515ac95592f033b328c3c5ddcd9ac9b2b455",
+      "baseline/autograd.py": "c2a535ae2ec5b7f1b7da000a42a96e985fcc84aa4b05df1421cc83b424b25903",
+      "baseline/chunk.py": "5bf75978176280c5eaf9268e7730ea00bf1581bb1ef8dddb35ad5a178ffd49d0",
+      "baseline/fused_recurrent.py": "1e78c50a1f15f23e9a7213d57b021b558c02164989765877b6fba92a10cf473a",
+      "ref/calibrate.py": "d21ec73afc242b1b17e7d7f15e72c034fa0dfabda6505abe4edf74313cdb0765"
+    },
+    "wrappers_sha256": {
+      "chunk.py": "c79a199d9b8b9d5820834e87d7ad0805ce63531df878c11720c0a4f181c8a87e",
+      "chunk_bwd.py": "71ce0e041a02853de768e982cc38a497294ecbfaa9e8715aca084ad3db69247e",
+      "autograd.py": "78b96d6bb9a81dfa800c4704214bcd0cdce3447f2d1b1fdd77dd11bf5380559d",
+      "fused_recurrent.py": "872d15f102e482f4baa7f9229471e8bdcbc564c1e4531967d65be0fc758771fc"
+    }
+  },
+  "complete": true,
+  "cases": [
+    {
+      "route": "chunk",
+      "tokens": 64,
+      "A_log": -3.0,
+      "u": -104.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "59a0294d90a4719ca9a7ff96b4c8e2ffc2c94cef29e938d3aef39acccffe03b8",
+              "finite": 8192,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 8192
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "e57712dc43029af97872c6cbb658b86b5f043537d6dbe982e4aacc8019160802",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "59a0294d90a4719ca9a7ff96b4c8e2ffc2c94cef29e938d3aef39acccffe03b8",
+              "finite": 8192,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 8192
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "e57712dc43029af97872c6cbb658b86b5f043537d6dbe982e4aacc8019160802",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "chunk",
+      "tokens": 64,
+      "A_log": -3.0,
+      "u": -100.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "59a0294d90a4719ca9a7ff96b4c8e2ffc2c94cef29e938d3aef39acccffe03b8",
+              "finite": 8192,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 8192
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "e57712dc43029af97872c6cbb658b86b5f043537d6dbe982e4aacc8019160802",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "59a0294d90a4719ca9a7ff96b4c8e2ffc2c94cef29e938d3aef39acccffe03b8",
+              "finite": 8192,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 8192
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "e57712dc43029af97872c6cbb658b86b5f043537d6dbe982e4aacc8019160802",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "chunk",
+      "tokens": 64,
+      "A_log": -3.0,
+      "u": -90.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "59a0294d90a4719ca9a7ff96b4c8e2ffc2c94cef29e938d3aef39acccffe03b8",
+              "finite": 8192,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 8192
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "e57712dc43029af97872c6cbb658b86b5f043537d6dbe982e4aacc8019160802",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "59a0294d90a4719ca9a7ff96b4c8e2ffc2c94cef29e938d3aef39acccffe03b8",
+              "finite": 8192,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 8192
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "e57712dc43029af97872c6cbb658b86b5f043537d6dbe982e4aacc8019160802",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "chunk",
+      "tokens": 64,
+      "A_log": -3.0,
+      "u": -88.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "59a0294d90a4719ca9a7ff96b4c8e2ffc2c94cef29e938d3aef39acccffe03b8",
+              "finite": 8192,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 8192
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "e57712dc43029af97872c6cbb658b86b5f043537d6dbe982e4aacc8019160802",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "59a0294d90a4719ca9a7ff96b4c8e2ffc2c94cef29e938d3aef39acccffe03b8",
+              "finite": 8192,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 8192
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "e57712dc43029af97872c6cbb658b86b5f043537d6dbe982e4aacc8019160802",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "chunk",
+      "tokens": 64,
+      "A_log": -3.0,
+      "u": -87.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "59a0294d90a4719ca9a7ff96b4c8e2ffc2c94cef29e938d3aef39acccffe03b8",
+              "finite": 8192,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 8192
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "e57712dc43029af97872c6cbb658b86b5f043537d6dbe982e4aacc8019160802",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "59a0294d90a4719ca9a7ff96b4c8e2ffc2c94cef29e938d3aef39acccffe03b8",
+              "finite": 8192,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 8192
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "e57712dc43029af97872c6cbb658b86b5f043537d6dbe982e4aacc8019160802",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "chunk",
+      "tokens": 64,
+      "A_log": -3.0,
+      "u": -40.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "59a0294d90a4719ca9a7ff96b4c8e2ffc2c94cef29e938d3aef39acccffe03b8",
+              "finite": 8192,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 8192
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "e57712dc43029af97872c6cbb658b86b5f043537d6dbe982e4aacc8019160802",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "59a0294d90a4719ca9a7ff96b4c8e2ffc2c94cef29e938d3aef39acccffe03b8",
+              "finite": 8192,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 8192
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "e57712dc43029af97872c6cbb658b86b5f043537d6dbe982e4aacc8019160802",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "chunk",
+      "tokens": 64,
+      "A_log": -3.0,
+      "u": -20.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "59a0294d90a4719ca9a7ff96b4c8e2ffc2c94cef29e938d3aef39acccffe03b8",
+              "finite": 8192,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 8192
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "e57712dc43029af97872c6cbb658b86b5f043537d6dbe982e4aacc8019160802",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "59a0294d90a4719ca9a7ff96b4c8e2ffc2c94cef29e938d3aef39acccffe03b8",
+              "finite": 8192,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 8192
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "e57712dc43029af97872c6cbb658b86b5f043537d6dbe982e4aacc8019160802",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "chunk",
+      "tokens": 64,
+      "A_log": -3.0,
+      "u": -16.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "59a0294d90a4719ca9a7ff96b4c8e2ffc2c94cef29e938d3aef39acccffe03b8",
+              "finite": 8192,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 8192
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "1e13caef33f4d0f8c501b931365d8b5de96b4defa94f1eae5d9e3f7ae9834aa5",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "59a0294d90a4719ca9a7ff96b4c8e2ffc2c94cef29e938d3aef39acccffe03b8",
+              "finite": 8192,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 8192
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "1e13caef33f4d0f8c501b931365d8b5de96b4defa94f1eae5d9e3f7ae9834aa5",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "chunk",
+      "tokens": 64,
+      "A_log": -0.2,
+      "u": -104.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "59a0294d90a4719ca9a7ff96b4c8e2ffc2c94cef29e938d3aef39acccffe03b8",
+              "finite": 8192,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 8192
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "e57712dc43029af97872c6cbb658b86b5f043537d6dbe982e4aacc8019160802",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "59a0294d90a4719ca9a7ff96b4c8e2ffc2c94cef29e938d3aef39acccffe03b8",
+              "finite": 8192,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 8192
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "e57712dc43029af97872c6cbb658b86b5f043537d6dbe982e4aacc8019160802",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "chunk",
+      "tokens": 64,
+      "A_log": -0.2,
+      "u": -100.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "59a0294d90a4719ca9a7ff96b4c8e2ffc2c94cef29e938d3aef39acccffe03b8",
+              "finite": 8192,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 8192
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "e57712dc43029af97872c6cbb658b86b5f043537d6dbe982e4aacc8019160802",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "59a0294d90a4719ca9a7ff96b4c8e2ffc2c94cef29e938d3aef39acccffe03b8",
+              "finite": 8192,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 8192
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "e57712dc43029af97872c6cbb658b86b5f043537d6dbe982e4aacc8019160802",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "chunk",
+      "tokens": 64,
+      "A_log": -0.2,
+      "u": -90.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "59a0294d90a4719ca9a7ff96b4c8e2ffc2c94cef29e938d3aef39acccffe03b8",
+              "finite": 8192,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 8192
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "e57712dc43029af97872c6cbb658b86b5f043537d6dbe982e4aacc8019160802",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "59a0294d90a4719ca9a7ff96b4c8e2ffc2c94cef29e938d3aef39acccffe03b8",
+              "finite": 8192,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 8192
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "e57712dc43029af97872c6cbb658b86b5f043537d6dbe982e4aacc8019160802",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "chunk",
+      "tokens": 64,
+      "A_log": -0.2,
+      "u": -88.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "59a0294d90a4719ca9a7ff96b4c8e2ffc2c94cef29e938d3aef39acccffe03b8",
+              "finite": 8192,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 8192
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "e57712dc43029af97872c6cbb658b86b5f043537d6dbe982e4aacc8019160802",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "59a0294d90a4719ca9a7ff96b4c8e2ffc2c94cef29e938d3aef39acccffe03b8",
+              "finite": 8192,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 8192
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "e57712dc43029af97872c6cbb658b86b5f043537d6dbe982e4aacc8019160802",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "chunk",
+      "tokens": 64,
+      "A_log": -0.2,
+      "u": -87.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "59a0294d90a4719ca9a7ff96b4c8e2ffc2c94cef29e938d3aef39acccffe03b8",
+              "finite": 8192,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 8192
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "e57712dc43029af97872c6cbb658b86b5f043537d6dbe982e4aacc8019160802",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "59a0294d90a4719ca9a7ff96b4c8e2ffc2c94cef29e938d3aef39acccffe03b8",
+              "finite": 8192,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 8192
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "e57712dc43029af97872c6cbb658b86b5f043537d6dbe982e4aacc8019160802",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "chunk",
+      "tokens": 64,
+      "A_log": -0.2,
+      "u": -40.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "59a0294d90a4719ca9a7ff96b4c8e2ffc2c94cef29e938d3aef39acccffe03b8",
+              "finite": 8192,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 8192
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "e57712dc43029af97872c6cbb658b86b5f043537d6dbe982e4aacc8019160802",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "59a0294d90a4719ca9a7ff96b4c8e2ffc2c94cef29e938d3aef39acccffe03b8",
+              "finite": 8192,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 8192
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "e57712dc43029af97872c6cbb658b86b5f043537d6dbe982e4aacc8019160802",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "chunk",
+      "tokens": 64,
+      "A_log": -0.2,
+      "u": -20.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "59a0294d90a4719ca9a7ff96b4c8e2ffc2c94cef29e938d3aef39acccffe03b8",
+              "finite": 8192,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 8192
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "b8562258a56ee536e000f7a184c7a73dfa36d0efa17506cf0ebf84c939954821",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "59a0294d90a4719ca9a7ff96b4c8e2ffc2c94cef29e938d3aef39acccffe03b8",
+              "finite": 8192,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 8192
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "e57712dc43029af97872c6cbb658b86b5f043537d6dbe982e4aacc8019160802",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "chunk",
+      "tokens": 64,
+      "A_log": -0.2,
+      "u": -16.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "2eaf07a115126c7e6ad0d595282145e01d0718242c8402bdf37a3afc1c344cc7",
+              "finite": 8192,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 8192
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "8011d2c8a91114ed2ef60dce581196a06a263296dd3a95d801171618c0d7b1a6",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "2eaf07a115126c7e6ad0d595282145e01d0718242c8402bdf37a3afc1c344cc7",
+              "finite": 8192,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 8192
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "e22f5d5cf5f9ffe03a72dd1f9818361ecbbb2da142394f8ed9fe82e13fbf9ba1",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "chunk",
+      "tokens": 64,
+      "A_log": 2.7,
+      "u": -104.0,
+      "within_fla_default_alog_range": true,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "59a0294d90a4719ca9a7ff96b4c8e2ffc2c94cef29e938d3aef39acccffe03b8",
+              "finite": 8192,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 8192
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "e57712dc43029af97872c6cbb658b86b5f043537d6dbe982e4aacc8019160802",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "59a0294d90a4719ca9a7ff96b4c8e2ffc2c94cef29e938d3aef39acccffe03b8",
+              "finite": 8192,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 8192
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "e57712dc43029af97872c6cbb658b86b5f043537d6dbe982e4aacc8019160802",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "chunk",
+      "tokens": 64,
+      "A_log": 2.7,
+      "u": -100.0,
+      "within_fla_default_alog_range": true,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "59a0294d90a4719ca9a7ff96b4c8e2ffc2c94cef29e938d3aef39acccffe03b8",
+              "finite": 8192,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 8192
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "e57712dc43029af97872c6cbb658b86b5f043537d6dbe982e4aacc8019160802",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "59a0294d90a4719ca9a7ff96b4c8e2ffc2c94cef29e938d3aef39acccffe03b8",
+              "finite": 8192,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 8192
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "e57712dc43029af97872c6cbb658b86b5f043537d6dbe982e4aacc8019160802",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "chunk",
+      "tokens": 64,
+      "A_log": 2.7,
+      "u": -90.0,
+      "within_fla_default_alog_range": true,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "59a0294d90a4719ca9a7ff96b4c8e2ffc2c94cef29e938d3aef39acccffe03b8",
+              "finite": 8192,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 8192
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "e57712dc43029af97872c6cbb658b86b5f043537d6dbe982e4aacc8019160802",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "59a0294d90a4719ca9a7ff96b4c8e2ffc2c94cef29e938d3aef39acccffe03b8",
+              "finite": 8192,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 8192
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "e57712dc43029af97872c6cbb658b86b5f043537d6dbe982e4aacc8019160802",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "chunk",
+      "tokens": 64,
+      "A_log": 2.7,
+      "u": -88.0,
+      "within_fla_default_alog_range": true,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "59a0294d90a4719ca9a7ff96b4c8e2ffc2c94cef29e938d3aef39acccffe03b8",
+              "finite": 8192,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 8192
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "e57712dc43029af97872c6cbb658b86b5f043537d6dbe982e4aacc8019160802",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "59a0294d90a4719ca9a7ff96b4c8e2ffc2c94cef29e938d3aef39acccffe03b8",
+              "finite": 8192,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 8192
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "e57712dc43029af97872c6cbb658b86b5f043537d6dbe982e4aacc8019160802",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "chunk",
+      "tokens": 64,
+      "A_log": 2.7,
+      "u": -87.0,
+      "within_fla_default_alog_range": true,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "59a0294d90a4719ca9a7ff96b4c8e2ffc2c94cef29e938d3aef39acccffe03b8",
+              "finite": 8192,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 8192
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "e57712dc43029af97872c6cbb658b86b5f043537d6dbe982e4aacc8019160802",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "59a0294d90a4719ca9a7ff96b4c8e2ffc2c94cef29e938d3aef39acccffe03b8",
+              "finite": 8192,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 8192
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "e57712dc43029af97872c6cbb658b86b5f043537d6dbe982e4aacc8019160802",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "chunk",
+      "tokens": 64,
+      "A_log": 2.7,
+      "u": -40.0,
+      "within_fla_default_alog_range": true,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "59a0294d90a4719ca9a7ff96b4c8e2ffc2c94cef29e938d3aef39acccffe03b8",
+              "finite": 8192,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 8192
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "e57712dc43029af97872c6cbb658b86b5f043537d6dbe982e4aacc8019160802",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "59a0294d90a4719ca9a7ff96b4c8e2ffc2c94cef29e938d3aef39acccffe03b8",
+              "finite": 8192,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 8192
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "e57712dc43029af97872c6cbb658b86b5f043537d6dbe982e4aacc8019160802",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "chunk",
+      "tokens": 64,
+      "A_log": 2.7,
+      "u": -20.0,
+      "within_fla_default_alog_range": true,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "59a0294d90a4719ca9a7ff96b4c8e2ffc2c94cef29e938d3aef39acccffe03b8",
+              "finite": 8192,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 8192
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "3f2a1a74b672b765b82decea5a0ce5e05ac8c9bd841b455a3d7ff168f171d5ea",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "59a0294d90a4719ca9a7ff96b4c8e2ffc2c94cef29e938d3aef39acccffe03b8",
+              "finite": 8192,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 8192
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "e57712dc43029af97872c6cbb658b86b5f043537d6dbe982e4aacc8019160802",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "chunk",
+      "tokens": 64,
+      "A_log": 2.7,
+      "u": -16.0,
+      "within_fla_default_alog_range": true,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "4f9d236476477b3611c74d24f75a45330730dac4f370848e55232386e9469b7b",
+              "finite": 8192,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 8192
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "99b9a320bd5914fa47552f5c487bad713afebf9818381dfa9f2828e4cec128f6",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "47b2c02b63138c06d903fcfec61da47d15069184743b025fe157fc5fa260bf23",
+              "finite": 8192,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 8192
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "73533d66c6b5d261b781a3d8f7a08797b9ef36f3a48c9dda83ef2b7e6e341f10",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "chunk",
+      "tokens": 64,
+      "A_log": 80.0,
+      "u": -104.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "59a0294d90a4719ca9a7ff96b4c8e2ffc2c94cef29e938d3aef39acccffe03b8",
+              "finite": 8192,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 8192
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "e57712dc43029af97872c6cbb658b86b5f043537d6dbe982e4aacc8019160802",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "59a0294d90a4719ca9a7ff96b4c8e2ffc2c94cef29e938d3aef39acccffe03b8",
+              "finite": 8192,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 8192
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "e57712dc43029af97872c6cbb658b86b5f043537d6dbe982e4aacc8019160802",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "chunk",
+      "tokens": 64,
+      "A_log": 80.0,
+      "u": -100.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "59a0294d90a4719ca9a7ff96b4c8e2ffc2c94cef29e938d3aef39acccffe03b8",
+              "finite": 8192,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 8192
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "e57712dc43029af97872c6cbb658b86b5f043537d6dbe982e4aacc8019160802",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "59a0294d90a4719ca9a7ff96b4c8e2ffc2c94cef29e938d3aef39acccffe03b8",
+              "finite": 8192,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 8192
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "e57712dc43029af97872c6cbb658b86b5f043537d6dbe982e4aacc8019160802",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "chunk",
+      "tokens": 64,
+      "A_log": 80.0,
+      "u": -90.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "59a0294d90a4719ca9a7ff96b4c8e2ffc2c94cef29e938d3aef39acccffe03b8",
+              "finite": 8192,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 8192
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "e57712dc43029af97872c6cbb658b86b5f043537d6dbe982e4aacc8019160802",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "59a0294d90a4719ca9a7ff96b4c8e2ffc2c94cef29e938d3aef39acccffe03b8",
+              "finite": 8192,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 8192
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "e57712dc43029af97872c6cbb658b86b5f043537d6dbe982e4aacc8019160802",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "chunk",
+      "tokens": 64,
+      "A_log": 80.0,
+      "u": -88.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "59a0294d90a4719ca9a7ff96b4c8e2ffc2c94cef29e938d3aef39acccffe03b8",
+              "finite": 8192,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 8192
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "e57712dc43029af97872c6cbb658b86b5f043537d6dbe982e4aacc8019160802",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "59a0294d90a4719ca9a7ff96b4c8e2ffc2c94cef29e938d3aef39acccffe03b8",
+              "finite": 8192,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 8192
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "e57712dc43029af97872c6cbb658b86b5f043537d6dbe982e4aacc8019160802",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "chunk",
+      "tokens": 64,
+      "A_log": 80.0,
+      "u": -87.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "53fa04ffb3cbc6031d9a8ca8318425ddf9b5e2e4b7d62d9d5e6c6c5521129c4a",
+              "finite": 8192,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 8192
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "47ccc7d2329c0c29718f5dfff45f1533d3cbbc2a0c1a737032407e96559a4bbe",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "59a0294d90a4719ca9a7ff96b4c8e2ffc2c94cef29e938d3aef39acccffe03b8",
+              "finite": 8192,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 8192
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "e57712dc43029af97872c6cbb658b86b5f043537d6dbe982e4aacc8019160802",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "chunk",
+      "tokens": 64,
+      "A_log": 80.0,
+      "u": -40.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "rejected",
+          "exception": "ValueError",
+          "message": "chunk \u5185\u95e8\u63a7\u8de8\u5ea6 14829271653489311744.0 \u8d85\u8fc7 impl='stable' \u5728 forward \u94fe\u4e0a\u7684\u4e0a\u9650 155.0\u3002kernel \u4f1a\u5728 fp32 \u4e0b\u6ea2/\u4e0a\u6ea2\u5e76\u8f93\u51fa NaN\u3002g \u662f log \u7a7a\u95f4\u7684 per-token \u8870\u51cf\u589e\u91cf\uff1b\u51cf\u5c0f g \u7684\u91cf\u7ea7\uff1aKDA \u5c42\u91cc\u5373\u51cf\u5c0f exp(A_log) \u6216 dt\u3002\u786e\u77e5\u53ef\u63a5\u53d7\u65f6\u4f20 check_gate_range=False \u8df3\u8fc7\u672c\u68c0\u67e5\u3002\u8be6\u89c1 docs/matrix/gaps.json \u7684 gate-range-beyond-declared \u4e0e gate-span-still-bounded"
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "59a0294d90a4719ca9a7ff96b4c8e2ffc2c94cef29e938d3aef39acccffe03b8",
+              "finite": 8192,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 8192
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "e57712dc43029af97872c6cbb658b86b5f043537d6dbe982e4aacc8019160802",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "chunk",
+      "tokens": 64,
+      "A_log": 80.0,
+      "u": -20.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "rejected",
+          "exception": "ValueError",
+          "message": "chunk \u5185\u95e8\u63a7\u8de8\u5ea6 7194646937588838376430108672.0 \u8d85\u8fc7 impl='stable' \u5728 forward \u94fe\u4e0a\u7684\u4e0a\u9650 155.0\u3002kernel \u4f1a\u5728 fp32 \u4e0b\u6ea2/\u4e0a\u6ea2\u5e76\u8f93\u51fa NaN\u3002g \u662f log \u7a7a\u95f4\u7684 per-token \u8870\u51cf\u589e\u91cf\uff1b\u51cf\u5c0f g \u7684\u91cf\u7ea7\uff1aKDA \u5c42\u91cc\u5373\u51cf\u5c0f exp(A_log) \u6216 dt\u3002\u786e\u77e5\u53ef\u63a5\u53d7\u65f6\u4f20 check_gate_range=False \u8df3\u8fc7\u672c\u68c0\u67e5\u3002\u8be6\u89c1 docs/matrix/gaps.json \u7684 gate-range-beyond-declared \u4e0e gate-span-still-bounded"
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "59a0294d90a4719ca9a7ff96b4c8e2ffc2c94cef29e938d3aef39acccffe03b8",
+              "finite": 8192,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 8192
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "e57712dc43029af97872c6cbb658b86b5f043537d6dbe982e4aacc8019160802",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "chunk",
+      "tokens": 64,
+      "A_log": 80.0,
+      "u": -16.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "rejected",
+          "exception": "ValueError",
+          "message": "chunk \u5185\u95e8\u63a7\u8de8\u5ea6 392814377620788309879192289280.0 \u8d85\u8fc7 impl='stable' \u5728 forward \u94fe\u4e0a\u7684\u4e0a\u9650 155.0\u3002kernel \u4f1a\u5728 fp32 \u4e0b\u6ea2/\u4e0a\u6ea2\u5e76\u8f93\u51fa NaN\u3002g \u662f log \u7a7a\u95f4\u7684 per-token \u8870\u51cf\u589e\u91cf\uff1b\u51cf\u5c0f g \u7684\u91cf\u7ea7\uff1aKDA \u5c42\u91cc\u5373\u51cf\u5c0f exp(A_log) \u6216 dt\u3002\u786e\u77e5\u53ef\u63a5\u53d7\u65f6\u4f20 check_gate_range=False \u8df3\u8fc7\u672c\u68c0\u67e5\u3002\u8be6\u89c1 docs/matrix/gaps.json \u7684 gate-range-beyond-declared \u4e0e gate-span-still-bounded"
+        },
+        "predecessor_npu": {
+          "behavior": "rejected",
+          "exception": "ValueError",
+          "message": "chunk \u5185\u95e8\u63a7\u8de8\u5ea6 416110982627672021390367653888.0 \u8d85\u8fc7 impl='stable' \u5728 forward \u94fe\u4e0a\u7684\u4e0a\u9650 155.0\u3002kernel \u4f1a\u5728 fp32 \u4e0b\u6ea2/\u4e0a\u6ea2\u5e76\u8f93\u51fa NaN\u3002g \u662f log \u7a7a\u95f4\u7684 per-token \u8870\u51cf\u589e\u91cf\uff1b\u51cf\u5c0f g \u7684\u91cf\u7ea7\uff1aKDA \u5c42\u91cc\u5373\u51cf\u5c0f exp(A_log) \u6216 dt\u3002\u786e\u77e5\u53ef\u63a5\u53d7\u65f6\u4f20 check_gate_range=False \u8df3\u8fc7\u672c\u68c0\u67e5\u3002\u8be6\u89c1 docs/matrix/gaps.json \u7684 gate-range-beyond-declared \u4e0e gate-span-still-bounded"
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "chunk",
+      "tokens": 64,
+      "A_log": 89.0,
+      "u": -104.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "rejected",
+          "exception": "ValueError",
+          "message": "chunk \u5185\u95e8\u63a7\u8de8\u5ea6 nan \u8d85\u8fc7 impl='stable' \u5728 forward \u94fe\u4e0a\u7684\u4e0a\u9650 155.0\u3002kernel \u4f1a\u5728 fp32 \u4e0b\u6ea2/\u4e0a\u6ea2\u5e76\u8f93\u51fa NaN\u3002g \u662f log \u7a7a\u95f4\u7684 per-token \u8870\u51cf\u589e\u91cf\uff1b\u51cf\u5c0f g \u7684\u91cf\u7ea7\uff1aKDA \u5c42\u91cc\u5373\u51cf\u5c0f exp(A_log) \u6216 dt\u3002\u786e\u77e5\u53ef\u63a5\u53d7\u65f6\u4f20 check_gate_range=False \u8df3\u8fc7\u672c\u68c0\u67e5\u3002\u8be6\u89c1 docs/matrix/gaps.json \u7684 gate-range-beyond-declared \u4e0e gate-span-still-bounded"
+        },
+        "predecessor_npu": {
+          "behavior": "rejected",
+          "exception": "ValueError",
+          "message": "chunk \u5185\u95e8\u63a7\u8de8\u5ea6 nan \u8d85\u8fc7 impl='stable' \u5728 forward \u94fe\u4e0a\u7684\u4e0a\u9650 155.0\u3002kernel \u4f1a\u5728 fp32 \u4e0b\u6ea2/\u4e0a\u6ea2\u5e76\u8f93\u51fa NaN\u3002g \u662f log \u7a7a\u95f4\u7684 per-token \u8870\u51cf\u589e\u91cf\uff1b\u51cf\u5c0f g \u7684\u91cf\u7ea7\uff1aKDA \u5c42\u91cc\u5373\u51cf\u5c0f exp(A_log) \u6216 dt\u3002\u786e\u77e5\u53ef\u63a5\u53d7\u65f6\u4f20 check_gate_range=False \u8df3\u8fc7\u672c\u68c0\u67e5\u3002\u8be6\u89c1 docs/matrix/gaps.json \u7684 gate-range-beyond-declared \u4e0e gate-span-still-bounded"
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "chunk",
+      "tokens": 64,
+      "A_log": 89.0,
+      "u": -100.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "rejected",
+          "exception": "ValueError",
+          "message": "chunk \u5185\u95e8\u63a7\u8de8\u5ea6 nan \u8d85\u8fc7 impl='stable' \u5728 forward \u94fe\u4e0a\u7684\u4e0a\u9650 155.0\u3002kernel \u4f1a\u5728 fp32 \u4e0b\u6ea2/\u4e0a\u6ea2\u5e76\u8f93\u51fa NaN\u3002g \u662f log \u7a7a\u95f4\u7684 per-token \u8870\u51cf\u589e\u91cf\uff1b\u51cf\u5c0f g \u7684\u91cf\u7ea7\uff1aKDA \u5c42\u91cc\u5373\u51cf\u5c0f exp(A_log) \u6216 dt\u3002\u786e\u77e5\u53ef\u63a5\u53d7\u65f6\u4f20 check_gate_range=False \u8df3\u8fc7\u672c\u68c0\u67e5\u3002\u8be6\u89c1 docs/matrix/gaps.json \u7684 gate-range-beyond-declared \u4e0e gate-span-still-bounded"
+        },
+        "predecessor_npu": {
+          "behavior": "rejected",
+          "exception": "ValueError",
+          "message": "chunk \u5185\u95e8\u63a7\u8de8\u5ea6 nan \u8d85\u8fc7 impl='stable' \u5728 forward \u94fe\u4e0a\u7684\u4e0a\u9650 155.0\u3002kernel \u4f1a\u5728 fp32 \u4e0b\u6ea2/\u4e0a\u6ea2\u5e76\u8f93\u51fa NaN\u3002g \u662f log \u7a7a\u95f4\u7684 per-token \u8870\u51cf\u589e\u91cf\uff1b\u51cf\u5c0f g \u7684\u91cf\u7ea7\uff1aKDA \u5c42\u91cc\u5373\u51cf\u5c0f exp(A_log) \u6216 dt\u3002\u786e\u77e5\u53ef\u63a5\u53d7\u65f6\u4f20 check_gate_range=False \u8df3\u8fc7\u672c\u68c0\u67e5\u3002\u8be6\u89c1 docs/matrix/gaps.json \u7684 gate-range-beyond-declared \u4e0e gate-span-still-bounded"
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "chunk",
+      "tokens": 64,
+      "A_log": 89.0,
+      "u": -90.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "rejected",
+          "exception": "ValueError",
+          "message": "chunk \u5185\u95e8\u63a7\u8de8\u5ea6 nan \u8d85\u8fc7 impl='stable' \u5728 forward \u94fe\u4e0a\u7684\u4e0a\u9650 155.0\u3002kernel \u4f1a\u5728 fp32 \u4e0b\u6ea2/\u4e0a\u6ea2\u5e76\u8f93\u51fa NaN\u3002g \u662f log \u7a7a\u95f4\u7684 per-token \u8870\u51cf\u589e\u91cf\uff1b\u51cf\u5c0f g \u7684\u91cf\u7ea7\uff1aKDA \u5c42\u91cc\u5373\u51cf\u5c0f exp(A_log) \u6216 dt\u3002\u786e\u77e5\u53ef\u63a5\u53d7\u65f6\u4f20 check_gate_range=False \u8df3\u8fc7\u672c\u68c0\u67e5\u3002\u8be6\u89c1 docs/matrix/gaps.json \u7684 gate-range-beyond-declared \u4e0e gate-span-still-bounded"
+        },
+        "predecessor_npu": {
+          "behavior": "rejected",
+          "exception": "ValueError",
+          "message": "chunk \u5185\u95e8\u63a7\u8de8\u5ea6 nan \u8d85\u8fc7 impl='stable' \u5728 forward \u94fe\u4e0a\u7684\u4e0a\u9650 155.0\u3002kernel \u4f1a\u5728 fp32 \u4e0b\u6ea2/\u4e0a\u6ea2\u5e76\u8f93\u51fa NaN\u3002g \u662f log \u7a7a\u95f4\u7684 per-token \u8870\u51cf\u589e\u91cf\uff1b\u51cf\u5c0f g \u7684\u91cf\u7ea7\uff1aKDA \u5c42\u91cc\u5373\u51cf\u5c0f exp(A_log) \u6216 dt\u3002\u786e\u77e5\u53ef\u63a5\u53d7\u65f6\u4f20 check_gate_range=False \u8df3\u8fc7\u672c\u68c0\u67e5\u3002\u8be6\u89c1 docs/matrix/gaps.json \u7684 gate-range-beyond-declared \u4e0e gate-span-still-bounded"
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "chunk",
+      "tokens": 64,
+      "A_log": 89.0,
+      "u": -88.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "rejected",
+          "exception": "ValueError",
+          "message": "chunk \u5185\u95e8\u63a7\u8de8\u5ea6 nan \u8d85\u8fc7 impl='stable' \u5728 forward \u94fe\u4e0a\u7684\u4e0a\u9650 155.0\u3002kernel \u4f1a\u5728 fp32 \u4e0b\u6ea2/\u4e0a\u6ea2\u5e76\u8f93\u51fa NaN\u3002g \u662f log \u7a7a\u95f4\u7684 per-token \u8870\u51cf\u589e\u91cf\uff1b\u51cf\u5c0f g \u7684\u91cf\u7ea7\uff1aKDA \u5c42\u91cc\u5373\u51cf\u5c0f exp(A_log) \u6216 dt\u3002\u786e\u77e5\u53ef\u63a5\u53d7\u65f6\u4f20 check_gate_range=False \u8df3\u8fc7\u672c\u68c0\u67e5\u3002\u8be6\u89c1 docs/matrix/gaps.json \u7684 gate-range-beyond-declared \u4e0e gate-span-still-bounded"
+        },
+        "predecessor_npu": {
+          "behavior": "rejected",
+          "exception": "ValueError",
+          "message": "chunk \u5185\u95e8\u63a7\u8de8\u5ea6 nan \u8d85\u8fc7 impl='stable' \u5728 forward \u94fe\u4e0a\u7684\u4e0a\u9650 155.0\u3002kernel \u4f1a\u5728 fp32 \u4e0b\u6ea2/\u4e0a\u6ea2\u5e76\u8f93\u51fa NaN\u3002g \u662f log \u7a7a\u95f4\u7684 per-token \u8870\u51cf\u589e\u91cf\uff1b\u51cf\u5c0f g \u7684\u91cf\u7ea7\uff1aKDA \u5c42\u91cc\u5373\u51cf\u5c0f exp(A_log) \u6216 dt\u3002\u786e\u77e5\u53ef\u63a5\u53d7\u65f6\u4f20 check_gate_range=False \u8df3\u8fc7\u672c\u68c0\u67e5\u3002\u8be6\u89c1 docs/matrix/gaps.json \u7684 gate-range-beyond-declared \u4e0e gate-span-still-bounded"
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "chunk",
+      "tokens": 64,
+      "A_log": 89.0,
+      "u": -87.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "rejected",
+          "exception": "ValueError",
+          "message": "chunk \u5185\u95e8\u63a7\u8de8\u5ea6 nan \u8d85\u8fc7 impl='stable' \u5728 forward \u94fe\u4e0a\u7684\u4e0a\u9650 155.0\u3002kernel \u4f1a\u5728 fp32 \u4e0b\u6ea2/\u4e0a\u6ea2\u5e76\u8f93\u51fa NaN\u3002g \u662f log \u7a7a\u95f4\u7684 per-token \u8870\u51cf\u589e\u91cf\uff1b\u51cf\u5c0f g \u7684\u91cf\u7ea7\uff1aKDA \u5c42\u91cc\u5373\u51cf\u5c0f exp(A_log) \u6216 dt\u3002\u786e\u77e5\u53ef\u63a5\u53d7\u65f6\u4f20 check_gate_range=False \u8df3\u8fc7\u672c\u68c0\u67e5\u3002\u8be6\u89c1 docs/matrix/gaps.json \u7684 gate-range-beyond-declared \u4e0e gate-span-still-bounded"
+        },
+        "predecessor_npu": {
+          "behavior": "rejected",
+          "exception": "ValueError",
+          "message": "chunk \u5185\u95e8\u63a7\u8de8\u5ea6 nan \u8d85\u8fc7 impl='stable' \u5728 forward \u94fe\u4e0a\u7684\u4e0a\u9650 155.0\u3002kernel \u4f1a\u5728 fp32 \u4e0b\u6ea2/\u4e0a\u6ea2\u5e76\u8f93\u51fa NaN\u3002g \u662f log \u7a7a\u95f4\u7684 per-token \u8870\u51cf\u589e\u91cf\uff1b\u51cf\u5c0f g \u7684\u91cf\u7ea7\uff1aKDA \u5c42\u91cc\u5373\u51cf\u5c0f exp(A_log) \u6216 dt\u3002\u786e\u77e5\u53ef\u63a5\u53d7\u65f6\u4f20 check_gate_range=False \u8df3\u8fc7\u672c\u68c0\u67e5\u3002\u8be6\u89c1 docs/matrix/gaps.json \u7684 gate-range-beyond-declared \u4e0e gate-span-still-bounded"
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "chunk",
+      "tokens": 64,
+      "A_log": 89.0,
+      "u": -40.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "rejected",
+          "exception": "ValueError",
+          "message": "chunk \u5185\u95e8\u63a7\u8de8\u5ea6 nan \u8d85\u8fc7 impl='stable' \u5728 forward \u94fe\u4e0a\u7684\u4e0a\u9650 155.0\u3002kernel \u4f1a\u5728 fp32 \u4e0b\u6ea2/\u4e0a\u6ea2\u5e76\u8f93\u51fa NaN\u3002g \u662f log \u7a7a\u95f4\u7684 per-token \u8870\u51cf\u589e\u91cf\uff1b\u51cf\u5c0f g \u7684\u91cf\u7ea7\uff1aKDA \u5c42\u91cc\u5373\u51cf\u5c0f exp(A_log) \u6216 dt\u3002\u786e\u77e5\u53ef\u63a5\u53d7\u65f6\u4f20 check_gate_range=False \u8df3\u8fc7\u672c\u68c0\u67e5\u3002\u8be6\u89c1 docs/matrix/gaps.json \u7684 gate-range-beyond-declared \u4e0e gate-span-still-bounded"
+        },
+        "predecessor_npu": {
+          "behavior": "rejected",
+          "exception": "ValueError",
+          "message": "chunk \u5185\u95e8\u63a7\u8de8\u5ea6 nan \u8d85\u8fc7 impl='stable' \u5728 forward \u94fe\u4e0a\u7684\u4e0a\u9650 155.0\u3002kernel \u4f1a\u5728 fp32 \u4e0b\u6ea2/\u4e0a\u6ea2\u5e76\u8f93\u51fa NaN\u3002g \u662f log \u7a7a\u95f4\u7684 per-token \u8870\u51cf\u589e\u91cf\uff1b\u51cf\u5c0f g \u7684\u91cf\u7ea7\uff1aKDA \u5c42\u91cc\u5373\u51cf\u5c0f exp(A_log) \u6216 dt\u3002\u786e\u77e5\u53ef\u63a5\u53d7\u65f6\u4f20 check_gate_range=False \u8df3\u8fc7\u672c\u68c0\u67e5\u3002\u8be6\u89c1 docs/matrix/gaps.json \u7684 gate-range-beyond-declared \u4e0e gate-span-still-bounded"
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "chunk",
+      "tokens": 64,
+      "A_log": 89.0,
+      "u": -20.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "rejected",
+          "exception": "ValueError",
+          "message": "chunk \u5185\u95e8\u63a7\u8de8\u5ea6 nan \u8d85\u8fc7 impl='stable' \u5728 forward \u94fe\u4e0a\u7684\u4e0a\u9650 155.0\u3002kernel \u4f1a\u5728 fp32 \u4e0b\u6ea2/\u4e0a\u6ea2\u5e76\u8f93\u51fa NaN\u3002g \u662f log \u7a7a\u95f4\u7684 per-token \u8870\u51cf\u589e\u91cf\uff1b\u51cf\u5c0f g \u7684\u91cf\u7ea7\uff1aKDA \u5c42\u91cc\u5373\u51cf\u5c0f exp(A_log) \u6216 dt\u3002\u786e\u77e5\u53ef\u63a5\u53d7\u65f6\u4f20 check_gate_range=False \u8df3\u8fc7\u672c\u68c0\u67e5\u3002\u8be6\u89c1 docs/matrix/gaps.json \u7684 gate-range-beyond-declared \u4e0e gate-span-still-bounded"
+        },
+        "predecessor_npu": {
+          "behavior": "rejected",
+          "exception": "ValueError",
+          "message": "chunk \u5185\u95e8\u63a7\u8de8\u5ea6 nan \u8d85\u8fc7 impl='stable' \u5728 forward \u94fe\u4e0a\u7684\u4e0a\u9650 155.0\u3002kernel \u4f1a\u5728 fp32 \u4e0b\u6ea2/\u4e0a\u6ea2\u5e76\u8f93\u51fa NaN\u3002g \u662f log \u7a7a\u95f4\u7684 per-token \u8870\u51cf\u589e\u91cf\uff1b\u51cf\u5c0f g \u7684\u91cf\u7ea7\uff1aKDA \u5c42\u91cc\u5373\u51cf\u5c0f exp(A_log) \u6216 dt\u3002\u786e\u77e5\u53ef\u63a5\u53d7\u65f6\u4f20 check_gate_range=False \u8df3\u8fc7\u672c\u68c0\u67e5\u3002\u8be6\u89c1 docs/matrix/gaps.json \u7684 gate-range-beyond-declared \u4e0e gate-span-still-bounded"
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "chunk",
+      "tokens": 64,
+      "A_log": 89.0,
+      "u": -16.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "rejected",
+          "exception": "ValueError",
+          "message": "chunk \u5185\u95e8\u63a7\u8de8\u5ea6 nan \u8d85\u8fc7 impl='stable' \u5728 forward \u94fe\u4e0a\u7684\u4e0a\u9650 155.0\u3002kernel \u4f1a\u5728 fp32 \u4e0b\u6ea2/\u4e0a\u6ea2\u5e76\u8f93\u51fa NaN\u3002g \u662f log \u7a7a\u95f4\u7684 per-token \u8870\u51cf\u589e\u91cf\uff1b\u51cf\u5c0f g \u7684\u91cf\u7ea7\uff1aKDA \u5c42\u91cc\u5373\u51cf\u5c0f exp(A_log) \u6216 dt\u3002\u786e\u77e5\u53ef\u63a5\u53d7\u65f6\u4f20 check_gate_range=False \u8df3\u8fc7\u672c\u68c0\u67e5\u3002\u8be6\u89c1 docs/matrix/gaps.json \u7684 gate-range-beyond-declared \u4e0e gate-span-still-bounded"
+        },
+        "predecessor_npu": {
+          "behavior": "rejected",
+          "exception": "ValueError",
+          "message": "chunk \u5185\u95e8\u63a7\u8de8\u5ea6 nan \u8d85\u8fc7 impl='stable' \u5728 forward \u94fe\u4e0a\u7684\u4e0a\u9650 155.0\u3002kernel \u4f1a\u5728 fp32 \u4e0b\u6ea2/\u4e0a\u6ea2\u5e76\u8f93\u51fa NaN\u3002g \u662f log \u7a7a\u95f4\u7684 per-token \u8870\u51cf\u589e\u91cf\uff1b\u51cf\u5c0f g \u7684\u91cf\u7ea7\uff1aKDA \u5c42\u91cc\u5373\u51cf\u5c0f exp(A_log) \u6216 dt\u3002\u786e\u77e5\u53ef\u63a5\u53d7\u65f6\u4f20 check_gate_range=False \u8df3\u8fc7\u672c\u68c0\u67e5\u3002\u8be6\u89c1 docs/matrix/gaps.json \u7684 gate-range-beyond-declared \u4e0e gate-span-still-bounded"
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "chunk",
+      "tokens": 64,
+      "A_log": 100.0,
+      "u": -104.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "rejected",
+          "exception": "ValueError",
+          "message": "chunk \u5185\u95e8\u63a7\u8de8\u5ea6 nan \u8d85\u8fc7 impl='stable' \u5728 forward \u94fe\u4e0a\u7684\u4e0a\u9650 155.0\u3002kernel \u4f1a\u5728 fp32 \u4e0b\u6ea2/\u4e0a\u6ea2\u5e76\u8f93\u51fa NaN\u3002g \u662f log \u7a7a\u95f4\u7684 per-token \u8870\u51cf\u589e\u91cf\uff1b\u51cf\u5c0f g \u7684\u91cf\u7ea7\uff1aKDA \u5c42\u91cc\u5373\u51cf\u5c0f exp(A_log) \u6216 dt\u3002\u786e\u77e5\u53ef\u63a5\u53d7\u65f6\u4f20 check_gate_range=False \u8df3\u8fc7\u672c\u68c0\u67e5\u3002\u8be6\u89c1 docs/matrix/gaps.json \u7684 gate-range-beyond-declared \u4e0e gate-span-still-bounded"
+        },
+        "predecessor_npu": {
+          "behavior": "rejected",
+          "exception": "ValueError",
+          "message": "chunk \u5185\u95e8\u63a7\u8de8\u5ea6 nan \u8d85\u8fc7 impl='stable' \u5728 forward \u94fe\u4e0a\u7684\u4e0a\u9650 155.0\u3002kernel \u4f1a\u5728 fp32 \u4e0b\u6ea2/\u4e0a\u6ea2\u5e76\u8f93\u51fa NaN\u3002g \u662f log \u7a7a\u95f4\u7684 per-token \u8870\u51cf\u589e\u91cf\uff1b\u51cf\u5c0f g \u7684\u91cf\u7ea7\uff1aKDA \u5c42\u91cc\u5373\u51cf\u5c0f exp(A_log) \u6216 dt\u3002\u786e\u77e5\u53ef\u63a5\u53d7\u65f6\u4f20 check_gate_range=False \u8df3\u8fc7\u672c\u68c0\u67e5\u3002\u8be6\u89c1 docs/matrix/gaps.json \u7684 gate-range-beyond-declared \u4e0e gate-span-still-bounded"
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "chunk",
+      "tokens": 64,
+      "A_log": 100.0,
+      "u": -100.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "rejected",
+          "exception": "ValueError",
+          "message": "chunk \u5185\u95e8\u63a7\u8de8\u5ea6 nan \u8d85\u8fc7 impl='stable' \u5728 forward \u94fe\u4e0a\u7684\u4e0a\u9650 155.0\u3002kernel \u4f1a\u5728 fp32 \u4e0b\u6ea2/\u4e0a\u6ea2\u5e76\u8f93\u51fa NaN\u3002g \u662f log \u7a7a\u95f4\u7684 per-token \u8870\u51cf\u589e\u91cf\uff1b\u51cf\u5c0f g \u7684\u91cf\u7ea7\uff1aKDA \u5c42\u91cc\u5373\u51cf\u5c0f exp(A_log) \u6216 dt\u3002\u786e\u77e5\u53ef\u63a5\u53d7\u65f6\u4f20 check_gate_range=False \u8df3\u8fc7\u672c\u68c0\u67e5\u3002\u8be6\u89c1 docs/matrix/gaps.json \u7684 gate-range-beyond-declared \u4e0e gate-span-still-bounded"
+        },
+        "predecessor_npu": {
+          "behavior": "rejected",
+          "exception": "ValueError",
+          "message": "chunk \u5185\u95e8\u63a7\u8de8\u5ea6 nan \u8d85\u8fc7 impl='stable' \u5728 forward \u94fe\u4e0a\u7684\u4e0a\u9650 155.0\u3002kernel \u4f1a\u5728 fp32 \u4e0b\u6ea2/\u4e0a\u6ea2\u5e76\u8f93\u51fa NaN\u3002g \u662f log \u7a7a\u95f4\u7684 per-token \u8870\u51cf\u589e\u91cf\uff1b\u51cf\u5c0f g \u7684\u91cf\u7ea7\uff1aKDA \u5c42\u91cc\u5373\u51cf\u5c0f exp(A_log) \u6216 dt\u3002\u786e\u77e5\u53ef\u63a5\u53d7\u65f6\u4f20 check_gate_range=False \u8df3\u8fc7\u672c\u68c0\u67e5\u3002\u8be6\u89c1 docs/matrix/gaps.json \u7684 gate-range-beyond-declared \u4e0e gate-span-still-bounded"
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "chunk",
+      "tokens": 64,
+      "A_log": 100.0,
+      "u": -90.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "rejected",
+          "exception": "ValueError",
+          "message": "chunk \u5185\u95e8\u63a7\u8de8\u5ea6 nan \u8d85\u8fc7 impl='stable' \u5728 forward \u94fe\u4e0a\u7684\u4e0a\u9650 155.0\u3002kernel \u4f1a\u5728 fp32 \u4e0b\u6ea2/\u4e0a\u6ea2\u5e76\u8f93\u51fa NaN\u3002g \u662f log \u7a7a\u95f4\u7684 per-token \u8870\u51cf\u589e\u91cf\uff1b\u51cf\u5c0f g \u7684\u91cf\u7ea7\uff1aKDA \u5c42\u91cc\u5373\u51cf\u5c0f exp(A_log) \u6216 dt\u3002\u786e\u77e5\u53ef\u63a5\u53d7\u65f6\u4f20 check_gate_range=False \u8df3\u8fc7\u672c\u68c0\u67e5\u3002\u8be6\u89c1 docs/matrix/gaps.json \u7684 gate-range-beyond-declared \u4e0e gate-span-still-bounded"
+        },
+        "predecessor_npu": {
+          "behavior": "rejected",
+          "exception": "ValueError",
+          "message": "chunk \u5185\u95e8\u63a7\u8de8\u5ea6 nan \u8d85\u8fc7 impl='stable' \u5728 forward \u94fe\u4e0a\u7684\u4e0a\u9650 155.0\u3002kernel \u4f1a\u5728 fp32 \u4e0b\u6ea2/\u4e0a\u6ea2\u5e76\u8f93\u51fa NaN\u3002g \u662f log \u7a7a\u95f4\u7684 per-token \u8870\u51cf\u589e\u91cf\uff1b\u51cf\u5c0f g \u7684\u91cf\u7ea7\uff1aKDA \u5c42\u91cc\u5373\u51cf\u5c0f exp(A_log) \u6216 dt\u3002\u786e\u77e5\u53ef\u63a5\u53d7\u65f6\u4f20 check_gate_range=False \u8df3\u8fc7\u672c\u68c0\u67e5\u3002\u8be6\u89c1 docs/matrix/gaps.json \u7684 gate-range-beyond-declared \u4e0e gate-span-still-bounded"
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "chunk",
+      "tokens": 64,
+      "A_log": 100.0,
+      "u": -88.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "rejected",
+          "exception": "ValueError",
+          "message": "chunk \u5185\u95e8\u63a7\u8de8\u5ea6 nan \u8d85\u8fc7 impl='stable' \u5728 forward \u94fe\u4e0a\u7684\u4e0a\u9650 155.0\u3002kernel \u4f1a\u5728 fp32 \u4e0b\u6ea2/\u4e0a\u6ea2\u5e76\u8f93\u51fa NaN\u3002g \u662f log \u7a7a\u95f4\u7684 per-token \u8870\u51cf\u589e\u91cf\uff1b\u51cf\u5c0f g \u7684\u91cf\u7ea7\uff1aKDA \u5c42\u91cc\u5373\u51cf\u5c0f exp(A_log) \u6216 dt\u3002\u786e\u77e5\u53ef\u63a5\u53d7\u65f6\u4f20 check_gate_range=False \u8df3\u8fc7\u672c\u68c0\u67e5\u3002\u8be6\u89c1 docs/matrix/gaps.json \u7684 gate-range-beyond-declared \u4e0e gate-span-still-bounded"
+        },
+        "predecessor_npu": {
+          "behavior": "rejected",
+          "exception": "ValueError",
+          "message": "chunk \u5185\u95e8\u63a7\u8de8\u5ea6 nan \u8d85\u8fc7 impl='stable' \u5728 forward \u94fe\u4e0a\u7684\u4e0a\u9650 155.0\u3002kernel \u4f1a\u5728 fp32 \u4e0b\u6ea2/\u4e0a\u6ea2\u5e76\u8f93\u51fa NaN\u3002g \u662f log \u7a7a\u95f4\u7684 per-token \u8870\u51cf\u589e\u91cf\uff1b\u51cf\u5c0f g \u7684\u91cf\u7ea7\uff1aKDA \u5c42\u91cc\u5373\u51cf\u5c0f exp(A_log) \u6216 dt\u3002\u786e\u77e5\u53ef\u63a5\u53d7\u65f6\u4f20 check_gate_range=False \u8df3\u8fc7\u672c\u68c0\u67e5\u3002\u8be6\u89c1 docs/matrix/gaps.json \u7684 gate-range-beyond-declared \u4e0e gate-span-still-bounded"
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "chunk",
+      "tokens": 64,
+      "A_log": 100.0,
+      "u": -87.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "rejected",
+          "exception": "ValueError",
+          "message": "chunk \u5185\u95e8\u63a7\u8de8\u5ea6 nan \u8d85\u8fc7 impl='stable' \u5728 forward \u94fe\u4e0a\u7684\u4e0a\u9650 155.0\u3002kernel \u4f1a\u5728 fp32 \u4e0b\u6ea2/\u4e0a\u6ea2\u5e76\u8f93\u51fa NaN\u3002g \u662f log \u7a7a\u95f4\u7684 per-token \u8870\u51cf\u589e\u91cf\uff1b\u51cf\u5c0f g \u7684\u91cf\u7ea7\uff1aKDA \u5c42\u91cc\u5373\u51cf\u5c0f exp(A_log) \u6216 dt\u3002\u786e\u77e5\u53ef\u63a5\u53d7\u65f6\u4f20 check_gate_range=False \u8df3\u8fc7\u672c\u68c0\u67e5\u3002\u8be6\u89c1 docs/matrix/gaps.json \u7684 gate-range-beyond-declared \u4e0e gate-span-still-bounded"
+        },
+        "predecessor_npu": {
+          "behavior": "rejected",
+          "exception": "ValueError",
+          "message": "chunk \u5185\u95e8\u63a7\u8de8\u5ea6 nan \u8d85\u8fc7 impl='stable' \u5728 forward \u94fe\u4e0a\u7684\u4e0a\u9650 155.0\u3002kernel \u4f1a\u5728 fp32 \u4e0b\u6ea2/\u4e0a\u6ea2\u5e76\u8f93\u51fa NaN\u3002g \u662f log \u7a7a\u95f4\u7684 per-token \u8870\u51cf\u589e\u91cf\uff1b\u51cf\u5c0f g \u7684\u91cf\u7ea7\uff1aKDA \u5c42\u91cc\u5373\u51cf\u5c0f exp(A_log) \u6216 dt\u3002\u786e\u77e5\u53ef\u63a5\u53d7\u65f6\u4f20 check_gate_range=False \u8df3\u8fc7\u672c\u68c0\u67e5\u3002\u8be6\u89c1 docs/matrix/gaps.json \u7684 gate-range-beyond-declared \u4e0e gate-span-still-bounded"
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "chunk",
+      "tokens": 64,
+      "A_log": 100.0,
+      "u": -40.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "rejected",
+          "exception": "ValueError",
+          "message": "chunk \u5185\u95e8\u63a7\u8de8\u5ea6 nan \u8d85\u8fc7 impl='stable' \u5728 forward \u94fe\u4e0a\u7684\u4e0a\u9650 155.0\u3002kernel \u4f1a\u5728 fp32 \u4e0b\u6ea2/\u4e0a\u6ea2\u5e76\u8f93\u51fa NaN\u3002g \u662f log \u7a7a\u95f4\u7684 per-token \u8870\u51cf\u589e\u91cf\uff1b\u51cf\u5c0f g \u7684\u91cf\u7ea7\uff1aKDA \u5c42\u91cc\u5373\u51cf\u5c0f exp(A_log) \u6216 dt\u3002\u786e\u77e5\u53ef\u63a5\u53d7\u65f6\u4f20 check_gate_range=False \u8df3\u8fc7\u672c\u68c0\u67e5\u3002\u8be6\u89c1 docs/matrix/gaps.json \u7684 gate-range-beyond-declared \u4e0e gate-span-still-bounded"
+        },
+        "predecessor_npu": {
+          "behavior": "rejected",
+          "exception": "ValueError",
+          "message": "chunk \u5185\u95e8\u63a7\u8de8\u5ea6 nan \u8d85\u8fc7 impl='stable' \u5728 forward \u94fe\u4e0a\u7684\u4e0a\u9650 155.0\u3002kernel \u4f1a\u5728 fp32 \u4e0b\u6ea2/\u4e0a\u6ea2\u5e76\u8f93\u51fa NaN\u3002g \u662f log \u7a7a\u95f4\u7684 per-token \u8870\u51cf\u589e\u91cf\uff1b\u51cf\u5c0f g \u7684\u91cf\u7ea7\uff1aKDA \u5c42\u91cc\u5373\u51cf\u5c0f exp(A_log) \u6216 dt\u3002\u786e\u77e5\u53ef\u63a5\u53d7\u65f6\u4f20 check_gate_range=False \u8df3\u8fc7\u672c\u68c0\u67e5\u3002\u8be6\u89c1 docs/matrix/gaps.json \u7684 gate-range-beyond-declared \u4e0e gate-span-still-bounded"
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "chunk",
+      "tokens": 64,
+      "A_log": 100.0,
+      "u": -20.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "rejected",
+          "exception": "ValueError",
+          "message": "chunk \u5185\u95e8\u63a7\u8de8\u5ea6 nan \u8d85\u8fc7 impl='stable' \u5728 forward \u94fe\u4e0a\u7684\u4e0a\u9650 155.0\u3002kernel \u4f1a\u5728 fp32 \u4e0b\u6ea2/\u4e0a\u6ea2\u5e76\u8f93\u51fa NaN\u3002g \u662f log \u7a7a\u95f4\u7684 per-token \u8870\u51cf\u589e\u91cf\uff1b\u51cf\u5c0f g \u7684\u91cf\u7ea7\uff1aKDA \u5c42\u91cc\u5373\u51cf\u5c0f exp(A_log) \u6216 dt\u3002\u786e\u77e5\u53ef\u63a5\u53d7\u65f6\u4f20 check_gate_range=False \u8df3\u8fc7\u672c\u68c0\u67e5\u3002\u8be6\u89c1 docs/matrix/gaps.json \u7684 gate-range-beyond-declared \u4e0e gate-span-still-bounded"
+        },
+        "predecessor_npu": {
+          "behavior": "rejected",
+          "exception": "ValueError",
+          "message": "chunk \u5185\u95e8\u63a7\u8de8\u5ea6 nan \u8d85\u8fc7 impl='stable' \u5728 forward \u94fe\u4e0a\u7684\u4e0a\u9650 155.0\u3002kernel \u4f1a\u5728 fp32 \u4e0b\u6ea2/\u4e0a\u6ea2\u5e76\u8f93\u51fa NaN\u3002g \u662f log \u7a7a\u95f4\u7684 per-token \u8870\u51cf\u589e\u91cf\uff1b\u51cf\u5c0f g \u7684\u91cf\u7ea7\uff1aKDA \u5c42\u91cc\u5373\u51cf\u5c0f exp(A_log) \u6216 dt\u3002\u786e\u77e5\u53ef\u63a5\u53d7\u65f6\u4f20 check_gate_range=False \u8df3\u8fc7\u672c\u68c0\u67e5\u3002\u8be6\u89c1 docs/matrix/gaps.json \u7684 gate-range-beyond-declared \u4e0e gate-span-still-bounded"
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "chunk",
+      "tokens": 64,
+      "A_log": 100.0,
+      "u": -16.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "rejected",
+          "exception": "ValueError",
+          "message": "chunk \u5185\u95e8\u63a7\u8de8\u5ea6 nan \u8d85\u8fc7 impl='stable' \u5728 forward \u94fe\u4e0a\u7684\u4e0a\u9650 155.0\u3002kernel \u4f1a\u5728 fp32 \u4e0b\u6ea2/\u4e0a\u6ea2\u5e76\u8f93\u51fa NaN\u3002g \u662f log \u7a7a\u95f4\u7684 per-token \u8870\u51cf\u589e\u91cf\uff1b\u51cf\u5c0f g \u7684\u91cf\u7ea7\uff1aKDA \u5c42\u91cc\u5373\u51cf\u5c0f exp(A_log) \u6216 dt\u3002\u786e\u77e5\u53ef\u63a5\u53d7\u65f6\u4f20 check_gate_range=False \u8df3\u8fc7\u672c\u68c0\u67e5\u3002\u8be6\u89c1 docs/matrix/gaps.json \u7684 gate-range-beyond-declared \u4e0e gate-span-still-bounded"
+        },
+        "predecessor_npu": {
+          "behavior": "rejected",
+          "exception": "ValueError",
+          "message": "chunk \u5185\u95e8\u63a7\u8de8\u5ea6 nan \u8d85\u8fc7 impl='stable' \u5728 forward \u94fe\u4e0a\u7684\u4e0a\u9650 155.0\u3002kernel \u4f1a\u5728 fp32 \u4e0b\u6ea2/\u4e0a\u6ea2\u5e76\u8f93\u51fa NaN\u3002g \u662f log \u7a7a\u95f4\u7684 per-token \u8870\u51cf\u589e\u91cf\uff1b\u51cf\u5c0f g \u7684\u91cf\u7ea7\uff1aKDA \u5c42\u91cc\u5373\u51cf\u5c0f exp(A_log) \u6216 dt\u3002\u786e\u77e5\u53ef\u63a5\u53d7\u65f6\u4f20 check_gate_range=False \u8df3\u8fc7\u672c\u68c0\u67e5\u3002\u8be6\u89c1 docs/matrix/gaps.json \u7684 gate-range-beyond-declared \u4e0e gate-span-still-bounded"
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "decode",
+      "tokens": 1,
+      "A_log": -3.0,
+      "u": -104.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "4693046f7ec748208d4d3c91b30bbf24167ee5518d29c38ca3832b4592ebe495",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "942d83399993a945aacfd5a1cb168345c6187750053cfdb3aa3422b19ed95e41",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "4693046f7ec748208d4d3c91b30bbf24167ee5518d29c38ca3832b4592ebe495",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "942d83399993a945aacfd5a1cb168345c6187750053cfdb3aa3422b19ed95e41",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "decode",
+      "tokens": 1,
+      "A_log": -3.0,
+      "u": -100.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "4693046f7ec748208d4d3c91b30bbf24167ee5518d29c38ca3832b4592ebe495",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "942d83399993a945aacfd5a1cb168345c6187750053cfdb3aa3422b19ed95e41",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "4693046f7ec748208d4d3c91b30bbf24167ee5518d29c38ca3832b4592ebe495",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "942d83399993a945aacfd5a1cb168345c6187750053cfdb3aa3422b19ed95e41",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "decode",
+      "tokens": 1,
+      "A_log": -3.0,
+      "u": -90.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "4693046f7ec748208d4d3c91b30bbf24167ee5518d29c38ca3832b4592ebe495",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "942d83399993a945aacfd5a1cb168345c6187750053cfdb3aa3422b19ed95e41",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "4693046f7ec748208d4d3c91b30bbf24167ee5518d29c38ca3832b4592ebe495",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "942d83399993a945aacfd5a1cb168345c6187750053cfdb3aa3422b19ed95e41",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "decode",
+      "tokens": 1,
+      "A_log": -3.0,
+      "u": -88.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "4693046f7ec748208d4d3c91b30bbf24167ee5518d29c38ca3832b4592ebe495",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "942d83399993a945aacfd5a1cb168345c6187750053cfdb3aa3422b19ed95e41",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "4693046f7ec748208d4d3c91b30bbf24167ee5518d29c38ca3832b4592ebe495",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "942d83399993a945aacfd5a1cb168345c6187750053cfdb3aa3422b19ed95e41",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "decode",
+      "tokens": 1,
+      "A_log": -3.0,
+      "u": -87.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "4693046f7ec748208d4d3c91b30bbf24167ee5518d29c38ca3832b4592ebe495",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "942d83399993a945aacfd5a1cb168345c6187750053cfdb3aa3422b19ed95e41",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "4693046f7ec748208d4d3c91b30bbf24167ee5518d29c38ca3832b4592ebe495",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "942d83399993a945aacfd5a1cb168345c6187750053cfdb3aa3422b19ed95e41",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "decode",
+      "tokens": 1,
+      "A_log": -3.0,
+      "u": -40.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "4693046f7ec748208d4d3c91b30bbf24167ee5518d29c38ca3832b4592ebe495",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "942d83399993a945aacfd5a1cb168345c6187750053cfdb3aa3422b19ed95e41",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "4693046f7ec748208d4d3c91b30bbf24167ee5518d29c38ca3832b4592ebe495",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "942d83399993a945aacfd5a1cb168345c6187750053cfdb3aa3422b19ed95e41",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "decode",
+      "tokens": 1,
+      "A_log": -3.0,
+      "u": -20.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "4693046f7ec748208d4d3c91b30bbf24167ee5518d29c38ca3832b4592ebe495",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "942d83399993a945aacfd5a1cb168345c6187750053cfdb3aa3422b19ed95e41",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "4693046f7ec748208d4d3c91b30bbf24167ee5518d29c38ca3832b4592ebe495",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "942d83399993a945aacfd5a1cb168345c6187750053cfdb3aa3422b19ed95e41",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "decode",
+      "tokens": 1,
+      "A_log": -3.0,
+      "u": -16.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "4693046f7ec748208d4d3c91b30bbf24167ee5518d29c38ca3832b4592ebe495",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "942d83399993a945aacfd5a1cb168345c6187750053cfdb3aa3422b19ed95e41",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "4693046f7ec748208d4d3c91b30bbf24167ee5518d29c38ca3832b4592ebe495",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "942d83399993a945aacfd5a1cb168345c6187750053cfdb3aa3422b19ed95e41",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "decode",
+      "tokens": 1,
+      "A_log": -0.2,
+      "u": -104.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "4693046f7ec748208d4d3c91b30bbf24167ee5518d29c38ca3832b4592ebe495",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "942d83399993a945aacfd5a1cb168345c6187750053cfdb3aa3422b19ed95e41",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "4693046f7ec748208d4d3c91b30bbf24167ee5518d29c38ca3832b4592ebe495",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "942d83399993a945aacfd5a1cb168345c6187750053cfdb3aa3422b19ed95e41",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "decode",
+      "tokens": 1,
+      "A_log": -0.2,
+      "u": -100.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "4693046f7ec748208d4d3c91b30bbf24167ee5518d29c38ca3832b4592ebe495",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "942d83399993a945aacfd5a1cb168345c6187750053cfdb3aa3422b19ed95e41",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "4693046f7ec748208d4d3c91b30bbf24167ee5518d29c38ca3832b4592ebe495",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "942d83399993a945aacfd5a1cb168345c6187750053cfdb3aa3422b19ed95e41",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "decode",
+      "tokens": 1,
+      "A_log": -0.2,
+      "u": -90.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "4693046f7ec748208d4d3c91b30bbf24167ee5518d29c38ca3832b4592ebe495",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "942d83399993a945aacfd5a1cb168345c6187750053cfdb3aa3422b19ed95e41",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "4693046f7ec748208d4d3c91b30bbf24167ee5518d29c38ca3832b4592ebe495",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "942d83399993a945aacfd5a1cb168345c6187750053cfdb3aa3422b19ed95e41",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "decode",
+      "tokens": 1,
+      "A_log": -0.2,
+      "u": -88.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "4693046f7ec748208d4d3c91b30bbf24167ee5518d29c38ca3832b4592ebe495",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "942d83399993a945aacfd5a1cb168345c6187750053cfdb3aa3422b19ed95e41",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "4693046f7ec748208d4d3c91b30bbf24167ee5518d29c38ca3832b4592ebe495",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "942d83399993a945aacfd5a1cb168345c6187750053cfdb3aa3422b19ed95e41",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "decode",
+      "tokens": 1,
+      "A_log": -0.2,
+      "u": -87.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "4693046f7ec748208d4d3c91b30bbf24167ee5518d29c38ca3832b4592ebe495",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "942d83399993a945aacfd5a1cb168345c6187750053cfdb3aa3422b19ed95e41",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "4693046f7ec748208d4d3c91b30bbf24167ee5518d29c38ca3832b4592ebe495",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "942d83399993a945aacfd5a1cb168345c6187750053cfdb3aa3422b19ed95e41",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "decode",
+      "tokens": 1,
+      "A_log": -0.2,
+      "u": -40.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "4693046f7ec748208d4d3c91b30bbf24167ee5518d29c38ca3832b4592ebe495",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "942d83399993a945aacfd5a1cb168345c6187750053cfdb3aa3422b19ed95e41",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "4693046f7ec748208d4d3c91b30bbf24167ee5518d29c38ca3832b4592ebe495",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "942d83399993a945aacfd5a1cb168345c6187750053cfdb3aa3422b19ed95e41",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "decode",
+      "tokens": 1,
+      "A_log": -0.2,
+      "u": -20.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "4693046f7ec748208d4d3c91b30bbf24167ee5518d29c38ca3832b4592ebe495",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "942d83399993a945aacfd5a1cb168345c6187750053cfdb3aa3422b19ed95e41",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "4693046f7ec748208d4d3c91b30bbf24167ee5518d29c38ca3832b4592ebe495",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "942d83399993a945aacfd5a1cb168345c6187750053cfdb3aa3422b19ed95e41",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "decode",
+      "tokens": 1,
+      "A_log": -0.2,
+      "u": -16.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "4693046f7ec748208d4d3c91b30bbf24167ee5518d29c38ca3832b4592ebe495",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "25bc304184242ee928fa221aaff7a4bab5e9a3bc52ecf3c0b9d0747afccea905",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "4693046f7ec748208d4d3c91b30bbf24167ee5518d29c38ca3832b4592ebe495",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "59947f4dd9ea0c6ba15ae705418743f0d9d9b60d8289d166082f9826e7001b91",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "decode",
+      "tokens": 1,
+      "A_log": 2.7,
+      "u": -104.0,
+      "within_fla_default_alog_range": true,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "4693046f7ec748208d4d3c91b30bbf24167ee5518d29c38ca3832b4592ebe495",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "942d83399993a945aacfd5a1cb168345c6187750053cfdb3aa3422b19ed95e41",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "4693046f7ec748208d4d3c91b30bbf24167ee5518d29c38ca3832b4592ebe495",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "942d83399993a945aacfd5a1cb168345c6187750053cfdb3aa3422b19ed95e41",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "decode",
+      "tokens": 1,
+      "A_log": 2.7,
+      "u": -100.0,
+      "within_fla_default_alog_range": true,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "4693046f7ec748208d4d3c91b30bbf24167ee5518d29c38ca3832b4592ebe495",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "942d83399993a945aacfd5a1cb168345c6187750053cfdb3aa3422b19ed95e41",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "4693046f7ec748208d4d3c91b30bbf24167ee5518d29c38ca3832b4592ebe495",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "942d83399993a945aacfd5a1cb168345c6187750053cfdb3aa3422b19ed95e41",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "decode",
+      "tokens": 1,
+      "A_log": 2.7,
+      "u": -90.0,
+      "within_fla_default_alog_range": true,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "4693046f7ec748208d4d3c91b30bbf24167ee5518d29c38ca3832b4592ebe495",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "942d83399993a945aacfd5a1cb168345c6187750053cfdb3aa3422b19ed95e41",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "4693046f7ec748208d4d3c91b30bbf24167ee5518d29c38ca3832b4592ebe495",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "942d83399993a945aacfd5a1cb168345c6187750053cfdb3aa3422b19ed95e41",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "decode",
+      "tokens": 1,
+      "A_log": 2.7,
+      "u": -88.0,
+      "within_fla_default_alog_range": true,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "4693046f7ec748208d4d3c91b30bbf24167ee5518d29c38ca3832b4592ebe495",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "942d83399993a945aacfd5a1cb168345c6187750053cfdb3aa3422b19ed95e41",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "4693046f7ec748208d4d3c91b30bbf24167ee5518d29c38ca3832b4592ebe495",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "942d83399993a945aacfd5a1cb168345c6187750053cfdb3aa3422b19ed95e41",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "decode",
+      "tokens": 1,
+      "A_log": 2.7,
+      "u": -87.0,
+      "within_fla_default_alog_range": true,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "4693046f7ec748208d4d3c91b30bbf24167ee5518d29c38ca3832b4592ebe495",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "942d83399993a945aacfd5a1cb168345c6187750053cfdb3aa3422b19ed95e41",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "4693046f7ec748208d4d3c91b30bbf24167ee5518d29c38ca3832b4592ebe495",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "942d83399993a945aacfd5a1cb168345c6187750053cfdb3aa3422b19ed95e41",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "decode",
+      "tokens": 1,
+      "A_log": 2.7,
+      "u": -40.0,
+      "within_fla_default_alog_range": true,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "4693046f7ec748208d4d3c91b30bbf24167ee5518d29c38ca3832b4592ebe495",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "942d83399993a945aacfd5a1cb168345c6187750053cfdb3aa3422b19ed95e41",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "4693046f7ec748208d4d3c91b30bbf24167ee5518d29c38ca3832b4592ebe495",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "942d83399993a945aacfd5a1cb168345c6187750053cfdb3aa3422b19ed95e41",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "decode",
+      "tokens": 1,
+      "A_log": 2.7,
+      "u": -20.0,
+      "within_fla_default_alog_range": true,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "4693046f7ec748208d4d3c91b30bbf24167ee5518d29c38ca3832b4592ebe495",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "942d83399993a945aacfd5a1cb168345c6187750053cfdb3aa3422b19ed95e41",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "4693046f7ec748208d4d3c91b30bbf24167ee5518d29c38ca3832b4592ebe495",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "942d83399993a945aacfd5a1cb168345c6187750053cfdb3aa3422b19ed95e41",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "decode",
+      "tokens": 1,
+      "A_log": 2.7,
+      "u": -16.0,
+      "within_fla_default_alog_range": true,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "4693046f7ec748208d4d3c91b30bbf24167ee5518d29c38ca3832b4592ebe495",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "cf7d9751be0781b70495a06ea20a7fcc364961824cec43ca7d9221d39cd23047",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "4693046f7ec748208d4d3c91b30bbf24167ee5518d29c38ca3832b4592ebe495",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "c9939d9efa1c919962df0718ce4469af54c284648da43031940cdd55b576fa23",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "decode",
+      "tokens": 1,
+      "A_log": 80.0,
+      "u": -104.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "4693046f7ec748208d4d3c91b30bbf24167ee5518d29c38ca3832b4592ebe495",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "942d83399993a945aacfd5a1cb168345c6187750053cfdb3aa3422b19ed95e41",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "4693046f7ec748208d4d3c91b30bbf24167ee5518d29c38ca3832b4592ebe495",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "942d83399993a945aacfd5a1cb168345c6187750053cfdb3aa3422b19ed95e41",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "decode",
+      "tokens": 1,
+      "A_log": 80.0,
+      "u": -100.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "4693046f7ec748208d4d3c91b30bbf24167ee5518d29c38ca3832b4592ebe495",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "942d83399993a945aacfd5a1cb168345c6187750053cfdb3aa3422b19ed95e41",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "4693046f7ec748208d4d3c91b30bbf24167ee5518d29c38ca3832b4592ebe495",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "942d83399993a945aacfd5a1cb168345c6187750053cfdb3aa3422b19ed95e41",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "decode",
+      "tokens": 1,
+      "A_log": 80.0,
+      "u": -90.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "4693046f7ec748208d4d3c91b30bbf24167ee5518d29c38ca3832b4592ebe495",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "942d83399993a945aacfd5a1cb168345c6187750053cfdb3aa3422b19ed95e41",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "4693046f7ec748208d4d3c91b30bbf24167ee5518d29c38ca3832b4592ebe495",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "942d83399993a945aacfd5a1cb168345c6187750053cfdb3aa3422b19ed95e41",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "decode",
+      "tokens": 1,
+      "A_log": 80.0,
+      "u": -88.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "4693046f7ec748208d4d3c91b30bbf24167ee5518d29c38ca3832b4592ebe495",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "942d83399993a945aacfd5a1cb168345c6187750053cfdb3aa3422b19ed95e41",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "4693046f7ec748208d4d3c91b30bbf24167ee5518d29c38ca3832b4592ebe495",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "942d83399993a945aacfd5a1cb168345c6187750053cfdb3aa3422b19ed95e41",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "decode",
+      "tokens": 1,
+      "A_log": 80.0,
+      "u": -87.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "0c3c35d01da94dc77b7ee67fa23fa12d21f035d45cd6a9b132d50713706c067b",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "fdc6efe886a7c044496f32a2f37e9db03ff2ce40b38515d78c81b1c2297e4e09",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "4693046f7ec748208d4d3c91b30bbf24167ee5518d29c38ca3832b4592ebe495",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "942d83399993a945aacfd5a1cb168345c6187750053cfdb3aa3422b19ed95e41",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "decode",
+      "tokens": 1,
+      "A_log": 80.0,
+      "u": -40.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "f13e98a1de7c990a94b7675db48d7b940215d06319c4f004b54e4cf5a1c79f4c",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "b3de449bbaa53d674f742d5de133337f872af5742f889fe8b0c916be573c9c9a",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "4693046f7ec748208d4d3c91b30bbf24167ee5518d29c38ca3832b4592ebe495",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "942d83399993a945aacfd5a1cb168345c6187750053cfdb3aa3422b19ed95e41",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "decode",
+      "tokens": 1,
+      "A_log": 80.0,
+      "u": -20.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "f13e98a1de7c990a94b7675db48d7b940215d06319c4f004b54e4cf5a1c79f4c",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "b3de449bbaa53d674f742d5de133337f872af5742f889fe8b0c916be573c9c9a",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "4693046f7ec748208d4d3c91b30bbf24167ee5518d29c38ca3832b4592ebe495",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "942d83399993a945aacfd5a1cb168345c6187750053cfdb3aa3422b19ed95e41",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "decode",
+      "tokens": 1,
+      "A_log": 80.0,
+      "u": -16.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "f13e98a1de7c990a94b7675db48d7b940215d06319c4f004b54e4cf5a1c79f4c",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "b3de449bbaa53d674f742d5de133337f872af5742f889fe8b0c916be573c9c9a",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "f13e98a1de7c990a94b7675db48d7b940215d06319c4f004b54e4cf5a1c79f4c",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "b3de449bbaa53d674f742d5de133337f872af5742f889fe8b0c916be573c9c9a",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "decode",
+      "tokens": 1,
+      "A_log": 89.0,
+      "u": -104.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "5b3b993313021c4d7ff6b466b85f19671c3a0799939d74b2720520046aadb9a4",
+              "finite": 0,
+              "nan": 128,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "a64c1694f3dcb22cac4b2bbfb2d93fc7903bdced2c344d034c834a3cd70a2451",
+              "finite": 0,
+              "nan": 16384,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "5b3b993313021c4d7ff6b466b85f19671c3a0799939d74b2720520046aadb9a4",
+              "finite": 0,
+              "nan": 128,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "a64c1694f3dcb22cac4b2bbfb2d93fc7903bdced2c344d034c834a3cd70a2451",
+              "finite": 0,
+              "nan": 16384,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "decode",
+      "tokens": 1,
+      "A_log": 89.0,
+      "u": -100.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "5b3b993313021c4d7ff6b466b85f19671c3a0799939d74b2720520046aadb9a4",
+              "finite": 0,
+              "nan": 128,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "a64c1694f3dcb22cac4b2bbfb2d93fc7903bdced2c344d034c834a3cd70a2451",
+              "finite": 0,
+              "nan": 16384,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "5b3b993313021c4d7ff6b466b85f19671c3a0799939d74b2720520046aadb9a4",
+              "finite": 0,
+              "nan": 128,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "a64c1694f3dcb22cac4b2bbfb2d93fc7903bdced2c344d034c834a3cd70a2451",
+              "finite": 0,
+              "nan": 16384,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "decode",
+      "tokens": 1,
+      "A_log": 89.0,
+      "u": -90.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "5b3b993313021c4d7ff6b466b85f19671c3a0799939d74b2720520046aadb9a4",
+              "finite": 0,
+              "nan": 128,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "a64c1694f3dcb22cac4b2bbfb2d93fc7903bdced2c344d034c834a3cd70a2451",
+              "finite": 0,
+              "nan": 16384,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "5b3b993313021c4d7ff6b466b85f19671c3a0799939d74b2720520046aadb9a4",
+              "finite": 0,
+              "nan": 128,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "a64c1694f3dcb22cac4b2bbfb2d93fc7903bdced2c344d034c834a3cd70a2451",
+              "finite": 0,
+              "nan": 16384,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "decode",
+      "tokens": 1,
+      "A_log": 89.0,
+      "u": -88.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "5b3b993313021c4d7ff6b466b85f19671c3a0799939d74b2720520046aadb9a4",
+              "finite": 0,
+              "nan": 128,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "a64c1694f3dcb22cac4b2bbfb2d93fc7903bdced2c344d034c834a3cd70a2451",
+              "finite": 0,
+              "nan": 16384,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "5b3b993313021c4d7ff6b466b85f19671c3a0799939d74b2720520046aadb9a4",
+              "finite": 0,
+              "nan": 128,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "a64c1694f3dcb22cac4b2bbfb2d93fc7903bdced2c344d034c834a3cd70a2451",
+              "finite": 0,
+              "nan": 16384,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "decode",
+      "tokens": 1,
+      "A_log": 89.0,
+      "u": -87.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "f13e98a1de7c990a94b7675db48d7b940215d06319c4f004b54e4cf5a1c79f4c",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "b3de449bbaa53d674f742d5de133337f872af5742f889fe8b0c916be573c9c9a",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "5b3b993313021c4d7ff6b466b85f19671c3a0799939d74b2720520046aadb9a4",
+              "finite": 0,
+              "nan": 128,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "a64c1694f3dcb22cac4b2bbfb2d93fc7903bdced2c344d034c834a3cd70a2451",
+              "finite": 0,
+              "nan": 16384,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "decode",
+      "tokens": 1,
+      "A_log": 89.0,
+      "u": -40.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "f13e98a1de7c990a94b7675db48d7b940215d06319c4f004b54e4cf5a1c79f4c",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "b3de449bbaa53d674f742d5de133337f872af5742f889fe8b0c916be573c9c9a",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "5b3b993313021c4d7ff6b466b85f19671c3a0799939d74b2720520046aadb9a4",
+              "finite": 0,
+              "nan": 128,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "a64c1694f3dcb22cac4b2bbfb2d93fc7903bdced2c344d034c834a3cd70a2451",
+              "finite": 0,
+              "nan": 16384,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "decode",
+      "tokens": 1,
+      "A_log": 89.0,
+      "u": -20.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "f13e98a1de7c990a94b7675db48d7b940215d06319c4f004b54e4cf5a1c79f4c",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "b3de449bbaa53d674f742d5de133337f872af5742f889fe8b0c916be573c9c9a",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "5b3b993313021c4d7ff6b466b85f19671c3a0799939d74b2720520046aadb9a4",
+              "finite": 0,
+              "nan": 128,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "a64c1694f3dcb22cac4b2bbfb2d93fc7903bdced2c344d034c834a3cd70a2451",
+              "finite": 0,
+              "nan": 16384,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "decode",
+      "tokens": 1,
+      "A_log": 89.0,
+      "u": -16.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "f13e98a1de7c990a94b7675db48d7b940215d06319c4f004b54e4cf5a1c79f4c",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "b3de449bbaa53d674f742d5de133337f872af5742f889fe8b0c916be573c9c9a",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "f13e98a1de7c990a94b7675db48d7b940215d06319c4f004b54e4cf5a1c79f4c",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "b3de449bbaa53d674f742d5de133337f872af5742f889fe8b0c916be573c9c9a",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "decode",
+      "tokens": 1,
+      "A_log": 100.0,
+      "u": -104.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "5b3b993313021c4d7ff6b466b85f19671c3a0799939d74b2720520046aadb9a4",
+              "finite": 0,
+              "nan": 128,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "a64c1694f3dcb22cac4b2bbfb2d93fc7903bdced2c344d034c834a3cd70a2451",
+              "finite": 0,
+              "nan": 16384,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "5b3b993313021c4d7ff6b466b85f19671c3a0799939d74b2720520046aadb9a4",
+              "finite": 0,
+              "nan": 128,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "a64c1694f3dcb22cac4b2bbfb2d93fc7903bdced2c344d034c834a3cd70a2451",
+              "finite": 0,
+              "nan": 16384,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "decode",
+      "tokens": 1,
+      "A_log": 100.0,
+      "u": -100.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "5b3b993313021c4d7ff6b466b85f19671c3a0799939d74b2720520046aadb9a4",
+              "finite": 0,
+              "nan": 128,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "a64c1694f3dcb22cac4b2bbfb2d93fc7903bdced2c344d034c834a3cd70a2451",
+              "finite": 0,
+              "nan": 16384,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "5b3b993313021c4d7ff6b466b85f19671c3a0799939d74b2720520046aadb9a4",
+              "finite": 0,
+              "nan": 128,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "a64c1694f3dcb22cac4b2bbfb2d93fc7903bdced2c344d034c834a3cd70a2451",
+              "finite": 0,
+              "nan": 16384,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "decode",
+      "tokens": 1,
+      "A_log": 100.0,
+      "u": -90.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "5b3b993313021c4d7ff6b466b85f19671c3a0799939d74b2720520046aadb9a4",
+              "finite": 0,
+              "nan": 128,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "a64c1694f3dcb22cac4b2bbfb2d93fc7903bdced2c344d034c834a3cd70a2451",
+              "finite": 0,
+              "nan": 16384,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "5b3b993313021c4d7ff6b466b85f19671c3a0799939d74b2720520046aadb9a4",
+              "finite": 0,
+              "nan": 128,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "a64c1694f3dcb22cac4b2bbfb2d93fc7903bdced2c344d034c834a3cd70a2451",
+              "finite": 0,
+              "nan": 16384,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "decode",
+      "tokens": 1,
+      "A_log": 100.0,
+      "u": -88.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "5b3b993313021c4d7ff6b466b85f19671c3a0799939d74b2720520046aadb9a4",
+              "finite": 0,
+              "nan": 128,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "a64c1694f3dcb22cac4b2bbfb2d93fc7903bdced2c344d034c834a3cd70a2451",
+              "finite": 0,
+              "nan": 16384,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "5b3b993313021c4d7ff6b466b85f19671c3a0799939d74b2720520046aadb9a4",
+              "finite": 0,
+              "nan": 128,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "a64c1694f3dcb22cac4b2bbfb2d93fc7903bdced2c344d034c834a3cd70a2451",
+              "finite": 0,
+              "nan": 16384,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "decode",
+      "tokens": 1,
+      "A_log": 100.0,
+      "u": -87.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "f13e98a1de7c990a94b7675db48d7b940215d06319c4f004b54e4cf5a1c79f4c",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "b3de449bbaa53d674f742d5de133337f872af5742f889fe8b0c916be573c9c9a",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "5b3b993313021c4d7ff6b466b85f19671c3a0799939d74b2720520046aadb9a4",
+              "finite": 0,
+              "nan": 128,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "a64c1694f3dcb22cac4b2bbfb2d93fc7903bdced2c344d034c834a3cd70a2451",
+              "finite": 0,
+              "nan": 16384,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "decode",
+      "tokens": 1,
+      "A_log": 100.0,
+      "u": -40.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "f13e98a1de7c990a94b7675db48d7b940215d06319c4f004b54e4cf5a1c79f4c",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "b3de449bbaa53d674f742d5de133337f872af5742f889fe8b0c916be573c9c9a",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "5b3b993313021c4d7ff6b466b85f19671c3a0799939d74b2720520046aadb9a4",
+              "finite": 0,
+              "nan": 128,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "a64c1694f3dcb22cac4b2bbfb2d93fc7903bdced2c344d034c834a3cd70a2451",
+              "finite": 0,
+              "nan": 16384,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "decode",
+      "tokens": 1,
+      "A_log": 100.0,
+      "u": -20.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "f13e98a1de7c990a94b7675db48d7b940215d06319c4f004b54e4cf5a1c79f4c",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "b3de449bbaa53d674f742d5de133337f872af5742f889fe8b0c916be573c9c9a",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "5b3b993313021c4d7ff6b466b85f19671c3a0799939d74b2720520046aadb9a4",
+              "finite": 0,
+              "nan": 128,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "a64c1694f3dcb22cac4b2bbfb2d93fc7903bdced2c344d034c834a3cd70a2451",
+              "finite": 0,
+              "nan": 16384,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    },
+    {
+      "route": "decode",
+      "tokens": 1,
+      "A_log": 100.0,
+      "u": -16.0,
+      "within_fla_default_alog_range": false,
+      "public_default_checks": true,
+      "behaviors": {
+        "candidate": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "f13e98a1de7c990a94b7675db48d7b940215d06319c4f004b54e4cf5a1c79f4c",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "b3de449bbaa53d674f742d5de133337f872af5742f889fe8b0c916be573c9c9a",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        },
+        "predecessor_npu": {
+          "behavior": "returned",
+          "outputs": {
+            "o": {
+              "dtype": "torch.bfloat16",
+              "sha256": "f13e98a1de7c990a94b7675db48d7b940215d06319c4f004b54e4cf5a1c79f4c",
+              "finite": 128,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 128
+            },
+            "final_state": {
+              "dtype": "torch.float32",
+              "sha256": "b3de449bbaa53d674f742d5de133337f872af5742f889fe8b0c916be573c9c9a",
+              "finite": 16384,
+              "nan": 0,
+              "positive_infinity": 0,
+              "negative_infinity": 0,
+              "elements": 16384
+            }
+          }
+        }
+      },
+      "input_unchanged": {
+        "q": true,
+        "k": true,
+        "v": true,
+        "beta": true,
+        "initial_state": true,
+        "dt_bias": true,
+        "g": true,
+        "A_log": true
+      }
+    }
+  ],
+  "scope": "Observed endpoint behavior only; no numerical pass line and no input-domain change."
+}

@@ -1,0 +1,96 @@
+{
+  "case": {
+    "id": "norm_f32_bf16",
+    "seed": 7007,
+    "block_dim": 1,
+    "parameters": {
+      "kind": "norm",
+      "types": "f32_bf16",
+      "shape": [
+        2,
+        65,
+        2,
+        128
+      ]
+    }
+  },
+  "stage": "pipesim",
+  "to_fp64": {
+    "elements": 33280,
+    "finite_pairs": 33280,
+    "actual_nan": 0,
+    "reference_nan": 0,
+    "actual_posinf": 0,
+    "reference_posinf": 0,
+    "actual_neginf": 0,
+    "reference_neginf": 0,
+    "reference_norm": 16.124515432814153,
+    "residual_norm": 0.026413202093792255,
+    "relative_l2": 0.0016380772621569846,
+    "relative_l2_finite_pairs": 0.0016380772621569846,
+    "max_abs": 0.000969935644538622,
+    "max_relative_nonzero": 0.0038844872698658153,
+    "relative_quantiles": [
+      0.0013536436064486136,
+      0.002625222464503372,
+      0.003458467335818677,
+      0.0038844872698658153
+    ],
+    "zero_reference_nonzero_actual": 0,
+    "rounded_reference_max_ulp": 0,
+    "rounded_reference_over_one_ulp": 0,
+    "rounded_reference_sign_differences": 0,
+    "actual_sha256": "e1f3b9507bcbba9a9128050d76b9c9efc76d1fd7c4196108e3a603c5422b5c36",
+    "reference_fp64_sha256": "de59eada7a5d4d9945d69232b42c7224cb69da5819f8b6465880c42561a9d816"
+  },
+  "to_predecessor_fp32": {
+    "elements": 33280,
+    "finite_pairs": 33280,
+    "actual_nan": 0,
+    "reference_nan": 0,
+    "actual_posinf": 0,
+    "reference_posinf": 0,
+    "actual_neginf": 0,
+    "reference_neginf": 0,
+    "reference_norm": 16.124859749963022,
+    "residual_norm": 0.0,
+    "relative_l2": 0.0,
+    "relative_l2_finite_pairs": 0.0,
+    "max_abs": 0.0,
+    "max_relative_nonzero": 0.0,
+    "relative_quantiles": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "zero_reference_nonzero_actual": 0,
+    "rounded_reference_max_ulp": 0,
+    "rounded_reference_over_one_ulp": 0,
+    "rounded_reference_sign_differences": 0,
+    "actual_sha256": "e1f3b9507bcbba9a9128050d76b9c9efc76d1fd7c4196108e3a603c5422b5c36",
+    "reference_fp64_sha256": "e1f3b9507bcbba9a9128050d76b9c9efc76d1fd7c4196108e3a603c5422b5c36"
+  },
+  "budget": {
+    "relative_l2": 0.005005332401431067,
+    "max_relative_nonzero": 0.011673144813292246
+  },
+  "passed": true,
+  "execution_evidence": [
+    {
+      "kernel": "kda_prep_chunk_norm_f32_bf16_kernel",
+      "device": "a5",
+      "requested_backend": "cce",
+      "stage": "pipesim",
+      "launcher": "pipesim",
+      "block_dim": 1,
+      "model": "lowered events and hazards",
+      "backend_executed": false,
+      "event_balance": [],
+      "hazards": [],
+      "deadlock": null,
+      "model_cycles": 11248,
+      "sim_processes": "threads"
+    }
+  ]
+}
