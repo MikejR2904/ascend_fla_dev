@@ -136,7 +136,8 @@ def main():
     def finish(label,row,tensors):
         row['id']=label;write('cases/'+label,row)
         torch.save(tensors,args.output/(label+'.private.pt'))
-        records.append(dict(id=label,passed=row['passed']))
+        records.append(dict(id=label,passed=row['passed'],classification_complete=row.get('classification_complete'),
+            native_flush_elements=(row.get('native_flush') or {}).get('elements',0)))
         write('summary',dict(complete=False,passed=all(x['passed'] for x in records),cases=records))
         print('BOUNDARY_RESULT',label,row['passed'],flush=True)
     rng=torch.Generator().manual_seed(8009)
@@ -191,13 +192,43 @@ def main():
             comparisons={n:dict(cpu=semantics(v,c),npu=semantics(v,d),to_fp64=precision.metrics(v,high[n]),
                 old_cpu_to_fp64=precision.metrics(c,high[n]),old_npu_to_fp64=precision.metrics(d,high[n]))
                 for n,v,c,d in zip(('dg','dA_log','ddt_bias'),actual,results['old_cpu'],results['old_npu'])}
-            # Observations do not establish a new endpoint class. Nonfinite masks
-            # must at least match the original CPU and native graphs pointwise.
-            passed=all(r[device][key] for r in comparisons.values() for device in ('cpu','npu')
-                for key in ('nan_mask_equal','positive_inf_equal','negative_inf_equal'))
-            finish(f'gate_{dtype}_alog{value:g}',dict(comparisons=comparisons,passed=passed,
-                endpoint_qualification=False,scope='Range observations; same nonfinite masks required, no new exemption or ordinary numerical qualification.'),
-                dict(g=g,a=a,bias=bias,gy=gy,actual=actual,**results,fp64=high))
+            # CPU FP32 semantics are measured before any cast back to raw BF16.
+            fp32_leaves=[t.float().detach().requires_grad_() for t in (g,a,bias)]
+            fp32_y=old._prepare_inputs(None,None,fp32_leaves[0],None,A_log=fp32_leaves[1],
+                dt_bias=fp32_leaves[2],use_gate_in_kernel=True)[2]
+            cpu32=torch.autograd.grad(fp32_y,fp32_leaves,gy)
+            four={n:support.ieee_four_columns(v,d,c,high[n])
+                for n,v,d,c in zip(('dg','dA_log','ddt_bias'),actual,results['old_npu'],cpu32)}
+            only_nan=sum(r['candidate_only_nan'] for rows in four.values() for r in rows)
+            # D-PM-56(3) removes the former mask-equality line. Report each
+            # membership independently: the first and third owner labels overlap.
+            counts={n:{k:sum(r[k] for r in rows) for k in ('candidate_equals_cpu',
+                'candidate_equals_old_npu_differs_cpu','old_npu_differs_candidate_equals_cpu','candidate_only_nan')}
+                for n,rows in four.items()}
+            label=f'gate_{dtype}_alog{value:g}'
+            ordinary_records={}
+            u=g.double()+bias.double().view(1,128)
+            sp=torch.where(u>20,u,torch.logaddexp(u,torch.zeros_like(u)))
+            term=gy.double()*sp*(-a.double().exp().view(-1,1))
+            conditions=dict(dg=torch.ones_like(high['dg']),dA_log=term.abs().sum((0,1,3))/high['dA_log'].abs(),
+                ddt_bias=high['dg'].abs().sum((0,1)).reshape(-1)/high['ddt_bias'].abs())
+            for name,got,prior,previous,cpugrad in zip(('dg','dA_log','ddt_bias'),actual,results['old_cpu'],results['old_npu'],cpu32):
+                finite=got.isfinite() & prior.isfinite() & previous.isfinite() & high[name].to(got.dtype).isfinite()
+                ordinary=finite & (cpugrad.abs()>=torch.finfo(torch.float32).tiny)
+                if ordinary.any():
+                    key='gate:'+'_'.join([dtype]*3)+':'+name
+                    ordinary_records[name]=support.gradient_record(key,got[ordinary],high[name][ordinary],prior[ordinary],
+                        precision,limits['groups'][key],args.output/'ulp-details'/label/name,
+                        condition=conditions[name][ordinary],environment=environment)
+                    ordinary_records[name]['original_indices']=ordinary.nonzero().tolist()
+            write('four-columns/'+label,dict(authority='D-PM-56(3), D-PM-48(1)',gradients=four,
+                raw_g=g.float().reshape(-1).tolist(),A_log=float(a[0]),dt_bias=bias.float().tolist(),gy=gy.reshape(-1).tolist()))
+            finish(label,dict(comparisons=comparisons,passed=only_nan==0 and all(r['passed'] for r in ordinary_records.values()),
+                ordinary_gradients=ordinary_records,
+                candidate_only_nan=only_nan,classification_counts=counts,four_columns='four-columns/'+label+'.json',
+                cpu_correctness_pass=False,endpoint_qualification=False,
+                scope='D-PM-56(3) pointwise range observations; no nonfinite-mask passline or CPU accuracy pass inferred.'),
+                dict(g=g,a=a,bias=bias,gy=gy,actual=actual,**results,cpu_fp32=cpu32,fp64=high))
     rng=torch.Generator().manual_seed(8010)
     for dtype,dt in calibration.DTYPES.items():
         populations=[('gaussian',torch.randn((2,192,8),generator=rng)),('full_kimi',torch.randn((1,4096,32),generator=rng)),
@@ -210,17 +241,93 @@ def main():
             torch.npu.synchronize();got=got.cpu();saved=probability.cpu()
             leaf=x.clone().requires_grad_();s=leaf.float().sigmoid();cpu,=torch.autograd.grad(s,leaf,gy)
             leaf=xd.detach().requires_grad_();sdev=leaf.float().sigmoid();native,=torch.autograd.grad(sdev,leaf,gd);native=native.cpu()
+            leaf32=x.float().detach().requires_grad_();s32=leaf32.sigmoid()
+            cpu32,=torch.autograd.grad(s32,leaf32,gy)
             high=calibration.beta_reference(x,gy);mask=(saved==0)|(saved==1);key='beta:'+dtype+':dbeta';label='beta_'+dtype+'_'+kind
+            shared_zero=mask & (cpu32==0)
+            flush=mask & (cpu32.abs()>0) & (cpu32.abs()<torch.finfo(torch.float32).tiny) & (got==0)
             row=support.gradient_record(key,got,high,cpu,precision,limits['groups'][key],args.output/'ulp-details'/label,
-                source=x,sensitivity=gy,environment=environment,
-                endpoint_zero_mask=mask,endpoint_authority='D-PM-55(2), actual saved sigmoid saturation')
+                source=x,sensitivity=gy,environment=environment, native_flush_mask=flush,cpu_fp32=cpu32,
+                endpoint_zero_mask=shared_zero,endpoint_authority='D-PM-55(2), actual saved sigmoid saturation; CPU zero subset')
+            if kind=='saturation':
+                write('four-columns/'+label,dict(authority='D-PM-55(2), D-PM-56(1,2)',
+                    gradients=support.ieee_four_columns(got,native,cpu32,high),
+                    raw_beta=x.float().reshape(-1).tolist(),gy=gy.reshape(-1).tolist(),
+                    saved_sigmoid=saved.reshape(-1).tolist(),old_cpu_sigmoid=s32.detach().reshape(-1).tolist(),
+                    old_npu_sigmoid=sdev.detach().cpu().reshape(-1).tolist()))
+                row['four_columns']='four-columns/'+label+'.json'
             row.update(old_npu_to_fp64=precision.metrics(native,high),saved_sigmoid_sha256=check.digest(saved),
                 old_npu_endpoint_zero=bool((native[mask]==0).all()),audit=audit.report(),unexpected=audit.unexpected(),launches=launches,
                 input_unchanged=check.digest(xd)==check.digest(x) and check.digest(gd)==check.digest(gy))
             row['passed']=row['passed'] and row['old_npu_endpoint_zero'] and row['input_unchanged'] and not audit.unexpected()
-            finish(label,row,dict(x=x,gy=gy,actual=got,old_cpu=cpu,old_npu=native,fp64=high,saved_sigmoid=saved,old_cpu_sigmoid=s.detach(),old_npu_sigmoid=sdev.detach().cpu()))
+            finish(label,row,dict(x=x,gy=gy,actual=got,old_cpu=cpu,cpu_fp32=cpu32,old_npu=native,fp64=high,saved_sigmoid=saved,old_cpu_sigmoid=s.detach(),old_npu_sigmoid=sdev.detach().cpu()))
+    # Determine whether the located leaf ranges can reach public training with
+    # the unchanged default gate-span checks. Rejection never qualifies a leaf.
+    reachability=[]
+    for dtype,dt in calibration.DTYPES.items():
+        for value in (-120.,-100.,80.,88.,89.,100.):
+            gen=torch.Generator().manual_seed(8108)
+            raw=dict(q=(torch.randn((1,64,1,128),generator=gen)*.02).bfloat16(),
+                k=(torch.randn((1,64,1,128),generator=gen)*.02).bfloat16(),
+                v=(torch.randn((1,64,1,128),generator=gen)*.02).bfloat16(),
+                g=torch.linspace(-2.,2.,128).reshape(1,1,1,128).repeat(1,64,1,1).to(dt),
+                beta=torch.full((1,64,1),.5),A_log=torch.tensor([value],dtype=dt),dt_bias=torch.zeros(128,dtype=dt),
+                h0=torch.randn((1,1,128,128),generator=gen)*.01)
+            paths={}
+            for route,api in (('candidate',auto),('old_npu',old_auto)):
+                leaves={n:t.npu().requires_grad_() for n,t in raw.items()}
+                with check.instrument(audit=False) as (_,launches):
+                    try:
+                        output,state=api.chunk_kda(*(leaves[n] for n in ('q','k','v','g','beta')),
+                            A_log=leaves['A_log'],dt_bias=leaves['dt_bias'],initial_state=leaves['h0'],
+                            use_gate_in_kernel=True,output_final_state=True,**options)
+                        grads=torch.autograd.grad((output,state),[leaves[n] for n in raw],
+                            (torch.ones_like(output),torch.ones_like(state)))
+                        torch.npu.synchronize()
+                        paths[route]=dict(accepted=True,finite_output=bool(output.cpu().isfinite().all()),
+                            finite_state=bool(state.cpu().isfinite().all()),finite_gradients=[bool(t.cpu().isfinite().all()) for t in grads],
+                            output_sha256=check.digest(output),state_sha256=check.digest(state))
+                    except ValueError as exc:
+                        paths[route]=dict(accepted=False,error_type=type(exc).__name__,message=str(exc))
+                paths[route]['launches']=launches
+                paths[route]['inputs_unchanged']=all(check.digest(leaves[n])==check.digest(t) for n,t in raw.items())
+            reachability.append(dict(dtype=dtype,A_log=value,paths=paths,
+                scope='Measured public default-gate behavior; no leaf numerical pass inferred from rejection.'))
+            write('public-range-reachability',dict(complete=False,cases=reachability))
+    write('public-range-reachability',dict(complete=True,cases=reachability,
+        scope='Measured public default-gate behavior; no leaf numerical pass inferred from rejection.'))
+    beta_reachability=[]
+    for dtype,dt in calibration.DTYPES.items():
+        for value in (-88.,16.,20.):
+            gen=torch.Generator().manual_seed(8208)
+            raw=dict(q=(torch.randn((1,64,1,128),generator=gen)*.02).bfloat16(),
+                k=(torch.randn((1,64,1,128),generator=gen)*.02).bfloat16(),
+                v=(torch.randn((1,64,1,128),generator=gen)*.02).bfloat16(),
+                g=torch.full((1,64,1,128),-.002),beta=torch.full((1,64,1),value,dtype=dt),
+                h0=torch.randn((1,1,128,128),generator=gen)*.01)
+            paths={}
+            for route,api in (('candidate',auto),('old_npu',old_auto)):
+                leaves={n:t.npu().requires_grad_() for n,t in raw.items()}
+                with check.instrument(audit=False) as (_,launches):
+                    output,state=api.chunk_kda(*(leaves[n] for n in ('q','k','v','g','beta')),
+                        initial_state=leaves['h0'],use_beta_sigmoid_in_kernel=True,
+                        output_final_state=True,**options)
+                    grads=torch.autograd.grad((output,state),[leaves[n] for n in raw],
+                        (torch.ones_like(output),torch.ones_like(state)))
+                torch.npu.synchronize()
+                paths[route]=dict(accepted=True,finite_output=bool(output.cpu().isfinite().all()),
+                    finite_state=bool(state.cpu().isfinite().all()),
+                    finite_gradients=[bool(t.cpu().isfinite().all()) for t in grads],
+                    output_sha256=check.digest(output),state_sha256=check.digest(state),
+                    gradient_sha256={n:check.digest(t) for n,t in zip(raw,grads)},
+                    beta_gradient_zero=bool((grads[4].cpu()==0).all()),launches=launches,
+                    inputs_unchanged=all(check.digest(leaves[n])==check.digest(t) for n,t in raw.items()))
+            beta_reachability.append(dict(dtype=dtype,raw_beta=value,paths=paths,
+                scope='Actual public training reachability; no CPU accuracy inference.'))
+            write('public-beta-reachability',dict(complete=False,cases=beta_reachability))
+    write('public-beta-reachability',dict(complete=True,cases=beta_reachability))
     write('summary',dict(complete=True,passed=all(x['passed'] for x in records),cases=records,
-        scope='Gate ordinary/threshold and beta ordinary/saturation; A_log range rows are located observations, not new endpoint qualification.'))
+        scope='D-PM-56: ordinary finite criteria, native-flush disclosure (not CPU pass), gate pointwise range observations.'))
     if not all(x['passed'] for x in records):raise AssertionError('Retained backward boundary failures')
 
 if __name__ == '__main__':main()

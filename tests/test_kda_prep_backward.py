@@ -35,6 +35,51 @@ def test_endpoint_classification_rejects_hidden_ordinary_or_zero_errors(tmp_path
     assert not compare([1., 0.], [1., 1.e-10], 'nonzero_cpu')['passed']
 
 
+def test_bf16_dual_ulp_owner_rule_preserves_both_required_lines(tmp_path):
+    root = Path(__file__).resolve().parents[1] / 'kernels/projects/a5/kda_prep'
+    def load(name, filename):
+        spec = importlib.util.spec_from_file_location(name, root / filename)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module
+    support = load('dual_ulp_support', 'backward_native_support.py')
+    precision = load('dual_ulp_precision', 'ref/calibrate.py')
+    budget = json.loads((root / 'backward_budgets.json').read_text())['groups']['beta:bf16:dbeta']
+    def value(bits):
+        return torch.tensor([bits-65536 if bits >= 32768 else bits], dtype=torch.int16).view(torch.bfloat16)
+    def compare(candidate, previous, label):
+        return support.gradient_record('beta:bf16:dbeta', value(candidate), value(46111).double(),
+            value(previous), precision, budget, tmp_path / label, condition=torch.ones(1))
+    improved = compare(46111, 46120, 'old_nine_ulp')
+    assert improved['passed'] and improved['old_host_ulp_policy']['disclosed_elements'] == 1
+    detail = json.loads((tmp_path / 'old_nine_ulp' / '00000.json').read_text())['locations'][0]
+    assert detail['old_to_fp64_ulp'] == 9 and detail['old_line_disclosure']
+    assert not compare(46113, 46120, 'candidate_two_ulp')['passed']
+    assert not compare(46110, 46112, 'both_within_one_but_two_apart')['passed']
+    assert compare(46111, 46112, 'both_required_pass')['passed']
+
+
+def test_native_flush_classification_is_not_cpu_accuracy_pass(tmp_path):
+    root = Path(__file__).resolve().parents[1] / 'kernels/projects/a5/kda_prep'
+    def load(name, filename):
+        spec = importlib.util.spec_from_file_location(name, root / filename)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module
+    support = load('flush_support', 'backward_native_support.py')
+    precision = load('flush_precision', 'ref/calibrate.py')
+    budget = json.loads((root / 'backward_budgets.json').read_text())['groups']['beta:f32:dbeta']
+    def compare(golden, actual, label):
+        cpu = torch.tensor([1., golden], dtype=torch.float32)
+        return support.gradient_record('beta:f32:dbeta', torch.tensor([1., actual]), cpu.double(), cpu,
+            precision, budget, tmp_path / label, native_flush_mask=torch.tensor([False, True]), cpu_fp32=cpu)
+    valid = compare(1e-39, 0., 'subnormal_zero')
+    assert valid['classification_complete'] and valid['ordinary_criteria_passed']
+    assert not valid['passed'] and not valid['native_flush']['cpu_correctness_pass']
+    assert not compare(1e-30, 0., 'normal_hidden_as_flush')['classification_complete']
+    assert not compare(1e-39, 1e-39, 'nonzero_hidden_as_flush')['classification_complete']
+
+
 @pytest.fixture
 def preparation_abi(monkeypatch):
     events = []

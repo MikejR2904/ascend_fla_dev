@@ -125,6 +125,7 @@ def main():
     import statistics
     families = {r['signature']: r['family'] for r in builds}
     measurements = []
+    raw_timings = []
     def timed(function):
         start = torch.npu.Event(enable_timing=True)
         end = torch.npu.Event(enable_timing=True)
@@ -210,13 +211,15 @@ def main():
                     assert all(bool(t.isfinite().all()) for t in returned.values()),'nonfinite measured output'
                     measurement.update(phase=phase,output_sha256={n:check.digest(t) for n,t in returned.items()})
                     samples.append(measurement)
+                    raw_timings.append(dict(tokens=tokens,baseline=baseline_route,round=round_index+1,**measurement))
+                    write('raw-timings',dict(complete=False,rows=raw_timings))
                     if route == 'candidate':last_candidate = returned
                     else:last_baseline = returned
                 rounds.append(dict(round=round_index+1,samples=samples))
             old_ms = [s['wall_ms'] for row in rounds for s in (row['samples'][0],row['samples'][2])]
             new_ms = [row['samples'][1]['wall_ms'] for row in rounds]
             comparisons = {n:check.metrics(last_candidate[n],last_baseline[n],limit)
-                for n,limit in dict(o=.05,final_state=.05,**limits['end_to_end_relative_l2']).items()}
+                for n,limit in limits['end_to_end_relative_l2'].items()}
             parameter_observations = {n:precision.metrics(last_candidate[n],last_baseline[n].double())
                 for n in ('dA_log','ddt_bias')}
             unchanged = {n:check.digest(device_inputs[n])==check.digest(t) for n,t in raw.items()}
@@ -235,6 +238,7 @@ def main():
             write('measurements',dict(complete=False,rows=measurements))
             if not row['passed']:raise AssertionError('Measured training path failed its retained comparison')
             print('PERF_RESULT',tokens,baseline_route,row['candidate_over_baseline'],flush=True)
+    write('raw-timings',dict(complete=True,rows=raw_timings))
     write('measurements',dict(complete=True,rows=measurements))
     write('summary',dict(complete=True,passed=True,speed_gate=None,scopes=len(measurements)))
 

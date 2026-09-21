@@ -1,10 +1,10 @@
 # KDA raw preparation backward — BF-08
 
-BF-08 implements custom backward kernels for raw KDA preparation. Qualification
-is still in progress: the latest candidate passes complete Kimi training at
-bd1/2/3/4, the seven located grid regressions, 22 norm cases and 12 reduced
-model configurations. Final grid, range endpoints and performance remain open.
-BF-07 forward qualification does not qualify new backward kernels.
+BF-08 implements custom backward kernels for raw KDA preparation. Final-source
+full Kimi training passes bd1/2/3/4 with 19 matching output/gradient/cache hashes;
+12 reduced model checks pass. Native performance is measured and slower.
+Qualification remains incomplete: final grid/evidence closeout and endpoint
+interpretation are still open. BF-07 forward results do not qualify BF-08.
 
 The first commit froze comparison criteria and calibration before any candidate
 kernel implementation; historical failures below remain part of the evidence.
@@ -87,7 +87,7 @@ D-PM-54 ([PM decision](https://github.com/ddddwee1/ascend_fla_dev/issues/117#iss
 selects the ULP policy from the ordinary calibration by output and dtype.
 BF16 outputs whose predecessor already exceeds1ULP use the frozen relative
 metrics; other BF16 outputs retain ≤1ULP to both correctly rounded FP64 and the
-actual predecessor. FP32 outputs retain the BF-07 rule with no ULP pass line.
+actual predecessor, subject to the later pointwise D-PM-56 rule below. FP32 outputs retain the BF-07 rule with no ULP pass line.
 Both-reference ULP distributions must be reported. Every BF16 element farther
 than1ULP from either comparator must be individually listed with its three-way
 bits and sensitivity row or cancellation condition. No3ULP acceptance limit is
@@ -299,3 +299,66 @@ underflow observation is retained separately. Gate compensated products at
 large A_log also introduce NaNs in places where predecessor gradients are
 infinite; those are retained failures requiring investigation. No criteria have
 been changed to make these runs pass.
+
+
+## Final source measurements and D-PM-56
+
+[PM decision D-PM-56](https://github.com/ddddwee1/ascend_fla_dev/issues/117#issuecomment-5755378864)
+interprets retained BF16 dual-ULP criteria pointwise. Correctly rounded FP64
+remains within one ULP at every ordinary element. The old-host line applies
+where that host itself is within one ULP of FP64; other locations are counted
+and listed with all three bit patterns and sensitivity/condition data. Norm
+BF16 remains D-PM-54 report-only. Frozen budget bytes remain unchanged.
+Negative controls reject a candidate two ULP from FP64, disagreement by two ULP
+where the host line still applies, and a normal value mislabeled as native flush.
+
+Compensated add/multiply now preserve a primary overflowing FP32 infinity with
+a zero low component, avoiding an artificial Inf-minus-Inf residual NaN. Ordinary
+arithmetic, loop structure, event credits, buffer allocations and gradient ABI
+remain unchanged. Final full-v7 native execution passes all four block dimensions;
+all 19 result hashes agree. Full source/environment/build/audit/numerical receipts,
+12 model results and raw performance samples are losslessly stored under
+`evidence/backward/final-native-v1/original-receipts/`. To restore every original
+JSON and verify its original-byte SHA (including its own environment):
+
+```bash
+python kernels/projects/a5/kda_prep/evidence_archive.py verify kernels/projects/a5/kda_prep/evidence/backward/final-native-v1/original-receipts --restore tmp/bf08-final-native-restored
+```
+
+Boundary-v3 retains two non-passing beta populations solely for native flush:
+one element per dtype at beta=-88 has CPU FP32 subnormal gradient and candidate
+zero. All ordinary elements pass the frozen criteria; the classification is
+valid under D-PM-56(2), **not a CPU correctness pass**. Candidate +0 and old NPU
+-0 have zero numeric ULP distance but different bytes. No bytewise-equality or
+CPU-pass claim is made. Both public beta paths accept -88,16,20 in both dtypes
+with finite output/state/gradients. BF16 beta16 now passes the authoritative
+FP64 line and discloses its nine-ULP distance from the old graph.
+
+Gate A_log89/100 no longer has candidate-only NaNs. A_log88 still has positions
+where candidate and FP64 are finite while both CPU FP32 and old NPU are infinite:
+2 BF16 and13 FP32 dg positions, also present in corresponding dt_bias gradients.
+These do not fit the literal three equality labels in D-PM-48(1); they remain
+unqualified pending owner interpretation, rather than inventing another endpoint
+class or forcing an old arithmetic order. `located-endpoints.json` publishes all
+30 output positions and four located beta rows; the archive has every point.
+Measured public default-gate checks reject A_log80/88/89/100 in both dtypes;
+-120/-100 are reachable. Rejection does not qualify the isolated leaf.
+D-PM-54/55/56 must all be separately disclosed at user merge authorization.
+
+Full training performance uses one card, bd4, all raw flags and eight gradients,
+three synchronized baseline/candidate/baseline rounds, with old-host and Torch
+NPU baselines separately. Raw samples, clean whole-stream device events, host
+wall time and separate launch-attribution measurements are retained. There is
+no speed acceptance threshold. Candidate medians are about106.8ms at T1024 and
+425.7ms at T4096:
+
+| Tokens | Baseline | Baseline median ms | Candidate median ms | Candidate / baseline |
+|---|---|---:|---:|---:|
+| 1024 | Previous host preparation graph | 9.574992 | 106.751083 | 11.148947 |
+| 1024 | Torch NPU training | 39.937813 | 106.819345 | 2.674642 |
+| 4096 | Previous host preparation graph | 37.599414 | 425.724631 | 11.322640 |
+| 4096 | Torch NPU training | 140.536072 | 425.778071 | 3.029671 |
+
+The final host suite passes1139 tests with5 NPU-only skips. Base-entry negative
+controls still produce11 expected failures and8 no-grad passes. These host
+checks and measured performance do not resolve the remaining endpoint scope.

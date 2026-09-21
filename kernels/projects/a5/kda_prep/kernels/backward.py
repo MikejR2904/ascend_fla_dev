@@ -23,6 +23,7 @@ def _dd_add(oh, ol, ah, al, bh, bl):
     t = Reg(DT.float)
     h = Reg(DT.float)
     l = Reg(DT.float)
+    overflow = MaskReg(DT.float)
     s <<= ah + bh
     v <<= s - ah
     t <<= s - v
@@ -34,6 +35,16 @@ def _dd_add(oh, ol, ah, al, bh, bl):
     h <<= s + e
     t <<= h - s
     l <<= e - t
+    # A finite two-component expansion cannot encode an infinite residual.
+    # Keep the primary IEEE result instead of turning Inf into Inf-Inf NaN.
+    e.fill(0.)
+    t <<= h.abs()
+    compare(overflow, t, 3.4028234663852886e38, CompareMode.GT)
+    select(l, e, l, overflow)
+    t <<= s.abs()
+    compare(overflow, t, 3.4028234663852886e38, CompareMode.GT)
+    select(h, s, h, overflow)
+    select(l, e, l, overflow)
     oh <<= h
     ol <<= l
 
@@ -78,6 +89,7 @@ def _dd_mul(oh, ol, ah, al, bh, bl):
     t = Reg(DT.float)
     h = Reg(DT.float)
     l = Reg(DT.float)
+    overflow = MaskReg(DT.float)
     mask.fill(0xfffff000)
     bits <<= ah.reinterpret(DT.uint32)
     vand(bits, bits, mask)
@@ -103,6 +115,16 @@ def _dd_mul(oh, ol, ah, al, bh, bl):
     h <<= p + e
     t <<= h - p
     l <<= e - t
+    # A finite two-component expansion cannot encode an infinite residual.
+    # Keep the primary IEEE result instead of turning Inf into Inf-Inf NaN.
+    b0.fill(0.)
+    t <<= h.abs()
+    compare(overflow, t, 3.4028234663852886e38, CompareMode.GT)
+    select(l, b0, l, overflow)
+    t <<= p.abs()
+    compare(overflow, t, 3.4028234663852886e38, CompareMode.GT)
+    select(h, p, h, overflow)
+    select(l, b0, l, overflow)
     oh <<= h
     ol <<= l
 

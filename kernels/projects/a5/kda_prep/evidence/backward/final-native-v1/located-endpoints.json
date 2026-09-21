@@ -1,0 +1,1475 @@
+{
+  "environment": {
+    "python": "3.12.14",
+    "torch": "2.12.0+cu130",
+    "torch_npu": "2.12.0",
+    "ascriptor": "0.1.0",
+    "library_commit": "90cfcdc720bbcd66e8bd4361c4dd4fbc1a2a57b5",
+    "kernels_commit": "b3b3f9c16df7c4626ed3c081032a1be5a753d0b1",
+    "cann_version_records": {
+      "compiler": {
+        "raw_lines": [
+          "Version=9.1.0-beta.1",
+          "version_dir=cann",
+          "required_package_runtime_version=\"9.1\"",
+          "required_package_ge-executor_version=\"9.1\"",
+          "required_package_metadef_version=\"9.1\"",
+          "required_package_opbase_version=\"9.1\"",
+          "required_package_bisheng-compiler_version=\"9.1\"",
+          "required_package_tbe-tik_version=\"9.1\"",
+          "timestamp=20260509_173000235"
+        ],
+        "sha256": "0f982a259247cdd06df4fa5bdaf526b57b6ad15f7d27a33f23b3c70a381c2fe5"
+      },
+      "opp": {
+        "raw_lines": [
+          "Version=9.1.0-beta.1",
+          "version_dir=cann",
+          "required_package_runtime_version=\">=8.5\"",
+          "required_package_ge-executor_version=\">=8.5\"",
+          "required_package_metadef_version=\">=8.5\"",
+          "required_package_asc-devkit_version=\">=8.5\"",
+          "required_package_bisheng-compiler_version=\">=8.5\"",
+          "timestamp=20260509_173000235"
+        ],
+        "sha256": "377b05dab3a2dfc87dfaa92affd69a9aa5795a54d423cbe629d3495ad20370ef"
+      }
+    },
+    "opp_directories": [
+      "ascend910_93",
+      "ascend910b",
+      "ascend950"
+    ],
+    "driver_sha256": "bf27499c97f4090f6c9537cd6f11c6fb09cea7b2bbf632b996b442693ab1ddb1",
+    "helper_sha256": "808b3d2c778ea577489ef966db72f38375d5a4d609190a63a63704757ae4f880",
+    "production_source_manifest_sha256": "41b681ecd6a2925ca720274317d3a3245d94a17eef6c8924e513d153a9d1a4a9",
+    "source_identity_receipt": "source-identity.json"
+  },
+  "source": "complete original boundary-v3 receipts in original-receipts/",
+  "task_complete": false,
+  "beta_flush_not_cpu_correctness_pass": true,
+  "gate_unclassified_by_literal_three_equalities": true,
+  "rows": [
+    {
+      "kind": "beta",
+      "dtype": "bf16",
+      "raw_beta": -88.0,
+      "gy": -1.0232213735580444,
+      "point": {
+        "index": [
+          0,
+          4,
+          0
+        ],
+        "candidate": {
+          "dtype": "torch.bfloat16",
+          "bits": "0000",
+          "value": 0.0,
+          "ieee_class": "zero"
+        },
+        "old_npu": {
+          "dtype": "torch.bfloat16",
+          "bits": "8000",
+          "value": -0.0,
+          "ieee_class": "zero"
+        },
+        "cpu_fp32": {
+          "dtype": "torch.float32",
+          "bits": "804375b1",
+          "value": -6.195197964017054e-39,
+          "ieee_class": "subnormal"
+        },
+        "fp64": {
+          "dtype": "torch.float64",
+          "bits": "b800dd6c44bcf561",
+          "value": -6.19519806775954e-39,
+          "ieee_class": "normal"
+        },
+        "candidate_equals_cpu": false,
+        "candidate_equals_old_npu": true,
+        "candidate_equals_old_npu_differs_cpu": true,
+        "old_npu_differs_candidate_equals_cpu": false,
+        "candidate_only_nan": false
+      },
+      "native_saved_sigmoid": 0.0,
+      "cpu_saved_sigmoid": 6.054601485195952e-39
+    },
+    {
+      "kind": "beta",
+      "dtype": "bf16",
+      "raw_beta": 16.0,
+      "gy": -1.3141944408416748,
+      "point": {
+        "index": [
+          0,
+          10,
+          0
+        ],
+        "candidate": {
+          "dtype": "torch.bfloat16",
+          "bits": "b41f",
+          "value": -1.4808028936386108e-07,
+          "ieee_class": "normal"
+        },
+        "old_npu": {
+          "dtype": "torch.bfloat16",
+          "bits": "b428",
+          "value": -1.564621925354004e-07,
+          "ieee_class": "normal"
+        },
+        "cpu_fp32": {
+          "dtype": "torch.float32",
+          "bits": "b4283785",
+          "value": -1.5666417141346756e-07,
+          "ieee_class": "normal"
+        },
+        "fp64": {
+          "dtype": "torch.float64",
+          "bits": "be83d9912e5b6f34",
+          "value": -1.4789306772885061e-07,
+          "ieee_class": "normal"
+        },
+        "candidate_equals_cpu": false,
+        "candidate_equals_old_npu": false,
+        "candidate_equals_old_npu_differs_cpu": false,
+        "old_npu_differs_candidate_equals_cpu": false,
+        "candidate_only_nan": false
+      },
+      "native_saved_sigmoid": 0.9999998807907104,
+      "cpu_saved_sigmoid": 0.9999998807907104
+    },
+    {
+      "kind": "gate",
+      "dtype": "bf16",
+      "A_log": 88,
+      "output": "dg",
+      "point": {
+        "index": [
+          0,
+          0,
+          0,
+          72
+        ],
+        "candidate": {
+          "dtype": "torch.bfloat16",
+          "bits": "7f1e",
+          "value": 2.100180233340167e+38,
+          "ieee_class": "normal"
+        },
+        "old_npu": {
+          "dtype": "torch.bfloat16",
+          "bits": "7f80",
+          "value": null,
+          "ieee_class": "positive_inf"
+        },
+        "cpu_fp32": {
+          "dtype": "torch.float32",
+          "bits": "7f800000",
+          "value": null,
+          "ieee_class": "positive_inf"
+        },
+        "fp64": {
+          "dtype": "torch.float64",
+          "bits": "47e3c23d211faee6",
+          "value": 2.1011101889431855e+38,
+          "ieee_class": "normal"
+        },
+        "candidate_equals_cpu": false,
+        "candidate_equals_old_npu": false,
+        "candidate_equals_old_npu_differs_cpu": false,
+        "old_npu_differs_candidate_equals_cpu": false,
+        "candidate_only_nan": false
+      }
+    },
+    {
+      "kind": "gate",
+      "dtype": "bf16",
+      "A_log": 88,
+      "output": "dg",
+      "point": {
+        "index": [
+          0,
+          0,
+          0,
+          85
+        ],
+        "candidate": {
+          "dtype": "torch.bfloat16",
+          "bits": "7f48",
+          "value": 2.6584559915698317e+38,
+          "ieee_class": "normal"
+        },
+        "old_npu": {
+          "dtype": "torch.bfloat16",
+          "bits": "7f80",
+          "value": null,
+          "ieee_class": "positive_inf"
+        },
+        "cpu_fp32": {
+          "dtype": "torch.float32",
+          "bits": "7f800000",
+          "value": null,
+          "ieee_class": "positive_inf"
+        },
+        "fp64": {
+          "dtype": "torch.float64",
+          "bits": "47e8fa8854136525",
+          "value": 2.656184894587674e+38,
+          "ieee_class": "normal"
+        },
+        "candidate_equals_cpu": false,
+        "candidate_equals_old_npu": false,
+        "candidate_equals_old_npu_differs_cpu": false,
+        "old_npu_differs_candidate_equals_cpu": false,
+        "candidate_only_nan": false
+      }
+    },
+    {
+      "kind": "gate",
+      "dtype": "bf16",
+      "A_log": 88,
+      "output": "ddt_bias",
+      "point": {
+        "index": [
+          72
+        ],
+        "candidate": {
+          "dtype": "torch.bfloat16",
+          "bits": "7f1e",
+          "value": 2.100180233340167e+38,
+          "ieee_class": "normal"
+        },
+        "old_npu": {
+          "dtype": "torch.bfloat16",
+          "bits": "7f80",
+          "value": null,
+          "ieee_class": "positive_inf"
+        },
+        "cpu_fp32": {
+          "dtype": "torch.float32",
+          "bits": "7f800000",
+          "value": null,
+          "ieee_class": "positive_inf"
+        },
+        "fp64": {
+          "dtype": "torch.float64",
+          "bits": "47e3c23d211faee6",
+          "value": 2.1011101889431855e+38,
+          "ieee_class": "normal"
+        },
+        "candidate_equals_cpu": false,
+        "candidate_equals_old_npu": false,
+        "candidate_equals_old_npu_differs_cpu": false,
+        "old_npu_differs_candidate_equals_cpu": false,
+        "candidate_only_nan": false
+      }
+    },
+    {
+      "kind": "gate",
+      "dtype": "bf16",
+      "A_log": 88,
+      "output": "ddt_bias",
+      "point": {
+        "index": [
+          85
+        ],
+        "candidate": {
+          "dtype": "torch.bfloat16",
+          "bits": "7f48",
+          "value": 2.6584559915698317e+38,
+          "ieee_class": "normal"
+        },
+        "old_npu": {
+          "dtype": "torch.bfloat16",
+          "bits": "7f80",
+          "value": null,
+          "ieee_class": "positive_inf"
+        },
+        "cpu_fp32": {
+          "dtype": "torch.float32",
+          "bits": "7f800000",
+          "value": null,
+          "ieee_class": "positive_inf"
+        },
+        "fp64": {
+          "dtype": "torch.float64",
+          "bits": "47e8fa8854136525",
+          "value": 2.656184894587674e+38,
+          "ieee_class": "normal"
+        },
+        "candidate_equals_cpu": false,
+        "candidate_equals_old_npu": false,
+        "candidate_equals_old_npu_differs_cpu": false,
+        "old_npu_differs_candidate_equals_cpu": false,
+        "candidate_only_nan": false
+      }
+    },
+    {
+      "kind": "beta",
+      "dtype": "f32",
+      "raw_beta": -88.0,
+      "gy": -0.2454078048467636,
+      "point": {
+        "index": [
+          0,
+          4,
+          0
+        ],
+        "candidate": {
+          "dtype": "torch.float32",
+          "bits": "00000000",
+          "value": 0.0,
+          "ieee_class": "zero"
+        },
+        "old_npu": {
+          "dtype": "torch.float32",
+          "bits": "80000000",
+          "value": -0.0,
+          "ieee_class": "zero"
+        },
+        "cpu_fp32": {
+          "dtype": "torch.float32",
+          "bits": "80102def",
+          "value": -1.485845807169855e-39,
+          "ieee_class": "subnormal"
+        },
+        "fp64": {
+          "dtype": "torch.float64",
+          "bits": "b7e02def8999c5a8",
+          "value": -1.4858465603714592e-39,
+          "ieee_class": "normal"
+        },
+        "candidate_equals_cpu": false,
+        "candidate_equals_old_npu": true,
+        "candidate_equals_old_npu_differs_cpu": true,
+        "old_npu_differs_candidate_equals_cpu": false,
+        "candidate_only_nan": false
+      },
+      "native_saved_sigmoid": 0.0,
+      "cpu_saved_sigmoid": 6.054601485195952e-39
+    },
+    {
+      "kind": "beta",
+      "dtype": "f32",
+      "raw_beta": 16.0,
+      "gy": -1.5047792196273804,
+      "point": {
+        "index": [
+          0,
+          10,
+          0
+        ],
+        "candidate": {
+          "dtype": "torch.float32",
+          "bits": "b435d3fa",
+          "value": -1.6934055224737676e-07,
+          "ieee_class": "normal"
+        },
+        "old_npu": {
+          "dtype": "torch.float32",
+          "bits": "b4409c99",
+          "value": -1.793836332808496e-07,
+          "ieee_class": "normal"
+        },
+        "cpu_fp32": {
+          "dtype": "torch.float32",
+          "bits": "b4409c99",
+          "value": -1.793836332808496e-07,
+          "ieee_class": "normal"
+        },
+        "fp64": {
+          "dtype": "torch.float64",
+          "bits": "be86ba7f44946226",
+          "value": -1.6934055428113776e-07,
+          "ieee_class": "normal"
+        },
+        "candidate_equals_cpu": false,
+        "candidate_equals_old_npu": false,
+        "candidate_equals_old_npu_differs_cpu": false,
+        "old_npu_differs_candidate_equals_cpu": false,
+        "candidate_only_nan": false
+      },
+      "native_saved_sigmoid": 0.9999998807907104,
+      "cpu_saved_sigmoid": 0.9999998807907104
+    },
+    {
+      "kind": "gate",
+      "dtype": "f32",
+      "A_log": 88,
+      "output": "dg",
+      "point": {
+        "index": [
+          0,
+          0,
+          0,
+          11
+        ],
+        "candidate": {
+          "dtype": "torch.float32",
+          "bits": "7e2982f1",
+          "value": 5.63298544849937e+37,
+          "ieee_class": "normal"
+        },
+        "old_npu": {
+          "dtype": "torch.float32",
+          "bits": "7f800000",
+          "value": null,
+          "ieee_class": "positive_inf"
+        },
+        "cpu_fp32": {
+          "dtype": "torch.float32",
+          "bits": "7f800000",
+          "value": null,
+          "ieee_class": "positive_inf"
+        },
+        "fp64": {
+          "dtype": "torch.float64",
+          "bits": "47c5305e2728a9f0",
+          "value": 5.632985561935766e+37,
+          "ieee_class": "normal"
+        },
+        "candidate_equals_cpu": false,
+        "candidate_equals_old_npu": false,
+        "candidate_equals_old_npu_differs_cpu": false,
+        "old_npu_differs_candidate_equals_cpu": false,
+        "candidate_only_nan": false
+      }
+    },
+    {
+      "kind": "gate",
+      "dtype": "f32",
+      "A_log": 88,
+      "output": "dg",
+      "point": {
+        "index": [
+          0,
+          0,
+          0,
+          14
+        ],
+        "candidate": {
+          "dtype": "torch.float32",
+          "bits": "fe32585f",
+          "value": -5.926535805054461e+37,
+          "ieee_class": "normal"
+        },
+        "old_npu": {
+          "dtype": "torch.float32",
+          "bits": "ff800000",
+          "value": null,
+          "ieee_class": "negative_inf"
+        },
+        "cpu_fp32": {
+          "dtype": "torch.float32",
+          "bits": "ff800000",
+          "value": null,
+          "ieee_class": "negative_inf"
+        },
+        "fp64": {
+          "dtype": "torch.float64",
+          "bits": "c7c64b0bd288fff7",
+          "value": -5.926535591695487e+37,
+          "ieee_class": "normal"
+        },
+        "candidate_equals_cpu": false,
+        "candidate_equals_old_npu": false,
+        "candidate_equals_old_npu_differs_cpu": false,
+        "old_npu_differs_candidate_equals_cpu": false,
+        "candidate_only_nan": false
+      }
+    },
+    {
+      "kind": "gate",
+      "dtype": "f32",
+      "A_log": 88,
+      "output": "dg",
+      "point": {
+        "index": [
+          0,
+          0,
+          0,
+          15
+        ],
+        "candidate": {
+          "dtype": "torch.float32",
+          "bits": "fe444e07",
+          "value": -6.523345707641911e+37,
+          "ieee_class": "normal"
+        },
+        "old_npu": {
+          "dtype": "torch.float32",
+          "bits": "ff800000",
+          "value": null,
+          "ieee_class": "negative_inf"
+        },
+        "cpu_fp32": {
+          "dtype": "torch.float32",
+          "bits": "ff800000",
+          "value": null,
+          "ieee_class": "negative_inf"
+        },
+        "fp64": {
+          "dtype": "torch.float64",
+          "bits": "c7c889c0d43f28f8",
+          "value": -6.523345521403738e+37,
+          "ieee_class": "normal"
+        },
+        "candidate_equals_cpu": false,
+        "candidate_equals_old_npu": false,
+        "candidate_equals_old_npu_differs_cpu": false,
+        "old_npu_differs_candidate_equals_cpu": false,
+        "candidate_only_nan": false
+      }
+    },
+    {
+      "kind": "gate",
+      "dtype": "f32",
+      "A_log": 88,
+      "output": "dg",
+      "point": {
+        "index": [
+          0,
+          0,
+          0,
+          46
+        ],
+        "candidate": {
+          "dtype": "torch.float32",
+          "bits": "7ebea544",
+          "value": 1.2670571369232266e+38,
+          "ieee_class": "normal"
+        },
+        "old_npu": {
+          "dtype": "torch.float32",
+          "bits": "7f800000",
+          "value": null,
+          "ieee_class": "positive_inf"
+        },
+        "cpu_fp32": {
+          "dtype": "torch.float32",
+          "bits": "7f800000",
+          "value": null,
+          "ieee_class": "positive_inf"
+        },
+        "fp64": {
+          "dtype": "torch.float64",
+          "bits": "47d7d4a87ffb1517",
+          "value": 1.2670571368623494e+38,
+          "ieee_class": "normal"
+        },
+        "candidate_equals_cpu": false,
+        "candidate_equals_old_npu": false,
+        "candidate_equals_old_npu_differs_cpu": false,
+        "old_npu_differs_candidate_equals_cpu": false,
+        "candidate_only_nan": false
+      }
+    },
+    {
+      "kind": "gate",
+      "dtype": "f32",
+      "A_log": 88,
+      "output": "dg",
+      "point": {
+        "index": [
+          0,
+          0,
+          0,
+          82
+        ],
+        "candidate": {
+          "dtype": "torch.float32",
+          "bits": "ff091702",
+          "value": -1.82223698815099e+38,
+          "ieee_class": "normal"
+        },
+        "old_npu": {
+          "dtype": "torch.float32",
+          "bits": "ff091703",
+          "value": -1.822237190975086e+38,
+          "ieee_class": "normal"
+        },
+        "cpu_fp32": {
+          "dtype": "torch.float32",
+          "bits": "ff800000",
+          "value": null,
+          "ieee_class": "negative_inf"
+        },
+        "fp64": {
+          "dtype": "torch.float64",
+          "bits": "c7e122e04890a350",
+          "value": -1.8222370424380758e+38,
+          "ieee_class": "normal"
+        },
+        "candidate_equals_cpu": false,
+        "candidate_equals_old_npu": false,
+        "candidate_equals_old_npu_differs_cpu": false,
+        "old_npu_differs_candidate_equals_cpu": false,
+        "candidate_only_nan": false
+      }
+    },
+    {
+      "kind": "gate",
+      "dtype": "f32",
+      "A_log": 88,
+      "output": "dg",
+      "point": {
+        "index": [
+          0,
+          0,
+          0,
+          83
+        ],
+        "candidate": {
+          "dtype": "torch.float32",
+          "bits": "ff3dd9db",
+          "value": -2.5235526146935436e+38,
+          "ieee_class": "normal"
+        },
+        "old_npu": {
+          "dtype": "torch.float32",
+          "bits": "ff800000",
+          "value": null,
+          "ieee_class": "negative_inf"
+        },
+        "cpu_fp32": {
+          "dtype": "torch.float32",
+          "bits": "ff800000",
+          "value": null,
+          "ieee_class": "negative_inf"
+        },
+        "fp64": {
+          "dtype": "torch.float64",
+          "bits": "c7e7bb3b523b35e4",
+          "value": -2.5235525274239828e+38,
+          "ieee_class": "normal"
+        },
+        "candidate_equals_cpu": false,
+        "candidate_equals_old_npu": false,
+        "candidate_equals_old_npu_differs_cpu": false,
+        "old_npu_differs_candidate_equals_cpu": false,
+        "candidate_only_nan": false
+      }
+    },
+    {
+      "kind": "gate",
+      "dtype": "f32",
+      "A_log": 88,
+      "output": "dg",
+      "point": {
+        "index": [
+          0,
+          0,
+          0,
+          100
+        ],
+        "candidate": {
+          "dtype": "torch.float32",
+          "bits": "ff01b6fa",
+          "value": -1.724204800869084e+38,
+          "ieee_class": "normal"
+        },
+        "old_npu": {
+          "dtype": "torch.float32",
+          "bits": "ff01b6f9",
+          "value": -1.724204598044988e+38,
+          "ieee_class": "normal"
+        },
+        "cpu_fp32": {
+          "dtype": "torch.float32",
+          "bits": "ff800000",
+          "value": null,
+          "ieee_class": "negative_inf"
+        },
+        "fp64": {
+          "dtype": "torch.float64",
+          "bits": "c7e036df2f8fafda",
+          "value": -1.7242046966762988e+38,
+          "ieee_class": "normal"
+        },
+        "candidate_equals_cpu": false,
+        "candidate_equals_old_npu": false,
+        "candidate_equals_old_npu_differs_cpu": false,
+        "old_npu_differs_candidate_equals_cpu": false,
+        "candidate_only_nan": false
+      }
+    },
+    {
+      "kind": "gate",
+      "dtype": "f32",
+      "A_log": 88,
+      "output": "dg",
+      "point": {
+        "index": [
+          0,
+          0,
+          0,
+          101
+        ],
+        "candidate": {
+          "dtype": "torch.float32",
+          "bits": "ff3118ec",
+          "value": -2.354027570272014e+38,
+          "ieee_class": "normal"
+        },
+        "old_npu": {
+          "dtype": "torch.float32",
+          "bits": "ff3118ed",
+          "value": -2.35402777309611e+38,
+          "ieee_class": "normal"
+        },
+        "cpu_fp32": {
+          "dtype": "torch.float32",
+          "bits": "ff800000",
+          "value": null,
+          "ieee_class": "negative_inf"
+        },
+        "fp64": {
+          "dtype": "torch.float64",
+          "bits": "c7e6231d8b232c42",
+          "value": -2.3540276408636355e+38,
+          "ieee_class": "normal"
+        },
+        "candidate_equals_cpu": false,
+        "candidate_equals_old_npu": false,
+        "candidate_equals_old_npu_differs_cpu": false,
+        "old_npu_differs_candidate_equals_cpu": false,
+        "candidate_only_nan": false
+      }
+    },
+    {
+      "kind": "gate",
+      "dtype": "f32",
+      "A_log": 88,
+      "output": "dg",
+      "point": {
+        "index": [
+          0,
+          0,
+          0,
+          107
+        ],
+        "candidate": {
+          "dtype": "torch.float32",
+          "bits": "7ecf92c6",
+          "value": 1.379561431929626e+38,
+          "ieee_class": "normal"
+        },
+        "old_npu": {
+          "dtype": "torch.float32",
+          "bits": "7ecf92c5",
+          "value": 1.379561330517578e+38,
+          "ieee_class": "normal"
+        },
+        "cpu_fp32": {
+          "dtype": "torch.float32",
+          "bits": "7f800000",
+          "value": null,
+          "ieee_class": "positive_inf"
+        },
+        "fp64": {
+          "dtype": "torch.float64",
+          "bits": "47d9f258c3f65b5c",
+          "value": 1.3795614444867558e+38,
+          "ieee_class": "normal"
+        },
+        "candidate_equals_cpu": false,
+        "candidate_equals_old_npu": false,
+        "candidate_equals_old_npu_differs_cpu": false,
+        "old_npu_differs_candidate_equals_cpu": false,
+        "candidate_only_nan": false
+      }
+    },
+    {
+      "kind": "gate",
+      "dtype": "f32",
+      "A_log": 88,
+      "output": "dg",
+      "point": {
+        "index": [
+          0,
+          0,
+          0,
+          110
+        ],
+        "candidate": {
+          "dtype": "torch.float32",
+          "bits": "7ea5970a",
+          "value": 1.1005342947712296e+38,
+          "ieee_class": "normal"
+        },
+        "old_npu": {
+          "dtype": "torch.float32",
+          "bits": "7ea5970b",
+          "value": 1.1005343961832776e+38,
+          "ieee_class": "normal"
+        },
+        "cpu_fp32": {
+          "dtype": "torch.float32",
+          "bits": "7f800000",
+          "value": null,
+          "ieee_class": "positive_inf"
+        },
+        "fp64": {
+          "dtype": "torch.float64",
+          "bits": "47d4b2e14c67aef5",
+          "value": 1.1005343340842862e+38,
+          "ieee_class": "normal"
+        },
+        "candidate_equals_cpu": false,
+        "candidate_equals_old_npu": false,
+        "candidate_equals_old_npu_differs_cpu": false,
+        "old_npu_differs_candidate_equals_cpu": false,
+        "candidate_only_nan": false
+      }
+    },
+    {
+      "kind": "gate",
+      "dtype": "f32",
+      "A_log": 88,
+      "output": "dg",
+      "point": {
+        "index": [
+          0,
+          0,
+          0,
+          112
+        ],
+        "candidate": {
+          "dtype": "torch.float32",
+          "bits": "7eee9f97",
+          "value": 1.5859245042058358e+38,
+          "ieee_class": "normal"
+        },
+        "old_npu": {
+          "dtype": "torch.float32",
+          "bits": "7eee9f96",
+          "value": 1.5859244027937878e+38,
+          "ieee_class": "normal"
+        },
+        "cpu_fp32": {
+          "dtype": "torch.float32",
+          "bits": "7f800000",
+          "value": null,
+          "ieee_class": "positive_inf"
+        },
+        "fp64": {
+          "dtype": "torch.float64",
+          "bits": "47ddd3f2d3450811",
+          "value": 1.58592446386176e+38,
+          "ieee_class": "normal"
+        },
+        "candidate_equals_cpu": false,
+        "candidate_equals_old_npu": false,
+        "candidate_equals_old_npu_differs_cpu": false,
+        "old_npu_differs_candidate_equals_cpu": false,
+        "candidate_only_nan": false
+      }
+    },
+    {
+      "kind": "gate",
+      "dtype": "f32",
+      "A_log": 88,
+      "output": "dg",
+      "point": {
+        "index": [
+          0,
+          0,
+          0,
+          114
+        ],
+        "candidate": {
+          "dtype": "torch.float32",
+          "bits": "fe413031",
+          "value": -6.419780681844225e+37,
+          "ieee_class": "normal"
+        },
+        "old_npu": {
+          "dtype": "torch.float32",
+          "bits": "fe413030",
+          "value": -6.419780174783985e+37,
+          "ieee_class": "normal"
+        },
+        "cpu_fp32": {
+          "dtype": "torch.float32",
+          "bits": "ff800000",
+          "value": null,
+          "ieee_class": "negative_inf"
+        },
+        "fp64": {
+          "dtype": "torch.float64",
+          "bits": "c7c8260614b2e3df",
+          "value": -6.4197805027693975e+37,
+          "ieee_class": "normal"
+        },
+        "candidate_equals_cpu": false,
+        "candidate_equals_old_npu": false,
+        "candidate_equals_old_npu_differs_cpu": false,
+        "old_npu_differs_candidate_equals_cpu": false,
+        "candidate_only_nan": false
+      }
+    },
+    {
+      "kind": "gate",
+      "dtype": "f32",
+      "A_log": 88,
+      "output": "dg",
+      "point": {
+        "index": [
+          0,
+          0,
+          0,
+          124
+        ],
+        "candidate": {
+          "dtype": "torch.float32",
+          "bits": "7efcddaf",
+          "value": 1.6805825098260782e+38,
+          "ieee_class": "normal"
+        },
+        "old_npu": {
+          "dtype": "torch.float32",
+          "bits": "7efcddae",
+          "value": 1.6805824084140302e+38,
+          "ieee_class": "normal"
+        },
+        "cpu_fp32": {
+          "dtype": "torch.float32",
+          "bits": "7f800000",
+          "value": null,
+          "ieee_class": "positive_inf"
+        },
+        "fp64": {
+          "dtype": "torch.float64",
+          "bits": "47df9bb5cd04e5a8",
+          "value": 1.6805824496732978e+38,
+          "ieee_class": "normal"
+        },
+        "candidate_equals_cpu": false,
+        "candidate_equals_old_npu": false,
+        "candidate_equals_old_npu_differs_cpu": false,
+        "old_npu_differs_candidate_equals_cpu": false,
+        "candidate_only_nan": false
+      }
+    },
+    {
+      "kind": "gate",
+      "dtype": "f32",
+      "A_log": 88,
+      "output": "ddt_bias",
+      "point": {
+        "index": [
+          11
+        ],
+        "candidate": {
+          "dtype": "torch.float32",
+          "bits": "7e2982f1",
+          "value": 5.63298544849937e+37,
+          "ieee_class": "normal"
+        },
+        "old_npu": {
+          "dtype": "torch.float32",
+          "bits": "7f800000",
+          "value": null,
+          "ieee_class": "positive_inf"
+        },
+        "cpu_fp32": {
+          "dtype": "torch.float32",
+          "bits": "7f800000",
+          "value": null,
+          "ieee_class": "positive_inf"
+        },
+        "fp64": {
+          "dtype": "torch.float64",
+          "bits": "47c5305e2728a9f0",
+          "value": 5.632985561935766e+37,
+          "ieee_class": "normal"
+        },
+        "candidate_equals_cpu": false,
+        "candidate_equals_old_npu": false,
+        "candidate_equals_old_npu_differs_cpu": false,
+        "old_npu_differs_candidate_equals_cpu": false,
+        "candidate_only_nan": false
+      }
+    },
+    {
+      "kind": "gate",
+      "dtype": "f32",
+      "A_log": 88,
+      "output": "ddt_bias",
+      "point": {
+        "index": [
+          14
+        ],
+        "candidate": {
+          "dtype": "torch.float32",
+          "bits": "fe32585f",
+          "value": -5.926535805054461e+37,
+          "ieee_class": "normal"
+        },
+        "old_npu": {
+          "dtype": "torch.float32",
+          "bits": "ff800000",
+          "value": null,
+          "ieee_class": "negative_inf"
+        },
+        "cpu_fp32": {
+          "dtype": "torch.float32",
+          "bits": "ff800000",
+          "value": null,
+          "ieee_class": "negative_inf"
+        },
+        "fp64": {
+          "dtype": "torch.float64",
+          "bits": "c7c64b0bd288fff7",
+          "value": -5.926535591695487e+37,
+          "ieee_class": "normal"
+        },
+        "candidate_equals_cpu": false,
+        "candidate_equals_old_npu": false,
+        "candidate_equals_old_npu_differs_cpu": false,
+        "old_npu_differs_candidate_equals_cpu": false,
+        "candidate_only_nan": false
+      }
+    },
+    {
+      "kind": "gate",
+      "dtype": "f32",
+      "A_log": 88,
+      "output": "ddt_bias",
+      "point": {
+        "index": [
+          15
+        ],
+        "candidate": {
+          "dtype": "torch.float32",
+          "bits": "fe444e07",
+          "value": -6.523345707641911e+37,
+          "ieee_class": "normal"
+        },
+        "old_npu": {
+          "dtype": "torch.float32",
+          "bits": "ff800000",
+          "value": null,
+          "ieee_class": "negative_inf"
+        },
+        "cpu_fp32": {
+          "dtype": "torch.float32",
+          "bits": "ff800000",
+          "value": null,
+          "ieee_class": "negative_inf"
+        },
+        "fp64": {
+          "dtype": "torch.float64",
+          "bits": "c7c889c0d43f28f8",
+          "value": -6.523345521403738e+37,
+          "ieee_class": "normal"
+        },
+        "candidate_equals_cpu": false,
+        "candidate_equals_old_npu": false,
+        "candidate_equals_old_npu_differs_cpu": false,
+        "old_npu_differs_candidate_equals_cpu": false,
+        "candidate_only_nan": false
+      }
+    },
+    {
+      "kind": "gate",
+      "dtype": "f32",
+      "A_log": 88,
+      "output": "ddt_bias",
+      "point": {
+        "index": [
+          46
+        ],
+        "candidate": {
+          "dtype": "torch.float32",
+          "bits": "7ebea544",
+          "value": 1.2670571369232266e+38,
+          "ieee_class": "normal"
+        },
+        "old_npu": {
+          "dtype": "torch.float32",
+          "bits": "7f800000",
+          "value": null,
+          "ieee_class": "positive_inf"
+        },
+        "cpu_fp32": {
+          "dtype": "torch.float32",
+          "bits": "7f800000",
+          "value": null,
+          "ieee_class": "positive_inf"
+        },
+        "fp64": {
+          "dtype": "torch.float64",
+          "bits": "47d7d4a87ffb1517",
+          "value": 1.2670571368623494e+38,
+          "ieee_class": "normal"
+        },
+        "candidate_equals_cpu": false,
+        "candidate_equals_old_npu": false,
+        "candidate_equals_old_npu_differs_cpu": false,
+        "old_npu_differs_candidate_equals_cpu": false,
+        "candidate_only_nan": false
+      }
+    },
+    {
+      "kind": "gate",
+      "dtype": "f32",
+      "A_log": 88,
+      "output": "ddt_bias",
+      "point": {
+        "index": [
+          82
+        ],
+        "candidate": {
+          "dtype": "torch.float32",
+          "bits": "ff091702",
+          "value": -1.82223698815099e+38,
+          "ieee_class": "normal"
+        },
+        "old_npu": {
+          "dtype": "torch.float32",
+          "bits": "ff091703",
+          "value": -1.822237190975086e+38,
+          "ieee_class": "normal"
+        },
+        "cpu_fp32": {
+          "dtype": "torch.float32",
+          "bits": "ff800000",
+          "value": null,
+          "ieee_class": "negative_inf"
+        },
+        "fp64": {
+          "dtype": "torch.float64",
+          "bits": "c7e122e04890a350",
+          "value": -1.8222370424380758e+38,
+          "ieee_class": "normal"
+        },
+        "candidate_equals_cpu": false,
+        "candidate_equals_old_npu": false,
+        "candidate_equals_old_npu_differs_cpu": false,
+        "old_npu_differs_candidate_equals_cpu": false,
+        "candidate_only_nan": false
+      }
+    },
+    {
+      "kind": "gate",
+      "dtype": "f32",
+      "A_log": 88,
+      "output": "ddt_bias",
+      "point": {
+        "index": [
+          83
+        ],
+        "candidate": {
+          "dtype": "torch.float32",
+          "bits": "ff3dd9db",
+          "value": -2.5235526146935436e+38,
+          "ieee_class": "normal"
+        },
+        "old_npu": {
+          "dtype": "torch.float32",
+          "bits": "ff800000",
+          "value": null,
+          "ieee_class": "negative_inf"
+        },
+        "cpu_fp32": {
+          "dtype": "torch.float32",
+          "bits": "ff800000",
+          "value": null,
+          "ieee_class": "negative_inf"
+        },
+        "fp64": {
+          "dtype": "torch.float64",
+          "bits": "c7e7bb3b523b35e4",
+          "value": -2.5235525274239828e+38,
+          "ieee_class": "normal"
+        },
+        "candidate_equals_cpu": false,
+        "candidate_equals_old_npu": false,
+        "candidate_equals_old_npu_differs_cpu": false,
+        "old_npu_differs_candidate_equals_cpu": false,
+        "candidate_only_nan": false
+      }
+    },
+    {
+      "kind": "gate",
+      "dtype": "f32",
+      "A_log": 88,
+      "output": "ddt_bias",
+      "point": {
+        "index": [
+          100
+        ],
+        "candidate": {
+          "dtype": "torch.float32",
+          "bits": "ff01b6fa",
+          "value": -1.724204800869084e+38,
+          "ieee_class": "normal"
+        },
+        "old_npu": {
+          "dtype": "torch.float32",
+          "bits": "ff01b6f9",
+          "value": -1.724204598044988e+38,
+          "ieee_class": "normal"
+        },
+        "cpu_fp32": {
+          "dtype": "torch.float32",
+          "bits": "ff800000",
+          "value": null,
+          "ieee_class": "negative_inf"
+        },
+        "fp64": {
+          "dtype": "torch.float64",
+          "bits": "c7e036df2f8fafda",
+          "value": -1.7242046966762988e+38,
+          "ieee_class": "normal"
+        },
+        "candidate_equals_cpu": false,
+        "candidate_equals_old_npu": false,
+        "candidate_equals_old_npu_differs_cpu": false,
+        "old_npu_differs_candidate_equals_cpu": false,
+        "candidate_only_nan": false
+      }
+    },
+    {
+      "kind": "gate",
+      "dtype": "f32",
+      "A_log": 88,
+      "output": "ddt_bias",
+      "point": {
+        "index": [
+          101
+        ],
+        "candidate": {
+          "dtype": "torch.float32",
+          "bits": "ff3118ec",
+          "value": -2.354027570272014e+38,
+          "ieee_class": "normal"
+        },
+        "old_npu": {
+          "dtype": "torch.float32",
+          "bits": "ff3118ed",
+          "value": -2.35402777309611e+38,
+          "ieee_class": "normal"
+        },
+        "cpu_fp32": {
+          "dtype": "torch.float32",
+          "bits": "ff800000",
+          "value": null,
+          "ieee_class": "negative_inf"
+        },
+        "fp64": {
+          "dtype": "torch.float64",
+          "bits": "c7e6231d8b232c42",
+          "value": -2.3540276408636355e+38,
+          "ieee_class": "normal"
+        },
+        "candidate_equals_cpu": false,
+        "candidate_equals_old_npu": false,
+        "candidate_equals_old_npu_differs_cpu": false,
+        "old_npu_differs_candidate_equals_cpu": false,
+        "candidate_only_nan": false
+      }
+    },
+    {
+      "kind": "gate",
+      "dtype": "f32",
+      "A_log": 88,
+      "output": "ddt_bias",
+      "point": {
+        "index": [
+          107
+        ],
+        "candidate": {
+          "dtype": "torch.float32",
+          "bits": "7ecf92c6",
+          "value": 1.379561431929626e+38,
+          "ieee_class": "normal"
+        },
+        "old_npu": {
+          "dtype": "torch.float32",
+          "bits": "7ecf92c5",
+          "value": 1.379561330517578e+38,
+          "ieee_class": "normal"
+        },
+        "cpu_fp32": {
+          "dtype": "torch.float32",
+          "bits": "7f800000",
+          "value": null,
+          "ieee_class": "positive_inf"
+        },
+        "fp64": {
+          "dtype": "torch.float64",
+          "bits": "47d9f258c3f65b5c",
+          "value": 1.3795614444867558e+38,
+          "ieee_class": "normal"
+        },
+        "candidate_equals_cpu": false,
+        "candidate_equals_old_npu": false,
+        "candidate_equals_old_npu_differs_cpu": false,
+        "old_npu_differs_candidate_equals_cpu": false,
+        "candidate_only_nan": false
+      }
+    },
+    {
+      "kind": "gate",
+      "dtype": "f32",
+      "A_log": 88,
+      "output": "ddt_bias",
+      "point": {
+        "index": [
+          110
+        ],
+        "candidate": {
+          "dtype": "torch.float32",
+          "bits": "7ea5970a",
+          "value": 1.1005342947712296e+38,
+          "ieee_class": "normal"
+        },
+        "old_npu": {
+          "dtype": "torch.float32",
+          "bits": "7ea5970b",
+          "value": 1.1005343961832776e+38,
+          "ieee_class": "normal"
+        },
+        "cpu_fp32": {
+          "dtype": "torch.float32",
+          "bits": "7f800000",
+          "value": null,
+          "ieee_class": "positive_inf"
+        },
+        "fp64": {
+          "dtype": "torch.float64",
+          "bits": "47d4b2e14c67aef5",
+          "value": 1.1005343340842862e+38,
+          "ieee_class": "normal"
+        },
+        "candidate_equals_cpu": false,
+        "candidate_equals_old_npu": false,
+        "candidate_equals_old_npu_differs_cpu": false,
+        "old_npu_differs_candidate_equals_cpu": false,
+        "candidate_only_nan": false
+      }
+    },
+    {
+      "kind": "gate",
+      "dtype": "f32",
+      "A_log": 88,
+      "output": "ddt_bias",
+      "point": {
+        "index": [
+          112
+        ],
+        "candidate": {
+          "dtype": "torch.float32",
+          "bits": "7eee9f97",
+          "value": 1.5859245042058358e+38,
+          "ieee_class": "normal"
+        },
+        "old_npu": {
+          "dtype": "torch.float32",
+          "bits": "7eee9f96",
+          "value": 1.5859244027937878e+38,
+          "ieee_class": "normal"
+        },
+        "cpu_fp32": {
+          "dtype": "torch.float32",
+          "bits": "7f800000",
+          "value": null,
+          "ieee_class": "positive_inf"
+        },
+        "fp64": {
+          "dtype": "torch.float64",
+          "bits": "47ddd3f2d3450811",
+          "value": 1.58592446386176e+38,
+          "ieee_class": "normal"
+        },
+        "candidate_equals_cpu": false,
+        "candidate_equals_old_npu": false,
+        "candidate_equals_old_npu_differs_cpu": false,
+        "old_npu_differs_candidate_equals_cpu": false,
+        "candidate_only_nan": false
+      }
+    },
+    {
+      "kind": "gate",
+      "dtype": "f32",
+      "A_log": 88,
+      "output": "ddt_bias",
+      "point": {
+        "index": [
+          114
+        ],
+        "candidate": {
+          "dtype": "torch.float32",
+          "bits": "fe413031",
+          "value": -6.419780681844225e+37,
+          "ieee_class": "normal"
+        },
+        "old_npu": {
+          "dtype": "torch.float32",
+          "bits": "fe413030",
+          "value": -6.419780174783985e+37,
+          "ieee_class": "normal"
+        },
+        "cpu_fp32": {
+          "dtype": "torch.float32",
+          "bits": "ff800000",
+          "value": null,
+          "ieee_class": "negative_inf"
+        },
+        "fp64": {
+          "dtype": "torch.float64",
+          "bits": "c7c8260614b2e3df",
+          "value": -6.4197805027693975e+37,
+          "ieee_class": "normal"
+        },
+        "candidate_equals_cpu": false,
+        "candidate_equals_old_npu": false,
+        "candidate_equals_old_npu_differs_cpu": false,
+        "old_npu_differs_candidate_equals_cpu": false,
+        "candidate_only_nan": false
+      }
+    },
+    {
+      "kind": "gate",
+      "dtype": "f32",
+      "A_log": 88,
+      "output": "ddt_bias",
+      "point": {
+        "index": [
+          124
+        ],
+        "candidate": {
+          "dtype": "torch.float32",
+          "bits": "7efcddaf",
+          "value": 1.6805825098260782e+38,
+          "ieee_class": "normal"
+        },
+        "old_npu": {
+          "dtype": "torch.float32",
+          "bits": "7efcddae",
+          "value": 1.6805824084140302e+38,
+          "ieee_class": "normal"
+        },
+        "cpu_fp32": {
+          "dtype": "torch.float32",
+          "bits": "7f800000",
+          "value": null,
+          "ieee_class": "positive_inf"
+        },
+        "fp64": {
+          "dtype": "torch.float64",
+          "bits": "47df9bb5cd04e5a8",
+          "value": 1.6805824496732978e+38,
+          "ieee_class": "normal"
+        },
+        "candidate_equals_cpu": false,
+        "candidate_equals_old_npu": false,
+        "candidate_equals_old_npu_differs_cpu": false,
+        "old_npu_differs_candidate_equals_cpu": false,
+        "candidate_only_nan": false
+      }
+    }
+  ]
+}
