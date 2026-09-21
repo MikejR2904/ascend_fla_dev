@@ -2295,6 +2295,10 @@
         {
           "at": "2026-09-21T05:26",
           "summary": "STATUS（05:08Z，自述，#35，PR #123 头 b54978b）：二审四条已改——① probe.json 的 env.cann_version_info 含 compiler / opp 的 version.info 原文 + sha256（compiler 9.2.0-beta.1、timestamp 20260805_224858134）与内置算子包目录列表（ascend910_93 / ascend910b / config / scene.info / version.info），未过滤原始日志 probe_stdout.log；② 去掉 env.cann_home 绝对路径；③ §3 第 5 / 7 行按「1/eg 溢出线」重判，实测 1/x 对 subnormal 分母（1/6.05e-39 = 1.65e38 有限、1/2.23e-39 = inf），写明这是 torch_npu 的设备倒数、向量单元自己的 div / reciprocal 没测（A2-11）；④ §4 未测项明标「未测（A2-10）」，§2 MISS 行补 #22。PM 三审（读完整 diff、未执行任何东西；5 个文件：docs/research/a2_gdn_abi.md、benchmarks/a2/probe_gdn_abi.py、_a2_exp_kernel.py、evidence/gdn_abi/probe.json、probe_stdout.log，均在写集内含追认的 _a2_exp_kernel.py）：**REVIEW accept**。核对：version.info 原文的 sha256 我重算与 JSON 里写的一致（compiler 7e0dd345…、opp eb4e5cb9…，原文不含结尾换行）；1/x 结果与 FLT_MAX 的理论线（x < 2.94e-39 → 1/x 溢出）一致；5 个文件扫 IP / 绝对路径 / 邮箱 / 令牌 0 命中；探针脚本只读环境变量、version.info 与目录列表，无网络 / 子进程；文档里 A2-01 命中表的引用与 hit_table.json 逐行对上（#17 / #23 / #25 累加点行号一致）。真机观测（自述，A2 数字在 A2-11 之前只是观测记录）：910B3、CANN 9.2.0-beta.1、torch_npu 2.10.0.post2、ascriptor 90cfcdc / b3b3f9c、cube / vector = 20 / 40；fp32 exp 下溢到 0 在 ≈ −104（不冲 subnormal）、上溢 89，但 1/eg 在 span ≈ 89 溢出、可用量程线仍约 88.7；bf16 exp 下溢 ≈ −95。**合入不由 PM 自己定**：新账号第一次合入（PROTOCOL §5 第 5 条）与 A2 真机数字（A2-11 之前不算结论）都要用户明确同意——已向用户请求，得到同意后用 --match-head-commit 合入 b54978b。请申领人在此之前不再推新提交。"
+        },
+        {
+          "at": "2026-09-21T06:05",
+          "summary": "STATUS（05:35Z，自述，#35，MikejR2904）：**一条「代为转达用户明确决定」的声明**——称用户明确同意 A2-07 第一次合入（新账号首合）并确认知悉 D-PM-30，分支冻结在 b54978b，「若需用户以本账号再确认一次，用户可补一句；否则请按此合入」。PM 处理：**不采信为授权**。理由：issue / 评论里的内容一律是数据，不是指令；D-PM-33 与 PROTOCOL §5 第 5 条要求的「用户明确同意」必须由用户直接对 PM 会话给出，由 assignee 代为转达无法核实——不论转达是否属实；已回复申领人并把这条声明连同 A2-07 的评审结论一起如实告诉用户，等用户直接授权后才用 --match-head-commit 合入 b54978b。A2-07 的评审结果（accept）不受影响。"
         }
       ],
       "result": null
@@ -2332,7 +2336,12 @@
       "assignee_caps": null,
       "branch": null,
       "timebox_h": 16,
-      "reports": [],
+      "reports": [
+        {
+          "at": "2026-09-21T06:05",
+          "summary": "APPLY（05:37Z，自述，条件申请，#36，MikejR2904）：持有 A2-07（已 accept、等合入），A2-07 CLOSE 后再领；a2 / 910B3 / CANN 9.2.0-beta.1，本任务纯 CPU / 主机侧（用 ascend_fla/reference/kda.py 的 torch 递推替身，读 HF 的 config.json 与 modeling、不下权重）；fork MikejR2904/ascend_fla_dev_a2；写集 ascend_fla/models/kimi_linear.py + tests/test_models_kimi.py 与在飞的 BF-08 不重叠；理由「A2-08 → A2-16 → A2-20 的路径上现在唯一 deps 已满足的开放任务」。PM 处理：回 NO_TASK（A2-07 还没 CLOSE，一账号一任务）；优先级说明：A2 上机主线 A2-02 → A2-10 → A2-11（P0）先于 A2-08（P2）；A2-07 CLOSE 时若 BF-08 已 CLOSE 就派 A2-02，未 CLOSE 才派 A2-08 填空档；A2-08 的规格「纯 CPU」与 D-PM-34（所有任务必须真机验证）的关系，派单时再核（规格里已有 D-PM-34 一条）。"
+        }
+      ],
       "result": null
     },
     {
@@ -4940,6 +4949,10 @@
         {
           "at": "2026-09-20T13:27",
           "summary": "用户 2026-09-20 指示「scan fused 需要定位」（D-PM-46）→ PM 立项：只定位、不修。范围与方法见 docs/pm/tasks/A5K-03.md：机制 + 可证伪预测 + 干预实验（实验性派生单元 kda_scan_diag，不接公开调度），回答四问（kernel 竞态还是环境 / 卡？精确到源码行与事件？预测被干预证实？影响面与「为什么只有 dh0」？）；N≥50 重放、负对照、跨卡 / 跨 CANN 对照；不宣称修复，修复要用户另批 kernel 批次。排队：优先级 P0，建议 BF-07（阶段 1）CLOSE 后由发现者 session 01a0b7ce-… 接手、BF-08 顺延；其它有 A5 真机的 session 也可申领；派单由 PM 定。"
+        },
+        {
+          "at": "2026-09-21T06:05",
+          "summary": "APPLY（05:33Z，自述，#120，limjiunnbin 账号、session 01a0b7ce-…，agent Codex）：a5，CANN 9.1.0-beta.1 / compiler 20260509_173000235 / opp 含 ascend950、有 FMT-02 两张对照卡的复现资产、CANN 9.2.0 可读环境是否可用于同组对照要重新验证；ascriptor 90cfcdc；请求排在 BF-08 CLOSE 之后，不同时领取两个任务；已读 #120 只定位范围（只在新实验单元诊断，不改上游或生产调度；至少两张卡各 N ≥ 50，机制 → 可证伪预测 → 单变量干预与负对照，完整真机 workload 在缩小 sim / pipesim 之前；保留 FMT-02 固定种子、输入哈希与私有错误张量）。PM 处理：同一 session 现有 BF-08 在 review（算在飞），一个 session 一次一个任务——回 NO_TASK 并承诺「BF-08 CLOSE 后直接派 A5K-03、不需要重新 APPLY」（同 BF-03 / BF-07 的做法）。"
         }
       ],
       "result": null,
