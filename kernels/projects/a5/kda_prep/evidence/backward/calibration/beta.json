@@ -1,0 +1,539 @@
+{
+  "environment": {
+    "python": "3.11.15",
+    "torch": "2.10.0+cpu",
+    "device": "CPU",
+    "precision_reference": "independent analytic FP64; not the KDA end-to-end golden",
+    "predecessor": {
+      "repository_commit": "6c42dc6c3fd4b6cdbb4d1e6cef17156a3919d478",
+      "scope": "Byte-preserved host training predecessor for BF-08 calibration and native controls.",
+      "files": {
+        "chunk.py": {
+          "source": "ascend_fla/ops/kda/chunk.py",
+          "sha256": "c79a199d9b8b9d5820834e87d7ad0805ce63531df878c11720c0a4f181c8a87e"
+        },
+        "autograd.py": {
+          "source": "ascend_fla/ops/kda/autograd.py",
+          "sha256": "78b96d6bb9a81dfa800c4704214bcd0cdce3447f2d1b1fdd77dd11bf5380559d"
+        }
+      }
+    },
+    "calibration_driver_sha256": "40db1fee611c562f94b2578abb52f9f05ef261816a51419c176e60c2b7056c3f",
+    "metric_driver_sha256": "d21ec73afc242b1b17e7d7f15e72c034fa0dfabda6505abe4edf74313cdb0765"
+  },
+  "section": "beta",
+  "complete": true,
+  "scope": "Pre-implementation observations; endpoint classifications and BF16 ULP policy require owner disposition.",
+  "rows": [
+    {
+      "id": "beta:bf16:dbeta:gaussian:0",
+      "key": "beta:bf16:dbeta",
+      "route": "beta",
+      "types": "bf16",
+      "output": "dbeta",
+      "kind": "gaussian",
+      "input_shape": [
+        2,
+        192,
+        8
+      ],
+      "output_shape": [
+        2,
+        192,
+        8
+      ],
+      "output_dtype": "torch.bfloat16",
+      "sensitivity_dtype": "torch.float32",
+      "input_sha256": [
+        "0de8df344fc5eb1bafb28c57d6cde4b95b0327178cc3b35ec099548c48e230af"
+      ],
+      "sensitivity_sha256": "665a4d82c6c20154c963bb1041321c266b30b481434a8c3572a6fd4b56ee50cd",
+      "ordinary_calibration_population": true,
+      "metrics": {
+        "elements": 3072,
+        "finite_pairs": 3072,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 11.78035310665386,
+        "residual_norm": 0.019519910214516205,
+        "relative_l2": 0.0016569885501556685,
+        "relative_l2_finite_pairs": 0.0016569885501556685,
+        "max_abs": 0.0018965468089483517,
+        "max_relative_nonzero": 0.003746806257998973,
+        "relative_quantiles": [
+          0.0013407462296140572,
+          0.002647150852297002,
+          0.003450266991723119,
+          0.003746806257998973
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 0,
+        "rounded_reference_over_one_ulp": 0,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "99203c193506a7f7325b19a30e756b5de9759ecf808572726c2265a34a9451e8",
+        "reference_fp64_sha256": "5b968fad7c7021023c4c525c3a23c1d7ff103af549d4bf82c700d54e54c73fe3"
+      }
+    },
+    {
+      "id": "beta:bf16:dbeta:full_kimi:1",
+      "key": "beta:bf16:dbeta",
+      "route": "beta",
+      "types": "bf16",
+      "output": "dbeta",
+      "kind": "full_kimi",
+      "input_shape": [
+        1,
+        4096,
+        32
+      ],
+      "output_shape": [
+        1,
+        4096,
+        32
+      ],
+      "output_dtype": "torch.bfloat16",
+      "sensitivity_dtype": "torch.float32",
+      "input_sha256": [
+        "6b62b77d89e7afa4eb8781a07dac17ba0cc3f867def851457d2fc12763f33604"
+      ],
+      "sensitivity_sha256": "c3ce71bc86a3377f6436b084175783ef63abd65f08d1787ec6b375cb3b60c59e",
+      "ordinary_calibration_population": true,
+      "metrics": {
+        "elements": 131072,
+        "finite_pairs": 131072,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 76.79959286050425,
+        "residual_norm": 0.12739749258646382,
+        "relative_l2": 0.001658830312002612,
+        "relative_l2_finite_pairs": 0.001658830312002612,
+        "max_abs": 0.002726902165001599,
+        "max_relative_nonzero": 0.003879466045358764,
+        "relative_quantiles": [
+          0.0013555777664263865,
+          0.0026263966143558887,
+          0.0034731468332176336,
+          0.003879466045358764
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 1,
+        "rounded_reference_over_one_ulp": 0,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "140c1a9a29cc3a199c26b11abb877881ec2439bc9c3c9042a02daf99ed37cb9e",
+        "reference_fp64_sha256": "fc0f9d14ed4cabe2bbed9d0f2130516d8d2cc36c210bf8aa9869f5c96cb5553a"
+      }
+    },
+    {
+      "id": "beta:bf16:dbeta:zero:2",
+      "key": "beta:bf16:dbeta",
+      "route": "beta",
+      "types": "bf16",
+      "output": "dbeta",
+      "kind": "zero",
+      "input_shape": [
+        1,
+        64,
+        2
+      ],
+      "output_shape": [
+        1,
+        64,
+        2
+      ],
+      "output_dtype": "torch.bfloat16",
+      "sensitivity_dtype": "torch.float32",
+      "input_sha256": [
+        "5341e6b2646979a70e57653007a1f310169421ec9bdd9f1a5648f75ade005af1"
+      ],
+      "sensitivity_sha256": "99c807b996c2f1d531c6d312d6736651d2973ae06a0ff7babba64dea3595774b",
+      "ordinary_calibration_population": true,
+      "metrics": {
+        "elements": 128,
+        "finite_pairs": 128,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 2.7710643916748796,
+        "residual_norm": 0.004609671516052614,
+        "relative_l2": 0.0016635021293267198,
+        "relative_l2_finite_pairs": 0.0016635021293267198,
+        "max_abs": 0.0018355250358581543,
+        "max_relative_nonzero": 0.0035741597822936855,
+        "relative_quantiles": [
+          0.0013155347302869643,
+          0.0025503492139589347,
+          0.0029761429690027185,
+          0.0035741597822936855
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 0,
+        "rounded_reference_over_one_ulp": 0,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "ef1e82f2bcdd10ff799014472e6f1dd40d7e8d847d78765dd47cf04299cc1c85",
+        "reference_fp64_sha256": "537538b4e253f1050fe0b61294a869a097f9d52c045fd51f72f2c43de014b18c"
+      }
+    },
+    {
+      "id": "beta:bf16:dbeta:saturation:3",
+      "key": "beta:bf16:dbeta",
+      "route": "beta",
+      "types": "bf16",
+      "output": "dbeta",
+      "kind": "saturation",
+      "input_shape": [
+        1,
+        14,
+        1
+      ],
+      "output_shape": [
+        1,
+        14,
+        1
+      ],
+      "output_dtype": "torch.bfloat16",
+      "sensitivity_dtype": "torch.float32",
+      "input_sha256": [
+        "68ef8dd6bc7bdd073d073980b76146abb757cbd510f9441869e1a349a8895b04"
+      ],
+      "sensitivity_sha256": "1c78f6ffe67696152c2ac5acfd2fdd57814ca629e8f0b09f8a3ad83c50b93e8d",
+      "ordinary_calibration_population": false,
+      "metrics": {
+        "elements": 14,
+        "finite_pairs": 14,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 0.2720280652709365,
+        "residual_norm": 0.0002612014722401075,
+        "relative_l2": 0.0009602004557138403,
+        "relative_l2_finite_pairs": 0.0009602004557138403,
+        "max_abs": 0.0002462714432743818,
+        "max_relative_nonzero": 1.0,
+        "relative_quantiles": [
+          0.5289706777273041,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 12628,
+        "rounded_reference_over_one_ulp": 4,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "65b02ee1bfde215c1decac1d4d75f65c53f8a898a7a52f4aa83dad569d0a068a",
+        "reference_fp64_sha256": "a6eba4a43c94f34d15df05b18f1a59ce2069c2534359295e8304b91c751ab8df"
+      }
+    },
+    {
+      "id": "beta:f32:dbeta:gaussian:4",
+      "key": "beta:f32:dbeta",
+      "route": "beta",
+      "types": "f32",
+      "output": "dbeta",
+      "kind": "gaussian",
+      "input_shape": [
+        2,
+        192,
+        8
+      ],
+      "output_shape": [
+        2,
+        192,
+        8
+      ],
+      "output_dtype": "torch.float32",
+      "sensitivity_dtype": "torch.float32",
+      "input_sha256": [
+        "ba5c52d415d804d7104d594ac5f1c692bc3c3e090768582d9189c517631557ff"
+      ],
+      "sensitivity_sha256": "c613fea892b5328ffe70b2ce5af0bf840bfa37ed532814176990341d98ccb1ac",
+      "ordinary_calibration_population": true,
+      "metrics": {
+        "elements": 3072,
+        "finite_pairs": 3072,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 11.880263693540424,
+        "residual_norm": 7.748225784007914e-07,
+        "relative_l2": 6.521930812209837e-08,
+        "relative_l2_finite_pairs": 6.521930812209837e-08,
+        "max_abs": 1.7050459447109922e-07,
+        "max_relative_nonzero": 1.7029240133912485e-06,
+        "relative_quantiles": [
+          3.798661792865837e-08,
+          1.0549142859638542e-07,
+          3.5308174294476557e-07,
+          1.7029240133912485e-06
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 21,
+        "rounded_reference_over_one_ulp": 250,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "01c9faf02930a340e0e5e1dc3b7e1272c2dbd63d987cd051f5ffa663321b88ce",
+        "reference_fp64_sha256": "54b1979f91501a8e232b770b060441dc208fe8b8e962c625738081ef14ecb730"
+      }
+    },
+    {
+      "id": "beta:f32:dbeta:full_kimi:5",
+      "key": "beta:f32:dbeta",
+      "route": "beta",
+      "types": "f32",
+      "output": "dbeta",
+      "kind": "full_kimi",
+      "input_shape": [
+        1,
+        4096,
+        32
+      ],
+      "output_shape": [
+        1,
+        4096,
+        32
+      ],
+      "output_dtype": "torch.float32",
+      "sensitivity_dtype": "torch.float32",
+      "input_sha256": [
+        "76fc99045ad25bb80ca1b1f800ef2a52d683cacefeea7e1813bf449e38ad6807"
+      ],
+      "sensitivity_sha256": "571b594a1d1968ab2448d3c32a9e783b01db8f47e7bf5de2e89aa4d6d9e7e008",
+      "ordinary_calibration_population": true,
+      "metrics": {
+        "elements": 131072,
+        "finite_pairs": 131072,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 76.58079704003804,
+        "residual_norm": 4.670899444278971e-06,
+        "relative_l2": 6.099308997576674e-08,
+        "relative_l2_finite_pairs": 6.099308997576674e-08,
+        "max_abs": 1.9182426624908544e-07,
+        "max_relative_nonzero": 3.285143416601931e-06,
+        "relative_quantiles": [
+          3.8074811729868615e-08,
+          1.0480131031574668e-07,
+          3.47321462202469e-07,
+          3.285143416601931e-06
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 31,
+        "rounded_reference_over_one_ulp": 9237,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "bd5761f8c6360beb918ac995483b454858cad1040f75da303f008dc42a2a874b",
+        "reference_fp64_sha256": "0bd2c05ab211f82e84698e2d991f899ecdce18bff96e9e1356df530bb7aaddb1"
+      }
+    },
+    {
+      "id": "beta:f32:dbeta:zero:6",
+      "key": "beta:f32:dbeta",
+      "route": "beta",
+      "types": "f32",
+      "output": "dbeta",
+      "kind": "zero",
+      "input_shape": [
+        1,
+        64,
+        2
+      ],
+      "output_shape": [
+        1,
+        64,
+        2
+      ],
+      "output_dtype": "torch.float32",
+      "sensitivity_dtype": "torch.float32",
+      "input_sha256": [
+        "076a27c79e5ace2a3d47f9dd2e83e4ff6ea8872b3c2218f66c92b89b55f36560"
+      ],
+      "sensitivity_sha256": "e2e0921b6a1f88e7bfb2f95fd7dccb3eb553fcb66f4ff0ec8f008d0240abd36a",
+      "ordinary_calibration_population": true,
+      "metrics": {
+        "elements": 128,
+        "finite_pairs": 128,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 2.863916241214729,
+        "residual_norm": 0.0,
+        "relative_l2": 0.0,
+        "relative_l2_finite_pairs": 0.0,
+        "max_abs": 0.0,
+        "max_relative_nonzero": 0.0,
+        "relative_quantiles": [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 0,
+        "rounded_reference_over_one_ulp": 0,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "f1b993d48162fd5c276b528bd4d8a52600df00a9bd1c598e8658de7c88ff967e",
+        "reference_fp64_sha256": "68099d5c8b842818eab57679911dc2ba63308bd6e5fb023ccba421679311a455"
+      }
+    },
+    {
+      "id": "beta:f32:dbeta:saturation:7",
+      "key": "beta:f32:dbeta",
+      "route": "beta",
+      "types": "f32",
+      "output": "dbeta",
+      "kind": "saturation",
+      "input_shape": [
+        1,
+        14,
+        1
+      ],
+      "output_shape": [
+        1,
+        14,
+        1
+      ],
+      "output_dtype": "torch.float32",
+      "sensitivity_dtype": "torch.float32",
+      "input_sha256": [
+        "a98d92fea2ac0393bb74587467561d5a7273423c4b3c1bdc52d7c3003921b371"
+      ],
+      "sensitivity_sha256": "6f1684b5a3888ee550725897546ed48eefbb47c44e775ad025ed926d755b6652",
+      "ordinary_calibration_population": false,
+      "metrics": {
+        "elements": 14,
+        "finite_pairs": 14,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 0.44679203009227136,
+        "residual_norm": 3.0568343865538486e-08,
+        "relative_l2": 6.841738841945216e-08,
+        "relative_l2_finite_pairs": 6.841738841945216e-08,
+        "max_abs": 2.8868347795585336e-08,
+        "max_relative_nonzero": 1.0,
+        "relative_quantiles": [
+          0.5296534963002377,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 800860557,
+        "rounded_reference_over_one_ulp": 6,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "3431d6f5bfec5e8568f7960d5149530ae56f5aeda464fc73fac40322b4091be6",
+        "reference_fp64_sha256": "8e6f5d922b81d72a49bb805c16dd3cb67184ca6bbf0e57e103c1a052e0e48e92"
+      }
+    }
+  ],
+  "negative_controls": [
+    {
+      "case": "beta:bf16:dbeta:gaussian:0",
+      "corruption": "zero",
+      "relative_l2": 1.0,
+      "floor": 0.0016569885501556685,
+      "rejected_by_three_times_own_floor": true
+    },
+    {
+      "case": "beta:bf16:dbeta:gaussian:0",
+      "corruption": "negated",
+      "relative_l2": 2.0000291292558043,
+      "floor": 0.0016569885501556685,
+      "rejected_by_three_times_own_floor": true
+    },
+    {
+      "case": "beta:bf16:dbeta:gaussian:0",
+      "corruption": "scaled_1p25",
+      "relative_l2": 0.24998960832854944,
+      "floor": 0.0016569885501556685,
+      "rejected_by_three_times_own_floor": true
+    },
+    {
+      "case": "beta:bf16:dbeta:full_kimi:1",
+      "corruption": "zero",
+      "relative_l2": 1.0,
+      "floor": 0.001658830312002612,
+      "rejected_by_three_times_own_floor": true
+    },
+    {
+      "case": "beta:bf16:dbeta:full_kimi:1",
+      "corruption": "negated",
+      "relative_l2": 2.000009815444996,
+      "floor": 0.001658830312002612,
+      "rejected_by_three_times_own_floor": true
+    },
+    {
+      "case": "beta:bf16:dbeta:full_kimi:1",
+      "corruption": "scaled_1p25",
+      "relative_l2": 0.24998682506649278,
+      "floor": 0.001658830312002612,
+      "rejected_by_three_times_own_floor": true
+    },
+    {
+      "case": "beta:f32:dbeta:gaussian:4",
+      "corruption": "zero",
+      "relative_l2": 1.0,
+      "floor": 6.521930812209837e-08,
+      "rejected_by_three_times_own_floor": true
+    },
+    {
+      "case": "beta:f32:dbeta:gaussian:4",
+      "corruption": "negated",
+      "relative_l2": 2.0000000009096537,
+      "floor": 6.521930812209837e-08,
+      "rejected_by_three_times_own_floor": true
+    },
+    {
+      "case": "beta:f32:dbeta:gaussian:4",
+      "corruption": "scaled_1p25",
+      "relative_l2": 0.25000000106191417,
+      "floor": 6.521930812209837e-08,
+      "rejected_by_three_times_own_floor": true
+    },
+    {
+      "case": "beta:f32:dbeta:full_kimi:5",
+      "corruption": "zero",
+      "relative_l2": 1.0,
+      "floor": 6.099308997576674e-08,
+      "rejected_by_three_times_own_floor": true
+    },
+    {
+      "case": "beta:f32:dbeta:full_kimi:5",
+      "corruption": "negated",
+      "relative_l2": 2.0000000008191474,
+      "floor": 6.099308997576674e-08,
+      "rejected_by_three_times_own_floor": true
+    },
+    {
+      "case": "beta:f32:dbeta:full_kimi:5",
+      "corruption": "scaled_1p25",
+      "relative_l2": 0.250000000917061,
+      "floor": 6.099308997576674e-08,
+      "rejected_by_three_times_own_floor": true
+    }
+  ]
+}
