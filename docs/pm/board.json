@@ -1842,7 +1842,7 @@
       "wave": "W0",
       "soc": "any",
       "priority": "P1",
-      "status": "assigned",
+      "status": "in_progress",
       "model": [],
       "kernel": [],
       "dtype": [],
@@ -1904,6 +1904,10 @@
         {
           "at": "2026-09-21T07:52",
           "summary": "BF-08 已合入（PR #122 → 6c4aaca）、A2-07 已 CLOSE（PR #123 → 28cced5）——按 MikejR2904 在 #31 的条件 APPLY（03:40Z）与 PM 的承诺直接派 A2-02（P1，10h，分支 task/A2-02）。ASSIGN 里点明：main 自 APPLY 以来变了（BF-07 / BF-08：raw flags 前处理的 runtime、三个 autograd Function），规格里写死 a5 的清单要以现状重扫；`kernels/projects/a5/kda_prep/**` 是 BF-09 的写集、不在 A2-02 写集里、别改（确需动先 RISK）；a5 编译签名逐字不变 / soc = a2、a3 编译前报「未验收」/ conftest 的 session fixture 不得打乱 / 主机侧基线 1132 passed / 12 skipped；真机验证（D-PM-34）在其 910B3 上跑 soc = a2 入口报未验收与 SoC 解析路径，附 SoC、CANN version.info 原文 + sha256、算子包目录、原始日志行；A2 数字在 A2-11 之前只是观测记录；新增文件先 RISK；ACK 给真实计划与 ETA。"
+        },
+        {
+          "at": "2026-09-21T08:21",
+          "summary": "ACK（08:10Z，自述，#31，MikejR2904）：读了 AGENTS / handoff / PROTOCOL / A2-02.md；**基线说的是「现有交付（task/A2-02 头 a644f4b）」——即在被派之前已经做过一版**：platform.py（resolve_soc + CAPABILITIES，a5 qualified、a2 / a3 未验收）、ops/kda 的 device 默认改 None 走 platform、test_platform.py 11 个、conftest 显式 ASCEND_FLA_SOC = a5。计划：(1) 补一个把改前编译签名写死的对照测试证明 a5 的 _signature 逐字未变；(2) 主机侧 pytest tests/ 改前 / 改后计数逐项对齐（两组数都报）、写集只动规格列的 6 项、ops/gdn2/** 属仓主轨道不碰；(3) 910B3 真机（D-PM-34）——SoC 从 torch_npu 设备名自动解析为 a2、a2 下 chunk_kda / prepare / fused_recurrent_kda 在编译前报清楚的「未验收」错误（含实际约束值），留 SoC / CANN version.info 原文 + sha256 / 内置算子包目录 / 原始日志行，A2 数字按观测标；(4) rebase 到当前 main（28cced5）后开 PR、DONE。ETA 5h（≤ 10h 时限）。PM 核对：与 ASSIGN 逐项对得上，不需要回复。留意点（评审时核）：rebase 后 BF-08 新增的 `_prepare_training_inputs(device='a5', …)` 等写死默认也要按规格第 2 条改成 None 走 platform；kernels/projects/a5/kda_prep/** 是 BF-09 的写集、不动；`ascend_fla/ops/gdn2/**` 与 reserved_paths 空 diff；基线是 main 的 1132 passed / 12 skipped（NPU-free）。"
         }
       ],
       "result": null,
