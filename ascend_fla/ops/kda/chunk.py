@@ -26,6 +26,8 @@ from typing import Any
 
 import torch
 
+from ascend_fla.platform import capability, require_qualified, resolve_soc
+
 __all__ = ["chunk_kda_fwd", "kda_fwd_kernels"]
 
 L_PER_CHUNK = 64
@@ -121,7 +123,7 @@ def _prep_runtime():
 def _prepare_kernel_inputs(q, k, g, beta, *, A_log=None, dt_bias=None,
                            use_qk_l2norm_in_kernel=False, use_gate_in_kernel=False,
                            use_beta_sigmoid_in_kernel=False, qk_dtype=torch.bfloat16,
-                           device="a5", block_dim=1, namespace="chunk", impl="stable"):
+                           device=None, block_dim=1, namespace="chunk", impl="stable"):
     """Validate, precompile dependencies, then prepare enabled inputs on NPU."""
     _validate_raw_inputs(q, k, g, beta, A_log=A_log, dt_bias=dt_bias,
                         use_qk_l2norm_in_kernel=use_qk_l2norm_in_kernel,
@@ -130,6 +132,7 @@ def _prepare_kernel_inputs(q, k, g, beta, *, A_log=None, dt_bias=None,
                         qk_dtype=qk_dtype)
     if not (use_qk_l2norm_in_kernel or use_gate_in_kernel or use_beta_sigmoid_in_kernel):
         return q, k, g, beta
+    device = resolve_soc(device)
     runtime = _prep_runtime()
     sources = []
     if use_qk_l2norm_in_kernel:
@@ -194,7 +197,8 @@ def _check_input_domain(q, k, g, beta, *, use_qk_l2norm_in_kernel=False,
 # ascriptor kda_fwd contract.json 的 shapes.block_dim 声明；只有这几个值被 cases 覆盖过。
 # 契约的 core_ownership 说明分区方式：gate 按向量核切 B*HV*C，scores/WY/inverse 按 cube
 # 组切，融合尾部按 B*HV 头对切（两个 V=64 tile 必须留在同一组）。
-SUPPORTED_BLOCK_DIM = (1, 2, 3, 4)
+#: a5 chunk 路径的 block_dim，从能力表读（a5 的别名）。真值住在 ``platform.CAPABILITIES``。
+SUPPORTED_BLOCK_DIM = capability("a5")["supported_block_dim"]["chunk"]
 
 #: Stable uses the local gate/scores/WY kernels for gate-span stability and the
 #: repaired recurrent kernel for continuous Aqk slot rotation across heads.
@@ -405,10 +409,11 @@ def _layout_runtime():
 
 
 def _to_bhcld(x: torch.Tensor, heads: int, *, on_cpu: bool = False,
-              device="a5", block_dim=1) -> torch.Tensor:
+              device=None, block_dim=1) -> torch.Tensor:
     """Token-major → head/chunk-major, entirely in the owned layout kernel."""
     if on_cpu:
         raise ValueError("CPU layout conversion is prohibited by D-PM-37")
+    device = resolve_soc(device)
     b, t = x.shape[:2]
     c = t // L_PER_CHUNK
     if x.dim() == 3:
@@ -426,10 +431,11 @@ def _to_bhcld(x: torch.Tensor, heads: int, *, on_cpu: bool = False,
 
 
 def _from_bhcld(x: torch.Tensor, *, on_cpu: bool = False, dtype=None,
-                device="a5", block_dim=1, multiply=False, factor=1.0) -> torch.Tensor:
+                device=None, block_dim=1, multiply=False, factor=1.0) -> torch.Tensor:
     """Head/chunk-major → token-major, optionally narrowing in the same launch."""
     if on_cpu:
         raise ValueError("CPU layout conversion is prohibited by D-PM-37")
+    device = resolve_soc(device)
     b, hv, c, l, d = x.shape
     result = _layout_runtime().move(
         x, (b, c, l, hv, d), (hv*c*l*d, l*d, d, c*l*d, 1),
@@ -459,11 +465,9 @@ def _from_bhcld(x: torch.Tensor, *, on_cpu: bool = False, dtype=None,
 #: 于是：纯推理（``chunk_kda_fwd``）可以用到 155，训练（``chunk_kda_fwd_with_caches`` /
 #: ``chunk_kda``）到 105。
 #: 数字全部是**实测点**，不是推算：见两个单元 contract.json 的 ``domain.gate_span``。
-MAX_GATE_SPAN = {
-    # upstream 两条链都受 ~87/88.7 那条硬线约束（前向下溢、反向上溢），取 80 留余量
-    "upstream": {"forward": 80.0, "backward": 80.0},
-    "stable": {"forward": 155.0, "backward": 105.0},
-}
+#: a5 的门控跨度上限，从能力表读（a5 的别名）。真值住在 ``platform.CAPABILITIES``：
+#: upstream 两条链都受 ~87/88.7 那条硬线约束（前向下溢、反向上溢），取 80 留余量。
+MAX_GATE_SPAN = capability("a5")["max_gate_span"]
 
 #: 两条链的名字。``_check_gate_range`` 的 ``path`` 只接受这两个。
 GATE_PATHS = ("forward", "backward")
@@ -614,7 +618,7 @@ def chunk_kda_fwd(
     initial_state: torch.Tensor | None = None,
     output_final_state: bool = False,
     *,
-    device: str = "a5",
+    device: str | None = None,
     block_dim: int = 1,
     layout_device: str = "auto",
     check_gate_range: bool = True,
@@ -655,6 +659,8 @@ def chunk_kda_fwd(
         ``(o, final_state)``，``o`` 为 ``[B, T, HV, 128]`` bfloat16；
         ``final_state`` 为 ``[B, HV, 128, 128]`` float32 或 ``None``。
     """
+    device = resolve_soc(device)
+    require_qualified(device)
     b, h, hv, c = _check(q, k, v, g, beta, initial_state, block_dim, impl)
     on_cpu = _resolve_layout(layout_device)
     if check_gate_range:
@@ -726,7 +732,7 @@ def chunk_kda_fwd_with_caches(
     scale: float | None = None,
     initial_state: torch.Tensor | None = None,
     *,
-    device: str = "a5",
+    device: str | None = None,
     block_dim: int = 1,
     layout_device: str = "auto",
     check_gate_range: bool = True,
@@ -756,6 +762,8 @@ def chunk_kda_fwd_with_caches(
         ``(o, final_state, caches)``。``caches`` 的键正是 :data:`BWD_CACHE_NAMES`，
         全部 bfloat16、token-major（``h`` 为 ``[B,C,HV,128,128]``），可直接喂 ``kda_bwd``。
     """
+    device = resolve_soc(device)
+    require_qualified(device)
     b, h_q, hv, c = _check(q, k, v, g, beta, initial_state, block_dim, impl)
     on_cpu = _resolve_layout(layout_device)
     # ⚠️ 门控必须在编译**之前**查。两个理由：

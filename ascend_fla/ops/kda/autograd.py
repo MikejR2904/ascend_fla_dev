@@ -84,7 +84,7 @@ class _RawBeta(torch.autograd.Function):
 
 def _prepare_training_inputs(q, k, g, beta, *, A_log=None, dt_bias=None,
                              use_qk_l2norm_in_kernel=False, use_gate_in_kernel=False,
-                             use_beta_sigmoid_in_kernel=False, device='a5', block_dim=1,
+                             use_beta_sigmoid_in_kernel=False, device=None, block_dim=1,
                              impl='stable'):
     """Retain graph edges at each enabled native preparation boundary."""
     _validate_raw_inputs(q, k, g, beta, A_log=A_log, dt_bias=dt_bias,
@@ -93,6 +93,8 @@ def _prepare_training_inputs(q, k, g, beta, *, A_log=None, dt_bias=None,
                         use_beta_sigmoid_in_kernel=use_beta_sigmoid_in_kernel)
     if not (use_qk_l2norm_in_kernel or use_gate_in_kernel or use_beta_sigmoid_in_kernel):
         return q, k, g, beta
+    from ascend_fla.platform import resolve_soc
+    device = resolve_soc(device)
     runtime = _prep_runtime()
     sources = []
     if use_qk_l2norm_in_kernel:
@@ -195,7 +197,7 @@ def chunk_kda(
     use_gate_in_kernel: bool = False,
     use_beta_sigmoid_in_kernel: bool = False,
     check_domain: bool = True,
-    device: str = "a5",
+    device: str | None = None,
     block_dim: int = 1,
     layout_device: str = "auto",
     check_gate_range: bool = True,
@@ -252,6 +254,10 @@ def chunk_kda(
     Raises:
         ValueError: 任何定尺/dtype/设备约束不满足。绝不静默降级（AGENTS.md §7）。
     """
+    from ascend_fla.platform import require_qualified, resolve_soc
+    device = resolve_soc(device)
+    require_qualified(device)
+
     # Choose before preparation; gate-parameter-only training must keep its graph.
     train_inputs = (q, k, v, g, beta, initial_state)
     if use_gate_in_kernel:
