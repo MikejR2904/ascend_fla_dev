@@ -21,6 +21,17 @@
 - 仓主轨道的保留路径（`board.json` 的 `reserved_paths`）只跑、不改；结果照样列进清单，标「仓主轨道」。
 - 交付 `docs/research/host_op_audit.md`：清单 + 建议的改正任务拆分（PM 据此建任务）。
 
+## 2026-09-21 更新（规格写于 09-19，之后 main 变了；PM 派单前补这一节，先读它）
+
+自 09-19 起 main 合入了 FMT-02（KDA 的布局 / dtype / 零填充进 kernel）、BF-02（GDN BF16）、BF-03（PGDN BF16）、BF-04（PKDA BF16）、BF-06（KDA decode BF16）、BF-07（KDA raw flags 前处理，推理 / decode）。上面「阳性对照」里写的那些已知违规**大半已经不在了**，请按现在的主线改用下面这些：
+
+- **仍应被工具查出的（阳性）**：① D-PM-42 登记的 KDA 存量例外——`_scan_states` 整体（带缓存前向与反向里 h / v_new 的 host 复算：Cast / matmul / stack）、`log2(eg)` 分支、`dw` 取负、只读校验（含默认的门控跨度检查在 device 上的 cumsum）；② KDA 训练路径的 raw-flag 前处理（`chunk._prepare_inputs` 的 host 计算图，BF-08 在做，合入前仍在）；③ GDN-2 的 BF16 加宽（仓主轨道，只跑不改，BF-05 在做）。
+- **应报干净的（阴性）**：PKDA FP32，以及现在应已合规的路径——KDA 推理 / decode（raw flags 关与开）、GDN / PGDN / PKDA 的 BF16。**工具报出的与这些期望不符的地方都是发现，如实列出**，不要为了对上期望去调分类表。
+- **入口**（函数名以仓里为准）：`chunk_kda`（raw flags 关 / 开 × 需要梯度 / 不需要梯度；前向、带缓存前向 `chunk_kda_fwd_with_caches`、反向经 autograd）、`chunk_kda_bwd`、`fused_recurrent_kda`、`chunk_gdn`、`chunk_gdn_bwd`、`chunk_pgdn`、`chunk_precond_kda`、`chunk_gdn2`，每条 dtype 路径各一份。
+- **每份结果带被审计的 main 提交**（`git rev-parse HEAD`）与被审计源文件的 sha256——BF-05 / BF-08 合入后结果会变；工具要能**一条命令重跑**，以后各任务统一用它。
+- **交叉核对**：在同一入口上，把你的结果与已合入任务自带的审计驱动（`kernels/projects/a5/kda_prep/native_audit.py`、`kda_fused_recurrent_bf16/verify_native.py`、`pkda_chunk_fwd_bf16/verify_native.py` 等 TorchDispatchMode 用法）对一遍，不一致要解释；这些驱动只读、不在写集内、不改。
+- **环境**：你的机器是 CANN 9.3.0 / torch 2.7.1，其它任务用的是 9.1.0-beta.1 / 9.2.0 与 torch 2.12。aten 层的算子名 / 分解可能随版本不同——**原始追踪是这套环境的观测，结论只对它成立**，清单里逐条写明环境；若某入口因版本差异在你的环境里跑不起来（torch API 缺失之类），如实标「无法运行 + 原因」，不绕、不为它改源码。
+
 ## 验收
 
 - [ ] 工具的 CPU 单测（分类表、合成函数的正反例）；DONE 里给命令与结果。

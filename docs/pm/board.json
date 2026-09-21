@@ -510,7 +510,7 @@
       "wave": "W0",
       "soc": "a5",
       "priority": "P0",
-      "status": "open",
+      "status": "assigned",
       "model": [],
       "kernel": [],
       "dtype": [
@@ -532,14 +532,29 @@
       "spec": "docs/pm/tasks/FMT-01.md",
       "issue": 108,
       "pr": null,
-      "assignee": null,
-      "assignee_caps": null,
-      "branch": null,
+      "assignee": "joshjms",
+      "assignee_caps": {
+        "agent": "Claude Opus 5 (Claude Code)（自述）",
+        "socs": [
+          "a5"
+        ],
+        "soc_details": "自述（APPLY 02:07Z）：a5，Ascend950PR_9589 两张卡；CANN toolkit 9.3.0（innerversion V100R001C12B116）、驱动 7.0.t9.0.B798；内置算子包含 ascend950 / ascend910b / ascend910_93（torch_npu 计算算子可用，已实测 randn / matmul / d2h）；宿主 torch 2.7.1 / torch_npu 2.7.1.post4、Python 3.11.15，自己的 venv（--system-site-packages）；该机无 npu-smi，占用用 torch_npu.npu.mem_get_info 间接看，只用自己的卡（机器与卡归 assignee 管理，D-PM-28）；结论只对实际验证的那一套环境成立",
+        "ascriptor": "library 90cfcdc / kernels b3b3f9c（agent/compatibility.json 当前 pin，自述）",
+        "fla": "0.5.2（本地主机侧，自述）",
+        "fork": "joshjms/ascend_fla_dev",
+        "availability": "异步",
+        "note": "新账号，首次申领；自述已先在该 a5 上验证真机链路（tests/test_kda_fwd_npu.py 4 passed in 1058.40s，首次含 kernel 编译）。首次合入需用户明确同意（PROTOCOL §5 第 5 条）。"
+      },
+      "branch": "task/FMT-01",
       "timebox_h": 16,
       "reports": [
         {
           "at": "2026-09-19T16:47",
           "summary": "用户 D-PM-37 建：把通则的 host 算子审计做成可复用工具，并在真机上给出全仓公共入口的 host 侧转换清单（只读，不改入口源码）；BF/FMT 各任务落地后统一用它"
+        },
+        {
+          "at": "2026-09-21T02:12",
+          "summary": "APPLY（02:07Z，自述，#108；新账号 joshjms，agent「Claude Opus 5 (Claude Code)」，a5，CANN 9.3.0 / torch 2.7.1 / 算子包含 ascend950，两张卡只用自己的一张；ascriptor 90cfcdc / b3b3f9c，fla 0.5.2，fork joshjms/ascend_fla_dev，异步可用）；已读 FMT-01.md 与 bf16-kernel-side.md，写集只碰 benchmarks/host_op_audit.py、tests/test_host_op_audit.py、docs/research/host_op_audit.md、benchmarks/evidence/host_op_audit/**，reserved_paths 下的入口只跑不改、结果标「仓主轨道」，不改 ops / kernel 源码；自述先在 a5 上跑通了 tests/test_kda_fwd_npu.py（4 passed in 1058.40s）以证明真机链路可用。PM 处理：无人持有、P0、无依赖、写集与 BF-05 / BF-08 / 保留路径都不相交、A5 是本仓当前波次、申领人的 D-PM-34 真机条件自述可落实——直接派（分配给新账号不需要问用户；「新账号第一次合入要用户明确同意」是合入时的事，届时我把审查结论与关键数字发给用户）。派单前补了规格「2026-09-21 更新」一节：09-19 之后 main 合入了 FMT-02 / BF-02 / BF-03 / BF-04 / BF-06 / BF-07，规格里的「已知违规」大半已不在——阳性对照改用仍在的（D-PM-42 存量例外、KDA 训练 raw-flag 前处理、GDN-2 BF16 加宽），阴性对照与入口清单、被审计提交与文件哈希、与已合入任务自带审计驱动的交叉核对、环境差异（CANN 9.3.0 / torch 2.7.1）都写明。"
         }
       ],
       "result": null,
