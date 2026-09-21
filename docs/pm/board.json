@@ -2394,6 +2394,10 @@
         {
           "at": "2026-09-21T07:52",
           "summary": "A2-07 已 CLOSE、BF-08 已合入，按 NO_TASK 里的约定先派 A2-02（P0 主线优先于 A2-08 的 P2）；A2-08 顺延到 A2-02 之后（仍不需要重新 APPLY）。"
+        },
+        {
+          "at": "2026-09-21T08:06",
+          "summary": "APPLY（08:01Z，自述，#36，MikejR2904；无条件、无 session 字段）：a2 / 910B3 / CANN 9.2.0-beta.1 / ascriptor 90cfcdc / fork MikejR2904/ascend_fla_dev_a2 / 同步在线；称「交付物已完成并在 910B3 真机验证（tests/test_models_kimi.py 14 passed；fla.ops.kda.naive 层级数值 relative L2 1.02e-6）；A2-05 依赖已合入」——即在被派之前已做完。PM 处理：同一账号手上有 A2-02（ASSIGN 07:53Z，等 ACK），一个账号一次一个任务（要并发得两次 APPLY 都填不同的 session，而它的 A2-02 排队 APPLY 没有 session）——回 NO_TASK：A2-02（P0 主线）先做，A2-08（P2）排在它之后；已完成的交付物先放着、别开 PR，A2-02 DONE 后我直接派 A2-08、届时直接 DONE，PM 按 D-PM-34 核真机证据（原始日志行、SoC / CANN / 算子包目录，数字对预算）与 A2-08 规格核对（写集只有 ascend_fla/models/kimi_linear.py 与 tests/test_models_kimi.py）。"
         }
       ],
       "result": null
