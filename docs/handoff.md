@@ -11,6 +11,12 @@
 
 ### 正在飞的任务（现在没有；A5K-02、PK-02、PK-03 都已于 2026-09-19 合入）
 
+> **2026-09-21T13:37Z 更新：A2-10（PR #127）force-push 新头 8a001a0（未发 STATUS）→ PM 二审：上一轮七条全部到位，只剩测试断言三处小的，仍 rework（改完只核增量、然后请示用户）。**
+> - 强证据：新一批真机回执的 152 个桥 / harness 哈希与**上一头那批逐个相同**（两次独立运行相隔约 1.5h）；bd1 = bd2 桥输出 76/76；桥自证 fwd 5 次 / decode 1 次启动、签名 bd1 与 bd2 不相交；带完整 40 位 ascriptor 修订（与 A2-03 的 env.json 同）；scratch merge 全量 1182 passed / 12 skipped / 0 failed（= 1173 + 9）。
+> - 新的观测（标观测、不是结论）：解开单元的域检查后 block_dim 1 / 2 / 4 / 8 / 20 / 40 在 kda_fwd_stable 的 narrow_gate case 上**都跑完、没有死锁**（与 A5「超过物理核数死锁」不同；但只是 liveness，正确性没验）；核数 torch_npu 读到 20 / 40 与 profile 一致，UB / L1 / L0C 容量仍是 profile 声明值；`_claim_op_name` 在 A2 上真机同进程二次 build 抛 AclError。
+> - PM 的负对照发现三处新测试没守住文档断言：fwd case 启动次数只要求 in (1, 5)、claim_op_name 与 block_dim_probe 两份回执没有测试读。要求只动测试三处断言。**教训**：申领人 force-push 后没发 STATUS 也别干等——先评审，发评论前核头没变。
+> - 接下来：申领人改完测试 → PM 核增量 → **向用户请求 A2-10 合入授权**（D-PM-33：A2 数字只作观测）→ 合入后派 A2-08（成品放着）、A2-11 解锁。
+>
 > **2026-09-21T12:23Z 更新：A2-10（PR #127，MikejR2904）交了 DONE（ACK 后约 1.5h）→ PM 评审 **rework**。核心结果成立、卫生做得好，但规格有两项没做成。**
 > - 成立的：runtime 桥对 aclnn harness 逐位相同 152/152（PM 从原始 JSON 复算；152 个哈希各不相同；case 集与 contract 逐个对上；**bd1 与 bd2 桥输出逐位相同 76/76**，A2 观测）；覆盖表 12/12；scratch merge 全量 1178 passed / 12 skipped / 0 failed（= 1173 + 5）。单提交、写集干净、隐私 0 命中、脱敏在推 PR 前做——A2-02 的教训他们吃进去了。
 > - 没做成的：① 设备事实是 ascriptor profile 的声明值（20 / 40、UB 192 …）而非实测，block_dim 探针 4 / 8 / 20 / 40 全死在单元自己的域检查、没到硬件（文档推给 A2-11 是错的，A2-11 不测 block_dim）；② `_claim_op_name()` 在 A2 上「报错而不是静默忽略」的检查没做（DONE 写的是绕开它）；③ 文档说每份回执带 ascriptor 修订，一份都没有；④ 回执不能自证走的是桥；⑤ 测试太薄（PM 负对照：删掉 50/60 比较并把 soc 改成 a5，5 测试仍全过）；⑥ 缺原始控制台日志。
