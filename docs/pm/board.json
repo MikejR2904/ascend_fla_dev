@@ -4714,7 +4714,9 @@
         "ascend_fla/ops/kda/autograd.py",
         "ascend_fla/ops/kda/chunk.py",
         "tests/test_kda_prep_backward.py",
-        "docs/research/kda_prep_backward.md"
+        "docs/research/kda_prep_backward.md",
+        "tests/test_kda_domain_checks.py",
+        "tests/test_kda_prep_kernel.py"
       ],
       "needs": {
         "npu": true,
@@ -4759,6 +4761,10 @@
         {
           "at": "2026-09-21T01:26",
           "summary": "RISK comparison-contract-boundary（01:17Z，自述，#117，实现前，无 candidate kernel）：CPU 校准发现旧 host 的 BF16 norm 反向对 FP64 正确舍入已有 3 ULP（基线 6c42dc6 的 chunk.py，种子 8008，B1 / T4096 / H32 / K128，全量 16,777,216 元素：relL2 0.0016560061688898119、逐元素最大相对误差 0.019609933398464667、7 处 > 1 ULP、最大 3、无符号差；三处 3 ULP 均为普通 FP32 正规数，不属于 D-PM-52 的极小输出类；条件数约 1.69e5 / 5.92e5 / 1.51e5，两项相消）；若同时继承 BF-07 对两个比较对象各 ≤ 1 ULP，三处整数邻域无交集。申领人请 PM 明确：继承（则请给正式比较契约处置）还是不继承（按首提交冻结的 3F 相对 L2 / 逐元素误差，norm 仍受 1e-2 上限，两个对象的 ULP 分布逐类报告 / 解释）；自述未把 3 ULP 设成通过线、未新增端点类、未改 CPU FP32 端到端 golden 或六梯度预算，继续 gate / beta / 参数归约的独立 CPU 校准，norm 判据冻结与 kernel 实现暂不越过。FP32 raw 路径：同形状旧 host relL2 5.0221e-8、最大 540135 FP32 ULP，按已明确的 FP32 规则只报告 / 解释。PM 处理：**独立复现成立**——在 CPU（Torch 2.10.0+cpu）上原样跑 RISK 脚本，7 个 > 1 ULP、最大 3、三个 3 ULP 位置的 BF16 位（旧 host / 正确舍入）46025 / 46022、45872 / 45875、45988 / 45985、relL2 与逐元素最大相对误差都与 RISK 逐位一致；另有 4 个位置距离为 2，只剩中点一个 BF16 值可选。裁定 D-PM-54（PM，合入前单列给用户、可推翻）：不继承，反向 BF16 输出改用 BF-07 澄清第 2 条的口径；权威是 FP64 / CPU FP32，旧 host 只是观测对象；归属（哪些输出用哪种口径）由第一个提交的校准冻结；>1 ULP 元素逐个列出并解释；检测力靠损坏输出对照（含接近预算边界的一类）保证；其余一律不变。规格 docs/pm/tasks/BF-08.md 已加「2026-09-21 澄清」一节；已在 #117 回复，申领人可以冻结 norm 判据继续。"
+        },
+        {
+          "at": "2026-09-21T01:31",
+          "summary": "RISK write-set-expansion（01:25Z，自述，#117）：BF-07 新增的 tests/test_kda_prep_kernel.py::test_training_graph_selection_and_no_grad（第 107 行；training_leaf 八类 × enabled 两种 = 16 例）monkeypatch autograd._prepare_inputs 并断言启用梯度时 seen == ['training_host']——这正是 BF-07 登记的训练存量例外的观察点，BF-08 消除该路径后必然失败；申请只改这一个函数的函数体，参数化与其它顶层节点一字不改，观察点换成新的训练前处理 ABI（函数内局部 CPU 替身），保留八类 leaf / grad-enabled 与 no_grad / parameter-only / 推理分流覆盖并明确断言旧 host 前处理未被调用，不加生产 CPU 旁路、不删 / 跳过 / 放宽；已批准的 test_kda_domain_checks.py 两个函数仍按原规则，此函数待 PM 确认后才动。PM 处理：核实属实（在 main 上读了函数与全部对旧 host 训练路径的引用：其余只有 test_kda_domain_checks 的两个已批准函数与直接调用 _prepare_inputs 的对照，后者要求 chunk._prepare_inputs 保留）；**事先批准**这一个函数（PM 事先批准的 write-set-expansion，不需要问用户），条件写进规格「现有测试」：只改函数体、AST 逐节点核其余不变、保留全部覆盖并明确断言旧 host 未被调用、局部替身、不加生产 CPU 旁路、chunk._prepare_inputs 必须保留、做入口换回 base 的负对照；清单外若还有被牵连的既有测试（举例 test_disabled_gate_parameters_do_not_select_training）先 RISK。板上 write_set 补入 tests/test_kda_domain_checks.py（两个已批准函数）与 tests/test_kda_prep_kernel.py（这一个函数）。"
         }
       ],
       "result": null,

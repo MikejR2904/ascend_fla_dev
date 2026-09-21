@@ -14,6 +14,7 @@
 > **2026-09-21T01:26Z 更新：BF-08 的第一个 RISK（comparison-contract-boundary，实现前）→ PM 裁定 D-PM-54：反向 BF16 输出不继承「对两个对象各 ≤ 1 ULP」。**
 > - 申领人在 CPU 校准里发现旧 host 的 BF16 norm 反向对 FP64 正确舍入最多 3 ULP（7 / 16.7M 元素，两项相消，条件数 1.5e5–5.9e5）；三处 3 ULP 位置上任何 BF16 candidate 都无法同时落在两个对象的 1 ULP 内。**PM 在 CPU 上原样复现，逐位一致**（另有 4 个位置只剩中点一个值可选）。
 > - 裁定（PM，规格 `BF-08.md` 已加 2026-09-21 澄清一节）：反向 BF16 输出改用 BF-07 澄清第 2 条口径——不设 ULP 通过线，relL2 ≤ min(1e-2, 3F)、逐元素相对误差 ≤ 3 × 旧 host 对 FP64 的实测地板，第一个提交冻结；两个对象的 ULP 分布都报、> 1 ULP 元素逐个列出；哪些输出用哪种口径由校准冻结；带接近预算边界的损坏输出对照。端到端六个梯度预算、155 / 105 闸、域、D-PM-48 / 50 / 52 框架不变。
+> - BF-08 的第二个 RISK（write-set-expansion，01:25Z）：BF-07 的 `test_training_graph_selection_and_no_grad`（16 例，断言训练走 host）必然被 BF-08 打破——PM 事先批准只改这一个函数体（条件见规格「现有测试」追加段：AST 核其余不变、保留覆盖并明确断言旧 host 未被调用、局部替身、`chunk._prepare_inputs` 必须保留、入口换回 base 的负对照）。
 > - **待用户：暂无，但 BF-08 合入授权时要把这条（BF16 反向输出去掉 ULP 判据、改 3× 地板）单列给用户；用户可推翻。**
 >
 > **2026-09-21T01:04Z 更新：用户授权「#118授权」（D-PM-53），PR #118（BF-07）已合入 → 381b452，BF-07 done；main 全量 1032 passed, 12 skipped, 5 warnings。BF-08 按约定派给同 session。**
