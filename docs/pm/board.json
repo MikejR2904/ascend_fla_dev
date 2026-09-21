@@ -1189,6 +1189,10 @@
         {
           "at": "2026-09-21T01:16",
           "summary": "STATUS（01:11Z，自述，#104，头 a45873c，分支 task/BF-05）：派生单元 ABI 改成 BF16 口径——q/k/v 与 o 是 BF16、state 与门控仍 FP32；两个参考都是「BF16 输入加宽一次 → 跑与 FP32 单元相同的 FP32 递推 → o 舍成 BF16」；域与 GD2-01 相同（含 B=1）；判据 o 与 final_state 相对 L2 ≤ 5.2354e-03（校准好的那条）。`run.py reference` 12/12 通过、sim 在 t1_h1_small 整链通过。阻塞（自述，自行处理、没有向 PM 提问）：12 个 case 的 sim 全量在 t64_h16_real 上 SimDeadlock（进程 core dump）；一次一个变量的对照：FP32 单元同 case 通过、BF16 派生单元死锁，t1_h1_small 不复现——所以是 BF16 改写引入的（stage 1 三处 widen_row 的 @vf 调用、stage 5 一处 narrow_row、BF16 的 GM 形参与暂存 tile），库的信用诊断显示 lock / ready / wait / free 四个计数之一不动；还没定位到具体一处，下一步读生成代码的事件表逐个对四个计数，再决定是把 @vf 调用挪出条件分支还是本来就不该进内层循环；随后 sim 全量 12 个 case → 每个 kernel compile --backend cce（A2-09 的教训：sim 不校验物理分配）→ 才上 A5 真机。不主张：真机一步没跑，没有任何精度 / 性能数字，FP32 路径逐位不变也还没证。PM 核对（只做了不需要设备的部分，从分支读的）：首个提交 1ebec19（15:52Z，只加 66 行研究文档：误差地板与预算）先于 kernel 派生提交 f6ed5e0 / b751286 / a45873c，预算 5.2354e-03 与 STATUS 一致；文档里参考 A 已改为「pin 住的 fla GDN-2 naive（e52dbc0e…，与本机 checkout 的 864a87f6 不同），真机验收前接上并核 SHA」——PM 上一条要求对齐 fla 修订的意思已经写进去了，验收时我核回执里的 SHA。没有需要 PM / 用户决定的事，不回复；这是一次调试进展，也不是 write-set / 预算 / 域变更。24h 时限自 15:3xZ（Sep 20，看板 ASSIGN 提交 15:32Z）起算，约 15:3xZ（Sep 21）到期，申领人在 STATUS 里没有给新的 ETA——到约 03:36Z（50% 点）时若仍没有真机数字，我会按超时 50% 的口径上报。"
+        },
+        {
+          "at": "2026-09-21T09:22",
+          "summary": "非协议消息（08:46Z，#104，首行 `[FLA-PM] STATUS BF-05 correction-not-a-deadlock from=…` 多了一个词 → 解析器判首行格式不对，没有记成 STATUS；内容按数据读）：撤回上一条里「BF16 改写引入 SimDeadlock」的定性——`SimDeadlock` 来自模拟器 `join(timeout)` 后线程仍存活，不是信用配平被打破，报错里「lanes still blocked:」后没有列出任何 lane 正是「没有东西在阻塞」的信号；定位表（每步一个变量）：FP32 原单元通过；varC（FP32 + 两个未调用的 @vf + 未用的 BF16 tile）通过；varA（只有输入转 BF16）与 varB（只有输出转 BF16）各自报 SimDeadlock；完整 BF16 换线程模型仍报；完整 BF16 只把 `--timeout` 放大到 3600 通过——代码一字未改；BF16 在模拟器里更慢：A5 上加宽 / 收窄只能走 @vf，逐 token 循环里每 token 多 3 次 widen_row + 1 次 narrow_row，`t64_h16_real` 最明显（CPU 模拟器墙钟，**不是真机结论**）；现状：`t64_h16_real` 在 `--timeout 3600` 下整链通过（含全部 stage checkpoint）、12 个 case 全量 sim 用 `--timeout 7200` 重跑中；单元代码没因此改过一行。**仍没有任何真机数字**（D-PM-34 要真机）。PM 已回复（非协议）：头必须恰好是 `[FLA-PM] STATUS BF-05 from=limjiunnbin`；请发合规 STATUS 写清到第一批 A5 真机数字的现实 ETA 与预计超时量；预计超出 ≥25% 发 RISK timebox-slip，>50% PM 请示用户。时限约 15:30Z 到期，PM 在到期前再看一次。"
         }
       ],
       "result": null,
@@ -1859,7 +1863,7 @@
       "wave": "W0",
       "soc": "any",
       "priority": "P1",
-      "status": "in_progress",
+      "status": "rework",
       "model": [],
       "kernel": [],
       "dtype": [],
@@ -1881,7 +1885,7 @@
       },
       "spec": "docs/pm/tasks/A2-02.md",
       "issue": 31,
-      "pr": null,
+      "pr": 126,
       "assignee": "MikejR2904",
       "assignee_caps": {
         "agent": "Claude Opus 4.8 (Claude Code)，operated by MikejR2904（自述）",
@@ -1925,6 +1929,10 @@
         {
           "at": "2026-09-21T08:21",
           "summary": "ACK（08:10Z，自述，#31，MikejR2904）：读了 AGENTS / handoff / PROTOCOL / A2-02.md；**基线说的是「现有交付（task/A2-02 头 a644f4b）」——即在被派之前已经做过一版**：platform.py（resolve_soc + CAPABILITIES，a5 qualified、a2 / a3 未验收）、ops/kda 的 device 默认改 None 走 platform、test_platform.py 11 个、conftest 显式 ASCEND_FLA_SOC = a5。计划：(1) 补一个把改前编译签名写死的对照测试证明 a5 的 _signature 逐字未变；(2) 主机侧 pytest tests/ 改前 / 改后计数逐项对齐（两组数都报）、写集只动规格列的 6 项、ops/gdn2/** 属仓主轨道不碰；(3) 910B3 真机（D-PM-34）——SoC 从 torch_npu 设备名自动解析为 a2、a2 下 chunk_kda / prepare / fused_recurrent_kda 在编译前报清楚的「未验收」错误（含实际约束值），留 SoC / CANN version.info 原文 + sha256 / 内置算子包目录 / 原始日志行，A2 数字按观测标；(4) rebase 到当前 main（28cced5）后开 PR、DONE。ETA 5h（≤ 10h 时限）。PM 核对：与 ASSIGN 逐项对得上，不需要回复。留意点（评审时核）：rebase 后 BF-08 新增的 `_prepare_training_inputs(device='a5', …)` 等写死默认也要按规格第 2 条改成 None 走 platform；kernels/projects/a5/kda_prep/** 是 BF-09 的写集、不动；`ascend_fla/ops/gdn2/**` 与 reserved_paths 空 diff；基线是 main 的 1132 passed / 12 skipped（NPU-free）。"
+        },
+        {
+          "at": "2026-09-21T09:22",
+          "summary": "DONE（08:48Z，自述，#31，PR #126，头 1ef4518，三个提交，rebase 到 44b6c6d）：platform.py（resolve_soc：显式 → ASCEND_FLA_SOC → torch_npu 设备名，三条都空报错；CAPABILITIES：a5 qualified、a2 / a3 未验收；require_qualified）、compile_kernel(device=None) 走 platform、chunk_kda / prepare / fused_recurrent_kda 默认 None 并在编译前报「未验收」、SUPPORTED_BLOCK_DIM / MAX_GATE_SPAN 改从能力表读、conftest 显式 ASCEND_FLA_SOC=a5、test_platform 12 个；910B3 真机（自述）：设备名 → resolve_soc()=a2、三个入口编译前被拦、test_platform 12 passed（DONE 评论里的 sha256 被截断、没有原始输出，且「真机验证」一节带了容器名——已请其编辑评论）。 PM 二审（NPU-free，scratch merge 到当时 main 4517851）：**REVIEW rework**——(1) **回归**：全量 `1 failed, 1170 passed, 12 skipped`（预期 1171 = 1159 + 12），失败的是 `tests/test_kda_decode.py::test_block_dim_domain_matches_contract`（KeyError SUPPORTED_BLOCK_DIM）：该测试用 ast 读 `fused_recurrent.py` 的模块级字面量，而 PR 把它改成 `capability(\"a5\")[…]`；申领人报的「改前改后都是 200 passed / 3 skipped / 8 failed」看不出它（推测那 8 个预存失败在其无 `kernels/` 的环境里就含这个测试，同 ID 前后都红，未核实），验收「主机侧结果与改前完全相同」没满足；PM 预批只改 `_op_consts` 函数体；(2) **规格要求 2 未做完**：`ops/kda/**` 仍有 `device=\"a5\"` 默认——`autograd.py:87`、`chunk.py:126 / 411 / 432 / 618 / 730`、`chunk_bwd.py:216`，在 A2 机器上直接调用会静默按 a5 编译，入口拦住了它们没拦（ACK 时我已提醒过 `_prepare_training_inputs`）；(3) 真机证据不合规：sha256 截断、无原始输出（PM 预批 `benchmarks/a2/probe_platform.py` + `benchmarks/a2/evidence/platform/**`，≤ 1 MB）、容器名要删；(4) 「未验收」提示文字「A2-01 仅静态验证」不准确（A2-01 有 910B3 读数，只是 D-PM-30 之前不算数）。已核没问题：范围 8 个文件全在写集、无二进制；三个提交全部 10 个 blob 隐私扫描 0 命中；a5 常量搬家值不变；test_platform 12 passed；gen_matrix --check 通过；其余 1170 个全过、skipped 12 与 main 相同。**PM 更正规格（两处，都是收窄我自己写的规格，不是放宽用户的决定）**：① 验收里 `grep -rn '\"a5\"' ascend_fla | grep -v platform.py` 范围写宽了——`ops/gdn* / pgdn* / pkda*` 不在写集、`ops/gdn2/**` 在 reserved_paths，范围收为 `ops/kda/**`、`runtime/`、`layers/kda.py`；② 「kernel 单元路径由能力表给」**延后**到第一个 a2 单元出现时：现在没有 a2 / a3 单元可路由，入口已在编译前拦住，路由是死代码，还会碰 BF-08 刚合入的热路径。"
         }
       ],
       "result": null,

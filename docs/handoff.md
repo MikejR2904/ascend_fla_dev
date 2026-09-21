@@ -11,6 +11,13 @@
 
 ### 正在飞的任务（现在没有；A5K-02、PK-02、PK-03 都已于 2026-09-19 合入）
 
+> **2026-09-21T09:22Z 更新：A2-02（PR #126，MikejR2904）交了 DONE → PM 二审 **rework**（不是合入）；BF-05 一条头格式不合规的 STATUS 按数据记下并回复。**
+> - A2-02 的硬伤是一个**实测回归**：PR 合到当前 main（NPU-free）全量 `1 failed, 1170 passed, 12 skipped`（预期 1171），失败的是 `tests/test_kda_decode.py::test_block_dim_domain_matches_contract`——测试用 ast 读 `fused_recurrent.py` 的字面量，PR 把它改成了能力表调用。申领人报的「200 / 3 / 8 改前改后一样」看不出它（8 个预存失败很可能含这一个）。教训：**报数要报失败 ID 集合，不只是计数**；预存失败会遮住同 ID 上的新增失败。
+> - 其他：`ops/kda/**` 仍有 7 处 `device="a5"` 默认（规格要求 2）；真机证据 sha256 被截断、无原始输出、DONE 评论带了容器名（已请其编辑评论，PM 的记录里不重复该值）；「A2-01 仅静态验证」措辞不准。范围、隐私、a5 常量搬家值、`test_platform` 12 passed、`gen_matrix --check` 都没问题。
+> - **PM 收窄了自己的规格（两处）**：验收 grep 只管 `ops/kda/**` + `runtime/` + `layers/kda.py`（gdn / pgdn / pkda 不在写集、gdn2 是 reserved）；「单元路径由能力表给」延后到第一个 a2 单元出现（现在是死代码，入口已拦）。写在 `docs/pm/tasks/A2-02.md` 的「二审澄清」。预批写集扩展三项：`tests/test_kda_decode.py::_op_consts` 函数体、`benchmarks/a2/probe_platform.py`、`benchmarks/a2/evidence/platform/**`。
+> - 改完的复核清单：AST 比对只有 `_op_consts` 变；重做 scratch merge，预期 1171 + 新增数 passed / 12 skipped / 0 failed；核 probe 输出的完整哈希。合入按 D-PM-33 由 PM 自行合（MikejR2904 首合已由 D-PM-58 授权；A2-02 的真机读数是环境事实、不是算子结论）。之后 A2-08 直接 DONE，再 A2-10 → A2-11。
+> - BF-05：08:46Z 那条 STATUS 首行多了一个词（`correction-not-a-deadlock`），解析器判为非协议消息；内容（撤回「BF16 改写引入 SimDeadlock」、根因是模拟器 join 超时、12 case 用 `--timeout 7200` 重跑）当数据记在看板。**仍没有真机数字**；时限约 15:30Z 到期，已请其发合规 STATUS 写现实 ETA，到期前我再看一次。
+>
 > **2026-09-21T08:50Z 更新：FMT-01（PR #124）二审 accept 并由 PM 按 D-PM-33 自行合入 → c1379a3；main 全量 1159 passed / 12 skipped（= 1132 + 27）。FMT-01 done。**
 > - 合入的是审过的头 `3ec23db2`（joshjms，不是新账号——D-PM-15 已批准其首合，我早先记错）：22 份回执的 `audit_tool_sha256` 全等于提交的工具、24 个源文件哈希对上 8e5da4c、20 个 case 的计数与上一轮逐格相同、26 次按调用点改判我从 rows 独立重算与文档 §2.1 一致。工具 `benchmarks/host_op_audit.py` 从现在起是各任务 host 算子审计的**统一工具**（`docs/pm/bf16-kernel-side.md` 已指到它，BF-09 规格已加一条验收）。
 > - 清单是 8e5da4c 的快照：clean——KDA 推理 / decode、GDN / GDN 反向、PGDN、PKDA BF16、GDN-2 FP32；违规五处（均已登记）——`_scan_states`、`dw` 取负、raw-flag 训练前处理 + 引擎反向（BF-08 合入后已消除）、GDN-2 BF16 加宽；**新发现**：PKDA FP32 的域校验还在 host 上算（gaps 新增 `pkda-fp32-host-domain-validation-unregistered`，P2）；`log2(eg)` 只在 `impl="upstream"` 上走。
