@@ -1,0 +1,218 @@
+{
+ "case": "gdn2.chunk_gdn2.bf16",
+ "note": "仓主轨道：只跑不改（BF-05 在做）",
+ "device": "npu",
+ "audited_roots": [
+  "ascend_fla/ops"
+ ],
+ "environment": {
+  "python": "3.11.15",
+  "audited_commit": "8e5da4c7ed25d8cc905601b1c1154fae96aabb05",
+  "audit_tool_sha256": "84c067762d9aa69a0278b177328f623110f938e932e227ada8efaecc44069cb0",
+  "timestamp_utc": "2026-09-21T08:05:06Z",
+  "torch": "2.7.1+cpu",
+  "torch_npu": "2.7.1.post4",
+  "cann": {
+   "ascend_toolkit_install.info": {
+    "path": "x86_64-linux/ascend_toolkit_install.info",
+    "toolkit_home_basename": "cann-9.3.0",
+    "line": [
+     "package_name=Ascend-cann-toolkit",
+     "version=9.3.0",
+     "innerversion=V100R001C12B116",
+     "compatible_version=[V100R001C15],[V100R001C23],[V100R001C10],[V100R001C11],[V100R001C12]",
+     "arch=x86_64",
+     "os=linux"
+    ],
+    "sha256": "2345b720f38e96b8e5384f8a8639e4bcb05d1fc944fcf501e7687ade504b99b5"
+   },
+   "version.info": {
+    "path": "compiler/version.info",
+    "toolkit_home_basename": "cann-9.3.0",
+    "line": [
+     "Version=9.2.0",
+     "version_dir=cann",
+     "required_package_runtime_version=\"9.2\"",
+     "required_package_ge-executor_version=\"9.2\"",
+     "required_package_metadef_version=\"9.2\"",
+     "required_package_bisheng-compiler_version=\"9.2\""
+    ],
+    "sha256": "78381b0f507d50bb3ca8106b8a1953410f58596f3d1779d97de05eceb8fa0b5f"
+   }
+  },
+  "opp_kernel_dirs": [
+   "ascend910_93",
+   "ascend910b",
+   "ascend950",
+   "config"
+  ],
+  "ascend_custom_opp_path_set": true
+ },
+ "audited_sources_sha256": {
+  "ascend_fla/ops/gdn2_chunk_fwd.py": "9696d9a30bfd8b862ebbda54c5bdfbf15014389018479e0cf43c90bec1c13b50"
+ },
+ "error": null,
+ "seconds": 10.63,
+ "summary": {
+  "total_calls": 22,
+  "by_category": {
+   "alloc": 18,
+   "forbidden_dtype_cast": 4
+  },
+  "forbidden_calls": 4,
+  "meta_that_copied": [],
+  "unclassified_ops": [],
+  "reclassified_by_site": [],
+  "check_site_functions": {
+   "_gate_span": "kda/chunk.py:467 —— 算 chunk 内门控跨度用于判定上限，返回 float 判据，不产出进入计算的张量",
+   "_check_gate_range": "kda/chunk.py:479 —— 拿 _gate_span 的值与 MAX_GATE_SPAN 比，超了报错",
+   "_check_input_domain": "kda/chunk.py:164 —— 判 g<=0 / 0<beta<1 / q,k 行范数，只产出 bool",
+   "_validate_raw_inputs": "kda/chunk.py:47 —— raw 输入的 dtype / 形状 / 连续性检查",
+   "_check": "kda/chunk_bwd.py:145 —— 反向入口的形状 / dtype / caches 校验，返回维度元组",
+   "_validate": "gdn_chunk_fwd.py:58、gdn_chunk_bwd.py、pgdn_chunk_fwd.py:62 —— 各入口的 ABI 与域校验",
+   "_check_options": "gdn2_chunk_fwd.py:45 —— device / block_dim 取值检查",
+   "_constant": "pgdn_chunk_fwd.py:57 —— 常量参数与期望值比对"
+  },
+  "npu_custom_ops": [],
+  "verdict": "violations",
+  "bridge_launch_invisible": "runtime 桥用 ctypes 直调 aclnn，不经过 aten dispatch，本工具看不到；那是自编译 kernel 的 launch，允许。"
+ },
+ "rows": [
+  {
+   "op": "aten._to_copy.default",
+   "category": "forbidden_dtype_cast",
+   "site_file": "ascend_fla/ops/gdn2_chunk_fwd.py",
+   "site_line": 111,
+   "site_func": "chunk_gdn2",
+   "input_dtypes": "bfloat16",
+   "output_dtypes": "float32",
+   "input_shapes": "1x128x1x128",
+   "output_shapes": "1x128x1x128",
+   "dtype_changed": true,
+   "copy": true,
+   "contiguous_in": "1",
+   "check_by_site": false,
+   "count": 3,
+   "order": 0
+  },
+  {
+   "op": "aten.empty.memory_format",
+   "category": "alloc",
+   "site_file": "ascend_fla/ops/gdn2_chunk_fwd.py",
+   "site_line": 127,
+   "site_func": "chunk_gdn2",
+   "input_dtypes": "",
+   "output_dtypes": "float32",
+   "input_shapes": "",
+   "output_shapes": "1x2x1x64x128",
+   "dtype_changed": false,
+   "copy": false,
+   "contiguous_in": "",
+   "check_by_site": false,
+   "count": 8,
+   "order": 1
+  },
+  {
+   "op": "aten.empty.memory_format",
+   "category": "alloc",
+   "site_file": "ascend_fla/ops/gdn2_chunk_fwd.py",
+   "site_line": 117,
+   "site_func": "launch",
+   "input_dtypes": "",
+   "output_dtypes": "uint8",
+   "input_shapes": "",
+   "output_shapes": "16777216",
+   "dtype_changed": false,
+   "copy": false,
+   "contiguous_in": "",
+   "check_by_site": false,
+   "count": 5,
+   "order": 2
+  },
+  {
+   "op": "aten.empty.memory_format",
+   "category": "alloc",
+   "site_file": "ascend_fla/ops/gdn2_chunk_fwd.py",
+   "site_line": 127,
+   "site_func": "chunk_gdn2",
+   "input_dtypes": "",
+   "output_dtypes": "float32",
+   "input_shapes": "",
+   "output_shapes": "1x2x1x64x64",
+   "dtype_changed": false,
+   "copy": false,
+   "contiguous_in": "",
+   "check_by_site": false,
+   "count": 2,
+   "order": 3
+  },
+  {
+   "op": "aten.empty.memory_format",
+   "category": "alloc",
+   "site_file": "ascend_fla/ops/gdn2_chunk_fwd.py",
+   "site_line": 127,
+   "site_func": "chunk_gdn2",
+   "input_dtypes": "",
+   "output_dtypes": "float32",
+   "input_shapes": "",
+   "output_shapes": "1x2x1x128x128",
+   "dtype_changed": false,
+   "copy": false,
+   "contiguous_in": "",
+   "check_by_site": false,
+   "count": 1,
+   "order": 4
+  },
+  {
+   "op": "aten.empty.memory_format",
+   "category": "alloc",
+   "site_file": "ascend_fla/ops/gdn2_chunk_fwd.py",
+   "site_line": 127,
+   "site_func": "chunk_gdn2",
+   "input_dtypes": "",
+   "output_dtypes": "float32",
+   "input_shapes": "",
+   "output_shapes": "1x1x128x128",
+   "dtype_changed": false,
+   "copy": false,
+   "contiguous_in": "",
+   "check_by_site": false,
+   "count": 1,
+   "order": 5
+  },
+  {
+   "op": "aten.empty.memory_format",
+   "category": "alloc",
+   "site_file": "ascend_fla/ops/gdn2_chunk_fwd.py",
+   "site_line": 127,
+   "site_func": "chunk_gdn2",
+   "input_dtypes": "",
+   "output_dtypes": "float32",
+   "input_shapes": "",
+   "output_shapes": "1x128x1x128",
+   "dtype_changed": false,
+   "copy": false,
+   "contiguous_in": "",
+   "check_by_site": false,
+   "count": 1,
+   "order": 6
+  },
+  {
+   "op": "aten._to_copy.default",
+   "category": "forbidden_dtype_cast",
+   "site_file": "ascend_fla/ops/gdn2_chunk_fwd.py",
+   "site_line": 128,
+   "site_func": "chunk_gdn2",
+   "input_dtypes": "float32",
+   "output_dtypes": "bfloat16",
+   "input_shapes": "1x128x1x128",
+   "output_shapes": "1x128x1x128",
+   "dtype_changed": true,
+   "copy": true,
+   "contiguous_in": "1",
+   "check_by_site": false,
+   "count": 1,
+   "order": 7
+  }
+ ]
+}
