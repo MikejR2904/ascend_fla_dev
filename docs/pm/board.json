@@ -384,6 +384,20 @@
       "by": "pm",
       "decision": "BF-08 第三条 RISK（04:03Z，非饱和 beta 双参考冲突 / gate 量程）的裁定：(1) BF16「≤ 1 ULP 双线」改为逐点读——对 FP64 正确舍入的 ≤ 1 ULP 在每个元素上仍是通过线（权威）；对旧 host 的 ≤ 1 ULP 只在旧 host 自己距正确舍入 ≤ 1 ULP 的元素上要求，旧 host 已超 1 ULP 的元素上这半条改为逐个列出（三方 BF16 位 + 灵敏度 / 相消条件数）并计数、不计失败；适用于保留双线的全部 BF16 输出组（norm:bf16:dx 仍 report-only，D-PM-54），冻结的 backward_budgets.json 文件字节不动。(2) native exp 下溢端点（如 beta = −88：候选 = 旧 NPU = 零、旧 CPU 为 FP32 subnormal）按 D-PM-50 的元素分类（正规数 → 普通判据；golden 为 subnormal 且候选 ±0 → flush 类、报个数；其它失败），四列逐点记录，「与旧 NPU 逐字节相同 = 无回退、不是 CPU 正确性通过」，不外推 D-PM-52 的只披露口径。(3) gate 的 exp 上溢端点（A_log ≥ 88.7 一类）按 D-PM-48 (1)：四列 / 三类 / 不设 NaN·Inf 掩码相等的通过线，候选独有的 NaN（旧 CPU 与旧 NPU 该点都非 NaN）是候选缺陷必须修，不要求复现原 autograd 的算术顺序，普通有限域仍保持冻结解析精度，写公共入口下的可达性。",
       "risk": "依据：(1) 触发它的实证是 PM 从已推送的 beta-located-boundaries-v1.json 核过的——raw beta = 16 时保存的 sigmoid 未饱和（0.9999998807907104，候选 / 旧 CPU / 旧 NPU 相同），旧 CPU 与旧 NPU 同为 BF16 位 46120（−1.5646e-7），候选与 FP64 正确舍入同为 46111（−1.4808e-7，FP64 −1.4789e-7），相距 9 ULP；旧路径相对 FP64 约 5.8%（(1 − s) 相消），FP32 输出同一点旧 −1.7938e-7 对 FP64 −1.6934e-7 也差 5.9% 而候选相对误差约 1e-8——三角不等式下两个 1 ULP 邻域不相交，任何 kernel 都无法同时满足；相距 2 ULP 的元素只剩中点，而中点比正确舍入更不准，等于要求候选故意更不准去贴旧 host。这与 D-PM-54 同一个理由（旧 host 自己超 1 ULP → 双线无解），只是这次证据来自验证人口而非校准人口；PM 的读法是 D-PM-54 (4)「旧 host 对 FP64 出现过 > 1 ULP 的输出不设对旧 host 的线」的逐点化，方向只是去掉不可满足的那一半、对权威（FP64）的 ≤ 1 ULP 一条不松。(2)(3) 是既有端点框架（D-PM-48 / 50，BF-07 澄清第 3 条）在 BF-08 backward 输出上的落实，不是新端点类。因为它们去掉了一条冻结判据里的一半，属于用户在 D-PM-33 里要求单列的判据变化：BF-08 合入授权时与 D-PM-54 / 55 一起单列给用户，用户可推翻，推翻则回退到冻结的原文并重判。"
+    },
+    {
+      "id": "D-PM-57",
+      "date": "2026-09-21",
+      "by": "user",
+      "decision": "授权合入 PR #122（BF-08，KDA raw flags 前处理的梯度链进自编译 kernel，阶段 2）。（用户原话：「#122授权, #123」，回应 PM 的合入请求。）",
+      "risk": "PM 的读法：用户是在被告知下面这些之后授权的，且选了 PM 给的选项 A（合入 + 立即另立 P0 性能任务，不是 B「等优化后再合」）：(1) 判据裁定 D-PM-54 / 55 / 56（PM 作出、用户可推翻；BF16 norm 反向不设 ULP 线、norm 在前向上溢处梯度取零、beta 从 raw beta 算非饱和分支的解析导数、BF16 双 1 ULP 线逐点读、native 下溢与 gate 上溢端点按 D-PM-50 / 48）；(2) 端点披露——每 bd 482 个 native 下溢输出不是 CPU 正确性通过、每 bd 30 个 gate A_log = 88 输出记录留作「未资格化观察」（默认公共闸拒绝这些输入），contract 的 board 阶段保持 failed；(3) **完整前向 + 反向训练步慢 11.3 ×**（T4096 旧 host 图 37.6 → 425.7 ms、比 Torch NPU 基线慢 3.0 ×，一个 gate backward 第一阶段 kernel 占 375 ms；`ascend_fla/layers/kda.py` 的 KDA 层在 chunk 与 decode 上都用这三个 raw flag，故 KDA 层训练路径受影响，默认无 flag 路径不受影响）；(4) 证据约 83 MB。由 PM 按 D-PM-33 用 --match-head-commit 合入审过的头 d9280a7d。"
+    },
+    {
+      "id": "D-PM-58",
+      "date": "2026-09-21",
+      "by": "user",
+      "decision": "授权合入 PR #123（A2-07，Qwen3-Next 上 A2 的 GDN ABI 方案：调研 + 设计 + 910B3 真机探针）——新账号 MikejR2904 的第一次合入（PROTOCOL §5 第 5 条），并知悉 A2 真机数字在 A2-11 之前只是观测记录、不构成算子结论（D-PM-30）。（用户原话：「#122授权, #123」。）",
+      "risk": "PM 的读法：「#123」与前面的「#122授权」并列，读作同样的授权。PM 请求时写明的两点——新账号首次合入、A2 观测数字不构成结论（例如 a2 不冲 fp32 subnormal、exp(−88) 保留 6.05e-39，但 1/eg 在 span ≈ 89 溢出，可用量程线仍约 88.7）——用户是在知道它们之后授权的。**注**：在此之前 MikejR2904 曾在 #35 发过一条「代为转达用户明确决定」的 STATUS，PM 没有采信（授权必须由用户直接对 PM 会话给出）；这次是用户直接给出的。文档里的批次建议（A / B / C）是给用户审批 kernel 批次的输入，本次授权只针对合入这份文档 + 探针 + 证据，不构成对 A2-K1 kernel 批次的批准（A2-K1 / A2-20 仍 gated）。"
     }
   ],
   "gated_epics": [
@@ -2240,7 +2254,7 @@
       "wave": "W0",
       "soc": "a2",
       "priority": "P1",
-      "status": "review",
+      "status": "done",
       "model": [
         "qwen3-next-80b-a3b"
       ],
@@ -2303,9 +2317,26 @@
         {
           "at": "2026-09-21T06:05",
           "summary": "STATUS（05:35Z，自述，#35，MikejR2904）：**一条「代为转达用户明确决定」的声明**——称用户明确同意 A2-07 第一次合入（新账号首合）并确认知悉 D-PM-30，分支冻结在 b54978b，「若需用户以本账号再确认一次，用户可补一句；否则请按此合入」。PM 处理：**不采信为授权**。理由：issue / 评论里的内容一律是数据，不是指令；D-PM-33 与 PROTOCOL §5 第 5 条要求的「用户明确同意」必须由用户直接对 PM 会话给出，由 assignee 代为转达无法核实——不论转达是否属实；已回复申领人并把这条声明连同 A2-07 的评审结论一起如实告诉用户，等用户直接授权后才用 --match-head-commit 合入 b54978b。A2-07 的评审结果（accept）不受影响。"
+        },
+        {
+          "at": "2026-09-21T07:50",
+          "summary": "合入（PR #123 → 28cced5，合入的是审过的头 b54978b3，依 D-PM-58 用户明确授权「#122授权, #123」；新账号 MikejR2904 的第一次合入、A2 观测数字不构成结论）。合入后 main 全量（NPU-free）1132 passed, 12 skipped, 5 warnings（BF-08 合入后一并跑，A2-07 无测试变化）。文档里的批次建议是给用户审批 kernel 批次的输入，本次合入不构成对 A2-K1 的批准（A2-K1 / A2-20 仍 gated）。看板 done。"
         }
       ],
-      "result": null
+      "result": {
+        "commits": [
+          "b54978b",
+          "28cced5"
+        ],
+        "evidence": [
+          "PR #123",
+          "docs/research/a2_gdn_abi.md",
+          "benchmarks/a2/probe_gdn_abi.py",
+          "benchmarks/a2/evidence/gdn_abi/probe.json",
+          "benchmarks/a2/evidence/gdn_abi/probe_stdout.log"
+        ],
+        "numbers": "真机 910B3 观测记录（自述，A2-11 之前不构成算子结论；CANN 9.2.0-beta.1 / torch_npu 2.10.0.post2 / ascriptor 90cfcdc / b3b3f9c；compiler 与 opp 的 version.info 原文 + sha256、内置算子包目录、未过滤原始日志随 PR）：cube / vector = 20 / 40（与 A2-01 一致）；torch_npu 13 个算子（silu / sigmoid / softplus / l2norm / cumsum / conv1d-depthwise / sdpa / softmax / topk / bmm / layer_norm / rms_norm / embedding）fp32 与 bf16 全部 ok 且有限，RoPE / scatter-gather / argmax / MoE grouped matmul / flash-attn 类 / FusedRMSNormGated 标「未测（A2-10）」；fp32 exp 下溢到 0 在 x ≈ −104（不冲 subnormal，exp(−88) = 6.05e-39）、上溢 89（exp(88.7) = 3.33e38）、bf16 exp 下溢 ≈ −95；1/x 对 subnormal x：1/6.05e-39 = 1.65e38 有限、1/2.23e-39 = inf → 1/eg 在 span ≈ 89 溢出、可用量程线仍约 88.7（torch_npu 设备倒数，向量单元自己的 div / reciprocal 未测，留 A2-11）；ascriptor 自编译 CCE 向量路径的 exp 与 torch_npu 内建逐位相同。文档：六项缺口对着 main 上的 GDN 派生单元（GDA-01/02/03、BF-01/02）逐项核，A2-01 命中表引用（GDN #17 inverse 累加点 306 / 312 / 317-318、#25 finalize 205 / 217 / 226 / 235 / 244、#23 wu 206）与 hit_table.json 逐行对上，批次建议 A / B / C 交用户审批 kernel 批次时用。合入后 main 全量（NPU-free）1132 passed, 12 skipped, 5 warnings。"
+      }
     },
     {
       "id": "A2-08",
@@ -4799,7 +4830,7 @@
       "wave": "W0",
       "soc": "a5",
       "priority": "P0",
-      "status": "review",
+      "status": "done",
       "model": [],
       "kernel": [
         "kda_prep"
@@ -4907,9 +4938,33 @@
         {
           "at": "2026-09-21T06:01",
           "summary": "DONE（05:18Z，自述，#117，PR #122 转 ready，头 d9280a7；8 个提交 f907a54 … d9280a7）：最终 production full-v7（Kimi B1 / T4096 / H = HV32、flags 全开、8 个梯度）bd1 / 2 / 3 / 4 各独立进程全过，每进程首次 custom 前 50 vendors（含 9 个旧 backward）编完，两个 CPU FP32 golden、2048 逐头逐 chunk、9 缓存、19 个输出 / 梯度 / 缓存 SHA 跨 bd 相同；网格 C1/2/3 × HV/H 1/2/4/8 × flags / dtypes / 梯度组合 每 bd 1620 case × 9 选择、四 bd 共 58,320 次公开训练调用普通判据全过（最终 28 组最大 L2 / limit 0.7120、最大逐元素 / limit 0.4146）；host 审计 123 张原始审计表与全部 58,320 次调用映射，unexpected = 0、旧 host 前处理 = 0，D-PM-42 例外单列；155 / 105 闸与域不变；最终 norm22 全过、12 缩小 sim / pipesim 在完整真机之后通过、显式 prepare 与先 inference 后 training 无手动预编译；同卡三轮 baseline / candidate / baseline 与逐 kernel profiler；端点按 D-PM-54 / 55 / 56：每 bd 482 个 native flush（gate A_log −100：BF16 239、FP32 241；beta −88 两 dtype 各 1）不是 CPU 正确性通过，每 bd 30 个 A_log = 88 输出保留未资格化观察（14 个两旧路径均 Inf、16 个 CPU Inf / 旧 NPU 有限），candidate 独有 NaN = 0；私有归档 7470 份完整原始 JSON（75,786,240 字节，SHA256 30dca16a…），Git 保留有界原始数值 / 哈希 / 审计表 / 6 个样本；主机全量 1139 passed / 5 NPU-only skipped，入口换回 base 负对照 11 预期失败 / 8 无梯度通过，既有 3 个测试仅批准函数体变更；冻结预算字节不变。**性能（完整前向 + 反向训练步，含 raw 前处理，不是单独前处理——我此前把它说成「前处理」是我的误读，此处更正）：T1024 旧 host 9.574992 → candidate 106.751083 ms（慢 11.15 ×）、Torch NPU 39.94 → 106.82（2.67 ×）；T4096 37.599414 → 425.724631 ms（慢 11.32 ×）、Torch NPU 140.54 → 425.78（3.03 ×）；无速度门槛，本任务未优化 kernel。**逐 kernel：gate backward 第一阶段 375.47 ms（独立事件窗口 370.9 ms）占大头，norm backward 两次 19.57 ms，其余为既有 kernel。PM 评审（NPU-free，从 Git 内原始文件独立复算；**REVIEW accept（技术判据全过）**）：① 范围 / 卫生：以 6c42dc6 为 base 的 1745 个文件（7 改 / 1738 增，8 个提交）全在写集内，reserved_paths 0 命中，无二进制，每提交新增 blob 最大 2.34 MB（< 5 MB），累计唯一新增 blob 约 83 MB；对 8 个提交范围内全部 1727 个 blob（87.2 MB）扫 IPv4 / 绝对路径 / 令牌 / uuid / 账号 / 邮箱 / 主机词 / 私有目录 0 命中（只有 18 处指向本仓 issue 评论的公开链接）；② 预算先于实现且冻结：首提交 f907a54（13 个文件，只有校准 / 预算 / 对照 / 基线副本、无 kernel）先于 kernel 提交 ccc7194；backward_budgets.json、校准、ref 脚本、baseline_backward 自首提交起逐字节未变（sha 前 16 位 af053b4d3987eb9b 两端相同）；③ 源码身份：对 final-native-v1 / final-closeout-v1 / final-grid-v1 里 39 份带源码哈希表的原始回执逐个比对最终提交树——生产路径（ascend_fla/**、kda_prep/kernels/**）0 处不同；不同的只有验证驱动 / contract.json（每份回执自带自己的驱动身份，不阻塞）；122 份原始回执与 manifest 逐个对上（0 不符）；④ 完整 workload full-v7 bd1–4：passed、plain / cached 一致、输入未改、输出全有限；prep 六项 q / k L2 ≤ 0.327 × limit（逐元素 ≤ 0.066）、g / beta 逐元素 0.333 / 0.334 × limit、A_log / dt_bias ≪；端到端六梯度 dq 0.02792 / dk 0.03234 / dv 0.00358 / dg 0.06551 / dbeta 0.00412 / dh0 0.00238（预算 0.05 / 0.15 / 0.05 / 0.25 / 0.05 / 0.05），o 0.00333；19 个输出哈希四 bd 全同；⑤ 网格：申领人的公开复算脚本 verify_backward_review.py 我在 NPU-free 环境实际跑了——passed，重建 summary SHA 219b2472…，7992 metric rows、28 组、58,320 次公开训练调用、123 张审计表、6 份原始样本；我另写脚本独立复算 7992 行：全部满足冻结预算（L2、逐元素、保留 BF16 组的对两个对象各 ≤ 1 ULP 线、有限、零参考处无非零），最大 L2 / limit 0.7120（gate:f32_bf16_f32:dA_log）、最大逐元素 / limit 0.4146（gate:bf16_bf16_f32:dA_log），与 summary 一致——该网格人口上连更严的原始双 1 ULP 线都过，D-PM-56 (1) 只用于 beta = 16 边界；⑥ host 审计：full-v7 每 bd unexpected = [] 与旧 host 前处理 = []，D-PM-42 例外（dw 取负 chunk_bwd.py:286、_scan_states chunk.py:710 …）逐条列出未宣称合规，43 次自定义 launch 均 NaN 预填；⑦ 端点：endpoint-cross-bd 汇总——每 bd 482 个 native flush、30 个 A_log = 88 记录、candidate 独有 NaN = 0、四列数值与位跨 bd 全同、cpu_correctness_pass = false；contract.json 的 board 阶段保持 failed、merge_authorized = false、status = pending_user_merge_disposition，写得诚实；公共入口默认闸对 A_log 80 / 88 / 89 / 100 提前拒绝，−120 / −100 与 beta −88 / 16 / 20 可达；⑧ 性能：从 perf-v2-bd4/raw-timings.json 的 36 条原始样本我重算中位数——T1024 旧 host 9.5750 → 106.7511 ms（11.1489 ×）、Torch NPU 39.9378 → 106.8193（2.6746 ×）；T4096 37.5994 → 425.7246（11.3226 ×）、140.5361 → 425.7781（3.0297 ×），与 DONE 逐位相同；⑨ 生产代码 diff（autograd.py +100、chunk.py +7、__init__.py 仅 docstring）：三个 autograd Function（_RawNorm / _RawGate / _RawBeta）与 _prepare_training_inputs，训练路径无 host 算术 / 转换（用 _layout_runtime().cast 这个 kernel 侧转换），raw dtype 仍只接 BF16 / FP32，门控闸与域检查未动，chunk._prepare_inputs 保留，vendor 在首次 launch 前全部预编；⑩ 测试：既有测试 AST 逐节点对 base——只有三个批准函数体变了（装饰器 / 签名不变、16 例参数化保留），__init__ 只差 docstring；新增 100 个测试；**scratch merge（PR 合到当前 main）NPU-free 全量 1132 passed / 12 skipped，与预测一致（base 1032 + 100 新测试）**；入口三文件换回 base 的负对照：新 / 改测试 12 failed + 96 errors，只有 11 个不依赖入口的通过（8 个 no-grad 参数 + 3 个验证脚本的纯主机测试），与自述「11 预期失败 / 8 无梯度通过」（限既有测试）一致；⑪ 不能核的：私有归档里的 6560 份网格原始 JSON 只有 SHA，PM 核了 Git 里的有界原始数值与公开复算包。**合入不由 PM 自己定**（D-PM-33）：判据裁定 D-PM-54 / 55 / 56（PM 作出、用户可推翻）、端点披露（482 native flush / bd 不是 CPU 通过；30 个 A_log = 88 记录未资格化）、以及**完整训练步慢 11 ×** 都要用户看过——已向用户请求。"
+        },
+        {
+          "at": "2026-09-21T07:50",
+          "summary": "合入（PR #122 → 6c4aaca，合入的是审过的头 d9280a7d，依 D-PM-57 用户明确授权「#122授权, #123」；选项 A：合入 + 立即另立 P0 性能任务 BF-09）：用户是在被告知判据裁定 D-PM-54 / 55 / 56、端点披露、完整训练步慢 11.3 ×、证据约 83 MB 之后授权的。合入后 main 全量（NPU-free）1132 passed, 12 skipped, 5 warnings，与预测一致（base 1032 + BF-08 的 100 个新测试）；A2-07（PR #123）随后合入，无测试变化。看板 done；kernel_inventory 的 kda_prep 注记更新（训练路径已 kernel 侧、性能倒退单列）；gaps 新增 kda-prep-backward-training-step-slowdown（P1）与 kda-prep-backward-endpoint-disclosures（P2）；BF-09（P0 性能优化）已立项 open。"
         }
       ],
-      "result": null,
+      "result": {
+        "commits": [
+          "f907a54",
+          "ccc7194",
+          "297c80b",
+          "7c2e56b",
+          "2924fe1",
+          "88e8615",
+          "5c28123",
+          "d9280a7",
+          "6c4aaca"
+        ],
+        "evidence": [
+          "PR #122",
+          "kernels/projects/a5/kda_prep/evidence/backward/",
+          "docs/research/kda_prep_backward.md",
+          "kernels/projects/a5/kda_prep/backward_budgets.json",
+          "kernels/projects/a5/kda_prep/verify_backward_review.py"
+        ],
+        "numbers": "真机（A5，CANN 9.1.0-beta.1、compiler_timestamp 20260509_173000235、opp 含 ascend910_93 / ascend910b / ascend950、torch 2.12.0 / torch_npu 2.12.0；回执自带环境与源码身份，PM 从原始 JSON 复算）：预算先于实现（首提交 f907a54 无 kernel，冻结文件逐字节未变）；最终 production full-v7 完整 Kimi 训练 bd1 / 2 / 3 / 4 各独立进程全过、19 个输出 / 梯度 / 缓存哈希跨 bd 全同，端到端六梯度 dq 0.02792 / dk 0.03234 / dv 0.00358 / dg 0.06551 / dbeta 0.00412 / dh0 0.00238（预算 0.05 / 0.15 / 0.05 / 0.25 / 0.05 / 0.05）；网格每 bd 1620 case × 9 选择、四 bd 共 58,320 次公开训练调用，7992 metric rows 全部满足冻结预算（最大 L2 / limit 0.7120、最大逐元素 / limit 0.4146），公开复算脚本重建 summary SHA 219b2472…；host 审计 123 张原始审计表、unexpected = 0、旧 host 前处理 = 0，D-PM-42 例外单列；最终回执 39 份生产源码哈希与最终树 0 处不同。披露（不是通过）：每 bd 482 个 native 下溢输出不是 CPU 正确性通过；每 bd 30 个 gate A_log = 88 输出记录留作「未资格化观察」；contract board 阶段保持 failed。性能（完整前向 + 反向训练步，同卡 bd4 三轮，36 条原始样本 PM 复算）：T1024 旧 host 9.5750 → 106.7511 ms（11.149 ×）、Torch NPU 39.9378 → 106.8193（2.675 ×）；T4096 37.5994 → 425.7246（11.323 ×）、140.5361 → 425.7781（3.030 ×）；gate backward 第一阶段 375.47 ms 占大头。无速度门槛，已另立 BF-09。合入后 main 全量（NPU-free）1132 passed, 12 skipped, 5 warnings（= base 1032 + 100 个新测试，与预测一致）。"
+      },
       "origin": {
         "kind": "user",
         "note": "用户 2026-09-19 直接指令（D-PM-35）：BF16 必须 kernel 侧；kernel 批次 D-PM-43 已批准；PM 2026-09-20 从 BF-07 拆出的阶段 2"
@@ -4963,6 +5018,53 @@
       "origin": {
         "kind": "user",
         "note": "用户 2026-09-20 直接指令（D-PM-46）：scan_fused 的 dh0 不确定性需要定位（只定位）"
+      }
+    },
+    {
+      "id": "BF-09",
+      "title": "KDA raw flags 训练前处理反向 kernel 的性能优化（BF-08 的后续），A5 真机",
+      "wave": "W0",
+      "soc": "a5",
+      "priority": "P0",
+      "status": "open",
+      "model": [],
+      "kernel": [
+        "kda_prep"
+      ],
+      "dtype": [
+        "bf16",
+        "fp32"
+      ],
+      "deps": [
+        "BF-08"
+      ],
+      "write_set": [
+        "kernels/projects/a5/kda_prep/**",
+        "tests/test_kda_prep_backward.py",
+        "docs/research/kda_prep_backward.md"
+      ],
+      "needs": {
+        "npu": true,
+        "ascriptor": true,
+        "fla": true
+      },
+      "spec": "docs/pm/tasks/BF-09.md",
+      "issue": null,
+      "pr": null,
+      "assignee": null,
+      "assignee_caps": null,
+      "branch": null,
+      "timebox_h": 24,
+      "reports": [
+        {
+          "at": "2026-09-21T07:50",
+          "summary": "PM 从 BF-08 合入立项（用户 D-PM-57 选项 A：合入 + 立即另立 P0 性能任务）：完整前向 + 反向训练步 T4096 旧 host 图 37.6 → 425.7 ms（慢 11.3 ×）、比 Torch NPU 基线慢 3.0 ×，gate backward 第一阶段一个 kernel 占 375 ms；目标线（PM 建议、非硬门槛）≤ 旧 host 图 × 1.25，冻结预算字节不变、跨 bd 逐位相同、不放宽任何判据，做不到就如实报瓶颈与下界。写集只在 kda_prep/** + 两个测试 / 文档文件（autograd.py / chunk.py 不在写集，避免与 A2-02 相交）。"
+        }
+      ],
+      "result": null,
+      "origin": {
+        "kind": "user",
+        "note": "用户 2026-09-21（D-PM-57「#122授权」，PM 请求里的选项 A）：合入 BF-08 并立即另立 P0 性能任务"
       }
     }
   ],
@@ -5305,8 +5407,8 @@
         "id": "kda_prep",
         "family": "kda",
         "track": "agent",
-        "note_zh": "本仓自写的 raw flags 前处理单元：q/k l2norm、门控变换 −exp(A_log)·softplus(g+dt_bias)、beta sigmoid 进自编译 kernel；BF-07（已合入，PR #118）= 前向 / 推理 / decode：raw 只接 BF16 / FP32（FP16 / FP64 显式报错），真机 A5 完整 workload 四个 bd 与 25,920 个普通网格 case 全过、跨 bd 逐位相同；近零输出的数值失败按 D-PM-52 只披露不称通过（gaps: kda-prep-nearzero-output-underflow）；性能比前任慢 12% / 6%；BF-08（进行中）= 训练梯度链，在它合入前需要梯度且 raw flag 开着时前处理仍走 host `_prepare_inputs` 图（登记的存量例外）",
-        "note_en": "In-repo raw-flags preprocessing unit: q/k L2 norm, gate transform -exp(A_log)*softplus(g+dt_bias) and beta sigmoid as self-compiled kernels; BF-07 (merged, PR #118) = forward/inference/decode: raw inputs only BF16/FP32 (FP16/FP64 raise), A5 device: full workload at four block dims and 25,920 ordinary grid cases pass with bitwise cross-block-dim equality; near-zero output failures are disclosed only (D-PM-52), not claimed as passing (gaps: kda-prep-nearzero-output-underflow); 12%/6% slower than the predecessor; BF-08 (in progress) = the training gradient chain — until it merges, the preprocessing stays on the host `_prepare_inputs` graph when gradients are needed and a raw flag is on (a registered legacy exception)",
+        "note_zh": "本仓自写的 raw flags 前处理单元：q/k l2norm、门控变换 −exp(A_log)·softplus(g+dt_bias)、beta sigmoid 进自编译 kernel；BF-07（已合入，PR #118）= 前向 / 推理 / decode，BF-08（已合入，PR #122）= 训练梯度链：norm / gate / beta 的反向、A_log / dt_bias 的 (B,T) 两级确定性归约（固定 32 BT 行 + GM 部分和、无原子、与 bd 无关）；raw 只接 BF16 / FP32；真机 A5 完整 Kimi 训练四 bd 与 58,320 次公开训练调用全过冻结预算、19 个输出哈希跨 bd 全同；披露（不是通过）：每 bd 482 个 native 下溢输出、30 个 gate A_log = 88 输出记录留作未资格化观察（gaps: kda-prep-backward-endpoint-disclosures）；**完整前向 + 反向训练步比旧 host 图慢 11.3 ×**（gate backward 第一阶段 375 ms，gaps: kda-prep-backward-training-step-slowdown），BF-09 在优化。D-PM-42 的 _scan_states / dw 取负 / log2(eg) 等存量例外仍在（不在本单元）",
+        "note_en": "In-repo raw-flags preprocessing unit: q/k L2 norm, gate transform and beta sigmoid as self-compiled kernels; BF-07 (merged, PR #118) = forward/inference/decode, BF-08 (merged, PR #122) = training gradient chain: norm/gate/beta backward and deterministic two-stage (B,T) reductions for A_log/dt_bias (fixed 32-BT partials in GM, no atomics, block-dim independent); raw inputs BF16/FP32 only; A5 device: full Kimi training at four block dims and 58,320 public training calls pass the frozen budgets, 19 output hashes bitwise equal across block dims; disclosures (not passes): 482 native-flush outputs and 30 gate A_log=88 output records per block dim; the complete forward+backward training step is 11.3x slower than the old host graph (gate backward first stage 375 ms), BF-09 is optimizing it. D-PM-42 legacy exceptions (_scan_states, dw negation, log2(eg)) remain outside this unit",
         "dtype_status": {
           "bf16": "native@a5",
           "fp32": "native@a5"

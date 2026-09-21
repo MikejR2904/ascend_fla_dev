@@ -11,6 +11,12 @@
 
 ### 正在飞的任务（现在没有；A5K-02、PK-02、PK-03 都已于 2026-09-19 合入）
 
+> **2026-09-21T07:50Z 更新：用户「#122授权, #123」（D-PM-57 / D-PM-58）——PR #122（BF-08）→ 6c4aaca、PR #123（A2-07）→ 28cced5 已合入；main 全量 1132 passed, 12 skipped, 5 warnings（= 1032 + BF-08 的 100 个新测试）。BF-08、A2-07 done；BF-09（P0 性能优化）立项。**
+> - **BF-08 合入**（bot 账号，`--match-head-commit` 钉住 d9280a7d；用户选了选项 A：合入 + 立即另立性能任务）：用户是在被告知判据裁定 D-PM-54 / 55 / 56、端点披露（每 bd 482 个 native 下溢输出不是 CPU 通过、30 个 A_log = 88 记录未资格化）、完整训练步慢 11.3 ×、证据约 83 MB 之后授权的。`kernel_inventory` 的 `kda_prep` 注记更新；gaps 新增 `kda-prep-backward-training-step-slowdown`（P1）与 `kda-prep-backward-endpoint-disclosures`（P2）。
+> - **BF-09**（P0，issue 由 sync 创建）：BF-08 后续的性能优化——目标线 T4096 完整训练步 ≤ 旧 host 图 × 1.25（PM 建议、非门槛），冻结预算字节不变、跨 bd 逐位相同、不放宽判据；写集只在 `kda_prep/**` + 两个测试 / 文档文件，`autograd.py` / `chunk.py` 不在写集（避免与 A2-02 相交）。**做不到目标就报瓶颈与下界，要放宽逐元素判据是用户的决定。**
+> - **A2-07 合入**（新账号 MikejR2904 的第一次合入，用户 D-PM-58 授权；A2 数字是观测记录、不构成结论）：批次建议 A / B / C 是给用户审批 kernel 批次的输入，本次合入不构成对 A2-K1 的批准（A2-K1 / A2-20 仍 gated）。
+> - 待派：A5K-03（我承诺 BF-08 CLOSE 后直接派）与 BF-09（性能）都是 P0，同一 session（01a0b7ce-…）——先派 BF-09（同一 kernel 单元、KDA 层训练路径的性能倒退是眼下最明显的问题），A5K-03 顺延，已向申领人说明；MikejR2904 的 A2-02 → A2-10 → A2-11 队列：BF-08 已合入，A2-02 可派（A2-07 已 CLOSE）。
+>
 > **2026-09-21T07:16Z 更新：FMT-01 交了 DONE（PR #124）→ PM 评审 rework（源码身份不符等四处小的）；**更正：joshjms 不是新账号**。**
 > - **FMT-01**：工具 + 19 个 case 的真机清单质量很高——我从原始 JSON 重算各类别调用数与文档 / DONE 的表逐格一致、audited_sources_sha256（23 个）与 8e5da4c 逐个对上、隐私 0 命中、scratch merge 后工具单测 25 passed。唯一硬伤：**回执里的 audit_tool_sha256（7bf19644…）与提交的工具（6c4ff8db…）对不上**——要重跑或证明差异不影响。另三处小的：文档写 24 passed（实 25）、PKDA FP32 的 6 次算术是未登记的只读校验（D-PM-42 意义下）不该与违规混成一类、CHECK_SITE_FUNCTIONS 改判的算子要列清单。清单结论：clean——KDA 推理 / decode、GDN / GDN 反向、PGDN、PKDA BF16、GDN-2 FP32；违规——`_scan_states` / dw 取负 / raw-flag 训练前处理 + 引擎反向 / GDN-2 BF16 加宽；log2(eg) 只在 `impl="upstream"` 上走。
 > - **更正**：我 02:12Z 起把 joshjms 记成「新账号、首次合入要用户同意」——错了：D-PM-15（用户）已批准其首合，A2-04（PR #60）已合入、A2-40 已 done。我派单时没查看板历史。FMT-01 按 D-PM-33 由 PM 评审通过后自行合入，不需要问用户；A2-07 的 MikejR2904 才是真新账号。

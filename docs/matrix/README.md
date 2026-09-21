@@ -208,7 +208,7 @@ kimi_linear_layer / bd=4 的拆分（ms）：fwd_kernels 1.314 · caches_host_si
 
 ## 缺口
 
-P0 2 项 · P1 22 项 · P2 13 项 · 已解决 13 项 · 共 50 项
+P0 2 项 · P1 23 项 · P2 14 项 · 已解决 13 项 · 共 52 项
 
 **第一期里程碑**：第一期五项已全部有结论，并补齐了同机性能对比：aclnn 编译、runtime 桥、kda_fwd 接线、KDA 本地基线均实测通过；自编译算子在 block_dim=4 下比 torch_npu 组合快 4.43x（kimi_linear_layer）/ 2.38x（long_context T=4096）/ 19.7x（smoke）。过程中修掉两个自己的 bug（bridge-per-call-overhead、op-name-collision-in-process），它们先后让 block_dim 的效果被完全掩盖。当前最大的性能项是 block-dim-ceiling（已升 P1）：扩展性一路线性到契约上限 4，而硬件有 28 cube。第二期的前置障碍 kda-fwd-bwd-dtype-mismatch 已量化（降 P2）。
 
@@ -237,7 +237,7 @@ P0 2 项 · P1 22 项 · P2 13 项 · 已解决 13 项 · 共 50 项
 
 | 算子族 | P0 | P1 | P2 |
 |---|---|---|---|
-| KDA | `c1-multihead-o-corrupt`<br>`ascriptor-gm-transfer-two-slice-row-gap` | `decode-call-overhead`<br>`decode-layer-overhead`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`no-tail-path`<br>`block-dim-ceiling`<br>`qk-l2norm-not-in-kernel`<br>`state-layout-k-first`<br>`kda-bwd-inverse-mm-mutex-over-budget`<br>`a2-splitk-fp32-cube`<br>`a2-splitk-bf16-fp16-unsettled`<br>`a2-cast-blkstride-sim-blind`<br>`kda-bwd-scan-dh0-nondeterministic` | `kda-fwd-bwd-dtype-mismatch`<br>`npu-builtin-ops-missing`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`kernel-nd2nz-suboptimal`<br>`fwd-caches-not-emitted`<br>`modules-are-torch-not-kernels`<br>`stable-unit-no-harness`<br>`gate-span-still-bounded`<br>`a2-sim-vs-toolchain-blind-spots`<br>`a2-autosync-missing-cross-pipe-guards`<br>`a2-kda-bwd-pair-checkpoint-thin-margin`<br>`kda-prep-nearzero-output-underflow` |
+| KDA | `c1-multihead-o-corrupt`<br>`ascriptor-gm-transfer-two-slice-row-gap` | `decode-call-overhead`<br>`decode-layer-overhead`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`no-tail-path`<br>`block-dim-ceiling`<br>`qk-l2norm-not-in-kernel`<br>`state-layout-k-first`<br>`kda-bwd-inverse-mm-mutex-over-budget`<br>`a2-splitk-fp32-cube`<br>`a2-splitk-bf16-fp16-unsettled`<br>`a2-cast-blkstride-sim-blind`<br>`kda-bwd-scan-dh0-nondeterministic`<br>`kda-prep-backward-training-step-slowdown` | `kda-fwd-bwd-dtype-mismatch`<br>`npu-builtin-ops-missing`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`kernel-nd2nz-suboptimal`<br>`fwd-caches-not-emitted`<br>`modules-are-torch-not-kernels`<br>`stable-unit-no-harness`<br>`gate-span-still-bounded`<br>`a2-sim-vs-toolchain-blind-spots`<br>`a2-autosync-missing-cross-pipe-guards`<br>`a2-kda-bwd-pair-checkpoint-thin-margin`<br>`kda-prep-nearzero-output-underflow`<br>`kda-prep-backward-endpoint-disclosures` |
 | GDN | `ascriptor-gm-transfer-two-slice-row-gap` | `gdn-no-gqa`<br>`layout-not-token-major`<br>`nonzero-initial-state`<br>`d-initial-state-absent`<br>`state-dtype-bf16`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`scale-param-no-slot`<br>`no-tail-path`<br>`block-dim-ceiling`<br>`a2-splitk-fp32-cube`<br>`a2-splitk-bf16-fp16-unsettled` | `npu-builtin-ops-missing`<br>`fixed-kv-128`<br>`asymmetric-kv-dim` |
 | GDN-2 | `ascriptor-gm-transfer-two-slice-row-gap` | `no-varlen`<br>`no-tail-path`<br>`gdn2-abi-not-gdn`<br>`gdn2-chunk-gate-range`<br>`gdn2-decode-fragmentation` | `npu-builtin-ops-missing`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`modules-are-torch-not-kernels` |
 | DeltaNet | `ascriptor-gm-transfer-two-slice-row-gap` | `layout-not-token-major`<br>`nonzero-initial-state`<br>`d-initial-state-absent`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`scale-param-no-slot`<br>`no-tail-path` | `npu-builtin-ops-missing`<br>`fixed-kv-128`<br>`asymmetric-kv-dim` |
@@ -558,6 +558,16 @@ PM 在权威 workspace 上独立跑了 `benchmarks/diag_c1_multihead.py`，**上
 
 **2026-09-20 用户指示「scan fused 需要定位」（D-PM-46）：已立项 A5K-03（只定位、不修，实验性派生单元、不接公开调度；机制 + 可证伪预测 + 干预实验；结论可能是 kernel 竞态也可能是环境 / 卡问题）。**修复仍要在定位出精确机制之后由用户另批 kernel 批次（本条仍是 `requires_kernel_change`，仍在队列里）。
 
+#### `kda-prep-backward-training-step-slowdown` — KDA raw flags 训练路径（BF-08 合入后）的完整前向 + 反向训练步比旧 host 图慢 11.3 ×：一个 gate backward 第一阶段 kernel 的补偿算术占 375 ms（T4096）
+
+- **类别** performance · **适用于** KDA · **阻塞** —
+- **依据** **来源：BF-08（#117，PR #122 → 6c4aaca）；PM 从 perf-v2-bd4 的 36 条原始样本复算；申领人的 A5 真机（CANN 9.1.0-beta.1），结论只对该环境成立。**
+- 同卡 bd4、B1 / H = HV32、BF16 raw / FP32 参数、三轮 baseline / candidate / baseline：T1024 旧 host 图 9.5750 → 106.7511 ms（11.149 ×）、Torch NPU 训练基线 39.9378 → 106.8193（2.675 ×）；T4096 37.5994 → 425.7246（11.323 ×）、140.5361 → 425.7781（3.030 ×）。这是**完整前向 + 反向训练步**（含 raw 前处理），不是单独前处理。
+- 逐 kernel（Level1 profiler，含扰动、不可与 clean 墙钟相加）：`kda_prep_backward_gate_bf16_f32_f32_kernel` 375.466 ms（独立事件窗口 370.907 ms）；`kda_prep_backward_norm_bf16_kernel` 两次共 19.566 ms；其余为既有 kernel。申领人的推断（源码 + 上述实测，非逐操作微基准）：补偿 exp / log1p / sigmoid 与乘积残差的指令数、每 64 lane 重复计算 / UB 物化与固定五层部分归约；第二阶段全局归约很小。
+- 为什么这么做：冻结的逐元素与 L2 精度预算（3 × 校准地板）在完整 Kimi 人口上连旧 host 图自己都过不了（k 的最差元素上候选与旧 host 逐位相同、相对误差 2.166，条件数 6.0e7），首次未补偿的候选因此失败，改用补偿算术后才通过——精度换来的性能代价。
+- **影响** `ascend_fla/layers/kda.py` 的 KDA 层在 chunk 与 decode 上都用 use_qk_l2norm_in_kernel / use_gate_in_kernel / use_beta_sigmoid_in_kernel 三个 raw flag，所以 **KDA 层的训练路径直接受影响**（推理 / decode 是 BF-07 的前向，不受影响；默认无 flag 路径不受影响）。规格不设速度门槛，用户在 D-PM-57 知情后选择先合入、另立 P0 性能任务。
+- **建议** BF-09（P0，open）：在冻结预算字节不变、跨 bd 逐位相同、固定归约次序的前提下优化 gate 第一阶段与 norm backward——减少补偿超越函数 / 乘积的指令数（证明同样的误差界）、减少重复的 64 lane 临时 load / store、改善流水与 tile 复用、减少冗余 launch；目标线（PM 建议，不是门槛）T4096 完整训练步 ≤ 旧 host 图的 1.25 ×。若守住约束仍做不到，如实报瓶颈与下界，由用户决定是否放宽逐元素判据（同一人口对旧 host 成对比较，或按项幅值归一）。
+
 ### P2
 
 #### `kda-fwd-bwd-dtype-mismatch` — kda 的 fwd 与 bwd 对同名张量声明了不同 dtype
@@ -692,3 +702,13 @@ PM 在权威 workspace 上独立跑了 `benchmarks/diag_c1_multihead.py`，**上
 - 另有一类：q / k ×1e-20 时 decode 的 final_state 对旧 prep 的 CPU reference 相差 4.3e-4~9.8e-4（1e-5 判据），原因是 eps 主导下商恰在 BF16 中点、candidate 与旧 FP32 商落在两侧（一次舍入翻转，q / k 约 1% 元素差 1 ulp）；D-PM-51（用户批准）只对 `nearzero_*` decode 组改判为「对实际 prep 输出的 reference ≤ 1e-5」（全部 384 例 state 最大 9.438e-7）。
 - **影响** 只影响输出量级 ≲ 3.2e-37 的极端近零输入（绝对误差同量级，数值上无实际意义）；失败是「响」的（contract board stage 保持 failed，逐切片表公开），不是静默错误；普通域 25,920 个 case 与完整 Kimi workload 不受影响。不影响 A2 / A3；BF-08（梯度链）会在自己的端点披露里再出现同类情形。
 - **建议** 1. 已由用户批准（D-PM-52）：只披露、不设通过线，类定义 = 切片 |golden|max ≤ 32 × FP32 最小正规数 且 candidate 与旧 NPU 逐位相同或 ≤ 1 BF16 / 4 FP32 ULP；类外失败仍是失败。2. 要闭合这些失败必须先改比较口径（现有口径对 decode 148/148、chunk 16/40 逻辑上无解），单改 kernel 不可能过；不建议改 inherited kernel 或收窄域。3. BF-08 沿用同一披露框架；新的类别或需要新通过线的，先 RISK 给 PM、由 PM 转用户。
+
+#### `kda-prep-backward-endpoint-disclosures` — KDA raw 前处理反向（BF-08）的端点披露：每 bd 482 个 native 下溢输出不是 CPU 正确性通过、30 个 gate A_log = 88 输出记录留作未资格化观察
+
+- **类别** numerics · **适用于** KDA · **阻塞** —
+- **依据** **来源：BF-08（#117，PR #122 → 6c4aaca）；PM 从端点跨 bd 汇总与原始四列回执核过；申领人的 A5 真机（CANN 9.1.0-beta.1），结论只对该环境成立。**
+- native 下溢（D-PM-56 (2) / D-PM-50 元素分类 (b)）：每 bd 482 个输出——gate A_log = −100（BF16 239、FP32 241）与 beta = −88（两 dtype 各 1）：golden 为 FP32 subnormal、candidate 为 +0、旧 NPU 为 −0（数值 ULP = 0 但字节不同）、CPU FP32 为 subnormal；四列数值与位跨 bd 全同；**不是 CPU 正确性通过**；公共入口在 beta = −88 / 16 / 20 与 A_log = −120 / −100 可达。
+- gate A_log = 88（D-PM-56 (3)）：每 bd 30 个输出记录（BF16 dg 2、FP32 dg 13 与对应 dt_bias 15）上 candidate 既不等于 CPU 也不等于旧 NPU 且涉及非有限值——14 个两旧路径均 +Inf、16 个 CPU +Inf / 旧 NPU 有限（与 candidate 有有限舍入差）；candidate 有限且更接近 FP64（例：BF16 dg[0,0,0,72] candidate 2.1002e38、旧 NPU = CPU = +Inf、FP64 2.1011e38）；candidate 独有 NaN = 0；默认公共 gate 检查在 A_log 80 / 88 / 89 / 100 两 dtype 都提前拒绝（只有 check_gate_range = False 才走得到）。
+- contract 的 board 阶段保持 failed、merge_authorized = false；这些是披露，不是通过。另一条发现：冻结的逐元素限值在完整 Kimi 人口上被旧 host 图自己超过（q 至少 0.0464、k 2.166，限值 0.0588），旧图在 raw beta = 16 处相对 FP64 约 5.8% / 9 BF16 ULP 之外。
+- **影响** 只影响：亚正规 / 上溢端点的输入（默认公共闸就会拒绝 A_log ≥ 80 一类）与 native 下溢的输出；这些输出的绝对量级极小或输入被默认闸拒绝，不是静默错误；普通域 58,320 次公开训练调用与完整 Kimi 全部满足冻结预算。
+- **建议** 用户在 D-PM-57 知情后授权合入，端点按披露处理，不需要动作；若将来要把这两类改成有通过线的口径（例如 A_log = 88 的候选有限而旧路径 Inf 的一类），需要用户另行裁定新端点类（D-PM-52 的「只披露」口径不外推）。BF-09 沿用同一披露框架，新类别先 RISK。
