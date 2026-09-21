@@ -1852,6 +1852,10 @@
         {
           "at": "2026-09-19T16:32",
           "summary": "session 01a0b7ce-… 在 #31 再次 APPLY（16:08Z），称当前无在飞任务——但 15:55Z 已被派 BF-04（#103，未见 ACK，它似乎只盯 #31）。回 NO_TASK 指向 #103；A2-02 顺延，仍 open"
+        },
+        {
+          "at": "2026-09-21T03:52",
+          "summary": "APPLY（03:40Z，自述，条件申请；新账号 MikejR2904，同一个人已持有 A2-07）：条件——BF-08 合入后派（写集含 ascend_fla/ops/kda/**，会 rebase 到合入后的树上；A2-02 本身不需要 NPU 与 ascriptor）。a2，910B3 / CANN 9.2.0-beta.1 / torch 2.10 / torch_npu 2.10.0.post2，fork MikejR2904/ascend_fla_dev，异步。PM 处理：写集与在飞的 BF-08 相交，BF-08 合入并 CLOSE 前派不了；条件 APPLY 我认，BF-08 CLOSE 后直接派、不需要重新 APPLY（届时 A2-07 若还没 CLOSE 先等它——一个账号一次一个任务，要并发两次 APPLY 都填不同 session）。"
         }
       ],
       "result": null,
@@ -2337,6 +2341,10 @@
         {
           "at": "2026-09-20T03:48",
           "summary": "用户 2026-09-20 放行（D-PM-43「其他的也放行」）：gated → open。machines:a2 这道闸放行；PM 补写了规格（docs/pm/tasks/A2-10.md），前置 A2-02（platform.py，open）没完成前不可派。"
+        },
+        {
+          "at": "2026-09-21T03:52",
+          "summary": "APPLY（03:40Z，自述，条件申请；新账号 MikejR2904，同一个人已持有 A2-07）：条件——A2-02 落地后派；需要 910B（自述持有）；固定修订 90cfcdc / b3b3f9c 上机前要 pin，目前 5287adc / b9c8a84，自述取不到固定修订「without a gitcode token」并已告知仓主。a2，910B3 / CANN 9.2.0-beta.1 / torch 2.10 / torch_npu 2.10.0.post2，fork MikejR2904/ascend_fla_dev，异步。PM 处理：依赖 A2-02 没完成——回 NO_TASK，A2-02 CLOSE 后直接派；固定修订取不到属仓主 / 用户的事（PM 不经手令牌），派单前要解决，解决不了先 RISK、不许用别的修订硬上。"
         }
       ],
       "result": null
@@ -2379,6 +2387,10 @@
         {
           "at": "2026-09-20T03:48",
           "summary": "用户 2026-09-20 放行（D-PM-43「其他的也放行」）：gated → open。machines:a2 这道闸放行；PM 补写了规格（docs/pm/tasks/A2-11.md）；只交证据与建议，「A2 结论算数」仍是用户的决定；前置 A2-10 没完成前不可派。"
+        },
+        {
+          "at": "2026-09-21T03:52",
+          "summary": "APPLY（03:40Z，自述，条件申请；新账号 MikejR2904，同一个人已持有 A2-07）：条件——A2-10 落地后派；A2 总闸，需要真 910B；将在 A2-01 固定修订（90cfcdc / b3b3f9c）上跑以使 split-K FP32 数字可比。a2，910B3 / CANN 9.2.0-beta.1 / torch 2.10 / torch_npu 2.10.0.post2，fork MikejR2904/ascend_fla_dev，异步。PM 处理：依赖 A2-10 没完成——回 NO_TASK，A2-10 CLOSE 后直接派。"
         }
       ],
       "result": null
@@ -4837,6 +4849,10 @@
         {
           "at": "2026-09-21T03:29",
           "summary": "RISK numerical-grid-and-norm-overflow-disclosure（03:10Z，自述，#117，头 297c80b）：当前「补偿 + 设备内二幂缩放」norm 在完整 Kimi 全 flags 训练上 bd1 / 2 / 3 / 4 各自独立通过，全部 50 vendors（含 9 个原有 backward 条目）在每个进程首次自定义执行前编完；norm-v3 22 个 native case 所有冻结梯度判据通过（含 near-null 与 scale 1e18 / 1e20），精确缩放检查在这些生成人口上 0 个不精确元素；BF16 / FP32 norm、gate / 两级归约、beta 的缩小 sim / pipesim 诊断完成（不替代 native 网格）。1e20 四列（16384 值 / raw dtype）：candidate 梯度对 FP64 的 L2 BF16 0.0016657754315523555 / FP32 6.903603602405483e-8；旧 CPU L2 = 1、旧 NPU L2 = 1（梯度全零）；FP64 梯度 norm 1.137e-19 / 1.134e-19；candidate 有限且非零，BF16 全部 16384 位置等于 FP64 正确舍入。同输入前向：BF-07 前向、旧 CPU、旧 NPU 各返回 16384 个有限的 0，FP64 前向无 0（norm 11.3137）；前向代码未改；缩放后的反向在前向 FP32 平方和已上溢并返回零时仍求解析导数——申领人把它作为「前 / 反向端点一致性披露」，没有发明端点豁免、没有改前向 / 域 / 预算，请 PM / 用户对这四列作端点决定。网格新失败（Grid-v2，bd1 与 bd3 共有，其余进程收集中，原始数组 / 灵敏度 / 逐输出指标 / BF16 位置报告全部保留，没有改容差、没有省略失败 case）：① c1_g8_vbf16_flags010_… 的 gate:f32_f32_bf16:ddt_bias 有 1 / 1024 个元素对旧 CPU 与 FP64 正确舍入同时差 2 ULP（冻结 1 ULP 线仍生效，relL2 0.00172 与最大相对误差 0.00864 通过，失败只在 ULP 线）；② c3_g1_… 的 beta:f32:dbeta relL2 2.405e-7 > 冻结 1.9566e-7；③ 另有 gate 参数相消 case 超逐元素限（dA_log 与 FP32 ddt_bias）。下一步：定位 beta 差异与 gate 贡献 / 归约误差，只在授权的实现契约内修复；保持 draft / in_progress；native 网格、prepare 顺序、边界回归、性能三明治、最终证据 / 归档均未完成；不提 DONE。第二条 RISK beta-saved-sigmoid-precision-contract（03:18Z）：在 c3_g1（192 元素）上重放 NPU 实际保存的 prepared sigmoid 与入射灵敏度——candidate 反向与「用保存的 s 在 CPU 上算 (gy·s)·(1−s)」逐位相同，没有反向算术差异；对冻结解析 FP64 的 relL2：candidate 2.405263952257356e-7、FP64 精确乘保存的 FP32 再舍入 3.145033229008698e-7、另一种 FP32 结合次序 2.410204141720626e-7、旧 CPU autograd 同输入 2.4141791003235956e-7——全部超冻结 1.9565792436629512e-7；舍入后的解析 FP64 是 2.535037847087912e-8。提议：保持 BF-07 前向不变、保持 saved_s == 0 / 1 的饱和行为，另保存 raw beta，在非饱和分支从 raw beta 用补偿设备算术算解析 sigmoid 导数（取代「全部普通梯度只从舍入后的 saved_s 推」这一实现选择），请确认在冻结的解析比较契约下导数语义；不改饱和端点或预算。gate 参数精度修复独立继续：受限 CPU 原型（项用两分量 FP32 算术、固定归约、exp(A_log) 因子后置）在 7 个已定位的代表人口上通过现有限，只是算术推演、非 native 证明；正在做有界的 typed-ABI / workspace 实现，随后先跑完整 workload 真机再回放原网格。PM 核对（NPU-free，从已推送的 297c80b）：完整 Kimi 训练 bd1–4（compensated-v1/full-v3-bd1..4）passed = true、plain / cached 一致、输入未改、输出全有限，prep 六项最大逐元素误差 ≤ 0.00389，19 个输出的 sha256 四个 bd 全同；norm near-null（relL2 0.0016607077649921488、最大逐元素 0.0038790742458557122）与 full_kimi 的数字与自述逐位一致。**norm-v3（二幂缩放）与 1e20 四列的证据尚未推送**（头仍是 297c80b，其 norm-v1 记录里 1e18 / 1e20 是 NaN 失败，与 02:42Z 自述一致）——先按自述作答，证据到后我再核。PM 裁定 D-PM-55（详见决策；已在 #117 回复）：(1) 1e20：反向与前向一致，前向已置零处梯度取零（同旧 CPU / NPU），二幂缩放只用于消除补偿中间量溢出、有限量程不得超出前向，不作新端点类；(2) beta：从 raw beta 算未饱和分支的解析导数符合契约，饱和开关只用保存的 s 恰为 0 / 1，不改前向 / 预算 / 端点。网格失败无需 PM 决定，提醒：冻结限不动、失败全保留、旧 CPU 在同一 case 上的对应数写成发现（beta：旧 CPU 2.414e-7 也超冻结 1.957e-7）、补偿是候选的选择（PM 既不要求也不阻止，性能不设门槛如实报）、最终资格在最终源码上重跑全网格；补偿重写若让 ETA 超过 21h / 24h，下一个 STATUS 里给新 ETA，PM 据此调时限、不按 timebox-slip 扣分。"
+        },
+        {
+          "at": "2026-09-21T03:52",
+          "summary": "STATUS（03:49Z，自述，#117，PR #122，头仍是 2924fe1）：**D-PM-55 已落实**——norm 以不变前向的 FP32 平方和是否上溢决定零梯度；beta 保存 raw 输入本体与实际 sigmoid，非饱和行计算补偿解析导数，保存的 sigmoid 恰为 0 / 1 决定零端点；冻结预算未改。最新候选完整 Kimi 真机 bd = 4 已 PASS，50 vendors（含九项原有 backward）首次 launch 前全部完成；bd = 1 / 2 / 3 独立进程继续验收；完整网格与端点复验未完成，不报 DONE。gate 的固定两级补偿归约初版在 vendor 编译时 VF stack 超限，保留失败，改为系数立即数以降低寄存器压力，同上限编译并完整真机通过，未放宽资源限制。旧版生产 297c80b 的完整 bd1..4、22 个 norm 诊断、12 个模型诊断与失败网格证据已在 2924fe1 公开（补齐 manifest 引用的 3 个执行源码文件）；该旧版网格每个 bd 的 1620 组 × 9 梯度选择均完成，**每个 bd 同样 54 组失败**，待新候选全量闭环。下一步：新候选所有 bd、7 个定位复现与全量网格、D-PM-55 端点；随后缩小模型、public prepare 顺序、边界与性能三明治；PR 保持 draft。PM 处理：无需回复。核对状态：新候选的证据尚未推送（分支头仍 2924fe1，PM 在 03:36Z 核过范围 / 体量：+32.5 MB、648 个文件、最大 blob 1.04 MB、无写集外文件，累计证据约 46 MB，仍在约 100 MB 目标内），数字待 DONE 时核；留意点：新候选的最终资格运行必须在最终源码上做、源码哈希与最终提交树对上；VF stack 超限的处理（系数改立即数）要在研究文档里写明是「改实现、非放宽资源限制」并给编译 / 资源数字。"
         }
       ],
       "result": null,
