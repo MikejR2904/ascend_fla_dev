@@ -805,13 +805,27 @@
       "blocks": [],
       "proposed_action": "1. A2-09（已要求，README-only）：机制改成实数、写明分辨率 ≈ 一次翻转；「≥95×」改「≥94×」；「58 ulp」写明只在 6 个 case 上测过。`contract.json` 的 `reason` 因为在 unit digest 里，留到下一次因别的原因动 contract 时同改。2. 下一次动 A2 契约时，把 `finalize_pair` 这一档的 stage 判据改成对翻转敏感的写法（超 1 ulp 的元素数 = 0、被翻转元素数有上限），不要只用相对 L2——相对 L2 的 1e-5 在 N 万级元素的 BF16 张量上就是单次翻转的量级。3. A2-11 定性 A2 的 cube FP32 / BF16 数值时对照，不据此单独下结论。",
       "requires_kernel_change": false
+    },
+    {
+      "id": "kda-prep-nearzero-output-underflow",
+      "title": "KDA raw 前处理（BF-07）的 nearzero 输出落在极端下溢区（|golden|max ≲ 3.2e-37）时数值判据失败：candidate = 旧 NPU，逻辑上无解的比较口径，用户批准只披露、不设通过线（D-PM-52）",
+      "category": "numerics",
+      "severity": "P2",
+      "applies_to": [
+        "kda"
+      ],
+      "evidence": "**来源：BF-07（#106，PR #118 已合入 381b452）；PM 从原始回执与逐位置记录复算；申领人的 A5 真机（CANN 9.1.0-beta.1），结论只对该环境成立。**\n- 失败范围：chunk 每 bd 16 例（40 个 head/chunk 位置）、decode 每 bd 44 例（148 个位置），六个 bd 的失败 ID / 位置 / 指标完全一致；触发条件是 q / k ×~1e-20 这类近零输入使输出 |golden|max ≲ 3.2e-37（chunk 最大 3.2323e-37 = 27.50 × FP32 最小正规数，decode 最大 1.1480e-38 = 0.977 ×）。\n- 与旧 host 路径的关系：candidate 与旧 NPU 逐位相同（chunk 35/40、decode 115/148）或差 ≤ 1 BF16 ULP（chunk）/ ≤ 4 FP32 ULP（decode）——没有回退，旧 host 路径同样失败；这不是 CPU 正确性通过。\n- 必要下界（PM 从回执的范数与距离重算）：decode 148 个位置里 124 个是「两套 CPU FP32 参考的允许误差球无交集」（两套参考在 ~1e-43 量级彼此就差 ~33%，最大距离 / 半径 17,930.9）、24 个是「BF16 最近舍入误差已超阈值」；chunk 40 个位置里 16 个 BF16 最近舍入 L2 > 0.05；其余 chunk 位置是真实的 CPU-normal 数值差异，不证明不可修。\n- 另有一类：q / k ×1e-20 时 decode 的 final_state 对旧 prep 的 CPU reference 相差 4.3e-4~9.8e-4（1e-5 判据），原因是 eps 主导下商恰在 BF16 中点、candidate 与旧 FP32 商落在两侧（一次舍入翻转，q / k 约 1% 元素差 1 ulp）；D-PM-51（用户批准）只对 `nearzero_*` decode 组改判为「对实际 prep 输出的 reference ≤ 1e-5」（全部 384 例 state 最大 9.438e-7）。",
+      "impact": "只影响输出量级 ≲ 3.2e-37 的极端近零输入（绝对误差同量级，数值上无实际意义）；失败是「响」的（contract board stage 保持 failed，逐切片表公开），不是静默错误；普通域 25,920 个 case 与完整 Kimi workload 不受影响。不影响 A2 / A3；BF-08（梯度链）会在自己的端点披露里再出现同类情形。",
+      "blocks": [],
+      "proposed_action": "1. 已由用户批准（D-PM-52）：只披露、不设通过线，类定义 = 切片 |golden|max ≤ 32 × FP32 最小正规数 且 candidate 与旧 NPU 逐位相同或 ≤ 1 BF16 / 4 FP32 ULP；类外失败仍是失败。2. 要闭合这些失败必须先改比较口径（现有口径对 decode 148/148、chunk 16/40 逻辑上无解），单改 kernel 不可能过；不建议改 inherited kernel 或收窄域。3. BF-08 沿用同一披露框架；新的类别或需要新通过线的，先 RISK 给 PM、由 PM 转用户。",
+      "requires_kernel_change": false
     }
   ],
   "summary": {
     "P0": 2,
     "P1": 22,
-    "P2": 12,
-    "total": 49,
+    "P2": 13,
+    "total": 50,
     "first_milestone": "第一期五项已全部有结论，并补齐了同机性能对比：aclnn 编译、runtime 桥、kda_fwd 接线、KDA 本地基线均实测通过；自编译算子在 block_dim=4 下比 torch_npu 组合快 4.43x（kimi_linear_layer）/ 2.38x（long_context T=4096）/ 19.7x（smoke）。过程中修掉两个自己的 bug（bridge-per-call-overhead、op-name-collision-in-process），它们先后让 block_dim 的效果被完全掩盖。当前最大的性能项是 block-dim-ceiling（已升 P1）：扩展性一路线性到契约上限 4，而硬件有 28 cube。第二期的前置障碍 kda-fwd-bwd-dtype-mismatch 已量化（降 P2）。",
     "second_milestone": "第二期已完成：kda_bwd 九 kernel 链 + 九个前向检查点 + autograd + KDA layer（含 2 modules），训练步在 bd=4 下比 torch_npu 组合版快 4.83x~5.67x。\n过程中发现并根治了第二期最关键的一个缺口：**按 fla 的默认初始化（chunk 内门控跨度 ~94），上游 kernel 在前向与反向各有一处量程失效，方向相反** —— 前向在 87.3 下溢、反向在 88.72 上溢。两处都在本仓建了派生单元（kda_fwd_stable / kda_bwd_stable），把成对衰减分解的锚点从区间端点改到中点，数学同义。\n门控闸因此做成二维 `{impl: {forward, backward}}`：前向 155（受有限性约束，到 155.97 精度完全不退化）、反向 100（受**精度**约束，它先于有限性到来 —— 梯度到 169.8 都有限但 dq 在 130 处超预算）。**「不吐 NaN」不等于「能用」，两者要分别测、闸按更严的定。**\n剩一项端到端确认（默认初始化下整层反向的精度）卡在机器可用性上 —— 算子层面的同一件事已由 test_kda_bwd_deep_npu.py 在跨度 94 测过，六项梯度全在契约预算内。\n当前最大的性能项仍是 block-dim-ceiling（P1）。",
     "recommended_first_target": "KDA（Kimi-Linear / fla-kda-default 形状）。其 ABI 已是 token-major BTHK、GQA 原生支持、initial_state 与 final_state 均为 FP32、backward 产出 dh0 —— 上述多数 ABI 缺口对它都不适用。唯一需要前置补齐的是本地验证证据（kda-no-local-evidence）。",

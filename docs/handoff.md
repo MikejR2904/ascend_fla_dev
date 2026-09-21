@@ -11,6 +11,12 @@
 
 ### 正在飞的任务（现在没有；A5K-02、PK-02、PK-03 都已于 2026-09-19 合入）
 
+> **2026-09-21T01:04Z 更新：用户授权「#118授权」（D-PM-53），PR #118（BF-07）已合入 → 381b452，BF-07 done；main 全量 1032 passed, 12 skipped, 5 warnings。BF-08 按约定派给同 session。**
+> - **合入**（bot 账号，`--match-head-commit`）：授权早于评审里要补的只加证据的提交，PM 没合当时的头 `ef5bfc65`，而是等申领人补完并核对后合入 `5b71779e`——两个提交只动 `kda_prep/evidence/`：最终源码上补跑 bd4 完整 workload（`full-v2-bd4`：8241 项比较 0 超预算、17 个返回量与 bd1/2/3 及首轮 v1-bd4 逐位相同、34 个源码哈希与提交树全对，`autograd.py` = `78b96d6b…`）、被引用的失败切片表 CSV（270 行 = 失败表 270 个切片）、更新后的 1422 项 manifest（全对、无未列文件）；隐私 0 命中。合入后 main 全量（NPU-free）**1032 passed, 12 skipped, 5 warnings in 281.27s (0:04:41)**（915 + 117 个新测试，与预测一致）。`kernel_inventory`：`kda_prep` 的 dtype_status → native@a5（推理 / decode 前处理已 kernel 侧，训练路径仍是登记例外，待 BF-08）；gaps 新增 `kda-prep-nearzero-output-underflow`（P2，D-PM-52 披露）。
+> - **用户是在被告知四件事后授权的**：dtype 域收窄（raw 只接 BF16 / FP32，FP16 / FP64 显式报错）、D-PM-52 的披露（不是通过）、性能比前任慢 12% / 6%、证据体量 1.4 GB / 1413 个文件。**以后不再接受这个证据体量**——BF-08 的 ASSIGN 已要求 evidence 总量控制在 ~100 MB 内（Git 里留汇总 + 逐文件 SHA + 抽样明细 + 恢复脚本，完整原始回执放私有归档）。
+> - **BF-08**（issue #117，24h，分支 task/BF-08，session `01a0b7ce-…`）：训练梯度链进自编译 kernel；ASSIGN 点明校准先行冻结预算、跨核 (B,T) 归约确定性、每份最终源码资格回执的生产源码哈希要与最终提交树对上（吸取 BF-07 首个 bd4 回执的教训）、端点披露沿用 D-PM-48 / 50 / 52 框架（新类别先 RISK）、证据体量、写集与既有测试规则。**A5K-03**（scan_fused dh0 定位，P0）仍 open、无人申领——用户可另开 session 直接 APPLY，需要 A5 至少两张卡。
+> - 待用户：暂无。
+>
 > **2026-09-21T00:39Z 更新：BF-07 交了 DONE（PR #118 转 ready，头 `ef5bfc65`）——PM 评审 accept（技术判据全过），合入前只欠一处只加证据的补充；合入待用户授权。**
 > - **PM 从原始文件独立复算**（`tmp/review/BF-07/`，git-ignored）：1455 个文件全在写集内（含已批准的既有测试函数）、reserved 0、stable kernel 零 diff、无二进制、blob ≤ 2.5 MB、12 个提交 1331 个 blob（1.38 GB）隐私 0 命中；预算先于实现（首提交 c9409a2）且逐字节未变、与 PM 独立重算一致；完整 workload 四个 bd 32,964 个比较项 0 超预算、17 个返回量跨 bd 逐位相同；普通网格 25,920 case 全过、945,216 个比较项 0 超预算、最大 error / budget 0.3333、4,860 组跨 bd 哈希无差；D-PM-51 六个 bd × 384 ID 全部 state ≤ 1e-5（最大 9.438e-7）；D-PM-52 的 188 个位置 0 个在类外（chunk 最大 27.50 ×、decode 最大 0.977 × FP32 最小正规数）、必要下界重算一致；AST 恰好 5 个获批函数、负对照 44 failed；NPU-free 全量 1032 passed / 12 skipped（= 915 + 117，与预测一致）；性能 plain / cached 慢 12% / 6%。
 > - **合入前要补（只加证据）**：首个 bd4 完整 workload 的 6 份回执记录的 `autograd.py` sha256 是 `12293641…`，提交树里自 1d18143 起的是 `78b96d6b…`（其余 318 份回执都是后者，那一版不在 Git 历史、文档没说明）——已请二选一：在最终源码上补跑 bd4 完整 workload（建议）或给两版 diff 并证明差异不在执行路径上。生产文件在所有回执里其余都一致，验证驱动版本在批次间不同（各回执自带身份），不阻塞。

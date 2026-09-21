@@ -27,7 +27,7 @@ serves only as the semantic authority during testing (`naive.py` as a CPU fp32 o
 
 | family | id | track | kernels | task progress |
 |---|---|---|---|---|
-| KDA (Kimi Delta Attention) | `kda` | open to agents | 7 | 7/22 |
+| KDA (Kimi Delta Attention) | `kda` | open to agents | 7 | 8/22 |
 | GDN (Gated DeltaNet) | `gated_delta_rule` | open to agents | 4 | 5/10 |
 | DeltaNet | `delta_rule` | no task yet | 2 | 2/2 units with validation records |
 | GDN-2 (Gated DeltaNet 2) | `gdn2` | owner track | 6 | 3/5 |
@@ -47,7 +47,7 @@ serves only as the semantic authority during testing (`naive.py` as a CPU fp32 o
 
 ### Expand for detail (family → kernel → task)
 
-<details><summary><b>KDA (Kimi Delta Attention) —— 7 kernel(s)，7/22 done</b></summary>
+<details><summary><b>KDA (Kimi Delta Attention) —— 7 kernel(s)，8/22 done</b></summary>
 
 _First target family; used by Kimi-Linear_
 
@@ -59,7 +59,7 @@ _First target family; used by Kimi-Linear_
 | `kda_fwd` | upstream unit | ✅ native · A5 hw | — | 5/9 passed | _Upstream unit; superseded here by kda_fwd_stable_ |
 | `kda_bwd` | upstream unit | ✅ native · A5 hw | — | 4/9 passed，1 项 gap | _Upstream unit; superseded here by kda_bwd_stable_ |
 | `kda_layout` | open to agents | ✅ native · A5 hw | ✅ native · A5 hw | — | _In-repo layout / dtype-conversion unit (FMT-02, merged): token-major <-> head/chunk-major layout, BF16 / FP32 conversion and default state / dht zero fill as six self-compiled vector kernels (five-loop NDDMA, tiles up to 4096 elements); verified only on the A5 CANN 9.1.0-beta.1 environment; forward is 1.67-2.32x slower than the old host path; legacy host arithmetic (_scan_states etc.) remains, see D-PM-42_ |
-| `kda_prep` | open to agents | 🔵 in progress | 🔵 in progress | 0/2 | [#106](https://github.com/ddddwee1/ascend_fla_dev/issues/106) BF-07 |
+| `kda_prep` | open to agents | ✅ native · A5 hw | ✅ native · A5 hw | 1/2 | [#106](https://github.com/ddddwee1/ascend_fla_dev/issues/106) BF-07 |
 
 <details><summary>kda_fwd_stable —— 5/11 done，start A2-04、FMT-02、A2-03、A5K-01、A5-04</summary>
 
@@ -113,12 +113,12 @@ _First target family; used by Kimi-Linear_
 
 </details>
 
-<details><summary>kda_prep —— 0/2 done，start BF-07</summary>
+<details><summary>kda_prep —— 1/2 done，start BF-07</summary>
 
 | task | issue | SoC | dtype | status | note |
 |---|---|---|---|---|---|
-| BF-07 | [#106](https://github.com/ddddwee1/ascend_fla_dev/issues/106) | `a5` | bf16 | 🔵 review | ★ start |
-| BF-08 | [#117](https://github.com/ddddwee1/ascend_fla_dev/issues/117) | `a5` | bf16 | ⬜ open |  |
+| BF-07 | [#106](https://github.com/ddddwee1/ascend_fla_dev/issues/106) | `a5` | bf16 | ✅ done | ★ start |
+| BF-08 | [#117](https://github.com/ddddwee1/ascend_fla_dev/issues/117) | `a5` | bf16 | 🔵 assigned |  |
 
 </details>
 

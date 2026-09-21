@@ -208,7 +208,7 @@ kimi_linear_layer / bd=4 的拆分（ms）：fwd_kernels 1.314 · caches_host_si
 
 ## 缺口
 
-P0 2 项 · P1 22 项 · P2 12 项 · 已解决 13 项 · 共 49 项
+P0 2 项 · P1 22 项 · P2 13 项 · 已解决 13 项 · 共 50 项
 
 **第一期里程碑**：第一期五项已全部有结论，并补齐了同机性能对比：aclnn 编译、runtime 桥、kda_fwd 接线、KDA 本地基线均实测通过；自编译算子在 block_dim=4 下比 torch_npu 组合快 4.43x（kimi_linear_layer）/ 2.38x（long_context T=4096）/ 19.7x（smoke）。过程中修掉两个自己的 bug（bridge-per-call-overhead、op-name-collision-in-process），它们先后让 block_dim 的效果被完全掩盖。当前最大的性能项是 block-dim-ceiling（已升 P1）：扩展性一路线性到契约上限 4，而硬件有 28 cube。第二期的前置障碍 kda-fwd-bwd-dtype-mismatch 已量化（降 P2）。
 
@@ -237,7 +237,7 @@ P0 2 项 · P1 22 项 · P2 12 项 · 已解决 13 项 · 共 49 项
 
 | 算子族 | P0 | P1 | P2 |
 |---|---|---|---|
-| KDA | `c1-multihead-o-corrupt`<br>`ascriptor-gm-transfer-two-slice-row-gap` | `decode-call-overhead`<br>`decode-layer-overhead`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`no-tail-path`<br>`block-dim-ceiling`<br>`qk-l2norm-not-in-kernel`<br>`state-layout-k-first`<br>`kda-bwd-inverse-mm-mutex-over-budget`<br>`a2-splitk-fp32-cube`<br>`a2-splitk-bf16-fp16-unsettled`<br>`a2-cast-blkstride-sim-blind`<br>`kda-bwd-scan-dh0-nondeterministic` | `kda-fwd-bwd-dtype-mismatch`<br>`npu-builtin-ops-missing`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`kernel-nd2nz-suboptimal`<br>`fwd-caches-not-emitted`<br>`modules-are-torch-not-kernels`<br>`stable-unit-no-harness`<br>`gate-span-still-bounded`<br>`a2-sim-vs-toolchain-blind-spots`<br>`a2-autosync-missing-cross-pipe-guards`<br>`a2-kda-bwd-pair-checkpoint-thin-margin` |
+| KDA | `c1-multihead-o-corrupt`<br>`ascriptor-gm-transfer-two-slice-row-gap` | `decode-call-overhead`<br>`decode-layer-overhead`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`no-tail-path`<br>`block-dim-ceiling`<br>`qk-l2norm-not-in-kernel`<br>`state-layout-k-first`<br>`kda-bwd-inverse-mm-mutex-over-budget`<br>`a2-splitk-fp32-cube`<br>`a2-splitk-bf16-fp16-unsettled`<br>`a2-cast-blkstride-sim-blind`<br>`kda-bwd-scan-dh0-nondeterministic` | `kda-fwd-bwd-dtype-mismatch`<br>`npu-builtin-ops-missing`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`kernel-nd2nz-suboptimal`<br>`fwd-caches-not-emitted`<br>`modules-are-torch-not-kernels`<br>`stable-unit-no-harness`<br>`gate-span-still-bounded`<br>`a2-sim-vs-toolchain-blind-spots`<br>`a2-autosync-missing-cross-pipe-guards`<br>`a2-kda-bwd-pair-checkpoint-thin-margin`<br>`kda-prep-nearzero-output-underflow` |
 | GDN | `ascriptor-gm-transfer-two-slice-row-gap` | `gdn-no-gqa`<br>`layout-not-token-major`<br>`nonzero-initial-state`<br>`d-initial-state-absent`<br>`state-dtype-bf16`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`scale-param-no-slot`<br>`no-tail-path`<br>`block-dim-ceiling`<br>`a2-splitk-fp32-cube`<br>`a2-splitk-bf16-fp16-unsettled` | `npu-builtin-ops-missing`<br>`fixed-kv-128`<br>`asymmetric-kv-dim` |
 | GDN-2 | `ascriptor-gm-transfer-two-slice-row-gap` | `no-varlen`<br>`no-tail-path`<br>`gdn2-abi-not-gdn`<br>`gdn2-chunk-gate-range`<br>`gdn2-decode-fragmentation` | `npu-builtin-ops-missing`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`modules-are-torch-not-kernels` |
 | DeltaNet | `ascriptor-gm-transfer-two-slice-row-gap` | `layout-not-token-major`<br>`nonzero-initial-state`<br>`d-initial-state-absent`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`scale-param-no-slot`<br>`no-tail-path` | `npu-builtin-ops-missing`<br>`fixed-kv-128`<br>`asymmetric-kv-dim` |
@@ -680,3 +680,14 @@ PM 在权威 workspace 上独立跑了 `benchmarks/diag_c1_multihead.py`，**上
 - 求和顺序不同能不能解释「真机为什么与 torch 在这两个元素上舍到不同的一侧」——没有确立（sim / pipesim 在这两项上恰好 0.0，`gentle_decay` 的操作数不跨数量级）。
 - **影响** 只影响 A2 的 stage checkpoint 判据；六项输出梯度的预算（沿用 a5）不受影响（最差占预算 77%，dq @ zero_initial_state）。失败方式是「响」的（stage 检查报 failed），不是静默错误。代价是：换种子 / 形状 / 卡时，若 1 ulp 翻转落在中位数级元素上（`gentle_decay` 类张量里 64% 的元素），checkpoint 会超 1e-5 而误报；T 更大的真实形状里翻转的元素数会随之增加。**A2-09 的 README / contract.reason「比实测宽两个数量级」只对采样的四个 case 成立**，已要求 README 改成 26 例的实数与上面的分辨率说明。
 - **建议** 1. A2-09（已要求，README-only）：机制改成实数、写明分辨率 ≈ 一次翻转；「≥95×」改「≥94×」；「58 ulp」写明只在 6 个 case 上测过。`contract.json` 的 `reason` 因为在 unit digest 里，留到下一次因别的原因动 contract 时同改。2. 下一次动 A2 契约时，把 `finalize_pair` 这一档的 stage 判据改成对翻转敏感的写法（超 1 ulp 的元素数 = 0、被翻转元素数有上限），不要只用相对 L2——相对 L2 的 1e-5 在 N 万级元素的 BF16 张量上就是单次翻转的量级。3. A2-11 定性 A2 的 cube FP32 / BF16 数值时对照，不据此单独下结论。
+
+#### `kda-prep-nearzero-output-underflow` — KDA raw 前处理（BF-07）的 nearzero 输出落在极端下溢区（|golden|max ≲ 3.2e-37）时数值判据失败：candidate = 旧 NPU，逻辑上无解的比较口径，用户批准只披露、不设通过线（D-PM-52）
+
+- **类别** numerics · **适用于** KDA · **阻塞** —
+- **依据** **来源：BF-07（#106，PR #118 已合入 381b452）；PM 从原始回执与逐位置记录复算；申领人的 A5 真机（CANN 9.1.0-beta.1），结论只对该环境成立。**
+- 失败范围：chunk 每 bd 16 例（40 个 head/chunk 位置）、decode 每 bd 44 例（148 个位置），六个 bd 的失败 ID / 位置 / 指标完全一致；触发条件是 q / k ×~1e-20 这类近零输入使输出 |golden|max ≲ 3.2e-37（chunk 最大 3.2323e-37 = 27.50 × FP32 最小正规数，decode 最大 1.1480e-38 = 0.977 ×）。
+- 与旧 host 路径的关系：candidate 与旧 NPU 逐位相同（chunk 35/40、decode 115/148）或差 ≤ 1 BF16 ULP（chunk）/ ≤ 4 FP32 ULP（decode）——没有回退，旧 host 路径同样失败；这不是 CPU 正确性通过。
+- 必要下界（PM 从回执的范数与距离重算）：decode 148 个位置里 124 个是「两套 CPU FP32 参考的允许误差球无交集」（两套参考在 ~1e-43 量级彼此就差 ~33%，最大距离 / 半径 17,930.9）、24 个是「BF16 最近舍入误差已超阈值」；chunk 40 个位置里 16 个 BF16 最近舍入 L2 > 0.05；其余 chunk 位置是真实的 CPU-normal 数值差异，不证明不可修。
+- 另有一类：q / k ×1e-20 时 decode 的 final_state 对旧 prep 的 CPU reference 相差 4.3e-4~9.8e-4（1e-5 判据），原因是 eps 主导下商恰在 BF16 中点、candidate 与旧 FP32 商落在两侧（一次舍入翻转，q / k 约 1% 元素差 1 ulp）；D-PM-51（用户批准）只对 `nearzero_*` decode 组改判为「对实际 prep 输出的 reference ≤ 1e-5」（全部 384 例 state 最大 9.438e-7）。
+- **影响** 只影响输出量级 ≲ 3.2e-37 的极端近零输入（绝对误差同量级，数值上无实际意义）；失败是「响」的（contract board stage 保持 failed，逐切片表公开），不是静默错误；普通域 25,920 个 case 与完整 Kimi workload 不受影响。不影响 A2 / A3；BF-08（梯度链）会在自己的端点披露里再出现同类情形。
+- **建议** 1. 已由用户批准（D-PM-52）：只披露、不设通过线，类定义 = 切片 |golden|max ≤ 32 × FP32 最小正规数 且 candidate 与旧 NPU 逐位相同或 ≤ 1 BF16 / 4 FP32 ULP；类外失败仍是失败。2. 要闭合这些失败必须先改比较口径（现有口径对 decode 148/148、chunk 16/40 逻辑上无解），单改 kernel 不可能过；不建议改 inherited kernel 或收窄域。3. BF-08 沿用同一披露框架；新的类别或需要新通过线的，先 RISK 给 PM、由 PM 转用户。

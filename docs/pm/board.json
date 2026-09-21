@@ -356,6 +356,13 @@
       "by": "user",
       "decision": "批准 BF-07 剩余输出失败的处理（用户原话：「bf 07批准」，回应 PM 的三选一：A 接受为「只披露、不设通过线」的端点类（PM 建议）/ B 派生 kernel 修复批次 / C 其它）。",
       "risk": "PM 的读法：用户批准的是 PM 建议的 A，不是 B（没有批准 kernel 批次，不改 inherited kernel）、也不是 BF-07 的合入授权（PR 还是 draft、未 DONE、未评审）。A 的内容：chunk（每 bd 16 例）与 decode（每 bd 44 例）的 nearzero 输出失败，其切片同时满足 |golden|max ≤ 32 × FP32 最小正规数（≈ 3.76e-37）且 candidate 与旧 NPU 逐位相同或差 ≤ 1 BF16 ULP（chunk）/ ≤ 4 FP32 ULP（decode）者，归入「只披露、不设通过线」的端点类——披露不是通过；逐切片表照发布、原失败与分类计数保留、附必要下界证明与范围核对（188/188 落在类内）；类外的任何失败仍是失败；普通域判据、数值预算、155 / 105 门控、域、D-PM-48 / 50 / 51 不变。依据（申领人自述，PM 逐项读过其数据）：全部失败切片输出量级 ≲ 3.2e-37；candidate = 旧 NPU（无回退），旧 host 路径同样失败；decode 148/148 与 chunk 16/40 逻辑上任何 kernel 都无法同时满足（两套 CPU 参考在 ~1e-43 量级彼此差 ~33%、或 BF16 最优舍入 L2 已超阈值）。仍待用户：BF-07 合入前的最终授权——届时把 dtype 域收窄（raw 只接 BF16 / FP32，D-PM-40 同型）与本条一并单列。若用户本意是 B 或其它，请指出，PM 更正。"
+    },
+    {
+      "id": "D-PM-53",
+      "date": "2026-09-21",
+      "by": "user",
+      "decision": "授权合入 PR #118（BF-07，KDA raw flags 前处理进自编译 kernel，阶段 1）。（用户原话：「#118授权」，回应 PM 评审 accept 后单列的四件事。）",
+      "risk": "PM 的读法：(1) 用户是在被告知四件事之后授权的——dtype 域收窄（raw q/k/g/beta/A_log/dt_bias 只接 BF16 / FP32，FP16 / FP64 显式 ValueError，D-PM-40 同型）；D-PM-52 的披露（chunk 每 bd 16 例、decode 每 bd 44 例输出失败保留，不是通过，contract board stage 保持 failed）；性能比前任慢 12% / 6%（无速度门槛）；证据体量 1.4 GB / 1413 个文件（打包 38 MiB）。(2) 授权早于评审里要补的那一处只加证据的提交，PM 没有合入当时的头 ef5bfc65，而是等申领人补完并核对后合入 5b71779e（相对 ef5bfc65 的两个提交只动 kda_prep/evidence/：最终源码上补跑 bd4 完整 workload 的 full-v2-bd4——8241 个比较项 0 超预算、17 个返回量与 bd1/2/3 及首轮 v1-bd4 逐位相同、34 个源码哈希与提交树全对——加被引用的失败切片表 CSV 与更新后的 1422 项 manifest）。(3) 由 PM 按 D-PM-33 用 --match-head-commit 合入并在 main 上复跑全量，事后一句话告诉用户。"
     }
   ],
   "gated_epics": [
@@ -1392,7 +1399,7 @@
       "wave": "W0",
       "soc": "a5",
       "priority": "P0",
-      "status": "review",
+      "status": "done",
       "model": [],
       "kernel": [
         "kda_prep"
@@ -1556,9 +1563,28 @@
         {
           "at": "2026-09-21T00:51",
           "summary": "STATUS（2026-09-21T00:46Z，自述，#106，头仍 ef5bfc65）：已收到 PM 的 REVIEW，选建议方案 (a)——在最终源码上补跑完整 Kimi B1/T4096/H=HV32/K128、flags 全开、bd4，输出 full-v2-bd4；保留首轮 full-v1-bd4 原始回执不删不覆盖；补跑前已部署独立且校验哈希的控制器，执行前核验 476 个交付源码文件与 259 个接受依赖文件，持双共享锁并复查设备健康 / 空闲，独立 bd4 进程，全部 50 个 vendor（含 9 个 backward）先于首次自定义 kernel 执行；撤回「首轮 bd4 也与最终 autograd.py 字节相同」的笼统表述，补充回执会明确替代首轮回执的最终源码资格用途。完成后只提交证据并回报新 head。blocker：无（合入授权仍在 PM / 用户，待核对后）。PM 处理：无需回复；等新 head——核对项：新提交只加证据（diff 只在 evidence/ 与文档、不动生产 / 验证驱动代码）、full-v2-bd4 回执自带最终源码身份（autograd.py = 78b96d6b…）、比较项 0 超预算、17 个返回量与 bd1/2/3 逐位相同——然后向用户请求 #118 的合入授权（合入前单列：dtype 域收窄、D-PM-52 披露、性能慢 12% / 6%、证据体量 1.4 GB）。"
+        },
+        {
+          "at": "2026-09-21T01:04",
+          "summary": "合入（PR #118 → 381b452，合入的是审过的头 5b71779e，依 D-PM-53 用户明确授权「#118授权」）：授权早于评审要补的那一处只加证据的提交，PM 没有合入当时的头 ef5bfc65，而是等 00:50Z / 00:52Z 的两个提交（只动 kda_prep/evidence/：最终源码上补跑 bd4 完整 workload 的 full-v2-bd4、被引用的失败切片表 CSV、更新后的 1422 项 manifest）并核对后合入——PM 核对：full-v2-bd4 回执 8241 项比较 0 超预算 / 0 非有限、17 个返回量与 bd1/2/3 及首轮 v1-bd4 逐位相同、34 个源码哈希与提交树逐个对上（autograd.py = 78b96d6b…）、审计 unexpected 空；all-files.sha256 1422 项全对且无未列入文件；CSV 270 行与失败表 270 个切片一致；两个提交的 12 个文件隐私 0 命中。合入后 main 全量（NPU-free）1032 passed, 12 skipped, 5 warnings in 281.27s (0:04:41)——与预测一致（915 + BF-07 的 117 个新测试）。看板 done，kda_prep 的 dtype_status → native@a5（推理 / decode 前处理已 kernel 侧，训练路径仍是登记例外）；BF-08 按约定同 session 派单。"
         }
       ],
-      "result": null,
+      "result": {
+        "commits": [
+          "c9409a2",
+          "1d18143",
+          "5d7c73d",
+          "5b71779",
+          "381b452"
+        ],
+        "evidence": [
+          "PR #118",
+          "kernels/projects/a5/kda_prep/evidence/",
+          "docs/research/kda_prep_kernel.md",
+          "kernels/projects/a5/kda_prep/budgets.json"
+        ],
+        "numbers": "真机（A5，CANN 9.1.0-beta.1、compiler_timestamp 20260509_173000235、opp 含 ascend910_93 / ascend910b / ascend950、torch 2.12.0 / torch_npu 2.12.0；回执自带环境与源码身份，PM 从原始 JSON 逐项复算）：预算先于实现（首提交 c9409a2，100 个 CPU 校准 + 66 个损坏输出对照，逐字节未变）；完整 Kimi B1/T4096/H=HV32/K128 flags 全开在 bd1/2/3/4 各一份、共 32,964 个比较项 0 超预算 / 0 非有限，17 个返回量四个 bd 逐位相同；最终源码上的 bd4 补跑（full-v2-bd4）8,241 项 0 超预算、34 个源码哈希与提交树全对；普通网格 25,920 个 case（chunk 4 × 1620、decode 6 × 3240）全 passed、945,216 个比较项 0 超预算、最大 error / budget 0.3333、4,860 组跨 bd 哈希无差；独立特殊值 9216 个通过；D-PM-51 六个 bd × 384 个 nearzero_* decode ID state 全部 ≤ 1e-5（最大 9.438e-7）。已披露的数值失败（D-PM-52，用户批准，不是通过）：chunk 每 bd 16 例 / 40 个位置、decode 每 bd 44 例 / 148 个位置，全部 |golden|max ≤ 32 × FP32 最小正规数（chunk 最大 3.2323e-37、decode 最大 1.1480e-38），candidate 与旧 NPU 逐位相同（chunk 35/40、decode 115/148）或 ≤ 1 BF16 / 4 FP32 ULP；必要下界：decode 148/148、chunk 16/40 逻辑上任何 kernel 都无法同时满足。contract board stage 保持 failed。性能（同卡三轮，原始样本复算）：T1024 plain 1.1219 ×、cached 1.0655 ×，T4096 plain 1.1178 ×、cached 1.0614 ×（比前任慢 12% / 6%，全 flags 多 4 次 launch），对 torch_npu 向量化 0.696 / 0.908、对 recurrent 0.060 / 0.057，无速度门槛。域：raw q/k/g/beta/A_log/dt_bias 只接 BF16 / FP32（FP16 / FP64 显式报错）；155 / 105 闸不变；训练路径前处理仍走 host 图（登记例外，BF-08）。"
+      },
       "origin": {
         "kind": "user",
         "note": "用户 2026-09-19 直接指令（D-PM-35）：BF16 必须 kernel 侧，追加任务改正，后续 BF16 优先"
@@ -4657,7 +4683,7 @@
       "wave": "W0",
       "soc": "a5",
       "priority": "P0",
-      "status": "open",
+      "status": "assigned",
       "model": [],
       "kernel": [
         "kda_prep"
@@ -4683,14 +4709,29 @@
       "spec": "docs/pm/tasks/BF-08.md",
       "issue": 117,
       "pr": null,
-      "assignee": null,
-      "assignee_caps": null,
-      "branch": null,
+      "assignee": "limjiunnbin",
+      "assignee_caps": {
+        "agent": "Codex，持续 KDA / PKDA 任务（自述）",
+        "socs": [
+          "a5"
+        ],
+        "soc_details": "自述（APPLY 06:25Z）：a5，CANN 9.1.0-beta.1、compiler 20260509_173000235，OPP 含 ascend910_93 / ascend910b / ascend950；独立健康 / 占用检查、双共享锁、Docker 隔离（机器与卡归 assignee 管理，D-PM-28）；结论只对实际验证的那一套环境成立",
+        "ascriptor": "library 90cfcdc720bb / kernels b3b3f9c16df7（自述）",
+        "fla": "新任务按契约选择并校验固定源码身份（自述）",
+        "fork": "limjiunnbin/ascend_fla_dev",
+        "session": "01a0b7ce-3daf-7550-a7bf-31c67eb91ca3",
+        "note": "BF-07 的同一 session（BF-07 已 done，PR #118 → 381b452）；按 BF-07 规格与 PM 在 #106 的承诺「BF-07 合入并 CLOSE 后直接按建议派给同一 session、连续执行」派单，不重新 APPLY。此前持有 A5K-02、PK-02、PK-04、A2-44、BF-04、BF-06、FMT-02、BF-07（均已 done）。"
+      },
+      "branch": "task/BF-08",
       "timebox_h": 24,
       "reports": [
         {
           "at": "2026-09-20T09:15",
           "summary": "PM 从 BF-07 拆出（依 BF-07 申领人第一个 STATUS 的按 kernel 估计：阶段 1 约 17h、阶段 2 约 21h，合计 38h > 24h；BF-07 规格已写明阶段 2 可经 PM 拆成 BF-08、同一 kernel 批次内不另问用户，D-PM-43）。范围：新 autograd Function + 自编译 backward kernel（l2norm / gate / beta 的反向、A_log / dt_bias 的 (B,T) 两级确定性归约、与 bd 无关、无原子加），消除 BF-07 保留的「需要梯度且 raw flag 开着时走 host 图」的登记例外；写集 kda_prep/** + autograd.py + chunk.py + 新测试与文档，现有 tests/test_kda_domain_checks.py 里 PM 已确认的两个函数。BF-07 合入并 CLOSE 后按申领人的建议直接派给同一 session（01a0b7ce-…），不需要重新申领。"
+        },
+        {
+          "at": "2026-09-21T01:04",
+          "summary": "派给 limjiunnbin（session 01a0b7ce-…，BF-07 的同一 session），24h，分支 task/BF-08；BF-07 已合入 CLOSE（#118 → 381b452，main 全量 1032 passed / 12 skipped），按约定直接派，不需要重新 APPLY。ASSIGN 里点明：先读 BF-07.md 与 kda_prep_kernel.md；校准先行并随第一个提交冻结预算、跨核 (B,T) 归约确定性；每份用于最终源码资格的回执其生产源码哈希必须与最终提交树逐个对上（吸取 BF-07 首个 bd4 回执的教训，最终提交前用机械检查扫全部回执）；端点披露沿用 D-PM-48 / 50 / 52 的框架，新类别或需要新通过线先 RISK；证据体量控制在 ~100 MB 内（BF-07 是 1.4 GB，之后不再接受这个量级：Git 里留汇总 + 逐文件 SHA + 抽样明细 + 恢复脚本，完整原始回执放私有归档并写明归档 SHA，仍要让 PM 能从 Git 里的原始 JSON 复算关键数字）；写集与已确认的两个既有测试函数不变，其它既有测试要改先 RISK write-set-expansion；D-PM-42 登记例外不在本任务范围。"
         }
       ],
       "result": null,
@@ -5085,11 +5126,11 @@
         "id": "kda_prep",
         "family": "kda",
         "track": "agent",
-        "note_zh": "本仓自写的 raw flags 前处理单元（BF-07 / BF-08，进行中）：q/k l2norm、门控变换 −exp(A_log)·softplus(g+dt_bias)、beta sigmoid 进自编译 kernel；BF-07 = 前向 / 推理 / decode，BF-08 = 梯度链",
-        "note_en": "In-repo raw-flags preprocessing unit (BF-07 / BF-08, in progress): q/k L2 norm, gate transform -exp(A_log)*softplus(g+dt_bias) and beta sigmoid as self-compiled kernels; BF-07 = forward/inference/decode, BF-08 = gradient chain",
+        "note_zh": "本仓自写的 raw flags 前处理单元：q/k l2norm、门控变换 −exp(A_log)·softplus(g+dt_bias)、beta sigmoid 进自编译 kernel；BF-07（已合入，PR #118）= 前向 / 推理 / decode：raw 只接 BF16 / FP32（FP16 / FP64 显式报错），真机 A5 完整 workload 四个 bd 与 25,920 个普通网格 case 全过、跨 bd 逐位相同；近零输出的数值失败按 D-PM-52 只披露不称通过（gaps: kda-prep-nearzero-output-underflow）；性能比前任慢 12% / 6%；BF-08（进行中）= 训练梯度链，在它合入前需要梯度且 raw flag 开着时前处理仍走 host `_prepare_inputs` 图（登记的存量例外）",
+        "note_en": "In-repo raw-flags preprocessing unit: q/k L2 norm, gate transform -exp(A_log)*softplus(g+dt_bias) and beta sigmoid as self-compiled kernels; BF-07 (merged, PR #118) = forward/inference/decode: raw inputs only BF16/FP32 (FP16/FP64 raise), A5 device: full workload at four block dims and 25,920 ordinary grid cases pass with bitwise cross-block-dim equality; near-zero output failures are disclosed only (D-PM-52), not claimed as passing (gaps: kda-prep-nearzero-output-underflow); 12%/6% slower than the predecessor; BF-08 (in progress) = the training gradient chain — until it merges, the preprocessing stays on the host `_prepare_inputs` graph when gradients are needed and a raw flag is on (a registered legacy exception)",
         "dtype_status": {
-          "bf16": "wip",
-          "fp32": "wip"
+          "bf16": "native@a5",
+          "fp32": "native@a5"
         }
       }
     ]
