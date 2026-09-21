@@ -1,0 +1,268 @@
+{
+ "environment": {
+  "python": "3.11.15",
+  "audited_commit": "8e5da4c7ed25d8cc905601b1c1154fae96aabb05",
+  "audit_tool_sha256": "84c067762d9aa69a0278b177328f623110f938e932e227ada8efaecc44069cb0",
+  "timestamp_utc": "2026-09-21T08:05:08Z",
+  "torch": "2.7.1+cpu",
+  "torch_npu": "2.7.1.post4",
+  "cann": {
+   "ascend_toolkit_install.info": {
+    "path": "x86_64-linux/ascend_toolkit_install.info",
+    "toolkit_home_basename": "cann-9.3.0",
+    "line": [
+     "package_name=Ascend-cann-toolkit",
+     "version=9.3.0",
+     "innerversion=V100R001C12B116",
+     "compatible_version=[V100R001C15],[V100R001C23],[V100R001C10],[V100R001C11],[V100R001C12]",
+     "arch=x86_64",
+     "os=linux"
+    ],
+    "sha256": "2345b720f38e96b8e5384f8a8639e4bcb05d1fc944fcf501e7687ade504b99b5"
+   },
+   "version.info": {
+    "path": "compiler/version.info",
+    "toolkit_home_basename": "cann-9.3.0",
+    "line": [
+     "Version=9.2.0",
+     "version_dir=cann",
+     "required_package_runtime_version=\"9.2\"",
+     "required_package_ge-executor_version=\"9.2\"",
+     "required_package_metadef_version=\"9.2\"",
+     "required_package_bisheng-compiler_version=\"9.2\""
+    ],
+    "sha256": "78381b0f507d50bb3ca8106b8a1953410f58596f3d1779d97de05eceb8fa0b5f"
+   }
+  },
+  "opp_kernel_dirs": [
+   "ascend910_93",
+   "ascend910b",
+   "ascend950",
+   "config"
+  ],
+  "ascend_custom_opp_path_set": false
+ },
+ "cases": [
+  {
+   "case": "kda.chunk_kda.prepared_nograd",
+   "verdict": "clean",
+   "error": null,
+   "by_category": {
+    "alloc": 24,
+    "meta_view": 15,
+    "readonly_check": 32
+   },
+   "forbidden_calls": 0,
+   "unclassified_ops": []
+  },
+  {
+   "case": "kda.chunk_kda.prepared_grad",
+   "verdict": "violations",
+   "error": null,
+   "by_category": {
+    "alloc": 84,
+    "forbidden_arithmetic": 12,
+    "forbidden_dtype_cast": 10,
+    "forbidden_layout_copy": 2,
+    "meta_view": 113,
+    "readonly_check": 32
+   },
+   "forbidden_calls": 24,
+   "unclassified_ops": []
+  },
+  {
+   "case": "kda.chunk_kda.rawflags_nograd",
+   "verdict": "clean",
+   "error": null,
+   "by_category": {
+    "alloc": 31,
+    "meta_view": 25,
+    "readonly_check": 6
+   },
+   "forbidden_calls": 0,
+   "unclassified_ops": []
+  },
+  {
+   "case": "kda.chunk_kda.rawflags_grad",
+   "verdict": "violations",
+   "error": null,
+   "by_category": {
+    "alloc": 84,
+    "forbidden_arithmetic": 55,
+    "forbidden_dtype_cast": 18,
+    "forbidden_layout_copy": 2,
+    "meta_view": 115,
+    "readonly_check": 6
+   },
+   "forbidden_calls": 75,
+   "unclassified_ops": []
+  },
+  {
+   "case": "kda.chunk_kda_fwd_with_caches.bf16",
+   "verdict": "violations",
+   "error": null,
+   "by_category": {
+    "alloc": 33,
+    "forbidden_arithmetic": 10,
+    "forbidden_dtype_cast": 8,
+    "forbidden_layout_copy": 2,
+    "meta_view": 71,
+    "readonly_check": 6
+   },
+   "forbidden_calls": 20,
+   "unclassified_ops": []
+  },
+  {
+   "case": "kda.chunk_kda_fwd_with_caches.upstream_impl",
+   "verdict": "incomplete-clean",
+   "error": "PassError: local_mutex: cube needs 34 mutex IDs (maximum 32) at #18 loc(\"<ascriptor><path>/kernels/inverse_mm.py:65:15\"); %_l0a: 2 slots; %_l0b: 2 slots; %l1_do: 2 slots; %l1_vnew: 2 slots; %l1_dv: 2 slots; %l1_h: 2 slots; %l1_dh: 2 slots; %l1_Akk: 3 slots; %l1_dw: 3 slots; %l0c_dqg: 1 slots; %l0c_dkg: 1 slots; %l0c_dvh: 2 slots; %l0c_dvbeta: 2 slots; %l0c_dkbetag: 2 slots; %dvh_f_ub: 3 slots; %out_f_ub: 3 slots",
+   "by_category": {
+    "meta_view": 1,
+    "readonly_check": 6
+   },
+   "forbidden_calls": 0,
+   "unclassified_ops": []
+  },
+  {
+   "case": "kda.chunk_kda_bwd.bf16",
+   "verdict": "violations",
+   "error": null,
+   "by_category": {
+    "alloc": 43,
+    "forbidden_arithmetic": 1,
+    "meta_view": 17
+   },
+   "forbidden_calls": 1,
+   "unclassified_ops": []
+  },
+  {
+   "case": "kda.fused_recurrent_kda.bf16",
+   "verdict": "clean",
+   "error": null,
+   "by_category": {
+    "alloc": 3
+   },
+   "forbidden_calls": 0,
+   "unclassified_ops": []
+  },
+  {
+   "case": "kda.fused_recurrent_kda.fp32",
+   "verdict": "clean",
+   "error": null,
+   "by_category": {
+    "alloc": 3
+   },
+   "forbidden_calls": 0,
+   "unclassified_ops": []
+  },
+  {
+   "case": "gdn.chunk_gdn.fp32",
+   "verdict": "clean",
+   "error": null,
+   "by_category": {
+    "alloc": 18
+   },
+   "forbidden_calls": 0,
+   "unclassified_ops": []
+  },
+  {
+   "case": "gdn.chunk_gdn.bf16",
+   "verdict": "clean",
+   "error": null,
+   "by_category": {
+    "alloc": 18
+   },
+   "forbidden_calls": 0,
+   "unclassified_ops": []
+  },
+  {
+   "case": "gdn.chunk_gdn_bwd.fp32",
+   "verdict": "clean",
+   "error": null,
+   "by_category": {
+    "alloc": 14
+   },
+   "forbidden_calls": 0,
+   "unclassified_ops": []
+  },
+  {
+   "case": "gdn.chunk_gdn_bwd.bf16",
+   "verdict": "clean",
+   "error": null,
+   "by_category": {
+    "alloc": 14
+   },
+   "forbidden_calls": 0,
+   "unclassified_ops": []
+  },
+  {
+   "case": "pgdn.chunk_pgdn.fp32",
+   "verdict": "clean",
+   "error": null,
+   "by_category": {
+    "alloc": 24,
+    "meta_view": 2,
+    "readonly_check": 45
+   },
+   "forbidden_calls": 0,
+   "unclassified_ops": []
+  },
+  {
+   "case": "pgdn.chunk_pgdn.bf16",
+   "verdict": "clean",
+   "error": null,
+   "by_category": {
+    "alloc": 24,
+    "meta_view": 2,
+    "readonly_check": 45
+   },
+   "forbidden_calls": 0,
+   "unclassified_ops": []
+  },
+  {
+   "case": "pkda.chunk_precond_kda.fp32",
+   "verdict": "violations",
+   "error": null,
+   "by_category": {
+    "alloc": 22,
+    "forbidden_arithmetic": 6,
+    "meta_view": 5,
+    "readonly_check": 58
+   },
+   "forbidden_calls": 6,
+   "unclassified_ops": []
+  },
+  {
+   "case": "pkda.chunk_precond_kda.bf16",
+   "verdict": "clean",
+   "error": null,
+   "by_category": {
+    "alloc": 28,
+    "meta_view": 1
+   },
+   "forbidden_calls": 0,
+   "unclassified_ops": []
+  },
+  {
+   "case": "gdn2.chunk_gdn2.fp32",
+   "verdict": "clean",
+   "error": null,
+   "by_category": {
+    "alloc": 18
+   },
+   "forbidden_calls": 0,
+   "unclassified_ops": []
+  },
+  {
+   "case": "gdn2.chunk_gdn2.bf16",
+   "verdict": "violations",
+   "error": null,
+   "by_category": {
+    "alloc": 18,
+    "forbidden_dtype_cast": 4
+   },
+   "forbidden_calls": 4,
+   "unclassified_ops": []
+  }
+ ]
+}

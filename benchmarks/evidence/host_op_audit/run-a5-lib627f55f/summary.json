@@ -1,0 +1,62 @@
+{
+ "environment": {
+  "python": "3.11.15",
+  "audited_commit": "8e5da4c7ed25d8cc905601b1c1154fae96aabb05",
+  "audit_tool_sha256": "84c067762d9aa69a0278b177328f623110f938e932e227ada8efaecc44069cb0",
+  "timestamp_utc": "2026-09-21T08:19:22Z",
+  "torch": "2.7.1+cpu",
+  "torch_npu": "2.7.1.post4",
+  "cann": {
+   "ascend_toolkit_install.info": {
+    "path": "x86_64-linux/ascend_toolkit_install.info",
+    "toolkit_home_basename": "cann-9.3.0",
+    "line": [
+     "package_name=Ascend-cann-toolkit",
+     "version=9.3.0",
+     "innerversion=V100R001C12B116",
+     "compatible_version=[V100R001C15],[V100R001C23],[V100R001C10],[V100R001C11],[V100R001C12]",
+     "arch=x86_64",
+     "os=linux"
+    ],
+    "sha256": "2345b720f38e96b8e5384f8a8639e4bcb05d1fc944fcf501e7687ade504b99b5"
+   },
+   "version.info": {
+    "path": "compiler/version.info",
+    "toolkit_home_basename": "cann-9.3.0",
+    "line": [
+     "Version=9.2.0",
+     "version_dir=cann",
+     "required_package_runtime_version=\"9.2\"",
+     "required_package_ge-executor_version=\"9.2\"",
+     "required_package_metadef_version=\"9.2\"",
+     "required_package_bisheng-compiler_version=\"9.2\""
+    ],
+    "sha256": "78381b0f507d50bb3ca8106b8a1953410f58596f3d1779d97de05eceb8fa0b5f"
+   }
+  },
+  "opp_kernel_dirs": [
+   "ascend910_93",
+   "ascend910b",
+   "ascend950",
+   "config"
+  ],
+  "ascend_custom_opp_path_set": true
+ },
+ "cases": [
+  {
+   "case": "kda.chunk_kda_fwd_with_caches.upstream_impl",
+   "verdict": "violations",
+   "error": null,
+   "by_category": {
+    "alloc": 32,
+    "forbidden_arithmetic": 11,
+    "forbidden_dtype_cast": 8,
+    "forbidden_layout_copy": 2,
+    "meta_view": 71,
+    "readonly_check": 6
+   },
+   "forbidden_calls": 21,
+   "unclassified_ops": []
+  }
+ ]
+}
