@@ -1102,6 +1102,10 @@
         {
           "at": "2026-09-20T17:10",
           "summary": "STATUS（16:22Z，自述，#104，头 b751286，三个提交，校准在最前）：1ebec19 校准（F = 1.7451e-3、预算 5.2354e-3，已报）；f6ed5e0 派生单元 kernels/projects/a5/gdn2_chunk_fwd_bf16/——只有公共面换 dtype（q/k/v BF16 进、o BF16 出，中间仍 FP32：state、门控前缀、cube 累加是 kernel 内部精度选择，通则允许）；A5 没有 tile 级 cast（只在 vf 函数内可用），所以加宽 / 收窄写成两个 @vf 里的寄存器 load / store（widen_row / narrow_row），转换仍全在自编译 kernel 内；五个 kernel ascriptor check 全 0 error / 0 warning（prepare 190 / scores 128 / wy 199 / scan 153 / output 135 ops）；FP32 单元零改动（git diff 对 gdn2_chunk_fwd 为空）。b751286 入口去 host 转换（两条 dtype 路径）：删 q/k/v.float() 与 o.to(q.dtype)；缺省 state 原来是 torch.zeros(..., device=cpu).to(q.device)（一次 host 拷贝），改成直接在调用方设备上分配；入口按 q.dtype 分派到两个派生单元，prepare() 默认两条都编（CANN 每进程只解析一次 vendor 树）；入口里只剩通则允许的分配 / 元数据 / 只读校验 / launch。尚未做（自述）：参考 A 还没接上；单元的 unit.py / contract.json 还是从 FP32 单元拷来的；真机一步没跑，所以没有任何精度或性能数字；FP32 路径改前改后逐位相同还没证。下一步：unit.py / contract.json 改 BF16 口径、run.py reference 与 sim 先过、上真机前每个 kernel 先 compile --backend cce、再完整 workload → 契约全集 + 奇偶 C + 门控跨度端点 → bd 逐位 → FP32 逐位不变 → 两路 host 审计 → 三明治。PM 核对：无需裁定；zeros 在设备上分配属通则允许的分配。提醒（已在 15:57Z 回复，重申）：参考 A 的 F_A 与预算要在第一次真机结果之前冻结（kernel 已写但尚无任何结果，所以「预算先于结果」仍满足）。"
+        },
+        {
+          "at": "2026-09-21T01:16",
+          "summary": "STATUS（01:11Z，自述，#104，头 a45873c，分支 task/BF-05）：派生单元 ABI 改成 BF16 口径——q/k/v 与 o 是 BF16、state 与门控仍 FP32；两个参考都是「BF16 输入加宽一次 → 跑与 FP32 单元相同的 FP32 递推 → o 舍成 BF16」；域与 GD2-01 相同（含 B=1）；判据 o 与 final_state 相对 L2 ≤ 5.2354e-03（校准好的那条）。`run.py reference` 12/12 通过、sim 在 t1_h1_small 整链通过。阻塞（自述，自行处理、没有向 PM 提问）：12 个 case 的 sim 全量在 t64_h16_real 上 SimDeadlock（进程 core dump）；一次一个变量的对照：FP32 单元同 case 通过、BF16 派生单元死锁，t1_h1_small 不复现——所以是 BF16 改写引入的（stage 1 三处 widen_row 的 @vf 调用、stage 5 一处 narrow_row、BF16 的 GM 形参与暂存 tile），库的信用诊断显示 lock / ready / wait / free 四个计数之一不动；还没定位到具体一处，下一步读生成代码的事件表逐个对四个计数，再决定是把 @vf 调用挪出条件分支还是本来就不该进内层循环；随后 sim 全量 12 个 case → 每个 kernel compile --backend cce（A2-09 的教训：sim 不校验物理分配）→ 才上 A5 真机。不主张：真机一步没跑，没有任何精度 / 性能数字，FP32 路径逐位不变也还没证。PM 核对（只做了不需要设备的部分，从分支读的）：首个提交 1ebec19（15:52Z，只加 66 行研究文档：误差地板与预算）先于 kernel 派生提交 f6ed5e0 / b751286 / a45873c，预算 5.2354e-03 与 STATUS 一致；文档里参考 A 已改为「pin 住的 fla GDN-2 naive（e52dbc0e…，与本机 checkout 的 864a87f6 不同），真机验收前接上并核 SHA」——PM 上一条要求对齐 fla 修订的意思已经写进去了，验收时我核回执里的 SHA。没有需要 PM / 用户决定的事，不回复；这是一次调试进展，也不是 write-set / 预算 / 域变更。24h 时限自 15:3xZ（Sep 20，看板 ASSIGN 提交 15:32Z）起算，约 15:3xZ（Sep 21）到期，申领人在 STATUS 里没有给新的 ETA——到约 03:36Z（50% 点）时若仍没有真机数字，我会按超时 50% 的口径上报。"
         }
       ],
       "result": null,
@@ -4740,6 +4744,10 @@
         {
           "at": "2026-09-21T01:13",
           "summary": "ACK（01:10Z，自述，#117）：session 01a0b7ce-…；读了 AGENTS.md / handoff / PROTOCOL / START / BF-08.md / BF-07.md / kda_prep_kernel.md；分支 task/BF-08，基线 6c42dc6（= 本轮 BF-07 合入后的看板提交）；eta 21h（≤ 24h 时限）。计划与 ASSIGN 一致：(1) 钉住 BF-07 合入后的 host 训练图，逐 dtype 的 backward 精度校准 + 损坏输出对照，第一个提交冻结预算，再写 kernel；(2) preflight，l2norm / gate / beta backward + 固定分块、固定合并次序、无原子的两级参数归约；(3) 接入训练 autograd，关闭 flag 的对象 / 梯度透传，覆盖 raw 单项 / 全项 / 参数-only / 部分梯度，只改获批的两个既有测试观察点；(4) 每 bd 独立进程、含 backward 的全部 vendor 先编完，完整 Kimi T4096 训练步先上真机，再网格 / 审计 / 门控 / 跨 bd 逐位 / 缩小模型诊断；(5) 三轮同卡三明治，机械核对最终资格回执与生产源码哈希，Git 新增证据约 100 MB 内、完整原始归档另存并做恢复校验。约束自述：D-PM-42 存量例外不扩范围；D-PM-48 / 50 / 52 只按已批准端点框架披露，新类别 / 新通过线先 RISK；不改 stable / layout / 上游 kernel，不放宽端到端梯度预算与 155 / 105 闸。PM 核对：与 ASSIGN 要求逐项对得上，不需要回复。留一条：ASSIGN 里请 ACK 写明 A5 环境（CANN + compiler timestamp + opp 是否含 ascend950）与 ascriptor / fla 修订，这条 ACK 没重述；沿用 BF-07 APPLY 的自述（CANN 9.1.0-beta.1、compiler 20260509_173000235、opp 含 ascend950，ascriptor 90cfcdc720bb / b3b3f9c16df7），每份回执自带环境行，首个 STATUS 里请重述一次。"
+        },
+        {
+          "at": "2026-09-21T01:16",
+          "summary": "ACK 于 01:13Z 被申领人编辑补全（自述，#117，poll 读到的是编辑后的版本）：补上 ASSIGN 要的环境与修订——A5 Docker、CANN 9.1.0-beta.1、compiler timestamp 20260509_173000235、OPP 含 ascend910_93 / ascend910b / ascend950、Python 3.12.14 / Torch 2.12.0 / torch_npu 2.12.0；ascriptor 0.1.0、library 90cfcdc720bb…、kernels b3b3f9c16df7…；FLA v0.5.2 的 KDA naive.py SHA256 60a32285…（CPU 校准环境 Python 3.11.15 / Torch 2.10.0+cpu，端到端 golden 仍是 Torch CPU FP32）；每次 compile / run 前重新核实环境，BF-07 结果不替代 BF-08 真机验收。与 BF-07 的环境一致，PM 只当自述。上一条里「首个 STATUS 请重述环境」的留言因此不必了。"
         }
       ],
       "result": null,
