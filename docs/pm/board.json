@@ -377,6 +377,13 @@
       "by": "pm",
       "decision": "BF-08 两条 RISK（03:10Z norm 上溢端点 / 03:18Z beta 导数语义）的裁定：(1) norm 反向在「与前向同一输入上前向 FP32 平方和上溢、前向输出为零」的行上，梯度与旧 CPU / NPU 一致取零——反向跟随未改动前向的实际行为，不采用「FP64 正确的非零梯度」；二幂缩放只用来消除补偿算术中间量的溢出，不得把有限量程扩到前向之外，是否上溢以与前向同一固定顺序的 FP32 平方和为准；不作新端点类。(2) beta 反向：孤立导数的语义权威是冻结契约里的解析 FP64，从 raw beta 在未饱和分支用补偿算术算解析导数符合契约；饱和端点保持旧 FP32 语义（前向保存的 sigmoid 恰为 0 或 1 → 零导数），饱和开关只用这个保存值、不另设阈值；不改前向、预算、端点。",
       "risk": "(1) 依据：CPU FP32 是端点的语义权威、旧 NPU 是前任行为观测（D-PM-48），BF-07 澄清第 3 条要求「同一公式顺序下 kernel 给出相同的 IEEE FP32 行为」；申领人自述同输入上 BF-07 前向、旧 CPU、旧 NPU 都返回 16384 个有限的 0（FP64 前向无 0），旧 CPU / NPU 的反向也全零；若反向给出 FP64 正确的非零梯度就会让前向与反向在同一输入上自相矛盾——前向此处已经把结果置零，autograd 应是「被实现的函数」的导数。没有引入新端点类、没有放宽预算或域，因此 PM 自行裁定；若申领人认为非零更好，那是新端点类，需 RISK + 用户裁定，PM 不建议。(2) 依据：backward_budgets.json 的 authority / reference 已写明「孤立准备导数以解析 FP64 为准」，冻结文档还写明 beta 反向「沿用旧 FP32 sigmoid 饱和语义」；申领人定位（自述）到 c3_g1 网格 case 上 candidate 的反向与「用保存的 FP32 sigmoid 算 (gy·s)·(1−s)」逐位相同，是保存值本身的舍入使 relL2 2.405e-7 > 冻结 1.957e-7，而旧 CPU autograd 在同一输入上是 2.414e-7——旧 host 自己也超过冻结限，所以是候选选择「比旧 host 更准」，不是回退。两条都属于「实现前冻结的判据下、实现细节的语义确认」；因为它们触及端点 / 导数语义，BF-08 合入授权时与 D-PM-54 一起单列给用户，用户可推翻。"
+    },
+    {
+      "id": "D-PM-56",
+      "date": "2026-09-21",
+      "by": "pm",
+      "decision": "BF-08 第三条 RISK（04:03Z，非饱和 beta 双参考冲突 / gate 量程）的裁定：(1) BF16「≤ 1 ULP 双线」改为逐点读——对 FP64 正确舍入的 ≤ 1 ULP 在每个元素上仍是通过线（权威）；对旧 host 的 ≤ 1 ULP 只在旧 host 自己距正确舍入 ≤ 1 ULP 的元素上要求，旧 host 已超 1 ULP 的元素上这半条改为逐个列出（三方 BF16 位 + 灵敏度 / 相消条件数）并计数、不计失败；适用于保留双线的全部 BF16 输出组（norm:bf16:dx 仍 report-only，D-PM-54），冻结的 backward_budgets.json 文件字节不动。(2) native exp 下溢端点（如 beta = −88：候选 = 旧 NPU = 零、旧 CPU 为 FP32 subnormal）按 D-PM-50 的元素分类（正规数 → 普通判据；golden 为 subnormal 且候选 ±0 → flush 类、报个数；其它失败），四列逐点记录，「与旧 NPU 逐字节相同 = 无回退、不是 CPU 正确性通过」，不外推 D-PM-52 的只披露口径。(3) gate 的 exp 上溢端点（A_log ≥ 88.7 一类）按 D-PM-48 (1)：四列 / 三类 / 不设 NaN·Inf 掩码相等的通过线，候选独有的 NaN（旧 CPU 与旧 NPU 该点都非 NaN）是候选缺陷必须修，不要求复现原 autograd 的算术顺序，普通有限域仍保持冻结解析精度，写公共入口下的可达性。",
+      "risk": "依据：(1) 触发它的实证是 PM 从已推送的 beta-located-boundaries-v1.json 核过的——raw beta = 16 时保存的 sigmoid 未饱和（0.9999998807907104，候选 / 旧 CPU / 旧 NPU 相同），旧 CPU 与旧 NPU 同为 BF16 位 46120（−1.5646e-7），候选与 FP64 正确舍入同为 46111（−1.4808e-7，FP64 −1.4789e-7），相距 9 ULP；旧路径相对 FP64 约 5.8%（(1 − s) 相消），FP32 输出同一点旧 −1.7938e-7 对 FP64 −1.6934e-7 也差 5.9% 而候选相对误差约 1e-8——三角不等式下两个 1 ULP 邻域不相交，任何 kernel 都无法同时满足；相距 2 ULP 的元素只剩中点，而中点比正确舍入更不准，等于要求候选故意更不准去贴旧 host。这与 D-PM-54 同一个理由（旧 host 自己超 1 ULP → 双线无解），只是这次证据来自验证人口而非校准人口；PM 的读法是 D-PM-54 (4)「旧 host 对 FP64 出现过 > 1 ULP 的输出不设对旧 host 的线」的逐点化，方向只是去掉不可满足的那一半、对权威（FP64）的 ≤ 1 ULP 一条不松。(2)(3) 是既有端点框架（D-PM-48 / 50，BF-07 澄清第 3 条）在 BF-08 backward 输出上的落实，不是新端点类。因为它们去掉了一条冻结判据里的一半，属于用户在 D-PM-33 里要求单列的判据变化：BF-08 合入授权时与 D-PM-54 / 55 一起单列给用户，用户可推翻，推翻则回退到冻结的原文并重判。"
     }
   ],
   "gated_epics": [
@@ -566,6 +573,10 @@
         {
           "at": "2026-09-21T02:16",
           "summary": "ACK（02:15Z，自述，#108，joshjms）：读了 AGENTS / handoff / PROTOCOL（§3 / §4 / §5）/ START / bf16-kernel-side / FMT-01.md（含 2026-09-21 更新）；分支 task/FMT-01，基线 8e5da4c（= 派单时的 main 头，对得上）；ETA 12h（≤ 16h 时限）。计划：(1) benchmarks/host_op_audit.py——TorchDispatchMode 记录入口内每个 aten / npu_* 调用（算子、dtype、形状、是否连续、是否新 storage、栈回溯到 ascend_fla/** 的 文件:行），按显式分类表分为 分配 / 元数据 view / 校验 / 禁止-dtype / 禁止-格式 / 禁止-算术 / 桥内 launch，一条命令重跑，输出 JSON + 人读表，每份自带环境行、被审计源文件 sha256 与 main 提交；(2) tests/test_host_op_audit.py（纯 CPU）：分类表正反例、新 storage vs 元数据 view 的判定、脱敏与 JSON 可解析性检查；(3) A5 真机（自己的 venv、只用自己的卡）：按 09-21 更新的入口 × dtype 路径各跑一份，原始 JSON + 未过滤日志进 benchmarks/evidence/host_op_audit/；(4) 与 kda_prep/native_audit.py 等既有只读审计驱动交叉核对，不一致逐条解释；阳性 / 阴性对照按更新那节的清单核对，不为对上期望改分类表；(5) docs/research/host_op_audit.md：汇总在前、明细分目录，逐条标环境（CANN 9.3.0 / torch 2.7.1）与「仓主轨道」，附改正任务拆分建议。PM 核对：与规格及派单要求逐项对得上，不需要回复。留意点（评审时核，不用现在回）：「校验」类要与「允许」类分开列（D-PM-42 的只读校验是暂列、不是合规）；一份追踪里 host 侧 D-PM-42 存量例外应按文件:行逐条列出而不是合并成一个数。"
+        },
+        {
+          "at": "2026-09-21T04:23",
+          "summary": "RISK contradicts-handoff（03:59Z，自述，#108，joshjms）：当前 compatibility pin（library 90cfcdc / kernels b3b3f9c）下 impl = \"upstream\" 的 KDA 链编译不过——local_mutex pass 判上游反向单元 kda_bwd/kernels/inverse_mm.py:65 需要 34 个 mutex ID（上限 32）；固定 kernels 解出件只换 library：90cfcdc 在 block_dim = 1 与 2 都是同一个 34 > 32 失败（与核组数无关），627f55f（D-PM-13 时的 pin）能编能跑；local_mutex.py 在 627f55f..90cfcdc 之间才出现；没有改 kernel 源码、没有绕过该 pass。提议：FMT-01 清单里把该 case 标「当前 pin 编译不过 + 原因 + 对照实验」，补一份在 627f55f 上的审计（标明修订不同、不与主清单混用）；D-PM-42 登记的 log2(eg) 分支自述只在这条路径上，当前 pin 无法实测、如实标注；请 PM / 用户判：① 上游单元改写降 mutex 占用；② pass 的 ID 预算算法是否过保守；③ 是否正式退役 impl = \"upstream\"；并建议核对对在飞任务的影响。PM 处理：**这是已登记的已知条目**（gaps.json kda-bwd-inverse-mm-mutex-over-budget，P1；D-PM-24 起 PM 在 pin 版 library + kernels 上两次独立复现同一 PassError；A5K-02 已用派生的资源受限 inverse_mm_bounded_kernel 绕开，公开 stable 路径不再触发，tests/test_kda_aqk_dispatch.py::test_cached_forward_dependency_fits_mutex_budget_and_keeps_upstream_control 把「原版 34 > 32」固定为对照）。申领人新增的对照信息（同机换 library 627f55f 能编能跑、local_mutex.py 出现在 627f55f..90cfcdc 之间、与 block_dim 无关）有用，已补进该 gap 的证据（标自述、PM 未独立复现）。FMT-01 的处理方式**同意**（标注 + 对照实验 + 627f55f 上的补充审计并标明修订不同）；三个问题：① 派生版已做（stable）、上游改写在上游批次；② pass 的预算算法是 ascriptor 的事；③ 退役 impl = \"upstream\" 是公共 API 取舍，PM 不裁、也无必要——它只是对照路径。对在飞任务没有影响（BF-08 等都走 stable）。不需要用户决定。请核对 D-PM-42 的 log2(eg) 分支到底在哪条路径上（chunk.py 里 g_cumsum = log2(eg) 是「gate kernel 只写 eg」的那条路径），以追踪到的文件:行为准写进清单。"
         }
       ],
       "result": null,
@@ -2221,7 +2232,7 @@
       "wave": "W0",
       "soc": "a2",
       "priority": "P1",
-      "status": "assigned",
+      "status": "rework",
       "model": [
         "qwen3-next-80b-a3b"
       ],
@@ -2237,7 +2248,9 @@
         "A2-01"
       ],
       "write_set": [
-        "docs/research/a2_gdn_abi.md"
+        "docs/research/a2_gdn_abi.md",
+        "benchmarks/a2/probe_gdn_abi.py",
+        "benchmarks/a2/evidence/gdn_abi/**"
       ],
       "needs": {
         "npu": false,
@@ -2246,7 +2259,7 @@
       },
       "spec": "docs/pm/tasks/A2-07.md",
       "issue": 35,
-      "pr": null,
+      "pr": 123,
       "assignee": "MikejR2904",
       "assignee_caps": {
         "agent": "Claude Opus 4.8 (Claude Code)，operated by MikejR2904（自述）",
@@ -2266,6 +2279,10 @@
         {
           "at": "2026-09-21T03:33",
           "summary": "APPLY（03:22Z，自述，#35；新账号 MikejR2904，同一个人先在 03:13Z 申领了 gated 的 A2-20，PM 回 NO_TASK 时他已发出这条）：a2，910B3 / CANN 9.2.0-beta.1 / torch 2.10 / ascriptor 5287adc / fla 有 / fork MikejR2904/ascend_fla_dev / 异步；「主机侧调研 + ascriptor check / sim」。PM 处理：无人持有、P1、依赖 A2-01 已 done、写集只有 docs/research/a2_gdn_abi.md 与任何在飞任务都不相交、需要的是 ascriptor + fla（无 NPU 也能做主体），申领人有 910B3 可落实规格里的真机验证条（设计所依赖、能实测的事实——算子包覆盖、dtype / 指令支持、核数 / UB / block_dim 上限、原型编译与运行——在真机上测出来报数字，A2 数字在 A2-11 之前只是观测记录）——直接派。要求：ascriptor 用固定修订 library 90cfcdc / kernels b3b3f9c（引用上游 kernel 源码行、A2-01 命中表都对着它），或写明 5287adc 与它的差别并对引用逐条复核；分配给新账号不需要问用户，它第一次合入要用户明确同意。"
+        },
+        {
+          "at": "2026-09-21T04:23",
+          "summary": "ACK（03:57Z，自述，#35，MikejR2904）：读了 AGENTS §2 / §6 / §7、handoff、PROTOCOL §3–5、A2-07.md、gaps / models、ascriptor-kernels a5/{gdn_fwd,gdn_bwd,kda_fwd,kda_bwd}/contract.json、fla gate.py 与 gated_deltanet.py；计划：六项缺口逐项设计（含 scale / tail）、量程表（GDN 门控跨度按 Qwen3-Next 自己的 init 估、约 100.8 上界）、torch_npu 算子清单与三批次拆分、不写 kernel；eta_h 写的是 0（「交付物已完成，DONE 与 PR 随后」）；ascriptor：已把该 a2 机器 pin 到 A2-01 的 library 90cfcdc / kernels b3b3f9c，90cfcdc..5287adc 的差异只在 docs + pypto_pro（a5）后端 + 标量 passes / tests，不触 a2（cce）路径（自述，PM 未核；17 分钟前的 A2-10 条件 APPLY 里还写着取不到固定修订）。DONE（04:02Z，自述，#35，PR #123，头 0717cc2，1 个提交，只有 docs/research/a2_gdn_abi.md +308 行；PR 的 head 仓是 MikejR2904/ascend_fla_dev_a2，与 APPLY 里的 fork 名不同）：验收逐条自勾（六项缺口各栏 §1.1–1.6 + 耦合缺口 §1.7、量程表 9 行 §3、GDN 门控跨度单独估 100.8、批次建议 A2-K1-GDN-a / b / c、没改 kernel）；**device: none（纯主机侧调研，无真机运行）、numbers: 无本人新测的真机数字**。PM 审查（已读完整 diff——只有一个文档，未执行任何东西；写集内）：**REVIEW rework，一轮改完**：① 真机验证缺失（D-PM-34，硬条件）——规格验收最后一条要把设计所依赖、能实测的事实在 910B3 上测出来报数字，DONE 里没有就 rework，不能靠主机侧补；② 文档写「A2-01 still open」是错的（A2-01 已 done、PR #107 已合入，命中表 benchmarks/a2/evidence/host/hit_table.json、结论 benchmarks/a2/README.md 与 gaps 的 a2-splitk-fp32-cube / a2-splitk-bf16-fp16-unsettled），§2 与 §6 现在是「从契约推导」，要按实际命中表重写（FP32 手写 MMAD 累加链、BF16 / FP16 split-K 对 GDN 各 kernel 的暴露与设计影响）；③ 六项缺口是对着上游 contract.json 写的，没有对着 main 上已有的 GDN 派生单元（GDA-01 / 02 / 03、BF-01 / 02：kernels/projects/a5/gdn_chunk_{fwd,fwd_bf16,bwd,bwd_bf16}、ascend_fla/ops/gdn_chunk_{fwd,bwd}.py）——要逐项核对代码写「已有做法（文件:行）→ 移到 a2 还缺什么」，批次建议相应改成「派生单元移到 a2 + 剩余缺口」（这条部分是规格写于 09-19 没写全，PM 已补规格一节）；④ 有几处仓里查不到出处或与仓不符的说法：§1.4 / §1.6 / §2 的「本仓自己的 a2 gdn2 backward（gdn2_recurrent_bwd）已出 dh0、验证到 ~1e-6」「a2 gdn2 的 block_dim 该瞄 40 核」（仓里 0 处命中，kernels/projects/a2 下只有 kda_* 三个），§1.5 的「corrected Gemini table」（AGENTS.md 里没有；Gemini 文档只当需求来源），「AGENTS.md §8」引跨 SoC 规则应为 §6，§1.6 / §2 把 block_dim 上限写成 40 个向量核（GetVecNum() == 2 × block_dim，应对应 20 个 AI 核，且没测过），§1.6 引的 KDA 硅数是 A5 的要标明；⑤ 写集：PM 事先批准补 benchmarks/a2/probe_gdn_abi.py 与 benchmarks/a2/evidence/gdn_abi/**（探针与原始证据），仍不得改 kernel / ascend_fla/**，A2 数字在 A2-11 之前只是观测记录。好的地方保留：范围表、GDN 门控跨度估计（init 上界 100.8、与 KDA 分布不同的说明）、二维 MAX_GATE_SPAN、三批次的依赖与验收、「诚实缺口」一节。规格补了「2026-09-21 更新」一节（含真机验证最低清单）。"
         }
       ],
       "result": null
@@ -4853,6 +4870,10 @@
         {
           "at": "2026-09-21T03:52",
           "summary": "STATUS（03:49Z，自述，#117，PR #122，头仍是 2924fe1）：**D-PM-55 已落实**——norm 以不变前向的 FP32 平方和是否上溢决定零梯度；beta 保存 raw 输入本体与实际 sigmoid，非饱和行计算补偿解析导数，保存的 sigmoid 恰为 0 / 1 决定零端点；冻结预算未改。最新候选完整 Kimi 真机 bd = 4 已 PASS，50 vendors（含九项原有 backward）首次 launch 前全部完成；bd = 1 / 2 / 3 独立进程继续验收；完整网格与端点复验未完成，不报 DONE。gate 的固定两级补偿归约初版在 vendor 编译时 VF stack 超限，保留失败，改为系数立即数以降低寄存器压力，同上限编译并完整真机通过，未放宽资源限制。旧版生产 297c80b 的完整 bd1..4、22 个 norm 诊断、12 个模型诊断与失败网格证据已在 2924fe1 公开（补齐 manifest 引用的 3 个执行源码文件）；该旧版网格每个 bd 的 1620 组 × 9 梯度选择均完成，**每个 bd 同样 54 组失败**，待新候选全量闭环。下一步：新候选所有 bd、7 个定位复现与全量网格、D-PM-55 端点；随后缩小模型、public prepare 顺序、边界与性能三明治；PR 保持 draft。PM 处理：无需回复。核对状态：新候选的证据尚未推送（分支头仍 2924fe1，PM 在 03:36Z 核过范围 / 体量：+32.5 MB、648 个文件、最大 blob 1.04 MB、无写集外文件，累计证据约 46 MB，仍在约 100 MB 目标内），数字待 DONE 时核；留意点：新候选的最终资格运行必须在最终源码上做、源码哈希与最终提交树对上；VF stack 超限的处理（系数改立即数）要在研究文档里写明是「改实现、非放宽资源限制」并给编译 / 资源数字。"
+        },
+        {
+          "at": "2026-09-21T04:23",
+          "summary": "RISK nonsaturated-beta-dual-ulp-infeasible-and-gate-range（04:03Z，自述，#117，PR #122 头 88e8615）：D-PM-55 候选已推送——完整 Kimi bd1 / 2 / 3 / 4 真机全部通过，19 个输出 / 缓存 / 梯度哈希逐位一致；22 个 norm 案例（含 1e20 零端点）通过；7 个定位失败案例 × 9 梯度组合通过；12 个缩小模型通过；显式 prepare、实际先推理后训练、T1024 训练通过；完整网格 4 bd 仍在跑；新证据目录 compensated-gate-v1/（原始环境、源码哈希、逐位置 ULP、manifest）；主机整套 1137 passed / 5 NPU-only skipped，入口 base 负对照 11 预期失败 / 8 无梯度通过；冻结文件字节未改。① 非饱和 beta 边界：raw beta = 16、gy = −1.3141944408416748，候选 / CPU / NPU 保存的 sigmoid 都是 0.9999998807907104（未饱和）；候选与 FP64 正确舍入的 BF16 位 46111，旧 CPU 与旧 NPU 46120，相距 9 ULP、两个 ≤ 1 ULP 区间不相交；FP64 −1.4789306772885061e-07、候选 −1.4808028936386108e-07、旧 −1.564621925354004e-07；不是 subnormal、不是保存 sigmoid 0 / 1 端点，不能套 D-PM-55 零端点——请裁定该非饱和边界的双参考冲突，需用户裁则保留 failed 等候，不擅改冻结文件或加阈值。② beta = −88 另有既有 native exp 下溢：候选 / 旧 NPU 保存的 sigmoid 与梯度为零，CPU 保存的 sigmoid 6.054601485195952e-39、梯度 subnormal；当前 strict endpoint verifier 要求 CPU 为零因而 failed，拟按 D-PM-48 / 50 的 native 下溢定义逐点记四列（不是把 beta = 16 排除），请确认该定义覆盖此反向端点。③ gate：8 个 dtype 的 ordinary / 全量 Kimi / softplus 阈值 24 组全过；A_log 88 / 89 / 100 × 2 dtype 的 range 诊断失败——补偿乘积溢出时残差 Inf − Inf 产生 NaN，要修；A_log = 88 时旧 CPU 与旧 NPU 自身的非有限掩码也不同（FP32 dg：CPU 30 个非有限、旧 NPU 6、候选 1 个 NaN），代数因子移位还会改变中间溢出；拟先消除补偿独有的 NaN、补实际 public 范围闸可达性，不推定 BF-07 前向 48 点的诊断分类自动覆盖新 backward 输出；若要求对 CPU FP32 的原 autograd 算术顺序保持端点，请明确 gate dg / ddt_bias 的原顺序，而普通有限域仍保留冻结解析精度。PM 核对（NPU-free，已推送的 88e8615）：无写集外文件；本提交 +28.7 MB、最大 blob 1.05 MB；**累计新增证据约 75 MB**（13.6 + 32.5 + 28.7 + 首提交 0.55），离约 100 MB 目标只剩约 25 MB；beta-located-boundaries-v1.json 四条记录（bf16 / f32 × beta = −88 / 16）与自述的位与数值逐项一致（bf16 x = 16：候选 46111、旧 CPU = 旧 NPU 46120；旧路径相对 FP64 约 5.8%，候选约 0.13%；bf16 与 f32 的 x = −88：候选 0、旧 NPU −0、旧 CPU subnormal）。PM 裁定 D-PM-56（详见决策；已在 #117 回复；规格加了「2026-09-21 澄清二」）：(1) BF16 双线逐点读：对 FP64 正确舍入 ≤ 1 ULP 仍是每个元素的通过线，对旧 host 的 ≤ 1 ULP 只在旧 host 自己 ≤ 1 ULP 处要求，其余逐个列出计数不计失败；(2) beta = −88 一类按 D-PM-50 元素分类、四列、不是通过、不外推 D-PM-52；(3) gate 的上溢端点按 D-PM-48 (1)：候选独有的 NaN 必须修、不要求复现原算术顺序、写可达性。合入授权时与 D-PM-54 / 55 一起单列给用户。"
         }
       ],
       "result": null,

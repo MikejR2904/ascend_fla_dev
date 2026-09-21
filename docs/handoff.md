@@ -11,6 +11,11 @@
 
 ### 正在飞的任务（现在没有；A5K-02、PK-02、PK-03 都已于 2026-09-19 合入）
 
+> **2026-09-21T04:23Z 更新：A2-07 交了 DONE（PR #123）→ PM 审查 rework；FMT-01 报 mutex 编不过 → 已知条目；BF-08 第三条 RISK → D-PM-56。**
+> - **A2-07（MikejR2904，新账号，PR #123，只有一个文档）**：ACK（03:57Z）写 eta 0、随后 04:02Z 就 DONE；**device: none、无真机数字 → REVIEW rework**（D-PM-34）。另：文档写「A2-01 还是 open」（其实 done）、没对着 main 上已有的 GDN 派生单元（GDA-01/02/03、BF-01/02）、有仓里查不到出处的说法（`gdn2_recurrent_bwd`、「Gemini table」）、把 block_dim 上限写成 40 个向量核。规格补了「2026-09-21 更新」（部分是规格 09-19 写得不全）+ 写集补 `benchmarks/a2/probe_gdn_abi.py` 与 `benchmarks/a2/evidence/gdn_abi/**`。它的 fork 名在 PR 里是 `…_a2`，与 APPLY 不同。
+> - **FMT-01（joshjms）的 RISK**：pin 版下 `impl="upstream"` 反向编不过（34 > 32 mutex）——**已登记**（`kda-bwd-inverse-mm-mutex-over-budget`，A5K-02 已用派生单元绕开）；它的同机对照（627f55f 能编能跑）补进了那条 gap。处置同意，不需要用户决定。
+> - **BF-08 D-PM-56**：BF16 双 1 ULP 线改逐点读（对 FP64 仍是每元素通过线；对旧 host 只在旧 host 自己 ≤ 1 ULP 处要求）——实证：raw beta = 16 处旧路径 5.8% 误差、9 ULP 外，候选 = FP64 正确舍入；native exp 下溢端点按 D-PM-50、gate 上溢端点按 D-PM-48。**合入授权时 D-PM-54 / 55 / 56 一起单列给用户。** 累计新增证据约 75 MB，已提醒只剩约 25 MB。
+>
 > **2026-09-21T03:29Z 更新：BF-08 两条 RISK（norm 1e20 上溢端点 / beta 导数语义）→ PM 裁定 D-PM-55；新账号 MikejR2904 申领 gated 的 A2-20 → NO_TASK。**
 > - BF-08：补偿 + 二幂缩放 norm 在完整 Kimi 训练 bd1–4 通过（PM 从已推送的 297c80b 核：19 个输出哈希四个 bd 全同、prep 最大逐元素 0.00389）；网格里 gate / beta 有新失败（自述：ddt_bias 1 / 1024 个元素差 2 ULP、beta relL2 2.405e-7 > 冻结 1.957e-7，旧 CPU 同 case 2.414e-7 也超），申领人在候选内修，不改冻结限。**D-PM-55**：(1) norm 在前向 FP32 平方和上溢处梯度取零（跟随前向、同旧 CPU / NPU，不作新端点类），(2) beta 从 raw beta 算非饱和分支的解析导数符合契约、饱和开关只用保存的 s 恰为 0 / 1。**BF-08 合入授权时与 D-PM-54 一起单列给用户。**
 > - **（2026-09-21T03:52Z）MikejR2904 又排了 A2-02（BF-08 合入后）→ A2-10（A2-02 之后）→ A2-11（A2-10 之后）三条条件 APPLY**：PM 各回 NO_TASK 并承诺依赖落地后直接派（A2-02 写集与在飞的 BF-08 相交，BF-08 CLOSE 前不能派）。它自述拿不到固定的 ascriptor 修订（90cfcdc / b3b3f9c）「without a gitcode token」、目前在 5287adc / b9c8a84 并已告知仓主——这属仓主 / 用户的事（PM 不经手令牌），A2-10 / A2-11 派单前要解决，A2 数字对修订敏感。
