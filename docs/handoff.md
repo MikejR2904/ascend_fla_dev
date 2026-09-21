@@ -11,6 +11,10 @@
 
 ### 正在飞的任务（现在没有；A5K-02、PK-02、PK-03 都已于 2026-09-19 合入）
 
+> **2026-09-21T04:59Z 更新：A2-07 二审仍 rework（四处小的）；BF-08 最终版几乎收尾——但训练路径前处理比旧 host 慢 11 ×；gate A_log = 88 的 30 个输出记录留作「未资格化观察」；FMT-01 开了 PR #124（未 DONE）。**
+> - **A2-07（PR #123，头 ef502c7）**：第一轮的问题基本改对（A2-01 命中表引用逐行对上 `hit_table.json`；真机探针是真编译真跑，含 ascriptor 自编译 exp）。二审仍 rework：证据要件不全（缺内置算子包目录 / version.info 原文 / 未过滤原始日志）、`probe.json` 里有机器绝对路径、§3 第 5 / 7 行「A5 的 87 线对 a2 fp32 不适用」说过头（subnormal 分母在 span > 88.7 就使 1/eg 溢出）、§4 覆盖说满了。改完 PM 核完就向用户请求合入同意（新账号第一次合入 + A2 观测数字）。发现：a2（910B3）**不冲 fp32 subnormal**（exp(−88) = 6.05e-39 保留，下溢到 0 在 ≈ −104、上溢在 89）——观测记录，A2-11 之前不算结论。
+> - **BF-08（头 5c28123）**：D-PM-56 已落实；最终 1620 × 9 网格 bd2/3/4 各 PASS、bd1 进行中；**性能 T4096 前处理 37.6 → 425.7 ms（慢 11.3 ×，比 torch_npu 基线慢 3.0 ×）**——规格不设速度门槛，但合入授权时要单列给用户；gate A_log = 88 的 30 个输出记录（候选既不等于 CPU 也不等于旧 NPU、涉及非有限值）PM 同意留作「未资格化观察」并交用户处置（倾向接受为只披露：默认不可达、候选更接近 FP64）。累计 Git 证据约 84 MB，已在约 100 MB 上限边缘。
+>
 > **2026-09-21T04:23Z 更新：A2-07 交了 DONE（PR #123）→ PM 审查 rework；FMT-01 报 mutex 编不过 → 已知条目；BF-08 第三条 RISK → D-PM-56。**
 > - **A2-07（MikejR2904，新账号，PR #123，只有一个文档）**：ACK（03:57Z）写 eta 0、随后 04:02Z 就 DONE；**device: none、无真机数字 → REVIEW rework**（D-PM-34）。另：文档写「A2-01 还是 open」（其实 done）、没对着 main 上已有的 GDN 派生单元（GDA-01/02/03、BF-01/02）、有仓里查不到出处的说法（`gdn2_recurrent_bwd`、「Gemini table」）、把 block_dim 上限写成 40 个向量核。规格补了「2026-09-21 更新」（部分是规格 09-19 写得不全）+ 写集补 `benchmarks/a2/probe_gdn_abi.py` 与 `benchmarks/a2/evidence/gdn_abi/**`。它的 fork 名在 PR 里是 `…_a2`，与 APPLY 不同。
 > - **FMT-01（joshjms）的 RISK**：pin 版下 `impl="upstream"` 反向编不过（34 > 32 mutex）——**已登记**（`kda-bwd-inverse-mm-mutex-over-budget`，A5K-02 已用派生单元绕开）；它的同机对照（627f55f 能编能跑）补进了那条 gap。处置同意，不需要用户决定。
