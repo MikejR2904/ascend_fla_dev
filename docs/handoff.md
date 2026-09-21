@@ -15,6 +15,7 @@
 > - **BF-08 合入**（bot 账号，`--match-head-commit` 钉住 d9280a7d；用户选了选项 A：合入 + 立即另立性能任务）：用户是在被告知判据裁定 D-PM-54 / 55 / 56、端点披露（每 bd 482 个 native 下溢输出不是 CPU 通过、30 个 A_log = 88 记录未资格化）、完整训练步慢 11.3 ×、证据约 83 MB 之后授权的。`kernel_inventory` 的 `kda_prep` 注记更新；gaps 新增 `kda-prep-backward-training-step-slowdown`（P1）与 `kda-prep-backward-endpoint-disclosures`（P2）。
 > - **BF-09**（P0，issue 由 sync 创建）：BF-08 后续的性能优化——目标线 T4096 完整训练步 ≤ 旧 host 图 × 1.25（PM 建议、非门槛），冻结预算字节不变、跨 bd 逐位相同、不放宽判据；写集只在 `kda_prep/**` + 两个测试 / 文档文件，`autograd.py` / `chunk.py` 不在写集（避免与 A2-02 相交）。**做不到目标就报瓶颈与下界，要放宽逐元素判据是用户的决定。**
 > - **A2-07 合入**（新账号 MikejR2904 的第一次合入，用户 D-PM-58 授权；A2 数字是观测记录、不构成结论）：批次建议 A / B / C 是给用户审批 kernel 批次的输入，本次合入不构成对 A2-K1 的批准（A2-K1 / A2-20 仍 gated）。
+> - **（2026-09-21T07:52Z 已派）BF-09（issue #125）→ limjiunnbin（session 01a0b7ce-…，24h，task/BF-09）；A2-02（#31）→ MikejR2904（10h，task/A2-02）。A5K-03 顺延到 BF-09 之后直接派。**
 > - 待派：A5K-03（我承诺 BF-08 CLOSE 后直接派）与 BF-09（性能）都是 P0，同一 session（01a0b7ce-…）——先派 BF-09（同一 kernel 单元、KDA 层训练路径的性能倒退是眼下最明显的问题），A5K-03 顺延，已向申领人说明；MikejR2904 的 A2-02 → A2-10 → A2-11 队列：BF-08 已合入，A2-02 可派（A2-07 已 CLOSE）。
 >
 > **2026-09-21T07:16Z 更新：FMT-01 交了 DONE（PR #124）→ PM 评审 rework（源码身份不符等四处小的）；**更正：joshjms 不是新账号**。**
