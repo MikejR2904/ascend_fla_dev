@@ -2462,7 +2462,7 @@
       "wave": "W-A2",
       "soc": "a2",
       "priority": "P0",
-      "status": "in_progress",
+      "status": "rework",
       "model": [],
       "kernel": [],
       "dtype": [],
@@ -2482,7 +2482,7 @@
       },
       "spec": "docs/pm/tasks/A2-10.md",
       "issue": 37,
-      "pr": null,
+      "pr": 127,
       "assignee": "MikejR2904",
       "assignee_caps": {
         "agent": "Claude Opus 4.8 (Claude Code)，operated by MikejR2904（自述）",
@@ -2514,6 +2514,10 @@
         {
           "at": "2026-09-21T10:29",
           "summary": "ACK（10:26Z，自述，#37，MikejR2904；ASSIGN 后 2 分钟）：读了 AGENTS / handoff / PROTOCOL / A2-10.md；计划五步、ETA 8h（≤ 12h 时限）——① 环境 / 内置算子包覆盖 / 设备事实探针（`benchmarks/a2/bringup.py`）**已在 910B3 跑通**：coverage 12/12（randn / zeros / empty / cast bf16 + fp16 / contiguous / matmul / einsum / cumsum / h2d / d2h / strided_d2h）、cube / vec 20 / 40、UB 192 / L0C 128 / L1 512、driver / compiler / opp 的 version.info 完整 sha256、ascend910b 算子包目录，补每份回执带 ascriptor 90cfcdc / b3b3f9c；② runtime 桥对 aclnn harness 逐位一致（核心）：已证 kda_fwd_stable 五个 kernel 链的 o / final_state / g_cumsum 3/3 逐位相同（`compile_kernel(device=\"a2\", backend=\"cce\")` 进程内、直吃 NPU tensor、零拷贝），接着跑满 fwd 20 + decode 8 契约 case × bd ∈ {1, 2}，报 28 × bd 的逐位哈希（每 path × bd 单独进程）；③ block_dim 探针：1 / 2 之外能否跑，每个 bd 单独进程带超时、先小后大、死锁记下即停（观测，不作 A2 上限结论）；④ `tests/test_a2_bringup.py`（覆盖表 / 桥逐位 / 一算子名一 build 的机械检查）+ `docs/research/a2_bringup.md`；⑤ 证据卫生：全部机械脱敏（`<REPO>` / `<ASCEND_HOME>` / `<PYTHON_HOME>`、日志首行声明、脚本只打相对路径、完整哈希、原始未过滤日志），**推 PR 前完成**；A2 数字标「A2-11 之前只作观测」；合入按 D-PM-33。PM 核对：与 ASSIGN 与规格五项验收逐项对得上，不需要回复。留意点（评审时核）：① 表里的「12/12」要给每项的报错原文 / 通过证据与 CANN 标识（inner / compiler 时间戳）作为每份回执里的一行；② 逐位比较要对**字节**（不是相对 L2），28 × bd 每个 case 的输入与 aclnn harness 的输入同源；③ `_claim_op_name()` 在 A2 上越界报错而不是静默忽略要有一条测试；④ 写集只有规格四项，桥（`ascend_fla/runtime/**`）要改先 RISK；⑤ 合入前 PM 请示用户（A2 数字观测）。"
+        },
+        {
+          "at": "2026-09-21T12:23",
+          "summary": "DONE（11:54Z，自述，#37，PR #127，头 3764496，单个干净提交，基于 main eeef5e8；未脱敏的中间提交没推）：910B3 真机——`resolve_soc()` = a2；driver 25.5.1 / compiler 9.2.0-beta.1 / opp 9.2.0-beta.1 完整 sha256；ascend910b 算子包目录 ops_cv / ops_legacy / ops_math / ops_nn / ops_oam / ops_transformer；torch_npu 12/12 通过；runtime 桥（`compile_kernel(device=\"a2\", backend=\"cce\")` 进程内）对 aclnn harness 逐位相同 **152/152**（kda_fwd_stable 20 case × 3 输出 × bd{1,2} = 120，kda_fused_recurrent 8 case × 2 输出 × bd{1,2} = 32）；设备事实「20 cube / 40 vec、UB 192 / L0C 128 / L1 512」；block_dim 探针「1、2 跑通、4 / 8 / 20 / 40 在单元边界干净报错」；tests/test_a2_bringup.py 5 passed；A2 数字标观测。 PM 评审（NPU-free，读完整 diff 后才跑东西）：**REVIEW rework**。已核成立：单提交、8 个文件全在写集、无二进制、reserved_paths 0 命中；隐私 8 个 blob 0 命中；从四份回执原始 JSON 复算 152/152 逐位相同、152 个哈希各不相同（无常量输出）、case id 与两个 contract.json 逐个对上、**bd1 与 bd2 的桥输出逐位相同 76/76**（观测）；覆盖表 12/12；CANN 标识每份回执都带（driver Innerversion、compiler / opp timestamp 20260805_224858134、完整 sha256）；scratch merge 全量 1178 passed / 12 skipped / 0 failed（= 1173 + 5，预测一致）；我读了 `_execute_chain`（函数体内 import launch_kernel）确认桥的替换现在生效。**要改的**：(1) 规格范围 4 没做——设备事实是从 ascriptor 的 b3 profile JSON 读的声明值（文档也承认）、不是实测（A5 的教训正是 profile 与物理不符）；block_dim 探针 4 / 8 / 20 / 40 全死在单元自己的声明域检查（ValueError: Only a2/cce and block_dim in (1, 2) are declared）、一次都没到硬件，文档把它推给 A2-11 不成立（A2-11 是 split-K，不测 block_dim）；要求从运行时读核数 / 容量与 profile 对比、探针子进程里越过域检查按规格「单进程带超时先小后大、首次超时记下就停」；(2) 验收 3 没做——`_claim_op_name()` 在 A2 上报错的检查没有（DONE 写的是绕开它）；要求真机上同进程先后编 bd=1 与 bd=2 观测 AclError + host 侧测试；(3) 文档写「每份回执带 ascriptor 修订 90cfcdc / b3b3f9c」，五份回执一处都没有（PM 逐份 grep）；(4) 回执不能自证走的是桥（要记每 case 桥启动次数与每 kernel 的 CompiledKernel.signature）；(5) 测试太薄——PM 负对照：把 fwd_bd1.json 的 60 个比较删掉 50 个并把 environment.soc 改成 a5，5 个测试仍全过；(6) 缺原始控制台日志；(7)（不阻塞）scratch 目录建在单元目录里。合入前按 D-PM-33 先请示用户（A2 数字只作观测）。"
         }
       ],
       "result": null
