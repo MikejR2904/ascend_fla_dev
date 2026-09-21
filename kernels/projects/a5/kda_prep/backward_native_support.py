@@ -46,9 +46,9 @@ def raw_reference(raw, function, prepare_inputs, flags):
         outputs.append(o)
     output = torch.cat(outputs, 1)
     gradients = torch.autograd.grad((output, state), [leaves[n] for n in names],
-                                    (raw['do'].float(), raw['dht'].float()))
+                                    (raw['do'].float(), raw['dht'].float()), allow_unused=True)
     return dict(o=output.detach(), final_state=state.detach(),
-                **{'d'+n: t.detach() for n, t in zip(names, gradients)})
+                **{'d'+n: t.detach() if t is not None else None for n, t in zip(names, gradients)})
 
 
 def gradient_record(key, actual, fp64, old, precision, budget, detail_root,

@@ -182,3 +182,33 @@ unexpected or old host preparation operations. Raw results are retained under
 `evidence/backward/native-v1/`; this numerical failure blocks native acceptance.
 Grid, boundary, host audit, exact cross-bd equality, reduced model diagnostics
 and synchronized performance acceptance remain pending.
+
+
+## Compensated norm findings
+
+The unscaled compensated candidate subsequently passes the original full Kimi
+training workload at bd1,2,3,4. All19 returned output/gradient/cache hashes match
+bitwise across the four independent processes. Its primary row sum retains the
+forward two64-cadd order; a fixed compensated tree supplies a low component.
+The numerator preserves product residuals and the epsilon term through cancellation.
+No frozen budget changes. Raw full receipts, the executed source and cross-bd
+proof are in `evidence/backward/compensated-v1/`.
+
+The original candidate's full workload is also a useful predecessor finding:
+on exactly those returned sensitivities, old CPU norm dq/dk have maximum relative
+errors0.046371962552015374 and2.165737451646475 against FP64, with10 and14
+elements beyond one BF16 ULP. The old k result itself exceeds the frozen0.0588298
+limit; the compensated candidate passes that stricter limit. This observation
+does not revise the frozen comparison.
+
+In the near-null B1/T64/H2 case, compensated BF16 results all16384 equal FP64
+correct rounding. Candidate/old CPU/old NPU relative-L2 are0.0016607078/12.6931546/
+10.8792216. FP32 raw also passes the original limits. Native-generated inputs
+and the old CPU graph use Torch2.12; the initial calibration used Torch2.10, so
+these numbers are a new observation, not a bytewise replay or recalibration.
+
+The unscaled candidate fails scales1e18/1e20 with intermediate NaNs. A subsequent
+range candidate uses device-local powers of two and the algebraically equivalent
+scaled derivative, keeping the input/output ABI and fixed reduction order. Its
+complete qualification, same-input forward observations, and performance remain
+pending. Historical numerical failures and metadata clarifications remain explicit.

@@ -9,20 +9,39 @@ def make_norm_backward(name, raw_dtype):
         x1 = Reg(DT.float)
         d0 = Reg(DT.float)
         d1 = Reg(DT.float)
-        temp0 = Reg(DT.float)
-        temp1 = Reg(DT.float)
-        sum0 = Reg(DT.float)
-        sum1 = Reg(DT.float)
-        square = Reg(DT.float)
+        sh = Reg(DT.float)
+        sl = Reg(DT.float)
+        dh = Reg(DT.float)
+        dl = Reg(DT.float)
+        ph = Reg(DT.float)
+        pl = Reg(DT.float)
+        qh = Reg(DT.float)
+        ql = Reg(DT.float)
+        a_hi = Reg(DT.float)
+        a_lo = Reg(DT.float)
+        b_hi = Reg(DT.float)
+        b_lo = Reg(DT.float)
+        split = Reg(DT.float)
+        temp = Reg(DT.float)
+        summed = Reg(DT.float)
+        virtual_b = Reg(DT.float)
+        virtual_a = Reg(DT.float)
+        error_a = Reg(DT.float)
+        error_b = Reg(DT.float)
+        low = Reg(DT.float)
+        numerator = Reg(DT.float)
         denominator = Reg(DT.float)
-        dot = Reg(DT.float)
-        ratio = Reg(DT.float)
-        broadcast_r = Reg(DT.float)
-        broadcast_d = Reg(DT.float)
-        first = Reg(DT.float)
-        second = Reg(DT.float)
         result = Reg(DT.float)
+        row_scale = Reg(DT.float)
+        epsilon = Reg(DT.float)
+        large = MaskReg(DT.float)
+        index = Reg(DT.uint32)
+        signed_index = Reg(DT.int)
+        step = Reg(DT.uint32)
+        partner = Reg(DT.uint32)
         index0 = Reg(DT.uint32)
+        signed_index.arange(0)
+        index <<= signed_index.reinterpret(DT.uint32)
         index0.fill(0)
         packed = Reg(DT.bfloat16)
         full = MaskReg(DT.bfloat16, init_mode=MaskType.ALL)
@@ -36,38 +55,135 @@ def make_norm_backward(name, raw_dtype):
                 x1 <<= source[0, row*128+64:row*128+128]
             d0 <<= sensitivity[0, row*128:row*128+64].unpack()
             d1 <<= sensitivity[0, row*128+64:row*128+128].unpack()
-            temp0 <<= x0 * x0
-            temp1 <<= x1 * x1
-            cadd(sum0, temp0)
-            cadd(sum1, temp1)
-            square <<= sum0 + sum1
-            square <<= square + 1e-6
-            denominator <<= square.sqrt()
-            temp0 <<= x0 * d0
-            temp1 <<= x1 * d1
-            cadd(sum0, temp0)
-            cadd(sum1, temp1)
-            dot <<= sum0 + sum1
-            temp0 <<= square * denominator
-            ratio <<= dot / temp0
-            gather(broadcast_r, ratio, index0)
-            gather(broadcast_d, denominator, index0)
-            first <<= d0 / broadcast_d
-            second <<= x0 * broadcast_r
-            result <<= first - second
-            if raw_dtype == bf16:
-                packed <<= result.astype(DT.bfloat16, config)
-                reg_to_ub_downsample(destination[0, row*128:row*128+64], packed, mask=full)
-            else:
-                destination[0, row*128:row*128+64] <<= result
-            first <<= d1 / broadcast_d
-            second <<= x1 * broadcast_r
-            result <<= first - second
-            if raw_dtype == bf16:
-                packed <<= result.astype(DT.bfloat16, config)
-                reg_to_ub_downsample(destination[0, row*128+64:row*128+128], packed, mask=full)
-            else:
-                destination[0, row*128+64:row*128+128] <<= result
+            # Binary scaling keeps the derivative's intermediate products in
+            # range. Small rows retain scale1; no host preprocessing is used.
+            temp <<= x0.abs()
+            result <<= x1.abs()
+            cmax(denominator, temp)
+            cmax(numerator, result)
+            vmax(denominator, denominator, numerator)
+            gather(denominator, denominator, index0)
+            compare(large, denominator, 16., CompareMode.GE)
+            partner <<= denominator.reinterpret(DT.uint32)
+            step.fill(0x7f800000)
+            vand(partner, partner, step)
+            step.fill(0x7f000000)
+            partner <<= step - partner
+            row_scale <<= partner.reinterpret(DT.float)
+            vmaxs(row_scale, row_scale, 7.52316384526264e-37)
+            numerator.fill(1.)
+            select(row_scale, row_scale, numerator, large)
+            x0 <<= x0 * row_scale
+            x1 <<= x1 * row_scale
+            epsilon <<= row_scale * 1.e-6
+            epsilon <<= epsilon * row_scale
+            # Two-component products and a fixed compensated K128 reduction.
+            for left0, left1, right0, right1, high_out, low_out in (
+                    (x0, x1, x0, x1, sh, sl), (x0, x1, d0, d1, dh, dl)):
+                for a, b, high, residual in ((left0, right0, ph, pl), (left1, right1, qh, ql)):
+                    high <<= a * b
+                    if raw_dtype == bf16:
+                        residual.fill(0.)
+                    else:
+                        split <<= a * 4097.
+                        temp <<= split - a
+                        a_hi <<= split - temp
+                        a_lo <<= a - a_hi
+                        split <<= b * 4097.
+                        temp <<= split - b
+                        b_hi <<= split - temp
+                        b_lo <<= b - b_hi
+                        residual <<= a_hi * b_hi
+                        residual <<= residual - high
+                        temp <<= a_hi * b_lo
+                        residual <<= residual + temp
+                        temp <<= a_lo * b_hi
+                        residual <<= residual + temp
+                        temp <<= a_lo * b_lo
+                        residual <<= residual + temp
+                # Keep the forward two64-cadd value as the leading component;
+                # the explicit tree below supplies its missing low component.
+                cadd(denominator, ph)
+                cadd(result, qh)
+                denominator <<= denominator + result
+                gather(denominator, denominator, index0)
+                # First combine corresponding lanes from the two64 halves,
+                # then reduce those64 pairs in an explicit deterministic tree.
+                for level in unroll(7):
+                    if level > 0:
+                        step.fill(64 >> level)
+                        vxor(partner, index, step)
+                        gather(qh, ph, partner)
+                        gather(ql, pl, partner)
+                    summed <<= ph + qh
+                    virtual_b <<= summed - ph
+                    virtual_a <<= summed - virtual_b
+                    error_b <<= qh - virtual_b
+                    error_a <<= ph - virtual_a
+                    temp <<= error_a + error_b
+                    low <<= pl + ql
+                    low <<= low + temp
+                    ph <<= summed + low
+                    temp <<= ph - summed
+                    pl <<= low - temp
+                gather(high_out, ph, index0)
+                gather(low_out, pl, index0)
+                temp <<= high_out - denominator
+                low_out <<= temp + low_out
+                high_out <<= denominator
+            # Keep the epsilon contribution outside the cancellation. The
+            # numerator products also need their rounding residuals: improving
+            # the row reduction alone cannot recover these small derivatives.
+            for x, gy, offset in ((x0, d0, 0), (x1, d1, 64)):
+                for a, b, high, residual in ((gy, sh, ph, pl), (x, dh, qh, ql)):
+                    high <<= a * b
+                    split <<= a * 4097.
+                    temp <<= split - a
+                    a_hi <<= split - temp
+                    a_lo <<= a - a_hi
+                    split <<= b * 4097.
+                    temp <<= split - b
+                    b_hi <<= split - temp
+                    b_lo <<= b - b_hi
+                    residual <<= a_hi * b_hi
+                    residual <<= residual - high
+                    temp <<= a_hi * b_lo
+                    residual <<= residual + temp
+                    temp <<= a_lo * b_hi
+                    residual <<= residual + temp
+                    temp <<= a_lo * b_lo
+                    residual <<= residual + temp
+                qh <<= -qh
+                ql <<= -ql
+                summed <<= ph + qh
+                virtual_b <<= summed - ph
+                virtual_a <<= summed - virtual_b
+                error_b <<= qh - virtual_b
+                error_a <<= ph - virtual_a
+                temp <<= error_a + error_b
+                low <<= pl + ql
+                low <<= low + temp
+                ph <<= summed + low
+                temp <<= ph - summed
+                pl <<= low - temp
+                numerator <<= gy * sl
+                temp <<= x * dl
+                numerator <<= numerator - temp
+                temp <<= gy * epsilon
+                numerator <<= numerator + temp
+                numerator <<= numerator + pl
+                numerator <<= ph + numerator
+                temp <<= sl + epsilon
+                summed <<= sh + temp
+                denominator <<= summed.sqrt()
+                denominator <<= summed * denominator
+                result <<= numerator / denominator
+                result <<= result * row_scale
+                if raw_dtype == bf16:
+                    packed <<= result.astype(DT.bfloat16, config)
+                    reg_to_ub_downsample(destination[0, row*128+offset:row*128+offset+64], packed, mask=full)
+                else:
+                    destination[0, row*128+offset:row*128+offset+64] <<= result
         vf_barrier(VfPipe.STORE, VfPipe.LOAD)
 
     @kernel(mode='vec')
