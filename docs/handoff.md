@@ -11,6 +11,10 @@
 
 ### 正在飞的任务（现在没有；A5K-02、PK-02、PK-03 都已于 2026-09-19 合入）
 
+> **2026-09-21T08:50Z 更新：FMT-01（PR #124）二审 accept 并由 PM 按 D-PM-33 自行合入 → c1379a3；main 全量 1159 passed / 12 skipped（= 1132 + 27）。FMT-01 done。**
+> - 合入的是审过的头 `3ec23db2`（joshjms，不是新账号——D-PM-15 已批准其首合，我早先记错）：22 份回执的 `audit_tool_sha256` 全等于提交的工具、24 个源文件哈希对上 8e5da4c、20 个 case 的计数与上一轮逐格相同、26 次按调用点改判我从 rows 独立重算与文档 §2.1 一致。工具 `benchmarks/host_op_audit.py` 从现在起是各任务 host 算子审计的**统一工具**（`docs/pm/bf16-kernel-side.md` 已指到它，BF-09 规格已加一条验收）。
+> - 清单是 8e5da4c 的快照：clean——KDA 推理 / decode、GDN / GDN 反向、PGDN、PKDA BF16、GDN-2 FP32；违规五处（均已登记）——`_scan_states`、`dw` 取负、raw-flag 训练前处理 + 引擎反向（BF-08 合入后已消除）、GDN-2 BF16 加宽；**新发现**：PKDA FP32 的域校验还在 host 上算（gaps 新增 `pkda-fp32-host-domain-validation-unregistered`，P2）；`log2(eg)` 只在 `impl="upstream"` 上走。
+>
 > **2026-09-21T07:50Z 更新：用户「#122授权, #123」（D-PM-57 / D-PM-58）——PR #122（BF-08）→ 6c4aaca、PR #123（A2-07）→ 28cced5 已合入；main 全量 1132 passed, 12 skipped, 5 warnings（= 1032 + BF-08 的 100 个新测试）。BF-08、A2-07 done；BF-09（P0 性能优化）立项。**
 > - **BF-08 合入**（bot 账号，`--match-head-commit` 钉住 d9280a7d；用户选了选项 A：合入 + 立即另立性能任务）：用户是在被告知判据裁定 D-PM-54 / 55 / 56、端点披露（每 bd 482 个 native 下溢输出不是 CPU 通过、30 个 A_log = 88 记录未资格化）、完整训练步慢 11.3 ×、证据约 83 MB 之后授权的。`kernel_inventory` 的 `kda_prep` 注记更新；gaps 新增 `kda-prep-backward-training-step-slowdown`（P1）与 `kda-prep-backward-endpoint-disclosures`（P2）。
 > - **BF-09**（P0，issue 由 sync 创建）：BF-08 后续的性能优化——目标线 T4096 完整训练步 ≤ 旧 host 图 × 1.25（PM 建议、非门槛），冻结预算字节不变、跨 bd 逐位相同、不放宽判据；写集只在 `kda_prep/**` + 两个测试 / 文档文件，`autograd.py` / `chunk.py` 不在写集（避免与 A2-02 相交）。**做不到目标就报瓶颈与下界，要放宽逐元素判据是用户的决定。**

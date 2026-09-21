@@ -208,7 +208,7 @@ kimi_linear_layer / bd=4 的拆分（ms）：fwd_kernels 1.314 · caches_host_si
 
 ## 缺口
 
-P0 2 项 · P1 23 项 · P2 14 项 · 已解决 13 项 · 共 52 项
+P0 2 项 · P1 23 项 · P2 15 项 · 已解决 13 项 · 共 53 项
 
 **第一期里程碑**：第一期五项已全部有结论，并补齐了同机性能对比：aclnn 编译、runtime 桥、kda_fwd 接线、KDA 本地基线均实测通过；自编译算子在 block_dim=4 下比 torch_npu 组合快 4.43x（kimi_linear_layer）/ 2.38x（long_context T=4096）/ 19.7x（smoke）。过程中修掉两个自己的 bug（bridge-per-call-overhead、op-name-collision-in-process），它们先后让 block_dim 的效果被完全掩盖。当前最大的性能项是 block-dim-ceiling（已升 P1）：扩展性一路线性到契约上限 4，而硬件有 28 cube。第二期的前置障碍 kda-fwd-bwd-dtype-mismatch 已量化（降 P2）。
 
@@ -237,7 +237,7 @@ P0 2 项 · P1 23 项 · P2 14 项 · 已解决 13 项 · 共 52 项
 
 | 算子族 | P0 | P1 | P2 |
 |---|---|---|---|
-| KDA | `c1-multihead-o-corrupt`<br>`ascriptor-gm-transfer-two-slice-row-gap` | `decode-call-overhead`<br>`decode-layer-overhead`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`no-tail-path`<br>`block-dim-ceiling`<br>`qk-l2norm-not-in-kernel`<br>`state-layout-k-first`<br>`kda-bwd-inverse-mm-mutex-over-budget`<br>`a2-splitk-fp32-cube`<br>`a2-splitk-bf16-fp16-unsettled`<br>`a2-cast-blkstride-sim-blind`<br>`kda-bwd-scan-dh0-nondeterministic`<br>`kda-prep-backward-training-step-slowdown` | `kda-fwd-bwd-dtype-mismatch`<br>`npu-builtin-ops-missing`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`kernel-nd2nz-suboptimal`<br>`fwd-caches-not-emitted`<br>`modules-are-torch-not-kernels`<br>`stable-unit-no-harness`<br>`gate-span-still-bounded`<br>`a2-sim-vs-toolchain-blind-spots`<br>`a2-autosync-missing-cross-pipe-guards`<br>`a2-kda-bwd-pair-checkpoint-thin-margin`<br>`kda-prep-nearzero-output-underflow`<br>`kda-prep-backward-endpoint-disclosures` |
+| KDA | `c1-multihead-o-corrupt`<br>`ascriptor-gm-transfer-two-slice-row-gap` | `decode-call-overhead`<br>`decode-layer-overhead`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`no-tail-path`<br>`block-dim-ceiling`<br>`qk-l2norm-not-in-kernel`<br>`state-layout-k-first`<br>`kda-bwd-inverse-mm-mutex-over-budget`<br>`a2-splitk-fp32-cube`<br>`a2-splitk-bf16-fp16-unsettled`<br>`a2-cast-blkstride-sim-blind`<br>`kda-bwd-scan-dh0-nondeterministic`<br>`kda-prep-backward-training-step-slowdown` | `kda-fwd-bwd-dtype-mismatch`<br>`npu-builtin-ops-missing`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`kernel-nd2nz-suboptimal`<br>`fwd-caches-not-emitted`<br>`modules-are-torch-not-kernels`<br>`stable-unit-no-harness`<br>`gate-span-still-bounded`<br>`a2-sim-vs-toolchain-blind-spots`<br>`a2-autosync-missing-cross-pipe-guards`<br>`a2-kda-bwd-pair-checkpoint-thin-margin`<br>`kda-prep-nearzero-output-underflow`<br>`kda-prep-backward-endpoint-disclosures`<br>`pkda-fp32-host-domain-validation-unregistered` |
 | GDN | `ascriptor-gm-transfer-two-slice-row-gap` | `gdn-no-gqa`<br>`layout-not-token-major`<br>`nonzero-initial-state`<br>`d-initial-state-absent`<br>`state-dtype-bf16`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`scale-param-no-slot`<br>`no-tail-path`<br>`block-dim-ceiling`<br>`a2-splitk-fp32-cube`<br>`a2-splitk-bf16-fp16-unsettled` | `npu-builtin-ops-missing`<br>`fixed-kv-128`<br>`asymmetric-kv-dim` |
 | GDN-2 | `ascriptor-gm-transfer-two-slice-row-gap` | `no-varlen`<br>`no-tail-path`<br>`gdn2-abi-not-gdn`<br>`gdn2-chunk-gate-range`<br>`gdn2-decode-fragmentation` | `npu-builtin-ops-missing`<br>`fixed-kv-128`<br>`asymmetric-kv-dim`<br>`modules-are-torch-not-kernels` |
 | DeltaNet | `ascriptor-gm-transfer-two-slice-row-gap` | `layout-not-token-major`<br>`nonzero-initial-state`<br>`d-initial-state-absent`<br>`fused-recurrent-missing`<br>`no-varlen`<br>`scale-param-no-slot`<br>`no-tail-path` | `npu-builtin-ops-missing`<br>`fixed-kv-128`<br>`asymmetric-kv-dim` |
@@ -712,3 +712,10 @@ PM 在权威 workspace 上独立跑了 `benchmarks/diag_c1_multihead.py`，**上
 - contract 的 board 阶段保持 failed、merge_authorized = false；这些是披露，不是通过。另一条发现：冻结的逐元素限值在完整 Kimi 人口上被旧 host 图自己超过（q 至少 0.0464、k 2.166，限值 0.0588），旧图在 raw beta = 16 处相对 FP64 约 5.8% / 9 BF16 ULP 之外。
 - **影响** 只影响：亚正规 / 上溢端点的输入（默认公共闸就会拒绝 A_log ≥ 80 一类）与 native 下溢的输出；这些输出的绝对量级极小或输入被默认闸拒绝，不是静默错误；普通域 58,320 次公开训练调用与完整 Kimi 全部满足冻结预算。
 - **建议** 用户在 D-PM-57 知情后授权合入，端点按披露处理，不需要动作；若将来要把这两类改成有通过线的口径（例如 A_log = 88 的候选有限而旧路径 Inf 的一类），需要用户另行裁定新端点类（D-PM-52 的「只披露」口径不外推）。BF-09 沿用同一披露框架，新类别先 RISK。
+
+#### `pkda-fp32-host-domain-validation-unregistered` — PKDA FP32 公共入口的域校验（key 行 L2 范数与域判定）还在 host 上算，写在未登记的函数里；BF16 兄弟单元已把同样的校验放在 kernel 侧状态字
+
+- **类别** validation · **适用于** KDA · **阻塞** —
+- **依据** **来源：FMT-01（#108，PR #124，A5 真机，CANN 9.3.0 / torch 2.7.1；PM 从原始 JSON 复算）。** `chunk_precond_kda` FP32 路径 host 上发出 6 次算术（pow / sum / neg），全在 `ascend_fla/ops/pkda_chunk_fwd.py:126` 的 `ref.reference.validate_inputs`（算 key 行 L2 范数与域判定，产出只是判定）；BF16 路径在 `:102` 直接进 `_bf16_module().execute(...)`，域校验由 kernel 侧状态字完成（`kernels/projects/a5/pkda_chunk_fwd_bf16/kernels/pipeline.py` 的 `ERRORS` 1–7，含 "key row L2 norm must be <=1+1e-5"），host 上一个校验算子都没有——两份 trace 的差别就是证据。这是 D-PM-42 ① 意义下的「只读校验」（暂列、不是 D-PM-37 的 dtype / 格式 / 算术违规），只是写在未登记的函数里、在 host 上算。
+- **影响** 不影响结果，只是 host 侧多一次同步与若干算术；审计工具把它按算术报、需要人工判断它是校验。BF16 已有先例，改法范围小。
+- **建议** P2：PKDA FP32 路径的域校验搬成 kernel 侧状态字 + host 回读，与 BF16 兄弟单元一致（`ascend_fla/ops/pkda_chunk_fwd.py:126` 一处调用 + 可能的派生单元改动）；验收：审计报 clean、拒绝面不变（同样的非法输入仍然报错，错误信息等价）。也可以选择把 `validate_inputs` 登记为只读校验（D-PM-42），二选一，PM 待有空闲任务槽再立项。

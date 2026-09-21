@@ -28,7 +28,7 @@
 
 ## 统一验收（每个 BF / FMT 任务都要）
 
-1. **host 算子审计（硬判据）**：公共入口在真机上**每条 dtype 路径各跑一遍**，用 `torch.utils._python_dispatch.TorchDispatchMode`（或 `FMT-01` 交付的审计工具，它落地后统一用它）记录入口内发出的全部 aten 算子；
+1. **host 算子审计（硬判据）**：公共入口在真机上**每条 dtype 路径各跑一遍**，用 `torch.utils._python_dispatch.TorchDispatchMode`（或 `FMT-01` 交付的审计工具——**已合入**：`python benchmarks/host_op_audit.py --list / --self-check / --case <id> --output <dir> / --all --output <dir>`，每个 case 一个进程，回执自带环境行与工具 / 被审计源文件哈希，**统一用它**；判定 clean / violations 按它的显式分类表，只读校验按调用点认并留痕）记录入口内发出的全部 aten 算子；
    只允许出现分配（`empty*`、`zeros*`）与不拷贝的元数据算子（`view`、`unsqueeze`、`alias` 等），出现任何 dtype 转换、拷贝 / 重排、产出计算数据的算术算子即失败；只读校验与状态字回读单列为「校验」类（不算失败，但要列出）。算子列表放进证据。入口源码里不得再有 `.float()` / `.to(dtype)` / `.permute()+.contiguous()` 一类的转换。
 2. **正确性口径**：仍是 fp32 判定——对 pin 住的 fla naive（CPU FP32，喂**已按 BF16 舍入的输入**）与独立 CPU 参考各报一组相对 L2 / `max_abs`。
    先在 CPU 上用「BF16 输入舍入 + FP32 递推」的模拟器**校准误差地板 F**（FP32 参考输出与其 BF16 舍入之间的相对 L2，通常 2–4e-3），
