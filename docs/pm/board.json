@@ -2462,7 +2462,7 @@
       "wave": "W-A2",
       "soc": "a2",
       "priority": "P0",
-      "status": "assigned",
+      "status": "in_progress",
       "model": [],
       "kernel": [],
       "dtype": [],
@@ -2510,6 +2510,10 @@
         {
           "at": "2026-09-21T10:26",
           "summary": "A2-02 已合入（PR #126 → 33259af，squash）——按 #37 里 03:53Z 的承诺直接派 A2-10（P0，12h，分支 task/A2-10；A2 上机主线 A2-02 → A2-10 → A2-11 的第二步），不需要重新 APPLY。ASSIGN 里点明：① **顺序更正**：A2-10 先、A2-08 顺延（原因见 assignee_caps.note）；② main 自其上一单以来变了——A2-02 合入了 platform.py（a2 / a3 在 chunk_kda / prepare / fused_recurrent_kda 等入口报未验收），A2-10 不走这些入口、用 `compile_kernel(device=\"a2\", backend=\"cce\")` 直接编；真机 a2 进程显式设 ASCEND_FLA_SOC=a2（conftest 会 setdefault a5）；基线 1173 passed / 12 skipped（NPU-free）；③ ascriptor 修订固定 90cfcdc / b3b3f9c、每份回执带、对不上先 RISK；④ 写集照规格四项，runtime 桥要改先发 RISK write-set-expansion；⑤ **证据卫生**（吸取 A2-02 两轮返工）：回执 / 日志 / 脚本不含机器路径 / 主机名 / 容器名，机械替换脱敏并首行声明，脱敏要在推 PR 之前做（PR 分支上的旧提交公开可见）；哈希写完整、日志写未过滤原文；⑥ A2 数字在 A2-11 之前只是观测，A2 相关合入 PM 先请示用户。"
+        },
+        {
+          "at": "2026-09-21T10:29",
+          "summary": "ACK（10:26Z，自述，#37，MikejR2904；ASSIGN 后 2 分钟）：读了 AGENTS / handoff / PROTOCOL / A2-10.md；计划五步、ETA 8h（≤ 12h 时限）——① 环境 / 内置算子包覆盖 / 设备事实探针（`benchmarks/a2/bringup.py`）**已在 910B3 跑通**：coverage 12/12（randn / zeros / empty / cast bf16 + fp16 / contiguous / matmul / einsum / cumsum / h2d / d2h / strided_d2h）、cube / vec 20 / 40、UB 192 / L0C 128 / L1 512、driver / compiler / opp 的 version.info 完整 sha256、ascend910b 算子包目录，补每份回执带 ascriptor 90cfcdc / b3b3f9c；② runtime 桥对 aclnn harness 逐位一致（核心）：已证 kda_fwd_stable 五个 kernel 链的 o / final_state / g_cumsum 3/3 逐位相同（`compile_kernel(device=\"a2\", backend=\"cce\")` 进程内、直吃 NPU tensor、零拷贝），接着跑满 fwd 20 + decode 8 契约 case × bd ∈ {1, 2}，报 28 × bd 的逐位哈希（每 path × bd 单独进程）；③ block_dim 探针：1 / 2 之外能否跑，每个 bd 单独进程带超时、先小后大、死锁记下即停（观测，不作 A2 上限结论）；④ `tests/test_a2_bringup.py`（覆盖表 / 桥逐位 / 一算子名一 build 的机械检查）+ `docs/research/a2_bringup.md`；⑤ 证据卫生：全部机械脱敏（`<REPO>` / `<ASCEND_HOME>` / `<PYTHON_HOME>`、日志首行声明、脚本只打相对路径、完整哈希、原始未过滤日志），**推 PR 前完成**；A2 数字标「A2-11 之前只作观测」；合入按 D-PM-33。PM 核对：与 ASSIGN 与规格五项验收逐项对得上，不需要回复。留意点（评审时核）：① 表里的「12/12」要给每项的报错原文 / 通过证据与 CANN 标识（inner / compiler 时间戳）作为每份回执里的一行；② 逐位比较要对**字节**（不是相对 L2），28 × bd 每个 case 的输入与 aclnn harness 的输入同源；③ `_claim_op_name()` 在 A2 上越界报错而不是静默忽略要有一条测试；④ 写集只有规格四项，桥（`ascend_fla/runtime/**`）要改先 RISK；⑤ 合入前 PM 请示用户（A2 数字观测）。"
         }
       ],
       "result": null
