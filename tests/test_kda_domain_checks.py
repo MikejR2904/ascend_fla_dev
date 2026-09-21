@@ -153,9 +153,9 @@ def test_raw_preparation_keeps_all_six_gradient_paths():
                 return torch.autograd.grad(PrepABI.gate(*leaves),leaves,gy)
 
         @staticmethod
-        def beta_backward(s,gy,dtype,**options):
+        def beta_backward(source,s,gy,**options):
             calls.append('beta_backward')
-            return (gy*s*(1-s)).to(dtype)
+            return (gy*s*(1-s)).to(source.dtype)
 
     raw = tuple(x.clone().requires_grad_() for x in inputs())
     with pytest.MonkeyPatch.context() as monkeypatch:

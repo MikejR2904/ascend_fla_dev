@@ -52,20 +52,41 @@ def raw_reference(raw, function, prepare_inputs, flags):
 
 
 def gradient_record(key, actual, fp64, old, precision, budget, detail_root,
-                    source=None, sensitivity=None, condition=None, environment=None):
+                    source=None, sensitivity=None, condition=None, environment=None,
+                    endpoint_zero_mask=None, endpoint_authority=None):
     """Both-reference metrics plus every BF16 discrepancy beyond one ULP."""
     actual, fp64, old = (t.detach().cpu().contiguous() for t in (actual, fp64, old))
     high = precision.metrics(actual, fp64)
     previous = precision.metrics(actual, old)
     u64, finite64, histogram64 = numeric_ulps(actual, fp64)
     uold, finite_old, histogram_old = numeric_ulps(actual, old)
-    passed = (high['finite_pairs'] == actual.numel()
-              and high['relative_l2'] is not None
-              and high['relative_l2'] <= budget['relative_l2_limit']
-              and high['max_relative_nonzero'] <= budget['elementwise_relative_limit']
-              and high['zero_reference_nonzero_actual'] == 0)
+    ordinary = torch.ones_like(actual, dtype=torch.bool)
+    endpoint = None
+    ordinary_high = high
+    ordinary_old = previous
+    if endpoint_zero_mask is not None:
+        mask = endpoint_zero_mask.detach().cpu()
+        assert mask.dtype == torch.bool and mask.shape == actual.shape
+        assert endpoint_authority, 'Endpoint classification needs an owning decision'
+        ordinary = ~mask
+        endpoint = dict(authority=endpoint_authority, elements=int(mask.sum()),
+            candidate_zero=bool((actual[mask] == 0).all()),
+            old_cpu_zero=bool((old[mask] == 0).all()),
+            candidate_old_cpu_numeric_equal=bool(torch.equal(actual[mask], old[mask])),
+            fp64_discrepancies_retained_in_full_metrics=True)
+        ordinary_high = precision.metrics(actual[ordinary], fp64[ordinary]) if ordinary.any() else None
+        ordinary_old = precision.metrics(actual[ordinary], old[ordinary]) if ordinary.any() else None
+    m = ordinary_high
+    passed = (m is None or (m['finite_pairs'] == int(ordinary.sum())
+              and m['relative_l2'] is not None
+              and m['relative_l2'] <= budget['relative_l2_limit']
+              and m['max_relative_nonzero'] <= budget['elementwise_relative_limit']
+              and m['zero_reference_nonzero_actual'] == 0))
     if budget['ulp_limit_each_reference'] is not None:
-        passed = passed and bool(finite64.all() and finite_old.all()) and not bool(((u64 > 1) | (uold > 1)).any())
+        passed = passed and bool(finite64[ordinary].all() and finite_old[ordinary].all()) and not bool(((u64[ordinary] > 1) | (uold[ordinary] > 1)).any())
+    ordinary_passed = bool(passed)
+    if endpoint is not None:
+        passed = passed and endpoint['candidate_zero'] and endpoint['old_cpu_zero'] and endpoint['candidate_old_cpu_numeric_equal']
     details = []
     if actual.dtype == torch.bfloat16:
         locations = ((finite64 & (u64 > 1)) | (finite_old & (uold > 1))).nonzero().tolist()
@@ -94,5 +115,8 @@ def gradient_record(key, actual, fp64, old, precision, budget, detail_root,
         path.write_text(json.dumps(dict(environment=environment, key=key, locations=details[start:start+64]), indent=2, allow_nan=False)+'\n')
         pages.append(path.name)
     return dict(key=key, to_fp64=high, to_old_cpu=previous, budget=budget,
+                ordinary_to_fp64=ordinary_high, ordinary_to_old_cpu=ordinary_old,
+                ordinary_elements=int(ordinary.sum()), ordinary_criteria_passed=ordinary_passed,
+                endpoint_zero=endpoint,
                 ulp_to_fp64_distribution=histogram64, ulp_to_old_distribution=histogram_old,
                 bf16_over_one_locations=len(details), detail_pages=pages, passed=bool(passed))

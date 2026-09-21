@@ -1,9 +1,13 @@
 # KDA raw preparation backward — BF-08
 
-This first commit freezes the backward comparison criteria before any candidate
-kernel implementation. It contains CPU calibration, independent derivative
-references and corrupt-output controls. **No BF-08 native or simulator stage has
-passed yet.** BF-07 forward qualification does not qualify new backward kernels.
+BF-08 implements custom backward kernels for raw KDA preparation. Qualification
+is still in progress: the latest candidate passes complete Kimi training at
+bd1/2/3/4, the seven located grid regressions, 22 norm cases and 12 reduced
+model configurations. Final grid, range endpoints and performance remain open.
+BF-07 forward qualification does not qualify new backward kernels.
+
+The first commit froze comparison criteria and calibration before any candidate
+kernel implementation; historical failures below remain part of the evidence.
 
 The target is the training raw-flag path of `chunk_kda`: normalization of raw q/k,
 raw gate transformation, and raw beta sigmoid must have custom-kernel backward
@@ -160,7 +164,8 @@ Norm uses the forward kernel's two64-lane K128 sum order. Gate stage1 owns fixed
 writes a fixed binary-tree reduction into GM. Stage2 merges these partials in
 ascending order with compensated FP32 summation; head groups give each32-byte
 A_log output block one owner. There are no atomics or bd-dependent reduction
-orders. Beta differentiates the actual FP32 sigmoid output, preserving saturation.
+orders. Beta saves the raw input and actual FP32 sigmoid. D-PM-55 selects the analytic
+derivative for nonsaturated values and zero for saved sigmoid exactly0 or1.
 Raw outputs round only at their declared BF16/FP32 gradient boundary.
 
 Sixteen new dtype-specialized entries emit CCE successfully. Host verification
@@ -232,7 +237,7 @@ and close to FP64; predecessor gradients are zero. This forward/backward
 endpoint consistency question is disclosed to PM in issue117 comment5754878405.
 No endpoint exemption, forward change or new tolerance is assumed.
 
-The complete bd1 andbd3 training grids each retained54 failed cases outof1620.
+All four complete training grids at the earlier source each retained54 failed cases outof1620.
 The failures are in gate parameter cancellation (including one BF16 bias
 position at2ULP to both references) and FP32 beta's frozen relative-L2 limit.
 The latter is bitwise the correct product of the actual saved FP32 sigmoid;
@@ -241,3 +246,56 @@ the frozen analytic limit on the located population. Comment5754936474 requests
 the owning derivative-semantics decision before changing this boundary.
 Numerical budgets remain byte-identical to the initial freeze. Additional gate
 precision work is an unqualified candidate until native workload and grid reruns.
+
+
+## D-PM-55 and current compensated candidate
+
+[PM decision D-PM-55](https://github.com/ddddwee1/ascend_fla_dev/issues/117#issuecomment-5755012001)
+resolves the two preceding semantic questions. Norm backward follows the unchanged
+forward: a square-sum overflow in the same two64-cadd FP32 order gives a zero
+gradient. Binary scaling protects intermediate products only. Native norm checks
+retain all FP64 discrepancies and require the candidate, CPU FP32 and old NPU
+forward/gradient endpoint observations; ordinary rows retain frozen limits.
+
+Beta stores the original raw tensor object and the actual forward sigmoid, with
+no host copy or cast. Its nonsaturated derivative uses compensated arithmetic
+for gy*exp(-abs(beta))/(1+exp(-abs(beta)))²; only the saved sigmoid being exactly
+zero or one selects a zero derivative. On the located failed population, the old
+CPU graph itself has relative-L2 2.41418e-7, above the frozen 1.95658e-7 limit.
+That predecessor observation does not change the criterion. D-PM-54 and D-PM-55
+must both be disclosed when the user authorizes merge and remain subject to the
+user's final decision.
+
+Gate uses two FP32 components for softplus/sigmoid contributions and both levels
+of reduction. Each (head,32 BT-row) partial contains 512 FP32 elements: A high/low
+and bias high/low, each with128 channels. Fixed tree/ascending merge order and
+output ownership stay independent of block_dim. The exp(A_log) factor is applied
+after each parameter reduction. Polynomial coefficients are immediate operands;
+the initial vector-coefficient version exceeded the CANN VF stack limit and did
+not reach device execution. That failure remains retained; no limit was raised.
+
+The new candidate passes full Kimi training independently at bd1/2/3/4 with all50
+vendors ready first, including9 existing backward entries. The seven previously
+located failures now pass all9 gradient selections. Native 22-case norm checks
+and12 reduced sim/pipesim diagnostics pass. Public explicit prepare and an actual
+inference-then-training process both pass without manual precompilation, as does
+the additional T1024 full training check against both CPU FP32 references. These
+are completed stages; whole-task qualification remains open until the final
+1620-case grid at every bd, endpoint investigation, performance and evidence
+closeout complete. Raw receipts and their executed production hashes are published under
+`evidence/backward/compensated-gate-v1/`; this is an intermediate candidate,
+not final task qualification.
+
+
+The additional gate/beta range run retains eight failed populations: gate A_log
+88/89/100 in both raw dtypes, and both beta saturation populations. At beta16
+with BF16 sensitivity -1.3141944408416748, the actual saved sigmoid is
+0.9999998807907104 (not saturated). Candidate/rounded-FP64 BF16 bits are46111;
+old CPU and old NPU bits are46120. Their one-ULP neighborhoods are disjoint.
+This is an ordinary dual-reference feasibility gap under the frozen criterion,
+not a new permitted endpoint. At beta-88, the actual saved sigmoid and old NPU
+are zero while CPU sigmoid/gradient are subnormal; that existing native
+underflow observation is retained separately. Gate compensated products at
+large A_log also introduce NaNs in places where predecessor gradients are
+infinite; those are retained failures requiring investigation. No criteria have
+been changed to make these runs pass.

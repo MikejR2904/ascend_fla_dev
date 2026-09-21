@@ -158,7 +158,7 @@ def gate_backward(source, alog, bias, sensitivity, *, device='a5', block_dim=1):
         raise ValueError('KDA gate backward parameters must share the input device')
     bt = source.shape[0] * source.shape[1]
     chunks = (bt + 31) // 32
-    p = hv * chunks * 256
+    p = hv * chunks * 512
     if p >= 2**31:
         raise ValueError('KDA gate backward workspace must fit signed int32')
     destination = torch.empty(source.shape, dtype=source.dtype, device=source.device)
@@ -180,13 +180,13 @@ def gate_backward(source, alog, bias, sensitivity, *, device='a5', block_dim=1):
     return destination, da, db
 
 
-def beta_backward(probability, sensitivity, dtype, *, device='a5', block_dim=1):
+def beta_backward(source, probability, sensitivity, *, device='a5', block_dim=1):
+    _check_source('source', source)
     _check_source('probability', probability)
-    _check_sensitivity(probability, sensitivity, torch.float32)
-    if probability.dtype != torch.float32 or dtype not in _DTYPES:
-        raise ValueError('KDA beta backward requires FP32 probability and BF16/FP32 raw dtype')
-    destination = torch.empty(probability.shape, dtype=dtype, device=probability.device)
-    prepare_backward(device, block_dim)[f'beta_{_DTYPES[dtype]}'](
-        {'probability': probability.view(1, -1), 'sensitivity': sensitivity.view(1, -1)},
+    _check_sensitivity(source, probability, torch.float32)
+    _check_sensitivity(source, sensitivity, torch.float32)
+    destination = torch.empty(source.shape, dtype=source.dtype, device=source.device)
+    prepare_backward(device, block_dim)[f'beta_{_DTYPES[source.dtype]}'](
+        {'source': source.view(1, -1), 'probability': probability.view(1, -1), 'sensitivity': sensitivity.view(1, -1)},
         {'N': probability.numel()}, {'destination': destination.view(1, -1)})
     return destination

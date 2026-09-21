@@ -30,6 +30,8 @@ def main():
     parser.add_argument('--block-dim', type=int, choices=(1, 2, 3, 4), required=True)
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--chunk-count',type=int,choices=(1,2,3))
+    parser.add_argument('--case-id',action='append',help='Located diagnostic subset; never full-grid qualification')
+    parser.add_argument('--retain-prepared',action='store_true')
     args = parser.parse_args()
     assert os.environ.get('BF08_EXTERNAL_DEVICE_LOCK') == '1'
     args.output.mkdir(parents=True, exist_ok=False)
@@ -126,6 +128,10 @@ def main():
     # requires_grad selections, including disconnected disabled parameters.
     native_grid=load('_bf08_grid_inputs',ROOT/'native_grid.py')
     population=[c for c in native_grid.cases('chunk') if args.chunk_count is None or c['C']==args.chunk_count]
+    if args.case_id:
+        population=[c for c in population if c['id'] in args.case_id]
+        assert {c['id'] for c in population}==set(args.case_id),'Unknown diagnostic case'
+        environment['scope']='Located diagnostic subset; not full-grid qualification'
     modes=[('all',raw_names)]+[(n,(n,)) for n in ('q','k','g','beta','A_log','dt_bias')]
     modes += [('parameters',('A_log','dt_bias')),('partial',('q','g','beta'))]
     write('source-identity',dict(source_manifest=source_manifest))
@@ -179,6 +185,9 @@ def main():
             record['disabled_identity']={n:prepared[i] is dev[n] for i,n in enumerate(prep_names) if off[i]}
             record['cache_count']=len(captured['caches'])
             sensitivities=check.cpu(dict(zip(prep_names,values[len(targets):])))
+            if args.retain_prepared:
+                torch.save(dict(raw=data,actual=got,prepared_sensitivities=sensitivities,
+                    prepared=check.cpu(dict(zip(prep_names,prepared)))),args.output/(label+'.captured.private.pt'))
         else:sensitivities=None
         return got,record,sensitivities
 

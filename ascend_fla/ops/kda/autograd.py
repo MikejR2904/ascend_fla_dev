@@ -71,15 +71,14 @@ class _RawBeta(torch.autograd.Function):
     def forward(ctx, source, device, block_dim):
         ctx.options = dict(device=device, block_dim=block_dim)
         probability = _prep_runtime().beta(source, **ctx.options)
-        ctx.save_for_backward(probability)
-        ctx.raw_dtype = source.dtype
+        ctx.save_for_backward(source, probability)
         return probability
 
     @staticmethod
     def backward(ctx, sensitivity):
-        probability, = ctx.saved_tensors
+        source, probability = ctx.saved_tensors
         sensitivity = _layout_runtime().cast(sensitivity, torch.float32, **ctx.options)
-        result = _prep_runtime().beta_backward(probability, sensitivity, ctx.raw_dtype, **ctx.options)
+        result = _prep_runtime().beta_backward(source, probability, sensitivity, **ctx.options)
         return result, None, None
 
 

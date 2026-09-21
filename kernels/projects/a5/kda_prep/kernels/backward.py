@@ -1,5 +1,216 @@
 """Raw preparation derivatives with fixed work items and deterministic reductions."""
 from ascriptor.a5 import *
+import math
+import struct
+
+
+def _split_constant(value):
+    high = struct.unpack('f', struct.pack('f', value))[0]
+    return high, value - high
+
+
+_EXP_COEFFICIENTS = tuple(_split_constant(1 / math.factorial(n)) for n in range(13, -1, -1))
+_LOG_COEFFICIENTS = tuple(_split_constant(1 / n) for n in range(39, 0, -2))
+_EXP_FIRST = _split_constant(1 / math.factorial(14))
+_LOG_FIRST = _split_constant(1 / 41)
+
+
+@func
+def _dd_add(oh, ol, ah, al, bh, bl):
+    s = Reg(DT.float)
+    v = Reg(DT.float)
+    e = Reg(DT.float)
+    t = Reg(DT.float)
+    h = Reg(DT.float)
+    l = Reg(DT.float)
+    s <<= ah + bh
+    v <<= s - ah
+    t <<= s - v
+    e <<= ah - t
+    t <<= bh - v
+    e <<= e + t
+    t <<= al + bl
+    e <<= e + t
+    h <<= s + e
+    t <<= h - s
+    l <<= e - t
+    oh <<= h
+    ol <<= l
+
+
+@func
+def _dd_add_constant(oh, ol, ah, al, high, low):
+    # Immediate operands avoid retaining every polynomial coefficient in a
+    # vector register across the enclosing row loop.
+    s = Reg(DT.float)
+    v = Reg(DT.float)
+    e = Reg(DT.float)
+    t = Reg(DT.float)
+    h = Reg(DT.float)
+    l = Reg(DT.float)
+    s <<= ah + high
+    v <<= s - ah
+    t <<= s - v
+    e <<= ah - t
+    t <<= -v
+    t <<= t + high
+    e <<= e + t
+    t <<= al + low
+    e <<= e + t
+    h <<= s + e
+    t <<= h - s
+    l <<= e - t
+    oh <<= h
+    ol <<= l
+
+
+@func
+def _dd_mul(oh, ol, ah, al, bh, bl):
+    # Truncated mantissa splitting introduces no splitter-multiply overflow.
+    mask = Reg(DT.uint32)
+    bits = Reg(DT.uint32)
+    a0 = Reg(DT.float)
+    a1 = Reg(DT.float)
+    b0 = Reg(DT.float)
+    b1 = Reg(DT.float)
+    p = Reg(DT.float)
+    e = Reg(DT.float)
+    t = Reg(DT.float)
+    h = Reg(DT.float)
+    l = Reg(DT.float)
+    mask.fill(0xfffff000)
+    bits <<= ah.reinterpret(DT.uint32)
+    vand(bits, bits, mask)
+    a0 <<= bits.reinterpret(DT.float)
+    a1 <<= ah - a0
+    bits <<= bh.reinterpret(DT.uint32)
+    vand(bits, bits, mask)
+    b0 <<= bits.reinterpret(DT.float)
+    b1 <<= bh - b0
+    p <<= ah * bh
+    e <<= a0 * b0
+    e <<= e - p
+    t <<= a0 * b1
+    e <<= e + t
+    t <<= a1 * b0
+    e <<= e + t
+    t <<= a1 * b1
+    e <<= e + t
+    t <<= ah * bl
+    e <<= e + t
+    t <<= al * bh
+    e <<= e + t
+    h <<= p + e
+    t <<= h - p
+    l <<= e - t
+    oh <<= h
+    ol <<= l
+
+
+@func
+def _dd_div(oh, ol, ah, al, bh, bl):
+    q = Reg(DT.float)
+    zero = Reg(DT.float)
+    ph = Reg(DT.float)
+    pl = Reg(DT.float)
+    rh = Reg(DT.float)
+    rl = Reg(DT.float)
+    correction = Reg(DT.float)
+    zero.fill(0.)
+    q <<= ah / bh
+    _dd_mul(ph, pl, bh, bl, q, zero)
+    ph <<= -ph
+    pl <<= -pl
+    _dd_add(rh, rl, ah, al, ph, pl)
+    correction <<= rh + rl
+    correction <<= correction / bh
+    _dd_add(oh, ol, q, zero, correction, zero)
+
+
+@func
+def _dd_exp_negative(oh, ol, xh, xl):
+    # x <= 0. The polynomial is only evaluated on the proved bounded branch.
+    h = Reg(DT.float)
+    l = Reg(DT.float)
+    zh = Reg(DT.float)
+    zl = Reg(DT.float)
+    fallback = Reg(DT.float)
+    floor = Reg(DT.float)
+    zero = Reg(DT.float)
+    outside = MaskReg(DT.float)
+    floor.fill(-80.)
+    zero.fill(0.)
+    compare(outside, xh, -80., CompareMode.LT)
+    select(zh, floor, xh, outside)
+    select(zl, zero, xl, outside)
+    zh <<= zh * .00390625
+    zl <<= zl * .00390625
+    h.fill(_EXP_FIRST[0])
+    l.fill(_EXP_FIRST[1])
+    for high, low in _EXP_COEFFICIENTS:
+        _dd_mul(h, l, h, l, zh, zl)
+        _dd_add_constant(h, l, h, l, high, low)
+    for iteration in range(8):
+        _dd_mul(h, l, h, l, h, l)
+    fallback <<= xh.exp()
+    select(oh, fallback, h, outside)
+    select(ol, zero, l, outside)
+
+
+@func
+def _dd_softplus_sigmoid(sh, sl, dh, dl, uh, ul):
+    zero = Reg(DT.float)
+    one = Reg(DT.float)
+    two = Reg(DT.float)
+    xh = Reg(DT.float)
+    xl = Reg(DT.float)
+    eh = Reg(DT.float)
+    el = Reg(DT.float)
+    bh = Reg(DT.float)
+    bl = Reg(DT.float)
+    nh = Reg(DT.float)
+    nl = Reg(DT.float)
+    zh = Reg(DT.float)
+    zl = Reg(DT.float)
+    zz_h = Reg(DT.float)
+    zz_l = Reg(DT.float)
+    ph = Reg(DT.float)
+    pl = Reg(DT.float)
+    positive = MaskReg(DT.float)
+    upper = MaskReg(DT.float)
+    zero.fill(0.)
+    one.fill(1.)
+    two.fill(2.)
+    compare(positive, uh, 0., CompareMode.GE)
+    compare(upper, uh, 20., CompareMode.GT)
+    xh <<= -uh
+    xl <<= -ul
+    select(xh, xh, uh, positive)
+    select(xl, xl, ul, positive)
+    _dd_exp_negative(eh, el, xh, xl)
+    _dd_add(bh, bl, one, zero, eh, el)
+    select(nh, one, eh, positive)
+    select(nl, zero, el, positive)
+    _dd_div(dh, dl, nh, nl, bh, bl)
+    select(dh, one, dh, upper)
+    select(dl, zero, dl, upper)
+    # log(1+e) = 2*atanh(e/(2+e)); |e/(2+e)| <= 1/3.
+    _dd_add(bh, bl, two, zero, eh, el)
+    _dd_div(zh, zl, eh, el, bh, bl)
+    _dd_mul(zz_h, zz_l, zh, zl, zh, zl)
+    ph.fill(_LOG_FIRST[0])
+    pl.fill(_LOG_FIRST[1])
+    for high, low in _LOG_COEFFICIENTS:
+        _dd_mul(ph, pl, ph, pl, zz_h, zz_l)
+        _dd_add_constant(ph, pl, ph, pl, high, low)
+    _dd_mul(ph, pl, ph, pl, zh, zl)
+    ph <<= ph * 2.
+    pl <<= pl * 2.
+    select(nh, uh, zero, positive)
+    select(nl, ul, zero, positive)
+    _dd_add(sh, sl, ph, pl, nh, nl)
+    select(sh, uh, sh, upper)
+    select(sl, ul, sl, upper)
 
 
 def make_norm_backward(name, raw_dtype):
@@ -35,6 +246,7 @@ def make_norm_backward(name, raw_dtype):
         row_scale = Reg(DT.float)
         epsilon = Reg(DT.float)
         large = MaskReg(DT.float)
+        forward_overflow = MaskReg(DT.float)
         index = Reg(DT.uint32)
         signed_index = Reg(DT.int)
         step = Reg(DT.uint32)
@@ -55,6 +267,16 @@ def make_norm_backward(name, raw_dtype):
                 x1 <<= source[0, row*128+64:row*128+128]
             d0 <<= sensitivity[0, row*128:row*128+64].unpack()
             d1 <<= sensitivity[0, row*128+64:row*128+128].unpack()
+            # D-PM-55: preserve the unchanged forward's FP32 overflow boundary.
+            # Use its exact two64 cadd / add / epsilon operation order.
+            ph <<= x0 * x0
+            qh <<= x1 * x1
+            cadd(denominator, ph)
+            cadd(numerator, qh)
+            temp <<= denominator + numerator
+            temp <<= temp + 1.e-6
+            gather(temp, temp, index0)
+            compare(forward_overflow, temp, 3.4028234663852886e38, CompareMode.GT)
             # Binary scaling keeps the derivative's intermediate products in
             # range. Small rows retain scale1; no host preprocessing is used.
             temp <<= x0.abs()
@@ -179,6 +401,8 @@ def make_norm_backward(name, raw_dtype):
                 denominator <<= summed * denominator
                 result <<= numerator / denominator
                 result <<= result * row_scale
+                temp.fill(0.)
+                select(result, temp, result, forward_overflow)
                 if raw_dtype == bf16:
                     packed <<= result.astype(DT.bfloat16, config)
                     reg_to_ub_downsample(destination[0, row*128+offset:row*128+offset+64], packed, mask=full)
@@ -216,12 +440,12 @@ def make_norm_backward(name, raw_dtype):
 def make_gate_backward(name, raw_dtype, a_dtype, bias_dtype):
     @vf()
     def contributions(source: Tensor, sensitivity: Tensor, avec: Tensor, bias: Tensor,
-                      destination: Tensor, apart: Tensor, bpart: Tensor, partial: Tensor, rows: Var):
+                      destination: Tensor, terms: Tensor, partial: Tensor, rows: Var):
         decay = Reg(DT.float)
-        narrow_decay = Reg(DT.bfloat16)
+        narrow = Reg(DT.bfloat16)
         if a_dtype == bf16:
-            ub_to_reg_single(narrow_decay, avec[0, 0:1])
-            decay <<= narrow_decay.astype(DT.float)
+            ub_to_reg_single(narrow, avec[0, 0:1])
+            decay <<= narrow.astype(DT.float)
         else:
             ub_to_reg_single(decay, avec[0, 0:1])
         decay <<= decay.exp()
@@ -236,27 +460,19 @@ def make_gate_backward(name, raw_dtype, a_dtype, bias_dtype):
             bias1 <<= bias[0, 64:128]
         value = Reg(DT.float)
         gy = Reg(DT.float)
-        u = Reg(DT.float)
-        argument = Reg(DT.float)
-        exponential = Reg(DT.float)
-        denominator = Reg(DT.float)
-        plus_one = Reg(DT.float)
-        correction = Reg(DT.float)
-        logarithm = Reg(DT.float)
-        softplus = Reg(DT.float)
-        sigmoid = Reg(DT.float)
-        positive_sigmoid = Reg(DT.float)
+        uh = Reg(DT.float)
+        ul = Reg(DT.float)
+        sh = Reg(DT.float)
+        sl = Reg(DT.float)
+        dh = Reg(DT.float)
+        dl = Reg(DT.float)
+        ah = Reg(DT.float)
+        al = Reg(DT.float)
+        bh = Reg(DT.float)
+        bl = Reg(DT.float)
         result = Reg(DT.float)
-        one = Reg(DT.float)
         zero = Reg(DT.float)
-        threshold = Reg(DT.float)
-        one.fill(1.)
         zero.fill(0.)
-        threshold.fill(20.)
-        upper = MaskReg(DT.float)
-        positive = MaskReg(DT.float)
-        tiny = MaskReg(DT.float)
-        packed = Reg(DT.bfloat16)
         full = MaskReg(DT.bfloat16, init_mode=MaskType.ALL)
         config = CastConfig(round_mode=RoundMode.TO_EVEN)
         for row in range(rows):
@@ -267,64 +483,45 @@ def make_gate_backward(name, raw_dtype, a_dtype, bias_dtype):
                     value <<= source[0, row*128+half*64:row*128+half*64+64]
                 gy <<= sensitivity[0, row*128+half*64:row*128+half*64+64]
                 if half == 0:
-                    u <<= value + bias0
+                    _dd_add(uh, ul, value, zero, bias0, zero)
                 else:
-                    u <<= value + bias1
-                compare(upper, u, 20., CompareMode.GT)
-                compare(positive, u, 0., CompareMode.GE)
-                argument <<= u.abs()
-                argument <<= -argument
-                exponential <<= argument.exp()
-                denominator <<= exponential + 1.
-                sigmoid <<= exponential / denominator
-                positive_sigmoid <<= one / denominator
-                select(sigmoid, positive_sigmoid, sigmoid, positive)
-                select(sigmoid, one, sigmoid, upper)
-                result <<= gy * decay
-                result <<= result * sigmoid
-                bpart[0, row*128+half*64:row*128+half*64+64] <<= result
+                    _dd_add(uh, ul, value, zero, bias1, zero)
+                _dd_softplus_sigmoid(sh, sl, dh, dl, uh, ul)
+                _dd_mul(ah, al, gy, zero, sh, sl)
+                _dd_mul(bh, bl, gy, zero, dh, dl)
+                # Preserve both components until the fixed global reduction.
+                terms[0, row*128+half*64:row*128+half*64+64] <<= ah
+                terms[0, 4096+row*128+half*64:4096+row*128+half*64+64] <<= al
+                terms[0, 8192+row*128+half*64:8192+row*128+half*64+64] <<= bh
+                terms[0, 12288+row*128+half*64:12288+row*128+half*64+64] <<= bl
+                _dd_mul(dh, dl, bh, bl, decay, zero)
+                result <<= dh + dl
                 if raw_dtype == bf16:
-                    packed <<= result.astype(DT.bfloat16, config)
-                    reg_to_ub_downsample(destination[0, row*128+half*64:row*128+half*64+64], packed, mask=full)
+                    narrow <<= result.astype(DT.bfloat16, config)
+                    reg_to_ub_downsample(destination[0, row*128+half*64:row*128+half*64+64], narrow, mask=full)
                 else:
                     destination[0, row*128+half*64:row*128+half*64+64] <<= result
-                select(argument, threshold, u, upper)
-                exponential <<= argument.exp()
-                plus_one <<= exponential + 1.
-                denominator <<= plus_one - 1.
-                compare(tiny, plus_one, 1., CompareMode.EQ)
-                select(denominator, one, denominator, tiny)
-                correction <<= exponential / denominator
-                logarithm <<= plus_one.ln()
-                softplus <<= logarithm * correction
-                select(softplus, exponential, softplus, tiny)
-                select(softplus, u, softplus, upper)
-                result <<= gy * softplus
-                apart[0, row*128+half*64:row*128+half*64+64] <<= result
         for row in range(rows, 32):
-            for half in unroll(2):
-                apart[0, row*128+half*64:row*128+half*64+64] <<= zero
-                bpart[0, row*128+half*64:row*128+half*64+64] <<= zero
+            for part in unroll(4):
+                for half in unroll(2):
+                    terms[0, part*4096+row*128+half*64:part*4096+row*128+half*64+64] <<= zero
         vf_barrier(VfPipe.STORE, VfPipe.LOAD)
-        left = Reg(DT.float)
-        right = Reg(DT.float)
         for level in unroll(5):
             for pair in range(32 // (2 << level)):
-                for half in unroll(2):
-                    left <<= apart[0, pair*(256 << level)+half*64:pair*(256 << level)+half*64+64]
-                    right <<= apart[0, pair*(256 << level)+(128 << level)+half*64:pair*(256 << level)+(128 << level)+half*64+64]
-                    left <<= left + right
-                    apart[0, pair*(256 << level)+half*64:pair*(256 << level)+half*64+64] <<= left
-                    left <<= bpart[0, pair*(256 << level)+half*64:pair*(256 << level)+half*64+64]
-                    right <<= bpart[0, pair*(256 << level)+(128 << level)+half*64:pair*(256 << level)+(128 << level)+half*64+64]
-                    left <<= left + right
-                    bpart[0, pair*(256 << level)+half*64:pair*(256 << level)+half*64+64] <<= left
+                for part in unroll(2):
+                    for half in unroll(2):
+                        ah <<= terms[0, part*8192+pair*(256 << level)+half*64:part*8192+pair*(256 << level)+half*64+64]
+                        al <<= terms[0, part*8192+4096+pair*(256 << level)+half*64:part*8192+4096+pair*(256 << level)+half*64+64]
+                        bh <<= terms[0, part*8192+pair*(256 << level)+(128 << level)+half*64:part*8192+pair*(256 << level)+(128 << level)+half*64+64]
+                        bl <<= terms[0, part*8192+4096+pair*(256 << level)+(128 << level)+half*64:part*8192+4096+pair*(256 << level)+(128 << level)+half*64+64]
+                        _dd_add(ah, al, ah, al, bh, bl)
+                        terms[0, part*8192+pair*(256 << level)+half*64:part*8192+pair*(256 << level)+half*64+64] <<= ah
+                        terms[0, part*8192+4096+pair*(256 << level)+half*64:part*8192+4096+pair*(256 << level)+half*64+64] <<= al
             vf_barrier(VfPipe.STORE, VfPipe.LOAD)
-        for half in unroll(2):
-            left <<= apart[0, half*64:half*64+64]
-            partial[0, half*64:half*64+64] <<= left
-            left <<= bpart[0, half*64:half*64+64]
-            partial[0, 128+half*64:192+half*64] <<= left
+        for part in unroll(4):
+            for half in unroll(2):
+                result <<= terms[0, part*4096+half*64:part*4096+half*64+64]
+                partial[0, part*128+half*64:part*128+half*64+64] <<= result
         vf_barrier(VfPipe.STORE, VfPipe.LOAD)
 
     @kernel(mode='vec')
@@ -337,9 +534,8 @@ def make_gate_backward(name, raw_dtype, a_dtype, bias_dtype):
         outgoing = Tensor(raw_dtype, [1, 4096], Position.UB)
         avec = Tensor(a_dtype, [1, 16], Position.UB)
         bvec = Tensor(bias_dtype, [1, 128], Position.UB)
-        apart = Tensor(DT.float, [1, 4096], Position.UB)
-        bpart = Tensor(DT.float, [1, 4096], Position.UB)
-        partial = Tensor(DT.float, [1, 256], Position.UB)
+        terms = Tensor(DT.float, [1, 16384], Position.UB)
+        partial = Tensor(DT.float, [1, 512], Position.UB)
         chunks = CeilDiv(BT, 32)
         works = Var(HV * chunks)
         per_vec = CeilDiv(works, GetVecNum())
@@ -360,11 +556,11 @@ def make_gate_backward(name, raw_dtype, a_dtype, bias_dtype):
                              burst_len_element=128, src_stride_element=Channels-128, dst_stride=0)
                 gm_to_ub_pad(gradient, sensitivity[0, offset:offset+span], n_burst=rows,
                              burst_len_element=128, src_stride_element=Channels-128, dst_stride=0)
-                contributions(incoming, gradient, avec, bvec, outgoing, apart, bpart, partial, Var(rows))
+                contributions(incoming, gradient, avec, bvec, outgoing, terms, partial, Var(rows))
                 ub_to_gm_pad(destination[0, offset:offset+span], outgoing, n_burst=rows,
                              burst_len_element=128, src_stride=0, dst_stride_element=Channels-128)
-                ub_to_gm_pad(partials[0, work*256:work*256+256], partial, n_burst=1,
-                             burst_len_element=256, src_stride=0, dst_stride_element=0)
+                ub_to_gm_pad(partials[0, work*512:work*512+512], partial, n_burst=1,
+                             burst_len_element=512, src_stride=0, dst_stride_element=0)
         return destination, partials
 
     gate_backward.name = name
@@ -384,42 +580,39 @@ def make_gate_reduce(name, a_dtype, bias_dtype):
 
     @vf()
     def accumulate(partials: Tensor, state: Tensor, rows: Var):
-        total = Reg(DT.float)
-        compensation = Reg(DT.float)
-        value = Reg(DT.float)
-        adjusted = Reg(DT.float)
-        updated = Reg(DT.float)
-        difference = Reg(DT.float)
-        for part in unroll(4):
-            total <<= state[0, part*64:part*64+64]
-            compensation <<= state[0, 256+part*64:320+part*64]
-            for row in range(rows):
-                value <<= partials[0, row*256+part*64:row*256+part*64+64]
-                adjusted <<= value - compensation
-                updated <<= total + adjusted
-                difference <<= updated - total
-                compensation <<= difference - adjusted
-                total <<= updated
-            state[0, part*64:part*64+64] <<= total
-            state[0, 256+part*64:320+part*64] <<= compensation
+        ah = Reg(DT.float)
+        al = Reg(DT.float)
+        bh = Reg(DT.float)
+        bl = Reg(DT.float)
+        for part in unroll(2):
+            for half in unroll(2):
+                ah <<= state[0, part*256+half*64:part*256+half*64+64]
+                al <<= state[0, part*256+128+half*64:part*256+128+half*64+64]
+                for row in range(rows):
+                    bh <<= partials[0, row*512+part*256+half*64:row*512+part*256+half*64+64]
+                    bl <<= partials[0, row*512+part*256+128+half*64:row*512+part*256+128+half*64+64]
+                    _dd_add(ah, al, ah, al, bh, bl)
+                state[0, part*256+half*64:part*256+half*64+64] <<= ah
+                state[0, part*256+128+half*64:part*256+128+half*64+64] <<= al
         vf_barrier(VfPipe.STORE, VfPipe.LOAD)
 
     @vf()
     def finish(state: Tensor, avec: Tensor, aout: Tensor, bout: Tensor, slot: Var):
-        v0 = Reg(DT.float)
-        v1 = Reg(DT.float)
-        sum0 = Reg(DT.float)
-        sum1 = Reg(DT.float)
-        decay = Reg(DT.float)
+        ah = Reg(DT.float)
+        al = Reg(DT.float)
+        bh = Reg(DT.float)
+        bl = Reg(DT.float)
         result = Reg(DT.float)
+        decay = Reg(DT.float)
+        zero = Reg(DT.float)
         narrow = Reg(DT.bfloat16)
+        signed_index = Reg(DT.int)
+        index = Reg(DT.uint32)
+        partner = Reg(DT.uint32)
+        step = Reg(DT.uint32)
         full = MaskReg(DT.bfloat16, init_mode=MaskType.ALL)
         config = CastConfig(round_mode=RoundMode.TO_EVEN)
-        v0 <<= state[0, 0:64]
-        v1 <<= state[0, 64:128]
-        cadd(sum0, v0)
-        cadd(sum1, v1)
-        result <<= sum0 + sum1
+        zero.fill(0.)
         if a_dtype == bf16:
             ub_to_reg_single(narrow, avec[0, slot:slot+1])
             decay <<= narrow.astype(DT.float)
@@ -427,14 +620,31 @@ def make_gate_reduce(name, a_dtype, bias_dtype):
             ub_to_reg_single(decay, avec[0, slot:slot+1])
         decay <<= decay.exp()
         decay <<= -decay
-        result <<= result * decay
+        ah <<= state[0, 0:64]
+        al <<= state[0, 128:192]
+        bh <<= state[0, 64:128]
+        bl <<= state[0, 192:256]
+        _dd_add(ah, al, ah, al, bh, bl)
+        signed_index.arange(0)
+        index <<= signed_index.reinterpret(DT.uint32)
+        for level in unroll(6):
+            step.fill(1 << level)
+            vxor(partner, index, step)
+            gather(bh, ah, partner)
+            gather(bl, al, partner)
+            _dd_add(ah, al, ah, al, bh, bl)
+        _dd_mul(ah, al, ah, al, decay, zero)
+        result <<= ah + al
         if a_dtype == bf16:
             narrow <<= result.astype(DT.bfloat16, config)
             reg_to_ub_single(aout[0, slot:slot+1], narrow)
         else:
             reg_to_ub_single(aout[0, slot:slot+1], result)
         for half in unroll(2):
-            result <<= state[0, 128+half*64:192+half*64]
+            ah <<= state[0, 256+half*64:320+half*64]
+            al <<= state[0, 384+half*64:448+half*64]
+            _dd_mul(ah, al, ah, al, decay, zero)
+            result <<= ah + al
             if bias_dtype == bf16:
                 narrow <<= result.astype(DT.bfloat16, config)
                 reg_to_ub_downsample(bout[0, half*64:half*64+64], narrow, mask=full)
@@ -464,11 +674,11 @@ def make_gate_reduce(name, a_dtype, bias_dtype):
                 for slot in range(heads):
                     head = Var(head_begin+slot)
                     initialize(state)
-                    for tile in range(CeilDiv(Chunks, 16)):
-                        start = Var(tile*16)
-                        rows = Min(16, Chunks-start)
-                        offset = Var((head*Chunks+start)*256)
-                        count = Var(rows*256)
+                    for tile in range(CeilDiv(Chunks, 8)):
+                        start = Var(tile*8)
+                        rows = Min(8, Chunks-start)
+                        offset = Var((head*Chunks+start)*512)
+                        count = Var(rows*512)
                         gm_to_ub_pad(incoming, partials[0, offset:offset+count], n_burst=1,
                                      burst_len_element=count, src_stride_element=0, dst_stride=0)
                         accumulate(incoming, state, Var(rows))
@@ -485,22 +695,46 @@ def make_gate_reduce(name, a_dtype, bias_dtype):
 
 def make_beta_backward(name, raw_dtype):
     @vf()
-    def differentiate(probability: Tensor, sensitivity: Tensor, destination: Tensor, count: Var):
+    def differentiate(source: Tensor, probability: Tensor, sensitivity: Tensor, destination: Tensor, count: Var):
         s = Reg(DT.float)
+        x = Reg(DT.float)
         gy = Reg(DT.float)
-        complement = Reg(DT.float)
+        eh = Reg(DT.float)
+        el = Reg(DT.float)
+        dh = Reg(DT.float)
+        dl = Reg(DT.float)
+        nh = Reg(DT.float)
+        nl = Reg(DT.float)
         result = Reg(DT.float)
         one = Reg(DT.float)
+        zero = Reg(DT.float)
+        saturated_zero = MaskReg(DT.float)
+        saturated_one = MaskReg(DT.float)
         one.fill(1.)
+        zero.fill(0.)
         packed = Reg(DT.bfloat16)
         full = MaskReg(DT.bfloat16, init_mode=MaskType.ALL)
         config = CastConfig(round_mode=RoundMode.TO_EVEN)
         for index in range(count / 64):
+            if raw_dtype == bf16:
+                x <<= source[0, index*64:index*64+64].unpack()
+            else:
+                x <<= source[0, index*64:index*64+64]
             s <<= probability[0, index*64:index*64+64]
             gy <<= sensitivity[0, index*64:index*64+64]
-            complement <<= one - s
-            result <<= gy * s
-            result <<= result * complement
+            compare(saturated_zero, s, 0., CompareMode.EQ)
+            compare(saturated_one, s, 1., CompareMode.EQ)
+            x <<= x.abs()
+            x <<= -x
+            _dd_exp_negative(eh, el, x, zero)
+            _dd_add(dh, dl, one, zero, eh, el)
+            _dd_mul(dh, dl, dh, dl, dh, dl)
+            _dd_mul(nh, nl, gy, zero, eh, el)
+            _dd_div(nh, nl, nh, nl, dh, dl)
+            result <<= nh + nl
+            # Only the actual saved forward result decides saturation.
+            select(result, zero, result, saturated_zero)
+            select(result, zero, result, saturated_one)
             if raw_dtype == bf16:
                 packed <<= result.astype(DT.bfloat16, config)
                 reg_to_ub_downsample(destination[0, index*64:index*64+64], packed, mask=full)
@@ -509,8 +743,9 @@ def make_beta_backward(name, raw_dtype):
         vf_barrier(VfPipe.STORE, VfPipe.LOAD)
 
     @kernel(mode='vec')
-    def beta_backward(probability: GM[f32, (1, 'N')], sensitivity: GM[f32, (1, 'N')],
+    def beta_backward(source: GM[raw_dtype, (1, 'N')], probability: GM[f32, (1, 'N')], sensitivity: GM[f32, (1, 'N')],
                       destination: GM[raw_dtype, (1, 'N')], N: i32):
+        source_ub = Tensor(raw_dtype, [1, 4096], Position.UB)
         probability_ub = Tensor(DT.float, [1, 4096], Position.UB)
         gradient = Tensor(DT.float, [1, 4096], Position.UB)
         outgoing = Tensor(raw_dtype, [1, 4096], Position.UB)
@@ -523,11 +758,13 @@ def make_beta_backward(name, raw_dtype):
                 offset = Var(work*4096)
                 count = Min(4096, N-offset)
                 padded = Align64(count)
+                gm_to_ub_nd_dma(source_ub, source[0, offset:offset+count], [1], [1], [count],
+                                loop_right_pad=[padded-count], constant_value=0., fence='mte2')
                 gm_to_ub_nd_dma(probability_ub, probability[0, offset:offset+count], [1], [1], [count],
                                 loop_right_pad=[padded-count], constant_value=0., fence='mte2')
                 gm_to_ub_nd_dma(gradient, sensitivity[0, offset:offset+count], [1], [1], [count],
                                 loop_right_pad=[padded-count], constant_value=0., fence='mte2')
-                differentiate(probability_ub, gradient, outgoing, Var(padded))
+                differentiate(source_ub, probability_ub, gradient, outgoing, Var(padded))
                 ub_to_gm_pad(destination[0, offset:offset+count], outgoing, n_burst=1,
                              burst_len_element=count, src_stride=0, dst_stride_element=0)
         return destination

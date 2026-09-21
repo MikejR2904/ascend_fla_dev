@@ -173,9 +173,13 @@ def main():
         scale = first.abs()+second.abs()
         condition = scale/high.abs()
         key = 'norm:'+dtype+':dx'
+        overflow_rows = torch.isinf(x.float().square().sum(-1, keepdim=True) + 1.e-6)
+        endpoint_mask = overflow_rows.expand_as(x)
         record = support.gradient_record(key, actual, high, old_cpu, precision,
             limits['groups'][key], args.output/'ulp-details'/label,
-            source=x, sensitivity=gy, condition=condition, environment=environment)
+            source=x, sensitivity=gy, condition=condition, environment=environment,
+            endpoint_zero_mask=endpoint_mask,
+            endpoint_authority='D-PM-55(1), issue117 comment5755012001; forward FP32 square-sum overflow')
         record.update(id=label, shape=list(x.shape), inputs=dict(x=check.digest(x), gy=check.digest(gy)),
             old_cpu_to_fp64=precision.metrics(old_cpu, high),
             old_npu_to_fp64=precision.metrics(old_native, high),
@@ -189,6 +193,14 @@ def main():
                                ('old_npu',native_y.detach().cpu()))}
         record['same_input_forward']['fp64'] = dict(zeros=int((forward_high==0).sum()),
             finite=int(forward_high.isfinite().sum()), sha256=precision.digest(forward_high))
+        record['endpoint_native_consistency'] = dict(
+            overflow_rows=int(overflow_rows.sum()),
+            candidate_forward_zero=bool((forward[endpoint_mask]==0).all()),
+            old_cpu_forward_zero=bool((old_y.detach()[endpoint_mask]==0).all()),
+            old_npu_forward_zero=bool((native_y.detach().cpu()[endpoint_mask]==0).all()),
+            old_npu_gradient_zero=bool((old_native[endpoint_mask]==0).all()),
+            candidate_old_npu_gradient_numeric_equal=bool(torch.equal(actual[endpoint_mask],old_native[endpoint_mask])))
+        record['passed'] = record['passed'] and all(v for k,v in record['endpoint_native_consistency'].items() if k!='overflow_rows')
         maximum=x.float().abs().max(-1,keepdim=True).values
         bits=maximum.view(torch.int32).bitwise_and(0x7f800000)
         factor=(0x7f000000-bits).to(torch.int32).view(torch.float32).clamp_min(2.**-120)
@@ -219,7 +231,7 @@ def main():
                 max_relative_nonzero=float((delta[stable!=0]/stable[stable!=0].abs()).max()))
         record['passed']=record['passed'] and all(record['unchanged'].values()) and not audit.unexpected()
         write('cases/'+label,record)
-        if kind.startswith('near_null') or not record['passed']:
+        if kind.startswith('near_null') or bool(overflow_rows.any()) or not record['passed']:
             torch.save(dict(x=x,gy=gy,candidate=actual,old_cpu=old_cpu,old_npu=old_native,fp64=high,
                             forward=forward,forward_old_cpu=old_y.detach(),
                             forward_old_npu=native_y.detach().cpu(),forward_fp64=forward_high),
@@ -228,10 +240,10 @@ def main():
             candidate_max_relative=record['to_fp64']['max_relative_nonzero'],
             old_cpu_l2=record['old_cpu_to_fp64']['relative_l2'],old_npu_l2=record['old_npu_to_fp64']['relative_l2']))
         write('summary',dict(collection_complete=False,passed=all(t['passed'] for t in collected),cases=collected,
-            no_endpoint_exemptions=True,exit_zero_means_collection_only=True))
+            endpoint_policy='D-PM-55(1); existing candidate=CPU=NPU zero versus FP64 discrepancy',exit_zero_means_collection_only=True))
         print('NORM_CASE_RESULT',json.dumps(collected[-1]),flush=True)
     write('summary',dict(collection_complete=True,passed=all(t['passed'] for t in collected),cases=collected,
-        no_endpoint_exemptions=True,exit_zero_means_collection_only=True))
+        endpoint_policy='D-PM-55(1); existing candidate=CPU=NPU zero versus FP64 discrepancy',exit_zero_means_collection_only=True))
 
 
 if __name__ == '__main__':

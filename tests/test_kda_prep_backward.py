@@ -1,11 +1,38 @@
 """Training graph/ABI checks with explicit test-only CPU vendor substitutes."""
 import itertools
+import importlib.util
+import json
+from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
 import torch
 
 from ascend_fla.ops.kda import autograd, chunk, chunk_bwd
+
+
+def test_endpoint_classification_rejects_hidden_ordinary_or_zero_errors(tmp_path):
+    root = Path(__file__).resolve().parents[1] / 'kernels/projects/a5/kda_prep'
+    def load(name, filename):
+        spec = importlib.util.spec_from_file_location(name, root / filename)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module
+    support = load('endpoint_support', 'backward_native_support.py')
+    precision = load('endpoint_precision', 'ref/calibrate.py')
+    budget = json.loads((root / 'backward_budgets.json').read_text())['groups']['norm:f32:dx']
+    high = torch.tensor([1., 2.], dtype=torch.float64)
+    mask = torch.tensor([False, True])
+    def compare(actual, old, label):
+        return support.gradient_record('norm:f32:dx', torch.tensor(actual), high,
+            torch.tensor(old), precision, budget, tmp_path / label,
+            endpoint_zero_mask=mask, endpoint_authority='D-PM-55 synthetic verifier control')
+    correct = compare([1., 0.], [1., 0.], 'authorized_zero')
+    assert correct['passed'] and correct['ordinary_elements'] == 1
+    assert correct['to_fp64']['relative_l2'] > .8  # Still disclosed, never erased.
+    assert not compare([1.001, 0.], [1., 0.], 'bad_ordinary')['passed']
+    assert not compare([1., 1.e-10], [1., 0.], 'nonzero_candidate')['passed']
+    assert not compare([1., 0.], [1., 1.e-10], 'nonzero_cpu')['passed']
 
 
 @pytest.fixture
@@ -59,10 +86,10 @@ def preparation_abi(monkeypatch):
                 return torch.autograd.grad(PrepABI.gate(*leaves), leaves, sensitivity)
 
         @staticmethod
-        def beta_backward(probability, sensitivity, dtype, **options):
+        def beta_backward(source, probability, sensitivity, **options):
             events.append('beta_backward')
             assert sensitivity.dtype == torch.float32 and sensitivity.is_contiguous()
-            return (sensitivity * probability * (1 - probability)).to(dtype)
+            return (sensitivity * probability * (1 - probability)).to(source.dtype)
 
     monkeypatch.setattr(autograd, '_prep_runtime', lambda: PrepABI)
     monkeypatch.setattr(chunk, '_compiled_chain', lambda *a: events.append('forward_ready'))

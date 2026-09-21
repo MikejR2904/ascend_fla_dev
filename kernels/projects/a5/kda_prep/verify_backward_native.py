@@ -29,6 +29,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--block-dim', type=int, choices=(1, 2, 3, 4), required=True)
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--tokens', type=int, choices=(1024, 4096), default=4096)
+    parser.add_argument('--preparation-order', choices=('explicit', 'inference_then_training'))
     args = parser.parse_args()
     assert os.environ.get('BF08_EXTERNAL_DEVICE_LOCK') == '1'
     args.output.mkdir(parents=True, exist_ok=False)
@@ -72,7 +74,9 @@ def main():
         staging.replace(target)
 
     bd = args.block_dim
-    write('environment', dict(block_dim=bd, first_workload='full Kimi training, all raw flags'))
+    write('environment', dict(block_dim=bd, first_workload=(
+        'full Kimi inference then training' if args.preparation_order == 'inference_then_training'
+        else 'full Kimi training, all raw flags')))
     plan = [('prep_forward', e) for e in chunk._prep_runtime().kernels('chunk').values()]
     plan += [('prep_backward', e) for e in chunk._prep_runtime().backward_kernels().values()]
     plan += [('layout', e) for e in chunk._layout_runtime().kernels().values()]
@@ -80,17 +84,53 @@ def main():
     plan += [('backward', e) for e in chunk_bwd.kda_bwd_kernels().values()]
     assert len(plan) == 50 and sum(f == 'backward' for f, _ in plan) == 9
     builds = []
-    for family, entry in plan:
-        print('COMPILE_START', family, entry.name, bd, flush=True)
-        start = time.monotonic()
-        op = compile_kernel(entry, device='a5', block_dim=bd, backend='cce')
-        builds.append(dict(family=family, entry=entry.name, block_dim=bd, signature=op.signature,
-                           seconds=time.monotonic()-start,
-                           vendor_files={str(p.relative_to(op.vendor_dir)): hashlib.sha256(p.read_bytes()).hexdigest()
-                               for p in op.vendor_dir.rglob('*') if p.is_file() and p.suffix in ('.so', '.o', '.json')}))
-        write('compile', dict(complete=len(builds) == 50, entries=builds, first_custom_launch_not_started=True))
-    prepare(block_dim=bd, backward=True)
-    print('ALL_50_VENDORS_READY', flush=True)
+    if args.preparation_order:
+        # Observe only the public API's preparation. A manual precompile here
+        # would mask the fresh-process registration ordering being tested.
+        import importlib
+        compiler = importlib.import_module('ascend_fla.runtime.compile')
+        expected = {entry.name: family for family, entry in plan}
+        seen = set()
+        order = []
+        original_compile = compiler.compile_kernel
+        original_call = compiler.CompiledKernel.__call__
+        def observe_compile(entry, *a, **kw):
+            start = time.monotonic()
+            op = original_compile(entry, *a, **kw)
+            if entry.name not in seen:
+                assert not order, 'new vendor after first custom launch'
+                seen.add(entry.name)
+                builds.append(dict(family=expected[entry.name], entry=entry.name,
+                    block_dim=bd, signature=op.signature, seconds=time.monotonic()-start,
+                    vendor_files={str(p.relative_to(op.vendor_dir)): hashlib.sha256(p.read_bytes()).hexdigest()
+                        for p in op.vendor_dir.rglob('*') if p.is_file() and p.suffix in ('.so', '.o', '.json')}))
+                write('compile', dict(complete=seen == set(expected), entries=builds,
+                    first_custom_launch_not_started=True, preparation=args.preparation_order))
+            return op
+        def observe_launch(op, *a, **kw):
+            assert seen == set(expected), 'public preparation omitted required vendors'
+            order.append(dict(signature=op.signature, ready_vendors=len(seen)))
+            if len(order) == 1:
+                write('preparation-order', dict(mode=args.preparation_order, passed=True,
+                    expected_vendors=50, existing_backward_vendors=9,
+                    compiled_before_first_custom=sorted(seen), manual_precompile=False))
+            return original_call(op, *a, **kw)
+        compiler.compile_kernel = observe_compile
+        compiler.CompiledKernel.__call__ = observe_launch
+        if args.preparation_order == 'explicit':
+            prepare(block_dim=bd, backward=True)
+    else:
+        for family, entry in plan:
+            print('COMPILE_START', family, entry.name, bd, flush=True)
+            start = time.monotonic()
+            op = compile_kernel(entry, device='a5', block_dim=bd, backend='cce')
+            builds.append(dict(family=family, entry=entry.name, block_dim=bd, signature=op.signature,
+                               seconds=time.monotonic()-start,
+                               vendor_files={str(p.relative_to(op.vendor_dir)): hashlib.sha256(p.read_bytes()).hexdigest()
+                                   for p in op.vendor_dir.rglob('*') if p.is_file() and p.suffix in ('.so', '.o', '.json')}))
+            write('compile', dict(complete=len(builds) == 50, entries=builds, first_custom_launch_not_started=True))
+        prepare(block_dim=bd, backward=True)
+        print('ALL_50_VENDORS_READY', flush=True)
     torch.npu.set_device(0)
     check = load('_bf08_native_checks', ROOT.parent/'kda_layout/native_support.py')
     audit_module = load('_bf08_audit', ROOT/'native_audit.py')
@@ -120,15 +160,15 @@ def main():
     options = dict(block_dim=bd, layout_device='npu')
     raw_names = ('q', 'k', 'v', 'g', 'beta', 'A_log', 'dt_bias', 'h0')
     prep_names = ('q', 'k', 'g', 'beta')
-    case = dict(id='full_kimi_t4096_all_flags_training', B=1, T=4096, H=32, HV=32, K=128,
+    case = dict(id=f'full_kimi_t{args.tokens}_all_flags_training', B=1, T=args.tokens, H=32, HV=32, K=128,
                 raw_dtype='bf16', parameter_dtype='f32', flags=[True, True, True], all_raw_and_parameter_gradients=True)
     try:
         print('GENERATE_FULL_KIMI_TRAINING', flush=True)
         generator = torch.Generator().manual_seed(8008)
-        shape = (1, 4096, 32, 128)
+        shape = (1, args.tokens, 32, 128)
         raw = {n: torch.randn(shape, generator=generator).bfloat16() for n in ('q', 'k')}
         raw['g'] = (torch.randn(shape, generator=generator)*.1).bfloat16()
-        raw['beta'] = torch.randn((1, 4096, 32), generator=generator).bfloat16()
+        raw['beta'] = torch.randn((1, args.tokens, 32), generator=generator).bfloat16()
         raw['A_log'] = torch.linspace(-.2, .2, 32)
         raw['dt_bias'] = torch.linspace(-.3, -.1, 4096)
         raw['v'] = (torch.randn(shape, generator=generator)*.04).bfloat16()
@@ -136,6 +176,14 @@ def main():
         raw['do'] = (torch.randn(shape, generator=generator)*.04).bfloat16()
         raw['dht'] = (torch.randn((1, 32, 128, 128), generator=generator)*.01).bfloat16().float()
         dev = {n: t.npu().requires_grad_(n in raw_names) for n, t in raw.items()}
+        inference_hashes = None
+        if args.preparation_order == 'inference_then_training':
+            with torch.no_grad():
+                before_o, before_state = auto.chunk_kda(*(dev[n] for n in ('q', 'k', 'v', 'g', 'beta')),
+                    A_log=dev['A_log'], dt_bias=dev['dt_bias'], initial_state=dev['h0'],
+                    output_final_state=True, **flags, **options)
+            torch.npu.synchronize()
+            inference_hashes = dict(o=check.digest(before_o), final_state=check.digest(before_state))
         captured = {}
         actual_prep = auto._prepare_training_inputs
         actual_cached = auto.chunk_kda_fwd_with_caches
@@ -153,7 +201,7 @@ def main():
         auto._prepare_training_inputs = capture_prep
         auto.chunk_kda_fwd_with_caches = capture_caches
         try:
-            print('FIRST_CUSTOM_WORKLOAD_FULL_TRAINING', flush=True)
+            print('FULL_TRAINING_START', flush=True)
             with check.instrument() as (audit, launches):
                 o, state = auto.chunk_kda(*(dev[n] for n in ('q', 'k', 'v', 'g', 'beta')),
                     A_log=dev['A_log'], dt_bias=dev['dt_bias'], initial_state=dev['h0'],
@@ -178,6 +226,13 @@ def main():
                    finite={n: bool(t.isfinite().all()) for n, t in got.items()},
                    prep_gradients={}, cpu_references={}, passed=False)
         write('full', row)
+        if args.preparation_order:
+            inference_exact = inference_hashes is None or all(row['outputs'][n] == h for n, h in inference_hashes.items())
+            write('preparation-order', dict(mode=args.preparation_order, passed=inference_exact,
+                expected_vendors=50, existing_backward_vendors=9, manual_precompile=False,
+                compiled_before_first_custom=sorted(seen), custom_launches_observed=len(order),
+                inference_to_training_outputs_exact=inference_exact, inference_hashes=inference_hashes))
+            assert inference_exact, 'inference then training changed forward output bits'
         # Preserve actual outputs before any comparison can fail or be corrected.
         torch.save(dict(raw=raw, actual=got, prepared=prep_values, sensitivities=sensitivities),
                    args.output/'actual.private.pt')
@@ -224,7 +279,7 @@ def main():
                                                         for n in ('dA_log', 'ddt_bias')}
             metrics['per_head_chunk'] = [dict(chunk=c, head=h, **reference.metrics(
                 got['o'][:, c*64:(c+1)*64, h], expected['o'][:, c*64:(c+1)*64, h]))
-                for c in range(64) for h in range(32)]
+                for c in range(args.tokens//64) for h in range(32)]
             row['cpu_references'][label] = metrics
             write('full', row)
         row['passed'] = (all(row['unchanged'].values()) and all(row['finite'].values())

@@ -50,7 +50,7 @@
       3,
       4
     ],
-    "backward": "norm K128 fixed two64 cadd; gate fixed32-BT partials and ordered compensated merge, no atomics; beta differentiates FP32 prepared sigmoid; gradients retain raw dtype"
+    "backward": "Norm preserves forward FP32 square-sum overflow as zero; compensated scaled derivative otherwise. Gate fixed32-BT partials of512 FP32 components, fixed two-component tree and ascending merge without atomics. Beta uses raw analytic derivative except actual saved sigmoid0/1 giveszero (D-PM-55). Gradients retain raw dtype."
   },
   "dependencies": {
     "python": ">=3.10",
@@ -441,12 +441,19 @@
     "source_emission": "passed",
     "vendor_compile": "passed",
     "board": "failed",
-    "sim": "untested",
-    "pipesim": "untested",
+    "sim": "passed",
+    "pipesim": "passed",
     "task_validation_complete": false,
     "source_emission_note": "16 dtype-specialized entries, static CCE emission only; no execution inference",
     "vendor_compile_note": "All50 vendors including all9 inherited backward entries compiled in each independent bd1..4 process.",
-    "board_note": "First full B1/T4096/H=HV32 BF16 training, bd4: end-to-end and audit pass; isolated norm q/k elementwise errors exceed frozen limit. Candidate remains unqualified.",
-    "receipt": "evidence/backward/native-v1/full-v1-bd4/full.json"
+    "board_note": "Current full-v6 Kimi bd1..4 pass and seven located grid regressions pass, but boundaries-v1 retains gate range NaN/nonfinite differences and beta saturation/dual-reference conflicts; final grid still running. Task remains unqualified.",
+    "receipt": "evidence/backward/compensated-gate-v1/summary.json",
+    "status": "in_progress",
+    "full_workload": "passed_bd1_bd2_bd3_bd4_current_candidate",
+    "final_grid": "running; earlier source had54 failed cases per bd, seven located regressions nowpass",
+    "endpoint_semantics": "D-PM-55 implemented; norm22nativepass; gate/beta range still under verification",
+    "models": "12 reduced sim/pipesim configurations pass after full native workload",
+    "preparation_order": "explicit prepare and inference then training nativepass; no manualprecompile in these checks",
+    "performance": "pending native synchronized measurement"
   }
 }
