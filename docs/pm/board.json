@@ -510,7 +510,7 @@
       "wave": "W0",
       "soc": "a5",
       "priority": "P0",
-      "status": "assigned",
+      "status": "in_progress",
       "model": [],
       "kernel": [],
       "dtype": [
@@ -555,6 +555,10 @@
         {
           "at": "2026-09-21T02:12",
           "summary": "APPLY（02:07Z，自述，#108；新账号 joshjms，agent「Claude Opus 5 (Claude Code)」，a5，CANN 9.3.0 / torch 2.7.1 / 算子包含 ascend950，两张卡只用自己的一张；ascriptor 90cfcdc / b3b3f9c，fla 0.5.2，fork joshjms/ascend_fla_dev，异步可用）；已读 FMT-01.md 与 bf16-kernel-side.md，写集只碰 benchmarks/host_op_audit.py、tests/test_host_op_audit.py、docs/research/host_op_audit.md、benchmarks/evidence/host_op_audit/**，reserved_paths 下的入口只跑不改、结果标「仓主轨道」，不改 ops / kernel 源码；自述先在 a5 上跑通了 tests/test_kda_fwd_npu.py（4 passed in 1058.40s）以证明真机链路可用。PM 处理：无人持有、P0、无依赖、写集与 BF-05 / BF-08 / 保留路径都不相交、A5 是本仓当前波次、申领人的 D-PM-34 真机条件自述可落实——直接派（分配给新账号不需要问用户；「新账号第一次合入要用户明确同意」是合入时的事，届时我把审查结论与关键数字发给用户）。派单前补了规格「2026-09-21 更新」一节：09-19 之后 main 合入了 FMT-02 / BF-02 / BF-03 / BF-04 / BF-06 / BF-07，规格里的「已知违规」大半已不在——阳性对照改用仍在的（D-PM-42 存量例外、KDA 训练 raw-flag 前处理、GDN-2 BF16 加宽），阴性对照与入口清单、被审计提交与文件哈希、与已合入任务自带审计驱动的交叉核对、环境差异（CANN 9.3.0 / torch 2.7.1）都写明。"
+        },
+        {
+          "at": "2026-09-21T02:16",
+          "summary": "ACK（02:15Z，自述，#108，joshjms）：读了 AGENTS / handoff / PROTOCOL（§3 / §4 / §5）/ START / bf16-kernel-side / FMT-01.md（含 2026-09-21 更新）；分支 task/FMT-01，基线 8e5da4c（= 派单时的 main 头，对得上）；ETA 12h（≤ 16h 时限）。计划：(1) benchmarks/host_op_audit.py——TorchDispatchMode 记录入口内每个 aten / npu_* 调用（算子、dtype、形状、是否连续、是否新 storage、栈回溯到 ascend_fla/** 的 文件:行），按显式分类表分为 分配 / 元数据 view / 校验 / 禁止-dtype / 禁止-格式 / 禁止-算术 / 桥内 launch，一条命令重跑，输出 JSON + 人读表，每份自带环境行、被审计源文件 sha256 与 main 提交；(2) tests/test_host_op_audit.py（纯 CPU）：分类表正反例、新 storage vs 元数据 view 的判定、脱敏与 JSON 可解析性检查；(3) A5 真机（自己的 venv、只用自己的卡）：按 09-21 更新的入口 × dtype 路径各跑一份，原始 JSON + 未过滤日志进 benchmarks/evidence/host_op_audit/；(4) 与 kda_prep/native_audit.py 等既有只读审计驱动交叉核对，不一致逐条解释；阳性 / 阴性对照按更新那节的清单核对，不为对上期望改分类表；(5) docs/research/host_op_audit.md：汇总在前、明细分目录，逐条标环境（CANN 9.3.0 / torch 2.7.1）与「仓主轨道」，附改正任务拆分建议。PM 核对：与规格及派单要求逐项对得上，不需要回复。留意点（评审时核，不用现在回）：「校验」类要与「允许」类分开列（D-PM-42 的只读校验是暂列、不是合规）；一份追踪里 host 侧 D-PM-42 存量例外应按文件:行逐条列出而不是合并成一个数。"
         }
       ],
       "result": null,
