@@ -1,0 +1,47 @@
+=== device === {"name": "Ascend910B3", "total_memory": 65452113920, "cube_core_num": 20, "vector_core_num": 40, "device_name": "Ascend910B3"}
+=== version.info (raw) ===
+  [compiler] Version=9.2.0-beta.1
+version_dir=cann
+required_package_runtime_version="9.2"
+required_package_ge-executor_version="9.2"
+required_package_metadef_version="9.2"
+required_package_bisheng-compiler_version="9.2"
+required_package_tbe-tik_version="9.2"
+timestamp=20260805_224858134  sha256=7e0dd345db96
+  [opp] Version=9.2.0-beta.1
+version_dir=cann
+required_package_runtime_version=">=8.5"
+required_package_ge-executor_version=">=8.5"
+required_package_metadef_version=">=8.5"
+required_package_asc-devkit_version=">=8.5"
+required_package_bisheng-compiler_version=">=8.5"
+timestamp=20260805_224858134  sha256=eb4e5cb971cd
+  [opp built-in kernel dir] count=5 sample=['ascend910_93', 'ascend910b', 'config', 'scene.info', 'version.info']
+=== 1/x for subnormal x (fp32) ===
+   1/1.18e-38 = 8.474576894043213e+37  inf=False
+   1/6.05e-39 = 1.6528926599990289e+38  inf=False
+   1/3e-39 = 3.3333324830735454e+38  inf=False
+   1/2.23e-39 = inf  inf=True
+   1/1.5e-39 = inf  inf=True
+   1/1e-40 = inf  inf=True
+=== torch_npu op support (fp32 / bf16) ===
+  silu (short-conv act)                  f32=ok  bf16=ok
+  sigmoid (gate)                         f32=ok  bf16=ok
+  softplus (gate)                        f32=ok  bf16=ok
+  l2_normalize (q/k)                     f32=ok  bf16=ok
+  cumsum (gate decay)                    f32=ok  bf16=ok
+  conv1d depthwise (short conv)          f32=ok  bf16=ok
+  sdpa (full attn)                       f32=ok  bf16=ok
+  softmax (attn/router)                  f32=ok  bf16=ok
+  topk (MoE router)                      f32=ok  bf16=ok
+  bmm (MoE experts / GEMM)               f32=ok  bf16=ok
+  layer_norm                             f32=ok  bf16=ok
+  rms_norm (block/FusedRMSNormGated)     f32=ok  bf16=ok
+  embedding                              f32=ok  bf16=ok
+=== fp32_exp: underflow->0 at x=-104, overflow->inf at x=89 ===
+   -87.3:1.2192433092680476e-38  -88:6.054602886494416e-39  -88.7:3.006635794144578e-39  -89:2.2273639090442967e-39  88.7:3.325976864406685e+38  89:inf
+=== bf16_exp: underflow->0 at x=-95, overflow->inf at x=89 ===
+   -87.3:1.0010069081221042e-38  -88:6.06114274642742e-39  -88.7:3.6734198463196485e-39  -89:2.204051907791789e-39  88.7:2.7249173913590775e+38  89:inf
+=== ascriptor a2 cce exp: underflow->0 at x=-104, overflow->inf at x=89 ===
+   -87.3:1.2192433092680476e-38  -88:6.054602886494416e-39  -89:2.2273639090442967e-39  88.7:3.325976864406685e+38  89:inf
+wrote benchmarks/a2/evidence/gdn_abi/probe.json

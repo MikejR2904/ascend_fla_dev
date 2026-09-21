@@ -1,0 +1,200 @@
+{
+  "env": {
+    "python": "3.11.15",
+    "torch": "2.10.0+cpu",
+    "torch_npu": "2.10.0.post2",
+    "uname": "Linux-5.15.0-91-generic-aarch64-with-glibc2.35",
+    "ascend_compute_unit": "",
+    "soc": "a2",
+    "cann_version_info": {
+      "compiler": {
+        "file": "compiler/version.info",
+        "raw": "Version=9.2.0-beta.1\nversion_dir=cann\nrequired_package_runtime_version=\"9.2\"\nrequired_package_ge-executor_version=\"9.2\"\nrequired_package_metadef_version=\"9.2\"\nrequired_package_bisheng-compiler_version=\"9.2\"\nrequired_package_tbe-tik_version=\"9.2\"\ntimestamp=20260805_224858134",
+        "sha256": "7e0dd345db96d47d1e5d9ecd2434a3f63451c2a2c4259ac6ec176de1f1f2981f"
+      },
+      "opp": {
+        "file": "opp/version.info",
+        "raw": "Version=9.2.0-beta.1\nversion_dir=cann\nrequired_package_runtime_version=\">=8.5\"\nrequired_package_ge-executor_version=\">=8.5\"\nrequired_package_metadef_version=\">=8.5\"\nrequired_package_asc-devkit_version=\">=8.5\"\nrequired_package_bisheng-compiler_version=\">=8.5\"\ntimestamp=20260805_224858134",
+        "sha256": "eb4e5cb971cd59c53305fb3a64b1ca91cd60fdd9d459b47d8c2546cc7bf120e7"
+      },
+      "opp_builtin_kernel_dir": {
+        "tail": "opp/built-in/op_impl/ai_core/tbe/kernel",
+        "count": 5,
+        "sample": [
+          "ascend910_93",
+          "ascend910b",
+          "config",
+          "scene.info",
+          "version.info"
+        ]
+      }
+    },
+    "device_props": {
+      "name": "Ascend910B3",
+      "total_memory": 65452113920,
+      "cube_core_num": 20,
+      "vector_core_num": 40,
+      "device_name": "Ascend910B3"
+    },
+    "note": "A2 numbers are observation records until A2-11 (AGENTS.md §6 / D-PM-30)."
+  },
+  "torch_op_support": {
+    "silu (short-conv act)": {
+      "float32": "ok",
+      "bfloat16": "ok"
+    },
+    "sigmoid (gate)": {
+      "float32": "ok",
+      "bfloat16": "ok"
+    },
+    "softplus (gate)": {
+      "float32": "ok",
+      "bfloat16": "ok"
+    },
+    "l2_normalize (q/k)": {
+      "float32": "ok",
+      "bfloat16": "ok"
+    },
+    "cumsum (gate decay)": {
+      "float32": "ok",
+      "bfloat16": "ok"
+    },
+    "conv1d depthwise (short conv)": {
+      "float32": "ok",
+      "bfloat16": "ok"
+    },
+    "sdpa (full attn)": {
+      "float32": "ok",
+      "bfloat16": "ok"
+    },
+    "softmax (attn/router)": {
+      "float32": "ok",
+      "bfloat16": "ok"
+    },
+    "topk (MoE router)": {
+      "float32": "ok",
+      "bfloat16": "ok"
+    },
+    "bmm (MoE experts / GEMM)": {
+      "float32": "ok",
+      "bfloat16": "ok"
+    },
+    "layer_norm": {
+      "float32": "ok",
+      "bfloat16": "ok"
+    },
+    "rms_norm (block/FusedRMSNormGated)": {
+      "float32": "ok",
+      "bfloat16": "ok"
+    },
+    "embedding": {
+      "float32": "ok",
+      "bfloat16": "ok"
+    }
+  },
+  "fp32_exp": {
+    "values": {
+      "-80": 1.8048513285848406e-35,
+      "-85": 1.2160992719555806e-37,
+      "-87": 1.6458114537543937e-38,
+      "-87.3": 1.2192433092680476e-38,
+      "-88": 6.054602886494416e-39,
+      "-88.7": 3.006635794144578e-39,
+      "-89": 2.2273639090442967e-39,
+      "-95": 5.521115949439779e-42,
+      "-100": 3.783505853677006e-44,
+      "-103": 1.401298464324817e-45,
+      "-104": 0.0,
+      "-110": 0.0,
+      "80": 5.540622484676759e+34,
+      "85": 8.223012393018281e+36,
+      "87": 6.076030347399616e+37,
+      "88": 1.6516362661361307e+38,
+      "88.7": 3.325976864406685e+38,
+      "89": Infinity,
+      "90": Infinity,
+      "100": Infinity
+    },
+    "first_underflow_to_zero_at": -104,
+    "first_overflow_to_inf_at": 89
+  },
+  "bf16_exp": {
+    "values": {
+      "-80": 1.8055593228630336e-35,
+      "-85": 1.2195753889781233e-37,
+      "-87": 1.6438553812280427e-38,
+      "-87.3": 1.0010069081221042e-38,
+      "-88": 6.06114274642742e-39,
+      "-88.7": 3.6734198463196485e-39,
+      "-89": 2.204051907791789e-39,
+      "-95": 0.0,
+      "-100": 0.0,
+      "-103": 0.0,
+      "-104": 0.0,
+      "-110": 0.0,
+      "80": 5.549267267559097e+34,
+      "85": 8.224598223919167e+36,
+      "87": 6.08121808071599e+37,
+      "88": 1.6548888547522203e+38,
+      "88.7": 2.7249173913590775e+38,
+      "89": Infinity,
+      "90": Infinity,
+      "100": Infinity
+    },
+    "first_underflow_to_zero_at": -95,
+    "first_overflow_to_inf_at": 89
+  },
+  "fp32_reciprocal_subnormal": {
+    "1.18e-38": {
+      "recip": 8.474576894043213e+37,
+      "is_inf": false
+    },
+    "6.05e-39": {
+      "recip": 1.6528926599990289e+38,
+      "is_inf": false
+    },
+    "3e-39": {
+      "recip": 3.3333324830735454e+38,
+      "is_inf": false
+    },
+    "2.23e-39": {
+      "recip": Infinity,
+      "is_inf": true
+    },
+    "1.5e-39": {
+      "recip": Infinity,
+      "is_inf": true
+    },
+    "1e-40": {
+      "recip": Infinity,
+      "is_inf": true
+    }
+  },
+  "ascriptor_fp32_exp": {
+    "values": {
+      "-80": 1.8048513285848406e-35,
+      "-85": 1.2160992719555806e-37,
+      "-87": 1.6458114537543937e-38,
+      "-87.3": 1.2192433092680476e-38,
+      "-88": 6.054602886494416e-39,
+      "-88.7": 3.006635794144578e-39,
+      "-89": 2.2273639090442967e-39,
+      "-95": 5.521115949439779e-42,
+      "-100": 3.783505853677006e-44,
+      "-103": 1.401298464324817e-45,
+      "-104": 0.0,
+      "-110": 0.0,
+      "80": 5.540622484676759e+34,
+      "85": 8.223012393018281e+36,
+      "87": 6.076030347399616e+37,
+      "88": 1.6516362661361307e+38,
+      "88.7": 3.325976864406685e+38,
+      "89": Infinity,
+      "90": Infinity,
+      "100": Infinity
+    },
+    "first_underflow_to_zero_at": -104,
+    "first_overflow_to_inf_at": 89,
+    "path": "ascriptor a2 cce vector exp"
+  }
+}
