@@ -1193,6 +1193,10 @@
         {
           "at": "2026-09-21T09:22",
           "summary": "非协议消息（08:46Z，#104，首行 `[FLA-PM] STATUS BF-05 correction-not-a-deadlock from=…` 多了一个词 → 解析器判首行格式不对，没有记成 STATUS；内容按数据读）：撤回上一条里「BF16 改写引入 SimDeadlock」的定性——`SimDeadlock` 来自模拟器 `join(timeout)` 后线程仍存活，不是信用配平被打破，报错里「lanes still blocked:」后没有列出任何 lane 正是「没有东西在阻塞」的信号；定位表（每步一个变量）：FP32 原单元通过；varC（FP32 + 两个未调用的 @vf + 未用的 BF16 tile）通过；varA（只有输入转 BF16）与 varB（只有输出转 BF16）各自报 SimDeadlock；完整 BF16 换线程模型仍报；完整 BF16 只把 `--timeout` 放大到 3600 通过——代码一字未改；BF16 在模拟器里更慢：A5 上加宽 / 收窄只能走 @vf，逐 token 循环里每 token 多 3 次 widen_row + 1 次 narrow_row，`t64_h16_real` 最明显（CPU 模拟器墙钟，**不是真机结论**）；现状：`t64_h16_real` 在 `--timeout 3600` 下整链通过（含全部 stage checkpoint）、12 个 case 全量 sim 用 `--timeout 7200` 重跑中；单元代码没因此改过一行。**仍没有任何真机数字**（D-PM-34 要真机）。PM 已回复（非协议）：头必须恰好是 `[FLA-PM] STATUS BF-05 from=limjiunnbin`；请发合规 STATUS 写清到第一批 A5 真机数字的现实 ETA 与预计超时量；预计超出 ≥25% 发 RISK timebox-slip，>50% PM 请示用户。时限约 15:30Z 到期，PM 在到期前再看一次。"
+        },
+        {
+          "at": "2026-09-21T15:37",
+          "summary": "PM PING（15:36Z，#104）：BF-05 的 24h 时限在 15:36Z 到期（ASSIGN 15:36Z 起算），PM 09:20Z 请申领人发合规 STATUS 写到第一批 A5 真机数字的 ETA 与预计超时量，6h 没有回应（08:46Z 那条首行多一个词、按数据记、不算 STATUS；最后一条合规 STATUS 是 01:11Z）。已发 PING：请发首行恰好是 `[FLA-PM] STATUS BF-05 from=limjiunnbin` 的 STATUS，写当前头 / 校准、派生单元、模拟器、真机各到哪一步 / 到第一批真机数字的 ETA；预计超出时限 ≥ 25% 另发 RISK timebox-slip、> 50% PM 请示用户（判的是预计超出、不是已用时间）。说明这是催问、不是收回（收回是 48h 无 STATUS 之后再等 24h）；没有真机数字之前仍 in_progress。目前没有任何预计值，所以还不到「预计超出 > 50% 上报用户」；下一轮起若仍无回应，按 48h 心跳再走。"
         }
       ],
       "result": null,
