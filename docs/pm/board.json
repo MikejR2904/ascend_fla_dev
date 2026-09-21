@@ -4725,7 +4725,7 @@
       },
       "spec": "docs/pm/tasks/BF-08.md",
       "issue": 117,
-      "pr": null,
+      "pr": 122,
       "assignee": "limjiunnbin",
       "assignee_caps": {
         "agent": "Codex，持续 KDA / PKDA 任务（自述）",
@@ -4765,6 +4765,10 @@
         {
           "at": "2026-09-21T01:31",
           "summary": "RISK write-set-expansion（01:25Z，自述，#117）：BF-07 新增的 tests/test_kda_prep_kernel.py::test_training_graph_selection_and_no_grad（第 107 行；training_leaf 八类 × enabled 两种 = 16 例）monkeypatch autograd._prepare_inputs 并断言启用梯度时 seen == ['training_host']——这正是 BF-07 登记的训练存量例外的观察点，BF-08 消除该路径后必然失败；申请只改这一个函数的函数体，参数化与其它顶层节点一字不改，观察点换成新的训练前处理 ABI（函数内局部 CPU 替身），保留八类 leaf / grad-enabled 与 no_grad / parameter-only / 推理分流覆盖并明确断言旧 host 前处理未被调用，不加生产 CPU 旁路、不删 / 跳过 / 放宽；已批准的 test_kda_domain_checks.py 两个函数仍按原规则，此函数待 PM 确认后才动。PM 处理：核实属实（在 main 上读了函数与全部对旧 host 训练路径的引用：其余只有 test_kda_domain_checks 的两个已批准函数与直接调用 _prepare_inputs 的对照，后者要求 chunk._prepare_inputs 保留）；**事先批准**这一个函数（PM 事先批准的 write-set-expansion，不需要问用户），条件写进规格「现有测试」：只改函数体、AST 逐节点核其余不变、保留全部覆盖并明确断言旧 host 未被调用、局部替身、不加生产 CPU 旁路、chunk._prepare_inputs 必须保留、做入口换回 base 的负对照；清单外若还有被牵连的既有测试（举例 test_disabled_gate_parameters_do_not_select_training）先 RISK。板上 write_set 补入 tests/test_kda_domain_checks.py（两个已批准函数）与 tests/test_kda_prep_kernel.py（这一个函数）。"
+        },
+        {
+          "at": "2026-09-21T02:03",
+          "summary": "STATUS（01:46Z，自述，#117）+ draft PR #122（01:49Z，头 f907a54，1 个提交，13 个文件 +16,070 行）：首个提交（校准与预算冻结，先于任何 kernel）——144 条原始输出记录、28 组逐 dtype / 输出预算、228 个损坏输出对照全部被拒绝（其中 28 个接近固定 L2 边界，L2 / 限值 1.0026–1.6384；BF16 norm 漏一个 dot 元素 1.5652 倍）；28 组解析 FP64 导数对独立 FP64 autograd 相对 L2 < 1e-12；已采纳 D-PM-54；已接收 test_kda_prep_kernel 一个函数体的事先批准（chunk._prepare_inputs 保留、训练 raw 路径不调用）；标准库 checker 从 Git 内原始 JSON 复算；新增证据约 0.55 MB、无大 blob。观察（自述）：gy=x 的近零导数（BF16 旧 host 对 FP64 relL2 = 10.926449904724377；FP32 raw 配 BF16 gy 为 5.5010933221446365e-5）——没有用来放宽常规地板、也不归入新端点例外，候选仍按冻结预算测。下一步：16 个新 vendor 的反向 kernel 与训练 ABI 接线（固定 32 行 stage1、GM partials、固定顺序 stage2，无原子），首次候选执行 = 完整 Kimi B1/T4096/H32 全 flags 训练，所有 vendor 首次 custom launch 前编完、每 bd 独立进程；不提交 DONE，尚无编译 / 真机 / 模拟通过结论。PM 核对（首提交，NPU-free，从 Git 内原始 JSON 独立复算，脚本 tmp/review/recompute_bf08_freeze.py / recompute_bf08_controls.py）：① 13 个文件全在写集内，只有这一个提交（先于任何 kernel），最大 blob 248 KB，隐私 0 命中，PR 描述干净；② 冻结预算——144 条记录 / 28 组逐组重算（F = 普通校准人口的最大 relL2；L2 限值 = min(0.01, 3F)；逐元素限值 = 3 × 最大逐元素相对误差；ULP 政策），与 backward_budgets.json 及文档表 28/28 一致，三份校准 JSON 的 sha256 与预算文件里记的相同，零参考处无非零、无非有限；③ D-PM-54 的落实——BF16 输出里只有 norm:bf16:dx 的普通校准里旧 host 对正确舍入超过 1 ULP（7 个元素、最大 3）→ report-only；其余 13 个 BF16 输出组（beta / gate 的 dg、dA_log、ddt_bias）旧 host 最大 ≤ 1 ULP、超 1 ULP 元素为 0 → 保留「对两个对象各 ≤ 1 ULP」；14 个 FP32 输出组不设 ULP 线（旧 host 对 FP64 最大 ULP 到 619,320 量级，与 BF-07 的 FP32 口径同）；④ 检测力——228 个对照（168 个 zero / negated / ×1.25 + 60 个结构性）全部 L2 / 限值 > 1，168 个对自己的 3F 线最小 41.8 倍；结构性对照最紧的是 BF16 norm 漏一个 dot 元素 1.5652 倍，其余 ≥ 17.3 倍；28 个「刚好高于限值」是按限值构造的边界对照（1.0026–1.6384），只证明判定逻辑在边界上正确、不证明实际误差的检出力，检出力看结构性那 60 个；⑤ 基线 baseline_backward/{chunk,autograd}.py 与 6c42dc6 逐字节相同（c79a199d… / 78b96d6b…），calibrate / controls / metric 三个驱动的哈希与提交文件一致；7 个 > 1 ULP 位置的完整 128 元素输入 / 灵敏度行、项值、条件数（首个 1.69e5）齐全，BF16 位（46025/46022、45872/45875、45988/45985 …）与 PM 早先复现一致；⑥ 申领人自带的 check_backward_freeze.py 在 NPU-free 环境跑出 passed（144 / 28 / 228 / 28 / 28）。结论：校准与预算冻结通过，可以继续编码；这不是任何 kernel 结论。给申领人的两点提醒（已在 #117 回复）：gy=x 这类输入对任何 FP32 公式都会超冻结预算，第一次原生运行里出现时立即 RISK（带四列数据与必要下界论证），不自己定类、不等 DONE，PM 转用户；保留 1 ULP 双线的那 13 组若在验证人口上出现旧 host 对 FP64 超 1 ULP 的元素，先 RISK（三方 BF16 位 + 灵敏度 / 相消条件数），不悄悄改归属。"
         }
       ],
       "result": null,
