@@ -524,7 +524,7 @@
       "wave": "W0",
       "soc": "a5",
       "priority": "P0",
-      "status": "in_progress",
+      "status": "rework",
       "model": [],
       "kernel": [],
       "dtype": [
@@ -545,7 +545,7 @@
       },
       "spec": "docs/pm/tasks/FMT-01.md",
       "issue": 108,
-      "pr": null,
+      "pr": 124,
       "assignee": "joshjms",
       "assignee_caps": {
         "agent": "Claude Opus 5 (Claude Code)（自述）",
@@ -557,7 +557,7 @@
         "fla": "0.5.2（本地主机侧，自述）",
         "fork": "joshjms/ascend_fla_dev",
         "availability": "异步",
-        "note": "新账号，首次申领；自述已先在该 a5 上验证真机链路（tests/test_kda_fwd_npu.py 4 passed in 1058.40s，首次含 kernel 编译）。首次合入需用户明确同意（PROTOCOL §5 第 5 条）。"
+        "note": "（PM 更正 2026-09-21T07:16Z）joshjms **不是新账号**：D-PM-15（用户）已批准其首次合入、A2-04（PR #60）已合入、A2-40（PR #85）已 done——PM 派单时没查看板历史，把它记成「新账号、首次合入要用户同意」是错的，本任务合入不需要那条；APPLY 时自述已先在该 a5 上跑通 tests/test_kda_fwd_npu.py（4 passed in 1058.40s）。"
       },
       "branch": "task/FMT-01",
       "timebox_h": 16,
@@ -581,6 +581,10 @@
         {
           "at": "2026-09-21T04:59",
           "summary": "PR #124 已开（04:44Z，joshjms，头 3f3ef5f2，非 draft），但还没有 DONE 消息；PM 等 DONE 后再按外部账号顺序审：先读完整 diff（不执行）→ 核写集 → 才在临时 clone 里跑。"
+        },
+        {
+          "at": "2026-09-21T07:16",
+          "summary": "DONE（06:52Z，自述，#108，PR #124，提交 3d014bb；随后 06:54Z 的 STATUS 更新头到 0c8da9bf，只改 docs/research/host_op_audit.md 两处措辞）：工具 benchmarks/host_op_audit.py（TorchDispatchMode，显式分类表、拷贝按 storage 判、只读校验按调用点认、一个 case 一个进程；`--list` / `--self-check` / `--case` / `--all`）；CPU 单测 25 passed、self-check 11 / 11；A5 真机（Ascend950PR_9589、CANN toolkit 9.3.0 + 子包 version.info 9.2.0 都记并带 sha256、opp 目录 ascend910_93 / ascend910b / ascend950 / config、torch 2.7.1 / torch_npu 2.7.1.post4、被审计提交 8e5da4c）19 个 case 各一份 JSON + 未过滤 console.log（只把绝对路径换成占位符）+ 一份在上一个 library pin（627f55f）上的 upstream_impl 补测；清单：clean——KDA 推理（raw 关 / 开）、KDA decode、GDN 与 GDN 反向、PGDN、PKDA BF16、GDN-2 FP32；违规——`_scan_states`（cast 8 / 算术 10 / stack 2）、chunk_kda_bwd:286 的 dw 取负、raw-flag 训练前处理（算术 55 / cast 18）+ 引擎侧反向、GDN-2 BF16 加宽（:111 ×3、:128 ×1）、**PKDA FP32 报 6 次算术（pkda_chunk_fwd.py:126 的 ref.reference.validate_inputs）——与规格预期不符，如实列出**；log2(eg) 只在 impl = \"upstream\" 上走（chunk.py:551–563 / 784–787），当前 pin 编译不过（已登记条目）、在 627f55f 上补测命中 1 次；与 kda_prep/native_audit.py 交叉核对逐算子无差异（训练 case 差 3 次 detach 是两个 dispatch mode 叠加的产物）；没有改任何入口 / kernel 源码。PM 评审（外部账号顺序：先读完整 diff、不执行 → 核写集 → 才在临时 clone 里跑）：① PR 27 个文件（+15,638）全在写集四个路径内、无写集外文件、无二进制、最大 blob 260 KB；隐私扫描 0 命中（IPv4 / uuid / 令牌 / 账号 0；一处绝对路径是单测里用来测脱敏的合成字符串）；② 我从 19 + 1 份原始 JSON 的 rows 逐个重算各类别调用数与判定——与 DONE 的表、文档 §0 的表逐格一致；每份 JSON 的 audited_sources_sha256（共 23 个）与 8e5da4c 的 blob 逐个对上（0 不符）、audited_commit 都是 8e5da4c；环境行齐全；③ scratch merge（PR 合到当前 main，NPU-free）：`tests/test_host_op_audit.py` 25 passed、`--self-check` 11 / 11、`--list` 19 个 case、全量 NPU-free 1057 passed / 12 skipped，与预测一致（base 1032 + 25 个新测试）；④ 我读了工具全文与文档：分类表显式、未列出的落 unclassified 不猜、拷贝按新 storage 判、autograd 引擎单列，设计很扎实，报告如实（PKDA FP32 不符预期没有调分类表）。**仍要改（REVIEW rework，小而明确）**：① **源码身份不符**——每份回执的 audit_tool_sha256 = 7bf19644d683a6cb…，而 PR 头里 benchmarks/host_op_audit.py 的 sha256 = 6c4ff8db6ed40337…；证据不是提交的这个工具跑出来的（DONE 说工具未动，但哈希对不上）。要么用提交的工具在 8e5da4c 上重跑 19 个 case + 627f55f 补测并替换证据，要么给出两版工具的 diff 并证明差异不在被执行的路径上（建议重跑，便宜）；② 文档 §2 写「24 passed」，实际 25；③ PKDA FP32 的 6 次算术是 D-PM-42 意义下的**只读校验**（域判定，产出不进入计算），只是写在未登记的函数里——请在摘要与表里把它单列成「未登记的只读校验（新发现）」，别与 D-PM-37 的 dtype / 格式 / 算术违规混成一类（六处违规变成五处违规 + 一处未登记只读校验），建议 A 保留但标 P2；④ CHECK_SITE_FUNCTIONS 按调用点把名单内函数里的违规类算子改判为只读校验，名字里有泛名（如 `_check`、`_constant`）——文档里补一张「每个 case 被改判为只读校验的算子清单（函数、算子、次数）」并逐个名字写理由，让读者能审这条机制。另：你的环境里全量 3 failed 是 test_pkda_chunk_fwd_bf16::test_fixed_output_operand_budget（自述在 main 的干净副本上同样失败、与本 PR 无关）——PM 的 NPU-free 环境不复现，不算本 PR 的事。**PM 更正**：我派单时把 joshjms 说成新账号、「第一次合入要用户同意」——错了，D-PM-15 用户已批准其首合、A2-04 / A2-40 都已完成；本任务按 D-PM-33 由 PM 评审通过后自行合入，不需要问用户。"
         }
       ],
       "result": null,

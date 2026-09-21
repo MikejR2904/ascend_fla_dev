@@ -11,6 +11,10 @@
 
 ### 正在飞的任务（现在没有；A5K-02、PK-02、PK-03 都已于 2026-09-19 合入）
 
+> **2026-09-21T07:16Z 更新：FMT-01 交了 DONE（PR #124）→ PM 评审 rework（源码身份不符等四处小的）；**更正：joshjms 不是新账号**。**
+> - **FMT-01**：工具 + 19 个 case 的真机清单质量很高——我从原始 JSON 重算各类别调用数与文档 / DONE 的表逐格一致、audited_sources_sha256（23 个）与 8e5da4c 逐个对上、隐私 0 命中、scratch merge 后工具单测 25 passed。唯一硬伤：**回执里的 audit_tool_sha256（7bf19644…）与提交的工具（6c4ff8db…）对不上**——要重跑或证明差异不影响。另三处小的：文档写 24 passed（实 25）、PKDA FP32 的 6 次算术是未登记的只读校验（D-PM-42 意义下）不该与违规混成一类、CHECK_SITE_FUNCTIONS 改判的算子要列清单。清单结论：clean——KDA 推理 / decode、GDN / GDN 反向、PGDN、PKDA BF16、GDN-2 FP32；违规——`_scan_states` / dw 取负 / raw-flag 训练前处理 + 引擎反向 / GDN-2 BF16 加宽；log2(eg) 只在 `impl="upstream"` 上走。
+> - **更正**：我 02:12Z 起把 joshjms 记成「新账号、首次合入要用户同意」——错了：D-PM-15（用户）已批准其首合，A2-04（PR #60）已合入、A2-40 已 done。我派单时没查看板历史。FMT-01 按 D-PM-33 由 PM 评审通过后自行合入，不需要问用户；A2-07 的 MikejR2904 才是真新账号。
+>
 > **2026-09-21T06:01Z 更新：BF-08 DONE（PR #122，头 d9280a7）→ PM 评审 accept（技术判据全过）；A2-07 三审 accept（头 b54978b）。两件都等用户授权合入。**
 > - **BF-08**：PM 从 Git 里的原始文件独立复算——范围 / 隐私 0 命中（1727 blob）、预算先于实现且冻结（f907a54 无 kernel，冻结文件逐字节未变）、最终回执 39 份生产源码哈希与最终树 0 处不同、full-v7 bd1–4 全过（19 个输出哈希跨 bd 全同、端到端六梯度在预算内）、最终网格 7992 行 / 58,320 次公开训练调用全部满足冻结预算（最大 L2 / limit 0.7120、逐元素 0.4146）、host 审计 unexpected = 0、scratch merge NPU-free 全量 **1132 passed / 12 skipped**（= 1032 + 100 新测试）、入口换回 base 的负对照通过。
 > - **要用户看的三件事**：(1) 判据裁定 D-PM-54 / 55 / 56（PM 作出、可推翻）；(2) 端点披露——每 bd 482 个 native flush 输出不是 CPU 通过、30 个 gate A_log = 88 输出记录留作「未资格化观察」（默认公共闸就会拒绝这些输入），contract 的 board 阶段保持 failed；(3) **性能：完整前向 + 反向训练步（含 raw 前处理）慢 11 ×**——T4096 旧 host 37.6 → 425.7 ms、比 torch_npu 基线慢 3.0 ×，一个 gate backward 第一阶段 kernel 就占 375 ms（补偿算术），本任务未优化；**`ascend_fla/layers/kda.py` 的 KDA 层在 chunk 与 decode 上都用这三个 raw flag，所以合入后 KDA 层训练路径受影响**（更正我 04:59Z 那条把它说成「前处理慢 11 ×」）。选项：A 合入 + 立即另立 P0 性能任务（推荐：慢在一个 kernel 上、可局部优化；默认无 flag 路径不受影响）；B 等优化后再合。若优化后仍要满足冻结的精度预算而慢，那时要用户决定是否放宽逐元素判据。
