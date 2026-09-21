@@ -17,6 +17,7 @@
 > - **PM 收窄了自己的规格（两处）**：验收 grep 只管 `ops/kda/**` + `runtime/` + `layers/kda.py`（gdn / pgdn / pkda 不在写集、gdn2 是 reserved）；「单元路径由能力表给」延后到第一个 a2 单元出现（现在是死代码，入口已拦）。写在 `docs/pm/tasks/A2-02.md` 的「二审澄清」。预批写集扩展三项：`tests/test_kda_decode.py::_op_consts` 函数体、`benchmarks/a2/probe_platform.py`、`benchmarks/a2/evidence/platform/**`。
 > - 改完的复核清单：AST 比对只有 `_op_consts` 变；重做 scratch merge，预期 1171 + 新增数 passed / 12 skipped / 0 failed；核 probe 输出的完整哈希。合入按 D-PM-33 由 PM 自行合（MikejR2904 首合已由 D-PM-58 授权；A2-02 的真机读数是环境事实、不是算子结论）。之后 A2-08 直接 DONE，再 A2-10 → A2-11。
 > - BF-05：08:46Z 那条 STATUS 首行多了一个词（`correction-not-a-deadlock`），解析器判为非协议消息；内容（撤回「BF16 改写引入 SimDeadlock」、根因是模拟器 join 超时、12 case 用 `--timeout 7200` 重跑）当数据记在看板。**仍没有真机数字**；时限约 15:30Z 到期，已请其发合规 STATUS 写现实 ETA，到期前我再看一次。
+> - joshjms 09:07Z 在 #28 发了 APPLY（any，A5，手上没有在飞任务；自述不抢 A5K-03 / GD2-02 / A2-08，明说不要把 A2-08 派给他）→ **NO_TASK**：没有合适的可派任务（A5K-03 排在 BF-09 之后派给发现者 session；GD2-02 有 9-17 的在先 APPLY 且 BF-05 未完；A2 线是 MikejR2904 的且要 910B；PK-05 / GDA-04 / PK-06 / GDA-05 是骨架、前置未完；其余 gated）。看板有变化他再 APPLY。
 >
 > **2026-09-21T08:50Z 更新：FMT-01（PR #124）二审 accept 并由 PM 按 D-PM-33 自行合入 → c1379a3；main 全量 1159 passed / 12 skipped（= 1132 + 27）。FMT-01 done。**
 > - 合入的是审过的头 `3ec23db2`（joshjms，不是新账号——D-PM-15 已批准其首合，我早先记错）：22 份回执的 `audit_tool_sha256` 全等于提交的工具、24 个源文件哈希对上 8e5da4c、20 个 case 的计数与上一轮逐格相同、26 次按调用点改判我从 rows 独立重算与文档 §2.1 一致。工具 `benchmarks/host_op_audit.py` 从现在起是各任务 host 算子审计的**统一工具**（`docs/pm/bf16-kernel-side.md` 已指到它，BF-09 规格已加一条验收）。
