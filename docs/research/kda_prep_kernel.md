@@ -15,10 +15,10 @@ entries to CCE. All50 vendors compile at bd1,2,3,4. The complete Kimi T4096 all-
 workload passes at each of bd1,2,3,4. All17 returned outputs, caches and gradients
 are bitwise identical across those four runs. After that hardware
 run, all14 bounded source cases pass sim and pipesim at bd1. Ordinary chunk grids, regression and training checks, fresh scan repeatability, and
-synchronized performance measurements have also completed. All required grid populations have now executed. Remaining nearzero output
-failures and their unresolved acceptance boundary still block BF-07 acceptance. The source/evidence delivery snapshot has
+synchronized performance measurements have also completed. All required grid populations have now executed. D-PM-52 now authorizes disclosure-only treatment of the retained nearzero output
+failures within its bounded class; these are not CPU correctness passes. The source/evidence delivery snapshot has
 completed a separate fresh restoration. Endpoint reachability, high-bd leaf checks and
-metric-comparison reruns have completed. The task and PR remain incomplete.
+metric-comparison reruns have completed. Required BF-07 validation and disclosure are complete for review; final merge authorization remains with the user.
 FP64 is used for preprocessing error studies and reliable norm accumulation; the independent
 and pinned FLA end-to-end KDA goldens remain **Torch CPU FP32**.
 
@@ -149,7 +149,7 @@ In the isolated three-entry base swap, the52 public dtype/routing checks yield
 44 expected failures and8 retained training passes. These are host ABI evidence,
 not numerical kernel validation. All stable/layout kernel sources remain intact.
 
-Remaining completion requires resolution of retained nearzero output failures.
+D-PM-52 resolves the disposition of retained nearzero output failures as disclosure only.
 The source/evidence archive has now passed a separate fresh restore. Completed
 regression, repeatability and timing stages are recorded separately below.
 
@@ -337,7 +337,7 @@ PM5750678047 separately qualifies BF16 slices whose correctly rounded CPU
 golden is entirely zero using at most1ULP from numeric zero; raw relative-L2
 and signed-zero differences remain. This does not cover the wider failures below.
 
-## Complete special-value collection and unresolved nearzero failures
+## Complete special-value collection and retained nearzero failures
 
 Zero, threshold20 and beta-saturation populations pass576 chunk cases per
 block dimension and1152 decode cases per dimension:9216 native cases across
@@ -390,8 +390,8 @@ pass. True numeric zeros are counted separately. The first wider chunk slice,
 bitwise zero;955 CPU values remain nonzero when rounded to BF16, with up to125
 ULP from zero and raw L2=1. Thus it is not the all-rounded-zero class.
 
-Applying the classification to every failed slice also exposes **unqualified
-normal and nonzero-subnormal failures**:
+Applying the classification to every failed slice also exposes **numerically failed
+normal and nonzero-subnormal outputs**, now disclosed under D-PM-52:
 
 - Eight of the16 failing chunk cases contain CPU-normal elements whose subset
   error exceeds0.05. For `nearzero_c3_g8_rbf16_vbf16_flags011`, chunk1/head2,
@@ -443,7 +443,54 @@ oracle/slice comparisons are byte-identical. Neither byte equality nor these
 small predecessor differences establishes CPU correctness. All8 chunk cases
 with failing normal subsets also fail that0.05 check on the predecessor NPU.
 The domain, tolerances and inherited stable kernels remain unchanged. These
-failures await owner/user disposition; the task is not fully accepted.
+numerical failures are retained and disclosed under the user-approved D-PM-52 rule below.
+
+## D-PM-52: approved disclosure, not numerical PASS
+
+[The user approved the PM proposal](https://github.com/ddddwee1/ascend_fla_dev/issues/106#issuecomment-5753209528)
+for the listed nearzero boundary output failures: 16 chunk cases per bd and
+44 decode cases per bd. Each head/chunk slice must have `|golden|max <=
+32 * FP32 minimum normal` (approximately 3.76e-37), checked against **both**
+saved CPU FP32 oracles separately. Candidate and actual predecessor NPU output
+must be byte-identical or differ by at most 1 BF16 ULP for chunk / 4 FP32 ULP
+for decode. These bounds define a disclosure class, not a CPU accuracy pass line.
+
+The hash-verified retained-tensor audit in `native/dpm52-disclosure-scope.json`
+covers **40/40 chunk and 148/148 decode locations**. It includes both reference
+hashes, actual/predecessor hashes, magnitudes, ULP units, all case IDs and the
+corresponding block dimensions. Decode BF16 outputs are losslessly widened for
+FP32 ULP counting; all 48 BF16 oracle/slice comparisons are byte-identical to
+the predecessor. FP32 decode comparisons reach at most 4 ULP. Original metrics,
+normal-subset errors, zero/subnormal classification counts and numerical
+`passed=false` receipts remain untouched. **No regression is not CPU correctness
+PASS.** The necessary-bound proof below is part of this disclosure.
+
+Any failure outside this class remains a failure. Ordinary thresholds
+(1e-5, 0.05 and min(0.01, 3F)), gates 155/105, supported domain, inherited
+kernels and the D-PM-48/50/51 conditions are unchanged. The contract retains
+`board.status=failed` for aggregate numerical results and separately records
+completion of required validation and disclosure. No new device result is
+claimed by this offline classification of the already executed native runs.
+
+Replay the classification from the private tensor backup:
+
+```bash
+python qualify_endpoint_disclosure.py \
+  --tensor-root "$PRIVATE_TENSOR_ROOT" \
+  --tensor-manifest evidence/native/retained-tensor-manifest.json \
+  --case-table evidence/native/remaining-output-failure-table.json \
+  --output dpm52-disclosure-scope.json
+```
+
+Fourteen offline boundary controls reject an over-limit golden from either oracle,
+2 BF16 / 5 FP32 ULP differences, ordinary cases, missing references and nonfinite
+values. See `host/dpm52-class-boundaries.json`; replay with
+`python check_disclosure_scope.py --output class-boundaries.json`.
+
+This permits ready/DONE submission for review, **not merging**. Before merging,
+PM will present the endpoint disposition and the already assigned raw input
+dtype narrowing (BF16/FP32 accepted; FP16/FP64 explicitly rejected) together for
+final user authorization. The BF-08 training host exception remains recorded.
 
 ## Feasibility of the remaining tiny-output comparisons
 
@@ -492,7 +539,7 @@ All798 retained tensor files (5734547148 bytes) have been independently restored
 from a complete private archive and SHA256-verified. The binary archive stays
 outside Git; its receipt is `host/native-tensor-backup-restore.json`.
 [The additional comparison RISK](https://github.com/ddddwee1/ascend_fla_dev/issues/106#issuecomment-5751267005)
-asks the owner to include this feasibility issue in the user decision. No
+was included in the D-PM-52 user decision. No
 reference, limit, dtype, gate or public domain has been changed.
 
 ## Metric implementation verification
@@ -562,8 +609,11 @@ private machine controllers/configuration and raw tensor backups stay external.
 addition publishes that receipt, the source-sync proof and a CSV projection of
 the unchanged failure table; it changes no mathematical artifact or native result.
 
-The remote source/documents were synchronized only after confirming no active
-task compile/run. All473 source files and259 accepted dependencies match their
-manifests; six production mathematical files retain the exact tested bytes.
+The pre-disposition source/documents were synchronized only after confirming no
+active task compile/run. At9b1639e, all474 source files and259 accepted dependencies
+matched their manifests; six production mathematical files retain the exact tested
+bytes. Its metadata addendum restored5348 files (see
+`host/delivery-9b1639e-restore.json`). The final D-PM-52 metadata/disclosure addendum
+is restored separately, with its commit and archive hash reported in DONE.
 The previous source generation remains separately archived. Archive restoration
-and source synchronization do not satisfy the remaining numerical acceptance.
+and source synchronization are separate from numerical correctness and the D-PM-52 disclosure disposition.

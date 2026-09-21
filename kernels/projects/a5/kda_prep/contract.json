@@ -139,6 +139,22 @@
         "Raw and directly prepared public o/state hashes match"
       ],
       "no_ordinary_or_chunk_change": true
+    },
+    "nearzero_output_disclosure": {
+      "decision": "D-PM-52",
+      "owner_comment": "https://github.com/ddddwee1/ascend_fla_dev/issues/106#issuecomment-5753209528",
+      "user_approved": true,
+      "scope": "Listed nearzero boundary output head/chunk slices only; 16 chunk and 44 decode cases per block dimension",
+      "golden_max_limit": "32 * FP32 minimum normal; both retained CPU FP32 oracles checked separately",
+      "predecessor_limit": "Bitwise equality or <=1 BF16 ULP for chunk / <=4 FP32 ULP for decode",
+      "disposition": "Disclosure only, no numerical pass line; no regression is not CPU correctness PASS",
+      "requirements": [
+        "Preserve original relative L2, ULP, classification counts and failure decisions",
+        "All failures outside this class remain failures",
+        "Ordinary thresholds, gates 155/105, domain and inherited kernels unchanged",
+        "Retain D-PM-48/50/51 scopes and requirements"
+      ],
+      "receipt": "evidence/native/dpm52-disclosure-scope.json"
     }
   },
   "cases": [
@@ -378,7 +394,7 @@
       "backend": "cce",
       "stage": "board",
       "status": "failed",
-      "note": "Full B1T4096H=HV32 allflags bd1..4 passes with17 bitwise endpoints;25920 ordinary-grid and9216 zero/threshold/saturation cases pass. D-PM-51 nearzero decode384 cases per each of6bd: all state checks pass unchanged1e-5, but44 output cases per bd remain failed. Chunk has16 output cases per each of4bd, including8 cases with failing CPU-normal subsets. Domain is not fully qualified. See evidence/native/remaining-output-failure-table.json."
+      "note": "Aggregate numerical checks retain failed nearzero outputs: 16 chunk cases per bd and44 decode cases per bd. D-PM-52 accepts disclosure only for all40 chunk/148decode failed locations, not CPU correctness PASS. All ordinary25920/other-boundary9216 cases and full T4096 four-bd17endpoints pass; D-PM-51 all384decode state checks perbd pass1e-5. Required native validation and authorized disclosure are complete; see qualification and evidence."
     },
     {
       "device": "a5",
@@ -406,5 +422,13 @@
         "PM5748898047"
       ]
     }
-  ]
+  ],
+  "qualification": {
+    "task_validation_complete": true,
+    "disposition": "ready_for_review_with_user_approved_endpoint_disclosures",
+    "numerical_domain_fully_passed": false,
+    "board_status_interpretation": "failed preserves original numerical failures; D-PM-52 resolves task disclosure requirement without relabelling them passed",
+    "training_host_exception": "BF-08 pending",
+    "merge_authorized": false
+  }
 }

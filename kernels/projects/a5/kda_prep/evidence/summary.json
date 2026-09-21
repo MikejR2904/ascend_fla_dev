@@ -1,6 +1,6 @@
 {
   "task": "BF-07",
-  "complete": false,
+  "complete": true,
   "first_full_workload": {
     "passed": true,
     "block_dim": 4,
@@ -22,9 +22,7 @@
     "block_dim": 1,
     "after_native": true
   },
-  "pending": [
-    "remaining_output_endpoint_acceptance_owner_user_decision"
-  ],
+  "pending": [],
   "full_native_block_dims": [
     1,
     2,
@@ -49,7 +47,8 @@
     "endpoint_exact_cpu_per_run": 28,
     "endpoint_mismatch_per_run": 52,
     "all_input_and_guards_unchanged": true,
-    "qualified": false
+    "qualified": false,
+    "note": "Historical exact-CPU diagnostic runs v1/v2; current qualification is leaf_v3 below."
   },
   "ordinary_grid": {
     "chunk": {
@@ -132,14 +131,6 @@
     "total_runs": 7,
     "namespace_run_combinations": 14
   },
-  "unresolved": {
-    "risk": "https://github.com/ddddwee1/ascend_fla_dev/issues/106#issuecomment-5750600450",
-    "nonfinite_cross_products": "native/endpoint-v2-bd4/downstream.json",
-    "nearzero_failures": "native/boundary-diagnosis",
-    "nonfinite_comparison_owner": "https://github.com/ddddwee1/ascend_fla_dev/issues/106#issuecomment-5750678047",
-    "nonfinite_comparison_status": "All 48 cross-products classified; 96 actual public-entry observations retained. No numerical pass line; no domain/gate change.",
-    "new_output_risk": "https://github.com/ddddwee1/ascend_fla_dev/issues/106#issuecomment-5750969353"
-  },
   "independent_boundary_grid": {
     "chunk_block_dims": [
       1,
@@ -193,7 +184,7 @@
     "outputs_and_preparation_cross_bd_bitwise": true,
     "failure_locations_and_metrics_cross_bd_equal": true,
     "receipt": "native/nearzero-cross-bd-and-failures.json",
-    "note": "Diagnostic collector exits zero after all cases, while passed remains false. Normal golden elements and nonzero subnormal results contain failures outside the approved zero-only flush class.",
+    "note": "Original collector receipts and their passed=false remain unchanged. D-PM-51 actual-prep state reruns are listed separately; D-PM-52 classifies all remaining output failures as disclosure-only.",
     "D-PM-51": {
       "owner_comment": "https://github.com/ddddwee1/ascend_fla_dev/issues/106#issuecomment-5750986507",
       "user_approved": true,
@@ -260,6 +251,15 @@
         "cases_affected": 44
       },
       "criterion_changed": false
+    },
+    "disposition": {
+      "decision": "D-PM-52",
+      "user_approved": true,
+      "receipt": "native/dpm52-disclosure-scope.json",
+      "disclosed_chunk_locations": 40,
+      "disclosed_decode_locations": 148,
+      "outside_class_failures": 0,
+      "numerical_pass_claim": false
     }
   },
   "delivery_restore": {
@@ -267,7 +267,7 @@
     "passed": true,
     "files": 5341,
     "receipt": "host/delivery-7af5124-restore.json",
-    "note": "Current final addition only publishes restoration/source-sync receipts and a CSV view of unchanged failure data; no mathematical artifact or numerical result changes."
+    "note": "Base snapshot plus documented metadata addenda preserve final qualification sources without changing tested mathematical artifacts."
   },
   "private_native_tensor_backup": {
     "files": 798,
@@ -275,5 +275,17 @@
     "all_restored_sha256_verified": true,
     "receipt": "host/native-tensor-backup-restore.json",
     "manifest": "native/retained-tensor-manifest.json"
+  },
+  "completion_scope": "All required BF-07 stages executed and D-PM-48/50/51/52 disclosure requirements fulfilled; numerical endpoint failures remain, PM review/final user merge authorization pending.",
+  "delivery_status": "ready_for_review",
+  "merge_authorized": false,
+  "retained_failures": {
+    "risk": "https://github.com/ddddwee1/ascend_fla_dev/issues/106#issuecomment-5750600450",
+    "nonfinite_cross_products": "native/endpoint-v2-bd4/downstream.json",
+    "nearzero_failures": "native/boundary-diagnosis",
+    "nonfinite_comparison_owner": "https://github.com/ddddwee1/ascend_fla_dev/issues/106#issuecomment-5750678047",
+    "nonfinite_comparison_status": "All 48 cross-products classified; 96 actual public-entry observations retained. No numerical pass line; no domain/gate change.",
+    "new_output_risk": "https://github.com/ddddwee1/ascend_fla_dev/issues/106#issuecomment-5750969353",
+    "output_disposition": "D-PM-52 user-approved disclosure only, no numerical PASS"
   }
 }

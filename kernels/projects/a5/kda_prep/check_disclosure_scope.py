@@ -1,0 +1,35 @@
+"""Boundary controls for the D-PM-52 disclosure classifier, not device tests."""
+from pathlib import Path
+import argparse,hashlib,importlib.util,json,platform
+import torch
+parser=argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--output',type=Path,required=True)
+args=parser.parse_args()
+source=Path(__file__).with_name('qualify_endpoint_disclosure.py')
+spec=importlib.util.spec_from_file_location('disclosure',source);m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)
+bound=torch.tensor([32*torch.finfo(torch.float32).tiny]);refs={'independent':bound,'fla':bound.clone()};z=torch.zeros(1,dtype=torch.bfloat16);zf=z.float();records=[]
+def check(name,expected,route='chunk',case='nearzero_control',actual=None,old=None,reference=None):
+ r=m.classify(route,case,z if actual is None else actual,z if old is None else old,refs if reference is None else reference)
+ assert r['in_disclosure_class']==expected,(name,r)
+ records.append(dict(name=name,expected_in_disclosure_class=expected,observed=r['in_disclosure_class']))
+check('inclusive_magnitude_boundary',True)
+above=torch.nextafter(bound,torch.full_like(bound,float('inf')))
+check('independent_above_boundary',False,reference={'independent':above,'fla':bound})
+check('fla_above_boundary',False,reference={'independent':bound,'fla':above})
+bf1=torch.tensor([1],dtype=torch.int16).view(torch.bfloat16);bf2=torch.tensor([2],dtype=torch.int16).view(torch.bfloat16)
+check('chunk_one_ULP',True,actual=bf1)
+check('chunk_two_ULP_rejected',False,actual=bf2)
+f4=torch.tensor([4],dtype=torch.int32).view(torch.float32);f5=torch.tensor([5],dtype=torch.int32).view(torch.float32)
+check('decode_four_FP32_ULP',True,route='decode',actual=f4,old=zf)
+check('decode_five_FP32_ULP_rejected',False,route='decode',actual=f5,old=zf)
+check('decode_BF16_step_is_not_one_FP32_ULP',False,route='decode',actual=bf1)
+check('ordinary_case_rejected',False,case='ordinary_control')
+check('unknown_route_rejected',False,route='other')
+check('missing_oracle_rejected',False,reference={'independent':bound})
+check('nonfinite_actual_rejected',False,actual=torch.full_like(z,float('nan')))
+check('non_FP32_golden_rejected',False,reference={'independent':bound.double(),'fla':bound})
+check('signed_zero_preserved_as_observation',True,actual=-z)
+report=dict(passed=True,checks=len(records),records=records,scope='Offline D-PM-52 class-boundary checks, not kernel correctness or new native execution.',classifier_sha256=hashlib.sha256(source.read_bytes()).hexdigest(),environment=dict(python=platform.python_version(),torch=torch.__version__))
+report['checker_sha256']=hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
+args.output.write_text(json.dumps(report,indent=2)+'\n')
+print(json.dumps(dict(passed=True,checks=len(records))))
