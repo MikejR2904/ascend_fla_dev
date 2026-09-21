@@ -2,7 +2,7 @@
   "schema": "ascriptor.kernel-unit/1",
   "id": "a5.kda_prep",
   "kind": "kernel",
-  "description": "Typed raw KDA input preparation for inference and decode; training graph stays on host pending BF-08",
+  "description": "Typed raw KDA preparation and raw-gradient kernels; backward native qualification is tracked separately from BF-07 forward evidence",
   "inputs": {
     "source": {
       "dtype": "case-specific BF16/FP32"
@@ -43,13 +43,14 @@
     "gate": "-exp(A_log)*softplus(g+dt_bias), strict threshold20",
     "beta": "FP32 sigmoid",
     "ownership": "4096-element tiles; gate head x32BT rows; GetVecNum=2bd; single-slot autosync; disjoint outputs",
-    "training_exception": "Original host preparation remains differentiable; BF-08 owns removal",
+    "training_exception": "BF-08 candidate uses native preparation autograd; native acceptance pending",
     "block_dim": [
       1,
       2,
       3,
       4
-    ]
+    ],
+    "backward": "norm K128 fixed two64 cadd; gate fixed32-BT partials and ordered compensated merge, no atomics; beta differentiates FP32 prepared sigmoid; gradients retain raw dtype"
   },
   "dependencies": {
     "python": ">=3.10",
@@ -155,7 +156,9 @@
         "Retain D-PM-48/50/51 scopes and requirements"
       ],
       "receipt": "evidence/native/dpm52-disclosure-scope.json"
-    }
+    },
+    "frozen_backward_budgets": "backward_budgets.json",
+    "backward_rules": "D-PM-54: per-output/dtype frozen3F metrics, cap L2 at.01; BF16 dual1ULP only where pre-kernel ordinary floor never exceeds1ULP. Both-reference ULP distributions and every BF16 >1ULP location required. No new endpoint exemptions."
   },
   "cases": [
     {
@@ -428,7 +431,22 @@
     "disposition": "ready_for_review_with_user_approved_endpoint_disclosures",
     "numerical_domain_fully_passed": false,
     "board_status_interpretation": "failed preserves original numerical failures; D-PM-52 resolves task disclosure requirement without relabelling them passed",
-    "training_host_exception": "BF-08 pending",
-    "merge_authorized": false
+    "training_host_exception": "BF-08 first full BF16 training audit records zero old host preparation operations; other required cases pending.",
+    "merge_authorized": false,
+    "scope": "BF-07 forward only; historical validation does not qualify BF-08 candidate backward"
+  },
+  "backward_qualification": {
+    "task": "BF-08",
+    "calibration": "passed",
+    "source_emission": "passed",
+    "vendor_compile": "passed",
+    "board": "failed",
+    "sim": "untested",
+    "pipesim": "untested",
+    "task_validation_complete": false,
+    "source_emission_note": "16 dtype-specialized entries, static CCE emission only; no execution inference",
+    "vendor_compile_note": "All50 vendors including all9 inherited backward entries compiled in each independent bd1..4 process.",
+    "board_note": "First full B1/T4096/H=HV32 BF16 training, bd4: end-to-end and audit pass; isolated norm q/k elementwise errors exceed frozen limit. Candidate remains unqualified.",
+    "receipt": "evidence/backward/native-v1/full-v1-bd4/full.json"
   }
 }

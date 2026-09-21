@@ -2,9 +2,9 @@
 
 The first five arguments follow FLA's q/k/v/g/beta order. By default they are
 already prepared: normalized q/k, log-decay g, and sigmoid beta. The optional
-``use_*_in_kernel`` flags request FP32 preparation in custom kernels for
-inference. Training retains the differentiable host preparation graph pending
-BF-08; this remains an explicitly audited exception.
+``use_*_in_kernel`` flags request FP32 preparation in custom kernels. Training
+uses custom preparation derivatives, including deterministic gate-parameter
+reductions, and preserves the raw input gradient dtypes.
 
 Chunk mode checks the prepared-input domain by default. This is a heuristic:
 small unnormalized q/k cannot be distinguished from prepared inputs. Opting out
@@ -25,6 +25,8 @@ from .chunk import (
     _check_input_domain,
     _prepare_inputs,
     _prepare_kernel_inputs,
+    _validate_raw_inputs,
+    _prep_runtime,
     _layout_runtime,
     chunk_kda_fwd,
     chunk_kda_fwd_with_caches,
@@ -32,6 +34,95 @@ from .chunk import (
 from .chunk_bwd import chunk_kda_bwd
 
 __all__ = ["chunk_kda"]
+
+
+class _RawNorm(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, source, device, block_dim):
+        ctx.save_for_backward(source)
+        ctx.options = dict(device=device, block_dim=block_dim)
+        return _prep_runtime().norm(source, torch.bfloat16, **ctx.options)
+
+    @staticmethod
+    def backward(ctx, sensitivity):
+        source, = ctx.saved_tensors
+        sensitivity = _layout_runtime().cast(sensitivity, torch.bfloat16, **ctx.options)
+        return _prep_runtime().norm_backward(source, sensitivity, **ctx.options), None, None
+
+
+class _RawGate(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, source, alog, bias, device, block_dim):
+        ctx.save_for_backward(source, alog, bias)
+        ctx.options = dict(device=device, block_dim=block_dim)
+        return _prep_runtime().gate(source, alog, bias, **ctx.options)
+
+    @staticmethod
+    def backward(ctx, sensitivity):
+        source, alog, bias = ctx.saved_tensors
+        sensitivity = _layout_runtime().cast(sensitivity, torch.float32, **ctx.options)
+        dg, da, db = _prep_runtime().gate_backward(source, alog, bias, sensitivity, **ctx.options)
+        need = ctx.needs_input_grad
+        return dg if need[0] else None, da if need[1] else None, db if need[2] else None, None, None
+
+
+class _RawBeta(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, source, device, block_dim):
+        ctx.options = dict(device=device, block_dim=block_dim)
+        probability = _prep_runtime().beta(source, **ctx.options)
+        ctx.save_for_backward(probability)
+        ctx.raw_dtype = source.dtype
+        return probability
+
+    @staticmethod
+    def backward(ctx, sensitivity):
+        probability, = ctx.saved_tensors
+        sensitivity = _layout_runtime().cast(sensitivity, torch.float32, **ctx.options)
+        result = _prep_runtime().beta_backward(probability, sensitivity, ctx.raw_dtype, **ctx.options)
+        return result, None, None
+
+
+def _prepare_training_inputs(q, k, g, beta, *, A_log=None, dt_bias=None,
+                             use_qk_l2norm_in_kernel=False, use_gate_in_kernel=False,
+                             use_beta_sigmoid_in_kernel=False, device='a5', block_dim=1,
+                             impl='stable'):
+    """Retain graph edges at each enabled native preparation boundary."""
+    _validate_raw_inputs(q, k, g, beta, A_log=A_log, dt_bias=dt_bias,
+                        use_qk_l2norm_in_kernel=use_qk_l2norm_in_kernel,
+                        use_gate_in_kernel=use_gate_in_kernel,
+                        use_beta_sigmoid_in_kernel=use_beta_sigmoid_in_kernel)
+    if not (use_qk_l2norm_in_kernel or use_gate_in_kernel or use_beta_sigmoid_in_kernel):
+        return q, k, g, beta
+    runtime = _prep_runtime()
+    sources = []
+    if use_qk_l2norm_in_kernel:
+        if q.shape[-1] != HEAD_DIM or min(q.shape) <= 0:
+            raise ValueError('raw q/k require positive [B,T,H,128]')
+        sources += [('q', q), ('k', k)]
+    if use_gate_in_kernel:
+        if g.shape[-1] != HEAD_DIM or min(g.shape) <= 0:
+            raise ValueError('raw g requires positive [B,T,HV,128]')
+        sources += [('g', g), ('A_log', A_log), ('dt_bias', dt_bias)]
+    if use_beta_sigmoid_in_kernel:
+        sources += [('beta', beta)]
+    for name, source in sources:
+        runtime._check_source(name, source)
+    # Vendor installation after the first custom launch is unsafe. Precompile
+    # the complete forward, inherited backward, layout and new prep chain here.
+    from .chunk import _compiled_chain as fwd_chain
+    from .chunk_bwd import _compiled_chain as bwd_chain
+    fwd_chain(device, block_dim, impl)
+    bwd_chain(device, block_dim, impl)
+    runtime.prepare_backward(device, block_dim)
+    if use_gate_in_kernel:
+        g = _RawGate.apply(g, A_log, dt_bias, device, block_dim)
+    if use_qk_l2norm_in_kernel:
+        q = _RawNorm.apply(q, device, block_dim)
+        k = _RawNorm.apply(k, device, block_dim)
+    if use_beta_sigmoid_in_kernel:
+        beta = _RawBeta.apply(beta, device, block_dim)
+    return q, k, g, beta
 
 
 class _ChunkKDA(torch.autograd.Function):
@@ -172,7 +263,9 @@ def chunk_kda(
                    use_gate_in_kernel=use_gate_in_kernel,
                    use_beta_sigmoid_in_kernel=use_beta_sigmoid_in_kernel)
     if training:
-        q, k, g, beta = _prepare_inputs(q, k, g, beta, A_log=A_log, dt_bias=dt_bias, **options)
+        q, k, g, beta = _prepare_training_inputs(
+            q, k, g, beta, A_log=A_log, dt_bias=dt_bias, **options,
+            device=device, block_dim=block_dim, impl=impl)
     else:
         q, k, g, beta = _prepare_kernel_inputs(
             q, k, g, beta, A_log=A_log, dt_bias=dt_bias, **options,

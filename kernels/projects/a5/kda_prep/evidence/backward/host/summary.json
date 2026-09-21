@@ -1,0 +1,171 @@
+{
+  "scope": "CPU host checks only; no device/model numerical qualification",
+  "python": "3.11.15",
+  "torch": "2.10.0+cpu",
+  "full_suite": {
+    "passed": 1132,
+    "skipped": 9,
+    "failures": 0,
+    "reason": "5 NPU-only modules and4 missing optional FLA cache-oracle cases"
+  },
+  "missing_oracle_followup": {
+    "file": "tests/test_cache_adapter.py",
+    "passed": 29,
+    "skipped": 0,
+    "failures": 0,
+    "added_executed_cases": 4,
+    "oracle_source_commit": "e52dbc0ea19d3a40d7ab7f9eed855d2b473994d2",
+    "package_reported_version": "0.6.0"
+  },
+  "aggregate_coverage": {
+    "passed_cases": 1136,
+    "remaining_skips": 5,
+    "note": "Aggregate across full-suite and focused oracle follow-up, not a single combined run"
+  },
+  "targeted_existing": {
+    "passed": 188
+  },
+  "new_backward_tests": {
+    "passed": 97
+  },
+  "calibration_freeze": "144 output records,28 groups,168 coarse+32 structural+28 synthetic boundary controls",
+  "frozen_budgets_sha256": "af053b4d3987eb9baf8ff8636b57f421f1f6531bd57f2fe10e176e9dba306b31",
+  "base_entry_negative": {
+    "base": "6c42dc6",
+    "entry_files": [
+      "chunk.py",
+      "autograd.py"
+    ],
+    "test_cases": [
+      {
+        "id": "tests.test_kda_domain_checks::test_raw_preparation_keeps_all_six_gradient_paths",
+        "failed": true,
+        "error": false
+      },
+      {
+        "id": "tests.test_kda_domain_checks::test_public_chunk_routes_gate_parameter_only_gradients_to_autograd[A_log]",
+        "failed": true,
+        "error": false
+      },
+      {
+        "id": "tests.test_kda_domain_checks::test_public_chunk_routes_gate_parameter_only_gradients_to_autograd[dt_bias]",
+        "failed": true,
+        "error": false
+      },
+      {
+        "id": "tests.test_kda_prep_kernel::test_training_graph_selection_and_no_grad[True-q]",
+        "failed": true,
+        "error": false
+      },
+      {
+        "id": "tests.test_kda_prep_kernel::test_training_graph_selection_and_no_grad[True-k]",
+        "failed": true,
+        "error": false
+      },
+      {
+        "id": "tests.test_kda_prep_kernel::test_training_graph_selection_and_no_grad[True-v]",
+        "failed": true,
+        "error": false
+      },
+      {
+        "id": "tests.test_kda_prep_kernel::test_training_graph_selection_and_no_grad[True-g]",
+        "failed": true,
+        "error": false
+      },
+      {
+        "id": "tests.test_kda_prep_kernel::test_training_graph_selection_and_no_grad[True-beta]",
+        "failed": true,
+        "error": false
+      },
+      {
+        "id": "tests.test_kda_prep_kernel::test_training_graph_selection_and_no_grad[True-A_log]",
+        "failed": true,
+        "error": false
+      },
+      {
+        "id": "tests.test_kda_prep_kernel::test_training_graph_selection_and_no_grad[True-dt_bias]",
+        "failed": true,
+        "error": false
+      },
+      {
+        "id": "tests.test_kda_prep_kernel::test_training_graph_selection_and_no_grad[True-initial_state]",
+        "failed": true,
+        "error": false
+      },
+      {
+        "id": "tests.test_kda_prep_kernel::test_training_graph_selection_and_no_grad[False-q]",
+        "failed": false,
+        "error": false
+      },
+      {
+        "id": "tests.test_kda_prep_kernel::test_training_graph_selection_and_no_grad[False-k]",
+        "failed": false,
+        "error": false
+      },
+      {
+        "id": "tests.test_kda_prep_kernel::test_training_graph_selection_and_no_grad[False-v]",
+        "failed": false,
+        "error": false
+      },
+      {
+        "id": "tests.test_kda_prep_kernel::test_training_graph_selection_and_no_grad[False-g]",
+        "failed": false,
+        "error": false
+      },
+      {
+        "id": "tests.test_kda_prep_kernel::test_training_graph_selection_and_no_grad[False-beta]",
+        "failed": false,
+        "error": false
+      },
+      {
+        "id": "tests.test_kda_prep_kernel::test_training_graph_selection_and_no_grad[False-A_log]",
+        "failed": false,
+        "error": false
+      },
+      {
+        "id": "tests.test_kda_prep_kernel::test_training_graph_selection_and_no_grad[False-dt_bias]",
+        "failed": false,
+        "error": false
+      },
+      {
+        "id": "tests.test_kda_prep_kernel::test_training_graph_selection_and_no_grad[False-initial_state]",
+        "failed": false,
+        "error": false
+      }
+    ],
+    "expected_failure_count": 11,
+    "preserved_no_grad_pass_count": 8,
+    "passed": true
+  },
+  "allowed_test_ast": {
+    "tests/test_kda_domain_checks.py": {
+      "only_authorized_function_bodies_changed": true,
+      "changed": [
+        "test_raw_preparation_keeps_all_six_gradient_paths",
+        "test_public_chunk_routes_gate_parameter_only_gradients_to_autograd"
+      ]
+    },
+    "tests/test_kda_prep_kernel.py": {
+      "only_authorized_function_bodies_changed": true,
+      "changed": [
+        "test_training_graph_selection_and_no_grad"
+      ]
+    }
+  },
+  "init_docstring_only_ast": true,
+  "retained_failures": [
+    {
+      "stage": "host ABI fixture v1",
+      "failures": 4,
+      "location": "test_kda_prep_backward.py::test_flag_and_partial_gradient_graph",
+      "cause": "New reference used x*x AD topology while pinned predecessor and CPU ABI surrogate used x.square(); FP32 operation sequence differed before BF16 raw-gradient rounding.",
+      "resolution": "Corrected new test reference to the pinned AD semantics; tolerances/native references unchanged;97tests pass"
+    },
+    {
+      "stage": "full host v1",
+      "failures": 3,
+      "cause": "FLA_PKDA_NAIVE was unset",
+      "resolution": "Copied selected reference source into task-local read-only input and selected explicit oracle environment; full-suite retry passes"
+    }
+  ]
+}

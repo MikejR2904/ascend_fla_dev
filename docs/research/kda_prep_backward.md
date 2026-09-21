@@ -121,10 +121,10 @@ applicable. No domain gate or tolerance is relaxed.
 ## Detection and reproduction
 
 All168 zero/negated/scaled1.25 controls fail both their own3F line and the final
-group L2 limits. Another60 controls test omitted normalization projection /
+group L2 limits. Another32 structural controls test omitted normalization projection /
 r³ / dot-product element, omitted gate sigmoid / final32 BT rows of reduction,
 and omitted beta (1-s). There is one rounded, just-above-budget perturbation
-per group (28 total); these perturbations change the wrong output only, never
+per group (28 additional controls, separate from the32 structural faults); these perturbations change the wrong output only, never
 the limit. Their measured L2/limit range is 1.00263–1.6384.
 The BF16 norm missing-one-dot-product-element structural error is 1.5652 times
 the frozen L2 limit. All228 controls are rejected. These are comparator
@@ -145,3 +145,40 @@ floor/limit/classification from the committed raw JSON, verify hashes and check
 all negative-control decisions. Raw calibration, located proof and controls are
 small text artifacts. Native acceptance, host operator audit, cross-bd hashes,
 model diagnostics and synchronized performance measurements are still pending.
+
+
+## Candidate implementation and current validation
+
+The candidate uses per-operation autograd Functions only on enabled raw flags.
+It retains `chunk._prepare_inputs` for predecessor comparisons. The chunk compile
+chain installs all new backward vendors before the first custom launch, including
+when inference precedes a later training call. Existing D-PM-42 host exceptions
+remain outside this preparation change.
+
+Norm uses the forward kernel's two64-lane K128 sum order. Gate stage1 owns fixed
+(head,32 BT-row) work items, forms raw dg plus FP32 parameter contributions, and
+writes a fixed binary-tree reduction into GM. Stage2 merges these partials in
+ascending order with compensated FP32 summation; head groups give each32-byte
+A_log output block one owner. There are no atomics or bd-dependent reduction
+orders. Beta differentiates the actual FP32 sigmoid output, preserving saturation.
+Raw outputs round only at their declared BF16/FP32 gradient boundary.
+
+Sixteen new dtype-specialized entries emit CCE successfully. Host verification
+covers1136 cases across the full suite and a focused optional-oracle follow-up;
+only5 NPU-only modules remain skipped on the CPU host. The19-case base-entry
+negative control produces the expected11 failures and preserves8 no-grad passes.
+The three approved test function bodies preserve all decorators/signatures and
+other AST nodes. Detailed counts and the16 source-emission receipts are under
+`evidence/backward/host/`. These results do not establish native acceptance.
+
+All50 vendors (including all9 inherited backward entries) compiled for bd1..4.
+The first full Kimi BF16 training run at bd4 completed but failed isolated norm
+elementwise comparison: q0.0773618 and k2.1657375 exceed the frozen0.0588298
+limit. Both norm relative-L2 results pass. Gate, beta, parameter-gradient checks,
+all six end-to-end gradients against both CPU FP32 references, all2048
+head/chunk output checks per reference, input immutability, nine finite caches,
+and exact plain/cached outputs pass. The actual training audit records no
+unexpected or old host preparation operations. Raw results are retained under
+`evidence/backward/native-v1/`; this numerical failure blocks native acceptance.
+Grid, boundary, host audit, exact cross-bd equality, reduced model diagnostics
+and synchronized performance acceptance remain pending.

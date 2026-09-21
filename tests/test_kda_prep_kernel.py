@@ -111,8 +111,10 @@ def test_training_graph_selection_and_no_grad(monkeypatch,training_leaf,enabled)
     seen=[]
     real=chunk._prepare_inputs
 
-    def host(*args,**kwargs):
-        seen.append('training_host')
+    def training(*args,**kwargs):
+        seen.append('training_native')
+        for key in ('device','block_dim','impl'):
+            kwargs.pop(key)
         return real(*args,**kwargs)
 
     def native(*args,**kwargs):
@@ -121,14 +123,16 @@ def test_training_graph_selection_and_no_grad(monkeypatch,training_leaf,enabled)
             kwargs.pop(key)
         return real(*args,**kwargs)
 
-    monkeypatch.setattr(autograd,'_prepare_inputs',host)
+    monkeypatch.setattr(chunk,'_prepare_inputs',lambda *a,**kw: pytest.fail('old host preparation called'))
+    monkeypatch.setattr(autograd,'_prepare_inputs',lambda *a,**kw: pytest.fail('old host training called'))
+    monkeypatch.setattr(autograd,'_prepare_training_inputs',training,raising=False)
     monkeypatch.setattr(autograd,'_prepare_kernel_inputs',native,raising=False)
     monkeypatch.setattr(autograd._ChunkKDA,'apply',lambda *args: (x['v'],None))
     monkeypatch.setattr(autograd,'chunk_kda_fwd',lambda *args,**kwargs: (x['v'],None))
     with torch.set_grad_enabled(enabled):
         autograd.chunk_kda(**x,use_qk_l2norm_in_kernel=True,use_gate_in_kernel=True,
             use_beta_sigmoid_in_kernel=True)
-    assert seen==(['training_host'] if enabled else ['native'])
+    assert seen==(['training_native'] if enabled else ['native'])
 
 
 def test_disabled_gate_parameters_do_not_select_training(monkeypatch):
