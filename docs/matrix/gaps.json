@@ -861,13 +861,29 @@
       "blocks": [],
       "proposed_action": "P2：PKDA FP32 路径的域校验搬成 kernel 侧状态字 + host 回读，与 BF16 兄弟单元一致（`ascend_fla/ops/pkda_chunk_fwd.py:126` 一处调用 + 可能的派生单元改动）；验收：审计报 clean、拒绝面不变（同样的非法输入仍然报错，错误信息等价）。也可以选择把 `validate_inputs` 登记为只读校验（D-PM-42），二选一，PM 待有空闲任务槽再立项。",
       "requires_kernel_change": false
+    },
+    {
+      "id": "soc-defaults-a5-outside-kda",
+      "title": "SoC 显式化只做了 KDA 一侧：GDN / PGDN / PKDA / GDN-2 各族的入口仍写死 device=\"a5\" 默认，各族 kernels/projects/a5 单元路径也是字面量，能力表的 unit_root 还没有任何算子读它",
+      "category": "validation",
+      "severity": "P2",
+      "applies_to": [
+        "kda",
+        "gated_delta_rule",
+        "gdn2"
+      ],
+      "evidence": "**来源：A2-02（#31，PR #126，squash 33259af；PM 在合入后的 main 上 grep 与读源码，没有在 A2 机器上试过这些入口）。** A2-02 在 `ascend_fla/platform.py` 建了 SoC 解析（显式实参 → ASCEND_FLA_SOC → 设备名探测）与能力表，并把 `runtime/compile.py`、`ops/kda/**` 的 `device` 默认改成 None、对外入口在编译前按 SoC 验收。范围只到 `ops/kda/**` + `runtime/` + `layers/kda.py`（其余不在 A2-02 写集，`ops/gdn2/**` 在 reserved_paths）。剩下的：`ascend_fla/ops/gdn_chunk_{fwd,bwd}.py`、`pgdn_chunk_fwd.py`、`pkda_chunk_fwd.py`、`gdn2_chunk_fwd.py`、`ops/gdn2/*.py` 里仍有 `device='a5'` 默认与 `if device != 'a5'` 检查；各族与 KDA 的 `kernels/projects/a5/<unit>` 路径都是字面量（KDA 侧的路径路由按 PM 裁定延后到第一个 a2 单元出现时），`CAPABILITIES[soc]['unit_root']` 目前只被测试读。",
+      "impact": "不构成已知的静默错误：这些入口要么对非 a5 的 device 显式报错，要么按 a5 profile 编译，都没有像 KDA 那样在编译前按 SoC 报「未验收」；在 A2 机器上直接调用它们的后果没有实测（PM 只读了源码）。等对应的 A2 任务接 a2 时才会变成真问题。",
+      "blocks": [],
+      "proposed_action": "P2：各族在接 a2 时用 A2-02 的同一个模式——`device` 默认 None → `resolve_soc`、对外入口先 `require_qualified`；单元路径接 `platform.unit_root(soc)`（第一个 a2 单元出现时一并做 KDA 侧的路径路由）。落点：GDN 的 A2 任务（A2-20 / kernel 批次 A2-K1）、PGDN / PKDA 的 a2 派生；`gdn2` 在 reserved_paths 内由仓主轨道自行处理。",
+      "requires_kernel_change": false
     }
   ],
   "summary": {
     "P0": 2,
     "P1": 23,
-    "P2": 15,
-    "total": 53,
+    "P2": 16,
+    "total": 54,
     "first_milestone": "第一期五项已全部有结论，并补齐了同机性能对比：aclnn 编译、runtime 桥、kda_fwd 接线、KDA 本地基线均实测通过；自编译算子在 block_dim=4 下比 torch_npu 组合快 4.43x（kimi_linear_layer）/ 2.38x（long_context T=4096）/ 19.7x（smoke）。过程中修掉两个自己的 bug（bridge-per-call-overhead、op-name-collision-in-process），它们先后让 block_dim 的效果被完全掩盖。当前最大的性能项是 block-dim-ceiling（已升 P1）：扩展性一路线性到契约上限 4，而硬件有 28 cube。第二期的前置障碍 kda-fwd-bwd-dtype-mismatch 已量化（降 P2）。",
     "second_milestone": "第二期已完成：kda_bwd 九 kernel 链 + 九个前向检查点 + autograd + KDA layer（含 2 modules），训练步在 bd=4 下比 torch_npu 组合版快 4.83x~5.67x。\n过程中发现并根治了第二期最关键的一个缺口：**按 fla 的默认初始化（chunk 内门控跨度 ~94），上游 kernel 在前向与反向各有一处量程失效，方向相反** —— 前向在 87.3 下溢、反向在 88.72 上溢。两处都在本仓建了派生单元（kda_fwd_stable / kda_bwd_stable），把成对衰减分解的锚点从区间端点改到中点，数学同义。\n门控闸因此做成二维 `{impl: {forward, backward}}`：前向 155（受有限性约束，到 155.97 精度完全不退化）、反向 100（受**精度**约束，它先于有限性到来 —— 梯度到 169.8 都有限但 dq 在 130 处超预算）。**「不吐 NaN」不等于「能用」，两者要分别测、闸按更严的定。**\n剩一项端到端确认（默认初始化下整层反向的精度）卡在机器可用性上 —— 算子层面的同一件事已由 test_kda_bwd_deep_npu.py 在跨度 94 测过，六项梯度全在契约预算内。\n当前最大的性能项仍是 block-dim-ceiling（P1）。",
     "recommended_first_target": "KDA（Kimi-Linear / fla-kda-default 形状）。其 ABI 已是 token-major BTHK、GQA 原生支持、initial_state 与 final_state 均为 FP32、backward 产出 dh0 —— 上述多数 ABI 缺口对它都不适用。唯一需要前置补齐的是本地验证证据（kda-no-local-evidence）。",

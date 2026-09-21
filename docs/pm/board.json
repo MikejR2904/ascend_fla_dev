@@ -1863,7 +1863,7 @@
       "wave": "W0",
       "soc": "any",
       "priority": "P1",
-      "status": "rework",
+      "status": "done",
       "model": [],
       "kernel": [],
       "dtype": [],
@@ -1937,9 +1937,26 @@
         {
           "at": "2026-09-21T09:50",
           "summary": "STATUS（09:33Z，自述，#31，PR #126 新头 5331332，新增一个提交「rework: gate remaining kda entries, fix decode test, commit real-machine probe」）：五条 REVIEW 逐条处置——① `tests/test_kda_decode.py::_op_consts` 函数体改为 import 取 SUPPORTED_BLOCK_DIM；② `ops/kda/**` 剩下的 7 处 `device=\"a5\"` 全改成 None，对外的 chunk_kda_fwd / chunk_kda_fwd_with_caches / chunk_kda_bwd 先 resolve_soc 再 require_qualified、内部包装只解析，新增六入口门控测试；③ 单元路径路由按 PM 裁定延后并明说；④ 旧 DONE 评论已整条删除（评论与编辑历史里都没有容器名），真机运行整体落仓：`benchmarks/a2/probe_platform.py` + `benchmarks/a2/evidence/platform/{probe.log,test_platform.log}`（Ascend910B3、resolve_soc=a2、三个 version.info 完整 sha256、三入口被拦的完整回溯；910B3 上 test_platform 13 passed）；⑤ a2「未验收」文案改写。 PM 二审（第二轮，NPU-free，PR 头合到 main 0c1c3e7）：**仍 REVIEW rework，但只剩两条小的**。已核关闭：全量 **1172 passed / 12 skipped / 0 failed**（= 1159 + 13，与预测一致）；`test_kda_decode.py` 与 base 做 AST 比对 17 个顶层节点只有 `_op_consts` 变（参数 / 装饰器 / 注解不变）；`ops/kda/**` 内部调用点都显式传 device（不会入口按 a5 过闸、内部自己解析成 a2）；负对照（`ops/kda` 五个入口文件换回 base）→ 新门控测试变红（1 failed / 12 passed）；probe.log 的三个完整 sha256 与之前评论里给的首尾一致、PM 抽查 driver 那份的哈希前缀一致（设备名 → a2 的映射只在申领人机器上可见，按其原始日志记，环境事实、非算子结论）；gen_matrix --check 通过；写集全在（含 PM 预批三项）；旧 DONE 评论确已删除。**要改的两条**：(1) 隐私——`probe.log` / `test_platform.log` / `probe_platform.py` 里有机器绝对路径（工作副本临时目录前缀、Ascend 安装根、Python 安装根），要求脚本只打印相对根的路径、日志用机械替换加一行声明（哈希 / 设备名 / 异常文本不动）；(2) 验收 2 没按字面做——「改前的签名值写死在测试里」不成立（`test_a5_compile_signature_unchanged` 比的是新代码的显式 a5 与解析 a5，两边都是新代码算的）；PM 在 base 与 PR 上用固定输入各算了一遍逐位相同，给了三个字面量（固定合成 kernel）要求写死进测试。改完 PM 核增量并重做 scratch merge，预期 1173 passed / 12 skipped / 0 failed，然后按 D-PM-33 自行合入（MikejR2904 首合已由 D-PM-58 授权；A2-02 的真机读数是环境事实、不是 A2 算子结论）。"
+        },
+        {
+          "at": "2026-09-21T10:26",
+          "summary": "STATUS（09:59Z，自述，#31，PR #126 新头 90e248c）：第二轮两条已改——证据日志与探针脚本零绝对路径（脚本只打相对 ASCEND_HOME 的路径；日志机械替换 `<REPO>` / `<ASCEND_HOME>` / `<PYTHON_HOME>` 并在首行声明，哈希 / 设备名 / 异常文本 / 行序未动）、新增 `test_compile_signature_frozen_literals`（三个字面量与 PM 给的逐位一致，申领人也在 base 上自己复算过）；910B3 上 test_platform 14 passed。PM 二审（第三轮，NPU-free）：**REVIEW accept**——日志替换前后的差异只有声明行 / 相对路径 / 探针脚本行号（脚本加了 5 行）/ 新测试，哈希与设备名与异常文本不变；PR 头合到 main（bfc61bc）全量 1173 passed / 12 skipped / 0 failed（预测 1173）；gen_matrix --check 通过；写集全在；23 个 blob 隐私扫描除已脱敏位置外 0 命中；负对照两个都变红。**PM 按 D-PM-33 自行合入**（`--match-head-commit 90e248cb`，**squash**——中间提交里还有旧版未脱敏日志，squash 让它们不进 main 的历史；用 bot 账号的令牌执行 merge，与此前 #122 / #123 / #124 一致）→ 33259af，合入的树与 scratch merge 的树逐位相同；合入后 main 全量 1173 passed / 12 skipped / 0 failed（= 1159 + 14）。不需要请示用户的理由：MikejR2904 的首合已由 D-PM-58 授权（A2-07 → 28cced5）；交付里没有 A2 算子结论、只有环境事实；无争议；没有放宽任何预算 / 闸 / 域（a5 常量搬家值不变，有冻结测试）；写集扩展是 PM 预批的三项。两处 PM 收窄自己规格的地方（记在 docs/pm/tasks/A2-02.md「二审澄清」）：验收 grep 只管 ops/kda / runtime / layers/kda.py；「单元路径由能力表给」延后到第一个 a2 单元出现时。已登记 gap `soc-defaults-a5-outside-kda`（P2）防止丢。"
         }
       ],
-      "result": null,
+      "result": {
+        "commits": [
+          "90e248c",
+          "33259af"
+        ],
+        "evidence": [
+          "PR #126",
+          "ascend_fla/platform.py",
+          "tests/test_platform.py",
+          "benchmarks/a2/probe_platform.py",
+          "benchmarks/a2/evidence/platform/"
+        ],
+        "numbers": "真机（Ascend910B3，申领人自述，**环境事实、不是 A2 算子结论**，D-PM-30）：`torch.npu.get_device_name(0)` = Ascend910B3 → `resolve_soc()` = a2（未默认 a5）；driver / compiler（9.2.0-beta.1）/ opp（9.2.0-beta.1）的 version.info 完整 sha256 在 `probe.log`（PM 抽查 driver 那份的哈希前缀一致）；ascend910b 内置算子包目录 ops_cv / ops_legacy / ops_math / ops_nn / ops_oam / ops_transformer；`prepare` / `chunk_kda` / `fused_recurrent_kda` 在 a2 上编译之前报「未验收」（完整回溯在 probe.log）；`tests/test_platform.py` 在 910B3 上 14 passed。PM（NPU-free）：合入前 scratch merge 全量 1173 passed / 12 skipped / 0 failed，合入后 main（33259af）全量同为 1173 passed / 12 skipped / 0 failed（= 1159 + 14）；合入的树与 scratch merge 的树逐位相同（846d466）；`test_kda_decode.py` 与 base 做 AST 比对只有 `_op_consts` 函数体变；负对照两个（`ops/kda` 五个入口文件换回 base → 新门控测试变红；`_signature` 哈希截断 16→15 → 冻结字面量测试变红而自洽性测试仍绿）；a5 编译签名三个字面量（固定合成 kernel）PM 在 base main 上先算、写进测试。squash 合入，PR 分支中间提交里旧版未脱敏的日志不进 main 历史。"
+      },
       "gate": null
     },
     {
@@ -2431,6 +2448,10 @@
         {
           "at": "2026-09-21T08:06",
           "summary": "APPLY（08:01Z，自述，#36，MikejR2904；无条件、无 session 字段）：a2 / 910B3 / CANN 9.2.0-beta.1 / ascriptor 90cfcdc / fork MikejR2904/ascend_fla_dev_a2 / 同步在线；称「交付物已完成并在 910B3 真机验证（tests/test_models_kimi.py 14 passed；fla.ops.kda.naive 层级数值 relative L2 1.02e-6）；A2-05 依赖已合入」——即在被派之前已做完。PM 处理：同一账号手上有 A2-02（ASSIGN 07:53Z，等 ACK），一个账号一次一个任务（要并发得两次 APPLY 都填不同的 session，而它的 A2-02 排队 APPLY 没有 session）——回 NO_TASK：A2-02（P0 主线）先做，A2-08（P2）排在它之后；已完成的交付物先放着、别开 PR，A2-02 DONE 后我直接派 A2-08、届时直接 DONE，PM 按 D-PM-34 核真机证据（原始日志行、SoC / CANN / 算子包目录，数字对预算）与 A2-08 规格核对（写集只有 ascend_fla/models/kimi_linear.py 与 tests/test_models_kimi.py）。"
+        },
+        {
+          "at": "2026-09-21T10:26",
+          "summary": "A2-02 已合入；PM 更正 08:06Z 的说法：不是「A2-02 之后直接派 A2-08」，而是先派 A2-10（P0 主线，#37），A2-08（P2，成品已做完、放着不开 PR）顺延到 A2-10 DONE 并过审之后，仍不需要重新 APPLY；届时在当时的 main 上重跑一遍（main 自其做完以来变了 BF-07 / BF-08、FMT-01 / FMT-02、A2-02）。已在 #36 回复。"
         }
       ],
       "result": null
@@ -2441,7 +2462,7 @@
       "wave": "W-A2",
       "soc": "a2",
       "priority": "P0",
-      "status": "open",
+      "status": "assigned",
       "model": [],
       "kernel": [],
       "dtype": [],
@@ -2462,9 +2483,20 @@
       "spec": "docs/pm/tasks/A2-10.md",
       "issue": 37,
       "pr": null,
-      "assignee": null,
-      "assignee_caps": null,
-      "branch": null,
+      "assignee": "MikejR2904",
+      "assignee_caps": {
+        "agent": "Claude Opus 4.8 (Claude Code)，operated by MikejR2904（自述）",
+        "socs": [
+          "a2"
+        ],
+        "soc_details": "自述（APPLY 03:13Z / 03:22Z）：a2，Ascend 910B3（20 AI cores / 40 vector cores、UB 192KB、AIV 1.8GHz）、CANN 9.2.0-beta.1、内置算子包含 910B3 平台、torch 2.10.0 / torch_npu 2.10.0.post2、Python 3.11（机器与卡归 assignee 管理，D-PM-28）；A2 真机数字在 A2-11 之前只是观测记录",
+        "ascriptor": "A2-07 期间已按自述固定到 library 90cfcdc / kernels b3b3f9c；A2-10 每份回执带这两个修订，对不上先发 RISK",
+        "fla": "有（自述）",
+        "fork": "MikejR2904/ascend_fla_dev_a2（真 fork，parent ddddwee1；APPLY 里原写的同名非 fork 仓跨仓 PR 不认）",
+        "availability": "异步",
+        "note": "首次合入已由用户授权（D-PM-58，A2-07 → 28cced5）；A2-02 是第二次合入（PM 按 D-PM-33 自行合入，squash → 33259af）。A2-10 于 A2-02 合入后按 #37 的承诺（03:53Z）直接派；A2-11（#38）在 A2-10 之后；A2-08（#36，P2）顺延到 A2-10 DONE 并过审之后（PM 08:06Z 曾说「A2-02 之后直接派 A2-08」，现更正为 A2-10 先——P0 主线、依赖已解除，A2-08 不在 A2 上机关键路径上）。A2 相关的合入按 D-PM-33 先请示用户（A2-11 之前 A2 数字只是观测记录）。"
+      },
+      "branch": "task/A2-10",
       "timebox_h": 12,
       "reports": [
         {
@@ -2474,6 +2506,10 @@
         {
           "at": "2026-09-21T03:52",
           "summary": "APPLY（03:40Z，自述，条件申请；新账号 MikejR2904，同一个人已持有 A2-07）：条件——A2-02 落地后派；需要 910B（自述持有）；固定修订 90cfcdc / b3b3f9c 上机前要 pin，目前 5287adc / b9c8a84，自述取不到固定修订「without a gitcode token」并已告知仓主。a2，910B3 / CANN 9.2.0-beta.1 / torch 2.10 / torch_npu 2.10.0.post2，fork MikejR2904/ascend_fla_dev，异步。PM 处理：依赖 A2-02 没完成——回 NO_TASK，A2-02 CLOSE 后直接派；固定修订取不到属仓主 / 用户的事（PM 不经手令牌），派单前要解决，解决不了先 RISK、不许用别的修订硬上。"
+        },
+        {
+          "at": "2026-09-21T10:26",
+          "summary": "A2-02 已合入（PR #126 → 33259af，squash）——按 #37 里 03:53Z 的承诺直接派 A2-10（P0，12h，分支 task/A2-10；A2 上机主线 A2-02 → A2-10 → A2-11 的第二步），不需要重新 APPLY。ASSIGN 里点明：① **顺序更正**：A2-10 先、A2-08 顺延（原因见 assignee_caps.note）；② main 自其上一单以来变了——A2-02 合入了 platform.py（a2 / a3 在 chunk_kda / prepare / fused_recurrent_kda 等入口报未验收），A2-10 不走这些入口、用 `compile_kernel(device=\"a2\", backend=\"cce\")` 直接编；真机 a2 进程显式设 ASCEND_FLA_SOC=a2（conftest 会 setdefault a5）；基线 1173 passed / 12 skipped（NPU-free）；③ ascriptor 修订固定 90cfcdc / b3b3f9c、每份回执带、对不上先 RISK；④ 写集照规格四项，runtime 桥要改先发 RISK write-set-expansion；⑤ **证据卫生**（吸取 A2-02 两轮返工）：回执 / 日志 / 脚本不含机器路径 / 主机名 / 容器名，机械替换脱敏并首行声明，脱敏要在推 PR 之前做（PR 分支上的旧提交公开可见）；哈希写完整、日志写未过滤原文；⑥ A2 数字在 A2-11 之前只是观测，A2 相关合入 PM 先请示用户。"
         }
       ],
       "result": null
