@@ -1,0 +1,200 @@
+{
+  "environment": {
+    "python": "3.11.15",
+    "torch": "2.10.0+cpu",
+    "ascriptor": "0.1.0",
+    "stage": "pipesim",
+    "device_profile": "950",
+    "block_dim": 1,
+    "vector_participants": 2,
+    "library_commit": "90cfcdc720bbcd66e8bd4361c4dd4fbc1a2a57b5",
+    "kernels_commit": "b3b3f9c16df7c4626ed3c081032a1be5a753d0b1",
+    "accepted_runtime_manifest_sha256": "5cdd9b7600c14440489b26ab45f4042e38d07fee05a5342d558155ed755d136e",
+    "verified_runtime_files": 259,
+    "kernel_source_sha256": "2da8afd583aa37cd47521cfa4ba23d7ba38f832bd5c49e2f694ff07d4405180e",
+    "driver_sha256": "8bcd908db8a8b6db3cc61fa5d369be0ac8330283e4803a7c89d4ba591650f202",
+    "budget_sha256": "af053b4d3987eb9baf8ff8636b57f421f1f6531bd57f2fe10e176e9dba306b31",
+    "scope": "Reduced diagnostic; neither full workload nor board performance qualification"
+  },
+  "complete": true,
+  "passed": true,
+  "cases": [
+    {
+      "id": "beta8193",
+      "key": "beta:f32:dbeta",
+      "to_fp64": {
+        "elements": 8193,
+        "finite_pairs": 8193,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 19.063193660586816,
+        "residual_norm": 1.1887149269643634e-06,
+        "relative_l2": 6.235654676383179e-08,
+        "relative_l2_finite_pairs": 6.235654676383179e-08,
+        "max_abs": 1.272608939340003e-07,
+        "max_relative_nonzero": 1.3221211709159272e-06,
+        "relative_quantiles": [
+          3.810442101077762e-08,
+          1.0762299669210168e-07,
+          3.912649857040411e-07,
+          1.3221211709159272e-06
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 18,
+        "rounded_reference_over_one_ulp": 612,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "d45680f0d9d4bf8848cf5a07f71477683a349f22d8d24aff7c5732436aca7909",
+        "reference_fp64_sha256": "6f6c966d91f8e8161d734c6708df1d74a78d21651ff50de553911d892aef5ce5"
+      },
+      "to_old_cpu": {
+        "elements": 8193,
+        "finite_pairs": 8193,
+        "actual_nan": 0,
+        "reference_nan": 0,
+        "actual_posinf": 0,
+        "reference_posinf": 0,
+        "actual_neginf": 0,
+        "reference_neginf": 0,
+        "reference_norm": 19.063193655961957,
+        "residual_norm": 9.69269868392346e-07,
+        "relative_l2": 5.0845093738488557e-08,
+        "relative_l2_finite_pairs": 5.0845093738488557e-08,
+        "max_abs": 5.960464477539063e-08,
+        "max_relative_nonzero": 1.44457765858086e-07,
+        "relative_quantiles": [
+          0.0,
+          9.312198404548706e-08,
+          1.1534225980069892e-07,
+          1.44457765858086e-07
+        ],
+        "zero_reference_nonzero_actual": 0,
+        "rounded_reference_max_ulp": 2,
+        "rounded_reference_over_one_ulp": 5,
+        "rounded_reference_sign_differences": 0,
+        "actual_sha256": "d45680f0d9d4bf8848cf5a07f71477683a349f22d8d24aff7c5732436aca7909",
+        "reference_fp64_sha256": "0b13f552c29cb5b30879e32ddff4f705ad449fc324f20a59ceb69031c3d2a3b1"
+      },
+      "budget": {
+        "output_dtype": "torch.float32",
+        "calibration_case_ids": [
+          "beta:f32:dbeta:gaussian:4",
+          "beta:f32:dbeta:full_kimi:5",
+          "beta:f32:dbeta:zero:6"
+        ],
+        "floor_relative_l2": 6.521930812209837e-08,
+        "floor_max_relative_nonzero": 3.285143416601931e-06,
+        "old_to_rounded_fp64_max_ulp": 31,
+        "relative_l2_limit": 1.9565792436629512e-07,
+        "elementwise_relative_limit": 9.855430249805792e-06,
+        "zero_reference_nonzero_allowed": 0,
+        "ulp_limit_each_reference": null,
+        "ulp_policy_basis": "D-PM-54 calibration output/dtype classification; FP32 retains BF-07 no-ULP-passline rule"
+      },
+      "ulp_to_fp64_distribution": [
+        {
+          "ulp": 0,
+          "count": 4461
+        },
+        {
+          "ulp": 1,
+          "count": 3120
+        },
+        {
+          "ulp": 2,
+          "count": 352
+        },
+        {
+          "ulp": 3,
+          "count": 115
+        },
+        {
+          "ulp": 4,
+          "count": 52
+        },
+        {
+          "ulp": 5,
+          "count": 28
+        },
+        {
+          "ulp": 6,
+          "count": 23
+        },
+        {
+          "ulp": 7,
+          "count": 13
+        },
+        {
+          "ulp": 8,
+          "count": 13
+        },
+        {
+          "ulp": 9,
+          "count": 4
+        },
+        {
+          "ulp": 10,
+          "count": 4
+        },
+        {
+          "ulp": 12,
+          "count": 2
+        },
+        {
+          "ulp": 13,
+          "count": 2
+        },
+        {
+          "ulp": 15,
+          "count": 1
+        },
+        {
+          "ulp": 17,
+          "count": 1
+        },
+        {
+          "ulp": 18,
+          "count": 2
+        }
+      ],
+      "ulp_to_old_distribution": [
+        {
+          "ulp": 0,
+          "count": 5279
+        },
+        {
+          "ulp": 1,
+          "count": 2909
+        },
+        {
+          "ulp": 2,
+          "count": 5
+        }
+      ],
+      "bf16_over_one_locations": 0,
+      "detail_pages": [],
+      "passed": true
+    }
+  ],
+  "execution_evidence": [
+    {
+      "kernel": "kda_prep_backward_beta_f32_kernel",
+      "device": "a5",
+      "requested_backend": "cce",
+      "stage": "pipesim",
+      "launcher": "pipesim",
+      "block_dim": 1,
+      "model": "lowered events and hazards",
+      "backend_executed": false,
+      "event_balance": [],
+      "hazards": [],
+      "deadlock": null,
+      "model_cycles": 4876,
+      "sim_processes": "threads"
+    }
+  ],
+  "retained_boundaries": "two vector participants, repeated4096 tiles, one-row/one-element tail; gate two-stage GM handoff and grouped A-output owners"
+}

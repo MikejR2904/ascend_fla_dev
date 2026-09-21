@@ -1,0 +1,3000 @@
+{
+  "environment": {
+    "python": "3.12.14",
+    "torch": "2.12.0+cu130",
+    "torch_npu": "2.12.0",
+    "ascriptor": "0.1.0",
+    "library_commit": "90cfcdc720bbcd66e8bd4361c4dd4fbc1a2a57b5",
+    "kernels_commit": "b3b3f9c16df7c4626ed3c081032a1be5a753d0b1",
+    "cann_version_records": {
+      "compiler": {
+        "raw_lines": [
+          "Version=9.1.0-beta.1",
+          "version_dir=cann",
+          "required_package_runtime_version=\"9.1\"",
+          "required_package_ge-executor_version=\"9.1\"",
+          "required_package_metadef_version=\"9.1\"",
+          "required_package_opbase_version=\"9.1\"",
+          "required_package_bisheng-compiler_version=\"9.1\"",
+          "required_package_tbe-tik_version=\"9.1\"",
+          "timestamp=20260509_173000235"
+        ],
+        "sha256": "0f982a259247cdd06df4fa5bdaf526b57b6ad15f7d27a33f23b3c70a381c2fe5"
+      },
+      "opp": {
+        "raw_lines": [
+          "Version=9.1.0-beta.1",
+          "version_dir=cann",
+          "required_package_runtime_version=\">=8.5\"",
+          "required_package_ge-executor_version=\">=8.5\"",
+          "required_package_metadef_version=\">=8.5\"",
+          "required_package_asc-devkit_version=\">=8.5\"",
+          "required_package_bisheng-compiler_version=\">=8.5\"",
+          "timestamp=20260509_173000235"
+        ],
+        "sha256": "377b05dab3a2dfc87dfaa92affd69a9aa5795a54d423cbe629d3495ad20370ef"
+      }
+    },
+    "opp_directories": [
+      "ascend910_93",
+      "ascend910b",
+      "ascend950"
+    ],
+    "driver_sha256": "bf27499c97f4090f6c9537cd6f11c6fb09cea7b2bbf632b996b442693ab1ddb1",
+    "helper_sha256": "808b3d2c778ea577489ef966db72f38375d5a4d609190a63a63704757ae4f880",
+    "production_source_manifest_sha256": "41b681ecd6a2925ca720274317d3a3245d94a17eef6c8924e513d153a9d1a4a9",
+    "source_identity_receipt": "source-identity.json"
+  },
+  "complete": true,
+  "cases": [
+    {
+      "dtype": "bf16",
+      "A_log": -120.0,
+      "paths": {
+        "candidate": {
+          "accepted": true,
+          "finite_output": true,
+          "finite_state": true,
+          "finite_gradients": [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ],
+          "output_sha256": "cbee0143c8535b34f9f607960163edb55c8732e23be5786d7c3ae75a09b983da",
+          "state_sha256": "52cd0774a204a0d47dadbbcf3d580294f0743afd137c25cb8d146c206da95d1a",
+          "launches": [
+            {
+              "operator": "KdaPrepChunkGateBf16Bf16Bf16Kernel",
+              "signature": "cfffaf65d94ec35f",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32F32Kernel",
+              "signature": "c734ca5227d79ce8",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32F32Kernel",
+              "signature": "c734ca5227d79ce8",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub1GateStableKernel",
+              "signature": "aad21f2d2b3d2c2c",
+              "outputs": [
+                "g_cumsum",
+                "eg"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub2ScoreStableKernel",
+              "signature": "69ca68c647809e44",
+              "outputs": [
+                "Aqk",
+                "strict"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "TrilInverse64V2StrictBf16Kernel",
+              "signature": "a5a2c0726a680ba3",
+              "outputs": [
+                "inv"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub3WyStableKernel",
+              "signature": "d90b2cf4c23fa99a",
+              "outputs": [
+                "w",
+                "u",
+                "qg",
+                "kg"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub45AqkRepairedKernel",
+              "signature": "d24e6d59beb12bc6",
+              "outputs": [
+                "o",
+                "final_state"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32Bf16Kernel",
+              "signature": "1bace06d52ff1d46",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32Bf16Kernel",
+              "signature": "1bace06d52ff1d46",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32Bf16Kernel",
+              "signature": "1bace06d52ff1d46",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "ScanFusedKernel",
+              "signature": "306f6f401a02c792",
+              "outputs": [
+                "dAqk",
+                "dh",
+                "dv",
+                "dh0"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseMmBoundedKernel",
+              "signature": "5a0b0e0263189b90",
+              "outputs": [
+                "d_qg",
+                "d_kg",
+                "d_vh",
+                "d_v_beta",
+                "d_k_beta_g"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseEpilogueKernel",
+              "signature": "99d699ab19037e94",
+              "outputs": [
+                "dq_hv",
+                "dk_hv",
+                "dv",
+                "dbeta",
+                "dg_core",
+                "k_exp"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseDainvKernel",
+              "signature": "ed387cdedccff8e4",
+              "outputs": [
+                "dtri"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseDakkFusedKernel",
+              "signature": "c9546079430df630",
+              "outputs": [
+                "dAkk"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizePreStableKernel",
+              "signature": "89a92dfb7d3decd2",
+              "outputs": [
+                "q_scaled",
+                "k_scaled",
+                "kg",
+                "m_qk",
+                "m_base",
+                "m_beta"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizePairKernel",
+              "signature": "0ec1db8afb1df417",
+              "outputs": [
+                "dq_pair",
+                "dk_pair",
+                "s_base",
+                "t_beta"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizePostStableKernel",
+              "signature": "de7bf5fd932aff3e",
+              "outputs": [
+                "dq_hv_out",
+                "dk_hv_out",
+                "dbeta_out",
+                "dg_out"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizeReduceKernel",
+              "signature": "c50ccb9f48fbef6a",
+              "outputs": [
+                "dq_out",
+                "dk_out"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16F32Kernel",
+              "signature": "127dcc2b9168d6bb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16F32Kernel",
+              "signature": "127dcc2b9168d6bb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16F32Kernel",
+              "signature": "127dcc2b9168d6bb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaPrepBackwardGateBf16Bf16Bf16Kernel",
+              "signature": "cebc88ab38e7ac01",
+              "outputs": [
+                "destination",
+                "partials"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaPrepBackwardGateReduceBf16Bf16Kernel",
+              "signature": "a170cbf7a5114247",
+              "outputs": [
+                "da",
+                "db"
+              ],
+              "poisoned": true
+            }
+          ],
+          "inputs_unchanged": true
+        },
+        "old_npu": {
+          "accepted": true,
+          "finite_output": true,
+          "finite_state": true,
+          "finite_gradients": [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ],
+          "output_sha256": "cbee0143c8535b34f9f607960163edb55c8732e23be5786d7c3ae75a09b983da",
+          "state_sha256": "52cd0774a204a0d47dadbbcf3d580294f0743afd137c25cb8d146c206da95d1a",
+          "launches": [
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32F32Kernel",
+              "signature": "c734ca5227d79ce8",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32F32Kernel",
+              "signature": "c734ca5227d79ce8",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub1GateStableKernel",
+              "signature": "aad21f2d2b3d2c2c",
+              "outputs": [
+                "g_cumsum",
+                "eg"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub2ScoreStableKernel",
+              "signature": "69ca68c647809e44",
+              "outputs": [
+                "Aqk",
+                "strict"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "TrilInverse64V2StrictBf16Kernel",
+              "signature": "a5a2c0726a680ba3",
+              "outputs": [
+                "inv"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub3WyStableKernel",
+              "signature": "d90b2cf4c23fa99a",
+              "outputs": [
+                "w",
+                "u",
+                "qg",
+                "kg"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub45AqkRepairedKernel",
+              "signature": "d24e6d59beb12bc6",
+              "outputs": [
+                "o",
+                "final_state"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32Bf16Kernel",
+              "signature": "1bace06d52ff1d46",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32Bf16Kernel",
+              "signature": "1bace06d52ff1d46",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32Bf16Kernel",
+              "signature": "1bace06d52ff1d46",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "ScanFusedKernel",
+              "signature": "306f6f401a02c792",
+              "outputs": [
+                "dAqk",
+                "dh",
+                "dv",
+                "dh0"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseMmBoundedKernel",
+              "signature": "5a0b0e0263189b90",
+              "outputs": [
+                "d_qg",
+                "d_kg",
+                "d_vh",
+                "d_v_beta",
+                "d_k_beta_g"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseEpilogueKernel",
+              "signature": "99d699ab19037e94",
+              "outputs": [
+                "dq_hv",
+                "dk_hv",
+                "dv",
+                "dbeta",
+                "dg_core",
+                "k_exp"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseDainvKernel",
+              "signature": "ed387cdedccff8e4",
+              "outputs": [
+                "dtri"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseDakkFusedKernel",
+              "signature": "c9546079430df630",
+              "outputs": [
+                "dAkk"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizePreStableKernel",
+              "signature": "89a92dfb7d3decd2",
+              "outputs": [
+                "q_scaled",
+                "k_scaled",
+                "kg",
+                "m_qk",
+                "m_base",
+                "m_beta"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizePairKernel",
+              "signature": "0ec1db8afb1df417",
+              "outputs": [
+                "dq_pair",
+                "dk_pair",
+                "s_base",
+                "t_beta"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizePostStableKernel",
+              "signature": "de7bf5fd932aff3e",
+              "outputs": [
+                "dq_hv_out",
+                "dk_hv_out",
+                "dbeta_out",
+                "dg_out"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizeReduceKernel",
+              "signature": "c50ccb9f48fbef6a",
+              "outputs": [
+                "dq_out",
+                "dk_out"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16F32Kernel",
+              "signature": "127dcc2b9168d6bb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16F32Kernel",
+              "signature": "127dcc2b9168d6bb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16F32Kernel",
+              "signature": "127dcc2b9168d6bb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            }
+          ],
+          "inputs_unchanged": true
+        }
+      },
+      "scope": "Measured public default-gate behavior; no leaf numerical pass inferred from rejection."
+    },
+    {
+      "dtype": "bf16",
+      "A_log": -100.0,
+      "paths": {
+        "candidate": {
+          "accepted": true,
+          "finite_output": true,
+          "finite_state": true,
+          "finite_gradients": [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ],
+          "output_sha256": "cbee0143c8535b34f9f607960163edb55c8732e23be5786d7c3ae75a09b983da",
+          "state_sha256": "52cd0774a204a0d47dadbbcf3d580294f0743afd137c25cb8d146c206da95d1a",
+          "launches": [
+            {
+              "operator": "KdaPrepChunkGateBf16Bf16Bf16Kernel",
+              "signature": "cfffaf65d94ec35f",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32F32Kernel",
+              "signature": "c734ca5227d79ce8",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32F32Kernel",
+              "signature": "c734ca5227d79ce8",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub1GateStableKernel",
+              "signature": "aad21f2d2b3d2c2c",
+              "outputs": [
+                "g_cumsum",
+                "eg"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub2ScoreStableKernel",
+              "signature": "69ca68c647809e44",
+              "outputs": [
+                "Aqk",
+                "strict"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "TrilInverse64V2StrictBf16Kernel",
+              "signature": "a5a2c0726a680ba3",
+              "outputs": [
+                "inv"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub3WyStableKernel",
+              "signature": "d90b2cf4c23fa99a",
+              "outputs": [
+                "w",
+                "u",
+                "qg",
+                "kg"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub45AqkRepairedKernel",
+              "signature": "d24e6d59beb12bc6",
+              "outputs": [
+                "o",
+                "final_state"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32Bf16Kernel",
+              "signature": "1bace06d52ff1d46",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32Bf16Kernel",
+              "signature": "1bace06d52ff1d46",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32Bf16Kernel",
+              "signature": "1bace06d52ff1d46",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "ScanFusedKernel",
+              "signature": "306f6f401a02c792",
+              "outputs": [
+                "dAqk",
+                "dh",
+                "dv",
+                "dh0"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseMmBoundedKernel",
+              "signature": "5a0b0e0263189b90",
+              "outputs": [
+                "d_qg",
+                "d_kg",
+                "d_vh",
+                "d_v_beta",
+                "d_k_beta_g"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseEpilogueKernel",
+              "signature": "99d699ab19037e94",
+              "outputs": [
+                "dq_hv",
+                "dk_hv",
+                "dv",
+                "dbeta",
+                "dg_core",
+                "k_exp"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseDainvKernel",
+              "signature": "ed387cdedccff8e4",
+              "outputs": [
+                "dtri"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseDakkFusedKernel",
+              "signature": "c9546079430df630",
+              "outputs": [
+                "dAkk"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizePreStableKernel",
+              "signature": "89a92dfb7d3decd2",
+              "outputs": [
+                "q_scaled",
+                "k_scaled",
+                "kg",
+                "m_qk",
+                "m_base",
+                "m_beta"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizePairKernel",
+              "signature": "0ec1db8afb1df417",
+              "outputs": [
+                "dq_pair",
+                "dk_pair",
+                "s_base",
+                "t_beta"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizePostStableKernel",
+              "signature": "de7bf5fd932aff3e",
+              "outputs": [
+                "dq_hv_out",
+                "dk_hv_out",
+                "dbeta_out",
+                "dg_out"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizeReduceKernel",
+              "signature": "c50ccb9f48fbef6a",
+              "outputs": [
+                "dq_out",
+                "dk_out"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16F32Kernel",
+              "signature": "127dcc2b9168d6bb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16F32Kernel",
+              "signature": "127dcc2b9168d6bb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16F32Kernel",
+              "signature": "127dcc2b9168d6bb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaPrepBackwardGateBf16Bf16Bf16Kernel",
+              "signature": "cebc88ab38e7ac01",
+              "outputs": [
+                "destination",
+                "partials"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaPrepBackwardGateReduceBf16Bf16Kernel",
+              "signature": "a170cbf7a5114247",
+              "outputs": [
+                "da",
+                "db"
+              ],
+              "poisoned": true
+            }
+          ],
+          "inputs_unchanged": true
+        },
+        "old_npu": {
+          "accepted": true,
+          "finite_output": true,
+          "finite_state": true,
+          "finite_gradients": [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ],
+          "output_sha256": "cbee0143c8535b34f9f607960163edb55c8732e23be5786d7c3ae75a09b983da",
+          "state_sha256": "52cd0774a204a0d47dadbbcf3d580294f0743afd137c25cb8d146c206da95d1a",
+          "launches": [
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32F32Kernel",
+              "signature": "c734ca5227d79ce8",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32F32Kernel",
+              "signature": "c734ca5227d79ce8",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub1GateStableKernel",
+              "signature": "aad21f2d2b3d2c2c",
+              "outputs": [
+                "g_cumsum",
+                "eg"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub2ScoreStableKernel",
+              "signature": "69ca68c647809e44",
+              "outputs": [
+                "Aqk",
+                "strict"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "TrilInverse64V2StrictBf16Kernel",
+              "signature": "a5a2c0726a680ba3",
+              "outputs": [
+                "inv"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub3WyStableKernel",
+              "signature": "d90b2cf4c23fa99a",
+              "outputs": [
+                "w",
+                "u",
+                "qg",
+                "kg"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub45AqkRepairedKernel",
+              "signature": "d24e6d59beb12bc6",
+              "outputs": [
+                "o",
+                "final_state"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32Bf16Kernel",
+              "signature": "1bace06d52ff1d46",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32Bf16Kernel",
+              "signature": "1bace06d52ff1d46",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32Bf16Kernel",
+              "signature": "1bace06d52ff1d46",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "ScanFusedKernel",
+              "signature": "306f6f401a02c792",
+              "outputs": [
+                "dAqk",
+                "dh",
+                "dv",
+                "dh0"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseMmBoundedKernel",
+              "signature": "5a0b0e0263189b90",
+              "outputs": [
+                "d_qg",
+                "d_kg",
+                "d_vh",
+                "d_v_beta",
+                "d_k_beta_g"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseEpilogueKernel",
+              "signature": "99d699ab19037e94",
+              "outputs": [
+                "dq_hv",
+                "dk_hv",
+                "dv",
+                "dbeta",
+                "dg_core",
+                "k_exp"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseDainvKernel",
+              "signature": "ed387cdedccff8e4",
+              "outputs": [
+                "dtri"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseDakkFusedKernel",
+              "signature": "c9546079430df630",
+              "outputs": [
+                "dAkk"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizePreStableKernel",
+              "signature": "89a92dfb7d3decd2",
+              "outputs": [
+                "q_scaled",
+                "k_scaled",
+                "kg",
+                "m_qk",
+                "m_base",
+                "m_beta"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizePairKernel",
+              "signature": "0ec1db8afb1df417",
+              "outputs": [
+                "dq_pair",
+                "dk_pair",
+                "s_base",
+                "t_beta"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizePostStableKernel",
+              "signature": "de7bf5fd932aff3e",
+              "outputs": [
+                "dq_hv_out",
+                "dk_hv_out",
+                "dbeta_out",
+                "dg_out"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizeReduceKernel",
+              "signature": "c50ccb9f48fbef6a",
+              "outputs": [
+                "dq_out",
+                "dk_out"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16F32Kernel",
+              "signature": "127dcc2b9168d6bb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16F32Kernel",
+              "signature": "127dcc2b9168d6bb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16F32Kernel",
+              "signature": "127dcc2b9168d6bb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            }
+          ],
+          "inputs_unchanged": true
+        }
+      },
+      "scope": "Measured public default-gate behavior; no leaf numerical pass inferred from rejection."
+    },
+    {
+      "dtype": "bf16",
+      "A_log": 80.0,
+      "paths": {
+        "candidate": {
+          "accepted": false,
+          "error_type": "ValueError",
+          "message": "chunk \u5185\u95e8\u63a7\u8de8\u5ea6 7424238495326569195795828940948373504.0 \u8d85\u8fc7 impl='stable' \u5728 backward \u94fe\u4e0a\u7684\u4e0a\u9650 105.0\u3002\u53cd\u5411\u68af\u5ea6\u4ecd\u662f**\u6709\u9650\u503c**\uff08\u5b9e\u6d4b\u5230 169.8 \u90fd\u6709\u9650\uff09\uff0c\u4f46\u7cbe\u5ea6\u4f1a\u8d85\u51fa\u5951\u7ea6\u9884\u7b97\uff1adq \u5728\u8de8\u5ea6 130 \u5904\u8fbe 6.17e-02\uff08\u9884\u7b97 0.05\uff09\uff0cdg \u5728 169 \u5904\u8fbe 6.49e-01\uff08\u9884\u7b97 0.25\uff09\u3002g \u662f log \u7a7a\u95f4\u7684 per-token \u8870\u51cf\u589e\u91cf\uff1b\u51cf\u5c0f g \u7684\u91cf\u7ea7\uff08KDA \u5c42\u91cc\u5373\u51cf\u5c0f exp(A_log) \u6216 dt\uff09\uff1b\u53ea\u505a\u63a8\u7406\u4e0d\u9700\u8981\u53cd\u5411\u65f6\u7528 chunk_kda_fwd\uff0c\u5b83\u7684\u4e0a\u9650\u662f 155.0\u3002\u786e\u77e5\u53ef\u63a5\u53d7\u65f6\u4f20 check_gate_range=False \u8df3\u8fc7\u672c\u68c0\u67e5\u3002\u8be6\u89c1 docs/matrix/gaps.json \u7684 gate-range-beyond-declared \u4e0e gate-span-still-bounded",
+          "launches": [
+            {
+              "operator": "KdaPrepChunkGateBf16Bf16Bf16Kernel",
+              "signature": "cfffaf65d94ec35f",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            }
+          ],
+          "inputs_unchanged": true
+        },
+        "old_npu": {
+          "accepted": false,
+          "error_type": "ValueError",
+          "message": "chunk \u5185\u95e8\u63a7\u8de8\u5ea6 7424238495326569195795828940948373504.0 \u8d85\u8fc7 impl='stable' \u5728 backward \u94fe\u4e0a\u7684\u4e0a\u9650 105.0\u3002\u53cd\u5411\u68af\u5ea6\u4ecd\u662f**\u6709\u9650\u503c**\uff08\u5b9e\u6d4b\u5230 169.8 \u90fd\u6709\u9650\uff09\uff0c\u4f46\u7cbe\u5ea6\u4f1a\u8d85\u51fa\u5951\u7ea6\u9884\u7b97\uff1adq \u5728\u8de8\u5ea6 130 \u5904\u8fbe 6.17e-02\uff08\u9884\u7b97 0.05\uff09\uff0cdg \u5728 169 \u5904\u8fbe 6.49e-01\uff08\u9884\u7b97 0.25\uff09\u3002g \u662f log \u7a7a\u95f4\u7684 per-token \u8870\u51cf\u589e\u91cf\uff1b\u51cf\u5c0f g \u7684\u91cf\u7ea7\uff08KDA \u5c42\u91cc\u5373\u51cf\u5c0f exp(A_log) \u6216 dt\uff09\uff1b\u53ea\u505a\u63a8\u7406\u4e0d\u9700\u8981\u53cd\u5411\u65f6\u7528 chunk_kda_fwd\uff0c\u5b83\u7684\u4e0a\u9650\u662f 155.0\u3002\u786e\u77e5\u53ef\u63a5\u53d7\u65f6\u4f20 check_gate_range=False \u8df3\u8fc7\u672c\u68c0\u67e5\u3002\u8be6\u89c1 docs/matrix/gaps.json \u7684 gate-range-beyond-declared \u4e0e gate-span-still-bounded",
+          "launches": [],
+          "inputs_unchanged": true
+        }
+      },
+      "scope": "Measured public default-gate behavior; no leaf numerical pass inferred from rejection."
+    },
+    {
+      "dtype": "bf16",
+      "A_log": 88.0,
+      "paths": {
+        "candidate": {
+          "accepted": false,
+          "error_type": "ValueError",
+          "message": "chunk \u5185\u95e8\u63a7\u8de8\u5ea6 nan \u8d85\u8fc7 impl='stable' \u5728 backward \u94fe\u4e0a\u7684\u4e0a\u9650 105.0\u3002\u53cd\u5411\u68af\u5ea6\u4ecd\u662f**\u6709\u9650\u503c**\uff08\u5b9e\u6d4b\u5230 169.8 \u90fd\u6709\u9650\uff09\uff0c\u4f46\u7cbe\u5ea6\u4f1a\u8d85\u51fa\u5951\u7ea6\u9884\u7b97\uff1adq \u5728\u8de8\u5ea6 130 \u5904\u8fbe 6.17e-02\uff08\u9884\u7b97 0.05\uff09\uff0cdg \u5728 169 \u5904\u8fbe 6.49e-01\uff08\u9884\u7b97 0.25\uff09\u3002g \u662f log \u7a7a\u95f4\u7684 per-token \u8870\u51cf\u589e\u91cf\uff1b\u51cf\u5c0f g \u7684\u91cf\u7ea7\uff08KDA \u5c42\u91cc\u5373\u51cf\u5c0f exp(A_log) \u6216 dt\uff09\uff1b\u53ea\u505a\u63a8\u7406\u4e0d\u9700\u8981\u53cd\u5411\u65f6\u7528 chunk_kda_fwd\uff0c\u5b83\u7684\u4e0a\u9650\u662f 155.0\u3002\u786e\u77e5\u53ef\u63a5\u53d7\u65f6\u4f20 check_gate_range=False \u8df3\u8fc7\u672c\u68c0\u67e5\u3002\u8be6\u89c1 docs/matrix/gaps.json \u7684 gate-range-beyond-declared \u4e0e gate-span-still-bounded",
+          "launches": [
+            {
+              "operator": "KdaPrepChunkGateBf16Bf16Bf16Kernel",
+              "signature": "cfffaf65d94ec35f",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            }
+          ],
+          "inputs_unchanged": true
+        },
+        "old_npu": {
+          "accepted": false,
+          "error_type": "ValueError",
+          "message": "chunk \u5185\u95e8\u63a7\u8de8\u5ea6 nan \u8d85\u8fc7 impl='stable' \u5728 backward \u94fe\u4e0a\u7684\u4e0a\u9650 105.0\u3002\u53cd\u5411\u68af\u5ea6\u4ecd\u662f**\u6709\u9650\u503c**\uff08\u5b9e\u6d4b\u5230 169.8 \u90fd\u6709\u9650\uff09\uff0c\u4f46\u7cbe\u5ea6\u4f1a\u8d85\u51fa\u5951\u7ea6\u9884\u7b97\uff1adq \u5728\u8de8\u5ea6 130 \u5904\u8fbe 6.17e-02\uff08\u9884\u7b97 0.05\uff09\uff0cdg \u5728 169 \u5904\u8fbe 6.49e-01\uff08\u9884\u7b97 0.25\uff09\u3002g \u662f log \u7a7a\u95f4\u7684 per-token \u8870\u51cf\u589e\u91cf\uff1b\u51cf\u5c0f g \u7684\u91cf\u7ea7\uff08KDA \u5c42\u91cc\u5373\u51cf\u5c0f exp(A_log) \u6216 dt\uff09\uff1b\u53ea\u505a\u63a8\u7406\u4e0d\u9700\u8981\u53cd\u5411\u65f6\u7528 chunk_kda_fwd\uff0c\u5b83\u7684\u4e0a\u9650\u662f 155.0\u3002\u786e\u77e5\u53ef\u63a5\u53d7\u65f6\u4f20 check_gate_range=False \u8df3\u8fc7\u672c\u68c0\u67e5\u3002\u8be6\u89c1 docs/matrix/gaps.json \u7684 gate-range-beyond-declared \u4e0e gate-span-still-bounded",
+          "launches": [],
+          "inputs_unchanged": true
+        }
+      },
+      "scope": "Measured public default-gate behavior; no leaf numerical pass inferred from rejection."
+    },
+    {
+      "dtype": "bf16",
+      "A_log": 89.0,
+      "paths": {
+        "candidate": {
+          "accepted": false,
+          "error_type": "ValueError",
+          "message": "chunk \u5185\u95e8\u63a7\u8de8\u5ea6 nan \u8d85\u8fc7 impl='stable' \u5728 backward \u94fe\u4e0a\u7684\u4e0a\u9650 105.0\u3002\u53cd\u5411\u68af\u5ea6\u4ecd\u662f**\u6709\u9650\u503c**\uff08\u5b9e\u6d4b\u5230 169.8 \u90fd\u6709\u9650\uff09\uff0c\u4f46\u7cbe\u5ea6\u4f1a\u8d85\u51fa\u5951\u7ea6\u9884\u7b97\uff1adq \u5728\u8de8\u5ea6 130 \u5904\u8fbe 6.17e-02\uff08\u9884\u7b97 0.05\uff09\uff0cdg \u5728 169 \u5904\u8fbe 6.49e-01\uff08\u9884\u7b97 0.25\uff09\u3002g \u662f log \u7a7a\u95f4\u7684 per-token \u8870\u51cf\u589e\u91cf\uff1b\u51cf\u5c0f g \u7684\u91cf\u7ea7\uff08KDA \u5c42\u91cc\u5373\u51cf\u5c0f exp(A_log) \u6216 dt\uff09\uff1b\u53ea\u505a\u63a8\u7406\u4e0d\u9700\u8981\u53cd\u5411\u65f6\u7528 chunk_kda_fwd\uff0c\u5b83\u7684\u4e0a\u9650\u662f 155.0\u3002\u786e\u77e5\u53ef\u63a5\u53d7\u65f6\u4f20 check_gate_range=False \u8df3\u8fc7\u672c\u68c0\u67e5\u3002\u8be6\u89c1 docs/matrix/gaps.json \u7684 gate-range-beyond-declared \u4e0e gate-span-still-bounded",
+          "launches": [
+            {
+              "operator": "KdaPrepChunkGateBf16Bf16Bf16Kernel",
+              "signature": "cfffaf65d94ec35f",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            }
+          ],
+          "inputs_unchanged": true
+        },
+        "old_npu": {
+          "accepted": false,
+          "error_type": "ValueError",
+          "message": "chunk \u5185\u95e8\u63a7\u8de8\u5ea6 nan \u8d85\u8fc7 impl='stable' \u5728 backward \u94fe\u4e0a\u7684\u4e0a\u9650 105.0\u3002\u53cd\u5411\u68af\u5ea6\u4ecd\u662f**\u6709\u9650\u503c**\uff08\u5b9e\u6d4b\u5230 169.8 \u90fd\u6709\u9650\uff09\uff0c\u4f46\u7cbe\u5ea6\u4f1a\u8d85\u51fa\u5951\u7ea6\u9884\u7b97\uff1adq \u5728\u8de8\u5ea6 130 \u5904\u8fbe 6.17e-02\uff08\u9884\u7b97 0.05\uff09\uff0cdg \u5728 169 \u5904\u8fbe 6.49e-01\uff08\u9884\u7b97 0.25\uff09\u3002g \u662f log \u7a7a\u95f4\u7684 per-token \u8870\u51cf\u589e\u91cf\uff1b\u51cf\u5c0f g \u7684\u91cf\u7ea7\uff08KDA \u5c42\u91cc\u5373\u51cf\u5c0f exp(A_log) \u6216 dt\uff09\uff1b\u53ea\u505a\u63a8\u7406\u4e0d\u9700\u8981\u53cd\u5411\u65f6\u7528 chunk_kda_fwd\uff0c\u5b83\u7684\u4e0a\u9650\u662f 155.0\u3002\u786e\u77e5\u53ef\u63a5\u53d7\u65f6\u4f20 check_gate_range=False \u8df3\u8fc7\u672c\u68c0\u67e5\u3002\u8be6\u89c1 docs/matrix/gaps.json \u7684 gate-range-beyond-declared \u4e0e gate-span-still-bounded",
+          "launches": [],
+          "inputs_unchanged": true
+        }
+      },
+      "scope": "Measured public default-gate behavior; no leaf numerical pass inferred from rejection."
+    },
+    {
+      "dtype": "bf16",
+      "A_log": 100.0,
+      "paths": {
+        "candidate": {
+          "accepted": false,
+          "error_type": "ValueError",
+          "message": "chunk \u5185\u95e8\u63a7\u8de8\u5ea6 nan \u8d85\u8fc7 impl='stable' \u5728 backward \u94fe\u4e0a\u7684\u4e0a\u9650 105.0\u3002\u53cd\u5411\u68af\u5ea6\u4ecd\u662f**\u6709\u9650\u503c**\uff08\u5b9e\u6d4b\u5230 169.8 \u90fd\u6709\u9650\uff09\uff0c\u4f46\u7cbe\u5ea6\u4f1a\u8d85\u51fa\u5951\u7ea6\u9884\u7b97\uff1adq \u5728\u8de8\u5ea6 130 \u5904\u8fbe 6.17e-02\uff08\u9884\u7b97 0.05\uff09\uff0cdg \u5728 169 \u5904\u8fbe 6.49e-01\uff08\u9884\u7b97 0.25\uff09\u3002g \u662f log \u7a7a\u95f4\u7684 per-token \u8870\u51cf\u589e\u91cf\uff1b\u51cf\u5c0f g \u7684\u91cf\u7ea7\uff08KDA \u5c42\u91cc\u5373\u51cf\u5c0f exp(A_log) \u6216 dt\uff09\uff1b\u53ea\u505a\u63a8\u7406\u4e0d\u9700\u8981\u53cd\u5411\u65f6\u7528 chunk_kda_fwd\uff0c\u5b83\u7684\u4e0a\u9650\u662f 155.0\u3002\u786e\u77e5\u53ef\u63a5\u53d7\u65f6\u4f20 check_gate_range=False \u8df3\u8fc7\u672c\u68c0\u67e5\u3002\u8be6\u89c1 docs/matrix/gaps.json \u7684 gate-range-beyond-declared \u4e0e gate-span-still-bounded",
+          "launches": [
+            {
+              "operator": "KdaPrepChunkGateBf16Bf16Bf16Kernel",
+              "signature": "cfffaf65d94ec35f",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            }
+          ],
+          "inputs_unchanged": true
+        },
+        "old_npu": {
+          "accepted": false,
+          "error_type": "ValueError",
+          "message": "chunk \u5185\u95e8\u63a7\u8de8\u5ea6 nan \u8d85\u8fc7 impl='stable' \u5728 backward \u94fe\u4e0a\u7684\u4e0a\u9650 105.0\u3002\u53cd\u5411\u68af\u5ea6\u4ecd\u662f**\u6709\u9650\u503c**\uff08\u5b9e\u6d4b\u5230 169.8 \u90fd\u6709\u9650\uff09\uff0c\u4f46\u7cbe\u5ea6\u4f1a\u8d85\u51fa\u5951\u7ea6\u9884\u7b97\uff1adq \u5728\u8de8\u5ea6 130 \u5904\u8fbe 6.17e-02\uff08\u9884\u7b97 0.05\uff09\uff0cdg \u5728 169 \u5904\u8fbe 6.49e-01\uff08\u9884\u7b97 0.25\uff09\u3002g \u662f log \u7a7a\u95f4\u7684 per-token \u8870\u51cf\u589e\u91cf\uff1b\u51cf\u5c0f g \u7684\u91cf\u7ea7\uff08KDA \u5c42\u91cc\u5373\u51cf\u5c0f exp(A_log) \u6216 dt\uff09\uff1b\u53ea\u505a\u63a8\u7406\u4e0d\u9700\u8981\u53cd\u5411\u65f6\u7528 chunk_kda_fwd\uff0c\u5b83\u7684\u4e0a\u9650\u662f 155.0\u3002\u786e\u77e5\u53ef\u63a5\u53d7\u65f6\u4f20 check_gate_range=False \u8df3\u8fc7\u672c\u68c0\u67e5\u3002\u8be6\u89c1 docs/matrix/gaps.json \u7684 gate-range-beyond-declared \u4e0e gate-span-still-bounded",
+          "launches": [],
+          "inputs_unchanged": true
+        }
+      },
+      "scope": "Measured public default-gate behavior; no leaf numerical pass inferred from rejection."
+    },
+    {
+      "dtype": "f32",
+      "A_log": -120.0,
+      "paths": {
+        "candidate": {
+          "accepted": true,
+          "finite_output": true,
+          "finite_state": true,
+          "finite_gradients": [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ],
+          "output_sha256": "cbee0143c8535b34f9f607960163edb55c8732e23be5786d7c3ae75a09b983da",
+          "state_sha256": "52cd0774a204a0d47dadbbcf3d580294f0743afd137c25cb8d146c206da95d1a",
+          "launches": [
+            {
+              "operator": "KdaPrepChunkGateF32F32F32Kernel",
+              "signature": "53ee7ed25f0129cb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32F32Kernel",
+              "signature": "c734ca5227d79ce8",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32F32Kernel",
+              "signature": "c734ca5227d79ce8",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub1GateStableKernel",
+              "signature": "aad21f2d2b3d2c2c",
+              "outputs": [
+                "g_cumsum",
+                "eg"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub2ScoreStableKernel",
+              "signature": "69ca68c647809e44",
+              "outputs": [
+                "Aqk",
+                "strict"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "TrilInverse64V2StrictBf16Kernel",
+              "signature": "a5a2c0726a680ba3",
+              "outputs": [
+                "inv"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub3WyStableKernel",
+              "signature": "d90b2cf4c23fa99a",
+              "outputs": [
+                "w",
+                "u",
+                "qg",
+                "kg"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub45AqkRepairedKernel",
+              "signature": "d24e6d59beb12bc6",
+              "outputs": [
+                "o",
+                "final_state"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32Bf16Kernel",
+              "signature": "1bace06d52ff1d46",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32Bf16Kernel",
+              "signature": "1bace06d52ff1d46",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32Bf16Kernel",
+              "signature": "1bace06d52ff1d46",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "ScanFusedKernel",
+              "signature": "306f6f401a02c792",
+              "outputs": [
+                "dAqk",
+                "dh",
+                "dv",
+                "dh0"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseMmBoundedKernel",
+              "signature": "5a0b0e0263189b90",
+              "outputs": [
+                "d_qg",
+                "d_kg",
+                "d_vh",
+                "d_v_beta",
+                "d_k_beta_g"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseEpilogueKernel",
+              "signature": "99d699ab19037e94",
+              "outputs": [
+                "dq_hv",
+                "dk_hv",
+                "dv",
+                "dbeta",
+                "dg_core",
+                "k_exp"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseDainvKernel",
+              "signature": "ed387cdedccff8e4",
+              "outputs": [
+                "dtri"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseDakkFusedKernel",
+              "signature": "c9546079430df630",
+              "outputs": [
+                "dAkk"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizePreStableKernel",
+              "signature": "89a92dfb7d3decd2",
+              "outputs": [
+                "q_scaled",
+                "k_scaled",
+                "kg",
+                "m_qk",
+                "m_base",
+                "m_beta"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizePairKernel",
+              "signature": "0ec1db8afb1df417",
+              "outputs": [
+                "dq_pair",
+                "dk_pair",
+                "s_base",
+                "t_beta"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizePostStableKernel",
+              "signature": "de7bf5fd932aff3e",
+              "outputs": [
+                "dq_hv_out",
+                "dk_hv_out",
+                "dbeta_out",
+                "dg_out"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizeReduceKernel",
+              "signature": "c50ccb9f48fbef6a",
+              "outputs": [
+                "dq_out",
+                "dk_out"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16F32Kernel",
+              "signature": "127dcc2b9168d6bb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16F32Kernel",
+              "signature": "127dcc2b9168d6bb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16F32Kernel",
+              "signature": "127dcc2b9168d6bb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaPrepBackwardGateF32F32F32Kernel",
+              "signature": "17105abe26585840",
+              "outputs": [
+                "destination",
+                "partials"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaPrepBackwardGateReduceF32F32Kernel",
+              "signature": "e87b032def137209",
+              "outputs": [
+                "da",
+                "db"
+              ],
+              "poisoned": true
+            }
+          ],
+          "inputs_unchanged": true
+        },
+        "old_npu": {
+          "accepted": true,
+          "finite_output": true,
+          "finite_state": true,
+          "finite_gradients": [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ],
+          "output_sha256": "cbee0143c8535b34f9f607960163edb55c8732e23be5786d7c3ae75a09b983da",
+          "state_sha256": "52cd0774a204a0d47dadbbcf3d580294f0743afd137c25cb8d146c206da95d1a",
+          "launches": [
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32F32Kernel",
+              "signature": "c734ca5227d79ce8",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32F32Kernel",
+              "signature": "c734ca5227d79ce8",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub1GateStableKernel",
+              "signature": "aad21f2d2b3d2c2c",
+              "outputs": [
+                "g_cumsum",
+                "eg"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub2ScoreStableKernel",
+              "signature": "69ca68c647809e44",
+              "outputs": [
+                "Aqk",
+                "strict"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "TrilInverse64V2StrictBf16Kernel",
+              "signature": "a5a2c0726a680ba3",
+              "outputs": [
+                "inv"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub3WyStableKernel",
+              "signature": "d90b2cf4c23fa99a",
+              "outputs": [
+                "w",
+                "u",
+                "qg",
+                "kg"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub45AqkRepairedKernel",
+              "signature": "d24e6d59beb12bc6",
+              "outputs": [
+                "o",
+                "final_state"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32Bf16Kernel",
+              "signature": "1bace06d52ff1d46",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32Bf16Kernel",
+              "signature": "1bace06d52ff1d46",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32Bf16Kernel",
+              "signature": "1bace06d52ff1d46",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "ScanFusedKernel",
+              "signature": "306f6f401a02c792",
+              "outputs": [
+                "dAqk",
+                "dh",
+                "dv",
+                "dh0"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseMmBoundedKernel",
+              "signature": "5a0b0e0263189b90",
+              "outputs": [
+                "d_qg",
+                "d_kg",
+                "d_vh",
+                "d_v_beta",
+                "d_k_beta_g"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseEpilogueKernel",
+              "signature": "99d699ab19037e94",
+              "outputs": [
+                "dq_hv",
+                "dk_hv",
+                "dv",
+                "dbeta",
+                "dg_core",
+                "k_exp"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseDainvKernel",
+              "signature": "ed387cdedccff8e4",
+              "outputs": [
+                "dtri"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseDakkFusedKernel",
+              "signature": "c9546079430df630",
+              "outputs": [
+                "dAkk"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizePreStableKernel",
+              "signature": "89a92dfb7d3decd2",
+              "outputs": [
+                "q_scaled",
+                "k_scaled",
+                "kg",
+                "m_qk",
+                "m_base",
+                "m_beta"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizePairKernel",
+              "signature": "0ec1db8afb1df417",
+              "outputs": [
+                "dq_pair",
+                "dk_pair",
+                "s_base",
+                "t_beta"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizePostStableKernel",
+              "signature": "de7bf5fd932aff3e",
+              "outputs": [
+                "dq_hv_out",
+                "dk_hv_out",
+                "dbeta_out",
+                "dg_out"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizeReduceKernel",
+              "signature": "c50ccb9f48fbef6a",
+              "outputs": [
+                "dq_out",
+                "dk_out"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16F32Kernel",
+              "signature": "127dcc2b9168d6bb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16F32Kernel",
+              "signature": "127dcc2b9168d6bb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16F32Kernel",
+              "signature": "127dcc2b9168d6bb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            }
+          ],
+          "inputs_unchanged": true
+        }
+      },
+      "scope": "Measured public default-gate behavior; no leaf numerical pass inferred from rejection."
+    },
+    {
+      "dtype": "f32",
+      "A_log": -100.0,
+      "paths": {
+        "candidate": {
+          "accepted": true,
+          "finite_output": true,
+          "finite_state": true,
+          "finite_gradients": [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ],
+          "output_sha256": "cbee0143c8535b34f9f607960163edb55c8732e23be5786d7c3ae75a09b983da",
+          "state_sha256": "52cd0774a204a0d47dadbbcf3d580294f0743afd137c25cb8d146c206da95d1a",
+          "launches": [
+            {
+              "operator": "KdaPrepChunkGateF32F32F32Kernel",
+              "signature": "53ee7ed25f0129cb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32F32Kernel",
+              "signature": "c734ca5227d79ce8",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32F32Kernel",
+              "signature": "c734ca5227d79ce8",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub1GateStableKernel",
+              "signature": "aad21f2d2b3d2c2c",
+              "outputs": [
+                "g_cumsum",
+                "eg"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub2ScoreStableKernel",
+              "signature": "69ca68c647809e44",
+              "outputs": [
+                "Aqk",
+                "strict"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "TrilInverse64V2StrictBf16Kernel",
+              "signature": "a5a2c0726a680ba3",
+              "outputs": [
+                "inv"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub3WyStableKernel",
+              "signature": "d90b2cf4c23fa99a",
+              "outputs": [
+                "w",
+                "u",
+                "qg",
+                "kg"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub45AqkRepairedKernel",
+              "signature": "d24e6d59beb12bc6",
+              "outputs": [
+                "o",
+                "final_state"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32Bf16Kernel",
+              "signature": "1bace06d52ff1d46",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32Bf16Kernel",
+              "signature": "1bace06d52ff1d46",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32Bf16Kernel",
+              "signature": "1bace06d52ff1d46",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "ScanFusedKernel",
+              "signature": "306f6f401a02c792",
+              "outputs": [
+                "dAqk",
+                "dh",
+                "dv",
+                "dh0"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseMmBoundedKernel",
+              "signature": "5a0b0e0263189b90",
+              "outputs": [
+                "d_qg",
+                "d_kg",
+                "d_vh",
+                "d_v_beta",
+                "d_k_beta_g"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseEpilogueKernel",
+              "signature": "99d699ab19037e94",
+              "outputs": [
+                "dq_hv",
+                "dk_hv",
+                "dv",
+                "dbeta",
+                "dg_core",
+                "k_exp"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseDainvKernel",
+              "signature": "ed387cdedccff8e4",
+              "outputs": [
+                "dtri"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseDakkFusedKernel",
+              "signature": "c9546079430df630",
+              "outputs": [
+                "dAkk"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizePreStableKernel",
+              "signature": "89a92dfb7d3decd2",
+              "outputs": [
+                "q_scaled",
+                "k_scaled",
+                "kg",
+                "m_qk",
+                "m_base",
+                "m_beta"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizePairKernel",
+              "signature": "0ec1db8afb1df417",
+              "outputs": [
+                "dq_pair",
+                "dk_pair",
+                "s_base",
+                "t_beta"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizePostStableKernel",
+              "signature": "de7bf5fd932aff3e",
+              "outputs": [
+                "dq_hv_out",
+                "dk_hv_out",
+                "dbeta_out",
+                "dg_out"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizeReduceKernel",
+              "signature": "c50ccb9f48fbef6a",
+              "outputs": [
+                "dq_out",
+                "dk_out"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16F32Kernel",
+              "signature": "127dcc2b9168d6bb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16F32Kernel",
+              "signature": "127dcc2b9168d6bb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16F32Kernel",
+              "signature": "127dcc2b9168d6bb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaPrepBackwardGateF32F32F32Kernel",
+              "signature": "17105abe26585840",
+              "outputs": [
+                "destination",
+                "partials"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaPrepBackwardGateReduceF32F32Kernel",
+              "signature": "e87b032def137209",
+              "outputs": [
+                "da",
+                "db"
+              ],
+              "poisoned": true
+            }
+          ],
+          "inputs_unchanged": true
+        },
+        "old_npu": {
+          "accepted": true,
+          "finite_output": true,
+          "finite_state": true,
+          "finite_gradients": [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ],
+          "output_sha256": "cbee0143c8535b34f9f607960163edb55c8732e23be5786d7c3ae75a09b983da",
+          "state_sha256": "52cd0774a204a0d47dadbbcf3d580294f0743afd137c25cb8d146c206da95d1a",
+          "launches": [
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32F32Kernel",
+              "signature": "c734ca5227d79ce8",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32F32Kernel",
+              "signature": "c734ca5227d79ce8",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub1GateStableKernel",
+              "signature": "aad21f2d2b3d2c2c",
+              "outputs": [
+                "g_cumsum",
+                "eg"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub2ScoreStableKernel",
+              "signature": "69ca68c647809e44",
+              "outputs": [
+                "Aqk",
+                "strict"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "TrilInverse64V2StrictBf16Kernel",
+              "signature": "a5a2c0726a680ba3",
+              "outputs": [
+                "inv"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub3WyStableKernel",
+              "signature": "d90b2cf4c23fa99a",
+              "outputs": [
+                "w",
+                "u",
+                "qg",
+                "kg"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub45AqkRepairedKernel",
+              "signature": "d24e6d59beb12bc6",
+              "outputs": [
+                "o",
+                "final_state"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32Bf16Kernel",
+              "signature": "1bace06d52ff1d46",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32Bf16Kernel",
+              "signature": "1bace06d52ff1d46",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32Bf16Kernel",
+              "signature": "1bace06d52ff1d46",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "ScanFusedKernel",
+              "signature": "306f6f401a02c792",
+              "outputs": [
+                "dAqk",
+                "dh",
+                "dv",
+                "dh0"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseMmBoundedKernel",
+              "signature": "5a0b0e0263189b90",
+              "outputs": [
+                "d_qg",
+                "d_kg",
+                "d_vh",
+                "d_v_beta",
+                "d_k_beta_g"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseEpilogueKernel",
+              "signature": "99d699ab19037e94",
+              "outputs": [
+                "dq_hv",
+                "dk_hv",
+                "dv",
+                "dbeta",
+                "dg_core",
+                "k_exp"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseDainvKernel",
+              "signature": "ed387cdedccff8e4",
+              "outputs": [
+                "dtri"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseDakkFusedKernel",
+              "signature": "c9546079430df630",
+              "outputs": [
+                "dAkk"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizePreStableKernel",
+              "signature": "89a92dfb7d3decd2",
+              "outputs": [
+                "q_scaled",
+                "k_scaled",
+                "kg",
+                "m_qk",
+                "m_base",
+                "m_beta"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizePairKernel",
+              "signature": "0ec1db8afb1df417",
+              "outputs": [
+                "dq_pair",
+                "dk_pair",
+                "s_base",
+                "t_beta"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizePostStableKernel",
+              "signature": "de7bf5fd932aff3e",
+              "outputs": [
+                "dq_hv_out",
+                "dk_hv_out",
+                "dbeta_out",
+                "dg_out"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizeReduceKernel",
+              "signature": "c50ccb9f48fbef6a",
+              "outputs": [
+                "dq_out",
+                "dk_out"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16F32Kernel",
+              "signature": "127dcc2b9168d6bb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16F32Kernel",
+              "signature": "127dcc2b9168d6bb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16F32Kernel",
+              "signature": "127dcc2b9168d6bb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            }
+          ],
+          "inputs_unchanged": true
+        }
+      },
+      "scope": "Measured public default-gate behavior; no leaf numerical pass inferred from rejection."
+    },
+    {
+      "dtype": "f32",
+      "A_log": 80.0,
+      "paths": {
+        "candidate": {
+          "accepted": false,
+          "error_type": "ValueError",
+          "message": "chunk \u5185\u95e8\u63a7\u8de8\u5ea6 7424238495326569195795828940948373504.0 \u8d85\u8fc7 impl='stable' \u5728 backward \u94fe\u4e0a\u7684\u4e0a\u9650 105.0\u3002\u53cd\u5411\u68af\u5ea6\u4ecd\u662f**\u6709\u9650\u503c**\uff08\u5b9e\u6d4b\u5230 169.8 \u90fd\u6709\u9650\uff09\uff0c\u4f46\u7cbe\u5ea6\u4f1a\u8d85\u51fa\u5951\u7ea6\u9884\u7b97\uff1adq \u5728\u8de8\u5ea6 130 \u5904\u8fbe 6.17e-02\uff08\u9884\u7b97 0.05\uff09\uff0cdg \u5728 169 \u5904\u8fbe 6.49e-01\uff08\u9884\u7b97 0.25\uff09\u3002g \u662f log \u7a7a\u95f4\u7684 per-token \u8870\u51cf\u589e\u91cf\uff1b\u51cf\u5c0f g \u7684\u91cf\u7ea7\uff08KDA \u5c42\u91cc\u5373\u51cf\u5c0f exp(A_log) \u6216 dt\uff09\uff1b\u53ea\u505a\u63a8\u7406\u4e0d\u9700\u8981\u53cd\u5411\u65f6\u7528 chunk_kda_fwd\uff0c\u5b83\u7684\u4e0a\u9650\u662f 155.0\u3002\u786e\u77e5\u53ef\u63a5\u53d7\u65f6\u4f20 check_gate_range=False \u8df3\u8fc7\u672c\u68c0\u67e5\u3002\u8be6\u89c1 docs/matrix/gaps.json \u7684 gate-range-beyond-declared \u4e0e gate-span-still-bounded",
+          "launches": [
+            {
+              "operator": "KdaPrepChunkGateF32F32F32Kernel",
+              "signature": "53ee7ed25f0129cb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            }
+          ],
+          "inputs_unchanged": true
+        },
+        "old_npu": {
+          "accepted": false,
+          "error_type": "ValueError",
+          "message": "chunk \u5185\u95e8\u63a7\u8de8\u5ea6 7424238495326569195795828940948373504.0 \u8d85\u8fc7 impl='stable' \u5728 backward \u94fe\u4e0a\u7684\u4e0a\u9650 105.0\u3002\u53cd\u5411\u68af\u5ea6\u4ecd\u662f**\u6709\u9650\u503c**\uff08\u5b9e\u6d4b\u5230 169.8 \u90fd\u6709\u9650\uff09\uff0c\u4f46\u7cbe\u5ea6\u4f1a\u8d85\u51fa\u5951\u7ea6\u9884\u7b97\uff1adq \u5728\u8de8\u5ea6 130 \u5904\u8fbe 6.17e-02\uff08\u9884\u7b97 0.05\uff09\uff0cdg \u5728 169 \u5904\u8fbe 6.49e-01\uff08\u9884\u7b97 0.25\uff09\u3002g \u662f log \u7a7a\u95f4\u7684 per-token \u8870\u51cf\u589e\u91cf\uff1b\u51cf\u5c0f g \u7684\u91cf\u7ea7\uff08KDA \u5c42\u91cc\u5373\u51cf\u5c0f exp(A_log) \u6216 dt\uff09\uff1b\u53ea\u505a\u63a8\u7406\u4e0d\u9700\u8981\u53cd\u5411\u65f6\u7528 chunk_kda_fwd\uff0c\u5b83\u7684\u4e0a\u9650\u662f 155.0\u3002\u786e\u77e5\u53ef\u63a5\u53d7\u65f6\u4f20 check_gate_range=False \u8df3\u8fc7\u672c\u68c0\u67e5\u3002\u8be6\u89c1 docs/matrix/gaps.json \u7684 gate-range-beyond-declared \u4e0e gate-span-still-bounded",
+          "launches": [],
+          "inputs_unchanged": true
+        }
+      },
+      "scope": "Measured public default-gate behavior; no leaf numerical pass inferred from rejection."
+    },
+    {
+      "dtype": "f32",
+      "A_log": 88.0,
+      "paths": {
+        "candidate": {
+          "accepted": false,
+          "error_type": "ValueError",
+          "message": "chunk \u5185\u95e8\u63a7\u8de8\u5ea6 nan \u8d85\u8fc7 impl='stable' \u5728 backward \u94fe\u4e0a\u7684\u4e0a\u9650 105.0\u3002\u53cd\u5411\u68af\u5ea6\u4ecd\u662f**\u6709\u9650\u503c**\uff08\u5b9e\u6d4b\u5230 169.8 \u90fd\u6709\u9650\uff09\uff0c\u4f46\u7cbe\u5ea6\u4f1a\u8d85\u51fa\u5951\u7ea6\u9884\u7b97\uff1adq \u5728\u8de8\u5ea6 130 \u5904\u8fbe 6.17e-02\uff08\u9884\u7b97 0.05\uff09\uff0cdg \u5728 169 \u5904\u8fbe 6.49e-01\uff08\u9884\u7b97 0.25\uff09\u3002g \u662f log \u7a7a\u95f4\u7684 per-token \u8870\u51cf\u589e\u91cf\uff1b\u51cf\u5c0f g \u7684\u91cf\u7ea7\uff08KDA \u5c42\u91cc\u5373\u51cf\u5c0f exp(A_log) \u6216 dt\uff09\uff1b\u53ea\u505a\u63a8\u7406\u4e0d\u9700\u8981\u53cd\u5411\u65f6\u7528 chunk_kda_fwd\uff0c\u5b83\u7684\u4e0a\u9650\u662f 155.0\u3002\u786e\u77e5\u53ef\u63a5\u53d7\u65f6\u4f20 check_gate_range=False \u8df3\u8fc7\u672c\u68c0\u67e5\u3002\u8be6\u89c1 docs/matrix/gaps.json \u7684 gate-range-beyond-declared \u4e0e gate-span-still-bounded",
+          "launches": [
+            {
+              "operator": "KdaPrepChunkGateF32F32F32Kernel",
+              "signature": "53ee7ed25f0129cb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            }
+          ],
+          "inputs_unchanged": true
+        },
+        "old_npu": {
+          "accepted": false,
+          "error_type": "ValueError",
+          "message": "chunk \u5185\u95e8\u63a7\u8de8\u5ea6 nan \u8d85\u8fc7 impl='stable' \u5728 backward \u94fe\u4e0a\u7684\u4e0a\u9650 105.0\u3002\u53cd\u5411\u68af\u5ea6\u4ecd\u662f**\u6709\u9650\u503c**\uff08\u5b9e\u6d4b\u5230 169.8 \u90fd\u6709\u9650\uff09\uff0c\u4f46\u7cbe\u5ea6\u4f1a\u8d85\u51fa\u5951\u7ea6\u9884\u7b97\uff1adq \u5728\u8de8\u5ea6 130 \u5904\u8fbe 6.17e-02\uff08\u9884\u7b97 0.05\uff09\uff0cdg \u5728 169 \u5904\u8fbe 6.49e-01\uff08\u9884\u7b97 0.25\uff09\u3002g \u662f log \u7a7a\u95f4\u7684 per-token \u8870\u51cf\u589e\u91cf\uff1b\u51cf\u5c0f g \u7684\u91cf\u7ea7\uff08KDA \u5c42\u91cc\u5373\u51cf\u5c0f exp(A_log) \u6216 dt\uff09\uff1b\u53ea\u505a\u63a8\u7406\u4e0d\u9700\u8981\u53cd\u5411\u65f6\u7528 chunk_kda_fwd\uff0c\u5b83\u7684\u4e0a\u9650\u662f 155.0\u3002\u786e\u77e5\u53ef\u63a5\u53d7\u65f6\u4f20 check_gate_range=False \u8df3\u8fc7\u672c\u68c0\u67e5\u3002\u8be6\u89c1 docs/matrix/gaps.json \u7684 gate-range-beyond-declared \u4e0e gate-span-still-bounded",
+          "launches": [],
+          "inputs_unchanged": true
+        }
+      },
+      "scope": "Measured public default-gate behavior; no leaf numerical pass inferred from rejection."
+    },
+    {
+      "dtype": "f32",
+      "A_log": 89.0,
+      "paths": {
+        "candidate": {
+          "accepted": false,
+          "error_type": "ValueError",
+          "message": "chunk \u5185\u95e8\u63a7\u8de8\u5ea6 nan \u8d85\u8fc7 impl='stable' \u5728 backward \u94fe\u4e0a\u7684\u4e0a\u9650 105.0\u3002\u53cd\u5411\u68af\u5ea6\u4ecd\u662f**\u6709\u9650\u503c**\uff08\u5b9e\u6d4b\u5230 169.8 \u90fd\u6709\u9650\uff09\uff0c\u4f46\u7cbe\u5ea6\u4f1a\u8d85\u51fa\u5951\u7ea6\u9884\u7b97\uff1adq \u5728\u8de8\u5ea6 130 \u5904\u8fbe 6.17e-02\uff08\u9884\u7b97 0.05\uff09\uff0cdg \u5728 169 \u5904\u8fbe 6.49e-01\uff08\u9884\u7b97 0.25\uff09\u3002g \u662f log \u7a7a\u95f4\u7684 per-token \u8870\u51cf\u589e\u91cf\uff1b\u51cf\u5c0f g \u7684\u91cf\u7ea7\uff08KDA \u5c42\u91cc\u5373\u51cf\u5c0f exp(A_log) \u6216 dt\uff09\uff1b\u53ea\u505a\u63a8\u7406\u4e0d\u9700\u8981\u53cd\u5411\u65f6\u7528 chunk_kda_fwd\uff0c\u5b83\u7684\u4e0a\u9650\u662f 155.0\u3002\u786e\u77e5\u53ef\u63a5\u53d7\u65f6\u4f20 check_gate_range=False \u8df3\u8fc7\u672c\u68c0\u67e5\u3002\u8be6\u89c1 docs/matrix/gaps.json \u7684 gate-range-beyond-declared \u4e0e gate-span-still-bounded",
+          "launches": [
+            {
+              "operator": "KdaPrepChunkGateF32F32F32Kernel",
+              "signature": "53ee7ed25f0129cb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            }
+          ],
+          "inputs_unchanged": true
+        },
+        "old_npu": {
+          "accepted": false,
+          "error_type": "ValueError",
+          "message": "chunk \u5185\u95e8\u63a7\u8de8\u5ea6 nan \u8d85\u8fc7 impl='stable' \u5728 backward \u94fe\u4e0a\u7684\u4e0a\u9650 105.0\u3002\u53cd\u5411\u68af\u5ea6\u4ecd\u662f**\u6709\u9650\u503c**\uff08\u5b9e\u6d4b\u5230 169.8 \u90fd\u6709\u9650\uff09\uff0c\u4f46\u7cbe\u5ea6\u4f1a\u8d85\u51fa\u5951\u7ea6\u9884\u7b97\uff1adq \u5728\u8de8\u5ea6 130 \u5904\u8fbe 6.17e-02\uff08\u9884\u7b97 0.05\uff09\uff0cdg \u5728 169 \u5904\u8fbe 6.49e-01\uff08\u9884\u7b97 0.25\uff09\u3002g \u662f log \u7a7a\u95f4\u7684 per-token \u8870\u51cf\u589e\u91cf\uff1b\u51cf\u5c0f g \u7684\u91cf\u7ea7\uff08KDA \u5c42\u91cc\u5373\u51cf\u5c0f exp(A_log) \u6216 dt\uff09\uff1b\u53ea\u505a\u63a8\u7406\u4e0d\u9700\u8981\u53cd\u5411\u65f6\u7528 chunk_kda_fwd\uff0c\u5b83\u7684\u4e0a\u9650\u662f 155.0\u3002\u786e\u77e5\u53ef\u63a5\u53d7\u65f6\u4f20 check_gate_range=False \u8df3\u8fc7\u672c\u68c0\u67e5\u3002\u8be6\u89c1 docs/matrix/gaps.json \u7684 gate-range-beyond-declared \u4e0e gate-span-still-bounded",
+          "launches": [],
+          "inputs_unchanged": true
+        }
+      },
+      "scope": "Measured public default-gate behavior; no leaf numerical pass inferred from rejection."
+    },
+    {
+      "dtype": "f32",
+      "A_log": 100.0,
+      "paths": {
+        "candidate": {
+          "accepted": false,
+          "error_type": "ValueError",
+          "message": "chunk \u5185\u95e8\u63a7\u8de8\u5ea6 nan \u8d85\u8fc7 impl='stable' \u5728 backward \u94fe\u4e0a\u7684\u4e0a\u9650 105.0\u3002\u53cd\u5411\u68af\u5ea6\u4ecd\u662f**\u6709\u9650\u503c**\uff08\u5b9e\u6d4b\u5230 169.8 \u90fd\u6709\u9650\uff09\uff0c\u4f46\u7cbe\u5ea6\u4f1a\u8d85\u51fa\u5951\u7ea6\u9884\u7b97\uff1adq \u5728\u8de8\u5ea6 130 \u5904\u8fbe 6.17e-02\uff08\u9884\u7b97 0.05\uff09\uff0cdg \u5728 169 \u5904\u8fbe 6.49e-01\uff08\u9884\u7b97 0.25\uff09\u3002g \u662f log \u7a7a\u95f4\u7684 per-token \u8870\u51cf\u589e\u91cf\uff1b\u51cf\u5c0f g \u7684\u91cf\u7ea7\uff08KDA \u5c42\u91cc\u5373\u51cf\u5c0f exp(A_log) \u6216 dt\uff09\uff1b\u53ea\u505a\u63a8\u7406\u4e0d\u9700\u8981\u53cd\u5411\u65f6\u7528 chunk_kda_fwd\uff0c\u5b83\u7684\u4e0a\u9650\u662f 155.0\u3002\u786e\u77e5\u53ef\u63a5\u53d7\u65f6\u4f20 check_gate_range=False \u8df3\u8fc7\u672c\u68c0\u67e5\u3002\u8be6\u89c1 docs/matrix/gaps.json \u7684 gate-range-beyond-declared \u4e0e gate-span-still-bounded",
+          "launches": [
+            {
+              "operator": "KdaPrepChunkGateF32F32F32Kernel",
+              "signature": "53ee7ed25f0129cb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            }
+          ],
+          "inputs_unchanged": true
+        },
+        "old_npu": {
+          "accepted": false,
+          "error_type": "ValueError",
+          "message": "chunk \u5185\u95e8\u63a7\u8de8\u5ea6 nan \u8d85\u8fc7 impl='stable' \u5728 backward \u94fe\u4e0a\u7684\u4e0a\u9650 105.0\u3002\u53cd\u5411\u68af\u5ea6\u4ecd\u662f**\u6709\u9650\u503c**\uff08\u5b9e\u6d4b\u5230 169.8 \u90fd\u6709\u9650\uff09\uff0c\u4f46\u7cbe\u5ea6\u4f1a\u8d85\u51fa\u5951\u7ea6\u9884\u7b97\uff1adq \u5728\u8de8\u5ea6 130 \u5904\u8fbe 6.17e-02\uff08\u9884\u7b97 0.05\uff09\uff0cdg \u5728 169 \u5904\u8fbe 6.49e-01\uff08\u9884\u7b97 0.25\uff09\u3002g \u662f log \u7a7a\u95f4\u7684 per-token \u8870\u51cf\u589e\u91cf\uff1b\u51cf\u5c0f g \u7684\u91cf\u7ea7\uff08KDA \u5c42\u91cc\u5373\u51cf\u5c0f exp(A_log) \u6216 dt\uff09\uff1b\u53ea\u505a\u63a8\u7406\u4e0d\u9700\u8981\u53cd\u5411\u65f6\u7528 chunk_kda_fwd\uff0c\u5b83\u7684\u4e0a\u9650\u662f 155.0\u3002\u786e\u77e5\u53ef\u63a5\u53d7\u65f6\u4f20 check_gate_range=False \u8df3\u8fc7\u672c\u68c0\u67e5\u3002\u8be6\u89c1 docs/matrix/gaps.json \u7684 gate-range-beyond-declared \u4e0e gate-span-still-bounded",
+          "launches": [],
+          "inputs_unchanged": true
+        }
+      },
+      "scope": "Measured public default-gate behavior; no leaf numerical pass inferred from rejection."
+    }
+  ],
+  "scope": "Measured public default-gate behavior; no leaf numerical pass inferred from rejection."
+}

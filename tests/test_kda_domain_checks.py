@@ -107,21 +107,77 @@ def test_bf16_calibrated_margin_accepts_correlated_rounding():
 
 
 def test_raw_preparation_keeps_all_six_gradient_paths():
+    from ascend_fla.ops.kda import autograd, chunk, chunk_bwd
+    from types import SimpleNamespace
+    calls=[]
+
+    # Explicit local CPU substitutes at the preparation forward/backward ABI.
+    class PrepABI:
+        @staticmethod
+        def _check_source(name,value):
+            assert value.device.type=='cpu' and value.is_contiguous()
+
+        @staticmethod
+        def prepare_backward(*args):
+            calls.append('backward_ready')
+
+        @staticmethod
+        def norm(x,dtype,**options):
+            assert 'backward_ready' in calls
+            z=x.float()
+            return (z/(z.square().sum(-1,keepdim=True)+1e-6).sqrt()).to(dtype)
+
+        @staticmethod
+        def gate(g,a,bias,**options):
+            assert 'backward_ready' in calls
+            return -a.float().exp().view(-1,1)*torch.nn.functional.softplus(g.float()+bias.float().view(g.shape[-2:]))
+
+        @staticmethod
+        def beta(x,**options):
+            assert 'backward_ready' in calls
+            return x.float().sigmoid()
+
+        @staticmethod
+        def norm_backward(x,gy,**options):
+            calls.append('norm_backward')
+            with torch.enable_grad():
+                leaf=x.detach().clone().requires_grad_()
+                y=PrepABI.norm(leaf,torch.bfloat16)
+                return torch.autograd.grad(y,leaf,gy)[0]
+
+        @staticmethod
+        def gate_backward(g,a,bias,gy,**options):
+            calls.append('gate_backward')
+            with torch.enable_grad():
+                leaves=[t.detach().clone().requires_grad_() for t in (g,a,bias)]
+                return torch.autograd.grad(PrepABI.gate(*leaves),leaves,gy)
+
+        @staticmethod
+        def beta_backward(source,s,gy,**options):
+            calls.append('beta_backward')
+            return (gy*s*(1-s)).to(source.dtype)
+
     raw = tuple(x.clone().requires_grad_() for x in inputs())
-    q, k, g, beta = _prepare_inputs(*raw[:4], A_log=raw[4], dt_bias=raw[5],
-                                   use_qk_l2norm_in_kernel=True, use_gate_in_kernel=True,
-                                   use_beta_sigmoid_in_kernel=True)
-    # Nonconstant upstream weights avoid a normalization-invariant loss.
-    rng = torch.Generator().manual_seed(245)
-    gradients = [torch.randn(x.shape, generator=rng) for x in (q, k, g, beta)]
-    loss = sum((x.float() * dy).sum() for x, dy in zip((q, k, g, beta), gradients))
-    actual = torch.autograd.grad(loss, raw)
+    with pytest.MonkeyPatch.context() as monkeypatch:
+        monkeypatch.setattr(autograd,'_prep_runtime',lambda: PrepABI,raising=False)
+        monkeypatch.setattr(chunk,'_compiled_chain',lambda *a: {})
+        monkeypatch.setattr(chunk_bwd,'_compiled_chain',lambda *a: {})
+        monkeypatch.setattr(chunk,'_prepare_inputs',lambda *a,**kw: pytest.fail('old host preparation called'))
+        monkeypatch.setattr(autograd,'_layout_runtime',lambda: SimpleNamespace(cast=lambda x,dtype,**kw:x.to(dtype).contiguous()))
+        q,k,g,beta=autograd._prepare_training_inputs(*raw[:4],A_log=raw[4],dt_bias=raw[5],
+            use_qk_l2norm_in_kernel=True,use_gate_in_kernel=True,use_beta_sigmoid_in_kernel=True)
+        # Nonconstant upstream weights avoid a normalization-invariant loss.
+        rng = torch.Generator().manual_seed(245)
+        gradients = [torch.randn(x.shape, generator=rng) for x in (q, k, g, beta)]
+        loss = sum((x.float() * dy).sum() for x, dy in zip((q, k, g, beta), gradients))
+        actual = torch.autograd.grad(loss, raw)
     reference_raw = tuple(x.detach().clone().requires_grad_() for x in raw)
     reference = independent_prepare(*reference_raw)
     expected = torch.autograd.grad(sum((x.float() * dy).sum() for x, dy in zip(reference, gradients)), reference_raw)
     for got, want in zip(actual, expected):
         assert torch.isfinite(got).all() and torch.count_nonzero(got)
         torch.testing.assert_close(got, want, rtol=1e-5, atol=1e-6)
+    assert calls.count('norm_backward')==2 and calls.count('gate_backward')==1 and calls.count('beta_backward')==1
 
 
 @pytest.mark.parametrize('flags', list(itertools.product((False, True), repeat=3)))
@@ -277,18 +333,45 @@ def test_public_chunk_flags_reach_prepared_boundary(monkeypatch, flags):
 
 @pytest.mark.parametrize('parameter', ['A_log', 'dt_bias'])
 def test_public_chunk_routes_gate_parameter_only_gradients_to_autograd(monkeypatch, parameter):
-    from ascend_fla.ops.kda import autograd, chunk_kda
+    from ascend_fla.ops.kda import autograd, chunk_kda, chunk, chunk_bwd
+    from types import SimpleNamespace
     q, k, g, beta, a, bias = inputs()
     q, k, _, beta = independent_prepare(q, k, g, beta, a, bias)
     a.requires_grad_(parameter == 'A_log')
     bias.requires_grad_(parameter == 'dt_bias')
     seen = []
 
+    class PrepABI:
+        @staticmethod
+        def _check_source(name,value):
+            assert value.device.type=='cpu'
+
+        @staticmethod
+        def prepare_backward(*args):
+            pass
+
+        @staticmethod
+        def gate(g,a,bias,**options):
+            return -a.float().exp().view(-1,1)*torch.nn.functional.softplus(g.float()+bias.float().view(g.shape[-2:]))
+
+        @staticmethod
+        def gate_backward(g,a,bias,gy,**options):
+            with torch.enable_grad():
+                leaves=[t.detach().clone().requires_grad_() for t in (g,a,bias)]
+                return torch.autograd.grad(PrepABI.gate(*leaves),leaves,gy)
+
+    monkeypatch.setattr(autograd,'_prep_runtime',lambda: PrepABI,raising=False)
+    monkeypatch.setattr(chunk,'_compiled_chain',lambda *a: {})
+    monkeypatch.setattr(chunk_bwd,'_compiled_chain',lambda *a: {})
+    monkeypatch.setattr(chunk,'_prepare_inputs',lambda *a,**kw: pytest.fail('old host preparation called'))
+    monkeypatch.setattr(autograd,'_prepare_inputs',lambda *a,**kw: pytest.fail('old host training called'))
+    monkeypatch.setattr(autograd,'_layout_runtime',lambda: SimpleNamespace(cast=lambda x,dtype,**kw:x.to(dtype).contiguous()))
+
     def apply(q, k, v, transformed_g, beta, *args):
         assert transformed_g.requires_grad
         seen.append(True)
-        # The native tests exercise the real Function; here the kernel boundary
-        # is replaced to inspect the new preparation graph without an NPU.
+        # Native acceptance exercises the real KDA Function; this substitutes only
+        # its boundary while keeping the new raw gate autograd Function in use.
         return transformed_g.sum(), None
 
     monkeypatch.setattr(autograd._ChunkKDA, 'apply', apply)

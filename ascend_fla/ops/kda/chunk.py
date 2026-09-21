@@ -87,7 +87,9 @@ def _prepare_inputs(q, k, g, beta, *, A_log=None, dt_bias=None,
                     use_beta_sigmoid_in_kernel=False, qk_dtype=torch.bfloat16):
     """Preserved differentiable training graph pending BF-08.
 
-    Inference and decode use ``_prepare_kernel_inputs``. Disabled routes retain
+    Production training uses native preparation autograd; this helper remains
+    available for predecessor comparisons. Inference and decode use
+    ``_prepare_kernel_inputs``. Disabled routes retain
     their original objects. This training arithmetic remains an audited exception.
     """
     _validate_raw_inputs(q, k, g, beta, A_log=A_log, dt_bias=dt_bias,
@@ -300,6 +302,9 @@ def _compiled_chain(device: str, block_dim: int, impl: str = "stable") -> dict[s
 
     _layout_runtime().prepare(device, block_dim)
     _prep_runtime().prepare(device, block_dim, "chunk")
+    # A later training call in the same process cannot register new vendors
+    # after an earlier inference launch has initialized CANN's operator lookup.
+    _prep_runtime().prepare_backward(device, block_dim)
     return {name: compile_kernel(fn, device=device, block_dim=block_dim)
             for name, fn in kda_fwd_kernels(impl).items()}
 

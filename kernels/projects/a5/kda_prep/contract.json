@@ -2,7 +2,7 @@
   "schema": "ascriptor.kernel-unit/1",
   "id": "a5.kda_prep",
   "kind": "kernel",
-  "description": "Typed raw KDA input preparation for inference and decode; training graph stays on host pending BF-08",
+  "description": "Typed raw KDA preparation and raw-gradient kernels; backward native qualification is tracked separately from BF-07 forward evidence",
   "inputs": {
     "source": {
       "dtype": "case-specific BF16/FP32"
@@ -43,13 +43,14 @@
     "gate": "-exp(A_log)*softplus(g+dt_bias), strict threshold20",
     "beta": "FP32 sigmoid",
     "ownership": "4096-element tiles; gate head x32BT rows; GetVecNum=2bd; single-slot autosync; disjoint outputs",
-    "training_exception": "Original host preparation remains differentiable; BF-08 owns removal",
+    "training_exception": "BF-08 candidate uses native preparation autograd; native acceptance pending",
     "block_dim": [
       1,
       2,
       3,
       4
-    ]
+    ],
+    "backward": "Norm preserves forward FP32 square-sum overflow as zero; compensated scaled derivative otherwise. Gate fixed32-BT partials of512 FP32 components, fixed two-component tree and ascending merge without atomics. Beta uses raw analytic derivative except actual saved sigmoid0/1 giveszero (D-PM-55). Gradients retain raw dtype."
   },
   "dependencies": {
     "python": ">=3.10",
@@ -155,7 +156,9 @@
         "Retain D-PM-48/50/51 scopes and requirements"
       ],
       "receipt": "evidence/native/dpm52-disclosure-scope.json"
-    }
+    },
+    "frozen_backward_budgets": "backward_budgets.json",
+    "backward_rules": "D-PM-54: per-output/dtype frozen3F metrics, cap L2 at.01; BF16 dual1ULP only where pre-kernel ordinary floor never exceeds1ULP. Both-reference ULP distributions and every BF16 >1ULP location required. No new endpoint exemptions. D-PM-56(1): retained BF16 FP64<=1ULP always; old-host<=1ULP only where old-host itself<=1ULP from rounded FP64, otherwise full location disclosure. Frozen bytes unchanged."
   },
   "cases": [
     {
@@ -428,7 +431,32 @@
     "disposition": "ready_for_review_with_user_approved_endpoint_disclosures",
     "numerical_domain_fully_passed": false,
     "board_status_interpretation": "failed preserves original numerical failures; D-PM-52 resolves task disclosure requirement without relabelling them passed",
-    "training_host_exception": "BF-08 pending",
-    "merge_authorized": false
+    "training_host_exception": "BF-08 first full BF16 training audit records zero old host preparation operations; other required cases pending.",
+    "merge_authorized": false,
+    "scope": "BF-07 forward only; historical validation does not qualify BF-08 candidate backward"
+  },
+  "backward_qualification": {
+    "task": "BF-08",
+    "calibration": "passed",
+    "source_emission": "passed",
+    "vendor_compile": "passed",
+    "board": "failed",
+    "sim": "passed",
+    "pipesim": "passed",
+    "task_validation_complete": false,
+    "source_emission_note": "16 dtype-specialized entries, static CCE emission only; no execution inference",
+    "vendor_compile_note": "All50 vendors including all9 inherited backward entries compiled in each independent bd1..4 process.",
+    "board_note": "Final full-v7 all4bd and58320gridcalls ordinary criteria pass. Board failed retains native-flush CPU discrepancies; unqualified gate endpoint observations are neither ordinary failures nor passes.",
+    "receipt": "evidence/backward/final-native-v1/summary.json",
+    "status": "native_validation_and_required_disclosure_complete_pending_user_merge_disposition",
+    "full_workload": "passed_bd1_bd2_bd3_bd4_current_candidate",
+    "final_grid": "passed final production;1620cases x9gradient selections x4independent bd; all returned hashes exact",
+    "endpoint_semantics": "D-PM-55/56 native classification complete at bd1..4:482nativeflush outputs perbd are NOT CPU pass;30gateA88 records perbd remain unqualified observations perPM5755620410, pending user merge disposition.",
+    "models": "12 reduced sim/pipesim configurations pass after full native workload",
+    "preparation_order": "explicit prepare and inference then training nativepass; no manualprecompile in these checks",
+    "performance": "measured full training slowdown11.15x/11.32xvsoldhost and2.67x/3.03xvsTorchNPU; clean three-round sandwiches separate from profiler attribution",
+    "final_grid_receipt": "evidence/backward/final-grid-v1/summary.json",
+    "closeout_receipt": "evidence/backward/final-closeout-v1/summary.json",
+    "profiler": "complete separate Level1 active-step capture;all43candidate/34baseline custom launches matched;dominant gate firststage375.466ms; no unresolved profiler scheduling warnings"
   }
 }

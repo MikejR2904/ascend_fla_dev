@@ -1,0 +1,4137 @@
+{
+  "environment": {
+    "python": "3.12.14",
+    "torch": "2.12.0+cu130",
+    "torch_npu": "2.12.0",
+    "ascriptor": "0.1.0",
+    "library_commit": "90cfcdc720bbcd66e8bd4361c4dd4fbc1a2a57b5",
+    "kernels_commit": "b3b3f9c16df7c4626ed3c081032a1be5a753d0b1",
+    "cann_version_records": {
+      "compiler": {
+        "raw_lines": [
+          "Version=9.1.0-beta.1",
+          "version_dir=cann",
+          "required_package_runtime_version=\"9.1\"",
+          "required_package_ge-executor_version=\"9.1\"",
+          "required_package_metadef_version=\"9.1\"",
+          "required_package_opbase_version=\"9.1\"",
+          "required_package_bisheng-compiler_version=\"9.1\"",
+          "required_package_tbe-tik_version=\"9.1\"",
+          "timestamp=20260509_173000235"
+        ],
+        "sha256": "0f982a259247cdd06df4fa5bdaf526b57b6ad15f7d27a33f23b3c70a381c2fe5"
+      },
+      "opp": {
+        "raw_lines": [
+          "Version=9.1.0-beta.1",
+          "version_dir=cann",
+          "required_package_runtime_version=\">=8.5\"",
+          "required_package_ge-executor_version=\">=8.5\"",
+          "required_package_metadef_version=\">=8.5\"",
+          "required_package_asc-devkit_version=\">=8.5\"",
+          "required_package_bisheng-compiler_version=\">=8.5\"",
+          "timestamp=20260509_173000235"
+        ],
+        "sha256": "377b05dab3a2dfc87dfaa92affd69a9aa5795a54d423cbe629d3495ad20370ef"
+      }
+    },
+    "opp_directories": [
+      "ascend910_93",
+      "ascend910b",
+      "ascend950"
+    ],
+    "driver_sha256": "bf27499c97f4090f6c9537cd6f11c6fb09cea7b2bbf632b996b442693ab1ddb1",
+    "helper_sha256": "808b3d2c778ea577489ef966db72f38375d5a4d609190a63a63704757ae4f880",
+    "production_source_manifest_sha256": "41b681ecd6a2925ca720274317d3a3245d94a17eef6c8924e513d153a9d1a4a9",
+    "source_identity_receipt": "source-identity.json"
+  },
+  "complete": true,
+  "cases": [
+    {
+      "dtype": "bf16",
+      "raw_beta": -88.0,
+      "paths": {
+        "candidate": {
+          "accepted": true,
+          "finite_output": true,
+          "finite_state": true,
+          "finite_gradients": [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ],
+          "output_sha256": "4e09f055c32eb12b114d9a664ce5030a47b3a9b151d4ecca3ed0d968c9db3791",
+          "state_sha256": "85ae5385226f529762e5e7b76004f33b8ad930dca510c38dc3c9d804642b66af",
+          "gradient_sha256": {
+            "q": "2c6aef71ff02ec910fc7669bfe8a10cefd3f973dee1116a9fe82c60befcfc110",
+            "k": "4fe7b59af6de3b665b67788cc2f99892ab827efae3a467342b3bb4e3bc8e5bfe",
+            "v": "18b89383f68f29bc35f7c4e90be369a24b51c20447fae7e7bf35b16b8860d0c6",
+            "g": "a473b6e4d4d7417cf437812b667054c1cca48d2df0f9dca3d8747ce0ab7ceeff",
+            "beta": "38723a2e5e8a17aa7950dc008209944e898f69a7bd10a23c839d341e935fd5ca",
+            "h0": "c0502c1b88cc8bdcda4bbd5967ab5c1a7c895e3e30ac73fedb19c809ca6bd67a"
+          },
+          "beta_gradient_zero": true,
+          "launches": [
+            {
+              "operator": "KdaPrepChunkBetaBf16Kernel",
+              "signature": "58983d550034bf31",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32F32Kernel",
+              "signature": "c734ca5227d79ce8",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32F32Kernel",
+              "signature": "c734ca5227d79ce8",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub1GateStableKernel",
+              "signature": "aad21f2d2b3d2c2c",
+              "outputs": [
+                "g_cumsum",
+                "eg"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub2ScoreStableKernel",
+              "signature": "69ca68c647809e44",
+              "outputs": [
+                "Aqk",
+                "strict"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "TrilInverse64V2StrictBf16Kernel",
+              "signature": "a5a2c0726a680ba3",
+              "outputs": [
+                "inv"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub3WyStableKernel",
+              "signature": "d90b2cf4c23fa99a",
+              "outputs": [
+                "w",
+                "u",
+                "qg",
+                "kg"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub45AqkRepairedKernel",
+              "signature": "d24e6d59beb12bc6",
+              "outputs": [
+                "o",
+                "final_state"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32Bf16Kernel",
+              "signature": "1bace06d52ff1d46",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32Bf16Kernel",
+              "signature": "1bace06d52ff1d46",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32Bf16Kernel",
+              "signature": "1bace06d52ff1d46",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "ScanFusedKernel",
+              "signature": "306f6f401a02c792",
+              "outputs": [
+                "dAqk",
+                "dh",
+                "dv",
+                "dh0"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseMmBoundedKernel",
+              "signature": "5a0b0e0263189b90",
+              "outputs": [
+                "d_qg",
+                "d_kg",
+                "d_vh",
+                "d_v_beta",
+                "d_k_beta_g"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseEpilogueKernel",
+              "signature": "99d699ab19037e94",
+              "outputs": [
+                "dq_hv",
+                "dk_hv",
+                "dv",
+                "dbeta",
+                "dg_core",
+                "k_exp"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseDainvKernel",
+              "signature": "ed387cdedccff8e4",
+              "outputs": [
+                "dtri"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseDakkFusedKernel",
+              "signature": "c9546079430df630",
+              "outputs": [
+                "dAkk"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizePreStableKernel",
+              "signature": "89a92dfb7d3decd2",
+              "outputs": [
+                "q_scaled",
+                "k_scaled",
+                "kg",
+                "m_qk",
+                "m_base",
+                "m_beta"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizePairKernel",
+              "signature": "0ec1db8afb1df417",
+              "outputs": [
+                "dq_pair",
+                "dk_pair",
+                "s_base",
+                "t_beta"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizePostStableKernel",
+              "signature": "de7bf5fd932aff3e",
+              "outputs": [
+                "dq_hv_out",
+                "dk_hv_out",
+                "dbeta_out",
+                "dg_out"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizeReduceKernel",
+              "signature": "c50ccb9f48fbef6a",
+              "outputs": [
+                "dq_out",
+                "dk_out"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16F32Kernel",
+              "signature": "127dcc2b9168d6bb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16F32Kernel",
+              "signature": "127dcc2b9168d6bb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16F32Kernel",
+              "signature": "127dcc2b9168d6bb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaPrepBackwardBetaBf16Kernel",
+              "signature": "343cf16628dc159c",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            }
+          ],
+          "inputs_unchanged": true
+        },
+        "old_npu": {
+          "accepted": true,
+          "finite_output": true,
+          "finite_state": true,
+          "finite_gradients": [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ],
+          "output_sha256": "4e09f055c32eb12b114d9a664ce5030a47b3a9b151d4ecca3ed0d968c9db3791",
+          "state_sha256": "85ae5385226f529762e5e7b76004f33b8ad930dca510c38dc3c9d804642b66af",
+          "gradient_sha256": {
+            "q": "2c6aef71ff02ec910fc7669bfe8a10cefd3f973dee1116a9fe82c60befcfc110",
+            "k": "4fe7b59af6de3b665b67788cc2f99892ab827efae3a467342b3bb4e3bc8e5bfe",
+            "v": "18b89383f68f29bc35f7c4e90be369a24b51c20447fae7e7bf35b16b8860d0c6",
+            "g": "a473b6e4d4d7417cf437812b667054c1cca48d2df0f9dca3d8747ce0ab7ceeff",
+            "beta": "946bf9bed1f0fc43d59cd331f117ff82de9faad23edc6e8d84db041f18a29be9",
+            "h0": "c0502c1b88cc8bdcda4bbd5967ab5c1a7c895e3e30ac73fedb19c809ca6bd67a"
+          },
+          "beta_gradient_zero": true,
+          "launches": [
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32F32Kernel",
+              "signature": "c734ca5227d79ce8",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32F32Kernel",
+              "signature": "c734ca5227d79ce8",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub1GateStableKernel",
+              "signature": "aad21f2d2b3d2c2c",
+              "outputs": [
+                "g_cumsum",
+                "eg"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub2ScoreStableKernel",
+              "signature": "69ca68c647809e44",
+              "outputs": [
+                "Aqk",
+                "strict"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "TrilInverse64V2StrictBf16Kernel",
+              "signature": "a5a2c0726a680ba3",
+              "outputs": [
+                "inv"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub3WyStableKernel",
+              "signature": "d90b2cf4c23fa99a",
+              "outputs": [
+                "w",
+                "u",
+                "qg",
+                "kg"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub45AqkRepairedKernel",
+              "signature": "d24e6d59beb12bc6",
+              "outputs": [
+                "o",
+                "final_state"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32Bf16Kernel",
+              "signature": "1bace06d52ff1d46",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32Bf16Kernel",
+              "signature": "1bace06d52ff1d46",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32Bf16Kernel",
+              "signature": "1bace06d52ff1d46",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "ScanFusedKernel",
+              "signature": "306f6f401a02c792",
+              "outputs": [
+                "dAqk",
+                "dh",
+                "dv",
+                "dh0"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseMmBoundedKernel",
+              "signature": "5a0b0e0263189b90",
+              "outputs": [
+                "d_qg",
+                "d_kg",
+                "d_vh",
+                "d_v_beta",
+                "d_k_beta_g"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseEpilogueKernel",
+              "signature": "99d699ab19037e94",
+              "outputs": [
+                "dq_hv",
+                "dk_hv",
+                "dv",
+                "dbeta",
+                "dg_core",
+                "k_exp"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseDainvKernel",
+              "signature": "ed387cdedccff8e4",
+              "outputs": [
+                "dtri"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseDakkFusedKernel",
+              "signature": "c9546079430df630",
+              "outputs": [
+                "dAkk"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizePreStableKernel",
+              "signature": "89a92dfb7d3decd2",
+              "outputs": [
+                "q_scaled",
+                "k_scaled",
+                "kg",
+                "m_qk",
+                "m_base",
+                "m_beta"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizePairKernel",
+              "signature": "0ec1db8afb1df417",
+              "outputs": [
+                "dq_pair",
+                "dk_pair",
+                "s_base",
+                "t_beta"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizePostStableKernel",
+              "signature": "de7bf5fd932aff3e",
+              "outputs": [
+                "dq_hv_out",
+                "dk_hv_out",
+                "dbeta_out",
+                "dg_out"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizeReduceKernel",
+              "signature": "c50ccb9f48fbef6a",
+              "outputs": [
+                "dq_out",
+                "dk_out"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16F32Kernel",
+              "signature": "127dcc2b9168d6bb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16F32Kernel",
+              "signature": "127dcc2b9168d6bb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16F32Kernel",
+              "signature": "127dcc2b9168d6bb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            }
+          ],
+          "inputs_unchanged": true
+        }
+      },
+      "scope": "Actual public training reachability; no CPU accuracy inference."
+    },
+    {
+      "dtype": "bf16",
+      "raw_beta": 16.0,
+      "paths": {
+        "candidate": {
+          "accepted": true,
+          "finite_output": true,
+          "finite_state": true,
+          "finite_gradients": [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ],
+          "output_sha256": "cce859da4794cffd199867c4199dab6331e9c0cdd26f9948c4ec238bfeee1912",
+          "state_sha256": "43b14f172f667e609470512150ec3bd14595dda35ac11a814eee0a375d89f3dc",
+          "gradient_sha256": {
+            "q": "185317ac2397e1717306691dcdc30dd415c2c31d2dabf62b04b6ff5a7f8a8f7b",
+            "k": "f0a981923ccec9224b21debadab7c912c3cae57ab36bae3e9e8123113e9ede5e",
+            "v": "227587193a90df788183c8e13d68258464455ea5d0720898d423a1dca56d1d0b",
+            "g": "c887314db5b1aa106f965ddebb9bb5668aec8afd99aa3fdf34f73984f5f3be29",
+            "beta": "a5651a2387dd7181f93f195771e9a2ce2303e504192702941de87d20bf055a84",
+            "h0": "86e603d5dd205cfdaa7c3910e86f311c1f7bbf8f5f29c969c488b499ae7656dd"
+          },
+          "beta_gradient_zero": false,
+          "launches": [
+            {
+              "operator": "KdaPrepChunkBetaBf16Kernel",
+              "signature": "58983d550034bf31",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32F32Kernel",
+              "signature": "c734ca5227d79ce8",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32F32Kernel",
+              "signature": "c734ca5227d79ce8",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub1GateStableKernel",
+              "signature": "aad21f2d2b3d2c2c",
+              "outputs": [
+                "g_cumsum",
+                "eg"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub2ScoreStableKernel",
+              "signature": "69ca68c647809e44",
+              "outputs": [
+                "Aqk",
+                "strict"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "TrilInverse64V2StrictBf16Kernel",
+              "signature": "a5a2c0726a680ba3",
+              "outputs": [
+                "inv"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub3WyStableKernel",
+              "signature": "d90b2cf4c23fa99a",
+              "outputs": [
+                "w",
+                "u",
+                "qg",
+                "kg"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub45AqkRepairedKernel",
+              "signature": "d24e6d59beb12bc6",
+              "outputs": [
+                "o",
+                "final_state"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32Bf16Kernel",
+              "signature": "1bace06d52ff1d46",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32Bf16Kernel",
+              "signature": "1bace06d52ff1d46",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32Bf16Kernel",
+              "signature": "1bace06d52ff1d46",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "ScanFusedKernel",
+              "signature": "306f6f401a02c792",
+              "outputs": [
+                "dAqk",
+                "dh",
+                "dv",
+                "dh0"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseMmBoundedKernel",
+              "signature": "5a0b0e0263189b90",
+              "outputs": [
+                "d_qg",
+                "d_kg",
+                "d_vh",
+                "d_v_beta",
+                "d_k_beta_g"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseEpilogueKernel",
+              "signature": "99d699ab19037e94",
+              "outputs": [
+                "dq_hv",
+                "dk_hv",
+                "dv",
+                "dbeta",
+                "dg_core",
+                "k_exp"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseDainvKernel",
+              "signature": "ed387cdedccff8e4",
+              "outputs": [
+                "dtri"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseDakkFusedKernel",
+              "signature": "c9546079430df630",
+              "outputs": [
+                "dAkk"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizePreStableKernel",
+              "signature": "89a92dfb7d3decd2",
+              "outputs": [
+                "q_scaled",
+                "k_scaled",
+                "kg",
+                "m_qk",
+                "m_base",
+                "m_beta"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizePairKernel",
+              "signature": "0ec1db8afb1df417",
+              "outputs": [
+                "dq_pair",
+                "dk_pair",
+                "s_base",
+                "t_beta"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizePostStableKernel",
+              "signature": "de7bf5fd932aff3e",
+              "outputs": [
+                "dq_hv_out",
+                "dk_hv_out",
+                "dbeta_out",
+                "dg_out"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizeReduceKernel",
+              "signature": "c50ccb9f48fbef6a",
+              "outputs": [
+                "dq_out",
+                "dk_out"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16F32Kernel",
+              "signature": "127dcc2b9168d6bb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16F32Kernel",
+              "signature": "127dcc2b9168d6bb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16F32Kernel",
+              "signature": "127dcc2b9168d6bb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaPrepBackwardBetaBf16Kernel",
+              "signature": "343cf16628dc159c",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            }
+          ],
+          "inputs_unchanged": true
+        },
+        "old_npu": {
+          "accepted": true,
+          "finite_output": true,
+          "finite_state": true,
+          "finite_gradients": [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ],
+          "output_sha256": "cce859da4794cffd199867c4199dab6331e9c0cdd26f9948c4ec238bfeee1912",
+          "state_sha256": "43b14f172f667e609470512150ec3bd14595dda35ac11a814eee0a375d89f3dc",
+          "gradient_sha256": {
+            "q": "185317ac2397e1717306691dcdc30dd415c2c31d2dabf62b04b6ff5a7f8a8f7b",
+            "k": "f0a981923ccec9224b21debadab7c912c3cae57ab36bae3e9e8123113e9ede5e",
+            "v": "227587193a90df788183c8e13d68258464455ea5d0720898d423a1dca56d1d0b",
+            "g": "c887314db5b1aa106f965ddebb9bb5668aec8afd99aa3fdf34f73984f5f3be29",
+            "beta": "aa0af328d0e69b8b2ca6e2dccb106f5137ffd554ecf9e970c17c5a12a7a49969",
+            "h0": "86e603d5dd205cfdaa7c3910e86f311c1f7bbf8f5f29c969c488b499ae7656dd"
+          },
+          "beta_gradient_zero": false,
+          "launches": [
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32F32Kernel",
+              "signature": "c734ca5227d79ce8",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32F32Kernel",
+              "signature": "c734ca5227d79ce8",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub1GateStableKernel",
+              "signature": "aad21f2d2b3d2c2c",
+              "outputs": [
+                "g_cumsum",
+                "eg"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub2ScoreStableKernel",
+              "signature": "69ca68c647809e44",
+              "outputs": [
+                "Aqk",
+                "strict"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "TrilInverse64V2StrictBf16Kernel",
+              "signature": "a5a2c0726a680ba3",
+              "outputs": [
+                "inv"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub3WyStableKernel",
+              "signature": "d90b2cf4c23fa99a",
+              "outputs": [
+                "w",
+                "u",
+                "qg",
+                "kg"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub45AqkRepairedKernel",
+              "signature": "d24e6d59beb12bc6",
+              "outputs": [
+                "o",
+                "final_state"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32Bf16Kernel",
+              "signature": "1bace06d52ff1d46",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32Bf16Kernel",
+              "signature": "1bace06d52ff1d46",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32Bf16Kernel",
+              "signature": "1bace06d52ff1d46",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "ScanFusedKernel",
+              "signature": "306f6f401a02c792",
+              "outputs": [
+                "dAqk",
+                "dh",
+                "dv",
+                "dh0"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseMmBoundedKernel",
+              "signature": "5a0b0e0263189b90",
+              "outputs": [
+                "d_qg",
+                "d_kg",
+                "d_vh",
+                "d_v_beta",
+                "d_k_beta_g"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseEpilogueKernel",
+              "signature": "99d699ab19037e94",
+              "outputs": [
+                "dq_hv",
+                "dk_hv",
+                "dv",
+                "dbeta",
+                "dg_core",
+                "k_exp"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseDainvKernel",
+              "signature": "ed387cdedccff8e4",
+              "outputs": [
+                "dtri"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseDakkFusedKernel",
+              "signature": "c9546079430df630",
+              "outputs": [
+                "dAkk"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizePreStableKernel",
+              "signature": "89a92dfb7d3decd2",
+              "outputs": [
+                "q_scaled",
+                "k_scaled",
+                "kg",
+                "m_qk",
+                "m_base",
+                "m_beta"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizePairKernel",
+              "signature": "0ec1db8afb1df417",
+              "outputs": [
+                "dq_pair",
+                "dk_pair",
+                "s_base",
+                "t_beta"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizePostStableKernel",
+              "signature": "de7bf5fd932aff3e",
+              "outputs": [
+                "dq_hv_out",
+                "dk_hv_out",
+                "dbeta_out",
+                "dg_out"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizeReduceKernel",
+              "signature": "c50ccb9f48fbef6a",
+              "outputs": [
+                "dq_out",
+                "dk_out"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16F32Kernel",
+              "signature": "127dcc2b9168d6bb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16F32Kernel",
+              "signature": "127dcc2b9168d6bb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16F32Kernel",
+              "signature": "127dcc2b9168d6bb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            }
+          ],
+          "inputs_unchanged": true
+        }
+      },
+      "scope": "Actual public training reachability; no CPU accuracy inference."
+    },
+    {
+      "dtype": "bf16",
+      "raw_beta": 20.0,
+      "paths": {
+        "candidate": {
+          "accepted": true,
+          "finite_output": true,
+          "finite_state": true,
+          "finite_gradients": [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ],
+          "output_sha256": "cce859da4794cffd199867c4199dab6331e9c0cdd26f9948c4ec238bfeee1912",
+          "state_sha256": "43b14f172f667e609470512150ec3bd14595dda35ac11a814eee0a375d89f3dc",
+          "gradient_sha256": {
+            "q": "185317ac2397e1717306691dcdc30dd415c2c31d2dabf62b04b6ff5a7f8a8f7b",
+            "k": "f0a981923ccec9224b21debadab7c912c3cae57ab36bae3e9e8123113e9ede5e",
+            "v": "227587193a90df788183c8e13d68258464455ea5d0720898d423a1dca56d1d0b",
+            "g": "c887314db5b1aa106f965ddebb9bb5668aec8afd99aa3fdf34f73984f5f3be29",
+            "beta": "38723a2e5e8a17aa7950dc008209944e898f69a7bd10a23c839d341e935fd5ca",
+            "h0": "86e603d5dd205cfdaa7c3910e86f311c1f7bbf8f5f29c969c488b499ae7656dd"
+          },
+          "beta_gradient_zero": true,
+          "launches": [
+            {
+              "operator": "KdaPrepChunkBetaBf16Kernel",
+              "signature": "58983d550034bf31",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32F32Kernel",
+              "signature": "c734ca5227d79ce8",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32F32Kernel",
+              "signature": "c734ca5227d79ce8",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub1GateStableKernel",
+              "signature": "aad21f2d2b3d2c2c",
+              "outputs": [
+                "g_cumsum",
+                "eg"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub2ScoreStableKernel",
+              "signature": "69ca68c647809e44",
+              "outputs": [
+                "Aqk",
+                "strict"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "TrilInverse64V2StrictBf16Kernel",
+              "signature": "a5a2c0726a680ba3",
+              "outputs": [
+                "inv"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub3WyStableKernel",
+              "signature": "d90b2cf4c23fa99a",
+              "outputs": [
+                "w",
+                "u",
+                "qg",
+                "kg"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub45AqkRepairedKernel",
+              "signature": "d24e6d59beb12bc6",
+              "outputs": [
+                "o",
+                "final_state"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32Bf16Kernel",
+              "signature": "1bace06d52ff1d46",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32Bf16Kernel",
+              "signature": "1bace06d52ff1d46",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32Bf16Kernel",
+              "signature": "1bace06d52ff1d46",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "ScanFusedKernel",
+              "signature": "306f6f401a02c792",
+              "outputs": [
+                "dAqk",
+                "dh",
+                "dv",
+                "dh0"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseMmBoundedKernel",
+              "signature": "5a0b0e0263189b90",
+              "outputs": [
+                "d_qg",
+                "d_kg",
+                "d_vh",
+                "d_v_beta",
+                "d_k_beta_g"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseEpilogueKernel",
+              "signature": "99d699ab19037e94",
+              "outputs": [
+                "dq_hv",
+                "dk_hv",
+                "dv",
+                "dbeta",
+                "dg_core",
+                "k_exp"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseDainvKernel",
+              "signature": "ed387cdedccff8e4",
+              "outputs": [
+                "dtri"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseDakkFusedKernel",
+              "signature": "c9546079430df630",
+              "outputs": [
+                "dAkk"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizePreStableKernel",
+              "signature": "89a92dfb7d3decd2",
+              "outputs": [
+                "q_scaled",
+                "k_scaled",
+                "kg",
+                "m_qk",
+                "m_base",
+                "m_beta"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizePairKernel",
+              "signature": "0ec1db8afb1df417",
+              "outputs": [
+                "dq_pair",
+                "dk_pair",
+                "s_base",
+                "t_beta"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizePostStableKernel",
+              "signature": "de7bf5fd932aff3e",
+              "outputs": [
+                "dq_hv_out",
+                "dk_hv_out",
+                "dbeta_out",
+                "dg_out"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizeReduceKernel",
+              "signature": "c50ccb9f48fbef6a",
+              "outputs": [
+                "dq_out",
+                "dk_out"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16F32Kernel",
+              "signature": "127dcc2b9168d6bb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16F32Kernel",
+              "signature": "127dcc2b9168d6bb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16F32Kernel",
+              "signature": "127dcc2b9168d6bb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaPrepBackwardBetaBf16Kernel",
+              "signature": "343cf16628dc159c",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            }
+          ],
+          "inputs_unchanged": true
+        },
+        "old_npu": {
+          "accepted": true,
+          "finite_output": true,
+          "finite_state": true,
+          "finite_gradients": [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ],
+          "output_sha256": "cce859da4794cffd199867c4199dab6331e9c0cdd26f9948c4ec238bfeee1912",
+          "state_sha256": "43b14f172f667e609470512150ec3bd14595dda35ac11a814eee0a375d89f3dc",
+          "gradient_sha256": {
+            "q": "185317ac2397e1717306691dcdc30dd415c2c31d2dabf62b04b6ff5a7f8a8f7b",
+            "k": "f0a981923ccec9224b21debadab7c912c3cae57ab36bae3e9e8123113e9ede5e",
+            "v": "227587193a90df788183c8e13d68258464455ea5d0720898d423a1dca56d1d0b",
+            "g": "c887314db5b1aa106f965ddebb9bb5668aec8afd99aa3fdf34f73984f5f3be29",
+            "beta": "cd1f50d5056918f8e7dc45978c792512026767eba3061c1fb9a42d6f5da4c909",
+            "h0": "86e603d5dd205cfdaa7c3910e86f311c1f7bbf8f5f29c969c488b499ae7656dd"
+          },
+          "beta_gradient_zero": true,
+          "launches": [
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32F32Kernel",
+              "signature": "c734ca5227d79ce8",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32F32Kernel",
+              "signature": "c734ca5227d79ce8",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub1GateStableKernel",
+              "signature": "aad21f2d2b3d2c2c",
+              "outputs": [
+                "g_cumsum",
+                "eg"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub2ScoreStableKernel",
+              "signature": "69ca68c647809e44",
+              "outputs": [
+                "Aqk",
+                "strict"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "TrilInverse64V2StrictBf16Kernel",
+              "signature": "a5a2c0726a680ba3",
+              "outputs": [
+                "inv"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub3WyStableKernel",
+              "signature": "d90b2cf4c23fa99a",
+              "outputs": [
+                "w",
+                "u",
+                "qg",
+                "kg"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub45AqkRepairedKernel",
+              "signature": "d24e6d59beb12bc6",
+              "outputs": [
+                "o",
+                "final_state"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32Bf16Kernel",
+              "signature": "1bace06d52ff1d46",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32Bf16Kernel",
+              "signature": "1bace06d52ff1d46",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32Bf16Kernel",
+              "signature": "1bace06d52ff1d46",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "ScanFusedKernel",
+              "signature": "306f6f401a02c792",
+              "outputs": [
+                "dAqk",
+                "dh",
+                "dv",
+                "dh0"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseMmBoundedKernel",
+              "signature": "5a0b0e0263189b90",
+              "outputs": [
+                "d_qg",
+                "d_kg",
+                "d_vh",
+                "d_v_beta",
+                "d_k_beta_g"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseEpilogueKernel",
+              "signature": "99d699ab19037e94",
+              "outputs": [
+                "dq_hv",
+                "dk_hv",
+                "dv",
+                "dbeta",
+                "dg_core",
+                "k_exp"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseDainvKernel",
+              "signature": "ed387cdedccff8e4",
+              "outputs": [
+                "dtri"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseDakkFusedKernel",
+              "signature": "c9546079430df630",
+              "outputs": [
+                "dAkk"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizePreStableKernel",
+              "signature": "89a92dfb7d3decd2",
+              "outputs": [
+                "q_scaled",
+                "k_scaled",
+                "kg",
+                "m_qk",
+                "m_base",
+                "m_beta"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizePairKernel",
+              "signature": "0ec1db8afb1df417",
+              "outputs": [
+                "dq_pair",
+                "dk_pair",
+                "s_base",
+                "t_beta"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizePostStableKernel",
+              "signature": "de7bf5fd932aff3e",
+              "outputs": [
+                "dq_hv_out",
+                "dk_hv_out",
+                "dbeta_out",
+                "dg_out"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizeReduceKernel",
+              "signature": "c50ccb9f48fbef6a",
+              "outputs": [
+                "dq_out",
+                "dk_out"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16F32Kernel",
+              "signature": "127dcc2b9168d6bb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16F32Kernel",
+              "signature": "127dcc2b9168d6bb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16F32Kernel",
+              "signature": "127dcc2b9168d6bb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            }
+          ],
+          "inputs_unchanged": true
+        }
+      },
+      "scope": "Actual public training reachability; no CPU accuracy inference."
+    },
+    {
+      "dtype": "f32",
+      "raw_beta": -88.0,
+      "paths": {
+        "candidate": {
+          "accepted": true,
+          "finite_output": true,
+          "finite_state": true,
+          "finite_gradients": [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ],
+          "output_sha256": "4e09f055c32eb12b114d9a664ce5030a47b3a9b151d4ecca3ed0d968c9db3791",
+          "state_sha256": "85ae5385226f529762e5e7b76004f33b8ad930dca510c38dc3c9d804642b66af",
+          "gradient_sha256": {
+            "q": "2c6aef71ff02ec910fc7669bfe8a10cefd3f973dee1116a9fe82c60befcfc110",
+            "k": "4fe7b59af6de3b665b67788cc2f99892ab827efae3a467342b3bb4e3bc8e5bfe",
+            "v": "18b89383f68f29bc35f7c4e90be369a24b51c20447fae7e7bf35b16b8860d0c6",
+            "g": "a473b6e4d4d7417cf437812b667054c1cca48d2df0f9dca3d8747ce0ab7ceeff",
+            "beta": "5341e6b2646979a70e57653007a1f310169421ec9bdd9f1a5648f75ade005af1",
+            "h0": "c0502c1b88cc8bdcda4bbd5967ab5c1a7c895e3e30ac73fedb19c809ca6bd67a"
+          },
+          "beta_gradient_zero": true,
+          "launches": [
+            {
+              "operator": "KdaPrepChunkBetaF32Kernel",
+              "signature": "8e448d6684ec8096",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32F32Kernel",
+              "signature": "c734ca5227d79ce8",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32F32Kernel",
+              "signature": "c734ca5227d79ce8",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub1GateStableKernel",
+              "signature": "aad21f2d2b3d2c2c",
+              "outputs": [
+                "g_cumsum",
+                "eg"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub2ScoreStableKernel",
+              "signature": "69ca68c647809e44",
+              "outputs": [
+                "Aqk",
+                "strict"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "TrilInverse64V2StrictBf16Kernel",
+              "signature": "a5a2c0726a680ba3",
+              "outputs": [
+                "inv"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub3WyStableKernel",
+              "signature": "d90b2cf4c23fa99a",
+              "outputs": [
+                "w",
+                "u",
+                "qg",
+                "kg"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub45AqkRepairedKernel",
+              "signature": "d24e6d59beb12bc6",
+              "outputs": [
+                "o",
+                "final_state"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32Bf16Kernel",
+              "signature": "1bace06d52ff1d46",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32Bf16Kernel",
+              "signature": "1bace06d52ff1d46",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32Bf16Kernel",
+              "signature": "1bace06d52ff1d46",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "ScanFusedKernel",
+              "signature": "306f6f401a02c792",
+              "outputs": [
+                "dAqk",
+                "dh",
+                "dv",
+                "dh0"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseMmBoundedKernel",
+              "signature": "5a0b0e0263189b90",
+              "outputs": [
+                "d_qg",
+                "d_kg",
+                "d_vh",
+                "d_v_beta",
+                "d_k_beta_g"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseEpilogueKernel",
+              "signature": "99d699ab19037e94",
+              "outputs": [
+                "dq_hv",
+                "dk_hv",
+                "dv",
+                "dbeta",
+                "dg_core",
+                "k_exp"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseDainvKernel",
+              "signature": "ed387cdedccff8e4",
+              "outputs": [
+                "dtri"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseDakkFusedKernel",
+              "signature": "c9546079430df630",
+              "outputs": [
+                "dAkk"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizePreStableKernel",
+              "signature": "89a92dfb7d3decd2",
+              "outputs": [
+                "q_scaled",
+                "k_scaled",
+                "kg",
+                "m_qk",
+                "m_base",
+                "m_beta"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizePairKernel",
+              "signature": "0ec1db8afb1df417",
+              "outputs": [
+                "dq_pair",
+                "dk_pair",
+                "s_base",
+                "t_beta"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizePostStableKernel",
+              "signature": "de7bf5fd932aff3e",
+              "outputs": [
+                "dq_hv_out",
+                "dk_hv_out",
+                "dbeta_out",
+                "dg_out"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizeReduceKernel",
+              "signature": "c50ccb9f48fbef6a",
+              "outputs": [
+                "dq_out",
+                "dk_out"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16F32Kernel",
+              "signature": "127dcc2b9168d6bb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16F32Kernel",
+              "signature": "127dcc2b9168d6bb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16F32Kernel",
+              "signature": "127dcc2b9168d6bb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaPrepBackwardBetaF32Kernel",
+              "signature": "9a6f19f38495b7a2",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            }
+          ],
+          "inputs_unchanged": true
+        },
+        "old_npu": {
+          "accepted": true,
+          "finite_output": true,
+          "finite_state": true,
+          "finite_gradients": [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ],
+          "output_sha256": "4e09f055c32eb12b114d9a664ce5030a47b3a9b151d4ecca3ed0d968c9db3791",
+          "state_sha256": "85ae5385226f529762e5e7b76004f33b8ad930dca510c38dc3c9d804642b66af",
+          "gradient_sha256": {
+            "q": "2c6aef71ff02ec910fc7669bfe8a10cefd3f973dee1116a9fe82c60befcfc110",
+            "k": "4fe7b59af6de3b665b67788cc2f99892ab827efae3a467342b3bb4e3bc8e5bfe",
+            "v": "18b89383f68f29bc35f7c4e90be369a24b51c20447fae7e7bf35b16b8860d0c6",
+            "g": "a473b6e4d4d7417cf437812b667054c1cca48d2df0f9dca3d8747ce0ab7ceeff",
+            "beta": "76ec8f68eb681085c609e79e2fbc5aa03c47596446dfdedab2d2b485fced401b",
+            "h0": "c0502c1b88cc8bdcda4bbd5967ab5c1a7c895e3e30ac73fedb19c809ca6bd67a"
+          },
+          "beta_gradient_zero": true,
+          "launches": [
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32F32Kernel",
+              "signature": "c734ca5227d79ce8",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32F32Kernel",
+              "signature": "c734ca5227d79ce8",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub1GateStableKernel",
+              "signature": "aad21f2d2b3d2c2c",
+              "outputs": [
+                "g_cumsum",
+                "eg"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub2ScoreStableKernel",
+              "signature": "69ca68c647809e44",
+              "outputs": [
+                "Aqk",
+                "strict"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "TrilInverse64V2StrictBf16Kernel",
+              "signature": "a5a2c0726a680ba3",
+              "outputs": [
+                "inv"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub3WyStableKernel",
+              "signature": "d90b2cf4c23fa99a",
+              "outputs": [
+                "w",
+                "u",
+                "qg",
+                "kg"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub45AqkRepairedKernel",
+              "signature": "d24e6d59beb12bc6",
+              "outputs": [
+                "o",
+                "final_state"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32Bf16Kernel",
+              "signature": "1bace06d52ff1d46",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32Bf16Kernel",
+              "signature": "1bace06d52ff1d46",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32Bf16Kernel",
+              "signature": "1bace06d52ff1d46",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "ScanFusedKernel",
+              "signature": "306f6f401a02c792",
+              "outputs": [
+                "dAqk",
+                "dh",
+                "dv",
+                "dh0"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseMmBoundedKernel",
+              "signature": "5a0b0e0263189b90",
+              "outputs": [
+                "d_qg",
+                "d_kg",
+                "d_vh",
+                "d_v_beta",
+                "d_k_beta_g"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseEpilogueKernel",
+              "signature": "99d699ab19037e94",
+              "outputs": [
+                "dq_hv",
+                "dk_hv",
+                "dv",
+                "dbeta",
+                "dg_core",
+                "k_exp"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseDainvKernel",
+              "signature": "ed387cdedccff8e4",
+              "outputs": [
+                "dtri"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseDakkFusedKernel",
+              "signature": "c9546079430df630",
+              "outputs": [
+                "dAkk"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizePreStableKernel",
+              "signature": "89a92dfb7d3decd2",
+              "outputs": [
+                "q_scaled",
+                "k_scaled",
+                "kg",
+                "m_qk",
+                "m_base",
+                "m_beta"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizePairKernel",
+              "signature": "0ec1db8afb1df417",
+              "outputs": [
+                "dq_pair",
+                "dk_pair",
+                "s_base",
+                "t_beta"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizePostStableKernel",
+              "signature": "de7bf5fd932aff3e",
+              "outputs": [
+                "dq_hv_out",
+                "dk_hv_out",
+                "dbeta_out",
+                "dg_out"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizeReduceKernel",
+              "signature": "c50ccb9f48fbef6a",
+              "outputs": [
+                "dq_out",
+                "dk_out"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16F32Kernel",
+              "signature": "127dcc2b9168d6bb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16F32Kernel",
+              "signature": "127dcc2b9168d6bb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16F32Kernel",
+              "signature": "127dcc2b9168d6bb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            }
+          ],
+          "inputs_unchanged": true
+        }
+      },
+      "scope": "Actual public training reachability; no CPU accuracy inference."
+    },
+    {
+      "dtype": "f32",
+      "raw_beta": 16.0,
+      "paths": {
+        "candidate": {
+          "accepted": true,
+          "finite_output": true,
+          "finite_state": true,
+          "finite_gradients": [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ],
+          "output_sha256": "cce859da4794cffd199867c4199dab6331e9c0cdd26f9948c4ec238bfeee1912",
+          "state_sha256": "43b14f172f667e609470512150ec3bd14595dda35ac11a814eee0a375d89f3dc",
+          "gradient_sha256": {
+            "q": "185317ac2397e1717306691dcdc30dd415c2c31d2dabf62b04b6ff5a7f8a8f7b",
+            "k": "f0a981923ccec9224b21debadab7c912c3cae57ab36bae3e9e8123113e9ede5e",
+            "v": "227587193a90df788183c8e13d68258464455ea5d0720898d423a1dca56d1d0b",
+            "g": "c887314db5b1aa106f965ddebb9bb5668aec8afd99aa3fdf34f73984f5f3be29",
+            "beta": "d28f2191711d5f33171a8dbb6745edeb8e13b42ff687e4ec86da56838427e60d",
+            "h0": "86e603d5dd205cfdaa7c3910e86f311c1f7bbf8f5f29c969c488b499ae7656dd"
+          },
+          "beta_gradient_zero": false,
+          "launches": [
+            {
+              "operator": "KdaPrepChunkBetaF32Kernel",
+              "signature": "8e448d6684ec8096",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32F32Kernel",
+              "signature": "c734ca5227d79ce8",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32F32Kernel",
+              "signature": "c734ca5227d79ce8",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub1GateStableKernel",
+              "signature": "aad21f2d2b3d2c2c",
+              "outputs": [
+                "g_cumsum",
+                "eg"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub2ScoreStableKernel",
+              "signature": "69ca68c647809e44",
+              "outputs": [
+                "Aqk",
+                "strict"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "TrilInverse64V2StrictBf16Kernel",
+              "signature": "a5a2c0726a680ba3",
+              "outputs": [
+                "inv"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub3WyStableKernel",
+              "signature": "d90b2cf4c23fa99a",
+              "outputs": [
+                "w",
+                "u",
+                "qg",
+                "kg"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub45AqkRepairedKernel",
+              "signature": "d24e6d59beb12bc6",
+              "outputs": [
+                "o",
+                "final_state"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32Bf16Kernel",
+              "signature": "1bace06d52ff1d46",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32Bf16Kernel",
+              "signature": "1bace06d52ff1d46",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32Bf16Kernel",
+              "signature": "1bace06d52ff1d46",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "ScanFusedKernel",
+              "signature": "306f6f401a02c792",
+              "outputs": [
+                "dAqk",
+                "dh",
+                "dv",
+                "dh0"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseMmBoundedKernel",
+              "signature": "5a0b0e0263189b90",
+              "outputs": [
+                "d_qg",
+                "d_kg",
+                "d_vh",
+                "d_v_beta",
+                "d_k_beta_g"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseEpilogueKernel",
+              "signature": "99d699ab19037e94",
+              "outputs": [
+                "dq_hv",
+                "dk_hv",
+                "dv",
+                "dbeta",
+                "dg_core",
+                "k_exp"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseDainvKernel",
+              "signature": "ed387cdedccff8e4",
+              "outputs": [
+                "dtri"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseDakkFusedKernel",
+              "signature": "c9546079430df630",
+              "outputs": [
+                "dAkk"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizePreStableKernel",
+              "signature": "89a92dfb7d3decd2",
+              "outputs": [
+                "q_scaled",
+                "k_scaled",
+                "kg",
+                "m_qk",
+                "m_base",
+                "m_beta"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizePairKernel",
+              "signature": "0ec1db8afb1df417",
+              "outputs": [
+                "dq_pair",
+                "dk_pair",
+                "s_base",
+                "t_beta"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizePostStableKernel",
+              "signature": "de7bf5fd932aff3e",
+              "outputs": [
+                "dq_hv_out",
+                "dk_hv_out",
+                "dbeta_out",
+                "dg_out"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizeReduceKernel",
+              "signature": "c50ccb9f48fbef6a",
+              "outputs": [
+                "dq_out",
+                "dk_out"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16F32Kernel",
+              "signature": "127dcc2b9168d6bb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16F32Kernel",
+              "signature": "127dcc2b9168d6bb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16F32Kernel",
+              "signature": "127dcc2b9168d6bb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaPrepBackwardBetaF32Kernel",
+              "signature": "9a6f19f38495b7a2",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            }
+          ],
+          "inputs_unchanged": true
+        },
+        "old_npu": {
+          "accepted": true,
+          "finite_output": true,
+          "finite_state": true,
+          "finite_gradients": [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ],
+          "output_sha256": "cce859da4794cffd199867c4199dab6331e9c0cdd26f9948c4ec238bfeee1912",
+          "state_sha256": "43b14f172f667e609470512150ec3bd14595dda35ac11a814eee0a375d89f3dc",
+          "gradient_sha256": {
+            "q": "185317ac2397e1717306691dcdc30dd415c2c31d2dabf62b04b6ff5a7f8a8f7b",
+            "k": "f0a981923ccec9224b21debadab7c912c3cae57ab36bae3e9e8123113e9ede5e",
+            "v": "227587193a90df788183c8e13d68258464455ea5d0720898d423a1dca56d1d0b",
+            "g": "c887314db5b1aa106f965ddebb9bb5668aec8afd99aa3fdf34f73984f5f3be29",
+            "beta": "cce8acb2a60c7c99d8b0e6f273348466f1c843f074da9c639ee7995d0514852a",
+            "h0": "86e603d5dd205cfdaa7c3910e86f311c1f7bbf8f5f29c969c488b499ae7656dd"
+          },
+          "beta_gradient_zero": false,
+          "launches": [
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32F32Kernel",
+              "signature": "c734ca5227d79ce8",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32F32Kernel",
+              "signature": "c734ca5227d79ce8",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub1GateStableKernel",
+              "signature": "aad21f2d2b3d2c2c",
+              "outputs": [
+                "g_cumsum",
+                "eg"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub2ScoreStableKernel",
+              "signature": "69ca68c647809e44",
+              "outputs": [
+                "Aqk",
+                "strict"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "TrilInverse64V2StrictBf16Kernel",
+              "signature": "a5a2c0726a680ba3",
+              "outputs": [
+                "inv"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub3WyStableKernel",
+              "signature": "d90b2cf4c23fa99a",
+              "outputs": [
+                "w",
+                "u",
+                "qg",
+                "kg"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub45AqkRepairedKernel",
+              "signature": "d24e6d59beb12bc6",
+              "outputs": [
+                "o",
+                "final_state"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32Bf16Kernel",
+              "signature": "1bace06d52ff1d46",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32Bf16Kernel",
+              "signature": "1bace06d52ff1d46",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32Bf16Kernel",
+              "signature": "1bace06d52ff1d46",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "ScanFusedKernel",
+              "signature": "306f6f401a02c792",
+              "outputs": [
+                "dAqk",
+                "dh",
+                "dv",
+                "dh0"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseMmBoundedKernel",
+              "signature": "5a0b0e0263189b90",
+              "outputs": [
+                "d_qg",
+                "d_kg",
+                "d_vh",
+                "d_v_beta",
+                "d_k_beta_g"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseEpilogueKernel",
+              "signature": "99d699ab19037e94",
+              "outputs": [
+                "dq_hv",
+                "dk_hv",
+                "dv",
+                "dbeta",
+                "dg_core",
+                "k_exp"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseDainvKernel",
+              "signature": "ed387cdedccff8e4",
+              "outputs": [
+                "dtri"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseDakkFusedKernel",
+              "signature": "c9546079430df630",
+              "outputs": [
+                "dAkk"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizePreStableKernel",
+              "signature": "89a92dfb7d3decd2",
+              "outputs": [
+                "q_scaled",
+                "k_scaled",
+                "kg",
+                "m_qk",
+                "m_base",
+                "m_beta"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizePairKernel",
+              "signature": "0ec1db8afb1df417",
+              "outputs": [
+                "dq_pair",
+                "dk_pair",
+                "s_base",
+                "t_beta"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizePostStableKernel",
+              "signature": "de7bf5fd932aff3e",
+              "outputs": [
+                "dq_hv_out",
+                "dk_hv_out",
+                "dbeta_out",
+                "dg_out"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizeReduceKernel",
+              "signature": "c50ccb9f48fbef6a",
+              "outputs": [
+                "dq_out",
+                "dk_out"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16F32Kernel",
+              "signature": "127dcc2b9168d6bb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16F32Kernel",
+              "signature": "127dcc2b9168d6bb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16F32Kernel",
+              "signature": "127dcc2b9168d6bb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            }
+          ],
+          "inputs_unchanged": true
+        }
+      },
+      "scope": "Actual public training reachability; no CPU accuracy inference."
+    },
+    {
+      "dtype": "f32",
+      "raw_beta": 20.0,
+      "paths": {
+        "candidate": {
+          "accepted": true,
+          "finite_output": true,
+          "finite_state": true,
+          "finite_gradients": [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ],
+          "output_sha256": "cce859da4794cffd199867c4199dab6331e9c0cdd26f9948c4ec238bfeee1912",
+          "state_sha256": "43b14f172f667e609470512150ec3bd14595dda35ac11a814eee0a375d89f3dc",
+          "gradient_sha256": {
+            "q": "185317ac2397e1717306691dcdc30dd415c2c31d2dabf62b04b6ff5a7f8a8f7b",
+            "k": "f0a981923ccec9224b21debadab7c912c3cae57ab36bae3e9e8123113e9ede5e",
+            "v": "227587193a90df788183c8e13d68258464455ea5d0720898d423a1dca56d1d0b",
+            "g": "c887314db5b1aa106f965ddebb9bb5668aec8afd99aa3fdf34f73984f5f3be29",
+            "beta": "5341e6b2646979a70e57653007a1f310169421ec9bdd9f1a5648f75ade005af1",
+            "h0": "86e603d5dd205cfdaa7c3910e86f311c1f7bbf8f5f29c969c488b499ae7656dd"
+          },
+          "beta_gradient_zero": true,
+          "launches": [
+            {
+              "operator": "KdaPrepChunkBetaF32Kernel",
+              "signature": "8e448d6684ec8096",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32F32Kernel",
+              "signature": "c734ca5227d79ce8",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32F32Kernel",
+              "signature": "c734ca5227d79ce8",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub1GateStableKernel",
+              "signature": "aad21f2d2b3d2c2c",
+              "outputs": [
+                "g_cumsum",
+                "eg"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub2ScoreStableKernel",
+              "signature": "69ca68c647809e44",
+              "outputs": [
+                "Aqk",
+                "strict"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "TrilInverse64V2StrictBf16Kernel",
+              "signature": "a5a2c0726a680ba3",
+              "outputs": [
+                "inv"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub3WyStableKernel",
+              "signature": "d90b2cf4c23fa99a",
+              "outputs": [
+                "w",
+                "u",
+                "qg",
+                "kg"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub45AqkRepairedKernel",
+              "signature": "d24e6d59beb12bc6",
+              "outputs": [
+                "o",
+                "final_state"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32Bf16Kernel",
+              "signature": "1bace06d52ff1d46",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32Bf16Kernel",
+              "signature": "1bace06d52ff1d46",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32Bf16Kernel",
+              "signature": "1bace06d52ff1d46",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "ScanFusedKernel",
+              "signature": "306f6f401a02c792",
+              "outputs": [
+                "dAqk",
+                "dh",
+                "dv",
+                "dh0"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseMmBoundedKernel",
+              "signature": "5a0b0e0263189b90",
+              "outputs": [
+                "d_qg",
+                "d_kg",
+                "d_vh",
+                "d_v_beta",
+                "d_k_beta_g"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseEpilogueKernel",
+              "signature": "99d699ab19037e94",
+              "outputs": [
+                "dq_hv",
+                "dk_hv",
+                "dv",
+                "dbeta",
+                "dg_core",
+                "k_exp"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseDainvKernel",
+              "signature": "ed387cdedccff8e4",
+              "outputs": [
+                "dtri"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseDakkFusedKernel",
+              "signature": "c9546079430df630",
+              "outputs": [
+                "dAkk"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizePreStableKernel",
+              "signature": "89a92dfb7d3decd2",
+              "outputs": [
+                "q_scaled",
+                "k_scaled",
+                "kg",
+                "m_qk",
+                "m_base",
+                "m_beta"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizePairKernel",
+              "signature": "0ec1db8afb1df417",
+              "outputs": [
+                "dq_pair",
+                "dk_pair",
+                "s_base",
+                "t_beta"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizePostStableKernel",
+              "signature": "de7bf5fd932aff3e",
+              "outputs": [
+                "dq_hv_out",
+                "dk_hv_out",
+                "dbeta_out",
+                "dg_out"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizeReduceKernel",
+              "signature": "c50ccb9f48fbef6a",
+              "outputs": [
+                "dq_out",
+                "dk_out"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16F32Kernel",
+              "signature": "127dcc2b9168d6bb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16F32Kernel",
+              "signature": "127dcc2b9168d6bb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16F32Kernel",
+              "signature": "127dcc2b9168d6bb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaPrepBackwardBetaF32Kernel",
+              "signature": "9a6f19f38495b7a2",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            }
+          ],
+          "inputs_unchanged": true
+        },
+        "old_npu": {
+          "accepted": true,
+          "finite_output": true,
+          "finite_state": true,
+          "finite_gradients": [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ],
+          "output_sha256": "cce859da4794cffd199867c4199dab6331e9c0cdd26f9948c4ec238bfeee1912",
+          "state_sha256": "43b14f172f667e609470512150ec3bd14595dda35ac11a814eee0a375d89f3dc",
+          "gradient_sha256": {
+            "q": "185317ac2397e1717306691dcdc30dd415c2c31d2dabf62b04b6ff5a7f8a8f7b",
+            "k": "f0a981923ccec9224b21debadab7c912c3cae57ab36bae3e9e8123113e9ede5e",
+            "v": "227587193a90df788183c8e13d68258464455ea5d0720898d423a1dca56d1d0b",
+            "g": "c887314db5b1aa106f965ddebb9bb5668aec8afd99aa3fdf34f73984f5f3be29",
+            "beta": "0f68afd3b479f144f0fdc16848f1bcb4cc19c94f58f1673fd6968c9f69f098c6",
+            "h0": "86e603d5dd205cfdaa7c3910e86f311c1f7bbf8f5f29c969c488b499ae7656dd"
+          },
+          "beta_gradient_zero": true,
+          "launches": [
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32F32Kernel",
+              "signature": "c734ca5227d79ce8",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32F32Kernel",
+              "signature": "c734ca5227d79ce8",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub1GateStableKernel",
+              "signature": "aad21f2d2b3d2c2c",
+              "outputs": [
+                "g_cumsum",
+                "eg"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub2ScoreStableKernel",
+              "signature": "69ca68c647809e44",
+              "outputs": [
+                "Aqk",
+                "strict"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "TrilInverse64V2StrictBf16Kernel",
+              "signature": "a5a2c0726a680ba3",
+              "outputs": [
+                "inv"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub3WyStableKernel",
+              "signature": "d90b2cf4c23fa99a",
+              "outputs": [
+                "w",
+                "u",
+                "qg",
+                "kg"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaSub45AqkRepairedKernel",
+              "signature": "d24e6d59beb12bc6",
+              "outputs": [
+                "o",
+                "final_state"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32Bf16Kernel",
+              "signature": "1bace06d52ff1d46",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32Bf16Kernel",
+              "signature": "1bace06d52ff1d46",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutF32Bf16Kernel",
+              "signature": "1bace06d52ff1d46",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16Bf16Kernel",
+              "signature": "cf153020c43cbeab",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "ScanFusedKernel",
+              "signature": "306f6f401a02c792",
+              "outputs": [
+                "dAqk",
+                "dh",
+                "dv",
+                "dh0"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseMmBoundedKernel",
+              "signature": "5a0b0e0263189b90",
+              "outputs": [
+                "d_qg",
+                "d_kg",
+                "d_vh",
+                "d_v_beta",
+                "d_k_beta_g"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseEpilogueKernel",
+              "signature": "99d699ab19037e94",
+              "outputs": [
+                "dq_hv",
+                "dk_hv",
+                "dv",
+                "dbeta",
+                "dg_core",
+                "k_exp"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseDainvKernel",
+              "signature": "ed387cdedccff8e4",
+              "outputs": [
+                "dtri"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "InverseDakkFusedKernel",
+              "signature": "c9546079430df630",
+              "outputs": [
+                "dAkk"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizePreStableKernel",
+              "signature": "89a92dfb7d3decd2",
+              "outputs": [
+                "q_scaled",
+                "k_scaled",
+                "kg",
+                "m_qk",
+                "m_base",
+                "m_beta"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizePairKernel",
+              "signature": "0ec1db8afb1df417",
+              "outputs": [
+                "dq_pair",
+                "dk_pair",
+                "s_base",
+                "t_beta"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizePostStableKernel",
+              "signature": "de7bf5fd932aff3e",
+              "outputs": [
+                "dq_hv_out",
+                "dk_hv_out",
+                "dbeta_out",
+                "dg_out"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "FinalizeReduceKernel",
+              "signature": "c50ccb9f48fbef6a",
+              "outputs": [
+                "dq_out",
+                "dk_out"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16F32Kernel",
+              "signature": "127dcc2b9168d6bb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16F32Kernel",
+              "signature": "127dcc2b9168d6bb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            },
+            {
+              "operator": "KdaLayoutBf16F32Kernel",
+              "signature": "127dcc2b9168d6bb",
+              "outputs": [
+                "destination"
+              ],
+              "poisoned": true
+            }
+          ],
+          "inputs_unchanged": true
+        }
+      },
+      "scope": "Actual public training reachability; no CPU accuracy inference."
+    }
+  ]
+}

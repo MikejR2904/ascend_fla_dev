@@ -3,7 +3,7 @@
 ``chunk_kda`` is the differentiable entrypoint; ``fused_recurrent_kda`` serves
 forward-only decode with T<=16. Explicit raw-input flags use custom ``kda_prep``
 kernels for inference and decode. When gradients are needed, enabled raw flags
-retain the differentiable host preparation graph pending BF-08. Chunk's prepared
+use native preparation autograd and backward kernels. Chunk's prepared
 input domain checks are heuristic and optional; decode omits them to avoid
 per-step checks. ABI/gate-span guards remain enabled.
 

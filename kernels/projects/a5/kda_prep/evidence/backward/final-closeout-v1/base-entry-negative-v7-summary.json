@@ -1,0 +1,155 @@
+{
+  "environment": {
+    "python": "3.12.14",
+    "torch": "2.12.0+cu130",
+    "torch_npu": "2.12.0",
+    "ascriptor": "0.1.0",
+    "library_commit": "90cfcdc720bbcd66e8bd4361c4dd4fbc1a2a57b5",
+    "kernels_commit": "b3b3f9c16df7c4626ed3c081032a1be5a753d0b1",
+    "cann_version_records": {
+      "compiler": {
+        "raw_lines": [
+          "Version=9.1.0-beta.1",
+          "version_dir=cann",
+          "required_package_runtime_version=\"9.1\"",
+          "required_package_ge-executor_version=\"9.1\"",
+          "required_package_metadef_version=\"9.1\"",
+          "required_package_opbase_version=\"9.1\"",
+          "required_package_bisheng-compiler_version=\"9.1\"",
+          "required_package_tbe-tik_version=\"9.1\"",
+          "timestamp=20260509_173000235"
+        ],
+        "sha256": "0f982a259247cdd06df4fa5bdaf526b57b6ad15f7d27a33f23b3c70a381c2fe5"
+      },
+      "opp": {
+        "raw_lines": [
+          "Version=9.1.0-beta.1",
+          "version_dir=cann",
+          "required_package_runtime_version=\">=8.5\"",
+          "required_package_ge-executor_version=\">=8.5\"",
+          "required_package_metadef_version=\">=8.5\"",
+          "required_package_asc-devkit_version=\">=8.5\"",
+          "required_package_bisheng-compiler_version=\">=8.5\"",
+          "timestamp=20260509_173000235"
+        ],
+        "sha256": "377b05dab3a2dfc87dfaa92affd69a9aa5795a54d423cbe629d3495ad20370ef"
+      }
+    },
+    "opp_directories": [
+      "ascend910_93",
+      "ascend910b",
+      "ascend950"
+    ],
+    "driver_sha256": "f883e2845b713d14e29372516963576d98f81676297c751bca692390234d061f",
+    "helper_sha256": "808b3d2c778ea577489ef966db72f38375d5a4d609190a63a63704757ae4f880",
+    "production_source_manifest_sha256": "41b681ecd6a2925ca720274317d3a3245d94a17eef6c8924e513d153a9d1a4a9",
+    "source_identity_receipt": "source-identity.json"
+  },
+  "result": {
+    "base": "6c42dc6",
+    "entry_files": [
+      "chunk.py",
+      "autograd.py"
+    ],
+    "test_cases": [
+      {
+        "id": "tests.test_kda_domain_checks::test_raw_preparation_keeps_all_six_gradient_paths",
+        "failed": true,
+        "error": false
+      },
+      {
+        "id": "tests.test_kda_domain_checks::test_public_chunk_routes_gate_parameter_only_gradients_to_autograd[A_log]",
+        "failed": true,
+        "error": false
+      },
+      {
+        "id": "tests.test_kda_domain_checks::test_public_chunk_routes_gate_parameter_only_gradients_to_autograd[dt_bias]",
+        "failed": true,
+        "error": false
+      },
+      {
+        "id": "tests.test_kda_prep_kernel::test_training_graph_selection_and_no_grad[True-q]",
+        "failed": true,
+        "error": false
+      },
+      {
+        "id": "tests.test_kda_prep_kernel::test_training_graph_selection_and_no_grad[True-k]",
+        "failed": true,
+        "error": false
+      },
+      {
+        "id": "tests.test_kda_prep_kernel::test_training_graph_selection_and_no_grad[True-v]",
+        "failed": true,
+        "error": false
+      },
+      {
+        "id": "tests.test_kda_prep_kernel::test_training_graph_selection_and_no_grad[True-g]",
+        "failed": true,
+        "error": false
+      },
+      {
+        "id": "tests.test_kda_prep_kernel::test_training_graph_selection_and_no_grad[True-beta]",
+        "failed": true,
+        "error": false
+      },
+      {
+        "id": "tests.test_kda_prep_kernel::test_training_graph_selection_and_no_grad[True-A_log]",
+        "failed": true,
+        "error": false
+      },
+      {
+        "id": "tests.test_kda_prep_kernel::test_training_graph_selection_and_no_grad[True-dt_bias]",
+        "failed": true,
+        "error": false
+      },
+      {
+        "id": "tests.test_kda_prep_kernel::test_training_graph_selection_and_no_grad[True-initial_state]",
+        "failed": true,
+        "error": false
+      },
+      {
+        "id": "tests.test_kda_prep_kernel::test_training_graph_selection_and_no_grad[False-q]",
+        "failed": false,
+        "error": false
+      },
+      {
+        "id": "tests.test_kda_prep_kernel::test_training_graph_selection_and_no_grad[False-k]",
+        "failed": false,
+        "error": false
+      },
+      {
+        "id": "tests.test_kda_prep_kernel::test_training_graph_selection_and_no_grad[False-v]",
+        "failed": false,
+        "error": false
+      },
+      {
+        "id": "tests.test_kda_prep_kernel::test_training_graph_selection_and_no_grad[False-g]",
+        "failed": false,
+        "error": false
+      },
+      {
+        "id": "tests.test_kda_prep_kernel::test_training_graph_selection_and_no_grad[False-beta]",
+        "failed": false,
+        "error": false
+      },
+      {
+        "id": "tests.test_kda_prep_kernel::test_training_graph_selection_and_no_grad[False-A_log]",
+        "failed": false,
+        "error": false
+      },
+      {
+        "id": "tests.test_kda_prep_kernel::test_training_graph_selection_and_no_grad[False-dt_bias]",
+        "failed": false,
+        "error": false
+      },
+      {
+        "id": "tests.test_kda_prep_kernel::test_training_graph_selection_and_no_grad[False-initial_state]",
+        "failed": false,
+        "error": false
+      }
+    ],
+    "expected_failure_count": 11,
+    "preserved_no_grad_pass_count": 8,
+    "passed": true
+  }
+}

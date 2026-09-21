@@ -1,0 +1,230 @@
+{
+  "environment": {
+    "python": "3.12.14",
+    "torch": "2.12.0+cu130",
+    "torch_npu": "2.12.0",
+    "ascriptor": "0.1.0",
+    "library_commit": "90cfcdc720bbcd66e8bd4361c4dd4fbc1a2a57b5",
+    "kernels_commit": "b3b3f9c16df7c4626ed3c081032a1be5a753d0b1",
+    "cann_version_records": {
+      "compiler": {
+        "raw_lines": [
+          "Version=9.1.0-beta.1",
+          "version_dir=cann",
+          "required_package_runtime_version=\"9.1\"",
+          "required_package_ge-executor_version=\"9.1\"",
+          "required_package_metadef_version=\"9.1\"",
+          "required_package_opbase_version=\"9.1\"",
+          "required_package_bisheng-compiler_version=\"9.1\"",
+          "required_package_tbe-tik_version=\"9.1\"",
+          "timestamp=20260509_173000235"
+        ],
+        "sha256": "0f982a259247cdd06df4fa5bdaf526b57b6ad15f7d27a33f23b3c70a381c2fe5"
+      },
+      "opp": {
+        "raw_lines": [
+          "Version=9.1.0-beta.1",
+          "version_dir=cann",
+          "required_package_runtime_version=\">=8.5\"",
+          "required_package_ge-executor_version=\">=8.5\"",
+          "required_package_metadef_version=\">=8.5\"",
+          "required_package_asc-devkit_version=\">=8.5\"",
+          "required_package_bisheng-compiler_version=\">=8.5\"",
+          "timestamp=20260509_173000235"
+        ],
+        "sha256": "377b05dab3a2dfc87dfaa92affd69a9aa5795a54d423cbe629d3495ad20370ef"
+      }
+    },
+    "opp_directories": [
+      "ascend910_93",
+      "ascend910b",
+      "ascend950"
+    ],
+    "driver_sha256": "5795c5acdf48ea09c52fada9b1638d3676b3c58583fbd2a413bc0ee6cb897ae9",
+    "helper_sha256": "f4ad97dd4588095ab6d9f2f49f72f1a151e55c0d644438620c494994f6fb3c22",
+    "production_source_manifest_sha256": "faacc2ae2500c1f490251cf853214c245884f7f222922a8eebf2c678287a75d6",
+    "source_identity_receipt": "source-identity.json"
+  },
+  "collection_complete": true,
+  "passed": false,
+  "cases": [
+    {
+      "id": "bf16_near_null_parallel_sensitivity",
+      "passed": true,
+      "candidate_l2": 0.0016607077649921488,
+      "candidate_max_relative": 0.0038790742458557122,
+      "old_cpu_l2": 12.69315463798312,
+      "old_npu_l2": 10.879221639855139
+    },
+    {
+      "id": "f32_near_null_parallel_sensitivity",
+      "passed": true,
+      "candidate_l2": 6.775904827105966e-08,
+      "candidate_max_relative": 2.2528767203527127e-07,
+      "old_cpu_l2": 6.158784395398819e-05,
+      "old_npu_l2": 5.494256249980201e-05
+    },
+    {
+      "id": "bf16_gaussian",
+      "passed": true,
+      "candidate_l2": 0.001658367350336366,
+      "candidate_max_relative": 0.0038806576185872483,
+      "old_cpu_l2": 0.001658367350336366,
+      "old_npu_l2": 0.001658367350336366
+    },
+    {
+      "id": "bf16_full_kimi",
+      "passed": true,
+      "candidate_l2": 0.0016560035887001345,
+      "candidate_max_relative": 0.0038911197770501982,
+      "old_cpu_l2": 0.0016560035885855898,
+      "old_npu_l2": 0.001656003588948774
+    },
+    {
+      "id": "bf16_scale_0.0",
+      "passed": true,
+      "candidate_l2": 0.0016937992182375248,
+      "candidate_max_relative": 0.0033825503355704696,
+      "old_cpu_l2": 0.0016937992182375248,
+      "old_npu_l2": 0.0016937992182375248
+    },
+    {
+      "id": "bf16_scale_1e-20",
+      "passed": true,
+      "candidate_l2": 0.0016836298456230157,
+      "candidate_max_relative": 0.0033825503355704696,
+      "old_cpu_l2": 0.0016836298456230157,
+      "old_npu_l2": 0.0016836298456230157
+    },
+    {
+      "id": "bf16_scale_1e-08",
+      "passed": true,
+      "candidate_l2": 0.0016959917308446276,
+      "candidate_max_relative": 0.003382745990663262,
+      "old_cpu_l2": 0.0016959915775324513,
+      "old_npu_l2": 0.0016959915775324513
+    },
+    {
+      "id": "bf16_scale_0.0001",
+      "passed": true,
+      "candidate_l2": 0.0016486023101641059,
+      "candidate_max_relative": 0.003887126941360301,
+      "old_cpu_l2": 0.0016486023101671557,
+      "old_npu_l2": 0.0016486023101641059
+    },
+    {
+      "id": "bf16_scale_30.0",
+      "passed": true,
+      "candidate_l2": 0.001644589399454142,
+      "candidate_max_relative": 0.0038748567806137554,
+      "old_cpu_l2": 0.001644589399454142,
+      "old_npu_l2": 0.0016445893994541647
+    },
+    {
+      "id": "bf16_scale_10000000000.0",
+      "passed": true,
+      "candidate_l2": 0.001683515694621658,
+      "candidate_max_relative": 0.003855716345771219,
+      "old_cpu_l2": 0.001683515694621658,
+      "old_npu_l2": 0.001683515694621658
+    },
+    {
+      "id": "bf16_scale_1e+18",
+      "passed": false,
+      "candidate_l2": null,
+      "candidate_max_relative": 0.0,
+      "old_cpu_l2": 0.0016672941008539753,
+      "old_npu_l2": 0.08200180331626801
+    },
+    {
+      "id": "bf16_scale_1e+20",
+      "passed": false,
+      "candidate_l2": null,
+      "candidate_max_relative": 0.0,
+      "old_cpu_l2": 1.0,
+      "old_npu_l2": 1.0
+    },
+    {
+      "id": "f32_gaussian",
+      "passed": true,
+      "candidate_l2": 6.430445773279113e-08,
+      "candidate_max_relative": 2.496507939268587e-07,
+      "old_cpu_l2": 5.2083529931895104e-08,
+      "old_npu_l2": 4.8537653003145774e-08
+    },
+    {
+      "id": "f32_full_kimi",
+      "passed": true,
+      "candidate_l2": 6.538386109163946e-08,
+      "candidate_max_relative": 2.7612950977852957e-07,
+      "old_cpu_l2": 5.2459445547575215e-08,
+      "old_npu_l2": 4.9309574119756006e-08
+    },
+    {
+      "id": "f32_scale_0.0",
+      "passed": true,
+      "candidate_l2": 5.2862506716353845e-08,
+      "candidate_max_relative": 1.1322463768115941e-07,
+      "old_cpu_l2": 6.188706798839293e-08,
+      "old_npu_l2": 6.188706798839293e-08
+    },
+    {
+      "id": "f32_scale_1e-20",
+      "passed": true,
+      "candidate_l2": 5.199336532057221e-08,
+      "candidate_max_relative": 1.1322463768115941e-07,
+      "old_cpu_l2": 6.279634969866095e-08,
+      "old_npu_l2": 6.279634969866095e-08
+    },
+    {
+      "id": "f32_scale_1e-08",
+      "passed": true,
+      "candidate_l2": 5.6714686820335e-08,
+      "candidate_max_relative": 1.810716341621026e-07,
+      "old_cpu_l2": 5.754547593521849e-08,
+      "old_npu_l2": 5.754547593521849e-08
+    },
+    {
+      "id": "f32_scale_0.0001",
+      "passed": true,
+      "candidate_l2": 8.298265789746808e-08,
+      "candidate_max_relative": 2.873209015281492e-06,
+      "old_cpu_l2": 5.2547650511779506e-08,
+      "old_npu_l2": 4.867747837680588e-08
+    },
+    {
+      "id": "f32_scale_30.0",
+      "passed": true,
+      "candidate_l2": 6.461050829248206e-08,
+      "candidate_max_relative": 2.4701345640044137e-07,
+      "old_cpu_l2": 5.3827989517074615e-08,
+      "old_npu_l2": 4.9820949278210936e-08
+    },
+    {
+      "id": "f32_scale_10000000000.0",
+      "passed": true,
+      "candidate_l2": 6.42378803723596e-08,
+      "candidate_max_relative": 2.3425927870170733e-07,
+      "old_cpu_l2": 5.261436235612284e-08,
+      "old_npu_l2": 4.4850555711099065e-08
+    },
+    {
+      "id": "f32_scale_1e+18",
+      "passed": false,
+      "candidate_l2": null,
+      "candidate_max_relative": 0.0,
+      "old_cpu_l2": 5.5804261821119604e-08,
+      "old_npu_l2": 0.08349718715151276
+    },
+    {
+      "id": "f32_scale_1e+20",
+      "passed": false,
+      "candidate_l2": null,
+      "candidate_max_relative": 0.0,
+      "old_cpu_l2": 1.0,
+      "old_npu_l2": 1.0
+    }
+  ],
+  "no_endpoint_exemptions": true,
+  "exit_zero_means_collection_only": true
+}
