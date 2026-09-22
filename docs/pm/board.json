@@ -1201,6 +1201,10 @@
         {
           "at": "2026-09-22T02:22",
           "summary": "两条 STATUS（01:25Z、01:54Z，自述，#104，头 a45873c，PING 后约 10h 回应）：① 撤回撤回——上一条「correction」的定性成立（模拟器 join 超时非死锁）代码未改；五个 kernel 物理地址分配全过（无 UB/L0C 溢出，吸取 A2-09 的教训、放在报 sim 通过之前做）；12 case 全量 sim 用 --timeout 7200 跑（BF16 在模拟器里更慢，加宽/收窄逐 token 多 4 次 @vf，墙钟非真机结论）。② **真机受阻记录**（D-PM-28，只记不升级）：2026-09-22 卡快照——0/2 Alarm、1/3/6/7 OK 但有进程、4/5 Alarm 且空闲；按 AGENTS.md §5 不在 Alarm 卡跑、不占他人进程、不复位共享设备，因此暂不开工，只做不依赖真机的部分；问是否换到 41 那台（另一套环境，结论不互相沿用）——**PM 尚未答复这个问题，留给下一轮或请示用户**。③ 20 分钟后第二条：**已unblock、拿到第一个真机 pass**（t1_h1_small，五个 kernel 整链 + 全部 stage checkpoint，board stage passed；环境 Ascend950PR / CANN 9.2.0 / opp 含 ascend950 / compiler timestamp 2026-05-09T12:45:09+08:00）；卡纪律记录（用到物理卡 6 与 3，逐卡查 Health + proc-mem，只用 OK 且无进程的卡）；环境发现三条记进 machine_specs.md 类文档：缺 decorator / scipy（TBE 编译链要，只装进自己 venv）、/root/.tvm_test_data 只读需显式设 HOME/TMPDIR、构建子进程走 PATH 上的 python（venv 要放 PATH 最前）。仍未给出到完整交付的数值 ETA 或 RISK timebox-slip（PM 09:20Z / 15:36Z 两次问过）；已过 24h 时限约 10h，但正在推进、非停滞，暂不视为「预计超出 >50%」（判的是预计超出，不是已用时间，而目前没有预计值）。下一步：12 case 全量真机 → 奇偶 C / 门控跨度端点（BF16 重测 1520.9，有限性与精度分开报）/ bd 逐位 → FP32 路径逐位不变 → 两条 dtype 路径 TorchDispatchMode 审计 → 三明治性能 → 机械检查出包。"
+        },
+        {
+          "at": "2026-09-22T14:36",
+          "summary": "STATUS（14:27Z，自述，#104，头 4f8d3d2）：**12 个契约 case 在 A5 真机全过**（a5.gdn2_chunk_fwd_bf16，board stage，190/135 ops、12/12）；host 算子审计（TorchDispatchMode，通则 §1）两条 dtype 路径都过：FP32 empty×18 + zeros×1、BF16 empty×18 + zeros×1，全是分配，没有 dtype 转换 / 拷贝 / 重排 / 产出计算数据的算术，入口源码 .float()/.to(dtype)/.to(device) 已全删。**审计撞出并修了两条 AGENTS.md §6 记着的坑**：① 拷贝派生的五个 kernel 沿用了 FP32 单元的算子名，CANN 按算子名解析、同进程里 BF16 静默拿到 FP32 的二进制（单跑不暴露，两条路径共存才撞上，且是静默的）——已改名 gdn2_chunk_*_bf16（提交 4f8d3d2），check/reference 不变；② 审计脚本先跑 FP32 后注册 BF16 vendor 树被 binding.py 的闸拦下（首次算子解析前必须编完），已在入口加 prepare() 默认编两条 dtype 路径，顺带验证了 prepare(dtypes=...)。仍没有精度 / 性能成套数字（下一步：奇偶 C、门控跨度端点重测、bd 间逐位、FP32 路径改前改后逐位相同、三轮三明治、证据出包）。PM 评价：这是真实进展且质量在提高——host 算子审计抓到了一个真实的静默 dtype 替换缺陷并修复，方法论正确；仍未给数值 ETA，我不再追问 ETA（已问两次），等下一次真机里程碑。"
         }
       ],
       "result": null,
