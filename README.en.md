@@ -119,7 +119,7 @@ _First target family; used by Kimi-Linear_
 |---|---|---|---|---|---|
 | BF-07 | [#106](https://github.com/ddddwee1/ascend_fla_dev/issues/106) | `a5` | bf16 | ✅ done | ★ start |
 | BF-08 | [#117](https://github.com/ddddwee1/ascend_fla_dev/issues/117) | `a5` | bf16 | ✅ done |  |
-| BF-09 | [#125](https://github.com/ddddwee1/ascend_fla_dev/issues/125) | `a5` | bf16、fp32 | 🔵 assigned |  |
+| BF-09 | [#125](https://github.com/ddddwee1/ascend_fla_dev/issues/125) | `a5` | bf16、fp32 | 🔵 in_progress |  |
 
 </details>
 

@@ -5142,7 +5142,7 @@
       "wave": "W0",
       "soc": "a5",
       "priority": "P0",
-      "status": "assigned",
+      "status": "in_progress",
       "model": [],
       "kernel": [
         "kda_prep"
@@ -5190,6 +5190,10 @@
         {
           "at": "2026-09-21T07:52",
           "summary": "派给 limjiunnbin（session 01a0b7ce-…，BF-08 的同一 session），24h，分支 task/BF-09；不需要重新 APPLY。ASSIGN 里点明：第一个提交先冻结 BF-08 合入后的三轮同卡基线（旧 host 图 / Torch NPU / 当前 candidate，T1024 与 T4096）；硬约束一条都不放宽（backward_budgets.json 字节不变、D-PM-54 / 55 / 56 判读规则照用、跨 bd 逐位相同、固定归约次序、155 / 105 与域不变）；目标线 T4096 完整训练步 ≤ 旧 host 图 × 1.25（PM 建议、非门槛），做不到如实报瓶颈与下界、放宽判据是用户的决定；写集只在 kda_prep/** + 两个测试 / 文档文件，autograd.py / chunk.py 不在写集（避免与 A2-02 相交）；证据 ≲ 50 MB；沿用 BF-08 的纪律；排序更正——A5K-03 顺延到 BF-09 之后直接派。"
+        },
+        {
+          "at": "2026-09-22T13:37",
+          "summary": "ACK（13:35Z，自述，#125，session 01a0b7ce-…，分支 task/BF-09，晚于 ack_within_h 24h 的窗口——ASSIGN 07:52Z 09-21，ACK 09-22 13:35Z，约 30h）：申领人自陈「恢复时间晚于原 ACK 窗口，看板仍明确 assigned、无撤回或改派消息，因此立即恢复执行并补 ACK」，PM 核对属实（本 session 未发 PING/收回，任务确实一直是同一账号）。计划五步：① 重新实测设备健康/占用、核对来源与哈希，先跑完整 Kimi 训练，再重测三轮同卡（旧 host 图 / Torch NPU / 合入版）T1024 / T4096，**第一个提交冻结实际结果后才优化**（不沿用 BF-08 历史数字作基线，本任务重新测）；② 先定位 gate 第一阶段的指令 / 存储 / 重复工作成本，每次改动有独立依据，保持固定归约次序、无原子、跨 bd 逐位一致、冻结预算文件字节与 D-PM-54/55/56 判读规则不变；③ 只在批准写集内优化（autograd.py / chunk.py、stable / layout / 上游只读），不引入近似回退、阈值或选择性补偿；④ 最终源码重跑完整四 bd、58,320 次公开训练调用、norm / 端点 / 审计 / 模型 / 性能归因全套，vendor（含 backward）在各独立进程首次 custom 前编完；⑤ 证据增量约 50 MB 内，原始回执私有归档 + SHA + 恢复验证，机械核验最终生产源码，主机测试 / 负对照后交付 PR；性能未达目标如实报告瓶颈，不放宽判据。ETA 24h；承诺每次真机里程碑及至少每 12h 汇报；设备窗口受限会给具体证据（D-PM-28 范围内自行处理）。session 与 BF-05 的 bf05-gdn2-bf16-a5-1 不同，两条并发符合 PROTOCOL §3.1。PM 核对：计划与 ASSIGN、BF-09.md 规格逐项对得上（冻结基线优先、硬约束不放宽、写集边界正确），不需要回复。"
         }
       ],
       "result": null,
