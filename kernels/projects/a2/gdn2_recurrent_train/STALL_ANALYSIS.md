@@ -91,6 +91,20 @@ cores parallelize across (b,h) items, not within one item's op stream.
 - **Coalesce loads** → the 6 inputs are 6 separate GM tensors; they cannot merge into one DMA.
 - **Interleave two (b,h) recurrences per core** to fill the pipe → **UB-limited**: two states +
   two reduction scratches = 256 KB > 192 KB UB. Does not fit.
+- **Group-reduction primitives** (replace the two 7-add halving trees with `cadd`/`cgadd`/`cpadd`)
+  → **wrong-axis, ruled out by measurement.** These accumulators reduce along the *contiguous* axis
+  with strides counted in 8-element (32-byte) blocks, so they cannot step one column at a time to
+  reduce each row of a `[128,128]` state independently. Patched in and measured: dq rel-L2 **0.21**
+  (garbage). Dead end.
+- **Offload the `out = q@state` reduction to the CUBE unit** → **hardware-blocked on b3.** The cube
+  matmul verifies only on the 950 family. On b3 the `q_row`/`state` live in UB (vector output) and
+  the required on-chip moves to feed and drain the cube are **not implemented on this device**:
+  `device_lower` rejects `dma.ub_to_l1.nd2nz` (UB→L1 with nd→nz layout, needed for both matmul
+  inputs) and `dma.l0c_to_ub` (result back to UB) with *"not available on device b3 (devices:
+  ['950', '950pr'])"*. The only b3-legal path is UB→GM→L1 in and L0C→GM→UB out — two extra GM
+  round-trips per token per step, dwarfing the ~10 vector ops replaced, for an **M=1** matmul that
+  underutilizes the 16×16 cube array anyway. Even the (correctness-broken) build showed no device-time
+  change (~2.64 µs/step vs 2.67). Not viable.
 
 ## 7. Context
 
