@@ -2425,7 +2425,7 @@
       "wave": "W0",
       "soc": "any",
       "priority": "P2",
-      "status": "open",
+      "status": "assigned",
       "model": [
         "kimi-linear-48b-a3b"
       ],
@@ -2448,9 +2448,20 @@
       "spec": "docs/pm/tasks/A2-08.md",
       "issue": 36,
       "pr": null,
-      "assignee": null,
-      "assignee_caps": null,
-      "branch": null,
+      "assignee": "MikejR2904",
+      "assignee_caps": {
+        "agent": "Claude Opus 4.8 (Claude Code)，operated by MikejR2904（自述）",
+        "socs": [
+          "a2"
+        ],
+        "soc_details": "自述（APPLY 03:13Z / 03:22Z）：a2，Ascend 910B3（20 AI cores / 40 vector cores、UB 192KB、AIV 1.8GHz）、CANN 9.2.0-beta.1、内置算子包含 910B3 平台、torch 2.10.0 / torch_npu 2.10.0.post2、Python 3.11（机器与卡归 assignee 管理，D-PM-28）；A2 真机数字在 A2-11 之前只是观测记录",
+        "ascriptor": "A2-07 期间已按自述固定到 library 90cfcdc / kernels b3b3f9c；A2-10 每份回执带这两个修订，对不上先发 RISK",
+        "fla": "有（自述）",
+        "fork": "MikejR2904/ascend_fla_dev_a2（真 fork，parent ddddwee1；APPLY 里原写的同名非 fork 仓跨仓 PR 不认）",
+        "availability": "异步",
+        "note": "沿用 A2-10 时的能力自述（同账号、同环境，A2-11 之前 A2 真机数字仍只是观测记录）。A2-08 交付物据自述已完成（原时点：910B3，tests/test_models_kimi.py 14 passed，fla.ops.kda.naive 层级数值 relative L2 1.02e-6），需在当前 main（e1e8a57 起）上重新验证后再开 PR。"
+      },
+      "branch": "task/A2-08",
       "timebox_h": 16,
       "reports": [
         {
@@ -2468,6 +2479,10 @@
         {
           "at": "2026-09-21T10:26",
           "summary": "A2-02 已合入；PM 更正 08:06Z 的说法：不是「A2-02 之后直接派 A2-08」，而是先派 A2-10（P0 主线，#37），A2-08（P2，成品已做完、放着不开 PR）顺延到 A2-10 DONE 并过审之后，仍不需要重新 APPLY；届时在当时的 main 上重跑一遍（main 自其做完以来变了 BF-07 / BF-08、FMT-01 / FMT-02、A2-02）。已在 #36 回复。"
+        },
+        {
+          "at": "2026-09-23T02:19",
+          "summary": "ASSIGN（PM，自动，按 08:06Z/10:26Z 的既定顺延）：A2-10 已 DONE 并过审合入（8d7dcff），现在轮到 A2-08。此前已做完的交付物（tests/test_models_kimi.py 14 passed 等）请在当前 main（e1e8a57 起，含 A2-10/A2-02/BF-07/BF-08/FMT-01/FMT-02）上重新验证一遍再开 PR，不是照抄旧结果——main 自申领人原话所述的完成时点以来变化较大。不需要重新 APPLY。规格：docs/pm/tasks/A2-08.md；写集仍是 ascend_fla/models/kimi_linear.py + tests/test_models_kimi.py；D-PM-34（真机验证）与规格里「纯 CPU/主机侧」的关系：本任务不需要 NPU 算子执行，用 reference/kda.py 的 torch 递推替身，但仍需在申领人的 A2 环境（910B3）上跑通并留原始日志（pytest 输出、SoC/CANN/算子包目录），不是声称\"纯 CPU 所以免真机\"。"
         }
       ],
       "result": null
