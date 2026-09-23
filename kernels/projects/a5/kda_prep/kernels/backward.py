@@ -53,19 +53,17 @@ def _dd_add(oh, ol, ah, al, bh, bl):
 def _dd_add_constant(oh, ol, ah, al, high, low):
     # Immediate operands avoid retaining every polynomial coefficient in a
     # vector register across the enclosing row loop.
+    # Both Horner callers have abs(ah) < high: the exp product/coefficient
+    # ratio is below .372, and the log ratio below .127. FastTwoSum therefore
+    # recovers the same exact residual, with the low-term order unchanged.
     s = Reg(DT.float)
-    v = Reg(DT.float)
     e = Reg(DT.float)
     t = Reg(DT.float)
     h = Reg(DT.float)
     l = Reg(DT.float)
     s <<= ah + high
-    v <<= s - ah
-    t <<= s - v
+    t <<= s - high
     e <<= ah - t
-    t <<= -v
-    t <<= t + high
-    e <<= e + t
     t <<= al + low
     e <<= e + t
     h <<= s + e
@@ -76,38 +74,18 @@ def _dd_add_constant(oh, ol, ah, al, high, low):
 
 
 @func
-def _dd_mul(oh, ol, ah, al, bh, bl):
-    # Truncated mantissa splitting introduces no splitter-multiply overflow.
-    mask = Reg(DT.uint32)
-    bits = Reg(DT.uint32)
-    a0 = Reg(DT.float)
-    a1 = Reg(DT.float)
-    b0 = Reg(DT.float)
-    b1 = Reg(DT.float)
+def _dd_mul(oh, ol, ah, al, bh, bl, protect_overflow=True):
+    # A fused FP32 product-minus-rounded-product retains the product residual
+    # without mantissa splitting. Every call still carries both DD components;
+    # cross-product addition and renormalization retain their original order.
     p = Reg(DT.float)
     e = Reg(DT.float)
     t = Reg(DT.float)
     h = Reg(DT.float)
     l = Reg(DT.float)
-    overflow = MaskReg(DT.float)
-    mask.fill(0xfffff000)
-    bits <<= ah.reinterpret(DT.uint32)
-    vand(bits, bits, mask)
-    a0 <<= bits.reinterpret(DT.float)
-    a1 <<= ah - a0
-    bits <<= bh.reinterpret(DT.uint32)
-    vand(bits, bits, mask)
-    b0 <<= bits.reinterpret(DT.float)
-    b1 <<= bh - b0
     p <<= ah * bh
-    e <<= a0 * b0
-    e <<= e - p
-    t <<= a0 * b1
-    e <<= e + t
-    t <<= a1 * b0
-    e <<= e + t
-    t <<= a1 * b1
-    e <<= e + t
+    e <<= -p
+    muladddst(e, ah, bh)
     t <<= ah * bl
     e <<= e + t
     t <<= al * bh
@@ -115,16 +93,20 @@ def _dd_mul(oh, ol, ah, al, bh, bl):
     h <<= p + e
     t <<= h - p
     l <<= e - t
-    # A finite two-component expansion cannot encode an infinite residual.
-    # Keep the primary IEEE result instead of turning Inf into Inf-Inf NaN.
-    b0.fill(0.)
-    t <<= h.abs()
-    compare(overflow, t, 3.4028234663852886e38, CompareMode.GT)
-    select(l, b0, l, overflow)
-    t <<= p.abs()
-    compare(overflow, t, 3.4028234663852886e38, CompareMode.GT)
-    select(h, p, h, overflow)
-    select(l, b0, l, overflow)
+    # Only the bounded exp/log polynomial callsites disable this guard.
+    if protect_overflow:
+        zero = Reg(DT.float)
+        overflow = MaskReg(DT.float)
+        # A finite two-component expansion cannot encode an infinite residual.
+        # Keep the primary IEEE result instead of turning Inf into Inf-Inf NaN.
+        zero.fill(0.)
+        t <<= h.abs()
+        compare(overflow, t, 3.4028234663852886e38, CompareMode.GT)
+        select(l, zero, l, overflow)
+        t <<= p.abs()
+        compare(overflow, t, 3.4028234663852886e38, CompareMode.GT)
+        select(h, p, h, overflow)
+        select(l, zero, l, overflow)
     oh <<= h
     ol <<= l
 
@@ -170,10 +152,10 @@ def _dd_exp_negative(oh, ol, xh, xl):
     h.fill(_EXP_FIRST[0])
     l.fill(_EXP_FIRST[1])
     for high, low in _EXP_COEFFICIENTS:
-        _dd_mul(h, l, h, l, zh, zl)
+        _dd_mul(h, l, h, l, zh, zl, protect_overflow=False)
         _dd_add_constant(h, l, h, l, high, low)
     for iteration in range(8):
-        _dd_mul(h, l, h, l, h, l)
+        _dd_mul(h, l, h, l, h, l, protect_overflow=False)
     fallback <<= xh.exp()
     select(oh, fallback, h, outside)
     select(ol, zero, l, outside)
@@ -219,13 +201,13 @@ def _dd_softplus_sigmoid(sh, sl, dh, dl, uh, ul):
     # log(1+e) = 2*atanh(e/(2+e)); |e/(2+e)| <= 1/3.
     _dd_add(bh, bl, two, zero, eh, el)
     _dd_div(zh, zl, eh, el, bh, bl)
-    _dd_mul(zz_h, zz_l, zh, zl, zh, zl)
+    _dd_mul(zz_h, zz_l, zh, zl, zh, zl, protect_overflow=False)
     ph.fill(_LOG_FIRST[0])
     pl.fill(_LOG_FIRST[1])
     for high, low in _LOG_COEFFICIENTS:
-        _dd_mul(ph, pl, ph, pl, zz_h, zz_l)
+        _dd_mul(ph, pl, ph, pl, zz_h, zz_l, protect_overflow=False)
         _dd_add_constant(ph, pl, ph, pl, high, low)
-    _dd_mul(ph, pl, ph, pl, zh, zl)
+    _dd_mul(ph, pl, ph, pl, zh, zl, protect_overflow=False)
     ph <<= ph * 2.
     pl <<= pl * 2.
     select(nh, uh, zero, positive)

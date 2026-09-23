@@ -56,7 +56,7 @@ def summarize(root, measured, output):
     report=dict(environment=metadata['environment'],tokens=4096,block_dim=4,
         scope='Full forward+backward training including raw preparation; separate Level1 hardware profiler after complete training warmup.',
         profile_candidate_matches_clean_run_output_hashes=True,
-        interpretation='Profiler counters perturb durations. CSV device durations exclude queue wait but are not an additive decomposition of the clean425.7ms median. The separate event windows may include host idle gaps; host dispatch overlaps device execution.',
+        interpretation='Profiler counters perturb durations. CSV device durations exclude queue wait but are not an additive decomposition of the separately measured clean median. The separate event windows may include host idle gaps; host dispatch overlaps device execution.',
         source_summary_sha256=hashlib.sha256((root/'profile-summary.json').read_bytes()).hexdigest(),
         routes=routes,script_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest())
     Path(output).write_text(json.dumps(report,indent=2,allow_nan=False)+'\n')

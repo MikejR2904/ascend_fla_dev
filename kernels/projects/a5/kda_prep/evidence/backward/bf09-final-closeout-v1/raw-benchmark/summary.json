@@ -1,0 +1,74 @@
+{
+ "environment": {
+  "python": "3.12.14",
+  "audited_commit": "unknown",
+  "audit_tool_sha256": "84c067762d9aa69a0278b177328f623110f938e932e227ada8efaecc44069cb0",
+  "timestamp_utc": "2026-09-23T02:14:26Z",
+  "torch": "2.12.0+cu130",
+  "torch_npu": "2.12.0",
+  "cann": {
+   "ascend_toolkit_install.info": {
+    "path": "x86_64-linux/ascend_toolkit_install.info",
+    "toolkit_home_basename": "cann-9.1.0-beta.1",
+    "line": [
+     "package_name=Ascend-cann-toolkit",
+     "version=9.1.0-beta.1",
+     "innerversion=V100R001C11B050",
+     "compatible_version=[V100R001C15],[V100R001C19],[V100R001C20],[V100R001C21],[V100R001C23],[V100R001C10]",
+     "arch=x86_64",
+     "os=linux"
+    ],
+    "sha256": "5af58c9503e6f22b4ef65256f8560f3cb11dfa99b7271b00e4826e253143f06e"
+   },
+   "version.info": {
+    "path": "opp/version.info",
+    "toolkit_home_basename": "cann-9.1.0-beta.1",
+    "line": [
+     "Version=9.1.0-beta.1",
+     "version_dir=cann",
+     "required_package_runtime_version=\">=8.5\"",
+     "required_package_ge-executor_version=\">=8.5\"",
+     "required_package_metadef_version=\">=8.5\"",
+     "required_package_asc-devkit_version=\">=8.5\""
+    ],
+    "sha256": "377b05dab3a2dfc87dfaa92affd69a9aa5795a54d423cbe629d3495ad20370ef"
+   }
+  },
+  "opp_kernel_dirs": [
+   "ascend910_93",
+   "ascend910b",
+   "ascend950",
+   "config"
+  ],
+  "ascend_custom_opp_path_set": true
+ },
+ "cases": [
+  {
+   "case": "kda.chunk_kda.rawflags_grad",
+   "verdict": "violations",
+   "error": null,
+   "by_category": {
+    "alloc": 81,
+    "forbidden_arithmetic": 12,
+    "forbidden_dtype_cast": 10,
+    "forbidden_layout_copy": 2,
+    "meta_view": 120,
+    "readonly_check": 6
+   },
+   "forbidden_calls": 24,
+   "unclassified_ops": []
+  },
+  {
+   "case": "kda.chunk_kda.rawflags_nograd",
+   "verdict": "clean",
+   "error": null,
+   "by_category": {
+    "alloc": 21,
+    "meta_view": 25,
+    "readonly_check": 6
+   },
+   "forbidden_calls": 0,
+   "unclassified_ops": []
+  }
+ ]
+}

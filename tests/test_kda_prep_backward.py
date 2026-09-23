@@ -11,6 +11,29 @@ import torch
 from ascend_fla.ops.kda import autograd, chunk, chunk_bwd
 
 
+@pytest.mark.parametrize('kind', ['product', 'bounded_product', 'constant'])
+def test_compensated_arithmetic_preserves_residual_and_primary_infinity(kind, tmp_path):
+    pytest.importorskip('ascriptor')
+    root = Path(__file__).resolve().parents[1] / 'kernels/projects/a5/kda_prep'
+    def load(name, path):
+        spec = importlib.util.spec_from_file_location(name, path)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module
+    probe = load('bf09_arithmetic_test', root / 'backward_arithmetic.py')
+    runner = load('bf09_arithmetic_runner', root / '_unit_runner.py')
+    a, b, expected_high, expected_low = probe.inputs_and_reference(kind)
+    high, low = runner.launch_kernel(probe.make_probe(kind),
+        (a, b, torch.full_like(a, float('nan')), torch.full_like(a, float('nan'))),
+        dict(device='a5', backend='cce', block_dim=1, launcher='sim',
+             out_dir=tmp_path, timeout=45., board=None))
+    probe.check_outputs(high, low, expected_high, expected_low)
+    # A rounded product alone loses the discriminating cancellation residual.
+    assert torch.count_nonzero(expected_low)
+    with pytest.raises(AssertionError, match='residual'):
+        probe.check_outputs(high, torch.zeros_like(low), expected_high, expected_low)
+
+
 def test_endpoint_classification_rejects_hidden_ordinary_or_zero_errors(tmp_path):
     root = Path(__file__).resolve().parents[1] / 'kernels/projects/a5/kda_prep'
     def load(name, filename):
