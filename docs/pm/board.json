@@ -2425,7 +2425,7 @@
       "wave": "W0",
       "soc": "any",
       "priority": "P2",
-      "status": "assigned",
+      "status": "rework",
       "model": [
         "kimi-linear-48b-a3b"
       ],
@@ -2447,7 +2447,7 @@
       },
       "spec": "docs/pm/tasks/A2-08.md",
       "issue": 36,
-      "pr": null,
+      "pr": 129,
       "assignee": "MikejR2904",
       "assignee_caps": {
         "agent": "Claude Opus 4.8 (Claude Code)，operated by MikejR2904（自述）",
@@ -2483,6 +2483,10 @@
         {
           "at": "2026-09-23T02:19",
           "summary": "ASSIGN（PM，自动，按 08:06Z/10:26Z 的既定顺延）：A2-10 已 DONE 并过审合入（8d7dcff），现在轮到 A2-08。此前已做完的交付物（tests/test_models_kimi.py 14 passed 等）请在当前 main（e1e8a57 起，含 A2-10/A2-02/BF-07/BF-08/FMT-01/FMT-02）上重新验证一遍再开 PR，不是照抄旧结果——main 自申领人原话所述的完成时点以来变化较大。不需要重新 APPLY。规格：docs/pm/tasks/A2-08.md；写集仍是 ascend_fla/models/kimi_linear.py + tests/test_models_kimi.py；D-PM-34（真机验证）与规格里「纯 CPU/主机侧」的关系：本任务不需要 NPU 算子执行，用 reference/kda.py 的 torch 递推替身，但仍需在申领人的 A2 环境（910B3）上跑通并留原始日志（pytest 输出、SoC/CANN/算子包目录），不是声称\"纯 CPU 所以免真机\"。"
+        },
+        {
+          "at": "2026-09-23T02:55",
+          "summary": "ACK（02:21Z，自述，#36）：读了规格与 D-PM-34，计划在当前 main 上重验后开 PR，ETA 1h。DONE（02:27Z，自述，#36，PR #129，头 eb24b6e，写集 2 项）：910B3 全新 clone 上 pytest tests/test_models_kimi.py **14 passed, 1 skipped**；fla.ops.kda.naive 层级交叉校验因 A2 容器缺 fla 包被跳过（设计内的优雅跳过，自述可另找环境补）。PM 审查（NPU-free，本机排除 torch_npu 后独立复核，非请示——写集清晰、无争议）：以真实 merge-base d469275 核 diff，只有 kimi_linear.py + test_models_kimi.py 两个新文件、无私密字符串；`chunk_kda`/`fused_recurrent_kda` patch 目标核实存在；C1 多头闸的绕行显式路由到 decode，非静默近似。独立复算 pytest tests/test_models_kimi.py -q 得 14 passed/1 skipped（与自述逐字一致）；pytest tests/ -q 全量 1198 passed/13 skipped（较变更前 main 1184/12 净增 14+1、0 failed，「计数只增不减」这条 PM 已代为核过）。**REVIEW rework**，欠两项：① D-PM-34 要求的原始日志行（DONE 里是转述句子，不是任务规格明写的\"原始日志行\"）——写集不许建 evidence 目录，改为贴进评论回复；② 任务验收清单第 1 条（非可选）——fla.ops.kda.naive 层级交叉校验目前 0 次执行，只有自洽路由测试跑了（两边用同一参考实现，不能替代对上游 oracle 的核对，AGENTS.md §6 双 oracle）；PM 复核环境也没装 `fla`（区分于已装的 `fla_npu`，不是同一个包），补不了这个数，已请申领人在能装 flash-linear-attention 的环境补跑。"
         }
       ],
       "result": null
