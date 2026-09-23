@@ -36,6 +36,12 @@ _FWD = compile_kernel(_load("kernels/fwd_states.py", "gdn2_fwd_states_kernel"),
                       device="a2", block_dim=BLOCK_DIM, backend="cce")
 _BWD = compile_kernel(_load("kernels/bwd_step.py", "gdn2_recurrent_bwd_kernel"),
                       device="a2", block_dim=BLOCK_DIM, backend="cce")
+# Checkpoint-free inference forward: same arithmetic, no per-step states/delta
+# writes and no autograd node, so a no-grad call skips ~120 µs of host-side
+# per-call overhead (68 MB checkpoint allocation + save_for_backward). Outputs
+# are bit-identical to the training forward. See BENCHMARK_TRITON.md.
+_INFER = compile_kernel(_load("kernels/fwd_infer.py", "gdn2_fwd_infer_kernel"),
+                        device="a2", block_dim=BLOCK_DIM, backend="cce")
 
 
 class GDN2Recurrent(torch.autograd.Function):
@@ -69,6 +75,25 @@ class GDN2Recurrent(torch.autograd.Function):
         return outs["dq"], outs["dk"], outs["dv"], outs["dg"], outs["db"], outs["dw"], outs["dh0"]
 
 
+def _forward_inference(q, k, v, g, b, w, S0):
+    """No-grad forward: checkpoint-free kernel, only o + final_state allocated."""
+    B, T, H, K = q.shape; V = v.shape[-1]; dev = q.device
+    c = lambda t: t.contiguous().float()
+    q, k, v, g, b, w, S0 = (c(x) for x in (q, k, v, g, b, w, S0))
+    o = torch.empty(B, T, H, V, dtype=torch.float32, device=dev)
+    fs = torch.empty(B, H, K, V, dtype=torch.float32, device=dev)
+    _INFER({"q": q, "k": k, "v": v, "g": g, "erase_gate": b, "w": w, "initial_state": S0},
+           {"B": B, "T": T, "H": H}, {"o": o, "final_state": fs})
+    return o, fs
+
+
 def gdn2_recurrent(q, k, v, g, b, w, initial_state):
-    """GDN-2 fused-recurrent training op (differentiable). Returns (o, final_state)."""
+    """GDN-2 fused-recurrent training op (differentiable). Returns (o, final_state).
+
+    Dispatches to the checkpoint-free inference kernel when no gradient is needed
+    (bit-identical outputs, ~120 µs less host overhead per call); otherwise runs
+    the training forward that checkpoints every state for the backward."""
+    tensors = (q, k, v, g, b, w, initial_state)
+    if not (torch.is_grad_enabled() and any(t.requires_grad for t in tensors)):
+        return _forward_inference(q, k, v, g, b, w, initial_state)
     return GDN2Recurrent.apply(q, k, v, g, b, w, initial_state)

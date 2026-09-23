@@ -38,9 +38,35 @@ Correctness (rel-L2 vs `naive_recurrent_gdn2`): a2 **5.3e-6**, fla_recur 2.3e-7,
 | fla_recur (Triton) | 349 | 202.0 | relL2 0.00e+00 |
 
 NPU-Graph capture is **bit-for-bit identical** (no arithmetic change) — it only removes the per-call
-launch overhead. It collapses both kernels to near their device time, so the eager-mode wall gap
-(the a2's heavier aclnn dispatch vs Triton's launch) disappears: graph-vs-graph the a2 kernel is
-200.1 vs 202.0 µs — a hair ahead, consistent with its device-time win.
+host overhead. It collapses both kernels to near their device time, so the eager-mode wall gap
+(the a2's training-path checkpoint allocation + autograd node, decomposed below) disappears:
+graph-vs-graph the a2 kernel is 200.1 vs 202.0 µs — a hair ahead, consistent with its device-time win.
+
+## Why fla's eager wall looked lower — decomposed (1×64×16)
+
+The earlier "fla wins on wall" line blamed an "aclnn dispatch floor". That was wrong. Decomposing
+the a2 eager wall (each row is the mean of 100 timed calls after 20 warmups) shows the a2 **kernel**
+is not the problem — the *training wrapper* is:
+
+| stage | µs/call | what it is |
+|---|---|---|
+| a2 pure kernel dispatch (`_FWD`, pre-allocated buffers) | **281** | aclnn launch + 197 µs device compute |
+| a2 `.contiguous().float()` ×7 inputs | 8 | near no-op (inputs already fp32/contiguous) |
+| a2 alloc 4 output buffers | 32 | dominated by the **68 MB** per-step `states` checkpoint |
+| a2 **training** forward, full (`gdn2_recurrent`, grad) | **425** | dispatch + alloc + `autograd.Function` + `save_for_backward`(9 tensors) |
+| a2 **inference** forward (checkpoint-free, no autograd) | **301** | dispatch + 2 small allocs only |
+| fla_recur (Triton `fused_recurrent`, inference) | **328** | its full eager call |
+
+Two facts follow. **(1)** The a2 kernel dispatch alone (281 µs) is *faster* than fla's full eager
+call (328 µs) — aclnn is not the bottleneck. **(2)** The a2 op's higher wall came entirely from it
+running the **training** path on every call: allocating the 68 MB `states`/`delta` checkpoints and
+building an autograd node with a 9-tensor `save_for_backward`, ~120 µs of host-side work fla's
+*inference* kernel never does. Comparing like for like — both inference — the a2 checkpoint-free
+fast-path **wins the eager wall too: 301 vs 328 µs**, with `o`/`final_state` bit-identical
+(`torch.equal`) to the training forward.
+
+`gdn2_recurrent` now dispatches to this checkpoint-free kernel (`kernels/fwd_infer.py`) whenever no
+gradient is needed, and to the checkpointing training forward otherwise.
 
 ## Reading
 
@@ -49,10 +75,12 @@ launch overhead. It collapses both kernels to near their device time, so the eag
   fla's fused-recurrent Triton pays ~43µs for its separate l2norm pass; the a2 kernel fuses it into
   the recurrence.
 - The a2 kernel **beats fla's chunk Triton ~8-11×** on this recurrent shape.
-- fla wins on **wall** time (352 vs 432µs) purely on the a2's aclnn host-dispatch floor (~230µs),
-  not compute — and both run eager, so this is the dispatch mechanism, not the kernel.
+- **On eager wall, like for like (both inference), the a2 kernel also WINS: 301 vs 328 µs.** The
+  training forward's higher wall (425 µs) is host-side checkpoint + autograd overhead, not the
+  kernel — and NPU-Graph capture, which elides all host overhead, confirms it (200.1 vs 202.0 µs).
 - Remaining stretch goal: push VEC utilization from 0.879 to **> 90%** (needs op-reduction beyond the
-  frozen-arithmetic delta-checkpoint), and shrink the aclnn dispatch floor for the wall-time win.
+  frozen-arithmetic delta-checkpoint) — the `muladddst` fusion already trimmed 2 vec ops/step at
+  bit-exact accuracy (~2% device-time win; see STALL_ANALYSIS.md §4).
 
 _Measured on Ascend 910B3, CANN 9.2.0-beta.1, torch_npu 2.10, ascriptor library 90cfcdc / kernels
 b3b3f9c; fla pinned commit e52dbc0 (0.6.0) via the integrated triton-ascend backend._
