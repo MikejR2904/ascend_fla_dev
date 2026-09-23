@@ -42,6 +42,33 @@ host overhead. It collapses both kernels to near their device time, so the eager
 (the a2's training-path checkpoint allocation + autograd node, decomposed below) disappears:
 graph-vs-graph the a2 kernel is 200.1 vs 202.0 µs — a hair ahead, consistent with its device-time win.
 
+## Full training step (forward + backward) — who wins
+
+The tables above are the **forward**. For training you also pay the backward. Two facts decide it:
+
+1. **fla's `fused_recurrent_gdn2` is not trainable.** Its output comes back with `requires_grad=False`
+   / `grad_fn=None` — it is an inference/decode kernel and `.backward()` raises. So fla's *only*
+   trainable GDN-2 path is the **chunk** kernel. The a2 op is differentiable end-to-end (its own
+   reverse-recurrence backward kernel; all 7 grads match torch autograd to ≤1e-5).
+
+2. **On the trainable comparison, a2 wins ~6×.** Eager wall per fwd+bwd step (grads zeroed each step,
+   both l2-normalizing in-kernel, same harness):
+
+   | shape (B,T,H) | a2 fwd+bwd | fla_chunk fwd+bwd | fla_recur |
+   |---|---|---|---|
+   | (1, 64, 16)  | **1709 µs** | 9906 µs  | untrainable |
+   | (1, 128, 16) | **1738 µs** | 10739 µs | untrainable |
+   | (2, 64, 16)  | **1592 µs** | 10199 µs | untrainable |
+
+   Host-free (NPU-Graph, driving the a2 kernels directly) the a2 training step is **857 µs** at T=64
+   (fwd 188 + bwd 674) and **1680 µs** at T=128 (fwd 356 + bwd 1332) — the backward is ~3.6× the
+   forward. fla's chunk kernel is a *parallel-over-chunks* algorithm built for long sequences; on
+   these short recurrent shapes its overhead dominates (~10 ms/step, device-bound), so the a2
+   sequential recurrence is the right tool and wins decisively.
+
+**Verdict: for full training on a2 at these shapes, the a2 op wins — ~6× on wall — and is the only
+recurrent-form option that can train at all.**
+
 ## Why fla's eager wall looked lower — decomposed (1×64×16)
 
 The earlier "fla wins on wall" line blamed an "aclnn dispatch floor". That was wrong. Decomposing
