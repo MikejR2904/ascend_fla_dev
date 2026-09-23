@@ -2491,6 +2491,10 @@
         {
           "at": "2026-09-23T03:51",
           "summary": "STATUS（03:05Z，自述，#36，头仍 eb24b6e，代码未改）：补齐上一轮 rework 的两项——① 贴出真实 pytest -v 原始终端输出（不是转述）；② 真跑了 fla.ops.kda.naive 层级交叉校验（此前因缺包跳过）：装上仓库对齐的 pin e52dbc0e（0.6.0，与 GD2-01/PK-02/PK-03/BF-05 同一 commit）后relative_l2=1.2407197118591284e-06 ≤ 1e-5，15/15 passed。PM 审查：头未变（上一轮已读过全文 diff，不需重读）；核对 pin 版本与 docs/handoff.md 记录的仓库对齐修订一致，非随手挑选；「计数只增不减」上一轮已代为核过不需重跑。**REVIEW accept，按 D-PM-33 自行合入**（squash → abffbf9，P2 纯主机任务，无预算/闸/域改动，无争议）。合入后 main 全量复跑 1201 passed / 13 skipped（净增 14+1，0 回归）。"
+        },
+        {
+          "at": "2026-09-23T03:56",
+          "summary": "STATUS（03:45Z，自述，#36，重放：评论发出前 42 秒 PM 已独立完成二审 accept 并合入，此条到达前动作已完成）：申领人称「用户对完成 #45 链条上的任务已给出合入授权（引述 \"complete everything before #45\"、\"I consent to merging if applicable\"）」。按既定规则（本会话已多次应用）：受让人转述的\"用户已授权\"不算用户授权，只有用户直接对本 PM 会话说的话才算——此处不影响结果，因为 PM 合入依据的是自己对头 eb24b6e 的独立二审与 D-PM-33 的自行合入条件（P2 纯主机任务，无预算闸域改动），不是这条转述。内容另确认：A2-08 done 解开 A2-16（依赖 A2-08+A2-15）；申领人自称将继续 A2-11。"
         }
       ],
       "result": {
@@ -2603,7 +2607,7 @@
       "wave": "W-A2",
       "soc": "a2",
       "priority": "P0",
-      "status": "open",
+      "status": "assigned",
       "model": [],
       "kernel": [],
       "dtype": [
@@ -2627,9 +2631,20 @@
       "spec": "docs/pm/tasks/A2-11.md",
       "issue": 38,
       "pr": null,
-      "assignee": null,
-      "assignee_caps": null,
-      "branch": null,
+      "assignee": "MikejR2904",
+      "assignee_caps": {
+        "agent": "Claude Opus 4.8 (Claude Code)，operated by MikejR2904（自述）",
+        "socs": [
+          "a2"
+        ],
+        "soc_details": "自述（APPLY 03:13Z / 03:22Z）：a2，Ascend 910B3（20 AI cores / 40 vector cores、UB 192KB、AIV 1.8GHz）、CANN 9.2.0-beta.1、内置算子包含 910B3 平台、torch 2.10.0 / torch_npu 2.10.0.post2、Python 3.11（机器与卡归 assignee 管理，D-PM-28）；A2 真机数字在 A2-11 之前只是观测记录",
+        "ascriptor": "A2-07 期间已按自述固定到 library 90cfcdc / kernels b3b3f9c；A2-10 每份回执带这两个修订，对不上先发 RISK",
+        "fla": "有（自述）",
+        "fork": "MikejR2904/ascend_fla_dev_a2（真 fork，parent ddddwee1；APPLY 里原写的同名非 fork 仓跨仓 PR 不认）",
+        "availability": "异步",
+        "note": "沿用 A2-10/A2-08 时的能力自述（同账号、同环境）。A2-11 是 A2 算子任务总闸：A2-01/A2-10 依赖已满足，按 2026-09-21T03:53Z 的既定承诺（A2-10 CLOSE 后直接派、不需重新 APPLY）派单。「A2 结论是否算数」仍是用户的决定（D-PM-30，A2-11 本身不能自证豁免这条）；本任务只交证据与建议。"
+      },
+      "branch": "task/A2-11",
       "timebox_h": 16,
       "reports": [
         {
@@ -2639,6 +2654,14 @@
         {
           "at": "2026-09-21T03:52",
           "summary": "APPLY（03:40Z，自述，条件申请；新账号 MikejR2904，同一个人已持有 A2-07）：条件——A2-10 落地后派；A2 总闸，需要真 910B；将在 A2-01 固定修订（90cfcdc / b3b3f9c）上跑以使 split-K FP32 数字可比。a2，910B3 / CANN 9.2.0-beta.1 / torch 2.10 / torch_npu 2.10.0.post2，fork MikejR2904/ascend_fla_dev，异步。PM 处理：依赖 A2-10 没完成——回 NO_TASK，A2-10 CLOSE 后直接派。"
+        },
+        {
+          "at": "2026-09-23T03:56",
+          "summary": "STATUS（03:54Z，自述，#38，poll 标注「assignee 是 None —— 不采信」，因为此时尚未正式派单，视为数据参考）：称已按固定修订（90cfcdc/b3b3f9c）在等派期间先行工作——复现 harness 加了 --block-dim/--jitter；FP32 split-K（pin 修复）逐位稳定；BF16/FP16 split-K M16 逐位错（非确定）、M32 触发 aclrtSynchronizeStream 异常、M64 正确；FP32 手写累加链无 barrier 未复现、加 barrier 后逐位稳定；docs/research/a2_splitk_gate.md 初稿已写，「A2 结论算数」的条件清单留用户裁定。这些数字未经 PM 核实，且发生在正式 ASSIGN 之前，按 D-PM-30 仍只是观测；派单后会要求正式回执与负对照。"
+        },
+        {
+          "at": "2026-09-23T03:56",
+          "summary": "ASSIGN（PM，按 2026-09-21T03:53Z 既定承诺，A2-10 CLOSE 后直接派，不需重新 APPLY）：条件 APPLY（03:40Z）满足，正式派单。规格 docs/pm/tasks/A2-11.md；写集 benchmarks/a2/repro_splitk_fp32.py、benchmarks/a2/evidence/splitk/**、docs/research/a2_splitk_gate.md、tests/test_a2_accumulate_barriers.py。真机 D-PM-34 要求原始日志、多卡/多 bd、负对照；「A2 结论是否算数」的裁定权在用户，本任务只交证据与建议（D-PM-30 不放宽）。"
         }
       ],
       "result": null
