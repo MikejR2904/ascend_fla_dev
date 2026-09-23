@@ -43,16 +43,27 @@ The lowered kernel body contains, per step:
 
 | category | count | notes |
 |---|---|---|
-| vector/compute ops | 78 | the frozen arithmetic (l2-norm rsqrt-Newton, two 7-add reduction trees, rowscale/outer) |
+| vector/compute ops | 76 | the frozen arithmetic (l2-norm rsqrt-Newton, two 7-add reduction trees, rowscale, fused rank-1 update) |
 | sync ops | 47 | 17 `sync.set` + 17 `sync.wait` + 12 `sync.event` — cross-pipe handoffs |
 | DMA ops | 14 | 6 loads + 3 stores + copies |
 
-≈139 real ops/step, ~19 ns each on the core's **single** vector execution unit. So:
+≈137 real ops/step, ~19 ns each on the core's **single** vector execution unit. So:
 
 ```
-~66% of the stall = serial latency of the 78 vector ops (one vector pipe, mostly data-dependent)
+~66% of the stall = serial latency of the 76 vector ops (one vector pipe, mostly data-dependent)
 ~34% of the stall = cross-pipe synchronization (the 47 set/wait/event ops)
 ```
+
+The rank-1 state update `state += k⊗delta` is fused into **2** `muladddst` ops
+(`dst = dst + src1·src2`) rather than a 2-op outer-product + 2 `add`s. On the a2
+vector unit `muladddst` is **bit-identical** to the mul-then-add it replaces
+(forward `o`/`final_state` and all 7 gradients unchanged to every printed digit —
+`o` rel-L2 0.000e+00 vs the outer-then-add build), so it costs nothing in
+accuracy while removing 2 of the 78 vector ops. Paired device-time (NPU-Graph,
+same machine state, 2 runs each): T=128 **356.8/357.2 → 357.1/350.5 µs**, T=256
+**704.7/705.3 → 697.0/692.1 µs** — a reproducible **~2%** (~0.05 µs/step) win.
+This is the one op-reduction lever that survived: every other candidate in §5–§6
+is either wrong-axis, hardware-blocked, or already precise.
 
 The 47 syncs are overwhelmingly **correctness-mandatory**: each of the 6 loads needs
 `set(load-done)→wait(before the vector op reads it)`; each of the 3 stores needs

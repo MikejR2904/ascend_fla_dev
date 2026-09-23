@@ -83,20 +83,6 @@ def _rowscale(dst, src, sp8):
             src2_blk_stride=0, src2_rep_stride=1)
 
 
-def _outer(dst, sp8, col_row):
-    """dst[k,v] = value[k] * col_row[0, v]  (rank-1 outer product).
-
-    src1 = sp8 broadcast per row (blk_stride 0, rep_stride 1); src2 = col_row
-    broadcast down every row (rep_stride 0). dst rows stride the full tile."""
-    for g in range(NGROUP):
-        s = g * GROUP
-        mul(dst[0:HEAD_DIM, s:s + GROUP], sp8, col_row[0:1, s:s + GROUP],
-            repeat=HEAD_DIM, count_per_rep=GROUP,
-            dst_blk_stride=1, dst_rep_stride=ROWBLK,
-            src1_blk_stride=0, src1_rep_stride=1,
-            src2_blk_stride=1, src2_rep_stride=0)
-
-
 def _reduce_rows(scratch, out_row):
     """Sum scratch[0:128, 0:V] over the K rows into out_row[0:1,0:V]."""
     add(scratch[0:64, 0:VALUE_DIM], scratch[0:64, 0:VALUE_DIM], scratch[64:128, 0:VALUE_DIM])
@@ -243,12 +229,16 @@ def gdn2_fwd_states_kernel(
 
                 # ---- S2 = S1 + k_norm ^ delta ; o = q_norm^T @ S2 ----
                 _spread8(sp8, k_row)
-                _outer(scratch, sp8, delta)           # scratch[k,v] = k_norm[k] * delta[v]
-                # state += k ^ delta, split by rows into full-width contiguous halves
-                # (<=255 repeats, no strided-view stride hints needed).
-                add(state[0:64, 0:VALUE_DIM], state[0:64, 0:VALUE_DIM], scratch[0:64, 0:VALUE_DIM])
-                add(state[64:HEAD_DIM, 0:VALUE_DIM], state[64:HEAD_DIM, 0:VALUE_DIM],
-                    scratch[64:HEAD_DIM, 0:VALUE_DIM])
+                # state += k ^ delta via fused multiply-accumulate
+                # (muladddst: dst = dst + src1*src2). On a2 this is bit-identical
+                # to the outer-product-then-add it replaces, at 2 ops instead of 4.
+                for gi in range(NGROUP):
+                    gs = gi * GROUP
+                    muladddst(state[0:HEAD_DIM, gs:gs + GROUP], sp8, delta[0:1, gs:gs + GROUP],
+                              repeat=HEAD_DIM, count_per_rep=GROUP,
+                              dst_blk_stride=1, dst_rep_stride=ROWBLK,
+                              src1_blk_stride=0, src1_rep_stride=1,
+                              src2_blk_stride=1, src2_rep_stride=0)
                 _spread8(sp8, q_row)
                 _rowscale(scratch, state, sp8)        # scratch[k,:] = state[k,:] * q[k]
                 _reduce_rows(scratch, out_row)        # o[v] = sum_k scratch[k,v]
