@@ -1,0 +1,289 @@
+{
+  "schema": "ascriptor.kernel-unit/1",
+  "id": "a2.gdn2_fused_recurrent",
+  "kind": "kernel",
+  "description": "One-launch short-sequence GDN-2 recurrent forward with in-kernel q/k L2 normalization and FP32 state.",
+  "inputs": {
+    "q": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "T",
+        "H",
+        128
+      ]
+    },
+    "k": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "T",
+        "H",
+        128
+      ]
+    },
+    "v": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "T",
+        "H",
+        128
+      ]
+    },
+    "g": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "T",
+        "H",
+        128
+      ],
+      "note": "Already-activated non-positive per-key-channel log decay."
+    },
+    "erase_gate": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "T",
+        "H",
+        128
+      ],
+      "note": "Already-activated erase gate in [0,2]."
+    },
+    "w": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "T",
+        "H",
+        128
+      ],
+      "note": "Already-activated write gate in [0,1]."
+    },
+    "initial_state": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "H",
+        128,
+        128
+      ],
+      "note": "K-major, read-only and never aliased with final_state."
+    }
+  },
+  "outputs": {
+    "o": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "T",
+        "H",
+        128
+      ],
+      "initialization": "NaN poison; every element must be overwritten."
+    },
+    "final_state": {
+      "dtype": "float32",
+      "shape": [
+        "B",
+        "H",
+        128,
+        128
+      ],
+      "initialization": "NaN poison; every element must be overwritten."
+    }
+  },
+  "domain": {
+    "B": [
+      1
+    ],
+    "T": "1..16",
+    "H": [
+      1,
+      16
+    ],
+    "K": 128,
+    "V": 128,
+    "block_dim": [
+      8
+    ],
+    "layout": "Token-major BTHD inputs/output; K-major BHKV state; all tensors contiguous.",
+    "gate_domain": "Finite g<=0, 0<=erase_gate<=2 and 0<=w<=1. The public Python API calls this tensor b; g/b/w are activated by the layer.",
+    "normalization": "q and k are normalized in FP32 with eps=1e-6; q is then scaled by 128^-0.5.",
+    "ownership": "Each vector participant owns complete heads for all T; no head/state row crosses cores and no cross-core synchronization is used.",
+    "aliasing": "Inputs are read-only; o and final_state are fresh complete-overwrite outputs with disjoint storage."
+  },
+  "dependencies": {
+    "python": ">=3.10",
+    "ascriptor": "==0.1.0",
+    "host": [
+      "torch>=2.9.0",
+      "numpy"
+    ]
+  },
+  "comparison": {
+    "default": {
+      "mode": "allclose",
+      "atol": 0.0001,
+      "rtol": 0.0001,
+      "max_relative_l2": 0.0001,
+      "reason": "All arithmetic/state are FP32, but CCE register reductions may differ from the CPU reduction tree; bitwise equality is not required."
+    }
+  },
+  "cases": [
+    {
+      "id": "single_zero_state",
+      "seed": 20260914,
+      "block_dim": 8,
+      "parameters": {
+        "B": 1,
+        "T": 1,
+        "H": 1,
+        "state_scale": 0.0,
+        "gate_scale": 3.0
+      }
+    },
+    {
+      "id": "chain_nonzero_state",
+      "seed": 20260915,
+      "block_dim": 8,
+      "parameters": {
+        "B": 1,
+        "T": 4,
+        "H": 1,
+        "state_scale": 0.1,
+        "gate_scale": 6.0
+      }
+    },
+    {
+      "id": "strong_decay",
+      "seed": 20260916,
+      "block_dim": 8,
+      "parameters": {
+        "B": 1,
+        "T": 4,
+        "H": 1,
+        "state_scale": 0.1,
+        "gate_scale": 60.0
+      }
+    },
+    {
+      "id": "real_decode",
+      "seed": 20260917,
+      "block_dim": 8,
+      "parameters": {
+        "B": 1,
+        "T": 1,
+        "H": 16,
+        "state_scale": 0.1,
+        "gate_scale": 10.0
+      }
+    },
+    {
+      "id": "real_prompt",
+      "seed": 20260918,
+      "block_dim": 8,
+      "parameters": {
+        "B": 1,
+        "T": 6,
+        "H": 16,
+        "state_scale": 0.1,
+        "gate_scale": 60.0
+      }
+    }
+  ],
+  "support": [
+    {
+      "device": "a2",
+      "backend": "cce",
+      "stage": "reference",
+      "status": "passed",
+      "cases": [
+        "single_zero_state",
+        "chain_nonzero_state",
+        "strong_decay",
+        "real_decode",
+        "real_prompt"
+      ]
+    },
+    {
+      "device": "a2",
+      "backend": "cce",
+      "stage": "sim",
+      "status": "passed",
+      "cases": [
+        "single_zero_state",
+        "chain_nonzero_state",
+        "strong_decay"
+      ]
+    },
+    {
+      "device": "a2",
+      "backend": "cce",
+      "stage": "pipesim",
+      "status": "passed",
+      "cases": [
+        "single_zero_state",
+        "chain_nonzero_state"
+      ]
+    },
+    {
+      "device": "a2",
+      "backend": "cce",
+      "stage": "emit",
+      "status": "passed"
+    },
+    {
+      "device": "a2",
+      "backend": "cce",
+      "stage": "compile",
+      "status": "passed"
+    },
+    {
+      "device": "a2",
+      "backend": "cce",
+      "stage": "board",
+      "status": "passed",
+      "cases": [
+        "single_zero_state",
+        "chain_nonzero_state",
+        "strong_decay",
+        "real_decode",
+        "real_prompt"
+      ]
+    }
+  ],
+  "measured": {
+    "at": "a2 (Ascend910B3/b3), CANN 9.2.0-beta.1, card 7",
+    "static": "ascriptor check 0 errors / 0 warnings, 258 ops. Fully vectorized (no per-key loop).",
+    "board_cce": "All 5 contract cases pass through the aclnn launcher on real 910B silicon at block_dim=8 (16 heads on 16 vector participants).",
+    "performance": "In-process runtime bridge (zero-copy), real_decode B1/T1/H16 bd8: 266.9 us/call vs torch_npu recurrence 4265.4 us/call = 16.0x. Correctness o relative-L2 3.2e-6.",
+    "note": "a5 measurements not inherited (AGENTS.md 6). Newton-refined rsqrt keeps relative-L2 within 1e-4."
+  },
+  "provenance": [
+    {
+      "source": "GatedLinearAttention2 fused_recurrent_gdn2 recurrence at revision 7fb9cb84260779a8715f3dba855abc4cab6924d4",
+      "disposition": "Formula and public tensor semantics were independently reimplemented; no Triton source was copied."
+    },
+    {
+      "source": "ascend_fla kernels/projects/a5/kda_fused_recurrent",
+      "disposition": "Reused the already measured one-head-per-vector-core ownership and two-pass resident-state pattern, with distinct GDN-2 channel-wise erase/write math and in-kernel q/k normalization."
+    },
+    {
+      "source": "ascend_fla kernels/projects/a5/gdn2_fused_recurrent",
+      "disposition": "Mechanical a2 port: facade a5->a2 and device guard only; kernel algorithm unchanged. Vector-only kernel; does not exercise the split-K fp32 cube path (M10-081/M10-083)."
+    }
+  ],
+  "profile": {
+    "warmup": 5,
+    "repeat": 50
+  },
+  "release_scope": {
+    "version": "0.0.1.dev0",
+    "hardware": [
+      "a2"
+    ],
+    "note": "Repository-owned a2 port of the a5 gdn2_fused_recurrent unit; not part of Ascriptor 0.1.0. A2/A3 are deferred upstream (D-250)."
+  }
+}
