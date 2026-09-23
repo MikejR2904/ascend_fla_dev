@@ -2425,7 +2425,7 @@
       "wave": "W0",
       "soc": "any",
       "priority": "P2",
-      "status": "rework",
+      "status": "done",
       "model": [
         "kimi-linear-48b-a3b"
       ],
@@ -2487,9 +2487,24 @@
         {
           "at": "2026-09-23T02:55",
           "summary": "ACK（02:21Z，自述，#36）：读了规格与 D-PM-34，计划在当前 main 上重验后开 PR，ETA 1h。DONE（02:27Z，自述，#36，PR #129，头 eb24b6e，写集 2 项）：910B3 全新 clone 上 pytest tests/test_models_kimi.py **14 passed, 1 skipped**；fla.ops.kda.naive 层级交叉校验因 A2 容器缺 fla 包被跳过（设计内的优雅跳过，自述可另找环境补）。PM 审查（NPU-free，本机排除 torch_npu 后独立复核，非请示——写集清晰、无争议）：以真实 merge-base d469275 核 diff，只有 kimi_linear.py + test_models_kimi.py 两个新文件、无私密字符串；`chunk_kda`/`fused_recurrent_kda` patch 目标核实存在；C1 多头闸的绕行显式路由到 decode，非静默近似。独立复算 pytest tests/test_models_kimi.py -q 得 14 passed/1 skipped（与自述逐字一致）；pytest tests/ -q 全量 1198 passed/13 skipped（较变更前 main 1184/12 净增 14+1、0 failed，「计数只增不减」这条 PM 已代为核过）。**REVIEW rework**，欠两项：① D-PM-34 要求的原始日志行（DONE 里是转述句子，不是任务规格明写的\"原始日志行\"）——写集不许建 evidence 目录，改为贴进评论回复；② 任务验收清单第 1 条（非可选）——fla.ops.kda.naive 层级交叉校验目前 0 次执行，只有自洽路由测试跑了（两边用同一参考实现，不能替代对上游 oracle 的核对，AGENTS.md §6 双 oracle）；PM 复核环境也没装 `fla`（区分于已装的 `fla_npu`，不是同一个包），补不了这个数，已请申领人在能装 flash-linear-attention 的环境补跑。"
+        },
+        {
+          "at": "2026-09-23T03:51",
+          "summary": "STATUS（03:05Z，自述，#36，头仍 eb24b6e，代码未改）：补齐上一轮 rework 的两项——① 贴出真实 pytest -v 原始终端输出（不是转述）；② 真跑了 fla.ops.kda.naive 层级交叉校验（此前因缺包跳过）：装上仓库对齐的 pin e52dbc0e（0.6.0，与 GD2-01/PK-02/PK-03/BF-05 同一 commit）后relative_l2=1.2407197118591284e-06 ≤ 1e-5，15/15 passed。PM 审查：头未变（上一轮已读过全文 diff，不需重读）；核对 pin 版本与 docs/handoff.md 记录的仓库对齐修订一致，非随手挑选；「计数只增不减」上一轮已代为核过不需重跑。**REVIEW accept，按 D-PM-33 自行合入**（squash → abffbf9，P2 纯主机任务，无预算/闸/域改动，无争议）。合入后 main 全量复跑 1201 passed / 13 skipped（净增 14+1，0 回归）。"
         }
       ],
-      "result": null
+      "result": {
+        "commits": [
+          "eb24b6e",
+          "abffbf9"
+        ],
+        "evidence": [
+          "PR #129",
+          "ascend_fla/models/kimi_linear.py",
+          "tests/test_models_kimi.py"
+        ],
+        "numbers": "A2 910B3 真机（自述 + PM 独立复核，纯 CPU/主机侧，不涉及 A2 NPU kernel 结论，不受 A2-11 gating）：pytest tests/test_models_kimi.py -q 15 passed（装上仓库对齐的 fla pin e52dbc0e/0.6.0 后，含 fla.ops.kda.naive 层级交叉校验）；不装 fla 时 14 passed/1 skipped。fla.ops.kda.naive 交叉校验（任务验收清单第 1 条，真实 Kimi 形状 H=HV=32/K=V=128）：relative L2 = 1.2407197118591284e-06 ≤ 1e-5 预算。PM 独立复算（NPU-free，本机排除 torch_npu）：pytest tests/test_models_kimi.py -q → 14 passed/1 skipped（与自述一致，本机无 fla 故复现无 fla 分支）；pytest tests/ -q 合入前后全量均 1201 passed/13 skipped（较变更前 1187/12 净增 14+1，0 failed）。写集始终只有 kimi_linear.py + test_models_kimi.py。"
+      }
     },
     {
       "id": "A2-10",

@@ -11,6 +11,9 @@
 
 ### 正在飞的任务（现在没有；A5K-02、PK-02、PK-03 都已于 2026-09-19 合入）
 
+> **2026-09-23T03:45Z 更新：A2-08（PR #129）二审 accept 并由 PM 按 D-PM-33 自行合入（squash）→ abffbf9；main 全量 1201 passed / 13 skipped / 0 failed（净增 14+1）。A2-08 done。**
+> - 一审补了两项：原始终端输出（不是转述）、`fla.ops.kda.naive` 层级交叉校验真跑了（此前因容器缺包跳过）——relative_l2=1.24e-6 ≤ 1e-5，用的是仓库对齐的 fla pin `e52dbc0e`（0.6.0），与 GD2-01/PK-02/PK-03/BF-05 同一 commit，不是随手挑的版本。
+>
 > **2026-09-23T03:31Z 更新：BF-09（PR #128）审查 accept 并由 PM 按 D-PM-33 自行合入（squash）→ 3e26891；main 全量 1187 passed / 12 skipped / 0 failed（净增 3）。BF-09 done。**
 > - T4096 完整训练步 428.86ms（合入版 BF-08）→ 223.06ms，降 47.99%，仍为旧 host 图 5.92×——PM 建议的 1.25× 软目标未达，但已按规格给出瓶颈分析（gate 第一阶段的 profiler 条件下界 164.43ms）。`backward_budgets.json` 字节级冻结不变。
 > - 数学优化：`_dd_add_constant` 2Sum→FastTwoSum、`_dd_mul` Dekker 拆尾数→FMA 的 2MultFMA，均为文献级等价精确算法，注释里给了量级证明。
