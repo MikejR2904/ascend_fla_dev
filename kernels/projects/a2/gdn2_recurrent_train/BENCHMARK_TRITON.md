@@ -60,9 +60,12 @@ The tables above are the **forward**. For training you also pay the backward. Tw
    | (1, 128, 16) | **1738 µs** | 10739 µs | untrainable |
    | (2, 64, 16)  | **1592 µs** | 10199 µs | untrainable |
 
-   Host-free (NPU-Graph, driving the a2 kernels directly) the a2 training step is **857 µs** at T=64
-   (fwd 188 + bwd 674) and **1680 µs** at T=128 (fwd 356 + bwd 1332) — the backward is ~3.6× the
-   forward. fla's chunk kernel is a *parallel-over-chunks* algorithm built for long sequences; on
+   Host-free (NPU-Graph, driving the a2 kernels directly) the a2 training step is **841 µs** at T=64
+   (fwd 182 + bwd 664) and **1659 µs** at T=128 (fwd 349 + bwd 1317) — the backward is ~3.6× the
+   forward. Both the forward and the backward fuse their rank-1 state updates into `muladddst`
+   (bit-identical to the outer-then-add; validated on synthetic inputs and on the real gdn2-370m /
+   gdn2-1.3b checkpoints, all 7 grads ≤ 8e-6). fla's chunk kernel is a *parallel-over-chunks*
+   algorithm built for long sequences; on
    these short recurrent shapes its overhead dominates (~10 ms/step, device-bound), so the a2
    sequential recurrence is the right tool and wins decisively.
 

@@ -34,12 +34,15 @@ def _mul_rowvec(dst, src, row):
             src1_rep_stride=ROWBLK, src2_blk_stride=1, src2_rep_stride=0)
 
 
-def _outer(dst, sp8, row):
+def _outer_acc(acc, sp8, row):
+    """acc[k,v] += sp8[k] * row[0,v] via fused multiply-accumulate. muladddst
+    (dst = dst + src1*src2) is bit-identical to the outer-product-then-add it
+    replaces on a2, at 2 ops instead of 4 (no [K,V] outer-product temporary)."""
     for gi in range(NGROUP):
         s = gi * GROUP
-        mul(dst[0:K, s:s + GROUP], sp8, row[0:1, s:s + GROUP], repeat=K, count_per_rep=GROUP,
-            dst_blk_stride=1, dst_rep_stride=ROWBLK, src1_blk_stride=0, src1_rep_stride=1,
-            src2_blk_stride=1, src2_rep_stride=0)
+        muladddst(acc[0:K, s:s + GROUP], sp8, row[0:1, s:s + GROUP], repeat=K, count_per_rep=GROUP,
+                  dst_blk_stride=1, dst_rep_stride=ROWBLK, src1_blk_stride=0, src1_rep_stride=1,
+                  src2_blk_stride=1, src2_rep_stride=0)
 
 
 def _mul_full(dst, a, bt):
@@ -48,11 +51,6 @@ def _mul_full(dst, a, bt):
         mul(dst[0:K, s:s + GROUP], a[0:K, s:s + GROUP], bt[0:K, s:s + GROUP], repeat=K,
             count_per_rep=GROUP, dst_blk_stride=1, dst_rep_stride=ROWBLK, src1_blk_stride=1,
             src1_rep_stride=ROWBLK, src2_blk_stride=1, src2_rep_stride=ROWBLK)
-
-
-def _add_full(dst, a, bt):
-    add(dst[0:64, 0:V], a[0:64, 0:V], bt[0:64, 0:V])
-    add(dst[64:K, 0:V], a[64:K, 0:V], bt[64:K, 0:V])
 
 
 def _reduce_rows(scr, out_row):
@@ -187,7 +185,7 @@ def gdn2_recurrent_bwd_kernel(
                 Bt[0:K, 0:V] <<= states[bi, h, t + 1, 0:K, 0:V]
                 _mul_rowvec(Bt, Bt, dor); _reduce_cols(Bt, dqn)
                 # dS += qn ^ do
-                _spread8(sp8, qn); _outer(Bt, sp8, dor); _add_full(A, A, Bt)
+                _spread8(sp8, qn); _outer_acc(A, sp8, dor)
                 # ddelta = kn @ dS  (reduce over K)
                 Bt[0:K, 0:V] <<= A[0:K, 0:V]; _spread8(sp8, kn); _rowscale(Bt, Bt, sp8)
                 _reduce_rows(Bt, ddelta)
@@ -202,7 +200,7 @@ def gdn2_recurrent_bwd_kernel(
                 Bt[0:K, 0:V] <<= states[bi, h, t, 0:K, 0:V]; _spread8(sp8, eg); _rowscale(Bt, Bt, sp8)
                 _mul_rowvec(Bt, Bt, derase); _reduce_cols(Bt, dbk)
                 # dS += bk ^ derase
-                _spread8(sp8, bk); _outer(Bt, sp8, derase); _add_full(A, A, Bt)
+                _spread8(sp8, bk); _outer_acc(A, sp8, derase)
                 mul(prod, dbk, kn); db[bi, t, h, 0:K] <<= prod[0:1, 0:K]
                 mul(prod, dbk, br); add(dkn, dkn, prod)
                 # dg = reduce_v(dS * S_prev) * eg
