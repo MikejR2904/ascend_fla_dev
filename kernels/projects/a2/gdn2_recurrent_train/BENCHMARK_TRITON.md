@@ -30,6 +30,18 @@ fed to both — otherwise the a2 kernel pays for a normalization that fla skips.
 
 Correctness (rel-L2 vs `naive_recurrent_gdn2`): a2 **5.3e-6**, fla_recur 2.3e-7, fla_chunk 4.1e-7.
 
+## NPU-Graph (dispatch removed, fair: both graph-captured), wall µs/call, 1×64×16
+
+| kernel | eager wall | NPU-Graph wall | correctness vs eager |
+|---|---|---|---|
+| **a2 `gdn2_recurrent`** | 414 | **200.1** | **relL2 0.00e+00 (bit-identical)** |
+| fla_recur (Triton) | 349 | 202.0 | relL2 0.00e+00 |
+
+NPU-Graph capture is **bit-for-bit identical** (no arithmetic change) — it only removes the per-call
+launch overhead. It collapses both kernels to near their device time, so the eager-mode wall gap
+(the a2's heavier aclnn dispatch vs Triton's launch) disappears: graph-vs-graph the a2 kernel is
+200.1 vs 202.0 µs — a hair ahead, consistent with its device-time win.
+
 ## Reading
 
 - **On device time (the dispatch-agnostic, fair kernel comparison), the a2 kernel WINS: 197.5 vs
