@@ -2662,6 +2662,10 @@
         {
           "at": "2026-09-23T03:56",
           "summary": "ASSIGN（PM，按 2026-09-21T03:53Z 既定承诺，A2-10 CLOSE 后直接派，不需重新 APPLY）：条件 APPLY（03:40Z）满足，正式派单。规格 docs/pm/tasks/A2-11.md；写集 benchmarks/a2/repro_splitk_fp32.py、benchmarks/a2/evidence/splitk/**、docs/research/a2_splitk_gate.md、tests/test_a2_accumulate_barriers.py。真机 D-PM-34 要求原始日志、多卡/多 bd、负对照；「A2 结论是否算数」的裁定权在用户，本任务只交证据与建议（D-PM-30 不放宽）。"
+        },
+        {
+          "at": "2026-09-23T04:06",
+          "summary": "ACK（03:59Z，自述，#38，ETA 6h）：读了规格与 AGENTS.md §2/§7、D-PM-34/D-PM-30。计划：固定修订 90cfcdc/b3b3f9c，三类最小复现各独立进程 ≥1000 次+时序扰动（FP32 split-K 修复确认、BF16/FP16 M16/M32/M64 复现或否定、FP32 无 barrier 累加链能否踩出）；barrier 版绕行验证 ≥1000×多bd×多卡逐位稳定 + 去 barrier 负对照对照；测试负对照证明会红；research doc 按「已证安全/未复现/必须永久禁止」分档，「A2 结论算数」条件清单留用户裁定；证据脱敏后再推 PR。等派期间的观测明确声明不算数、要重新正式提交。"
         }
       ],
       "result": null
