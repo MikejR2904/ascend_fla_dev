@@ -5190,7 +5190,7 @@
       "wave": "W0",
       "soc": "a5",
       "priority": "P0",
-      "status": "in_progress",
+      "status": "done",
       "model": [],
       "kernel": [
         "kda_prep"
@@ -5262,9 +5262,27 @@
         {
           "at": "2026-09-23T02:09",
           "summary": "RISK shared-machine（02:03Z，自述，#125，session 01a0b7ce-…，draft PR #128 新头 6c3db86）：bd4 完整网格执行期间设备短暂报 Alarm，已停止仅本任务受影响的进程、保留原始部分回执（588/1620，raw exit=143，未计作完整通过、未改写原始结果），换健康设备整轮重跑；bd1/2 各 1620 case 已通过、bd3 继续跑、bd4 在新设备从头执行；四 bd 的 norm22、边界四列、原始回归已完成；边界端点继续按 D-PM-54/55/56 如实标 passed=false/native-flush，不宣称 CPU 正确性通过；不归因设备告警根因；按 D-PM-28（机器/卡由 agent 自己管理，shared-machine 类 RISK 只记不升级、不仲裁）—— **PM 记录、不上报、不介入**。"
+        },
+        {
+          "at": "2026-09-23T03:38",
+          "summary": "DONE（02:41Z，自述，#125，PR #128，头 271f1c8，5 个提交）：完整验收清单勾选，含冻结预算字节不变、跨 bd 逐位相同、58,320 次网格调用、host 算子审计、T4096 降 47.99% 但未达建议 1.25× 目标（如实披露，附瓶颈分析）。PM 三小时级深度审查（NPU-free，本机排除 torch_npu，全程独立复核不只信自述）：写集/reserved_paths 干净；首提交零 kernel 改动确认；`backward_budgets.json` blob hash 逐位确认冻结；数学审查 `_dd_add_constant`（2Sum→FastTwoSum，量级证明写在注释里）与 `_dd_mul`（Dekker 拆尾数→FMA 的 2MultFMA）为文献级等价精确算法非近似；404/405 生产源码哈希核对，唯一不符的 `contract.json` 自身查明为收尾自引用、无执行语义影响；**独立跑了申领人自己的 restore_backward_validation.py / classify_backward_endpoints.py / verify_backward_review.py / verify_bf09_closeout.py，从提交树的原始去重数据整条链路重放**，grid 汇总哈希、边界分类四项数字、收尾延迟降幅/目标/合规判定逐项与自述位级相同；host_op_audit 原始 JSON 哈希核实、forbidden 计数逐行相加复核（kda_prep 写集内 0 违规）；PM 独立用 ascriptor sim launcher 跑通新增算术诊断测试并做负对照（入口还原 base 后按预期编译失败）；全量测试合入前后均 1187/12/0，0 回归；隐私扫描 0 命中。**REVIEW accept，按 D-PM-33 自行合入**（squash → 3e26891，无预算/闸/域改动、无写集越界、无争议）。合入后 main 全量复跑同为 1187 passed / 12 skipped，合入树与已审 scratch merge 树逐位相同。"
         }
       ],
-      "result": null,
+      "result": {
+        "commits": [
+          "271f1c8",
+          "3e26891"
+        ],
+        "evidence": [
+          "PR #128",
+          "kernels/projects/a5/kda_prep/backward_arithmetic.py",
+          "kernels/projects/a5/kda_prep/evidence/backward/bf09-final-closeout-v1/",
+          "kernels/projects/a5/kda_prep/evidence/backward/bf09-final-grid-v1/",
+          "kernels/projects/a5/kda_prep/evidence/backward/bf09-final-validation-v1/",
+          "docs/research/kda_prep_backward.md#BF-09-性能"
+        ],
+        "numbers": "T4096 完整训练步：合入版 BF-08 428.859174ms → BF-09 最终 223.063633ms，降 47.99%（PM 复算一致），仍为旧 host 图 5.9188×（对 Torch NPU 1.5633×）；T1024 旧 host 5.7361×、对 Torch NPU 1.9635×。PM 建议的 1.25× 目标未达（软目标，任务文件原文非硬门槛），按规格要求给出瓶颈分析：profiler 条件下界 164.428501ms（gate 第一阶段），即便消去其它全部 kernel 最多再快 1.329×。`backward_budgets.json` 字节级冻结（blob hash 与优化前相同）；网格 58,320 次公开训练调用、7,992 条度量、28 组预算，0 超预算、0 非有限，最差 relative-L2/预算比 0.712、逐元素相对误差/预算比 0.415；四 bd 完整输出+9缓存+8梯度共19项跨bd逐位相同（PM 用申领人自己的 restore/verify 工具从提交树原始去重数据独立重放，非只读汇总：grid 汇总哈希、边界分类（482 native flush/bd、30 未获资格/bd、0 candidate-only NaN）、收尾的延迟降幅/目标未达/host 不合规均逐项复现）。host 算子审计：kda_prep 写集内 0 forbidden；训练路径存量 24 处（21 D-PM-42 遗留 + 3 audited roots 外），哈希核实、逐行相加复核。PM 独立用 ascriptor sim launcher 真跑新增算术诊断测试（3/3 通过，含负对照）；入口文件还原到 base 的负对照按预期编译失败。全量测试：合入前 scratch merge 与合入后 main 均为 1187 passed / 12 skipped / 0 failed（较变更前 main 1184/12 净增 3，无回归）；合入树与已审 scratch merge 树逐位相同（50baddc...）。证据 48.52MiB（~50MB 预算内），121 个新增 blob 隐私扫描 0 命中。唯一非精确匹配项：`contract.json` 自身因收尾提交回写自己而与回执记录的前一版哈希不同，逐行 diff 确认差异仅描述性字段，PM 判定良性。"
+      },
       "origin": {
         "kind": "user",
         "note": "用户 2026-09-21（D-PM-57「#122授权」，PM 请求里的选项 A）：合入 BF-08 并立即另立 P0 性能任务"

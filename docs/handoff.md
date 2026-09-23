@@ -11,6 +11,12 @@
 
 ### 正在飞的任务（现在没有；A5K-02、PK-02、PK-03 都已于 2026-09-19 合入）
 
+> **2026-09-23T03:31Z 更新：BF-09（PR #128）审查 accept 并由 PM 按 D-PM-33 自行合入（squash）→ 3e26891；main 全量 1187 passed / 12 skipped / 0 failed（净增 3）。BF-09 done。**
+> - T4096 完整训练步 428.86ms（合入版 BF-08）→ 223.06ms，降 47.99%，仍为旧 host 图 5.92×——PM 建议的 1.25× 软目标未达，但已按规格给出瓶颈分析（gate 第一阶段的 profiler 条件下界 164.43ms）。`backward_budgets.json` 字节级冻结不变。
+> - 数学优化：`_dd_add_constant` 2Sum→FastTwoSum、`_dd_mul` Dekker 拆尾数→FMA 的 2MultFMA，均为文献级等价精确算法，注释里给了量级证明。
+> - **本次评审首次做到「从提交树原始去重数据整条链路重放」**：不只读汇总 JSON，是真跑了申领人自己写的 `restore_backward_validation.py` / `classify_backward_endpoints.py` / `verify_backward_review.py` / `verify_bf09_closeout.py`，grid 汇总哈希、边界分类四项数字、收尾延迟降幅都独立复现到位级相同；还用 ascriptor `sim` launcher 真跑了新增算术诊断测试并做负对照。以后遇到类似「私有归档 + 公开去重证据」结构的 DONE，优先找这条路径，比只信汇总数字强得多。
+> - 唯一瑕疵：`contract.json` 因收尾提交回写自身而与回执记录的前一版哈希不同（自引用因果循环导致，不可避免），逐行 diff 确认只差描述性字段，判定良性，不影响合入。
+>
 > **2026-09-23T02:09Z 更新：A2-10（PR #127）三审 accept 并由 PM 按 D-PM-33 自行合入（squash）→ 8d7dcff；main 全量 1184 passed / 12 skipped / 0 failed（= 1173 + 11）。A2-10 done；A2-11 现在可以派了。**
 > - 三轮评审全过程：第一轮抓到设备事实非实测 + block_dim 探针没到硬件 + `_claim_op_name` 检查绕开而非验证 + 回执缺修订/自证 + 测试太薄 + 缺原始日志；第二轮除测试断言外全部补齐（含 152 个哈希与上一头逐个相同的强证据、bd1=bd2 76/76）；第三轮只剩测试断言按文档口径补齐，PM 用 4 个负对照独立核过，接受并合入。
 > - A2 上机主线完成第二步（A2-02 → **A2-10** → A2-11）。A2-11（split-K 总闸，issue #38）现在依赖已解除，MikejR2904 此前有条件 APPLY 在排队，下一轮可以直接派。A2-08（Kimi 注入脚手架，issue #36，成品已做完）也排在 A2-10 之后，可以一并考虑派单顺序。
