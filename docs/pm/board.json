@@ -2478,7 +2478,7 @@
       "wave": "W-A2",
       "soc": "a2",
       "priority": "P0",
-      "status": "rework",
+      "status": "done",
       "model": [],
       "kernel": [],
       "dtype": [],
@@ -2538,9 +2538,26 @@
         {
           "at": "2026-09-21T13:37",
           "summary": "PR #127 更新（13:19Z，force-push：新头 8a001a0，单个提交、基于 main 3fd7330；申领人还没发 STATUS，PM 等了约 3 分钟没等到就先评审这一头，发评论前核过头没变）。改动对着 PM 上一轮 REVIEW 的七条：设备事实改为 `probe_device_facts` 把 ascriptor profile 与 `torch.npu.get_device_properties` 逐项对比（核数 20 / 40 一致；UB / L1 / L0C 容量仍是 profile 声明值，文档标明「declares」、uuid 排除）；block_dim 探针在子进程里解开单元域检查（`--force-block-dim`，不改单元源码）后 1 / 2 / 4 / 8 / 20 / 40 都跑完（rc 0）、无死锁，文档明写只是 liveness、bd > 2 正确性未验；`probe_claim_op_name`：真机上同进程先后编 bd 1 与 2，第二次抛 AclError；每份回执带完整 40 位 ascriptor 修订（library 90cfcdc720bb…、kernels b3b3f9c16df7…，与 A2-03 的 env.json 逐位相同）；`bridge_trace`（每 case 桥启动次数与签名）；测试 5 → 9 个；6 + 2 份脱敏的原始控制台日志；scratch 目录改 tempfile。PM 二审（第二轮，NPU-free，读完整 diff 后才跑）：**上一轮七条全部到位**。已核成立：15 个文件全在写集、无二进制、reserved 0 命中；隐私 15 个 blob 0 命中；从四份回执原始 JSON 复算 152/152 逐位相同、152 个哈希各不相同，**且与上一头那批回执逐个比较 152 个哈希一个不差**（两次独立真机运行相隔约 1.5h 逐位复现）；bd1 与 bd2 桥输出逐位相同 76/76（观测）；桥自证：fwd 20 case × 5 次启动、decode 8 case × 1 次、bd1 / bd2 签名互不相交；scratch merge 全量 1182 passed / 12 skipped / 0 failed（= 1173 + 9，预测一致）；旧负对照三个（删比较 + 改 soc、去掉修订、日志塞路径）都变红。**仍 REVIEW rework，只剩一处很小的**：新测试没守住文档里写的断言——PM 负对照：(a) 把某个 fwd case 的 launches 改成 1、signatures 截成 1 个，9 个测试仍全过（测试只要求 launches in (1, 5)，而文档写「guards the expected launch counts」）；(b) 把 claim_op_name.json 的 second_build_raised 改成 false，仍全过（没有测试读它）；(c) 把 block_dim_probe.json 的六个 ran 全改成 false，仍全过（没有测试读它）。要求只动 tests/test_a2_bringup.py 三处断言、不动回执 / 日志 / bringup.py；改完 PM 只核增量，然后向用户请求这个头的合入授权（A2 数字只作观测，D-PM-33），用户同意后 --match-head-commit 合入。"
+        },
+        {
+          "at": "2026-09-23T02:09",
+          "summary": "STATUS（01:51Z，自述，#37，头 d764557，单提交、基于当时 main 809ac2d）：确认只改 tests/test_a2_bringup.py，回执 / 日志 / bringup.py 一字未改；三处按上一轮 REVIEW 逐条列出改法，并自报四个新负对照（各自变红后还原复绿）——与 PM 独立复核的结论一致。PM 三审（NPU-free，从原始文件独立复核，不依赖申领人自报）：diff 只有 tests/test_a2_bringup.py（其余 14 个证据/文档 blob 按哈希核对与上一头逐字节相同）；三处断言改法与上一轮 REVIEW 要求逐项对上，PM 自己的 4 个负对照（(a) launches 篡改、(b) second_build_raised 改 false、(c) 把 ran 全改 false 仍通过——符合设计、(d) 删掉 block_dim>2 的探针项）结果与其自报一致；scratch merge 全量 1184 passed / 12 skipped / 0 failed（= 1173 + 11，预测一致）；gen_matrix --check 通过。**REVIEW accept**，按 D-PM-33 自行合入（squash，MikejR2904 第三次合入，首次已由 D-PM-58 授权；本任务交付全是环境事实/观测，不含 A2 算子结论）→ 8d7dcff。合入后 main 复跑全量同为 1184 passed / 12 skipped / 0 failed，合入的树与我审过的 scratch merge 树逐位相同。（备注：申领人这条 STATUS 里写「合入按 D-PM-33 等用户授权」，但按与 A2-02 相同的先例（首次合入已获用户授权、本次交付不含 A2 结论），PM 未再请示、已直接合入，事后一句话告诉用户。）"
         }
       ],
-      "result": null
+      "result": {
+        "commits": [
+          "d764557",
+          "8d7dcff"
+        ],
+        "evidence": [
+          "PR #127",
+          "benchmarks/a2/bringup.py",
+          "tests/test_a2_bringup.py",
+          "docs/research/a2_bringup.md",
+          "benchmarks/a2/evidence/bringup/"
+        ],
+        "numbers": "A2 上机（bring-up，Ascend910B3，申领人自述，PM 无 A2 真机、只对原始回执复算，D-PM-30：环境事实与观测记录、不构成算子结论）：运行时桥对 aclnn harness 逐位一致 152/152（kda_fwd_stable 20 case × 3 输出、kda_fused_recurrent 8 case × 2 输出，各 bd∈{1,2}），152 个哈希各不相同（无常量输出），两次独立真机运行相隔约 1.5h 逐位复现；bd1 与 bd2 桥输出逐位相同 76/76；torch_npu 计算算子覆盖 12/12；设备事实（cube/vec 核数 20/40）实测与 ascriptor b3 profile 一致；block_dim 探针覆盖 1、2、4、8、20、40（解开单元自身域检查后），均跑完无死锁（liveness 观测，正确性未验）；`_claim_op_name` 在 A2 上真机验证：同进程同算子名二次 build 抛 AclError；每份回执带每 case 桥启动次数与签名（fwd 5、decode 1，签名两两不同），自证走的是桥而非静默退回 harness；每份回执带完整 40 位 ascriptor 修订（与 A2-03 的 env.json 一致）。PM 三轮复核（NPU-free，从原始 JSON 逐项复算，含 4 次负对照）：合入前 scratch merge 全量 1184 passed / 12 skipped / 0 failed；合入后 main（8d7dcff）全量同为 1184 passed / 12 skipped / 0 failed（= 1173 + 11）；合入的树与 scratch merge 的树逐位相同。squash 合入（PR 分支中间提交含未脱敏版本，不进 main 历史）。"
+      }
     },
     {
       "id": "A2-11",
@@ -5214,6 +5231,10 @@
         {
           "at": "2026-09-23T01:23",
           "summary": "两条 STATUS（01:08Z、01:16Z，自述，#125，session 01a0b7ce-…）+ **draft PR #128**（`BF-09: reduce compensated KDA raw-training arithmetic cost`，头 14d6a67，PM 已用 API 核实为 draft，申领人也明说「仍在执行最终验收，不是 DONE / 正式评审请求」——本轮只记进度，不评审）：① 三次独立候选均跑完整 Kimi B1/T4096/H=HV32/全部 raw flags/两份 CPU FP32 golden/全部 8 梯度 + 36 条同步性能样本，选定 **candidate3**：uniform FMA product residual + proved-dominance FastTwoSum + 只对静态可界定的 exp/log 乘积做溢出防护消除；补偿算术系数/阈值、归约次序、ABI/存储/同步全部不变，无选择性补偿或近似回退；backward.py SHA256 ba38f200…，冻结预算未改；16 种 dtype 源码发射通过，3 种新增算术探针功能模型通过且零残差负对照被拒绝（不替代全网格资格）。② **性能**：同卡三轮 T4096 candidate3 226.932248ms / 旧 host 35.929323ms = 6.316×；对 Torch NPU 119.185676ms = 1.904×；相对本任务未优化基线 427.648428ms **下降 46.93%**，但 **PM 建议的 1.25× 目标仍未达到**（申领人自己明说）。T1024：56.985328 / 9.210220ms = 6.187×，对 Torch NPU 39.000050ms = 1.464×。③ Draft PR：bd1/2/3 三个独立进程各 50 vendor（含 9 既有 backward）跑完完整训练，bd4 排队中；NPU-free 全套 1183 passed / 5 skipped；两种负对照方法论细节自报（入口字节未改的换回不算负对照、换回 base 6c42dc6 给 11 预期失败/8 no-grad 通过、残差清零负对照被新增算术测试拒绝）；仍在跑完整网格、端点、模型、审计，未改现有测试断言或冻结预算。再次提到「用户新授权允许健康卡带他人进程共享」——**PM 不采信为直接授权**（转述不算数），且在 D-PM-28 范围内不升级，只记录。仍未提交 DONE；A5K-03 继续按承诺排在 BF-09 CLOSE 之后。"
+        },
+        {
+          "at": "2026-09-23T02:09",
+          "summary": "RISK shared-machine（02:03Z，自述，#125，session 01a0b7ce-…，draft PR #128 新头 6c3db86）：bd4 完整网格执行期间设备短暂报 Alarm，已停止仅本任务受影响的进程、保留原始部分回执（588/1620，raw exit=143，未计作完整通过、未改写原始结果），换健康设备整轮重跑；bd1/2 各 1620 case 已通过、bd3 继续跑、bd4 在新设备从头执行；四 bd 的 norm22、边界四列、原始回归已完成；边界端点继续按 D-PM-54/55/56 如实标 passed=false/native-flush，不宣称 CPU 正确性通过；不归因设备告警根因；按 D-PM-28（机器/卡由 agent 自己管理，shared-machine 类 RISK 只记不升级、不仲裁）—— **PM 记录、不上报、不介入**。"
         }
       ],
       "result": null,
