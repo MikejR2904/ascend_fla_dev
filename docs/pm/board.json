@@ -1205,6 +1205,10 @@
         {
           "at": "2026-09-22T14:36",
           "summary": "STATUS（14:27Z，自述，#104，头 4f8d3d2）：**12 个契约 case 在 A5 真机全过**（a5.gdn2_chunk_fwd_bf16，board stage，190/135 ops、12/12）；host 算子审计（TorchDispatchMode，通则 §1）两条 dtype 路径都过：FP32 empty×18 + zeros×1、BF16 empty×18 + zeros×1，全是分配，没有 dtype 转换 / 拷贝 / 重排 / 产出计算数据的算术，入口源码 .float()/.to(dtype)/.to(device) 已全删。**审计撞出并修了两条 AGENTS.md §6 记着的坑**：① 拷贝派生的五个 kernel 沿用了 FP32 单元的算子名，CANN 按算子名解析、同进程里 BF16 静默拿到 FP32 的二进制（单跑不暴露，两条路径共存才撞上，且是静默的）——已改名 gdn2_chunk_*_bf16（提交 4f8d3d2），check/reference 不变；② 审计脚本先跑 FP32 后注册 BF16 vendor 树被 binding.py 的闸拦下（首次算子解析前必须编完），已在入口加 prepare() 默认编两条 dtype 路径，顺带验证了 prepare(dtypes=...)。仍没有精度 / 性能成套数字（下一步：奇偶 C、门控跨度端点重测、bd 间逐位、FP32 路径改前改后逐位相同、三轮三明治、证据出包）。PM 评价：这是真实进展且质量在提高——host 算子审计抓到了一个真实的静默 dtype 替换缺陷并修复，方法论正确；仍未给数值 ETA，我不再追问 ETA（已问两次），等下一次真机里程碑。"
+        },
+        {
+          "at": "2026-09-23T01:06",
+          "summary": "STATUS（00:57Z，自述，#104，头 4f8d3d2）：**两条「按位判、不用预算」的都在 A5 真机过了**——① bd 间输出逐位相同（bd=1/2/4/8，t64_h16_real 整 chunk、t65_h16_tail 尾块、t192_h16_odd 奇数 3 chunk 三个 case，o 与 final_state 全部 ALL BITWISE EQUAL，核切分不改算式成立）；② FP32 路径改前改后逐位相同（D-PM-37 要求）：before（origin/main 版本，含 .float()）与 after（零 .float()）各自独立进程跑同一组固定种子输入，o 与 final_state 哈希逐位相同——去掉 host 转换没有动到数值。累计成立（均 Ascend950PR / CANN 9.2.0 / opp 含 ascend950 实测）：校准 F=1.7451e-3、预算 5.2354e-3；五个 kernel check 0 error、物理地址分配全过；reference 12/12、sim 12/12、真机 12/12；host 算子审计两条 dtype 路径都 PASS（只有 empty×18 + zeros×1）；bd 逐位相同；FP32 路径逐位不变。next：门控跨度端点在 BF16 上重测（不沿用 GD2-01 的 FP32 数 1520.9，有限性与精度分开报）→ 三轮三明治性能（baseline 现有 FP32 路径，不设门槛）→ 证据出包开 PR。"
         }
       ],
       "result": null,
