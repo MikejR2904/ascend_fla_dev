@@ -74,12 +74,20 @@ Conclusion: independence cannot be turned into parallelism here — there is **o
 unit per core, and the scheduler/hardware serialize the ops regardless of source-level ILP. The 40
 cores parallelize across (b,h) items, not within one item's op stream.
 
-## 6. Why the remaining levers are blocked
+## 6. Why the remaining levers are blocked (all tested on a duplicated kernel)
 
-- **Fewer ops** → the 78 vector ops *are* the arithmetic (each is a math step) → would change the
-  bit-exact-validated numerics. Ruled out.
-- **Remove syncs** → the 47 syncs are mostly the required load→compute→store handoffs; removing one
-  reads stale/half-written data. Unsafe.
+- **Fewer ops via wider vector instructions** → **hardware-blocked.** Collapsing a `NGROUP=2`
+  two-op (2×64-lane) helper into one 128-lane op is rejected by the compiler:
+  `error[E0301]: count_per_rep ... valid range is [0, 64], got 128`. The a2 vector unit is
+  hard-limited to **64 lanes per repeat**, so 128-wide tiles *must* be two ops; and the two
+  column-chunks are not a single strided extension of the row-repeats, so they can't fold into one
+  `repeat` either. The two-op pattern is mandatory.
+- **Fewer ops via cheaper arithmetic** → the remaining ops (rsqrt-Newton, the reduction trees) *are*
+  the frozen bit-exact-validated math. Ruled out.
+- **Manual sync** → `auto_sync`'s 17 `set` / 17 `wait` pairs already match the *necessary* cross-pipe
+  handoffs almost exactly (6 loads + 3 stores + the `state[t]→state[t+1]` fence ≈ 17). It is
+  **precise, not conservative**, so there is essentially no removable sync; a whole-kernel manual
+  `setflag`/`waitflag` rewrite would gain ~0 while risking correctness.
 - **Coalesce loads** → the 6 inputs are 6 separate GM tensors; they cannot merge into one DMA.
 - **Interleave two (b,h) recurrences per core** to fill the pipe → **UB-limited**: two states +
   two reduction scratches = 256 KB > 192 KB UB. Does not fit.
